@@ -1,8 +1,5 @@
 # IceNET.NetworkAnalyser
-
-==============================================================
-Detect and Report Anomalies within Computer Network Security
-==============================================================
+# Detect and Report Anomalies within Computer Network Security
 
 1. x86  → Linux application for overall master control
 2. ARM  → Driven by FreeRTOS or Bare Metal
