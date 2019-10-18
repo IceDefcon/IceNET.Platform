@@ -2,13 +2,13 @@
 Detect and Report Security Anomalies within the Computer Network
 
 ----------------------------------------------------------------
-1. x86  → Linux application for overall master control
-2. ARM  → Driven by FreeRTOS
-3. RTOS → TCP/IP Stack for Communication with x86 terminal
-4. RTOS → SPI interface for ARM request → FPGA
-5. FPGA → SPI interface for FPGA response → ARM
-6. FPGA → Driven by Nios II Firmware
-7. FPGA → Fast Fourier transform and digital filtering
-8. FPGA → External 640Mbps and 800Mbps LVDS channels for
-          Rx and Tx respectively to communicate with the 
-          Ethernet target network 
+1. Linux kernel module runs TCP/IP server and sends the commands to the Cortex-M4F
+2. Cortex M4F is driven by FreeRTOS 
+3. FreeRTOS run Light weight TCP/IP stack to Rx/Tx commands from x86 terminal
+4. FreeRTOS run dspi driver to forward commands from x86 terminal to Cyclon II FPGA
+5. FPGA recieve master commands from x86 Linux kernel module via SPI
+6. FPGA execute master commands in Nios II Firmware
+
+
+
+#ICE
