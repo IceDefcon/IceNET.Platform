@@ -1,5 +1,5 @@
 # IceNET.NetworkAnalyser
-Detect and Report Security Anomalies within the Computer Network
+Detect and Report Security Anomalies within Computer Network
 
 ----------------------------------------------------------------
 1. Linux kernel module runs TCP/IP server and sends the commands to the Cortex-M4F
