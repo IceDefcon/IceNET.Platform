@@ -1,6 +1,4 @@
 # IceNET.NetworkAnalyser
-
-----------------------------------------------------------------
 Detect and Report Security Anomalies within the Computer Network
 
 ----------------------------------------------------------------
