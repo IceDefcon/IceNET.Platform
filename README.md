@@ -19,8 +19,7 @@ If there are JTAG problems:
 
 1. Check if Altera USB Blaser is present in the system: 
 
-	dmesg|tail
-
+	$dmesg|tail
 	usb 1-2: Product: USB-Blaster
 	usb 1-2: Manufacturer: Altera
 	usb 1-2: SerialNumber: 00000000
