@@ -1,0 +1,8 @@
+|NetworkAnalyser
+clock => ~NO_FANOUT~
+reset => ~NO_FANOUT~
+led_0 <= <GND>
+led_1 <= <VCC>
+led_2 <= <GND>
+
+

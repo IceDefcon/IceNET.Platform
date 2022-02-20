@@ -1,0 +1,14 @@
+vendor_name = ModelSim
+source_file = 1, /ice/code.lab/IceNET.NetworkAnalyser/Quartus/NetworkAnalyser.sdc
+source_file = 1, /ice/code.lab/IceNET.NetworkAnalyser/Quartus/NetworkAnalyser.vhd
+source_file = 1, /ice/code.lab/IceNET.NetworkAnalyser/Quartus/db/NetworkAnalyser.cbx.xml
+source_file = 1, /home/ice/altera/13.0sp1/quartus/libraries/vhdl/ieee/prmtvs_b.vhd
+source_file = 1, /home/ice/altera/13.0sp1/quartus/libraries/vhdl/ieee/prmtvs_p.vhd
+source_file = 1, /home/ice/altera/13.0sp1/quartus/libraries/vhdl/ieee/timing_b.vhd
+source_file = 1, /home/ice/altera/13.0sp1/quartus/libraries/vhdl/ieee/timing_p.vhd
+design_name = NetworkAnalyser
+instance = comp, \clock~I\, clock, NetworkAnalyser, 1
+instance = comp, \reset~I\, reset, NetworkAnalyser, 1
+instance = comp, \led_0~I\, led_0, NetworkAnalyser, 1
+instance = comp, \led_1~I\, led_1, NetworkAnalyser, 1
+instance = comp, \led_2~I\, led_2, NetworkAnalyser, 1
