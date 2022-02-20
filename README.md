@@ -5,8 +5,8 @@ Detect and Report Security Anomalies inside Computer Network
 Current Hardware configuration:
 
 	- EP2C5T144C8N Cyclone II FPGA
-	- FRDM-K64F Platform
-	- x64 Linux Terminal
+	- FRDM-K64F Platform ---> https://github.com/IceDefcon/K64F.FreeRTOS
+	- x64 Linux Terminal ---> TCP Server for SQL control
 
 Intel Altera provide a support for Cyclon II FPGA in Quartus 13.0ps1
 
