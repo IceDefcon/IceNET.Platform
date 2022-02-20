@@ -1,0 +1,14 @@
+	component NiosFirmware is
+		port (
+			cpu_clk            : in  std_logic                     := 'X';             -- clk
+			sys_reset_n        : in  std_logic                     := 'X';             -- reset_n
+			spi_mem_address    : in  std_logic_vector(9 downto 0)  := (others => 'X'); -- address
+			spi_mem_chipselect : in  std_logic                     := 'X';             -- chipselect
+			spi_mem_clken      : in  std_logic                     := 'X';             -- clken
+			spi_mem_write      : in  std_logic                     := 'X';             -- write
+			spi_mem_readdata   : out std_logic_vector(31 downto 0);                    -- readdata
+			spi_mem_writedata  : in  std_logic_vector(31 downto 0) := (others => 'X'); -- writedata
+			spi_mem_byteenable : in  std_logic_vector(3 downto 0)  := (others => 'X')  -- byteenable
+		);
+	end component NiosFirmware;
+

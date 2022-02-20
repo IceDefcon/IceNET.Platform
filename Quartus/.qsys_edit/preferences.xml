@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<preferences>
+ <debug showDebugMenu="0" />
+ <systemtable>
+  <columns>
+   <connections preferredWidth="111" />
+   <irq preferredWidth="34" />
+  </columns>
+ </systemtable>
+ <clocktable>
+  <columns>
+   <clockname preferredWidth="485" />
+   <clocksource preferredWidth="485" />
+   <frequency preferredWidth="466" />
+  </columns>
+ </clocktable>
+ <library
+   expandedCategories="Project,Library/Memories and Memory Controllers/On-Chip,Library/Memories and Memory Controllers,Library" />
+ <window width="1868" height="1071" x="62" y="19" />
+ <generation synthesis="VHDL" />
+ <hdlexample language="VHDL" />
+</preferences>
