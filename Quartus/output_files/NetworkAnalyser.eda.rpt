@@ -1,5 +1,5 @@
 EDA Netlist Writer report for NetworkAnalyser
-Sun Feb 20 16:31:22 2022
+Sun Feb 20 22:09:35 2022
 Quartus II 64-Bit Version 13.0.1 Build 232 06/12/2013 Service Pack 1 SJ Web Edition
 
 
@@ -34,7 +34,7 @@ applicable agreement for further details.
 +---------------------------------------------------------------+
 ; EDA Netlist Writer Summary                                    ;
 +---------------------------+-----------------------------------+
-; EDA Netlist Writer Status ; Failed - Sun Feb 20 16:31:22 2022 ;
+; EDA Netlist Writer Status ; Failed - Sun Feb 20 22:09:35 2022 ;
 ; Revision Name             ; NetworkAnalyser                   ;
 ; Top-level Entity Name     ; NetworkAnalyser                   ;
 ; Family                    ; Cyclone II                        ;
@@ -47,7 +47,7 @@ applicable agreement for further details.
 Info: *******************************************************************
 Info: Running Quartus II 64-Bit EDA Netlist Writer
     Info: Version 13.0.1 Build 232 06/12/2013 Service Pack 1 SJ Web Edition
-    Info: Processing started: Sun Feb 20 16:31:21 2022
+    Info: Processing started: Sun Feb 20 22:09:34 2022
 Info: Command: quartus_eda --read_settings_files=off --write_settings_files=off NetworkAnalyser -c NetworkAnalyser
 Error (204012): Can't generate netlist output files because the file "/ice/code.lab/IceNET.NetworkAnalyser/Quartus/db/ip/NiosFirmware/submodules/NiosFirmware_cpu.v" is an OpenCore Plus time-limited file
 Error (204009): Can't generate netlist output files because the license for encrypted file "/ice/code.lab/IceNET.NetworkAnalyser/Quartus/db/ip/NiosFirmware/submodules/NiosFirmware_cpu.v" is not available
@@ -56,8 +56,8 @@ Error (204009): Can't generate netlist output files because the license for encr
 Error (204012): Can't generate netlist output files because the file "/ice/code.lab/IceNET.NetworkAnalyser/Quartus/db/ip/NiosFirmware/submodules/NiosFirmware_cpu.v" is an OpenCore Plus time-limited file
 Error (204009): Can't generate netlist output files because the license for encrypted file "/ice/code.lab/IceNET.NetworkAnalyser/Quartus/db/ip/NiosFirmware/submodules/NiosFirmware_cpu.v" is not available
 Error: Quartus II 64-Bit EDA Netlist Writer was unsuccessful. 6 errors, 0 warnings
-    Error: Peak virtual memory: 820 megabytes
-    Error: Processing ended: Sun Feb 20 16:31:22 2022
+    Error: Peak virtual memory: 821 megabytes
+    Error: Processing ended: Sun Feb 20 22:09:35 2022
     Error: Elapsed time: 00:00:01
     Error: Total CPU time (on all processors): 00:00:01
 

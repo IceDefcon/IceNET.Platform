@@ -16,12 +16,12 @@ port
 (
 	sclk   			: in std_logic;     						--SPI Clock
 	cs     			: in std_logic;     						--Chip select
-	mosi   			: in std_logic;	   							--Master Out Slave In  (MOSI)
-	miso   			: out std_logic;	   						--Master In  Slave Out (MISO)
+	mosi   			: in std_logic;	   					--Master Out Slave In  (MOSI)
+	miso   			: out std_logic;	   					--Master In  Slave Out (MISO)
 	reset  			: in std_logic;     						--Asynchronous Reset
 
 	data_tx  		: in  std_logic_vector(N-1 downto 0);		--Parallel N-bit data to return back to the master
-	data_rx 		: out std_logic_vector(N-1 downto 0);   	--Parallel N-bit data recevied from the master
+	data_rx 		   : out std_logic_vector(N-1 downto 0);   	--Parallel N-bit data recevied from the master
 	busyrx   		: out std_logic;							--Do not read data_rx while high
 	busytx   		: out std_logic                        		--Do not write data_tx while high
 );

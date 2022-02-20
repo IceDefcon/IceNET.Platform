@@ -39,4 +39,9 @@ If there are JTAG problems:
 	./jtagconfig
 
 
+Bare metal drivers and low level source can be found:
+
+	https://mcuxpresso.nxp.com/en/welcome
+
+
 # ICE

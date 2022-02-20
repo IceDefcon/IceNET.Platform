@@ -6,8 +6,8 @@ mosi => spi:spi_module.mosi
 miso <= spi:spi_module.miso
 ssel => spi:spi_module.cs
 led_0 <= <GND>
-led_1 <= <VCC>
-led_2 <= <GND>
+led_1 <= <GND>
+led_2 <= <VCC>
 
 
 |NetworkAnalyser|spi:spi_module

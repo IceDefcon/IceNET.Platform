@@ -79,8 +79,8 @@ end component NiosFirmware;
 begin
 
 led_0 <= '0'; 	-- D2
-led_1 <= '1'; 	-- D4
-led_2 <= '0'; 	-- D5
+led_1 <= '0'; 	-- D4
+led_2 <= '1'; 	-- D5
 
 spi_module : component spi
 port map 
