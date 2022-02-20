@@ -38,8 +38,7 @@ If there are JTAG problems:
 	./jtagd 
 	./jtagconfig
 
-
-Bare metal drivers and low level source can be found:
+Bare metal drivers and low level sources:
 
 	https://mcuxpresso.nxp.com/en/welcome
 
