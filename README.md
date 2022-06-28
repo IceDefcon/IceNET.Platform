@@ -42,4 +42,12 @@ Bare metal drivers and low level sources:
 
 	https://mcuxpresso.nxp.com/en/welcome
 
+3. To drive SPI inside FPGA ---> K64F.FreeRTOS Project must be modified to allow pins of the K64F Board to comunicate with with the Cyclon Board
+
+	https://github.com/IceDefcon/K64F.FreeRTOS
+
+	Inside the Project ---> Threre is an example how to control particular K64F Board LED PIN 
+
+	This configuration can be modified to allow bare metal NXP SPI driver to comunicate with the Cyclon Board ! 
+
 # ICE
