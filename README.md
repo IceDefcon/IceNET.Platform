@@ -48,7 +48,7 @@ And operating system:
 
 To install Quartus 13.0sp1 you need
 
-	sudo apt-get install gcc-multilib g++-multilib plocate
+	sudo apt-get install gcc-multilib g++-multilib
 
 To launch quartus in 64-bit mode you need to download libpng12 library
 
