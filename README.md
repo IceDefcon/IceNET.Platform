@@ -72,6 +72,11 @@ Execution links for 64-bit:
 	cd /home/ice/altera/13.0sp1/quartus/bin
 	./quartus --64bit
 
+To check if QSYS is working or require some dependant libraries you can execute
+
+	cd /ice/altera/13.0sp1/quartus/sopc_builder/bin
+	./qsys-edit
+
 If there are JTAG problems:
 
 1.Check if Altera USB Blaser is present in the system: 
