@@ -55,6 +55,12 @@ To launch quartus in 64-bit mode you need to download libpng12 library
 	wget -q http://mirrors.kernel.org/ubuntu/pool/main/libp/libpng/libpng12-0_1.2.54-1ubuntu1_amd64.deb
 	dpkg -i /tmp/libpng12.deb
 
+	Or this one:
+
+	sudo add-apt-repository ppa:linuxuprising/libpng12
+	sudo apt update
+	sudo apt install libpng12-0
+
 And to launch QSYS more grphical libraries are required
 
 	sudo apt-get install libpng-dev
