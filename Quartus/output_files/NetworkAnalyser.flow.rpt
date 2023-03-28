@@ -1,5 +1,5 @@
 Flow report for NetworkAnalyser
-Sun Feb 20 22:09:35 2022
+Sat Mar 25 14:18:08 2023
 Quartus II 64-Bit Version 13.0.1 Build 232 06/12/2013 Service Pack 1 SJ Web Edition
 
 
@@ -37,26 +37,26 @@ applicable agreement for further details.
 
 
 
-+-------------------------------------------------------------------------------------------+
-; Flow Summary                                                                              ;
-+------------------------------------+------------------------------------------------------+
-; Flow Status                        ; EDA Netlist Writer Failed - Sun Feb 20 22:09:35 2022 ;
-; Quartus II 64-Bit Version          ; 13.0.1 Build 232 06/12/2013 SP 1 SJ Web Edition      ;
-; Revision Name                      ; NetworkAnalyser                                      ;
-; Top-level Entity Name              ; NetworkAnalyser                                      ;
-; Family                             ; Cyclone II                                           ;
-; Device                             ; EP2C5T144C8                                          ;
-; Timing Models                      ; Final                                                ;
-; Total logic elements               ; 837 / 4,608 ( 18 % )                                 ;
-;     Total combinational functions  ; 667 / 4,608 ( 14 % )                                 ;
-;     Dedicated logic registers      ; 601 / 4,608 ( 13 % )                                 ;
-; Total registers                    ; 601                                                  ;
-; Total pins                         ; 9 / 89 ( 10 % )                                      ;
-; Total virtual pins                 ; 0                                                    ;
-; Total memory bits                  ; 16,384 / 119,808 ( 14 % )                            ;
-; Embedded Multiplier 9-bit elements ; 0 / 26 ( 0 % )                                       ;
-; Total PLLs                         ; 0 / 2 ( 0 % )                                        ;
-+------------------------------------+------------------------------------------------------+
++--------------------------------------------------------------------------------------+
+; Flow Summary                                                                         ;
++------------------------------------+-------------------------------------------------+
+; Flow Status                        ; Successful - Sat Mar 25 14:17:49 2023           ;
+; Quartus II 64-Bit Version          ; 13.0.1 Build 232 06/12/2013 SP 1 SJ Web Edition ;
+; Revision Name                      ; NetworkAnalyser                                 ;
+; Top-level Entity Name              ; NetworkAnalyser                                 ;
+; Family                             ; Cyclone II                                      ;
+; Device                             ; EP2C5T144C8                                     ;
+; Timing Models                      ; Final                                           ;
+; Total logic elements               ; 872 / 4,608 ( 19 % )                            ;
+;     Total combinational functions  ; 694 / 4,608 ( 15 % )                            ;
+;     Dedicated logic registers      ; 621 / 4,608 ( 13 % )                            ;
+; Total registers                    ; 621                                             ;
+; Total pins                         ; 9 / 89 ( 10 % )                                 ;
+; Total virtual pins                 ; 0                                               ;
+; Total memory bits                  ; 32,768 / 119,808 ( 27 % )                       ;
+; Embedded Multiplier 9-bit elements ; 0 / 26 ( 0 % )                                  ;
+; Total PLLs                         ; 0 / 2 ( 0 % )                                   ;
++------------------------------------+-------------------------------------------------+
 
 
 +-----------------------------------------+
@@ -64,7 +64,7 @@ applicable agreement for further details.
 +-------------------+---------------------+
 ; Option            ; Setting             ;
 +-------------------+---------------------+
-; Start date & time ; 02/20/2022 22:07:27 ;
+; Start date & time ; 03/25/2023 14:16:55 ;
 ; Main task         ; Compilation         ;
 ; Revision Name     ; NetworkAnalyser     ;
 +-------------------+---------------------+
@@ -75,9 +75,8 @@ applicable agreement for further details.
 +-------------------------------------+--------------------------------------------------------------------------+---------------+-------------+----------------+
 ; Assignment Name                     ; Value                                                                    ; Default Value ; Entity Name ; Section Id     ;
 +-------------------------------------+--------------------------------------------------------------------------+---------------+-------------+----------------+
-; COMPILER_SIGNATURE_ID               ; 0.164539124717085                                                        ; --            ; --          ; --             ;
-; EDA_OUTPUT_DATA_FORMAT              ; Vhdl                                                                     ; --            ; --          ; eda_simulation ;
-; EDA_SIMULATION_TOOL                 ; ModelSim-Altera (VHDL)                                                   ; <None>        ; --          ; --             ;
+; COMPILER_SIGNATURE_ID               ; 0.167975021508804                                                        ; --            ; --          ; --             ;
+; EDA_OUTPUT_DATA_FORMAT              ; None                                                                     ; --            ; --          ; eda_simulation ;
 ; ENABLE_SIGNALTAP                    ; On                                                                       ; --            ; --          ; --             ;
 ; MAX_CORE_JUNCTION_TEMP              ; 85                                                                       ; --            ; --          ; --             ;
 ; MIN_CORE_JUNCTION_TEMP              ; 0                                                                        ; --            ; --          ; --             ;
@@ -106,11 +105,11 @@ applicable agreement for further details.
 ; SLD_NODE_PARAMETER_ASSIGNMENT       ; SLD_ADVANCED_TRIGGER_ENTITY=basic,1,                                     ; --            ; --          ; SPI_DEBUG      ;
 ; SLD_NODE_PARAMETER_ASSIGNMENT       ; SLD_TRIGGER_LEVEL_PIPELINE=1                                             ; --            ; --          ; SPI_DEBUG      ;
 ; SLD_NODE_PARAMETER_ASSIGNMENT       ; SLD_ENABLE_ADVANCED_TRIGGER=0                                            ; --            ; --          ; SPI_DEBUG      ;
-; SLD_NODE_PARAMETER_ASSIGNMENT       ; SLD_INVERSION_MASK=00000000000000000000000000000000000000                ; --            ; --          ; SPI_DEBUG      ;
-; SLD_NODE_PARAMETER_ASSIGNMENT       ; SLD_INVERSION_MASK_LENGTH=38                                             ; --            ; --          ; SPI_DEBUG      ;
-; SLD_NODE_PARAMETER_ASSIGNMENT       ; SLD_SEGMENT_SIZE=4096                                                    ; --            ; --          ; SPI_DEBUG      ;
-; SLD_NODE_PARAMETER_ASSIGNMENT       ; SLD_NODE_CRC_HIWORD=44250                                                ; --            ; --          ; SPI_DEBUG      ;
-; SLD_NODE_PARAMETER_ASSIGNMENT       ; SLD_SAMPLE_DEPTH=4096                                                    ; --            ; --          ; SPI_DEBUG      ;
+; SLD_NODE_PARAMETER_ASSIGNMENT       ; SLD_INVERSION_MASK=000000000000000000000000000000000000000               ; --            ; --          ; SPI_DEBUG      ;
+; SLD_NODE_PARAMETER_ASSIGNMENT       ; SLD_INVERSION_MASK_LENGTH=39                                             ; --            ; --          ; SPI_DEBUG      ;
+; SLD_NODE_PARAMETER_ASSIGNMENT       ; SLD_SEGMENT_SIZE=8192                                                    ; --            ; --          ; SPI_DEBUG      ;
+; SLD_NODE_PARAMETER_ASSIGNMENT       ; SLD_NODE_CRC_HIWORD=17364                                                ; --            ; --          ; SPI_DEBUG      ;
+; SLD_NODE_PARAMETER_ASSIGNMENT       ; SLD_SAMPLE_DEPTH=8192                                                    ; --            ; --          ; SPI_DEBUG      ;
 ; USE_SIGNALTAP_FILE                  ; spi_debug.stp                                                            ; --            ; --          ; --             ;
 +-------------------------------------+--------------------------------------------------------------------------+---------------+-------------+----------------+
 
@@ -120,12 +119,11 @@ applicable agreement for further details.
 +---------------------------+--------------+-------------------------+---------------------+------------------------------------+
 ; Module Name               ; Elapsed Time ; Average Processors Used ; Peak Virtual Memory ; Total CPU Time (on all processors) ;
 +---------------------------+--------------+-------------------------+---------------------+------------------------------------+
-; Analysis & Synthesis      ; 00:00:24     ; 1.0                     ; 759 MB              ; 00:00:29                           ;
-; Fitter                    ; 00:00:04     ; 1.0                     ; 690 MB              ; 00:00:04                           ;
+; Analysis & Synthesis      ; 00:00:12     ; 1.0                     ; 764 MB              ; 00:00:11                           ;
+; Fitter                    ; 00:00:05     ; 1.2                     ; 702 MB              ; 00:00:05                           ;
 ; Assembler                 ; 00:00:01     ; 1.0                     ; 564 MB              ; 00:00:01                           ;
-; TimeQuest Timing Analyzer ; 00:00:01     ; 1.0                     ; 538 MB              ; 00:00:01                           ;
-; EDA Netlist Writer        ; 00:00:01     ; 1.0                     ; 797 MB              ; 00:00:01                           ;
-; Total                     ; 00:00:31     ; --                      ; --                  ; 00:00:36                           ;
+; TimeQuest Timing Analyzer ; 00:00:01     ; 1.0                     ; 533 MB              ; 00:00:01                           ;
+; Total                     ; 00:00:19     ; --                      ; --                  ; 00:00:18                           ;
 +---------------------------+--------------+-------------------------+---------------------+------------------------------------+
 
 
@@ -134,11 +132,10 @@ applicable agreement for further details.
 +---------------------------+------------------+----------------+------------+----------------+
 ; Module Name               ; Machine Hostname ; OS Name        ; OS Version ; Processor type ;
 +---------------------------+------------------+----------------+------------+----------------+
-; Analysis & Synthesis      ; ice              ; Ubuntu 20.04.4 ; 20         ; x86_64         ;
-; Fitter                    ; ice              ; Ubuntu 20.04.4 ; 20         ; x86_64         ;
-; Assembler                 ; ice              ; Ubuntu 20.04.4 ; 20         ; x86_64         ;
-; TimeQuest Timing Analyzer ; ice              ; Ubuntu 20.04.4 ; 20         ; x86_64         ;
-; EDA Netlist Writer        ; ice              ; Ubuntu 20.04.4 ; 20         ; x86_64         ;
+; Analysis & Synthesis      ; ice              ; Ubuntu 18.04.6 ; 18         ; x86_64         ;
+; Fitter                    ; ice              ; Ubuntu 18.04.6 ; 18         ; x86_64         ;
+; Assembler                 ; ice              ; Ubuntu 18.04.6 ; 18         ; x86_64         ;
+; TimeQuest Timing Analyzer ; ice              ; Ubuntu 18.04.6 ; 18         ; x86_64         ;
 +---------------------------+------------------+----------------+------------+----------------+
 
 
@@ -149,7 +146,6 @@ quartus_map --read_settings_files=on --write_settings_files=off NetworkAnalyser 
 quartus_fit --read_settings_files=off --write_settings_files=off NetworkAnalyser -c NetworkAnalyser
 quartus_asm --read_settings_files=off --write_settings_files=off NetworkAnalyser -c NetworkAnalyser
 quartus_sta NetworkAnalyser -c NetworkAnalyser
-quartus_eda --read_settings_files=off --write_settings_files=off NetworkAnalyser -c NetworkAnalyser
 
 
 

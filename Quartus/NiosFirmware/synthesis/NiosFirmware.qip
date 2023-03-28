@@ -2,7 +2,7 @@ set_global_assignment -entity "NiosFirmware" -library "NiosFirmware" -name IP_TO
 set_global_assignment -entity "NiosFirmware" -library "NiosFirmware" -name IP_TOOL_VERSION "13.0sp1"
 set_global_assignment -entity "NiosFirmware" -library "NiosFirmware" -name IP_TOOL_ENV "Qsys"
 set_global_assignment -library "NiosFirmware" -name SOPCINFO_FILE [file join $::quartus(qip_path) "../../NiosFirmware.sopcinfo"]
-set_instance_assignment -entity "NiosFirmware" -library "NiosFirmware" -name SLD_INFO "QSYS_NAME NiosFirmware HAS_SOPCINFO 1 GENERATION_ID 1645370207"
+set_instance_assignment -entity "NiosFirmware" -library "NiosFirmware" -name SLD_INFO "QSYS_NAME NiosFirmware HAS_SOPCINFO 1 GENERATION_ID 1679563325"
 set_global_assignment -library "NiosFirmware" -name MISC_FILE [file join $::quartus(qip_path) "../../NiosFirmware.cmp"]
 set_global_assignment -name SYNTHESIS_ONLY_QIP ON
 set_global_assignment -library "NiosFirmware" -name MISC_FILE [file join $::quartus(qip_path) "../../NiosFirmware.qsys"]
@@ -36,21 +36,21 @@ set_global_assignment -library "NiosFirmware" -name VERILOG_FILE [file join $::q
 set_global_assignment -library "NiosFirmware" -name SOURCE_FILE [file join $::quartus(qip_path) "submodules/NiosFirmware_spi_mem.hex"]
 set_global_assignment -library "NiosFirmware" -name VERILOG_FILE [file join $::quartus(qip_path) "submodules/NiosFirmware_cpu_mem.v"]
 set_global_assignment -library "NiosFirmware" -name SOURCE_FILE [file join $::quartus(qip_path) "submodules/NiosFirmware_cpu_mem.hex"]
-set_global_assignment -library "NiosFirmware" -name VERILOG_FILE [file join $::quartus(qip_path) "submodules/NiosFirmware_cpu_oci_test_bench.v"]
-set_global_assignment -library "NiosFirmware" -name SOURCE_FILE [file join $::quartus(qip_path) "submodules/NiosFirmware_cpu_dc_tag_ram.mif"]
-set_global_assignment -library "NiosFirmware" -name SOURCE_FILE [file join $::quartus(qip_path) "submodules/NiosFirmware_cpu_ic_tag_ram.mif"]
-set_global_assignment -library "NiosFirmware" -name VERILOG_FILE [file join $::quartus(qip_path) "submodules/NiosFirmware_cpu_jtag_debug_module_wrapper.v"]
-set_global_assignment -library "NiosFirmware" -name SDC_FILE [file join $::quartus(qip_path) "submodules/NiosFirmware_cpu.sdc"]
-set_global_assignment -library "NiosFirmware" -name SOURCE_FILE [file join $::quartus(qip_path) "submodules/NiosFirmware_cpu_rf_ram_b.mif"]
 set_global_assignment -library "NiosFirmware" -name SOURCE_FILE [file join $::quartus(qip_path) "submodules/NiosFirmware_cpu_ociram_default_contents.mif"]
-set_global_assignment -library "NiosFirmware" -name VERILOG_FILE [file join $::quartus(qip_path) "submodules/NiosFirmware_cpu.v"]
-set_global_assignment -library "NiosFirmware" -name SOURCE_FILE [file join $::quartus(qip_path) "submodules/NiosFirmware_cpu_bht_ram.mif"]
-set_global_assignment -library "NiosFirmware" -name VERILOG_FILE [file join $::quartus(qip_path) "submodules/NiosFirmware_cpu_jtag_debug_module_sysclk.v"]
-set_global_assignment -library "NiosFirmware" -name VERILOG_FILE [file join $::quartus(qip_path) "submodules/NiosFirmware_cpu_jtag_debug_module_tck.v"]
-set_global_assignment -library "NiosFirmware" -name VERILOG_FILE [file join $::quartus(qip_path) "submodules/NiosFirmware_cpu_mult_cell.v"]
-set_global_assignment -library "NiosFirmware" -name SOURCE_FILE [file join $::quartus(qip_path) "submodules/NiosFirmware_cpu.ocp"]
-set_global_assignment -library "NiosFirmware" -name VERILOG_FILE [file join $::quartus(qip_path) "submodules/NiosFirmware_cpu_test_bench.v"]
+set_global_assignment -library "NiosFirmware" -name SOURCE_FILE [file join $::quartus(qip_path) "submodules/NiosFirmware_cpu_dc_tag_ram.mif"]
+set_global_assignment -library "NiosFirmware" -name SDC_FILE [file join $::quartus(qip_path) "submodules/NiosFirmware_cpu.sdc"]
 set_global_assignment -library "NiosFirmware" -name SOURCE_FILE [file join $::quartus(qip_path) "submodules/NiosFirmware_cpu_rf_ram_a.mif"]
+set_global_assignment -library "NiosFirmware" -name VERILOG_FILE [file join $::quartus(qip_path) "submodules/NiosFirmware_cpu_jtag_debug_module_sysclk.v"]
+set_global_assignment -library "NiosFirmware" -name VERILOG_FILE [file join $::quartus(qip_path) "submodules/NiosFirmware_cpu_oci_test_bench.v"]
+set_global_assignment -library "NiosFirmware" -name SOURCE_FILE [file join $::quartus(qip_path) "submodules/NiosFirmware_cpu.ocp"]
+set_global_assignment -library "NiosFirmware" -name VERILOG_FILE [file join $::quartus(qip_path) "submodules/NiosFirmware_cpu.v"]
+set_global_assignment -library "NiosFirmware" -name VERILOG_FILE [file join $::quartus(qip_path) "submodules/NiosFirmware_cpu_mult_cell.v"]
+set_global_assignment -library "NiosFirmware" -name VERILOG_FILE [file join $::quartus(qip_path) "submodules/NiosFirmware_cpu_jtag_debug_module_wrapper.v"]
+set_global_assignment -library "NiosFirmware" -name SOURCE_FILE [file join $::quartus(qip_path) "submodules/NiosFirmware_cpu_rf_ram_b.mif"]
+set_global_assignment -library "NiosFirmware" -name VERILOG_FILE [file join $::quartus(qip_path) "submodules/NiosFirmware_cpu_test_bench.v"]
+set_global_assignment -library "NiosFirmware" -name VERILOG_FILE [file join $::quartus(qip_path) "submodules/NiosFirmware_cpu_jtag_debug_module_tck.v"]
+set_global_assignment -library "NiosFirmware" -name SOURCE_FILE [file join $::quartus(qip_path) "submodules/NiosFirmware_cpu_bht_ram.mif"]
+set_global_assignment -library "NiosFirmware" -name SOURCE_FILE [file join $::quartus(qip_path) "submodules/NiosFirmware_cpu_ic_tag_ram.mif"]
 
 set_global_assignment -entity "NiosFirmware_irq_mapper" -library "NiosFirmware" -name IP_TOOL_NAME "altera_irq_mapper"
 set_global_assignment -entity "NiosFirmware_irq_mapper" -library "NiosFirmware" -name IP_TOOL_VERSION "13.0"

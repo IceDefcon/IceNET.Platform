@@ -1,12 +1,12 @@
-<session jtag_chain="USB-Blaster [1-2]" jtag_device="@1: EP2C5 (0x020B10DD)" sof_file="">
+<session jtag_chain="USB-Blaster [1-1]" jtag_device="@1: EP2C5 (0x020B10DD)" sof_file="">
   <display_tree gui_logging_enabled="0">
     <display_branch instance="SPI_DEBUG" signal_set="USE_GLOBAL_TEMP" trigger="USE_GLOBAL_TEMP"/>
   </display_tree>
   <instance entity_name="sld_signaltap" is_auto_node="yes" is_expanded="true" name="SPI_DEBUG" source_file="sld_signaltap.vhd">
     <node_ip_info instance_id="0" mfg_id="110" node_id="0" version="6"/>
-    <signal_set global_temp="1" is_expanded="true" name="signal_set: 2022/02/20 22:07:14  #0">
+    <signal_set global_temp="1" is_expanded="true" name="signal_set: 2023/03/25 14:16:40  #0">
       <clock name="clock" polarity="posedge" tap_mode="classic"/>
-      <config ram_type="M4K" reserved_data_nodes="0" reserved_storage_qualifier_nodes="0" reserved_trigger_nodes="0" sample_depth="4096" trigger_in_enable="no" trigger_out_enable="no"/>
+      <config ram_type="M4K" reserved_data_nodes="0" reserved_storage_qualifier_nodes="0" reserved_trigger_nodes="0" sample_depth="8192" trigger_in_enable="no" trigger_out_enable="no"/>
       <top_entity/>
       <signal_vec>
         <trigger_input_vec>
@@ -50,7 +50,7 @@
         <trigger_in_editor/>
         <trigger_out_editor/>
       </presentation>
-      <trigger CRC="ACDA9AFA" attribute_mem_mode="false" gap_record="true" global_temp="1" is_expanded="true" name="trigger: 2022/02/20 22:07:14  #1" position="pre" power_up_trigger_mode="false" record_data_gap="true" segment_size="64" storage_mode="off" storage_qualifier_disabled="no" storage_qualifier_port_is_pin="false" storage_qualifier_port_name="auto_stp_external_storage_qualifier" storage_qualifier_port_tap_mode="classic" trigger_type="circular">
+      <trigger CRC="43D49AFA" attribute_mem_mode="false" gap_record="true" global_temp="1" is_expanded="true" name="trigger: 2023/03/25 14:16:40  #1" position="pre" power_up_trigger_mode="false" record_data_gap="true" segment_size="2048" storage_mode="off" storage_qualifier_disabled="no" storage_qualifier_port_is_pin="true" storage_qualifier_port_name="auto_stp_external_storage_qualifier" storage_qualifier_port_tap_mode="classic" trigger_type="circular">
         <power_up_trigger position="pre" storage_qualifier_disabled="no"/>
         <events use_custom_flow_control="no">
           <level enabled="yes" name="condition1" type="basic">
@@ -88,7 +88,7 @@
       <single attribute="zoom level denominator" value="1"/>
       <single attribute="zoom level numerator" value="1"/>
       <single attribute="zoom offset denominator" value="1"/>
-      <single attribute="zoom offset numerator" value="130944"/>
+      <single attribute="zoom offset numerator" value="126977"/>
     </position_info>
   </instance>
   <mnemonics/>
