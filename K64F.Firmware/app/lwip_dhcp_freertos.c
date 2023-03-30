@@ -29,12 +29,12 @@
 #include "pin_mux.h"
 #include "clock_config.h"
 
-//
-// SPI
-//
-                                            // K64 Sub-Family Reference Manual
-                                            // ==================================
-                                            //                      (page number)
+///////////////////////////////////////////////////////////////////////////////////
+// GPIO
+///////////////////////////////////////////////////////////////////////////////////
+//                                          // K64 Sub-Family Reference Manual
+//                                          // ==================================
+//                                          //                      (page number)
 #define SIM_SCGC5 (*(int *)0x40048038u)     // Clock gate 5                 (314)
 #define SIM_SCGC5_PORTB 10                  // Open gate PORTB              (314)
 
@@ -45,10 +45,7 @@
 #define GPIOB_PDOR (*(int *)0x400FF040u)    // Port Data Output Register    (1759)
 #define PIN_N 21                            // PTB21 --> Blue LED           (1761)
 
-//
-// FOR SPI ---> CLOCK Pin as GPIO
-//
-//#define SIM_SCGC5 (*(int *)0x40048038u)   // Clock gate 5                 (314)
+#define SIM_SCGC5 (*(int *)0x40048038u)     // Clock gate 5                 (314)
 #define SIM_SCGC5_PORTD 12                  // Open gate PORTD              (314)
 
 #define PORTD_PCR1 (*(int *)0x4004C004u)    // Pin Control Register         (277)
@@ -90,23 +87,26 @@ void blinky_task()
     }
 }
 
-/*******************************************************************************
- * Definitions
- ******************************************************************************/
+///////////////////////////////////////////////////////////////////////////////////
+// Network Stack ---> LWIP
+///////////////////////////////////////////////////////////////////////////////////
+//
+// Definitions
+//
+// MAC address configuration
+//
+#define configMAC_ADDR                  \
+{                                       \
+    0x02, 0x12, 0x13, 0x10, 0x15, 0x11  \
+}
 
-/* MAC address configuration. */
-#define configMAC_ADDR                     \
-    {                                      \
-        0x02, 0x12, 0x13, 0x10, 0x15, 0x11 \
-    }
-
-/* Address of PHY interface. */
+// Address of PHY interface
 #define EXAMPLE_PHY_ADDRESS BOARD_ENET0_PHY_ADDRESS
 
-/* System clock name. */
+// System clock name
 #define EXAMPLE_CLOCK_NAME kCLOCK_CoreSysClk
 
-/* GPIO pin configuration. */
+// GPIO pin configuration
 #define BOARD_LED_GPIO BOARD_LED_RED_GPIO
 #define BOARD_LED_GPIO_PIN BOARD_LED_RED_GPIO_PIN
 #define BOARD_SW_GPIO BOARD_SW3_GPIO
@@ -115,30 +115,17 @@ void blinky_task()
 #define BOARD_SW_IRQ BOARD_SW3_IRQ
 #define BOARD_SW_IRQ_HANDLER BOARD_SW3_IRQ_HANDLER
 
-
-/*! @brief Stack size of the thread which prints DHCP info. */
+// brief Stack size of the thread which prints DHCP info
 #define PRINT_THREAD_STACKSIZE 512
 
-/*! @brief Priority of the thread which prints DHCP info. */
+// brief Priority of the thread which prints DHCP info
 #define PRINT_THREAD_PRIO DEFAULT_THREAD_PRIO
 
-/*******************************************************************************
- * Prototypes
- ******************************************************************************/
-
-/*******************************************************************************
- * Variables
- ******************************************************************************/
-
-/*******************************************************************************
- * Code
- ******************************************************************************/
-
-/*!
- * @brief Prints DHCP status of the interface when it has changed from last status.
- *
- * @param arg pointer to network interface structure
- */
+//
+// brief Prints DHCP status of the interface when it has changed from last status.
+// 
+// param arg pointer to network interface structure
+//
 static void print_dhcp_state(void *arg)
 {
     struct netif *netif = (struct netif *)arg;
@@ -264,7 +251,7 @@ void dhcp_init()
 }
 
 //
-// Main Routine
+// Mains
 //
 int main(void)
 {
