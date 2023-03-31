@@ -46,20 +46,23 @@
 #define TRANSFER_BAUDRATE (500000U) /*! Transfer baudrate - 500k */
 
 ///////////////////////////////////////////////////////////////////////////////////
-// GPIO
+// GPIO ---> For LED status control
 ///////////////////////////////////////////////////////////////////////////////////
-//                                          // K64 Sub-Family Reference Manual
-//                                          // ==================================
-//                                          //                      (page number)
+                                            // K64 Sub-Family Reference Manual
+                                            // ==================================
+                                            //                      (page number)
 #define SIM_SCGC5 (*(int *)0x40048038u)     // Clock gate 5                 (314)
 #define SIM_SCGC5_PORTB 10                  // Open gate PORTB              (314)
 
 #define PORTB_PCR21 (*(int *)0x4004A054u)   // Pin Control Register         (277)
 #define PORTB_PCR21_MUX 8                   // Mux "001"                    (282)
+#define PORTB_PCR22 (*(int *)0x4004A058u)   // Pin Control Register         (277)
+#define PORTB_PCR22_MUX 8                   // Mux "001"                    (282)
 
 #define GPIOB_PDDR (*(int *)0x400FF054u)    // Port Data Direction Register (1760)
 #define GPIOB_PDOR (*(int *)0x400FF040u)    // Port Data Output Register    (1759)
-#define PIN_N 21                            // PTB21 --> Blue LED           (1761)
+#define PIN_21_N 21                         // PTB21 --> Blue LED           (1761)
+#define PIN_22_N 22                         // PTB21 --> Red  LED           (1761)
 
 #define SIM_SCGC5 (*(int *)0x40048038u)     // Clock gate 5                 (314)
 #define SIM_SCGC5_PORTD 12                  // Open gate PORTD              (314)
@@ -73,21 +76,31 @@
 
 void init_gpio()
 {
-    /* Enable clocks. */
+    // Enable clock for PORTB
     SIM_SCGC5 |= 1 << SIM_SCGC5_PORTB;  // For LED
-    /* Configure pin 21 as GPIO. */
+
+    // Configure pins PCR21 and PCR22 as GPIO
     PORTB_PCR21 |= 1 << PORTB_PCR21_MUX;
-    /* Configure GPIO pin 21 as output.
-     * It will have a default output value set
-     * to 0, so LED will light (negative logic).
-     */
-    GPIOB_PDDR |= 1 << PIN_N;
+    PORTB_PCR22 |= 1 << PORTB_PCR22_MUX;
+
+    // Configure GPIO pins 21 and 22 as output.
+    // It will have a default output value set
+    // to 0, so LED will light (negative logic).
+    GPIOB_PDDR |= 1 << PIN_21_N;
+    GPIOB_PDDR |= 1 << PIN_22_N;
+
+    // Set Blue pin 21 ---> OFF
+    // Leave Red pin 22 in default ---> ON
+    GPIOB_PDOR ^= 1 << PIN_21_N;
 }
 
+//
+// This is for SPI to behave as toogling clock pin
+//
 void init_sclk_pin()
 {
     /* Enable clocks. */
-    SIM_SCGC5  |= 1 << SIM_SCGC5_PORTD;  // For SPI Clock Pin 
+    SIM_SCGC5  |= 1 << SIM_SCGC5_PORTD;
     /* Configure pin 1 as GPIO. */
     PORTD_PCR1 |= 1 << PORTD_PCR1_MUX;
     /* Configure GPIO pin 21 as output. */
@@ -96,10 +109,13 @@ void init_sclk_pin()
 
 void blinky_task()
 {
+    // Toogle pin 22 ---> Red LED OFF
+    GPIOB_PDOR ^= 1 << PIN_22_N;
+
     while(1) {
-        GPIOB_PDOR ^= 1 << PIN_N;               // Toggle with XOR
-        GPIOD_PDOR ^= 1 << PIN_SPI_N;           // Toggle with XOR
-        vTaskDelay(500 / portTICK_PERIOD_MS);     // 500/10
+        GPIOB_PDOR ^= 1 << PIN_21_N;            // LED Pin   ---> Toggle with XOR
+        GPIOD_PDOR ^= 1 << PIN_SPI_N;           // SPI CLock ---> Toggle with XOR
+        vTaskDelay(500 / portTICK_PERIOD_MS);   // 500/10
     }
 }
 
