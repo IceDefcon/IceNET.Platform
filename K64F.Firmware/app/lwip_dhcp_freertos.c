@@ -1,15 +1,4 @@
-/*
- * Copyright (c) 2016, Freescale Semiconductor, Inc.
- * Copyright 2016-2019 NXP
- * All rights reserved.
- *
- *
- * SPDX-License-Identifier: BSD-3-Clause
- */
 
-/*******************************************************************************
- * Includes
- ******************************************************************************/
 
 #include "lwip/opt.h"
 
@@ -28,6 +17,33 @@
 #include "fsl_device_registers.h"
 #include "pin_mux.h"
 #include "clock_config.h"
+
+///////////////////////////////////////////////////////////////////////////////////
+// DSPI
+///////////////////////////////////////////////////////////////////////////////////
+
+#define EXAMPLE_DSPI_MASTER_BASE (SPI0_BASE)
+#define EXAMPLE_DSPI_MASTER_IRQN (SPI0_IRQn)
+#define DSPI_MASTER_CLK_SRC      (DSPI0_CLK_SRC)
+#define DSPI_MASTER_CLK_FREQ     CLOCK_GetFreq((DSPI0_CLK_SRC))
+
+#define EXAMPLE_DSPI_SLAVE_BASE (SPI1_BASE)
+#define EXAMPLE_DSPI_SLAVE_IRQN (SPI1_IRQn)
+
+#define SINGLE_BOARD   0
+#define BOARD_TO_BOARD 1
+
+#define EXAMPLE_CONNECT_DSPI SINGLE_BOARD
+#if (EXAMPLE_CONNECT_DSPI == BOARD_TO_BOARD)
+#define isMASTER         0
+#define isSLAVE          1
+#define SPI_MASTER_SLAVE isMASTER
+#endif
+#define EXAMPLE_DSPI_MASTER_BASEADDR ((SPI_Type *)EXAMPLE_DSPI_MASTER_BASE)
+#define EXAMPLE_DSPI_SLAVE_BASEADDR  ((SPI_Type *)EXAMPLE_DSPI_SLAVE_BASE)
+
+#define TRANSFER_SIZE     (256)     /*! Transfer size */
+#define TRANSFER_BAUDRATE (500000U) /*! Transfer baudrate - 500k */
 
 ///////////////////////////////////////////////////////////////////////////////////
 // GPIO
