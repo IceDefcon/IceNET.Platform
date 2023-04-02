@@ -64,7 +64,7 @@ uint8_t slaveSendBuffer[TRANSFER_SIZE]     = {0};
 static void master_task(void *pvParameters);
 
 //
-// SPI Master task
+// SPI Master task :: RTOS
 //
 static void master_task(void *pvParameters)
 {
