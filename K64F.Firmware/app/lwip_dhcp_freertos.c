@@ -302,14 +302,15 @@ int main(void)
     //
     // Board init
     //
-    // SYSMPU_Type *base = SYSMPU;
+    SYSMPU_Type *base = SYSMPU;
     BOARD_InitPins();
     BOARD_BootClockRUN();
     // BOARD_InitDebugConsole();
+    
     //
-    // Disable SYSMPU. */
+    // Disable SYSMPU
     //
-    // base->CESR &= ~SYSMPU_CESR_VLD_MASK;
+    base->CESR &= ~SYSMPU_CESR_VLD_MASK;
 
     //
     // SPI
