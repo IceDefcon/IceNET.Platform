@@ -40,11 +40,14 @@ SRCS=\
     fsl/fsl_str.c \
     fsl/fsl_uart.c \
     fsl/fsl_smc.c \
+    fsl/fsl_common_arm.c \
     startup/startup_MK64F12.c \
     drivers/uart/uart_adapter.c \
     drivers/serial_manager/serial_manager.c \
     drivers/serial_manager/serial_port_uart.c \
     drivers/lists/generic_list.c \
+    drivers/dspi/fsl_dspi.c \
+    drivers/dspi/fsl_dspi_freertos.c \
     fsl/fsl_common.c \
     fsl/fsl_assert.c \
     lwip/port/enet_ethernetif.c \
@@ -142,6 +145,7 @@ INCLUDES=\
     -Idrivers/uart \
     -Idrivers/serial_manager \
     -Idrivers/lists \
+    -Idrivers/dspi \
     -Ilwip/port \
     -Ilwip/src \
     -Ilwip/src/include \

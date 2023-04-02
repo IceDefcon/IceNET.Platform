@@ -102,12 +102,9 @@ void BOARD_InitPins(void)
     /* PORTD7 (pin 100) is configured as SPI1_SIN */
     PORT_SetPinMux(PORTD, 7U, kPORT_MuxAlt7);
 
-    SIM->SOPT5 = ((SIM->SOPT5 &
-                   /* Mask bits to zero which are setting */
-                   (~(SIM_SOPT5_UART0TXSRC_MASK)))
-
-                  /* UART 0 transmit data source select: UART0_TX pin. */
-                  | SIM_SOPT5_UART0TXSRC(SOPT5_UART0TXSRC_UART_TX));
+SIM->SOPT5 = ((SIM->SOPT5 &
+    (~(SIM_SOPT5_UART0TXSRC_MASK))) /* Mask bits to zero which are setting */
+    | SIM_SOPT5_UART0TXSRC(SOPT5_UART0TXSRC_UART_TX)); /* UART 0 transmit data source select: UART0_TX pin. */
 }
 /***********************************************************************************************************************
  * EOF

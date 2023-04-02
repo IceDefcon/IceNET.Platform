@@ -1,21 +1,6 @@
-/*
- * Copyright (c) 2016, Freescale Semiconductor, Inc.
- * Copyright 2016-2017 NXP
- *
- * SPDX-License-Identifier: BSD-3-Clause
- */
-
-/*
- * TEXT BELOW IS USED AS SETTING FOR TOOLS *************************************
-!!GlobalInfo
-product: Pins v3.0
-processor: MK64FN1M0xxx12
-package_id: MK64FN1M0VLL12
-mcu_data: ksdk2_0
-processor_version: 2.0.0
- * BE CAREFUL MODIFYING THIS COMMENT - IT IS YAML SETTINGS FOR TOOLS ***********
- */
-
+//
+//
+//
 #include "fsl_common.h"
 #include "fsl_port.h"
 #include "pin_mux.h"
@@ -72,13 +57,34 @@ void BOARD_InitPins(void) {
   CLOCK_EnableClock(kCLOCK_PortA);                           /* Port A Clock Gate Control: Clock enabled */
   CLOCK_EnableClock(kCLOCK_PortB);                           /* Port B Clock Gate Control: Clock enabled */
   CLOCK_EnableClock(kCLOCK_PortC);                           /* Port C Clock Gate Control: Clock enabled */
+  CLOCK_EnableClock(kCLOCK_PortD);
 
+  //
+  // SPI :: 0 
+  //
+  PORT_SetPinMux(PORTD, 0U, kPORT_MuxAlt2);                  /* PORTD0 (pin 93) is configured as SPI0_PCS0 */
+  PORT_SetPinMux(PORTD, 1U, kPORT_MuxAlt2);                  /* PORTD1 (pin 94) is configured as SPI0_SCK */
+  PORT_SetPinMux(PORTD, 2U, kPORT_MuxAlt2);                  /* PORTD2 (pin 95) is configured as SPI0_SOUT */
+  PORT_SetPinMux(PORTD, 3U, kPORT_MuxAlt2);                  /* PORTD3 (pin 96) is configured as SPI0_SIN */
+
+  //
+  // SPI :: 1
+  //
+  PORT_SetPinMux(PORTD, 4U, kPORT_MuxAlt7);                  /* PORTD4 (pin 97) is configured as SPI1_PCS0 */
+  PORT_SetPinMux(PORTD, 5U, kPORT_MuxAlt7);                  /* PORTD5 (pin 98) is configured as SPI1_SCK */
+  PORT_SetPinMux(PORTD, 6U, kPORT_MuxAlt7);                  /* PORTD6 (pin 99) is configured as SPI1_SOUT */
+  PORT_SetPinMux(PORTD, 7U, kPORT_MuxAlt7);                  /* PORTD7 (pin 100) is configured as SPI1_SIN */
+
+  //
+  // RMIN :: IO
+  //
   PORT_SetPinMux(PORTA, PIN12_IDX, kPORT_MuxAlt4);           /* PORTA12 (pin 42) is configured as RMII0_RXD1 */
   PORT_SetPinMux(PORTA, PIN13_IDX, kPORT_MuxAlt4);           /* PORTA13 (pin 43) is configured as RMII0_RXD0 */
   PORT_SetPinMux(PORTA, PIN14_IDX, kPORT_MuxAlt4);           /* PORTA14 (pin 44) is configured as RMII0_CRS_DV */
   PORT_SetPinMux(PORTA, PIN15_IDX, kPORT_MuxAlt4);           /* PORTA15 (pin 45) is configured as RMII0_TXEN */
   PORT_SetPinMux(PORTA, PIN16_IDX, kPORT_MuxAlt4);           /* PORTA16 (pin 46) is configured as RMII0_TXD0 */
   PORT_SetPinMux(PORTA, PIN17_IDX, kPORT_MuxAlt4);           /* PORTA17 (pin 47) is configured as RMII0_TXD1 */
+
   const port_pin_config_t porta4_pin38_config = {
     kPORT_PullUp,                                            /* Internal pull-up resistor is enabled */
     kPORT_FastSlewRate,                                      /* Fast slew rate is configured */
@@ -88,8 +94,10 @@ void BOARD_InitPins(void) {
     kPORT_MuxAsGpio,                                         /* Pin is configured as PTA4 */
     kPORT_UnlockRegister                                     /* Pin Control Register fields [15:0] are not locked */
   };
+
   PORT_SetPinConfig(PORTA, PIN4_IDX, &porta4_pin38_config);  /* PORTA4 (pin 38) is configured as PTA4 */
   PORT_SetPinMux(PORTA, PIN5_IDX, kPORT_MuxAlt4);            /* PORTA5 (pin 39) is configured as RMII0_RXER */
+
   const port_pin_config_t portb0_pin53_config = {
     kPORT_PullUp,                                            /* Internal pull-up resistor is enabled */
     kPORT_FastSlewRate,                                      /* Fast slew rate is configured */
@@ -99,20 +107,24 @@ void BOARD_InitPins(void) {
     kPORT_MuxAlt4,                                           /* Pin is configured as RMII0_MDIO */
     kPORT_UnlockRegister                                     /* Pin Control Register fields [15:0] are not locked */
   };
+
   PORT_SetPinConfig(PORTB, PIN0_IDX, &portb0_pin53_config);  /* PORTB0 (pin 53) is configured as RMII0_MDIO */
   PORT_SetPinMux(PORTB, PIN1_IDX, kPORT_MuxAlt4);            /* PORTB1 (pin 54) is configured as RMII0_MDC */
+
+  //
+  // UART 0
+  //
   PORT_SetPinMux(PORTB, PIN16_IDX, kPORT_MuxAlt3);           /* PORTB16 (pin 62) is configured as UART0_RX */
   PORT_SetPinMux(PORTB, PIN17_IDX, kPORT_MuxAlt3);           /* PORTB17 (pin 63) is configured as UART0_TX */
   PORT_SetPinMux(PORTB, PIN22_IDX, kPORT_MuxAsGpio);         /* PORTB22 (pin 68) is configured as PTB22 */
+
   PORT_SetPinMux(PORTC, PIN16_IDX, kPORT_MuxAlt4);           /* PORTC16 (pin 90) is configured as ENET0_1588_TMR0 */
   PORT_SetPinMux(PORTC, PIN17_IDX, kPORT_MuxAlt4);           /* PORTC17 (pin 91) is configured as ENET0_1588_TMR1 */
   PORT_SetPinMux(PORTC, PIN18_IDX, kPORT_MuxAlt4);           /* PORTC18 (pin 92) is configured as ENET0_1588_TMR2 */
   SIM->SOPT5 = ((SIM->SOPT5 &
     (~(SIM_SOPT5_UART0TXSRC_MASK)))                          /* Mask bits to zero which are setting */
-      | SIM_SOPT5_UART0TXSRC(SOPT5_UART0TXSRC_UART_TX)       /* UART 0 transmit data source select: UART0_TX pin */
-    );
+      | SIM_SOPT5_UART0TXSRC(SOPT5_UART0TXSRC_UART_TX));     /* UART 0 transmit data source select: UART0_TX pin */
 }
 
-/*******************************************************************************
- * EOF
- ******************************************************************************/
+
+
