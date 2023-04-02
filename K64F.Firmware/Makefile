@@ -14,7 +14,7 @@ CFLAGS= -DNDEBUG -DCPU_MK64FN1M0VLL12 -DUSE_RTOS=1 -DPRINTF_ADVANCED_ENABLE=1 \
 LDSCRIPT=linker/MK64FN1M0xxx12_flash.ld
 SRCS=\
     startup/startup_MK64F12.S \
-    app/network_analyse.c \
+    app/network_analyser.c \
     app/pin_mux.c \
     app/board.c \
     app/clock_config.c \
