@@ -1554,7 +1554,7 @@ status_t CLOCK_SetMcgConfig(mcg_config_t const *config);
  *
  * @param delay_us  Delay time in unit of microsecond.
  */
-void SDK_DelayAtLeastUs(uint32_t delay_us);
+//void SDK_DelayAtLeastUs(uint32_t delay_us);
 
 /*@}*/
 

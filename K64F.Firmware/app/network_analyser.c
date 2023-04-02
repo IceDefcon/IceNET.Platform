@@ -68,11 +68,11 @@ static void master_task(void *pvParameters);
 //
 static void master_task(void *pvParameters)
 {
-    dspi_transfer_t masterXfer;
-    dspi_rtos_handle_t master_rtos_handle;
-    dspi_master_config_t masterConfig;
-    uint32_t sourceClock;
-    status_t status;
+    // dspi_transfer_t masterXfer;
+    // dspi_rtos_handle_t master_rtos_handle;
+    // dspi_master_config_t masterConfig;
+    // uint32_t sourceClock;
+    // status_t status;
 
     // /*Master config*/
     // masterConfig.whichCtar                                = kDSPI_Ctar0;

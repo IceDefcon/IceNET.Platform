@@ -118,12 +118,10 @@ Bare metal drivers and low level sources:
 
 	This configuration can be modified to allow bare metal NXP SPI driver to comunicate with the Cyclon Board ! 
 
-# PROGRESS
+# TODO
 
-	1. FPGA Pratform :: Ready for SPI commands 
-	2. FPGA Nios :: SPI must be must be linked trough avalon to NIOS CPU
-	3. CPU RTOS :: Running 
-	4. CPU RTOS :: SPI Drivers :: In progress
-	5. Linux app ;: Need TCP work
+	1. CPU SPI RTOS
+	2. Test SPI CPU :: FPGA
+	3. Linux app :: For comunication with CPU
 
 # ICE

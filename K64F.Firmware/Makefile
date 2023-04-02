@@ -9,28 +9,19 @@ CFLAGS= -DNDEBUG -DCPU_MK64FN1M0VLL12 -DUSE_RTOS=1 -DPRINTF_ADVANCED_ENABLE=1 \
 -fdata-sections -ffreestanding -fno-builtin -mthumb -mapcs -Xlinker --gc-sections \
 -Xlinker -static -Xlinker -z -Xlinker muldefs -Xlinker -Map=output.map -mcpu=cortex-m4 \
 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -Xlinker --defsym=__stack_size__=2048 -Xlinker \
---defsym=__heap_size__=25600
+--defsym=__heap_size__=25600 -Wall
 
 LDSCRIPT=linker/MK64FN1M0xxx12_flash.ld
 SRCS=\
     startup/startup_MK64F12.S \
+    startup/startup_MK64F12.c \
     app/network_analyser.c \
     app/pin_mux.c \
     app/board.c \
     app/clock_config.c \
-    drivers/phyksz8081/fsl_phy.c \
-    lwip/port/enet_ethernetif_kinetis.c \
     fsl/fsl_sim.c \
     fsl/fsl_clock.c \
     fsl/fsl_enet.c \
-    FreeRTOS/src/portable/MemMang/heap_3.c \
-    FreeRTOS/src/event_groups.c \
-    FreeRTOS/src/list.c \
-    FreeRTOS/src/portable/GCC/ARM_CM4F/port.c \
-    FreeRTOS/src/queue.c \
-    FreeRTOS/src/stream_buffer.c \
-    FreeRTOS/src/tasks.c \
-    FreeRTOS/src/timers.c \
     fsl/fsl_ftfx_cache.c \
     fsl/fsl_ftfx_controller.c \
     fsl/fsl_ftfx_flash.c \
@@ -41,15 +32,25 @@ SRCS=\
     fsl/fsl_uart.c \
     fsl/fsl_smc.c \
     fsl/fsl_common_arm.c \
-    startup/startup_MK64F12.c \
+    fsl/fsl_common.c \
+    fsl/fsl_assert.c \
+    fsl/fsl_sbrk.c \
+    fsl/fsl_dspi.c \
+    fsl/fsl_dspi_freertos.c \
+    fsl/fsl_phy.c \
+    FreeRTOS/src/portable/MemMang/heap_3.c \
+    FreeRTOS/src/event_groups.c \
+    FreeRTOS/src/list.c \
+    FreeRTOS/src/portable/GCC/ARM_CM4F/port.c \
+    FreeRTOS/src/queue.c \
+    FreeRTOS/src/stream_buffer.c \
+    FreeRTOS/src/tasks.c \
+    FreeRTOS/src/timers.c \
     drivers/uart/uart_adapter.c \
     drivers/serial_manager/serial_manager.c \
     drivers/serial_manager/serial_port_uart.c \
     drivers/lists/generic_list.c \
-    drivers/dspi/fsl_dspi.c \
-    drivers/dspi/fsl_dspi_freertos.c \
-    fsl/fsl_common.c \
-    fsl/fsl_assert.c \
+    lwip/port/enet_ethernetif_kinetis.c \
     lwip/port/enet_ethernetif.c \
     lwip/port/sys_arch.c \
     lwip/src/api/api_lib.c \
@@ -131,7 +132,6 @@ SRCS=\
     lwip/src/netif/ppp/vj.c \
     lwip/src/netif/slipif.c \
     lwip/src/netif/zepif.c \
-    fsl/fsl_sbrk.c \
 
 INCLUDES=\
     -Iapp/include \
@@ -139,13 +139,11 @@ INCLUDES=\
     -ICMSIS \
     -IFreeRTOS/include \
     -IFreeRTOS/include/private \
-    -Idrivers/phyksz8081 \
     -Ifsl \
     -Iinclude \
     -Idrivers/uart \
     -Idrivers/serial_manager \
     -Idrivers/lists \
-    -Idrivers/dspi \
     -Ilwip/port \
     -Ilwip/src \
     -Ilwip/src/include \
