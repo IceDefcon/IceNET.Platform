@@ -42,7 +42,7 @@
 
 #define configUSE_PREEMPTION                    1
 #define configUSE_TICKLESS_IDLE                 0
-#define configCPU_CLOCK_HZ                      (SystemCoreClock)
+#define configCPU_CLOCK_HZ                      (120000000U)
 #define configTICK_RATE_HZ                      ((TickType_t)1000)
 #define configMAX_PRIORITIES                    18
 #define configMINIMAL_STACK_SIZE                ((unsigned short)90)
