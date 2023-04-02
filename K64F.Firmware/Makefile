@@ -1,11 +1,10 @@
-TARGET=lwip
+TARGET=analyser
 CC=arm-none-eabi-gcc
 OBJCPY=arm-none-eabi-objcopy
 CFLAGS= -DNDEBUG -DCPU_MK64FN1M0VLL12 -DUSE_RTOS=1 -DPRINTF_ADVANCED_ENABLE=1 \
 -DFRDM_K64F -DFREEDOM -DFSL_RTOS_FREE_RTOS -Os -Wall -fno-common \
 -ffunction-sections -fdata-sections -ffreestanding -fno-builtin \
--mthumb -mapcs -std=gnu99 -mcpu=cortex-m4 -mfloat-abi=hard \
--mfpu=fpv4-sp-d16 -MMD -MP \
+-mthumb -mapcs -std=gnu99 -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -MMD -MP \
 --specs=nano.specs --specs=nosys.specs -Wall -fno-common -ffunction-sections \
 -fdata-sections -ffreestanding -fno-builtin -mthumb -mapcs -Xlinker --gc-sections \
 -Xlinker -static -Xlinker -z -Xlinker muldefs -Xlinker -Map=output.map -mcpu=cortex-m4 \
@@ -15,7 +14,7 @@ CFLAGS= -DNDEBUG -DCPU_MK64FN1M0VLL12 -DUSE_RTOS=1 -DPRINTF_ADVANCED_ENABLE=1 \
 LDSCRIPT=linker/MK64FN1M0xxx12_flash.ld
 SRCS=\
     startup/startup_MK64F12.S \
-    app/lwip_dhcp_freertos.c \
+    app/network_analyse.c \
     app/pin_mux.c \
     app/board.c \
     app/clock_config.c \
