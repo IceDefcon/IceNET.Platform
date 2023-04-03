@@ -120,7 +120,8 @@ Bare metal drivers and low level sources:
 
 # TODO
 
-	1. CPU SPI RTOS
+	1. Upgrade Makefile :: To avoid re-compilation of unchanged sources
+	2. Connect CLOCK :: FPGA
 	2. Test SPI CPU :: FPGA
 	3. Linux app :: For comunication with CPU
 
