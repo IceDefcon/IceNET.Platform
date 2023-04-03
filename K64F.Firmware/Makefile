@@ -31,7 +31,6 @@ SRCS=\
     fsl/fsl_str.c \
     fsl/fsl_uart.c \
     fsl/fsl_smc.c \
-    fsl/fsl_common_arm.c \
     fsl/fsl_common.c \
     fsl/fsl_assert.c \
     fsl/fsl_sbrk.c \
