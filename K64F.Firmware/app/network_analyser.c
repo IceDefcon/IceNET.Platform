@@ -18,6 +18,9 @@
 #include "pin_mux.h"
 #include "clock_config.h"
 
+#include "fsl_dspi.h"
+#include "fsl_dspi_freertos.h"
+
 ///////////////////////////////////////////////////////////////////////////////////
 // SPI
 ///////////////////////////////////////////////////////////////////////////////////
@@ -46,6 +49,9 @@ uint8_t masterSendBuffer[TRANSFER_SIZE]    = {0};
 uint8_t slaveReceiveBuffer[TRANSFER_SIZE]  = {0};
 uint8_t slaveSendBuffer[TRANSFER_SIZE]     = {0};
 
+dspi_slave_handle_t g_s_handle;
+SemaphoreHandle_t dspi_sem;
+
 //
 // Definitions
 //
@@ -58,65 +64,190 @@ uint8_t slaveSendBuffer[TRANSFER_SIZE]     = {0};
 //
 // Prototypes
 //
+static void slave_task(void *pvParameters);
 static void master_task(void *pvParameters);
+
+//
+// SPI Subroutines :: RTOS
+//
+typedef struct _callback_message_t
+{
+    status_t async_status;
+    SemaphoreHandle_t sem;
+} callback_message_t;
+
+void DSPI_SlaveUserCallback(SPI_Type *base, dspi_slave_handle_t *handle, status_t status, void *userData)
+{
+    callback_message_t *cb_msg = (callback_message_t *)userData;
+    BaseType_t reschedule      = 0;
+
+    cb_msg->async_status = status;
+    xSemaphoreGiveFromISR(cb_msg->sem, &reschedule);
+    portYIELD_FROM_ISR(reschedule);
+}
+
+//
+// SPI Slave task :: RTOS
+//
+static void slave_task(void *pvParameters)
+{
+    dspi_slave_config_t slaveConfig;
+    dspi_transfer_t slaveXfer;
+
+    uint32_t errorCount;
+    uint32_t i;
+    callback_message_t cb_msg;
+
+    cb_msg.sem = xSemaphoreCreateBinary();
+    dspi_sem   = cb_msg.sem;
+    if (cb_msg.sem == NULL)
+    {
+        PRINTF("DSPI slave: Error creating semaphore\r\n");
+        vTaskSuspend(NULL);
+    }
+    /*Set up the transfer data*/
+    for (i = 0; i < TRANSFER_SIZE; i++)
+    {
+        masterSendBuffer[i]    = i % 256;
+        masterReceiveBuffer[i] = 0;
+
+        slaveSendBuffer[i]    = ~masterSendBuffer[i];
+        slaveReceiveBuffer[i] = 0;
+    }
+    /*Slave config*/
+    slaveConfig.whichCtar                  = kDSPI_Ctar0;
+    slaveConfig.ctarConfig.bitsPerFrame    = 8;
+    slaveConfig.ctarConfig.cpol            = kDSPI_ClockPolarityActiveHigh;
+    slaveConfig.ctarConfig.cpha            = kDSPI_ClockPhaseFirstEdge;
+    slaveConfig.enableContinuousSCK        = false;
+    slaveConfig.enableRxFifoOverWrite      = false;
+    slaveConfig.enableModifiedTimingFormat = false;
+    slaveConfig.samplePoint                = kDSPI_SckToSin0Clock;
+
+    DSPI_SlaveInit(EXAMPLE_DSPI_SLAVE_BASEADDR, &slaveConfig);
+
+    /*Set up slave first */
+    DSPI_SlaveTransferCreateHandle(EXAMPLE_DSPI_SLAVE_BASEADDR, &g_s_handle, DSPI_SlaveUserCallback, &cb_msg);
+
+    /*Set slave transfer ready to receive/send data*/
+    slaveXfer.txData      = slaveSendBuffer;
+    slaveXfer.rxData      = slaveReceiveBuffer;
+    slaveXfer.dataSize    = TRANSFER_SIZE;
+    slaveXfer.configFlags = kDSPI_SlaveCtar0;
+
+    DSPI_SlaveTransferNonBlocking(EXAMPLE_DSPI_SLAVE_BASEADDR, &g_s_handle, &slaveXfer);
+
+    if (xTaskCreate(master_task, "Master_task", configMINIMAL_STACK_SIZE + 100, NULL, master_task_PRIORITY, NULL) !=
+        pdPASS)
+    {
+        PRINTF("Failed to create master task");
+        vTaskSuspend(NULL);
+    }
+
+    /* Wait for transfer to finish */
+    xSemaphoreTake(cb_msg.sem, portMAX_DELAY);
+
+    if (cb_msg.async_status == kStatus_Success)
+    {
+        PRINTF("DSPI slave transfer completed successfully. \r\n\r\n");
+    }
+    else
+    {
+        PRINTF("DSPI slave transfer completed with error. \r\n\r\n");
+    }
+
+    errorCount = 0;
+    for (i = 0; i < TRANSFER_SIZE; i++)
+    {
+        if (slaveSendBuffer[i] != masterReceiveBuffer[i])
+        {
+            errorCount++;
+        }
+
+        if (masterSendBuffer[i] != slaveReceiveBuffer[i])
+        {
+            errorCount++;
+        }
+
+        if (masterSendBuffer[i] != slaveReceiveBuffer[i])
+        {
+            errorCount++;
+        }
+
+        if (slaveSendBuffer[i] != masterReceiveBuffer[i])
+        {
+            errorCount++;
+        }
+    }
+    if (errorCount == 0)
+    {
+        PRINTF("DSPI transfer all data matched! \r\n");
+    }
+    else
+    {
+        PRINTF("Error occurred in DSPI transfer ! \r\n");
+    }
+
+    vTaskSuspend(NULL);
+}
 
 //
 // SPI Master task :: RTOS
 //
 static void master_task(void *pvParameters)
 {
-    // dspi_transfer_t masterXfer;
-    // dspi_rtos_handle_t master_rtos_handle;
-    // dspi_master_config_t masterConfig;
-    // uint32_t sourceClock;
-    // status_t status;
+    dspi_transfer_t masterXfer;
+    dspi_rtos_handle_t master_rtos_handle;
+    dspi_master_config_t masterConfig;
+    uint32_t sourceClock;
+    status_t status;
 
     // /*Master config*/
-    // masterConfig.whichCtar                                = kDSPI_Ctar0;
-    // masterConfig.ctarConfig.baudRate                      = TRANSFER_BAUDRATE;
-    // masterConfig.ctarConfig.bitsPerFrame                  = 8;
-    // masterConfig.ctarConfig.cpol                          = kDSPI_ClockPolarityActiveHigh;
-    // masterConfig.ctarConfig.cpha                          = kDSPI_ClockPhaseFirstEdge;
-    // masterConfig.ctarConfig.direction                     = kDSPI_MsbFirst;
-    // masterConfig.ctarConfig.pcsToSckDelayInNanoSec        = 2000;
-    // masterConfig.ctarConfig.lastSckToPcsDelayInNanoSec    = 2000;
-    // masterConfig.ctarConfig.betweenTransferDelayInNanoSec = 1000;
+    masterConfig.whichCtar                                = kDSPI_Ctar0;
+    masterConfig.ctarConfig.baudRate                      = TRANSFER_BAUDRATE;
+    masterConfig.ctarConfig.bitsPerFrame                  = 8;
+    masterConfig.ctarConfig.cpol                          = kDSPI_ClockPolarityActiveHigh;
+    masterConfig.ctarConfig.cpha                          = kDSPI_ClockPhaseFirstEdge;
+    masterConfig.ctarConfig.direction                     = kDSPI_MsbFirst;
+    masterConfig.ctarConfig.pcsToSckDelayInNanoSec        = 2000;
+    masterConfig.ctarConfig.lastSckToPcsDelayInNanoSec    = 2000;
+    masterConfig.ctarConfig.betweenTransferDelayInNanoSec = 1000;
 
-    // masterConfig.whichPcs           = kDSPI_Pcs0;
-    // masterConfig.pcsActiveHighOrLow = kDSPI_PcsActiveLow;
+    masterConfig.whichPcs           = kDSPI_Pcs0;
+    masterConfig.pcsActiveHighOrLow = kDSPI_PcsActiveLow;
 
-    // masterConfig.enableContinuousSCK        = false;
-    // masterConfig.enableRxFifoOverWrite      = false;
-    // masterConfig.enableModifiedTimingFormat = false;
-    // masterConfig.samplePoint                = kDSPI_SckToSin0Clock;
+    masterConfig.enableContinuousSCK        = false;
+    masterConfig.enableRxFifoOverWrite      = false;
+    masterConfig.enableModifiedTimingFormat = false;
+    masterConfig.samplePoint                = kDSPI_SckToSin0Clock;
 
-    // sourceClock = DSPI_MASTER_CLK_FREQ;
-    // status      = DSPI_RTOS_Init(&master_rtos_handle, EXAMPLE_DSPI_MASTER_BASEADDR, &masterConfig, sourceClock);
+    sourceClock = DSPI_MASTER_CLK_FREQ;
+    status      = DSPI_RTOS_Init(&master_rtos_handle, EXAMPLE_DSPI_MASTER_BASEADDR, &masterConfig, sourceClock);
 
-    // if (status != kStatus_Success)
-    // {
-    //     PRINTF("DSPI master: error during initialization. \r\n");
-    //     vTaskSuspend(NULL);
-    // }
-    // /*Start master transfer*/
-    // masterXfer.txData      = masterSendBuffer;
-    // masterXfer.rxData      = masterReceiveBuffer;
-    // masterXfer.dataSize    = TRANSFER_SIZE;
-    // masterXfer.configFlags = kDSPI_MasterCtar0 | kDSPI_MasterPcs0 | kDSPI_MasterPcsContinuous;
+    if (status != kStatus_Success)
+    {
+        PRINTF("DSPI master: error during initialization. \r\n");
+        vTaskSuspend(NULL);
+    }
+    /*Start master transfer*/
+    masterXfer.txData      = masterSendBuffer;
+    masterXfer.rxData      = masterReceiveBuffer;
+    masterXfer.dataSize    = TRANSFER_SIZE;
+    masterXfer.configFlags = kDSPI_MasterCtar0 | kDSPI_MasterPcs0 | kDSPI_MasterPcsContinuous;
 
-    // status = DSPI_RTOS_Transfer(&master_rtos_handle, &masterXfer);
+    status = DSPI_RTOS_Transfer(&master_rtos_handle, &masterXfer);
 
-    // if (status == kStatus_Success)
-    // {
-    //     xSemaphoreGive(dspi_sem);
-    //     PRINTF("DSPI master transfer completed successfully. \r\n\r\n");
-    // }
-    // else
-    // {
-    //     PRINTF("DSPI master transfer completed with error. \r\n\r\n");
-    // }
+    if (status == kStatus_Success)
+    {
+        xSemaphoreGive(dspi_sem);
+        PRINTF("DSPI master transfer completed successfully. \r\n\r\n");
+    }
+    else
+    {
+        PRINTF("DSPI master transfer completed with error. \r\n\r\n");
+    }
 
-    // vTaskSuspend(NULL);
+    vTaskSuspend(NULL);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
@@ -354,6 +485,12 @@ void dhcp_init()
 //
 int main(void)
 {
+    //
+    // GPIO :: LED STATUS
+    //
+    init_gpio();
+    init_sclk_pin();
+    xTaskCreate(blinky_task, "Blinky", 100, NULL, 1, NULL); 
 
     //
     // Board init :: For SPI and LWIP
@@ -373,12 +510,13 @@ int main(void)
     NVIC_SetPriority(EXAMPLE_DSPI_MASTER_IRQN, 3);
 
     //
-    // SPI
+    // DSPI :: RTOS
     //
-    init_gpio();
-    init_sclk_pin();
-    xTaskCreate(blinky_task, "Blinky", 100, NULL, 1, NULL); 
+    xTaskCreate(slave_task, "Slave_task", configMINIMAL_STACK_SIZE + 100, NULL, slave_task_PRIORITY, NULL);
 
+    //
+    // LWIP :: RTOS
+    //
     dhcp_init();
 
     vTaskStartScheduler();

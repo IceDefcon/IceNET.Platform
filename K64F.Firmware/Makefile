@@ -36,6 +36,8 @@ SRCS=\
     fsl/fsl_assert.c \
     fsl/fsl_sbrk.c \
     fsl/fsl_phy.c \
+    fsl/fsl_dspi.c \
+    fsl/fsl_dspi_freertos.c \
     FreeRTOS/src/portable/MemMang/heap_3.c \
     FreeRTOS/src/event_groups.c \
     FreeRTOS/src/list.c \
@@ -133,11 +135,11 @@ SRCS=\
 
 INCLUDES=\
     -Iapp/include \
-    -IFreeRTOS/src/portable/GCC/ARM_CM4F \
     -ICMSIS \
+    -Ifsl \
     -IFreeRTOS/include \
     -IFreeRTOS/include/private \
-    -Ifsl \
+    -IFreeRTOS/src/portable/GCC/ARM_CM4F \
     -Iinclude \
     -Idrivers/uart \
     -Idrivers/serial_manager \

@@ -21,6 +21,8 @@
 
 #include "fsl_device_registers.h"
 
+#define SDK_ISR_EXIT_BARRIER __DSB()
+
 /*!
  * @addtogroup ksdk_common
  * @{
