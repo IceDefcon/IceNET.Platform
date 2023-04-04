@@ -20,6 +20,99 @@
 
 #include "fsl_dspi.h"
 #include "fsl_dspi_freertos.h"
+#include "fsl_uart_freertos.h"
+
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////////
+// UART
+///////////////////////////////////////////////////////////////////////////////////
+// UART instance and clock
+#define DEMO_UART            UART0
+#define DEMO_UART_CLKSRC     UART0_CLK_SRC
+#define DEMO_UART_CLK_FREQ   CLOCK_GetFreq(UART0_CLK_SRC)
+#define DEMO_UART_RX_TX_IRQn UART0_RX_TX_IRQn
+// Task priorities.
+#define uart_task_PRIORITY (configMAX_PRIORITIES - 1)
+//
+// Prototypes
+//
+static void uart_task(void *pvParameters);
+//
+// Variables
+//
+char *to_send               = "FreeRTOS UART driver example!\r\n";
+char *send_ring_overrun     = "\r\nRing buffer overrun!\r\n";
+char *send_hardware_overrun = "\r\nHardware buffer overrun!\r\n";
+uint8_t background_buffer[32];
+uint8_t recv_buffer[4];
+
+uart_rtos_handle_t handle;
+struct _uart_handle t_handle;
+
+uart_rtos_config_t uart_config = {
+    .baudrate    = 115200,
+    .parity      = kUART_ParityDisabled,
+    .stopbits    = kUART_OneStopBit,
+    .buffer      = background_buffer,
+    .buffer_size = sizeof(background_buffer),
+};
+
+//
+// RTOS :: UART Task
+//
+static void uart_task(void *pvParameters)
+{
+    int error;
+    size_t n = 0;
+
+    uart_config.srcclk = DEMO_UART_CLK_FREQ;
+    uart_config.base   = DEMO_UART;
+
+    if (kStatus_Success != UART_RTOS_Init(&handle, &t_handle, &uart_config))
+    {
+        vTaskSuspend(NULL);
+    }
+
+    /* Send introduction message. */
+    if (kStatus_Success != UART_RTOS_Send(&handle, (uint8_t *)to_send, strlen(to_send)))
+    {
+        vTaskSuspend(NULL);
+    }
+
+    /* Receive user input and send it back to terminal. */
+    do
+    {
+        error = UART_RTOS_Receive(&handle, recv_buffer, sizeof(recv_buffer), &n);
+        if (error == kStatus_UART_RxHardwareOverrun)
+        {
+            /* Notify about hardware buffer overrun */
+            if (kStatus_Success !=
+                UART_RTOS_Send(&handle, (uint8_t *)send_hardware_overrun, strlen(send_hardware_overrun)))
+            {
+                vTaskSuspend(NULL);
+            }
+        }
+        if (error == kStatus_UART_RxRingBufferOverrun)
+        {
+            /* Notify about ring buffer overrun */
+            if (kStatus_Success != UART_RTOS_Send(&handle, (uint8_t *)send_ring_overrun, strlen(send_ring_overrun)))
+            {
+                vTaskSuspend(NULL);
+            }
+        }
+        if (n > 0)
+        {
+            /* send back the received data */
+            UART_RTOS_Send(&handle, recv_buffer, n);
+        }
+    } while (kStatus_Success == error);
+
+    UART_RTOS_Deinit(&handle);
+    vTaskSuspend(NULL);
+}
 
 ///////////////////////////////////////////////////////////////////////////////////
 // SPI
@@ -267,7 +360,7 @@ static void master_task(void *pvParameters)
 #define GPIOB_PDDR (*(int *)0x400FF054u)    // Port Data Direction Register (1760)
 #define GPIOB_PDOR (*(int *)0x400FF040u)    // Port Data Output Register    (1759)
 #define PIN_21_N 21                         // PTB21 --> Blue LED           (1761)
-#define PIN_22_N 22                         // PTB21 --> Red  LED           (1761)
+#define PIN_22_N 22                         // PTB22 --> Red  LED           (1761)
 
 #define SIM_SCGC5 (*(int *)0x40048038u)     // Clock gate 5                 (314)
 #define SIM_SCGC5_PORTD 12                  // Open gate PORTD              (314)
@@ -508,6 +601,12 @@ int main(void)
     /* Set interrupt priorities */
     NVIC_SetPriority(EXAMPLE_DSPI_SLAVE_IRQN, 2);
     NVIC_SetPriority(EXAMPLE_DSPI_MASTER_IRQN, 3);
+    NVIC_SetPriority(DEMO_UART_RX_TX_IRQn, 5);
+
+    //
+    // UART
+    //
+    xTaskCreate(uart_task, "Uart_task", configMINIMAL_STACK_SIZE + 100, NULL, uart_task_PRIORITY, NULL);
 
     //
     // DSPI :: RTOS

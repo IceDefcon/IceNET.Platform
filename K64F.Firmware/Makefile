@@ -16,9 +16,9 @@ SRCS=\
     startup/startup_MK64F12.S \
     startup/startup_MK64F12.c \
     app/network_analyser.c \
-    app/pin_mux.c \
-    app/board.c \
-    app/clock_config.c \
+    app/config/pin_mux.c \
+    app/config/board.c \
+    app/config/clock_config.c \
     fsl/fsl_sim.c \
     fsl/fsl_clock.c \
     fsl/fsl_enet.c \
@@ -37,6 +37,7 @@ SRCS=\
     fsl/fsl_phy.c \
     fsl/fsl_dspi.c \
     fsl/fsl_dspi_freertos.c \
+    fsl/fsl_uart_freertos.c \
     FreeRTOS/src/portable/MemMang/heap_3.c \
     FreeRTOS/src/event_groups.c \
     FreeRTOS/src/list.c \
