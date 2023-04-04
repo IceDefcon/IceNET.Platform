@@ -1,5 +1,5 @@
 TimeQuest Timing Analyzer report for NetworkAnalyser
-Sat Mar 25 14:18:08 2023
+Tue Apr  4 07:55:46 2023
 Quartus II 64-Bit Version 13.0.1 Build 232 06/12/2013 Service Pack 1 SJ Web Edition
 
 
@@ -89,7 +89,7 @@ applicable agreement for further details.
 +---------------------+--------+--------------------------+
 ; SDC File Path       ; Status ; Read at                  ;
 +---------------------+--------+--------------------------+
-; NetworkAnalyser.sdc ; OK     ; Sat Mar 25 14:18:08 2023 ;
+; NetworkAnalyser.sdc ; OK     ; Tue Apr  4 07:55:46 2023 ;
 +---------------------+--------+--------------------------+
 
 
@@ -243,8 +243,8 @@ No dedicated SERDES Receiver circuitry present in device or used in design
 ; Unconstrained Clocks            ; 1     ; 1    ;
 ; Unconstrained Input Ports       ; 3     ; 3    ;
 ; Unconstrained Input Port Paths  ; 6     ; 6    ;
-; Unconstrained Output Ports      ; 0     ; 0    ;
-; Unconstrained Output Port Paths ; 0     ; 0    ;
+; Unconstrained Output Ports      ; 1     ; 1    ;
+; Unconstrained Output Port Paths ; 1     ; 1    ;
 +---------------------------------+-------+------+
 
 
@@ -254,28 +254,13 @@ No dedicated SERDES Receiver circuitry present in device or used in design
 Info: *******************************************************************
 Info: Running Quartus II 64-Bit TimeQuest Timing Analyzer
     Info: Version 13.0.1 Build 232 06/12/2013 Service Pack 1 SJ Web Edition
-    Info: Processing started: Sat Mar 25 14:18:07 2023
+    Info: Processing started: Tue Apr  4 07:55:45 2023
 Info: Command: quartus_sta NetworkAnalyser -c NetworkAnalyser
 Info: qsta_default_script.tcl version: #1
 Info (11104): Parallel Compilation has detected 4 hyper-threaded processors. However, the extra hyper-threaded processors will not be used by default. Parallel Compilation will use 2 of the 2 physical processors detected instead.
 Info (21077): Low junction temperature is 0 degrees C
 Info (21077): High junction temperature is 85 degrees C
 Info (332164): Evaluating HDL-embedded SDC commands
-    Info (332165): Entity GHVD5181
-        Info (332166): set_disable_timing [get_cells -hierarchical AMGP4450_0]
-        Info (332166): set_disable_timing [get_cells -hierarchical TPOO7242_0]
-        Info (332166): set_disable_timing [get_cells -hierarchical TPOO7242_1]
-        Info (332166): set_disable_timing [get_cells -hierarchical TPOO7242_2]
-        Info (332166): set_disable_timing [get_cells -hierarchical TPOO7242_3]
-        Info (332166): set_disable_timing [get_cells -hierarchical TPOO7242_4]
-        Info (332166): set_disable_timing [get_cells -hierarchical TPOO7242_5]
-        Info (332166): set_disable_timing [get_cells -hierarchical TPOO7242_6]
-        Info (332166): set_disable_timing [get_cells -hierarchical TPOO7242_7]
-        Info (332166): set_disable_timing [get_cells -hierarchical ZNXJ5711_0]
-    Info (332165): Entity altera_std_synchronizer
-        Info (332166): set_false_path -to [get_keepers {*altera_std_synchronizer:*|din_s1}]
-    Info (332165): Entity pzdyqx_impl
-        Info (332166): set_false_path -from [get_keepers {altera_reserved_tdi}] -to [get_keepers {pzdyqx*}]
     Info (332165): Entity sld_jtag_hub
         Info (332166): create_clock -name altera_reserved_tck [get_ports {altera_reserved_tck}] -period 10MHz   
         Info (332166): set_clock_groups -asynchronous -group {altera_reserved_tck}
@@ -307,8 +292,8 @@ Info (332001): The selected device family is not supported by the report_metasta
 Info (332102): Design is not fully constrained for setup requirements
 Info (332102): Design is not fully constrained for hold requirements
 Info: Quartus II 64-Bit TimeQuest Timing Analyzer was successful. 0 errors, 2 warnings
-    Info: Peak virtual memory: 533 megabytes
-    Info: Processing ended: Sat Mar 25 14:18:08 2023
+    Info: Peak virtual memory: 538 megabytes
+    Info: Processing ended: Tue Apr  4 07:55:46 2023
     Info: Elapsed time: 00:00:01
     Info: Total CPU time (on all processors): 00:00:01
 

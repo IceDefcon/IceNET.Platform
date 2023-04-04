@@ -4,7 +4,7 @@ JedecChain;
 	DefaultMfr(6E);
 
 	P ActionCode(Cfg)
-		Device PartName(EP2C5T144) Path("/ice/code.lab/IceNET.NetworkAnalyser/Quartus/output_files/") File("NetworkAnalyser_time_limited.sof") MfrSpec(OpMask(1));
+		Device PartName(EP2C5T144) Path("/ice/code.lab/IceNET.NetworkAnalyser/Quartus/output_files/") File("NetworkAnalyser.sof") MfrSpec(OpMask(1));
 
 ChainEnd;
 
