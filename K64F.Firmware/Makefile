@@ -39,7 +39,6 @@ SRCS=\
     fsl/fsl_phy.c \
     fsl/fsl_dspi.c \
     fsl/fsl_dspi_freertos.c \
-    fsl/fsl_uart_freertos.c \
     FreeRTOS/src/portable/MemMang/heap_3.c \
     FreeRTOS/src/event_groups.c \
     FreeRTOS/src/list.c \

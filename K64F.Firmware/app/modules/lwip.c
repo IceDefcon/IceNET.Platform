@@ -60,7 +60,7 @@ static void print_dhcp_state(void *arg)
         {
             dhcp_last_state = dhcp->state;
 
-            PRINTF(" DHCP state       : ");
+            PRINTF("DHCP state       : ");
             switch (dhcp_last_state)
             {
                 case DHCP_STATE_OFF:
@@ -148,10 +148,6 @@ void dhcp_init()
     netifapi_netif_set_up(&fsl_netif0);
 
     netifapi_dhcp_start(&fsl_netif0);
-
-    PRINTF("\r\n************************************************\r\n");
-    PRINTF(" DHCP example\r\n");
-    PRINTF("************************************************\r\n");
 
     if (sys_thread_new("print_dhcp", print_dhcp_state, &fsl_netif0, PRINT_THREAD_STACKSIZE, PRINT_THREAD_PRIO) == NULL)
     {

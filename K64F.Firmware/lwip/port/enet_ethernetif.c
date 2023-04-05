@@ -82,7 +82,7 @@ void ethernetif_phy_init(struct ethernetif *ethernetif,
 
     sysClock = CLOCK_GetFreq(ethernetifConfig->clockName);
 
-    LWIP_PLATFORM_DIAG(("Initializing PHY..."));
+    LWIP_PLATFORM_DIAG(("Initializing LWIP PHY..."));
 
     while ((count < ENET_ATONEGOTIATION_TIMEOUT) && (!link))
     {
