@@ -19,6 +19,8 @@ SRCS=\
     app/config/pin_mux.c \
     app/config/board.c \
     app/config/clock_config.c \
+    app/modules/lwip.c \
+    app/modules/gpio.c \
     fsl/fsl_sim.c \
     fsl/fsl_clock.c \
     fsl/fsl_enet.c \
