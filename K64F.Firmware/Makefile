@@ -15,8 +15,6 @@ LDSCRIPT=linker/MK64FN1M0xxx12_flash.ld
 
 ASM_SOURCES := $(shell find . -name "*.S")
 CPP_SOURCES := $(shell find . -name "*.c")
-CPP_DIRNAME := $(shell dirname $(CPP_SOURCES))
-CPP_OBJECTS := $(patsubst $(CPP_DIRNAME)/%.c, $(CPP_DIRNAME)/%.o, $(CPP_DIRNAME))
 
 INCLUDES=\
     -Iapp/include \
