@@ -120,8 +120,7 @@ Bare metal drivers and low level sources:
 
 # TODO
 
-	1. Upgrade Makefile :: To avoid re-compilation of unchanged sources
-	2. Test SPI CPU :: FPGA
-	3. Linux app :: For comunication with CPU
+	1. Test SPI CPU :: FPGA
+	2. Linux app :: For CPU comunication with FPGA
 
 # ICE
