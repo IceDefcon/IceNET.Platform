@@ -22,13 +22,6 @@ void gpio_init()
     // Set Blue pin 21 ---> OFF
     // Leave Red pin 22 in default ---> ON
     GPIOB_PDOR ^= 1 << PIN_21_N;
-
-    // Enable clocks
-    SIM_SCGC5  |= 1 << SIM_SCGC5_PORTD;
-    // Configure pin 1 as GPIO
-    PORTD_PCR1 |= 1 << PORTD_PCR1_MUX;
-    // Configure GPIO pin 21 as output
-    GPIOD_PDDR |= 1 << PIN_SPI_N;
 }
 
 void Blinky_task()
@@ -38,7 +31,6 @@ void Blinky_task()
 
     while(1) {
         GPIOB_PDOR ^= 1 << PIN_21_N;            // LED Pin   ---> Toggle with XOR
-        GPIOD_PDOR ^= 1 << PIN_SPI_N;           // SPI CLock ---> Toggle with XOR
         vTaskDelay(500 / portTICK_PERIOD_MS);   // 500/10
     }
 }
