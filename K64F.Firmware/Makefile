@@ -31,7 +31,6 @@ INCLUDES=\
     -Ilwip/src \
     -Ilwip/src/include \
 
-ASM_OBJECTS = $(ASM_SOURCES:.S=.o)
 GCC_OBJECTS = $(GCC_SOURCES:.c=.o)
 DEP_OBJECTS = $(GCC_SOURCES:.c=.d)
 
@@ -40,13 +39,13 @@ all: $(TARGET).bin
 $(TARGET).bin: $(TARGET).elf
 	$(OBJCPY) $< $@ -O binary
 
-$(TARGET).elf: $(GCC_OBJECTS) $(ASM_OBJECTS)
-	$(CC) -o $@ $(CFLAGS) $(ASM_SOURCES) -T $(LDSCRIPT) $^
+$(TARGET).elf: $(GCC_OBJECTS)
+	$(CC) $(CFLAGS) $(ASM_SOURCES) -T $(LDSCRIPT) $^ -o $@ 
 
 %.o: %.c
 	$(CC) -I $(INCLUDES) $(CFLAGS) -c -o $@ $<
 
 clean:
-	rm -f $(TARGET).elf $(TARGET).bin $(TARGET).d output.map $(GCC_OBJECTS) $(DEP_OBJECTS) $(ASM_OBJECTS)
+	rm -f $(TARGET).elf $(TARGET).bin $(TARGET).d output.map $(GCC_OBJECTS) $(DEP_OBJECTS)
 
-.PHONY: all clean remove
+.PHONY: all clean
