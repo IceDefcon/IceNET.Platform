@@ -1,14 +1,28 @@
 |NetworkAnalyser
-clock => led_1~reg0.CLK
-clock => A1.CLK
-reset => ~NO_FANOUT~
-sclk => spi:spi_module.sclk
-mosi => spi:spi_module.mosi
-miso <= spi:spi_module.miso
-ssel => spi:spi_module.cs
-led_0 <= <GND>
-led_1 <= led_1~reg0.DB_MAX_OUTPUT_PORT_TYPE
-led_2 <= <GND>
+CLOCK => ~NO_FANOUT~
+RESET => ~NO_FANOUT~
+SSEL => spi:spi_module.cs
+MOSI => spi:spi_module.mosi
+MISO <= spi:spi_module.miso
+SCLK => spi:spi_module.sclk
+LED_0 <= <GND>
+LED_1 <= <VCC>
+LED_2 <= <GND>
+PIN_112 <= PIN_112.DB_MAX_OUTPUT_PORT_TYPE
+PIN_113 <= PIN_113.DB_MAX_OUTPUT_PORT_TYPE
+PIN_114 <= PIN_114.DB_MAX_OUTPUT_PORT_TYPE
+PIN_115 <= PIN_115.DB_MAX_OUTPUT_PORT_TYPE
+PIN_118 <= PIN_118.DB_MAX_OUTPUT_PORT_TYPE
+PIN_120 <= PIN_120.DB_MAX_OUTPUT_PORT_TYPE
+PIN_122 <= PIN_122.DB_MAX_OUTPUT_PORT_TYPE
+PIN_126 <= PIN_126.DB_MAX_OUTPUT_PORT_TYPE
+PIN_132 <= PIN_132.DB_MAX_OUTPUT_PORT_TYPE
+PIN_133 <= PIN_133.DB_MAX_OUTPUT_PORT_TYPE
+PIN_134 <= PIN_134.DB_MAX_OUTPUT_PORT_TYPE
+PIN_135 <= PIN_135.DB_MAX_OUTPUT_PORT_TYPE
+PIN_137 <= PIN_137.DB_MAX_OUTPUT_PORT_TYPE
+PIN_139 <= PIN_139.DB_MAX_OUTPUT_PORT_TYPE
+PIN_141 <= PIN_141.DB_MAX_OUTPUT_PORT_TYPE
 
 
 |NetworkAnalyser|spi:spi_module

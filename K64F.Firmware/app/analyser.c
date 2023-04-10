@@ -129,6 +129,7 @@ static void slave_task(void *pvParameters)
         PRINTF("Failed to create master task");
         vTaskSuspend(NULL);
     }
+    PRINTF("master TASK created");
 
     /* Wait for transfer to finish */
     xSemaphoreTake(cb_msg.sem, portMAX_DELAY);

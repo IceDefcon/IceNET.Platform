@@ -6,17 +6,33 @@ use ieee.std_logic_unsigned.all;
 entity NetworkAnalyser is
 port
 (
-	clock 			: in std_logic;
-	reset 			: in std_logic;
+	CLOCK 			: in std_logic; 	-- PIN_17
+	RESET 			: in std_logic; 	-- PIN_136 :: Connected to K64F
 
-	sclk 				: in std_logic;
-	mosi 				: in std_logic;
-	miso 				: out std_logic;
-	ssel 				: in std_logic;
+	SSEL 				: in std_logic;  	-- PIN_119 :: Connected to K64F
+	MOSI 				: in std_logic;  	-- PIN_121 :: Connected to K64F
+	MISO 				: out std_logic;  -- PIN_125 :: Connected to K64F
+	SCLK 				: in std_logic;  	-- PIN_129 :: Connected to K64F
 	
-	led_0 			: out std_logic;
-	led_1 			: out std_logic;
-	led_2 			: out std_logic
+	LED_0 			: out std_logic; 	-- PIN_3
+	LED_1 			: out std_logic; 	-- PIN_7
+	LED_2 			: out std_logic;	-- PIN_9
+	
+	PIN_112 			: out std_logic;	-- High Impedance :: Connected to K64F
+	PIN_113 			: out std_logic; 	-- High Impedance :: Connected to K64F
+	PIN_114 			: out std_logic; 	-- High Impedance :: Connected to K64F
+	PIN_115 			: out std_logic; 	-- High Impedance :: Connected to K64F
+	PIN_118 			: out std_logic; 	-- High Impedance :: Connected to K64F :: Counter PIN_119 :: SSEL
+	PIN_120 			: out std_logic; 	-- High Impedance :: Connected to K64F :: Counter PIN_121 :: MOSI
+	PIN_122 			: out std_logic; 	-- High Impedance :: Connected to K64F :: Counter PIN_125 :: MISO
+	PIN_126 			: out std_logic; 	-- High Impedance :: Connected to K64F :: Counter PIN_129 :: SCLK
+	PIN_132 			: out std_logic; 	-- High Impedance :: Connected to K64F
+	PIN_133 			: out std_logic; 	-- High Impedance :: Connected to K64F
+	PIN_134 			: out std_logic; 	-- High Impedance :: Connected to K64F
+	PIN_135 			: out std_logic; 	-- High Impedance :: Connected to K64F
+	PIN_137 			: out std_logic; 	-- High Impedance :: Connected to K64F
+	PIN_139 			: out std_logic; 	-- High Impedance :: Connected to K64F
+	PIN_141 			: out std_logic 	-- High Impedance :: Connected to K64F
 );
 end NetworkAnalyser;
 
@@ -26,7 +42,7 @@ architecture rtl of NetworkAnalyser is
 -- SIGNAL DECLARATION
 --------------------------------------------
 
-signal A1 			: std_logic := '0';
+signal a1 			: std_logic := '0';
 
 --------------------------------------------
 -- COMPONENTS DECLARATION
@@ -54,26 +70,43 @@ end component spi;
 --------------------------------------------
 begin
 
-led_0 <= '0'; 	-- D2 Low Enable
---led_1 <= '1'; 	-- D4 Low Enable
-led_2 <= '0'; 	-- D5 Low Enable
+-- GREEN LED
+PIN_112 <= 'Z';
+PIN_113 <= 'Z';
+PIN_114 <= 'Z';
+PIN_115 <= 'Z';
+PIN_118 <= 'Z';
+PIN_120 <= 'Z';
+PIN_122 <= 'Z';
+PIN_126 <= 'Z';
+PIN_132 <= 'Z';
+PIN_133 <= 'Z';
+PIN_134 <= 'Z';
+PIN_135 <= 'Z';
+PIN_137 <= 'Z';
+PIN_139 <= 'Z';
+PIN_141 <= 'Z';
 
-main_process:
-process(clock)
-begin
-	if rising_edge(clock) then
-		A1 	<= not(A1);
-		Led_1 <= A1;
-	end if;
-end process;
+LED_0 <= '0'; 	-- D2 Low Enable
+LED_1 <= '1'; 	-- D4 Low Enable
+LED_2 <= '0'; 	-- D5 Low Enable
+
+--main_process:
+--process(clock)
+--begin
+--	if rising_edge(clock) then
+--		a1 	<= not(a1);
+--		LED_1 <= a1;
+--	end if;
+--end process;
 
 spi_module : component spi
 port map 
 (
-	sclk       	=> sclk,
-	cs        	=> ssel,
-	mosi    		=> mosi,
-	miso 			=> miso,
+	sclk       	=> SCLK,
+	cs        	=> SSEL,
+	mosi    		=> MOSI,
+	miso 			=> MISO,
 	reset      	=> '0',
 
 	data_tx     => (others => '0'),
@@ -83,4 +116,3 @@ port map
 );
 
 end rtl;
-
