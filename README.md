@@ -83,9 +83,41 @@ To check if QSYS is working or require some dependant libraries you can execute
 	cd /ice/altera/13.0sp1/quartus/sopc_builder/bin
 	./qsys-edit
 
+--==[ IF PROBLEMS WITH  ]==--
+
+Fatal: Read failure in vlm process (0,0)
+
+1. For 13.1ps1 Download ---> freetype-2.4.12
+2. Configure
+   ./configure --build=i686-pc-linux-gnu "CFLAGS=-m32" "CXXFLAGS=-m32" "LDFLAGS=-m32"
+3. If everything good ---> make
+   make -j8
+
+4. Modify vsim ---> put after this line another one
+   dir=`dirname $arg0`
+   export LD_LIBRARY_PATH=${dir}/lib32
+
+5. Also check your kernrel ---> uname -r
+   then for example ---> 5.4.0-146-generic
+   modfy vsim intoadditional 5*
+
+	case $utype in
+	2.4.[7-9]*)       vco="linux" ;;
+	2.4.[1-9][0-9]*)  vco="linux" ;;
+	2.[5-9]*)         vco="linux" ;;
+	2.[1-9][0-9]*)    vco="linux" ;;
+	3.[0-9]*)    		vco="linux" ;;
+	5.[0-9]*)     vco="linux" ;;
+	*)                vco="linux_rh60" ;;
+
+6. Then copy this so library into credetd "lib32" folder in the modelsim_ase folder ! 
+   cp objs/.libs/libfreetype.so* ../../../altera/13.1/modelsim_ase/lib32/
+
+7. This should be if it should work now !!! enjoy
+
 If there are JTAG problems:
 
-1.Check if Altera USB Blaser is present in the system: 
+Check if Altera USB Blaser is present in the system: 
 
 	$dmesg|tail
 	usb 1-2: Product: USB-Blaster

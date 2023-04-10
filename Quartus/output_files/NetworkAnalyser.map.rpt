@@ -1,5 +1,5 @@
 Analysis & Synthesis report for NetworkAnalyser
-Mon Apr 10 16:59:22 2023
+Mon Apr 10 20:34:51 2023
 Quartus II 64-Bit Version 13.0.1 Build 232 06/12/2013 Service Pack 1 SJ Web Edition
 
 
@@ -51,13 +51,13 @@ applicable agreement for further details.
 +--------------------------------------------------------------------------------------+
 ; Analysis & Synthesis Summary                                                         ;
 +------------------------------------+-------------------------------------------------+
-; Analysis & Synthesis Status        ; Successful - Mon Apr 10 16:59:22 2023           ;
+; Analysis & Synthesis Status        ; Successful - Mon Apr 10 20:34:51 2023           ;
 ; Quartus II 64-Bit Version          ; 13.0.1 Build 232 06/12/2013 SP 1 SJ Web Edition ;
 ; Revision Name                      ; NetworkAnalyser                                 ;
 ; Top-level Entity Name              ; NetworkAnalyser                                 ;
 ; Family                             ; Cyclone II                                      ;
-; Total logic elements               ; 672                                             ;
-;     Total combinational functions  ; 444                                             ;
+; Total logic elements               ; 674                                             ;
+;     Total combinational functions  ; 445                                             ;
 ;     Dedicated logic registers      ; 493                                             ;
 ; Total registers                    ; 493                                             ;
 ; Total pins                         ; 24                                              ;
@@ -236,16 +236,16 @@ applicable agreement for further details.
 +---------------------------------------------+--------------------------+
 ; Resource                                    ; Usage                    ;
 +---------------------------------------------+--------------------------+
-; Estimated Total logic elements              ; 672                      ;
+; Estimated Total logic elements              ; 674                      ;
 ;                                             ;                          ;
-; Total combinational functions               ; 444                      ;
+; Total combinational functions               ; 445                      ;
 ; Logic element usage by number of LUT inputs ;                          ;
-;     -- 4 input functions                    ; 164                      ;
-;     -- 3 input functions                    ; 161                      ;
+;     -- 4 input functions                    ; 162                      ;
+;     -- 3 input functions                    ; 164                      ;
 ;     -- <=2 input functions                  ; 119                      ;
 ;                                             ;                          ;
 ; Logic elements by mode                      ;                          ;
-;     -- normal mode                          ; 374                      ;
+;     -- normal mode                          ; 375                      ;
 ;     -- arithmetic mode                      ; 70                       ;
 ;                                             ;                          ;
 ; Total registers                             ; 493                      ;
@@ -257,7 +257,7 @@ applicable agreement for further details.
 ; Embedded Multiplier 9-bit elements          ; 0                        ;
 ; Maximum fan-out node                        ; altera_internal_jtag~TDO ;
 ; Maximum fan-out                             ; 318                      ;
-; Total fan-out                               ; 3512                     ;
+; Total fan-out                               ; 3516                     ;
 ; Average fan-out                             ; 3.56                     ;
 +---------------------------------------------+--------------------------+
 
@@ -267,9 +267,9 @@ applicable agreement for further details.
 +---------------------------------------------------------------------------------------------------------+-------------------+--------------+-------------+--------------+---------+-----------+------+--------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+--------------+
 ; Compilation Hierarchy Node                                                                              ; LC Combinationals ; LC Registers ; Memory Bits ; DSP Elements ; DSP 9x9 ; DSP 18x18 ; Pins ; Virtual Pins ; Full Hierarchy Name                                                                                                                                                                                                                                                                                                                           ; Library Name ;
 +---------------------------------------------------------------------------------------------------------+-------------------+--------------+-------------+--------------+---------+-----------+------+--------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+--------------+
-; |NetworkAnalyser                                                                                        ; 444 (3)           ; 493 (2)      ; 81920       ; 0            ; 0       ; 0         ; 24   ; 0            ; |NetworkAnalyser                                                                                                                                                                                                                                                                                                                              ; work         ;
-;    |sld_hub:auto_hub|                                                                                   ; 116 (1)           ; 86 (0)       ; 0           ; 0            ; 0       ; 0         ; 0    ; 0            ; |NetworkAnalyser|sld_hub:auto_hub                                                                                                                                                                                                                                                                                                             ; work         ;
-;       |sld_jtag_hub:\jtag_hub_gen:sld_jtag_hub_inst|                                                    ; 115 (77)          ; 86 (58)      ; 0           ; 0            ; 0       ; 0         ; 0    ; 0            ; |NetworkAnalyser|sld_hub:auto_hub|sld_jtag_hub:\jtag_hub_gen:sld_jtag_hub_inst                                                                                                                                                                                                                                                                ; work         ;
+; |NetworkAnalyser                                                                                        ; 445 (2)           ; 493 (2)      ; 81920       ; 0            ; 0       ; 0         ; 24   ; 0            ; |NetworkAnalyser                                                                                                                                                                                                                                                                                                                              ; work         ;
+;    |sld_hub:auto_hub|                                                                                   ; 118 (1)           ; 86 (0)       ; 0           ; 0            ; 0       ; 0         ; 0    ; 0            ; |NetworkAnalyser|sld_hub:auto_hub                                                                                                                                                                                                                                                                                                             ; work         ;
+;       |sld_jtag_hub:\jtag_hub_gen:sld_jtag_hub_inst|                                                    ; 117 (79)          ; 86 (58)      ; 0           ; 0            ; 0       ; 0         ; 0    ; 0            ; |NetworkAnalyser|sld_hub:auto_hub|sld_jtag_hub:\jtag_hub_gen:sld_jtag_hub_inst                                                                                                                                                                                                                                                                ; work         ;
 ;          |sld_rom_sr:hub_info_reg|                                                                      ; 21 (21)           ; 9 (9)        ; 0           ; 0            ; 0       ; 0         ; 0    ; 0            ; |NetworkAnalyser|sld_hub:auto_hub|sld_jtag_hub:\jtag_hub_gen:sld_jtag_hub_inst|sld_rom_sr:hub_info_reg                                                                                                                                                                                                                                        ; work         ;
 ;          |sld_shadow_jsm:shadow_jsm|                                                                    ; 17 (17)           ; 19 (19)      ; 0           ; 0            ; 0       ; 0         ; 0    ; 0            ; |NetworkAnalyser|sld_hub:auto_hub|sld_jtag_hub:\jtag_hub_gen:sld_jtag_hub_inst|sld_shadow_jsm:shadow_jsm                                                                                                                                                                                                                                      ; work         ;
 ;    |sld_signaltap:SPI_DEBUG|                                                                            ; 325 (1)           ; 405 (10)     ; 81920       ; 0            ; 0       ; 0         ; 0    ; 0            ; |NetworkAnalyser|sld_signaltap:SPI_DEBUG                                                                                                                                                                                                                                                                                                      ; work         ;
@@ -327,76 +327,47 @@ Note: For table entries with two numbers listed, the numbers in parentheses indi
 +----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+------+----------------+--------------+--------------+--------------+--------------+-------+------+
 
 
-+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-; Registers Removed During Synthesis                                                                                                                                                                                                                                                                                                                                              ;
-+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-; Register name                                                                                                                                                                    ; Reason for Removal                                                                                                                                                                           ;
-+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-; spi:spi_module|sregout[1]~en                                                                                                                                                     ; Stuck at GND due to stuck port clear                                                                                                                                                         ;
-; spi:spi_module|sregout[0]~en                                                                                                                                                     ; Stuck at GND due to stuck port clear                                                                                                                                                         ;
-; spi:spi_module|sregout[0]                                                                                                                                                        ; Stuck at GND due to stuck port data_in                                                                                                                                                       ;
-; spi:spi_module|sregout[2]~en                                                                                                                                                     ; Stuck at GND due to stuck port clear                                                                                                                                                         ;
-; spi:spi_module|sregout[3]~en                                                                                                                                                     ; Stuck at GND due to stuck port clear                                                                                                                                                         ;
-; spi:spi_module|sregout[4]~en                                                                                                                                                     ; Stuck at GND due to stuck port clear                                                                                                                                                         ;
-; spi:spi_module|sregout[5]~en                                                                                                                                                     ; Stuck at GND due to stuck port clear                                                                                                                                                         ;
-; spi:spi_module|sregout[6]~en                                                                                                                                                     ; Stuck at GND due to stuck port clear                                                                                                                                                         ;
-; spi:spi_module|sregout[7]~en                                                                                                                                                     ; Stuck at GND due to stuck port clear                                                                                                                                                         ;
-; spi:spi_module|\transmit:state[0..3]                                                                                                                                             ; Stuck at GND due to stuck port clear                                                                                                                                                         ;
-; spi:spi_module|sregout[1..7]                                                                                                                                                     ; Stuck at GND due to stuck port data_in                                                                                                                                                       ;
-; Total Number of Removed Registers = 20                                                                                                                                           ;                                                                                                                                                                                              ;
-; sld_signaltap:SPI_DEBUG|sld_signaltap_impl:sld_signaltap_body|sld_signaltap_implb:sld_signaltap_body|segment_shift_clk_ena                                                       ; Merged with sld_signaltap:SPI_DEBUG|sld_signaltap_impl:sld_signaltap_body|sld_signaltap_implb:sld_signaltap_body|buffer_write_enable_delayed                                                 ;
-; sld_signaltap:SPI_DEBUG|sld_signaltap_impl:sld_signaltap_body|sld_signaltap_implb:sld_signaltap_body|sld_buffer_manager:sld_buffer_manager_inst|\buffer_manager:offset_count[0]  ; Merged with sld_signaltap:SPI_DEBUG|sld_signaltap_impl:sld_signaltap_body|sld_signaltap_implb:sld_signaltap_body|sld_buffer_manager:sld_buffer_manager_inst|\buffer_manager:next_address[0]  ;
-; sld_signaltap:SPI_DEBUG|sld_signaltap_impl:sld_signaltap_body|sld_signaltap_implb:sld_signaltap_body|sld_buffer_manager:sld_buffer_manager_inst|\buffer_manager:offset_count[1]  ; Merged with sld_signaltap:SPI_DEBUG|sld_signaltap_impl:sld_signaltap_body|sld_signaltap_implb:sld_signaltap_body|sld_buffer_manager:sld_buffer_manager_inst|\buffer_manager:next_address[1]  ;
-; sld_signaltap:SPI_DEBUG|sld_signaltap_impl:sld_signaltap_body|sld_signaltap_implb:sld_signaltap_body|sld_buffer_manager:sld_buffer_manager_inst|\buffer_manager:offset_count[2]  ; Merged with sld_signaltap:SPI_DEBUG|sld_signaltap_impl:sld_signaltap_body|sld_signaltap_implb:sld_signaltap_body|sld_buffer_manager:sld_buffer_manager_inst|\buffer_manager:next_address[2]  ;
-; sld_signaltap:SPI_DEBUG|sld_signaltap_impl:sld_signaltap_body|sld_signaltap_implb:sld_signaltap_body|sld_buffer_manager:sld_buffer_manager_inst|\buffer_manager:offset_count[3]  ; Merged with sld_signaltap:SPI_DEBUG|sld_signaltap_impl:sld_signaltap_body|sld_signaltap_implb:sld_signaltap_body|sld_buffer_manager:sld_buffer_manager_inst|\buffer_manager:next_address[3]  ;
-; sld_signaltap:SPI_DEBUG|sld_signaltap_impl:sld_signaltap_body|sld_signaltap_implb:sld_signaltap_body|sld_buffer_manager:sld_buffer_manager_inst|\buffer_manager:offset_count[4]  ; Merged with sld_signaltap:SPI_DEBUG|sld_signaltap_impl:sld_signaltap_body|sld_signaltap_implb:sld_signaltap_body|sld_buffer_manager:sld_buffer_manager_inst|\buffer_manager:next_address[4]  ;
-; sld_signaltap:SPI_DEBUG|sld_signaltap_impl:sld_signaltap_body|sld_signaltap_implb:sld_signaltap_body|sld_buffer_manager:sld_buffer_manager_inst|\buffer_manager:offset_count[5]  ; Merged with sld_signaltap:SPI_DEBUG|sld_signaltap_impl:sld_signaltap_body|sld_signaltap_implb:sld_signaltap_body|sld_buffer_manager:sld_buffer_manager_inst|\buffer_manager:next_address[5]  ;
-; sld_signaltap:SPI_DEBUG|sld_signaltap_impl:sld_signaltap_body|sld_signaltap_implb:sld_signaltap_body|sld_buffer_manager:sld_buffer_manager_inst|\buffer_manager:offset_count[6]  ; Merged with sld_signaltap:SPI_DEBUG|sld_signaltap_impl:sld_signaltap_body|sld_signaltap_implb:sld_signaltap_body|sld_buffer_manager:sld_buffer_manager_inst|\buffer_manager:next_address[6]  ;
-; sld_signaltap:SPI_DEBUG|sld_signaltap_impl:sld_signaltap_body|sld_signaltap_implb:sld_signaltap_body|sld_buffer_manager:sld_buffer_manager_inst|\buffer_manager:offset_count[7]  ; Merged with sld_signaltap:SPI_DEBUG|sld_signaltap_impl:sld_signaltap_body|sld_signaltap_implb:sld_signaltap_body|sld_buffer_manager:sld_buffer_manager_inst|\buffer_manager:next_address[7]  ;
-; sld_signaltap:SPI_DEBUG|sld_signaltap_impl:sld_signaltap_body|sld_signaltap_implb:sld_signaltap_body|sld_buffer_manager:sld_buffer_manager_inst|\buffer_manager:offset_count[8]  ; Merged with sld_signaltap:SPI_DEBUG|sld_signaltap_impl:sld_signaltap_body|sld_signaltap_implb:sld_signaltap_body|sld_buffer_manager:sld_buffer_manager_inst|\buffer_manager:next_address[8]  ;
-; sld_signaltap:SPI_DEBUG|sld_signaltap_impl:sld_signaltap_body|sld_signaltap_implb:sld_signaltap_body|sld_buffer_manager:sld_buffer_manager_inst|\buffer_manager:offset_count[9]  ; Merged with sld_signaltap:SPI_DEBUG|sld_signaltap_impl:sld_signaltap_body|sld_signaltap_implb:sld_signaltap_body|sld_buffer_manager:sld_buffer_manager_inst|\buffer_manager:next_address[9]  ;
-; sld_signaltap:SPI_DEBUG|sld_signaltap_impl:sld_signaltap_body|sld_signaltap_implb:sld_signaltap_body|sld_buffer_manager:sld_buffer_manager_inst|\buffer_manager:offset_count[10] ; Merged with sld_signaltap:SPI_DEBUG|sld_signaltap_impl:sld_signaltap_body|sld_signaltap_implb:sld_signaltap_body|sld_buffer_manager:sld_buffer_manager_inst|\buffer_manager:next_address[10] ;
-; sld_signaltap:SPI_DEBUG|sld_signaltap_impl:sld_signaltap_body|sld_signaltap_implb:sld_signaltap_body|sld_buffer_manager:sld_buffer_manager_inst|\buffer_manager:offset_count[11] ; Merged with sld_signaltap:SPI_DEBUG|sld_signaltap_impl:sld_signaltap_body|sld_signaltap_implb:sld_signaltap_body|sld_buffer_manager:sld_buffer_manager_inst|\buffer_manager:next_address[11] ;
-; sld_signaltap:SPI_DEBUG|sld_signaltap_impl:sld_signaltap_body|sld_signaltap_implb:sld_signaltap_body|sld_buffer_manager:sld_buffer_manager_inst|\buffer_manager:offset_count[12] ; Merged with sld_signaltap:SPI_DEBUG|sld_signaltap_impl:sld_signaltap_body|sld_signaltap_implb:sld_signaltap_body|sld_buffer_manager:sld_buffer_manager_inst|\buffer_manager:next_address[12] ;
-; sld_signaltap:SPI_DEBUG|sld_signaltap_impl:sld_signaltap_body|sld_signaltap_implb:sld_signaltap_body|sld_buffer_manager:sld_buffer_manager_inst|\buffer_manager:offset_count[13] ; Merged with sld_signaltap:SPI_DEBUG|sld_signaltap_impl:sld_signaltap_body|sld_signaltap_implb:sld_signaltap_body|sld_buffer_manager:sld_buffer_manager_inst|\buffer_manager:next_address[13] ;
-; sld_signaltap:SPI_DEBUG|sld_signaltap_impl:sld_signaltap_body|sld_signaltap_implb:sld_signaltap_body|current_offset_delayed[6]                                                   ; Merged with sld_signaltap:SPI_DEBUG|sld_signaltap_impl:sld_signaltap_body|sld_signaltap_implb:sld_signaltap_body|buffer_write_address_delayed[6]                                             ;
-; sld_signaltap:SPI_DEBUG|sld_signaltap_impl:sld_signaltap_body|sld_signaltap_implb:sld_signaltap_body|current_offset_delayed[5]                                                   ; Merged with sld_signaltap:SPI_DEBUG|sld_signaltap_impl:sld_signaltap_body|sld_signaltap_implb:sld_signaltap_body|buffer_write_address_delayed[5]                                             ;
-; sld_signaltap:SPI_DEBUG|sld_signaltap_impl:sld_signaltap_body|sld_signaltap_implb:sld_signaltap_body|current_offset_delayed[4]                                                   ; Merged with sld_signaltap:SPI_DEBUG|sld_signaltap_impl:sld_signaltap_body|sld_signaltap_implb:sld_signaltap_body|buffer_write_address_delayed[4]                                             ;
-; sld_signaltap:SPI_DEBUG|sld_signaltap_impl:sld_signaltap_body|sld_signaltap_implb:sld_signaltap_body|current_offset_delayed[3]                                                   ; Merged with sld_signaltap:SPI_DEBUG|sld_signaltap_impl:sld_signaltap_body|sld_signaltap_implb:sld_signaltap_body|buffer_write_address_delayed[3]                                             ;
-; sld_signaltap:SPI_DEBUG|sld_signaltap_impl:sld_signaltap_body|sld_signaltap_implb:sld_signaltap_body|current_offset_delayed[2]                                                   ; Merged with sld_signaltap:SPI_DEBUG|sld_signaltap_impl:sld_signaltap_body|sld_signaltap_implb:sld_signaltap_body|buffer_write_address_delayed[2]                                             ;
-; sld_signaltap:SPI_DEBUG|sld_signaltap_impl:sld_signaltap_body|sld_signaltap_implb:sld_signaltap_body|current_offset_delayed[1]                                                   ; Merged with sld_signaltap:SPI_DEBUG|sld_signaltap_impl:sld_signaltap_body|sld_signaltap_implb:sld_signaltap_body|buffer_write_address_delayed[1]                                             ;
-; sld_signaltap:SPI_DEBUG|sld_signaltap_impl:sld_signaltap_body|sld_signaltap_implb:sld_signaltap_body|current_offset_delayed[0]                                                   ; Merged with sld_signaltap:SPI_DEBUG|sld_signaltap_impl:sld_signaltap_body|sld_signaltap_implb:sld_signaltap_body|buffer_write_address_delayed[0]                                             ;
-; sld_signaltap:SPI_DEBUG|sld_signaltap_impl:sld_signaltap_body|sld_signaltap_implb:sld_signaltap_body|current_offset_delayed[7]                                                   ; Merged with sld_signaltap:SPI_DEBUG|sld_signaltap_impl:sld_signaltap_body|sld_signaltap_implb:sld_signaltap_body|buffer_write_address_delayed[7]                                             ;
-; sld_signaltap:SPI_DEBUG|sld_signaltap_impl:sld_signaltap_body|sld_signaltap_implb:sld_signaltap_body|current_offset_delayed[8]                                                   ; Merged with sld_signaltap:SPI_DEBUG|sld_signaltap_impl:sld_signaltap_body|sld_signaltap_implb:sld_signaltap_body|buffer_write_address_delayed[8]                                             ;
-; sld_signaltap:SPI_DEBUG|sld_signaltap_impl:sld_signaltap_body|sld_signaltap_implb:sld_signaltap_body|current_offset_delayed[9]                                                   ; Merged with sld_signaltap:SPI_DEBUG|sld_signaltap_impl:sld_signaltap_body|sld_signaltap_implb:sld_signaltap_body|buffer_write_address_delayed[9]                                             ;
-; sld_signaltap:SPI_DEBUG|sld_signaltap_impl:sld_signaltap_body|sld_signaltap_implb:sld_signaltap_body|current_offset_delayed[10]                                                  ; Merged with sld_signaltap:SPI_DEBUG|sld_signaltap_impl:sld_signaltap_body|sld_signaltap_implb:sld_signaltap_body|buffer_write_address_delayed[10]                                            ;
-; sld_signaltap:SPI_DEBUG|sld_signaltap_impl:sld_signaltap_body|sld_signaltap_implb:sld_signaltap_body|current_offset_delayed[11]                                                  ; Merged with sld_signaltap:SPI_DEBUG|sld_signaltap_impl:sld_signaltap_body|sld_signaltap_implb:sld_signaltap_body|buffer_write_address_delayed[11]                                            ;
-; sld_signaltap:SPI_DEBUG|sld_signaltap_impl:sld_signaltap_body|sld_signaltap_implb:sld_signaltap_body|current_offset_delayed[12]                                                  ; Merged with sld_signaltap:SPI_DEBUG|sld_signaltap_impl:sld_signaltap_body|sld_signaltap_implb:sld_signaltap_body|buffer_write_address_delayed[12]                                            ;
-; sld_signaltap:SPI_DEBUG|sld_signaltap_impl:sld_signaltap_body|sld_signaltap_implb:sld_signaltap_body|current_offset_delayed[13]                                                  ; Merged with sld_signaltap:SPI_DEBUG|sld_signaltap_impl:sld_signaltap_body|sld_signaltap_implb:sld_signaltap_body|buffer_write_address_delayed[13]                                            ;
-; Total Number of Removed Registers = 29                                                                                                                                           ;                                                                                                                                                                                              ;
-+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
++---------------------------------------------------------------------------------+
+; Registers Removed During Synthesis                                              ;
++----------------------------------------+----------------------------------------+
+; Register name                          ; Reason for Removal                     ;
++----------------------------------------+----------------------------------------+
+; spi:spi_module|sregout[1]~en           ; Stuck at VCC due to stuck port data_in ;
+; spi:spi_module|sregout[0]~en           ; Stuck at VCC due to stuck port data_in ;
+; spi:spi_module|sregout[0]              ; Stuck at GND due to stuck port data_in ;
+; spi:spi_module|sregout[2]~en           ; Stuck at VCC due to stuck port data_in ;
+; spi:spi_module|sregout[3]~en           ; Stuck at VCC due to stuck port data_in ;
+; spi:spi_module|sregout[4]~en           ; Stuck at VCC due to stuck port data_in ;
+; spi:spi_module|sregout[5]~en           ; Stuck at VCC due to stuck port data_in ;
+; spi:spi_module|sregout[6]~en           ; Stuck at VCC due to stuck port data_in ;
+; spi:spi_module|sregout[7]~en           ; Stuck at VCC due to stuck port data_in ;
+; spi:spi_module|sregout[1..7]           ; Stuck at GND due to stuck port data_in ;
+; spi:spi_module|\transmit:state[0..3]   ; Lost fanout                            ;
+; Total Number of Removed Registers = 20 ;                                        ;
++----------------------------------------+----------------------------------------+
 
 
-+-------------------------------------------------------------------------------------------------+
-; Removed Registers Triggering Further Register Optimizations                                     ;
-+------------------------------+-------------------------+----------------------------------------+
-; Register name                ; Reason for Removal      ; Registers Removed due to This Register ;
-+------------------------------+-------------------------+----------------------------------------+
-; spi:spi_module|sregout[1]~en ; Stuck at GND            ; spi:spi_module|sregout[2]              ;
-;                              ; due to stuck port clear ;                                        ;
-; spi:spi_module|sregout[0]~en ; Stuck at GND            ; spi:spi_module|sregout[1]              ;
-;                              ; due to stuck port clear ;                                        ;
-; spi:spi_module|sregout[2]~en ; Stuck at GND            ; spi:spi_module|sregout[3]              ;
-;                              ; due to stuck port clear ;                                        ;
-; spi:spi_module|sregout[3]~en ; Stuck at GND            ; spi:spi_module|sregout[4]              ;
-;                              ; due to stuck port clear ;                                        ;
-; spi:spi_module|sregout[4]~en ; Stuck at GND            ; spi:spi_module|sregout[5]              ;
-;                              ; due to stuck port clear ;                                        ;
-; spi:spi_module|sregout[5]~en ; Stuck at GND            ; spi:spi_module|sregout[6]              ;
-;                              ; due to stuck port clear ;                                        ;
-; spi:spi_module|sregout[6]~en ; Stuck at GND            ; spi:spi_module|sregout[7]              ;
-;                              ; due to stuck port clear ;                                        ;
-+------------------------------+-------------------------+----------------------------------------+
++----------------------------------------------------------------------------------------------------------------------------------+
+; Removed Registers Triggering Further Register Optimizations                                                                      ;
++------------------------------+---------------------------+-----------------------------------------------------------------------+
+; Register name                ; Reason for Removal        ; Registers Removed due to This Register                                ;
++------------------------------+---------------------------+-----------------------------------------------------------------------+
+; spi:spi_module|sregout[1]~en ; Stuck at VCC              ; spi:spi_module|sregout[2], spi:spi_module|\transmit:state[0],         ;
+;                              ; due to stuck port data_in ; spi:spi_module|\transmit:state[3], spi:spi_module|\transmit:state[2], ;
+;                              ;                           ; spi:spi_module|\transmit:state[1]                                     ;
+; spi:spi_module|sregout[0]~en ; Stuck at VCC              ; spi:spi_module|sregout[1]                                             ;
+;                              ; due to stuck port data_in ;                                                                       ;
+; spi:spi_module|sregout[2]~en ; Stuck at VCC              ; spi:spi_module|sregout[3]                                             ;
+;                              ; due to stuck port data_in ;                                                                       ;
+; spi:spi_module|sregout[3]~en ; Stuck at VCC              ; spi:spi_module|sregout[4]                                             ;
+;                              ; due to stuck port data_in ;                                                                       ;
+; spi:spi_module|sregout[4]~en ; Stuck at VCC              ; spi:spi_module|sregout[5]                                             ;
+;                              ; due to stuck port data_in ;                                                                       ;
+; spi:spi_module|sregout[5]~en ; Stuck at VCC              ; spi:spi_module|sregout[6]                                             ;
+;                              ; due to stuck port data_in ;                                                                       ;
+; spi:spi_module|sregout[6]~en ; Stuck at VCC              ; spi:spi_module|sregout[7]                                             ;
+;                              ; due to stuck port data_in ;                                                                       ;
++------------------------------+---------------------------+-----------------------------------------------------------------------+
 
 
 +------------------------------------------------------+
@@ -442,16 +413,18 @@ Note: For table entries with two numbers listed, the numbers in parentheses indi
 +-------------------------------------------------------------------------------------------------------------------------------------------------------------------------+---------+
 
 
-+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-; Multiplexer Restructuring Statistics (Restructuring Performed)                                                                                                                                                                                                                              ;
-+--------------------+-----------+---------------+----------------------+------------------------+------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-; Multiplexer Inputs ; Bus Width ; Baseline Area ; Area if Restructured ; Saving if Restructured ; Registered ; Example Multiplexer Output                                                                                                                                                    ;
-+--------------------+-----------+---------------+----------------------+------------------------+------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-; 4:1                ; 15 bits   ; 30 LEs        ; 30 LEs               ; 0 LEs                  ; Yes        ; |NetworkAnalyser|sld_signaltap:SPI_DEBUG|sld_signaltap_impl:sld_signaltap_body|sld_signaltap_implb:sld_signaltap_body|sld_buffer_manager:sld_buffer_manager_inst|counter[14]  ;
-; 5:1                ; 4 bits    ; 12 LEs        ; 4 LEs                ; 8 LEs                  ; Yes        ; |NetworkAnalyser|sld_signaltap:SPI_DEBUG|sld_signaltap_impl:sld_signaltap_body|sld_signaltap_implb:sld_signaltap_body|sld_rom_sr:crc_rom_sr|word_counter[0]                   ;
-; 12:1               ; 4 bits    ; 32 LEs        ; 28 LEs               ; 4 LEs                  ; Yes        ; |NetworkAnalyser|sld_signaltap:SPI_DEBUG|sld_signaltap_impl:sld_signaltap_body|sld_signaltap_implb:sld_signaltap_body|sld_rom_sr:crc_rom_sr|WORD_SR[0]                        ;
-; 3:1                ; 14 bits   ; 28 LEs        ; 14 LEs               ; 14 LEs                 ; No         ; |NetworkAnalyser|sld_signaltap:SPI_DEBUG|sld_signaltap_impl:sld_signaltap_body|sld_signaltap_implb:sld_signaltap_body|sld_buffer_manager:sld_buffer_manager_inst|offset_count ;
-+--------------------+-----------+---------------+----------------------+------------------------+------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
++--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+; Multiplexer Restructuring Statistics (Restructuring Performed)                                                                                                                                                                       ;
++--------------------+-----------+---------------+----------------------+------------------------+------------+------------------------------------------------------------------------------------------------------------------------+
+; Multiplexer Inputs ; Bus Width ; Baseline Area ; Area if Restructured ; Saving if Restructured ; Registered ; Example Multiplexer Output                                                                                             ;
++--------------------+-----------+---------------+----------------------+------------------------+------------+------------------------------------------------------------------------------------------------------------------------+
+; 3:1                ; 4 bits    ; 8 LEs         ; 4 LEs                ; 4 LEs                  ; Yes        ; |NetworkAnalyser|sld_hub:auto_hub|sld_jtag_hub:\jtag_hub_gen:sld_jtag_hub_inst|hub_minor_ver_reg[0]                    ;
+; 4:1                ; 5 bits    ; 10 LEs        ; 5 LEs                ; 5 LEs                  ; Yes        ; |NetworkAnalyser|sld_hub:auto_hub|sld_jtag_hub:\jtag_hub_gen:sld_jtag_hub_inst|mixer_addr_reg[4]                       ;
+; 5:1                ; 5 bits    ; 15 LEs        ; 5 LEs                ; 10 LEs                 ; Yes        ; |NetworkAnalyser|sld_hub:auto_hub|sld_jtag_hub:\jtag_hub_gen:sld_jtag_hub_inst|sld_rom_sr:hub_info_reg|word_counter[0] ;
+; 6:1                ; 7 bits    ; 28 LEs        ; 7 LEs                ; 21 LEs                 ; Yes        ; |NetworkAnalyser|sld_hub:auto_hub|sld_jtag_hub:\jtag_hub_gen:sld_jtag_hub_inst|irsr_reg[2]                             ;
+; 34:1               ; 4 bits    ; 88 LEs        ; 60 LEs               ; 28 LEs                 ; Yes        ; |NetworkAnalyser|sld_hub:auto_hub|sld_jtag_hub:\jtag_hub_gen:sld_jtag_hub_inst|design_hash_reg[3]                      ;
+; 20:1               ; 4 bits    ; 52 LEs        ; 36 LEs               ; 16 LEs                 ; Yes        ; |NetworkAnalyser|sld_hub:auto_hub|sld_jtag_hub:\jtag_hub_gen:sld_jtag_hub_inst|sld_rom_sr:hub_info_reg|WORD_SR[0]      ;
++--------------------+-----------+---------------+----------------------+------------------------+------------+------------------------------------------------------------------------------------------------------------------------+
 
 
 +-------------------------------------------------------------+
@@ -529,7 +502,7 @@ Note: In order to hide this table in the UI and the text report file, please set
 +---------+--------+----------+-------------------------------------------------------------------------------------+
 ; Port    ; Type   ; Severity ; Details                                                                             ;
 +---------+--------+----------+-------------------------------------------------------------------------------------+
-; reset   ; Input  ; Info     ; Stuck at GND                                                                        ;
+; reset   ; Input  ; Info     ; Stuck at VCC                                                                        ;
 ; data_tx ; Input  ; Info     ; Stuck at GND                                                                        ;
 ; data_rx ; Output ; Info     ; Connected to dangling logic. Logic that only feeds a dangling port will be removed. ;
 ; busyrx  ; Output ; Info     ; Connected to dangling logic. Logic that only feeds a dangling port will be removed. ;
@@ -546,14 +519,14 @@ Note: In order to hide this table in the UI and the text report file, please set
 +----------------+---------------+---------------------+------------------+--------------+----------+------------------------+----------------------+--------------------+-----------------------------+-----------------+------------------+--------------------------+
 
 
-+----------------------------------------+
-; Elapsed Time Per Partition             ;
-+-------------------------+--------------+
-; Partition Name          ; Elapsed Time ;
-+-------------------------+--------------+
-; sld_signaltap:SPI_DEBUG ; 00:00:00     ;
-; Top                     ; 00:00:00     ;
-+-------------------------+--------------+
++---------------------------------+
+; Elapsed Time Per Partition      ;
++------------------+--------------+
+; Partition Name   ; Elapsed Time ;
++------------------+--------------+
+; sld_hub:auto_hub ; 00:00:00     ;
+; Top              ; 00:00:00     ;
++------------------+--------------+
 
 
 +------------------------------------------------------------------------------------------------------+
@@ -564,8 +537,8 @@ Note: In order to hide this table in the UI and the text report file, please set
 ; a1    ; pre-synthesis ; connected ; Top            ; post-synthesis    ; a1                ; N/A     ;
 ; a1    ; pre-synthesis ; connected ; Top            ; post-synthesis    ; a1                ; N/A     ;
 ; clock ; pre-synthesis ; connected ; Top            ; post-synthesis    ; CLOCK             ; N/A     ;
-; miso  ; pre-synthesis ; connected ; Top            ; post-synthesis    ; QIC_SIGNALTAP_VCC ; N/A     ;
-; miso  ; pre-synthesis ; connected ; Top            ; post-synthesis    ; QIC_SIGNALTAP_VCC ; N/A     ;
+; miso  ; pre-synthesis ; connected ; Top            ; post-synthesis    ; SSEL              ; N/A     ;
+; miso  ; pre-synthesis ; connected ; Top            ; post-synthesis    ; SSEL              ; N/A     ;
 ; mosi  ; pre-synthesis ; connected ; Top            ; post-synthesis    ; MOSI              ; N/A     ;
 ; mosi  ; pre-synthesis ; connected ; Top            ; post-synthesis    ; MOSI              ; N/A     ;
 ; sclk  ; pre-synthesis ; connected ; Top            ; post-synthesis    ; SCLK              ; N/A     ;
@@ -581,7 +554,7 @@ Note: In order to hide this table in the UI and the text report file, please set
 Info: *******************************************************************
 Info: Running Quartus II 64-Bit Analysis & Synthesis
     Info: Version 13.0.1 Build 232 06/12/2013 Service Pack 1 SJ Web Edition
-    Info: Processing started: Mon Apr 10 16:59:17 2023
+    Info: Processing started: Mon Apr 10 20:34:47 2023
 Info: Command: quartus_map --read_settings_files=on --write_settings_files=off NetworkAnalyser -c NetworkAnalyser
 Info (11104): Parallel Compilation has detected 4 hyper-threaded processors. However, the extra hyper-threaded processors will not be used by default. Parallel Compilation will use 2 of the 2 physical processors detected instead.
 Info (12021): Found 2 design units, including 1 entities, in source file spi.vhd
@@ -630,23 +603,25 @@ Warning (13046): Tri-state node(s) do not directly drive top-level pin(s)
 Warning (13024): Output pins are stuck at VCC or GND
     Warning (13410): Pin "LED_0" is stuck at GND
     Warning (13410): Pin "LED_2" is stuck at GND
+Info (17049): 4 registers lost all their fanouts during netlist optimizations.
 Info (13000): Registers with preset signals will power-up high
 Info (13003): DEV_CLRn pin will set, and not reset, register with preset signal due to NOT Gate Push-Back
-Warning (18057): The assignment to disallow NOT gate push-back on register "sld_signaltap:SPI_DEBUG|sld_signaltap_impl:sld_signaltap_body|sld_signaltap_implb:sld_signaltap_body|trigger_out_mode_ff" is ignored
+Warning (13024): Output pins are stuck at VCC or GND
+    Warning (13410): Pin "sld_hub:auto_hub|receive[0][0]" is stuck at GND
 Info (35024): Succesfully connected in-system debug instance "SPI_DEBUG" to all 11 required data inputs, trigger inputs, acquisition clocks, and dynamic pins
 Info (16010): Generating hard_block partition "hard_block:auto_generated_inst"
     Info (16011): Adding 0 node(s), including 0 DDIO, 0 PLL, 0 transceiver and 0 LCELL
 Warning (21074): Design contains 1 input pin(s) that do not drive logic
     Warning (15610): No output dependent on input pin "RESET"
-Info (21057): Implemented 740 device resources after synthesis - the final resource count might be different
+Info (21057): Implemented 741 device resources after synthesis - the final resource count might be different
     Info (21058): Implemented 8 input pins
     Info (21059): Implemented 20 output pins
-    Info (21061): Implemented 691 logic cells
+    Info (21061): Implemented 692 logic cells
     Info (21064): Implemented 20 RAM segments
-Info: Quartus II 64-Bit Analysis & Synthesis was successful. 0 errors, 14 warnings
-    Info: Peak virtual memory: 702 megabytes
-    Info: Processing ended: Mon Apr 10 16:59:22 2023
-    Info: Elapsed time: 00:00:05
-    Info: Total CPU time (on all processors): 00:00:05
+Info: Quartus II 64-Bit Analysis & Synthesis was successful. 0 errors, 15 warnings
+    Info: Peak virtual memory: 718 megabytes
+    Info: Processing ended: Mon Apr 10 20:34:51 2023
+    Info: Elapsed time: 00:00:04
+    Info: Total CPU time (on all processors): 00:00:04
 
 

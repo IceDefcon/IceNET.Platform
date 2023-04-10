@@ -1,5 +1,5 @@
 TimeQuest Timing Analyzer report for NetworkAnalyser
-Mon Apr 10 17:00:38 2023
+Mon Apr 10 20:36:04 2023
 Quartus II 64-Bit Version 13.0.1 Build 232 06/12/2013 Service Pack 1 SJ Web Edition
 
 
@@ -18,20 +18,24 @@ Quartus II 64-Bit Version 13.0.1 Build 232 06/12/2013 Service Pack 1 SJ Web Edit
  10. Slow Model Removal Summary
  11. Slow Model Minimum Pulse Width Summary
  12. Slow Model Minimum Pulse Width: 'altera_reserved_tck'
- 13. Slow Model Datasheet Report
- 14. Fast Model Setup Summary
- 15. Fast Model Hold Summary
- 16. Fast Model Recovery Summary
- 17. Fast Model Removal Summary
- 18. Fast Model Minimum Pulse Width Summary
- 19. Fast Model Minimum Pulse Width: 'altera_reserved_tck'
- 20. Fast Model Datasheet Report
- 21. Multicorner Timing Analysis Summary
- 22. Clock Transfers
- 23. Report TCCS
- 24. Report RSKM
- 25. Unconstrained Paths
- 26. TimeQuest Timing Analyzer Messages
+ 13. Propagation Delay
+ 14. Minimum Propagation Delay
+ 15. Fast Model Setup Summary
+ 16. Fast Model Hold Summary
+ 17. Fast Model Recovery Summary
+ 18. Fast Model Removal Summary
+ 19. Fast Model Minimum Pulse Width Summary
+ 20. Fast Model Minimum Pulse Width: 'altera_reserved_tck'
+ 21. Propagation Delay
+ 22. Minimum Propagation Delay
+ 23. Multicorner Timing Analysis Summary
+ 24. Progagation Delay
+ 25. Minimum Progagation Delay
+ 26. Clock Transfers
+ 27. Report TCCS
+ 28. Report RSKM
+ 29. Unconstrained Paths
+ 30. TimeQuest Timing Analyzer Messages
 
 
 
@@ -89,7 +93,7 @@ applicable agreement for further details.
 +---------------------+--------+--------------------------+
 ; SDC File Path       ; Status ; Read at                  ;
 +---------------------+--------+--------------------------+
-; NetworkAnalyser.sdc ; OK     ; Mon Apr 10 17:00:38 2023 ;
+; NetworkAnalyser.sdc ; OK     ; Mon Apr 10 20:36:03 2023 ;
 +---------------------+--------+--------------------------+
 
 
@@ -150,10 +154,22 @@ No paths to report.
 +--------+--------------+----------------+-----------+---------------------+------------+---------------------+
 
 
--------------------------------
-; Slow Model Datasheet Report ;
--------------------------------
-Nothing to report.
++------------------------------------------------------+
+; Propagation Delay                                    ;
++------------+-------------+--------+----+----+--------+
+; Input Port ; Output Port ; RR     ; RF ; FR ; FF     ;
++------------+-------------+--------+----+----+--------+
+; SSEL       ; MISO        ; 11.016 ;    ;    ; 11.016 ;
++------------+-------------+--------+----+----+--------+
+
+
++------------------------------------------------------+
+; Minimum Propagation Delay                            ;
++------------+-------------+--------+----+----+--------+
+; Input Port ; Output Port ; RR     ; RF ; FR ; FF     ;
++------------+-------------+--------+----+----+--------+
+; SSEL       ; MISO        ; 11.016 ;    ;    ; 11.016 ;
++------------+-------------+--------+----+----+--------+
 
 
 ----------------------------
@@ -198,10 +214,22 @@ No paths to report.
 +--------+--------------+----------------+-----------+---------------------+------------+---------------------+
 
 
--------------------------------
-; Fast Model Datasheet Report ;
--------------------------------
-Nothing to report.
++----------------------------------------------------+
+; Propagation Delay                                  ;
++------------+-------------+-------+----+----+-------+
+; Input Port ; Output Port ; RR    ; RF ; FR ; FF    ;
++------------+-------------+-------+----+----+-------+
+; SSEL       ; MISO        ; 5.258 ;    ;    ; 5.258 ;
++------------+-------------+-------+----+----+-------+
+
+
++----------------------------------------------------+
+; Minimum Propagation Delay                          ;
++------------+-------------+-------+----+----+-------+
+; Input Port ; Output Port ; RR    ; RF ; FR ; FF    ;
++------------+-------------+-------+----+----+-------+
+; SSEL       ; MISO        ; 5.258 ;    ;    ; 5.258 ;
++------------+-------------+-------+----+----+-------+
 
 
 +--------------------------------------------------------------------------------+
@@ -214,6 +242,24 @@ Nothing to report.
 ; Design-wide TNS      ; 0.0   ; 0.0  ; 0.0      ; 0.0     ; 0.0                 ;
 ;  altera_reserved_tck ; N/A   ; N/A  ; N/A      ; N/A     ; 0.000               ;
 +----------------------+-------+------+----------+---------+---------------------+
+
+
++------------------------------------------------------+
+; Progagation Delay                                    ;
++------------+-------------+--------+----+----+--------+
+; Input Port ; Output Port ; RR     ; RF ; FR ; FF     ;
++------------+-------------+--------+----+----+--------+
+; SSEL       ; MISO        ; 11.016 ;    ;    ; 11.016 ;
++------------+-------------+--------+----+----+--------+
+
+
++----------------------------------------------------+
+; Minimum Progagation Delay                          ;
++------------+-------------+-------+----+----+-------+
+; Input Port ; Output Port ; RR    ; RF ; FR ; FF    ;
++------------+-------------+-------+----+----+-------+
+; SSEL       ; MISO        ; 5.258 ;    ;    ; 5.258 ;
++------------+-------------+-------+----+----+-------+
 
 
 -------------------
@@ -242,9 +288,9 @@ No dedicated SERDES Receiver circuitry present in device or used in design
 ; Illegal Clocks                  ; 0     ; 0    ;
 ; Unconstrained Clocks            ; 1     ; 1    ;
 ; Unconstrained Input Ports       ; 3     ; 3    ;
-; Unconstrained Input Port Paths  ; 6     ; 6    ;
-; Unconstrained Output Ports      ; 1     ; 1    ;
-; Unconstrained Output Port Paths ; 1     ; 1    ;
+; Unconstrained Input Port Paths  ; 9     ; 9    ;
+; Unconstrained Output Ports      ; 2     ; 2    ;
+; Unconstrained Output Port Paths ; 2     ; 2    ;
 +---------------------------------+-------+------+
 
 
@@ -254,7 +300,7 @@ No dedicated SERDES Receiver circuitry present in device or used in design
 Info: *******************************************************************
 Info: Running Quartus II 64-Bit TimeQuest Timing Analyzer
     Info: Version 13.0.1 Build 232 06/12/2013 Service Pack 1 SJ Web Edition
-    Info: Processing started: Mon Apr 10 17:00:37 2023
+    Info: Processing started: Mon Apr 10 20:36:03 2023
 Info: Command: quartus_sta NetworkAnalyser -c NetworkAnalyser
 Info: qsta_default_script.tcl version: #1
 Info (11104): Parallel Compilation has detected 4 hyper-threaded processors. However, the extra hyper-threaded processors will not be used by default. Parallel Compilation will use 2 of the 2 physical processors detected instead.
@@ -292,8 +338,8 @@ Info (332001): The selected device family is not supported by the report_metasta
 Info (332102): Design is not fully constrained for setup requirements
 Info (332102): Design is not fully constrained for hold requirements
 Info: Quartus II 64-Bit TimeQuest Timing Analyzer was successful. 0 errors, 2 warnings
-    Info: Peak virtual memory: 542 megabytes
-    Info: Processing ended: Mon Apr 10 17:00:38 2023
+    Info: Peak virtual memory: 528 megabytes
+    Info: Processing ended: Mon Apr 10 20:36:04 2023
     Info: Elapsed time: 00:00:01
     Info: Total CPU time (on all processors): 00:00:01
 

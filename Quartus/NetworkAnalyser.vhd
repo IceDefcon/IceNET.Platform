@@ -10,9 +10,9 @@ port
 	RESET 			: in std_logic; 	-- PIN_136 :: Connected to K64F
 
 	SSEL 				: in std_logic;  	-- PIN_119 :: Connected to K64F
-	MOSI 				: in std_logic;  	-- PIN_121 :: Connected to K64F
-	MISO 				: out std_logic;  -- PIN_125 :: Connected to K64F
-	SCLK 				: in std_logic;  	-- PIN_129 :: Connected to K64F
+	MOSI 				: in std_logic;  	-- PIN_121 :: Connected to K64F :: Input to FPGA
+	MISO 				: out std_logic;  -- PIN_125 :: Connected to K64F :: Back to Freedom board
+	SCLK 				: in std_logic;  	-- PIN_129 :: Connected to K64F :: Input form K64F Freedom
 	
 	LED_0 			: out std_logic; 	-- PIN_3
 	LED_1 			: out std_logic; 	-- PIN_7
@@ -107,7 +107,7 @@ port map
 	cs        	=> SSEL,
 	mosi    		=> MOSI,
 	miso 			=> MISO,
-	reset      	=> '0',
+	reset      	=> '1',
 
 	data_tx     => (others => '0'),
 	data_rx   	=> open,
