@@ -88,14 +88,15 @@ PIN_139 <= 'Z';
 PIN_141 <= 'Z';
 
 LED_0 <= '0'; 	-- D2 Low Enable
-LED_1 <= '1'; 	-- D4 Low Enable
+--LED_1 <= '1'; 	-- D4 Low Enable
 LED_2 <= '0'; 	-- D5 Low Enable
 
 main_process:
-process(clock)
+process(CLOCK)
 begin
-	if rising_edge(clock) then
+	if rising_edge(CLOCK) then
 		a1 	<= not(a1);
+		LED_1 <= a1;
 	end if;
 end process;
 

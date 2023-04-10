@@ -129,7 +129,7 @@ static void slave_task(void *pvParameters)
         PRINTF("Failed to create master task");
         vTaskSuspend(NULL);
     }
-    PRINTF("master TASK created");
+    PRINTF("master TASK created \r\n\r\n");
 
     /* Wait for transfer to finish */
     xSemaphoreTake(cb_msg.sem, portMAX_DELAY);
@@ -278,6 +278,7 @@ int main(void)
     // DSPI :: TASK
     //
     xTaskCreate(slave_task, "Slave_task", configMINIMAL_STACK_SIZE + 100, NULL, slave_task_PRIORITY, NULL);
+    PRINTF("slave TASK created \r\n\r\n");
 
     vTaskStartScheduler();
 

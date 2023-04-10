@@ -1,12 +1,13 @@
 |NetworkAnalyser
-CLOCK => ~NO_FANOUT~
+CLOCK => LED_1~reg0.CLK
+CLOCK => a1.CLK
 RESET => ~NO_FANOUT~
 SSEL => spi:spi_module.cs
 MOSI => spi:spi_module.mosi
 MISO <= spi:spi_module.miso
 SCLK => spi:spi_module.sclk
 LED_0 <= <GND>
-LED_1 <= <VCC>
+LED_1 <= LED_1~reg0.DB_MAX_OUTPUT_PORT_TYPE
 LED_2 <= <GND>
 PIN_112 <= PIN_112.DB_MAX_OUTPUT_PORT_TYPE
 PIN_113 <= PIN_113.DB_MAX_OUTPUT_PORT_TYPE
