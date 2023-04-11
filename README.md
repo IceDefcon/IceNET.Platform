@@ -85,35 +85,35 @@ To check if QSYS is working or require some dependant libraries you can execute
 
 --==[ IF PROBLEMS WITH  ]==--
 
-Fatal: Read failure in vlm process (0,0)
+	Fatal: Read failure in vlm process (0,0)
 
-1. For 13.1ps1 Download ---> freetype-2.4.12
-2. Configure
-   ./configure --build=i686-pc-linux-gnu "CFLAGS=-m32" "CXXFLAGS=-m32" "LDFLAGS=-m32"
-3. If everything good ---> make
-   make -j8
+	1. For 13.1ps1 Download ---> freetype-2.4.12
+	2. Configure
+	   ./configure --build=i686-pc-linux-gnu "CFLAGS=-m32" "CXXFLAGS=-m32" "LDFLAGS=-m32"
+	3. If everything good ---> make
+	   make -j8
 
-4. Modify vsim ---> put after this line another one
-   dir=`dirname $arg0`
-   export LD_LIBRARY_PATH=${dir}/lib32
+	4. Modify vsim ---> put after this line another one
+	   dir=`dirname $arg0`
+	   export LD_LIBRARY_PATH=${dir}/lib32
 
-5. Also check your kernrel ---> uname -r
-   then for example ---> 5.4.0-146-generic
-   modfy vsim intoadditional 5*
+	5. Also check your kernrel ---> uname -r
+	   then for example ---> 5.4.0-146-generic
+	   modfy vsim intoadditional 5*
 
-	case $utype in
-	2.4.[7-9]*)       vco="linux" ;;
-	2.4.[1-9][0-9]*)  vco="linux" ;;
-	2.[5-9]*)         vco="linux" ;;
-	2.[1-9][0-9]*)    vco="linux" ;;
-	3.[0-9]*)    		vco="linux" ;;
-	5.[0-9]*)     vco="linux" ;;
-	*)                vco="linux_rh60" ;;
+		case $utype in
+		2.4.[7-9]*)       vco="linux" ;;
+		2.4.[1-9][0-9]*)  vco="linux" ;;
+		2.[5-9]*)         vco="linux" ;;
+		2.[1-9][0-9]*)    vco="linux" ;;
+		3.[0-9]*)    		vco="linux" ;;
+		5.[0-9]*)     vco="linux" ;;
+		*)                vco="linux_rh60" ;;
 
-6. Then copy this so library into credetd "lib32" folder in the modelsim_ase folder ! 
-   cp objs/.libs/libfreetype.so* ../../../altera/13.1/modelsim_ase/lib32/
+	6. Then copy this so library into credetd "lib32" folder in the modelsim_ase folder ! 
+	   cp objs/.libs/libfreetype.so* ../../../altera/13.1/modelsim_ase/lib32/
 
-7. This should be if it should work now !!! enjoy
+	7. This should be if it should work now !!! enjoy
 
 If there are JTAG problems:
 
@@ -131,7 +131,7 @@ Check if Altera USB Blaser is present in the system:
 	usb 1-2: Manufacturer: Altera
 	usb 1-2: SerialNumber: 00000000
 
-2.When: unable to lock chain(Insufficient port permissions)
+When: unable to lock chain(Insufficient port permissions)
 
 	sudo killall -9 jtag 
 	cd /altera/13.0sp1/quartus/bin/
@@ -142,17 +142,9 @@ Bare metal drivers and low level sources:
 
 	https://mcuxpresso.nxp.com/en/welcome
 
-3. To drive SPI inside FPGA ---> K64F.FreeRTOS Project must be modified to allow pins of the K64F Board to comunicate with with the Cyclon Board
+# IN PROGRESS
 
-	https://github.com/IceDefcon/K64F.FreeRTOS
-
-	Inside the Project ---> Threre is an example how to control particular K64F Board LED PIN 
-
-	This configuration can be modified to allow bare metal NXP SPI driver to comunicate with the Cyclon Board ! 
-
-# TODO
-
-	1. Test SPI CPU :: FPGA
-	2. Linux app :: For CPU comunication with FPGA
+	1. FPGA SPI module testing :: Modelsim
+	2. x86_64 Linux application :: COmmand thread
 
 # ICE
