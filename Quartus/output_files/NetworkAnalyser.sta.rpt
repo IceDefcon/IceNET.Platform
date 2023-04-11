@@ -1,5 +1,5 @@
 TimeQuest Timing Analyzer report for NetworkAnalyser
-Mon Apr 10 20:36:04 2023
+Tue Apr 11 20:15:31 2023
 Quartus II 64-Bit Version 13.0.1 Build 232 06/12/2013 Service Pack 1 SJ Web Edition
 
 
@@ -93,7 +93,7 @@ applicable agreement for further details.
 +---------------------+--------+--------------------------+
 ; SDC File Path       ; Status ; Read at                  ;
 +---------------------+--------+--------------------------+
-; NetworkAnalyser.sdc ; OK     ; Mon Apr 10 20:36:03 2023 ;
+; NetworkAnalyser.sdc ; OK     ; Tue Apr 11 20:15:31 2023 ;
 +---------------------+--------+--------------------------+
 
 
@@ -154,22 +154,24 @@ No paths to report.
 +--------+--------------+----------------+-----------+---------------------+------------+---------------------+
 
 
-+------------------------------------------------------+
-; Propagation Delay                                    ;
-+------------+-------------+--------+----+----+--------+
-; Input Port ; Output Port ; RR     ; RF ; FR ; FF     ;
-+------------+-------------+--------+----+----+--------+
-; SSEL       ; MISO        ; 11.016 ;    ;    ; 11.016 ;
-+------------+-------------+--------+----+----+--------+
++---------------------------------------------------------------------+
+; Propagation Delay                                                   ;
++------------+----------------------------+--------+----+----+--------+
+; Input Port ; Output Port                ; RR     ; RF ; FR ; FF     ;
++------------+----------------------------+--------+----+----+--------+
+; SSEL       ; MISO                       ; 10.865 ;    ;    ; 10.865 ;
+; SSEL       ; pre_syn.bp.spi_module_miso ; 10.594 ;    ;    ; 10.594 ;
++------------+----------------------------+--------+----+----+--------+
 
 
-+------------------------------------------------------+
-; Minimum Propagation Delay                            ;
-+------------+-------------+--------+----+----+--------+
-; Input Port ; Output Port ; RR     ; RF ; FR ; FF     ;
-+------------+-------------+--------+----+----+--------+
-; SSEL       ; MISO        ; 11.016 ;    ;    ; 11.016 ;
-+------------+-------------+--------+----+----+--------+
++---------------------------------------------------------------------+
+; Minimum Propagation Delay                                           ;
++------------+----------------------------+--------+----+----+--------+
+; Input Port ; Output Port                ; RR     ; RF ; FR ; FF     ;
++------------+----------------------------+--------+----+----+--------+
+; SSEL       ; MISO                       ; 10.865 ;    ;    ; 10.865 ;
+; SSEL       ; pre_syn.bp.spi_module_miso ; 10.594 ;    ;    ; 10.594 ;
++------------+----------------------------+--------+----+----+--------+
 
 
 ----------------------------
@@ -214,22 +216,24 @@ No paths to report.
 +--------+--------------+----------------+-----------+---------------------+------------+---------------------+
 
 
-+----------------------------------------------------+
-; Propagation Delay                                  ;
-+------------+-------------+-------+----+----+-------+
-; Input Port ; Output Port ; RR    ; RF ; FR ; FF    ;
-+------------+-------------+-------+----+----+-------+
-; SSEL       ; MISO        ; 5.258 ;    ;    ; 5.258 ;
-+------------+-------------+-------+----+----+-------+
++-------------------------------------------------------------------+
+; Propagation Delay                                                 ;
++------------+----------------------------+-------+----+----+-------+
+; Input Port ; Output Port                ; RR    ; RF ; FR ; FF    ;
++------------+----------------------------+-------+----+----+-------+
+; SSEL       ; MISO                       ; 5.165 ;    ;    ; 5.165 ;
+; SSEL       ; pre_syn.bp.spi_module_miso ; 5.096 ;    ;    ; 5.096 ;
++------------+----------------------------+-------+----+----+-------+
 
 
-+----------------------------------------------------+
-; Minimum Propagation Delay                          ;
-+------------+-------------+-------+----+----+-------+
-; Input Port ; Output Port ; RR    ; RF ; FR ; FF    ;
-+------------+-------------+-------+----+----+-------+
-; SSEL       ; MISO        ; 5.258 ;    ;    ; 5.258 ;
-+------------+-------------+-------+----+----+-------+
++-------------------------------------------------------------------+
+; Minimum Propagation Delay                                         ;
++------------+----------------------------+-------+----+----+-------+
+; Input Port ; Output Port                ; RR    ; RF ; FR ; FF    ;
++------------+----------------------------+-------+----+----+-------+
+; SSEL       ; MISO                       ; 5.165 ;    ;    ; 5.165 ;
+; SSEL       ; pre_syn.bp.spi_module_miso ; 5.096 ;    ;    ; 5.096 ;
++------------+----------------------------+-------+----+----+-------+
 
 
 +--------------------------------------------------------------------------------+
@@ -244,22 +248,24 @@ No paths to report.
 +----------------------+-------+------+----------+---------+---------------------+
 
 
-+------------------------------------------------------+
-; Progagation Delay                                    ;
-+------------+-------------+--------+----+----+--------+
-; Input Port ; Output Port ; RR     ; RF ; FR ; FF     ;
-+------------+-------------+--------+----+----+--------+
-; SSEL       ; MISO        ; 11.016 ;    ;    ; 11.016 ;
-+------------+-------------+--------+----+----+--------+
++---------------------------------------------------------------------+
+; Progagation Delay                                                   ;
++------------+----------------------------+--------+----+----+--------+
+; Input Port ; Output Port                ; RR     ; RF ; FR ; FF     ;
++------------+----------------------------+--------+----+----+--------+
+; SSEL       ; MISO                       ; 10.865 ;    ;    ; 10.865 ;
+; SSEL       ; pre_syn.bp.spi_module_miso ; 10.594 ;    ;    ; 10.594 ;
++------------+----------------------------+--------+----+----+--------+
 
 
-+----------------------------------------------------+
-; Minimum Progagation Delay                          ;
-+------------+-------------+-------+----+----+-------+
-; Input Port ; Output Port ; RR    ; RF ; FR ; FF    ;
-+------------+-------------+-------+----+----+-------+
-; SSEL       ; MISO        ; 5.258 ;    ;    ; 5.258 ;
-+------------+-------------+-------+----+----+-------+
++-------------------------------------------------------------------+
+; Minimum Progagation Delay                                         ;
++------------+----------------------------+-------+----+----+-------+
+; Input Port ; Output Port                ; RR    ; RF ; FR ; FF    ;
++------------+----------------------------+-------+----+----+-------+
+; SSEL       ; MISO                       ; 5.165 ;    ;    ; 5.165 ;
+; SSEL       ; pre_syn.bp.spi_module_miso ; 5.096 ;    ;    ; 5.096 ;
++------------+----------------------------+-------+----+----+-------+
 
 
 -------------------
@@ -286,9 +292,9 @@ No dedicated SERDES Receiver circuitry present in device or used in design
 ; Property                        ; Setup ; Hold ;
 +---------------------------------+-------+------+
 ; Illegal Clocks                  ; 0     ; 0    ;
-; Unconstrained Clocks            ; 1     ; 1    ;
+; Unconstrained Clocks            ; 2     ; 2    ;
 ; Unconstrained Input Ports       ; 3     ; 3    ;
-; Unconstrained Input Port Paths  ; 9     ; 9    ;
+; Unconstrained Input Port Paths  ; 11    ; 11   ;
 ; Unconstrained Output Ports      ; 2     ; 2    ;
 ; Unconstrained Output Port Paths ; 2     ; 2    ;
 +---------------------------------+-------+------+
@@ -300,7 +306,7 @@ No dedicated SERDES Receiver circuitry present in device or used in design
 Info: *******************************************************************
 Info: Running Quartus II 64-Bit TimeQuest Timing Analyzer
     Info: Version 13.0.1 Build 232 06/12/2013 Service Pack 1 SJ Web Edition
-    Info: Processing started: Mon Apr 10 20:36:03 2023
+    Info: Processing started: Tue Apr 11 20:15:31 2023
 Info: Command: quartus_sta NetworkAnalyser -c NetworkAnalyser
 Info: qsta_default_script.tcl version: #1
 Info (11104): Parallel Compilation has detected 4 hyper-threaded processors. However, the extra hyper-threaded processors will not be used by default. Parallel Compilation will use 2 of the 2 physical processors detected instead.
@@ -311,6 +317,7 @@ Info (332164): Evaluating HDL-embedded SDC commands
         Info (332166): create_clock -name altera_reserved_tck [get_ports {altera_reserved_tck}] -period 10MHz   
         Info (332166): set_clock_groups -asynchronous -group {altera_reserved_tck}
 Info (332104): Reading SDC File: 'NetworkAnalyser.sdc'
+Warning (332060): Node: SCLK was determined to be a clock but was found without an associated clock assignment.
 Warning (332060): Node: CLOCK was determined to be a clock but was found without an associated clock assignment.
 Info: Found TIMEQUEST_REPORT_SCRIPT_INCLUDE_DEFAULT_ANALYSIS = ON
 Info: Analyzing Slow Model
@@ -325,6 +332,7 @@ Info (332146): Worst-case minimum pulse width slack is 97.223
     Info (332119):    97.223         0.000 altera_reserved_tck 
 Info (332001): The selected device family is not supported by the report_metastability command.
 Info: Analyzing Fast Model
+Warning (332060): Node: SCLK was determined to be a clock but was found without an associated clock assignment.
 Warning (332060): Node: CLOCK was determined to be a clock but was found without an associated clock assignment.
 Info (332140): No Setup paths to report
 Info (332140): No Hold paths to report
@@ -337,10 +345,10 @@ Info (332146): Worst-case minimum pulse width slack is 97.778
 Info (332001): The selected device family is not supported by the report_metastability command.
 Info (332102): Design is not fully constrained for setup requirements
 Info (332102): Design is not fully constrained for hold requirements
-Info: Quartus II 64-Bit TimeQuest Timing Analyzer was successful. 0 errors, 2 warnings
+Info: Quartus II 64-Bit TimeQuest Timing Analyzer was successful. 0 errors, 4 warnings
     Info: Peak virtual memory: 528 megabytes
-    Info: Processing ended: Mon Apr 10 20:36:04 2023
-    Info: Elapsed time: 00:00:01
+    Info: Processing ended: Tue Apr 11 20:15:31 2023
+    Info: Elapsed time: 00:00:00
     Info: Total CPU time (on all processors): 00:00:01
 
 

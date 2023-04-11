@@ -8,37 +8,40 @@ END tb;
 
 ARCHITECTURE behavior OF tb IS
   
-signal CLOCK : std_logic;
-signal RESET : std_logic;
+signal CLOCK : std_logic := '0';
+signal RESET : std_logic := '0';
 
-signal SSEL : std_logic;
-signal MOSI : std_logic;
-signal MISO : std_logic;
-signal SCLK : std_logic;
+signal SSEL : std_logic := '0';
+signal MOSI : std_logic := '0';
+signal MISO : std_logic := '0';
+signal SCLK : std_logic := '0';
 
-signal LED_0 : std_logic;
-signal LED_1 : std_logic;
-signal LED_2 : std_logic;
+signal LED_0 : std_logic := '0';
+signal LED_1 : std_logic := '0';
+signal LED_2 : std_logic := '0';
 
-signal PIN_112 : std_logic;
-signal PIN_113 : std_logic;
-signal PIN_114 : std_logic;
-signal PIN_115 : std_logic;
-signal PIN_118 : std_logic;
-signal PIN_120 : std_logic;
-signal PIN_122 : std_logic;
-signal PIN_126 : std_logic;
-signal PIN_132 : std_logic;
-signal PIN_133 : std_logic;
-signal PIN_134 : std_logic;
-signal PIN_135 : std_logic;
-signal PIN_137 : std_logic;
-signal PIN_139 : std_logic;
-signal PIN_141 : std_logic;
+signal PIN_112 : std_logic := '0';
+signal PIN_113 : std_logic := '0';
+signal PIN_114 : std_logic := '0';
+signal PIN_115 : std_logic := '0';
+signal PIN_118 : std_logic := '0';
+signal PIN_120 : std_logic := '0';
+signal PIN_122 : std_logic := '0';
+signal PIN_126 : std_logic := '0';
+signal PIN_132 : std_logic := '0';
+signal PIN_133 : std_logic := '0';
+signal PIN_134 : std_logic := '0';
+signal PIN_135 : std_logic := '0';
+signal PIN_137 : std_logic := '0';
+signal PIN_139 : std_logic := '0';
+signal PIN_141 : std_logic := '0';
 
+constant clk_period : time := 20 ns;
 
 BEGIN
-  
+
+CLOCK <= not CLOCK after clk_period/2;
+
 -- Instantiate the Unit Under Test (UUT)
 NetworkAnalyser_module: entity work.NetworkAnalyser PORT MAP (
                   

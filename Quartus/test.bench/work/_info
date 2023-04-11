@@ -18,7 +18,7 @@ L7
 VIUh@d0XH`Ibn4:A4a]9Y81
 Z9 OV;C;10.1d;51
 32
-Z10 !s108 1681204121.100537
+Z10 !s108 1681210662.579214
 Z11 !s90 -reportprogress|300|-work|work|-2002|-explicit|/ice/code.lab/IceNET.NetworkAnalyser/Quartus/test.bench/NetworkAnalyser.vhd|
 Z12 !s107 /ice/code.lab/IceNET.NetworkAnalyser/Quartus/test.bench/NetworkAnalyser.vhd|
 Z13 o-work work -2002 -explicit -O0
@@ -57,7 +57,7 @@ L12
 V>FE22ETk=Ri0Ym3kCaeFF0
 R9
 32
-Z19 !s108 1681204121.128780
+Z19 !s108 1681210662.607110
 Z20 !s90 -reportprogress|300|-work|work|-2002|-explicit|/ice/code.lab/IceNET.NetworkAnalyser/Quartus/test.bench/spi.vhd|
 Z21 !s107 /ice/code.lab/IceNET.NetworkAnalyser/Quartus/test.bench/spi.vhd|
 R13
@@ -82,13 +82,13 @@ R13
 R14
 !i10b 1
 Etb
-R16
+Z22 w1681210664
 R5
 R4
 R3
 R6
-Z22 8/ice/code.lab/IceNET.NetworkAnalyser/Quartus/test.bench/tb.vhd
-Z23 F/ice/code.lab/IceNET.NetworkAnalyser/Quartus/test.bench/tb.vhd
+Z23 8/ice/code.lab/IceNET.NetworkAnalyser/Quartus/test.bench/tb.vhd
+Z24 F/ice/code.lab/IceNET.NetworkAnalyser/Quartus/test.bench/tb.vhd
 l0
 L6
 VVgNHWgd?DZA^gN8BUePde2
@@ -96,9 +96,9 @@ VVgNHWgd?DZA^gN8BUePde2
 R9
 32
 !i10b 1
-Z24 !s108 1681204121.154389
-Z25 !s90 -reportprogress|300|-work|work|-2002|-explicit|/ice/code.lab/IceNET.NetworkAnalyser/Quartus/test.bench/tb.vhd|
-Z26 !s107 /ice/code.lab/IceNET.NetworkAnalyser/Quartus/test.bench/tb.vhd|
+Z25 !s108 1681210664.767626
+Z26 !s90 -reportprogress|300|-work|work|-2002|-explicit|/ice/code.lab/IceNET.NetworkAnalyser/Quartus/test.bench/tb.vhd|
+Z27 !s107 /ice/code.lab/IceNET.NetworkAnalyser/Quartus/test.bench/tb.vhd|
 R13
 R14
 Abehavior
@@ -108,16 +108,16 @@ R15
 R5
 R4
 R3
-Z27 DEx4 work 2 tb 0 22 VgNHWgd?DZA^gN8BUePde2
-l40
+Z28 DEx4 work 2 tb 0 22 VgNHWgd?DZA^gN8BUePde2
+l41
 L9
-Z28 VgZ4P1H=eZV2V9L8ocH=Gj3
-Z29 !s100 UDUcjE7PnbCzBfS>dYQ[J3
+VkMR`NT8K:R:=J1?je;^Wa1
+!s100 fkF^6iZC]QlHng4V7]Wa^0
 R9
 32
 !i10b 1
-R24
 R25
 R26
+R27
 R13
 R14

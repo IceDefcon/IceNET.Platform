@@ -1,5 +1,5 @@
 Partition Merge report for NetworkAnalyser
-Mon Apr 10 16:56:50 2023
+Tue Apr 11 20:14:38 2023
 Quartus II 64-Bit Version 13.0.1 Build 232 06/12/2013 Service Pack 1 SJ Web Edition
 
 
@@ -39,18 +39,18 @@ applicable agreement for further details.
 +--------------------------------------------------------------------------------------+
 ; Partition Merge Summary                                                              ;
 +------------------------------------+-------------------------------------------------+
-; Partition Merge Status             ; Successful - Mon Apr 10 16:56:50 2023           ;
+; Partition Merge Status             ; Successful - Tue Apr 11 20:14:38 2023           ;
 ; Quartus II 64-Bit Version          ; 13.0.1 Build 232 06/12/2013 SP 1 SJ Web Edition ;
 ; Revision Name                      ; NetworkAnalyser                                 ;
 ; Top-level Entity Name              ; NetworkAnalyser                                 ;
 ; Family                             ; Cyclone II                                      ;
-; Total logic elements               ; 675                                             ;
-;     Total combinational functions  ; 447                                             ;
-;     Dedicated logic registers      ; 493                                             ;
-; Total registers                    ; 493                                             ;
-; Total pins                         ; 24                                              ;
+; Total logic elements               ; 667                                             ;
+;     Total combinational functions  ; 427                                             ;
+;     Dedicated logic registers      ; 497                                             ;
+; Total registers                    ; 497                                             ;
+; Total pins                         ; 25                                              ;
 ; Total virtual pins                 ; 0                                               ;
-; Total memory bits                  ; 81,920                                          ;
+; Total memory bits                  ; 57,344                                          ;
 ; Embedded Multiplier 9-bit elements ; 0                                               ;
 ; Total PLLs                         ; 0                                               ;
 +------------------------------------+-------------------------------------------------+
@@ -68,23 +68,27 @@ applicable agreement for further details.
 +--------------------------------+----------------+-------------------+------------------------+--------------------------------+
 
 
-+------------------------------------------------------------------------------------------------------+
-; Connections to In-System Debugging Instance "SPI_DEBUG"                                              ;
-+-------+---------------+-----------+----------------+-------------------+-------------------+---------+
-; Name  ; Type          ; Status    ; Partition Name ; Netlist Type Used ; Actual Connection ; Details ;
-+-------+---------------+-----------+----------------+-------------------+-------------------+---------+
-; clock ; pre-synthesis ; connected ; Top            ; post-synthesis    ; CLOCK             ; N/A     ;
-; miso  ; pre-synthesis ; connected ; Top            ; post-synthesis    ; QIC_SIGNALTAP_VCC ; N/A     ;
-; miso  ; pre-synthesis ; connected ; Top            ; post-synthesis    ; QIC_SIGNALTAP_VCC ; N/A     ;
-; mosi  ; pre-synthesis ; connected ; Top            ; post-synthesis    ; MOSI              ; N/A     ;
-; mosi  ; pre-synthesis ; connected ; Top            ; post-synthesis    ; MOSI              ; N/A     ;
-; sclk  ; pre-synthesis ; connected ; Top            ; post-synthesis    ; SCLK              ; N/A     ;
-; sclk  ; pre-synthesis ; connected ; Top            ; post-synthesis    ; SCLK              ; N/A     ;
-; ssel  ; pre-synthesis ; connected ; Top            ; post-synthesis    ; SSEL              ; N/A     ;
-; ssel  ; pre-synthesis ; connected ; Top            ; post-synthesis    ; SSEL              ; N/A     ;
-; CLOCK ; post-fitting  ; connected ; Top            ; post-synthesis    ; CLOCK             ; N/A     ;
-; CLOCK ; post-fitting  ; connected ; Top            ; post-synthesis    ; CLOCK             ; N/A     ;
-+-------+---------------+-----------+----------------+-------------------+-------------------+---------+
++--------------------------------------------------------------------------------------------------------------------+
+; Connections to In-System Debugging Instance "SPI_DEBUG"                                                            ;
++---------------------+---------------+-----------+----------------+-------------------+-------------------+---------+
+; Name                ; Type          ; Status    ; Partition Name ; Netlist Type Used ; Actual Connection ; Details ;
++---------------------+---------------+-----------+----------------+-------------------+-------------------+---------+
+; clock               ; pre-synthesis ; connected ; Top            ; post-synthesis    ; CLOCK             ; N/A     ;
+; clock_register[0]   ; pre-synthesis ; connected ; Top            ; post-synthesis    ; clock_register[0] ; N/A     ;
+; clock_register[0]   ; pre-synthesis ; connected ; Top            ; post-synthesis    ; clock_register[0] ; N/A     ;
+; clock_register[1]   ; pre-synthesis ; connected ; Top            ; post-synthesis    ; clock_register[1] ; N/A     ;
+; clock_register[1]   ; pre-synthesis ; connected ; Top            ; post-synthesis    ; clock_register[1] ; N/A     ;
+; spi:spi_module|cs   ; pre-synthesis ; connected ; Top            ; post-synthesis    ; SSEL              ; N/A     ;
+; spi:spi_module|cs   ; pre-synthesis ; connected ; Top            ; post-synthesis    ; SSEL              ; N/A     ;
+; spi:spi_module|miso ; pre-synthesis ; connected ; Top            ; post-synthesis    ; SSEL              ; N/A     ;
+; spi:spi_module|miso ; pre-synthesis ; connected ; Top            ; post-synthesis    ; SSEL              ; N/A     ;
+; spi:spi_module|mosi ; pre-synthesis ; connected ; Top            ; post-synthesis    ; MOSI              ; N/A     ;
+; spi:spi_module|mosi ; pre-synthesis ; connected ; Top            ; post-synthesis    ; MOSI              ; N/A     ;
+; spi:spi_module|sclk ; pre-synthesis ; connected ; Top            ; post-synthesis    ; clock_register[1] ; N/A     ;
+; spi:spi_module|sclk ; pre-synthesis ; connected ; Top            ; post-synthesis    ; clock_register[1] ; N/A     ;
+; SCLK                ; post-fitting  ; connected ; Top            ; post-synthesis    ; SCLK              ; N/A     ;
+; SCLK                ; post-fitting  ; connected ; Top            ; post-synthesis    ; SCLK              ; N/A     ;
++---------------------+---------------+-----------+----------------+-------------------+-------------------+---------+
 
 
 +---------------------------------------------------------------------------------------------------------------------------------+
@@ -92,62 +96,62 @@ applicable agreement for further details.
 +---------------------------------------------+-----+------------------+-------------------------+--------------------------------+
 ; Statistic                                   ; Top ; sld_hub:auto_hub ; sld_signaltap:SPI_DEBUG ; hard_block:auto_generated_inst ;
 +---------------------------------------------+-----+------------------+-------------------------+--------------------------------+
-; Estimated Total logic elements              ; 4   ; 140              ; 532                     ; 0                              ;
+; Estimated Total logic elements              ; 3   ; 142              ; 522                     ; 0                              ;
 ;                                             ;     ;                  ;                         ;                                ;
-; Total combinational functions               ; 3   ; 116              ; 328                     ; 0                              ;
+; Total combinational functions               ; 1   ; 118              ; 308                     ; 0                              ;
 ; Logic element usage by number of LUT inputs ;     ;                  ;                         ;                                ;
-;     -- 4 input functions                    ; 0   ; 52               ; 116                     ; 0                              ;
-;     -- 3 input functions                    ; 0   ; 28               ; 132                     ; 0                              ;
-;     -- <=2 input functions                  ; 3   ; 36               ; 80                      ; 0                              ;
+;     -- 4 input functions                    ; 0   ; 51               ; 109                     ; 0                              ;
+;     -- 3 input functions                    ; 0   ; 31               ; 117                     ; 0                              ;
+;     -- <=2 input functions                  ; 1   ; 36               ; 82                      ; 0                              ;
 ;                                             ;     ;                  ;                         ;                                ;
 ; Logic elements by mode                      ;     ;                  ;                         ;                                ;
-;     -- normal mode                          ; 3   ; 108              ; 266                     ; 0                              ;
-;     -- arithmetic mode                      ; 0   ; 8                ; 62                      ; 0                              ;
+;     -- normal mode                          ; 1   ; 110              ; 250                     ; 0                              ;
+;     -- arithmetic mode                      ; 0   ; 8                ; 58                      ; 0                              ;
 ;                                             ;     ;                  ;                         ;                                ;
-; Total registers                             ; 2   ; 86               ; 405                     ; 0                              ;
-;     -- Dedicated logic registers            ; 2   ; 86               ; 405                     ; 0                              ;
+; Total registers                             ; 2   ; 86               ; 409                     ; 0                              ;
+;     -- Dedicated logic registers            ; 2   ; 86               ; 409                     ; 0                              ;
 ;                                             ;     ;                  ;                         ;                                ;
 ; Virtual pins                                ; 0   ; 0                ; 0                       ; 0                              ;
-; I/O pins                                    ; 24  ; 0                ; 0                       ; 0                              ;
+; I/O pins                                    ; 24  ; 0                ; 1                       ; 0                              ;
 ; Embedded Multiplier 9-bit elements          ; 0   ; 0                ; 0                       ; 0                              ;
-; Total memory bits                           ; 0   ; 0                ; 81920                   ; 0                              ;
+; Total memory bits                           ; 0   ; 0                ; 57344                   ; 0                              ;
 ; Total RAM block bits                        ; 0   ; 0                ; 0                       ; 0                              ;
 ; JTAG                                        ; 1   ; 0                ; 0                       ; 0                              ;
 ;                                             ;     ;                  ;                         ;                                ;
 ; Connections                                 ;     ;                  ;                         ;                                ;
-;     -- Input Connections                    ; 1   ; 128              ; 569                     ; 0                              ;
-;     -- Registered Input Connections         ; 0   ; 97               ; 449                     ; 0                              ;
-;     -- Output Connections                   ; 577 ; 119              ; 2                       ; 0                              ;
-;     -- Registered Output Connections        ; 0   ; 118              ; 0                       ; 0                              ;
+;     -- Input Connections                    ; 1   ; 128              ; 330                     ; 0                              ;
+;     -- Registered Input Connections         ; 0   ; 97               ; 232                     ; 0                              ;
+;     -- Output Connections                   ; 337 ; 120              ; 2                       ; 0                              ;
+;     -- Registered Output Connections        ; 6   ; 119              ; 0                       ; 0                              ;
 ;                                             ;     ;                  ;                         ;                                ;
 ; Internal Connections                        ;     ;                  ;                         ;                                ;
-;     -- Total Connections                    ; 588 ; 758              ; 2901                    ; 0                              ;
-;     -- Registered Connections               ; 3   ; 543              ; 1839                    ; 0                              ;
+;     -- Total Connections                    ; 348 ; 764              ; 2660                    ; 0                              ;
+;     -- Registered Connections               ; 7   ; 546              ; 1444                    ; 0                              ;
 ;                                             ;     ;                  ;                         ;                                ;
 ; External Connections                        ;     ;                  ;                         ;                                ;
-;     -- Top                                  ; 0   ; 119              ; 459                     ; 0                              ;
-;     -- sld_hub:auto_hub                     ; 119 ; 16               ; 112                     ; 0                              ;
-;     -- sld_signaltap:SPI_DEBUG              ; 459 ; 112              ; 0                       ; 0                              ;
+;     -- Top                                  ; 0   ; 119              ; 219                     ; 0                              ;
+;     -- sld_hub:auto_hub                     ; 119 ; 16               ; 113                     ; 0                              ;
+;     -- sld_signaltap:SPI_DEBUG              ; 219 ; 113              ; 0                       ; 0                              ;
 ;     -- hard_block:auto_generated_inst       ; 0   ; 0                ; 0                       ; 0                              ;
 ;                                             ;     ;                  ;                         ;                                ;
 ; Partition Interface                         ;     ;                  ;                         ;                                ;
-;     -- Input Ports                          ; 8   ; 19               ; 67                      ; 0                              ;
-;     -- Output Ports                         ; 20  ; 37               ; 20                      ; 0                              ;
+;     -- Input Ports                          ; 8   ; 19               ; 71                      ; 0                              ;
+;     -- Output Ports                         ; 26  ; 37               ; 24                      ; 0                              ;
 ;     -- Bidir Ports                          ; 0   ; 0                ; 0                       ; 0                              ;
 ;                                             ;     ;                  ;                         ;                                ;
 ; Registered Ports                            ;     ;                  ;                         ;                                ;
-;     -- Registered Input Ports               ; 0   ; 4                ; 16                      ; 0                              ;
-;     -- Registered Output Ports              ; 0   ; 26               ; 11                      ; 0                              ;
+;     -- Registered Input Ports               ; 0   ; 4                ; 19                      ; 0                              ;
+;     -- Registered Output Ports              ; 0   ; 26               ; 15                      ; 0                              ;
 ;                                             ;     ;                  ;                         ;                                ;
 ; Port Connectivity                           ;     ;                  ;                         ;                                ;
 ;     -- Input Ports driven by GND            ; 0   ; 1                ; 0                       ; 0                              ;
 ;     -- Output Ports driven by GND           ; 0   ; 1                ; 0                       ; 0                              ;
-;     -- Input Ports driven by VCC            ; 0   ; 0                ; 2                       ; 0                              ;
+;     -- Input Ports driven by VCC            ; 0   ; 0                ; 0                       ; 0                              ;
 ;     -- Output Ports driven by VCC           ; 0   ; 0                ; 0                       ; 0                              ;
 ;     -- Input Ports with no Source           ; 0   ; 1                ; 35                      ; 0                              ;
 ;     -- Output Ports with no Source          ; 0   ; 0                ; 0                       ; 0                              ;
 ;     -- Input Ports with no Fanout           ; 0   ; 2                ; 40                      ; 0                              ;
-;     -- Output Ports with no Fanout          ; 0   ; 15               ; 11                      ; 0                              ;
+;     -- Output Ports with no Fanout          ; 0   ; 15               ; 15                      ; 0                              ;
 +---------------------------------------------+-----+------------------+-------------------------+--------------------------------+
 Note: Resource usage numbers presented for Partitions containing post-synthesis logic are estimates.  For Partitions containing post-fit logic, resource usage numbers are accurate based on previous placement information.  Actual Fitter results may vary depending on current Fitter Preservation Level assignments.
 
@@ -157,29 +161,29 @@ Note: Resource usage numbers presented for Partitions containing post-synthesis 
 +---------------------------------------------+--------------------------+
 ; Resource                                    ; Usage                    ;
 +---------------------------------------------+--------------------------+
-; Estimated Total logic elements              ; 675                      ;
+; Estimated Total logic elements              ; 667                      ;
 ;                                             ;                          ;
-; Total combinational functions               ; 447                      ;
+; Total combinational functions               ; 427                      ;
 ; Logic element usage by number of LUT inputs ;                          ;
-;     -- 4 input functions                    ; 168                      ;
-;     -- 3 input functions                    ; 160                      ;
+;     -- 4 input functions                    ; 160                      ;
+;     -- 3 input functions                    ; 148                      ;
 ;     -- <=2 input functions                  ; 119                      ;
 ;                                             ;                          ;
 ; Logic elements by mode                      ;                          ;
-;     -- normal mode                          ; 377                      ;
-;     -- arithmetic mode                      ; 70                       ;
+;     -- normal mode                          ; 361                      ;
+;     -- arithmetic mode                      ; 66                       ;
 ;                                             ;                          ;
-; Total registers                             ; 493                      ;
-;     -- Dedicated logic registers            ; 493                      ;
+; Total registers                             ; 497                      ;
+;     -- Dedicated logic registers            ; 497                      ;
 ;     -- I/O registers                        ; 0                        ;
 ;                                             ;                          ;
-; I/O pins                                    ; 24                       ;
-; Total memory bits                           ; 81920                    ;
+; I/O pins                                    ; 25                       ;
+; Total memory bits                           ; 57344                    ;
 ; Embedded Multiplier 9-bit elements          ; 0                        ;
 ; Maximum fan-out node                        ; altera_internal_jtag~TDO ;
-; Maximum fan-out                             ; 318                      ;
-; Total fan-out                               ; 3523                     ;
-; Average fan-out                             ; 3.56                     ;
+; Maximum fan-out                             ; 311                      ;
+; Total fan-out                               ; 3294                     ;
+; Average fan-out                             ; 3.40                     ;
 +---------------------------------------------+--------------------------+
 
 
@@ -188,7 +192,7 @@ Note: Resource usage numbers presented for Partitions containing post-synthesis 
 +----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+------+----------------+--------------+--------------+--------------+--------------+-------+------+
 ; Name                                                                                                                                                                                                                       ; Type ; Mode           ; Port A Depth ; Port A Width ; Port B Depth ; Port B Width ; Size  ; MIF  ;
 +----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+------+----------------+--------------+--------------+--------------+--------------+-------+------+
-; sld_signaltap:SPI_DEBUG|sld_signaltap_impl:sld_signaltap_body|sld_signaltap_implb:sld_signaltap_body|altsyncram:\stp_non_zero_ram_gen:stp_buffer_ram|altsyncram_kp14:auto_generated|altsyncram_sdq1:altsyncram1|ALTSYNCRAM ; AUTO ; True Dual Port ; 16384        ; 5            ; 16384        ; 5            ; 81920 ; None ;
+; sld_signaltap:SPI_DEBUG|sld_signaltap_impl:sld_signaltap_body|sld_signaltap_implb:sld_signaltap_body|altsyncram:\stp_non_zero_ram_gen:stp_buffer_ram|altsyncram_pp14:auto_generated|altsyncram_1eq1:altsyncram1|ALTSYNCRAM ; AUTO ; True Dual Port ; 8192         ; 7            ; 8192         ; 7            ; 57344 ; None ;
 +----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+------+----------------+--------------+--------------+--------------+--------------+-------+------+
 
 
@@ -198,26 +202,30 @@ Note: Resource usage numbers presented for Partitions containing post-synthesis 
 Info: *******************************************************************
 Info: Running Quartus II 64-Bit Partition Merge
     Info: Version 13.0.1 Build 232 06/12/2013 Service Pack 1 SJ Web Edition
-    Info: Processing started: Mon Apr 10 16:56:49 2023
+    Info: Processing started: Tue Apr 11 20:14:38 2023
 Info: Command: quartus_cdb --read_settings_files=off --write_settings_files=off NetworkAnalyser -c NetworkAnalyser --merge=on
 Info (35007): Using synthesis netlist for partition "Top"
 Info (35007): Using synthesis netlist for partition "sld_hub:auto_hub"
 Info (35007): Using synthesis netlist for partition "sld_signaltap:SPI_DEBUG"
-Info (35024): Succesfully connected in-system debug instance "SPI_DEBUG" to all 11 required data inputs, trigger inputs, acquisition clocks, and dynamic pins
+Info (35024): Succesfully connected in-system debug instance "SPI_DEBUG" to all 15 required data inputs, trigger inputs, acquisition clocks, and dynamic pins
 Info (35002): Resolved and merged 3 partition(s)
+Info (35026): Attempting to remove 1 I/O cell(s) that do not connect to top-level pins or have illegal connectivity
+    Info (35028): Failed to remove I/O cell "pre_syn.bp.spi_module_miso"
+Critical Warning (35033): Found I/O pins in lower-level partitions that are not connected in the top-level design
+    Critical Warning (35034): I/O cell "pre_syn.bp.spi_module_miso" is not connected to partition "Top"
 Info (16010): Generating hard_block partition "hard_block:auto_generated_inst"
     Info (16011): Adding 0 node(s), including 0 DDIO, 0 PLL, 0 transceiver and 0 LCELL
 Warning (21074): Design contains 1 input pin(s) that do not drive logic
     Warning (15610): No output dependent on input pin "RESET"
-Info (21057): Implemented 743 device resources after synthesis - the final resource count might be different
+Info (21057): Implemented 728 device resources after synthesis - the final resource count might be different
     Info (21058): Implemented 8 input pins
-    Info (21059): Implemented 20 output pins
-    Info (21061): Implemented 694 logic cells
-    Info (21064): Implemented 20 RAM segments
-Info: Quartus II 64-Bit Partition Merge was successful. 0 errors, 2 warnings
+    Info (21059): Implemented 21 output pins
+    Info (21061): Implemented 684 logic cells
+    Info (21064): Implemented 14 RAM segments
+Info: Quartus II 64-Bit Partition Merge was successful. 0 errors, 4 warnings
     Info: Peak virtual memory: 887 megabytes
-    Info: Processing ended: Mon Apr 10 16:56:50 2023
-    Info: Elapsed time: 00:00:01
+    Info: Processing ended: Tue Apr 11 20:14:38 2023
+    Info: Elapsed time: 00:00:00
     Info: Total CPU time (on all processors): 00:00:01
 
 

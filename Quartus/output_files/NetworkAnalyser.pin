@@ -166,7 +166,7 @@ GND*                         : 99        :        :                   :         
 GND*                         : 100       :        :                   :         : 3         :                
 GND*                         : 101       :        :                   :         : 3         :                
 VCCIO3                       : 102       : power  :                   : 3.3V    : 3         :                
-GND*                         : 103       :        :                   :         : 3         :                
+pre_syn.bp.spi_module_miso   : 103       : output : 3.3-V LVTTL       :         : 3         : N              
 GND*                         : 104       :        :                   :         : 3         :                
 GND                          : 105       : gnd    :                   :         :           :                
 GND_PLL2                     : 106       : gnd    :                   :         :           :                

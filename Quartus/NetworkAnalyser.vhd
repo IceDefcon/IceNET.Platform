@@ -42,7 +42,8 @@ architecture rtl of NetworkAnalyser is
 -- SIGNAL DECLARATION
 --------------------------------------------
 
-signal a1 			: std_logic := '0';
+signal a1 					: std_logic := '0';
+signal clock_register 	: std_logic_vector (1 downto 0) := (others => '0');
 
 --------------------------------------------
 -- COMPONENTS DECLARATION
@@ -88,22 +89,24 @@ PIN_139 <= 'Z';
 PIN_141 <= 'Z';
 
 LED_0 <= '0'; 	-- D2 Low Enable
---LED_1 <= '1'; 	-- D4 Low Enable
+LED_1 <= '1'; 	-- D4 Low Enable
 LED_2 <= '0'; 	-- D5 Low Enable
 
 main_process:
-process(CLOCK)
+process(CLOCK, SCLK)
 begin
-	if rising_edge(CLOCK) then
-		a1 	<= not(a1);
-		LED_1 <= a1;
+	if rising_edge(SCLK) then
+		if rising_edge(CLOCK) then
+			clock_register(1) <= clock_register(0);
+			clock_register(0) <= SCLK;
+		end if;
 	end if;
 end process;
 
 spi_module : component spi
 port map 
 (
-	sclk       	=> SCLK,
+	sclk       	=> clock_register(1),
 	cs        	=> SSEL,
 	mosi    		=> MOSI,
 	miso 			=> MISO,
