@@ -42,29 +42,16 @@ architecture rtl of NetworkAnalyser is
 -- SIGNAL DECLARATION
 --------------------------------------------
 
-signal a1 					: std_logic := '0';
-signal clock_register 	: std_logic_vector (1 downto 0) := (others => '0');
+signal clock50MHz 		: std_logic := '0';
+signal sclk_delayed 		: std_logic := '0';
+
+constant depth: positive := 107;
+signal shift_register 	: std_logic_vector(depth - 2 downto 0) := (others => '0');
 
 --------------------------------------------
 -- COMPONENTS DECLARATION
 --------------------------------------------
 
-component spi is
-generic ( N : natural := 8	);
-port 
-(
-	sclk   			: in std_logic;     								--SPI Clock
-	cs     			: in std_logic;     								--Chip select
-	mosi   			: in std_logic;	   							--Master Out Slave In  (MOSI)
-	miso   			: out std_logic;	   							--Master In  Slave Out (MISO)
-	reset  			: in std_logic;     								--Asynchronous Reset
-
-	data_tx  		: in  std_logic_vector(N-1 downto 0);		--Parallel N-bit data to return back to the master
-	data_rx 			: out std_logic_vector(N-1 downto 0);   	--Parallel N-bit data recevied from the master
-	busyrx   		: out std_logic;									--Do not read data_rx while high
-	busytx   		: out std_logic                        	--Do not write data_tx while high
-);
-end component spi;
 
 --------------------------------------------
 -- MAIN ROUTINE
@@ -89,33 +76,26 @@ PIN_139 <= 'Z';
 PIN_141 <= 'Z';
 
 LED_0 <= '0'; 	-- D2 Low Enable
-LED_1 <= '1'; 	-- D4 Low Enable
+--LED_1 <= '1'; 	-- D4 Low Enable
 LED_2 <= '0'; 	-- D5 Low Enable
 
 main_process:
-process(CLOCK, SCLK)
+process(CLOCK)
 begin
-	if rising_edge(SCLK) then
-		if rising_edge(CLOCK) then
-			clock_register(1) <= clock_register(0);
-			clock_register(0) <= SCLK;
-		end if;
+	if rising_edge(CLOCK) then
+		clock50MHz 	<= not(clock50MHz);
+		LED_1 		<= clock50MHz;
 	end if;
 end process;
 
-spi_module : component spi
-port map 
-(
-	sclk       	=> clock_register(1),
-	cs        	=> SSEL,
-	mosi    		=> MOSI,
-	miso 			=> MISO,
-	reset      	=> '1',
+shift_process:
+process(CLOCK)
+begin
+	if rising_edge(CLOCK) then
+		shift_register <= shift_register(shift_register'high - 1 downto shift_register'low) & SCLK;
+		sclk_delayed <= shift_register(shift_register'high);
+	end if;
+end process;
 
-	data_tx     => (others => '0'),
-	data_rx   	=> open,
-	busyrx  		=> open,
-	busytx 		=> open
-);
-
+ 
 end rtl;
