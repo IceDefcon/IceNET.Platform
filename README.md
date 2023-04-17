@@ -146,5 +146,6 @@ Bare metal drivers and low level sources:
 
 	1. FPGA SPI module testing :: Modelsim
 	2. x86_64 Linux application :: COmmand thread
+	3. CPU platform upgrade :: From Cortex-M4F to Cortex-A8 
 
 # ICE
