@@ -1,1 +1,0 @@
-cmd_/home/debian/bin/IceNET.NetworkAnalyser/BBB.Firmware/gpio/hello.ko := ld -r  -EL -T ./scripts/module-common.lds -T ./arch/arm/kernel/module.lds  --build-id  -o /home/debian/bin/IceNET.NetworkAnalyser/BBB.Firmware/gpio/hello.ko /home/debian/bin/IceNET.NetworkAnalyser/BBB.Firmware/gpio/hello.o /home/debian/bin/IceNET.NetworkAnalyser/BBB.Firmware/gpio/hello.mod.o ;  true
