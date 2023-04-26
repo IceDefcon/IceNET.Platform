@@ -17,7 +17,8 @@ port
 	LED_0 			: out std_logic; 	-- PIN_3
 	LED_1 			: out std_logic; 	-- PIN_7
 	LED_2 			: out std_logic;	-- PIN_9
-	
+
+
 	PIN_112 			: out std_logic;	-- High Impedance :: Connected to K64F
 	PIN_113 			: out std_logic; 	-- High Impedance :: Connected to K64F
 	PIN_114 			: out std_logic; 	-- High Impedance :: Connected to K64F
@@ -32,7 +33,9 @@ port
 	PIN_135 			: out std_logic; 	-- High Impedance :: Connected to K64F
 	PIN_137 			: out std_logic; 	-- High Impedance :: Connected to K64F
 	PIN_139 			: out std_logic; 	-- High Impedance :: Connected to K64F
-	PIN_141 			: out std_logic 	-- High Impedance :: Connected to K64F
+	PIN_141 			: out std_logic; 	-- High Impedance :: Connected to K64F
+	
+	BUTTON 			: in std_logic 	-- Button
 );
 end NetworkAnalyser;
 
@@ -44,6 +47,7 @@ architecture rtl of NetworkAnalyser is
 
 signal clock50MHz 		: std_logic := '0';
 signal sclk_delayed 		: std_logic := '0';
+signal key_button			: std_logic := '0';
 
 constant depth: positive := 107;
 signal shift_register 	: std_logic_vector(depth - 2 downto 0) := (others => '0');
@@ -51,13 +55,29 @@ signal shift_register 	: std_logic_vector(depth - 2 downto 0) := (others => '0')
 --------------------------------------------
 -- COMPONENTS DECLARATION
 --------------------------------------------
-
+COMPONENT DeBounce
+PORT
+(
+	Clock : IN  std_logic;
+	Reset : IN  std_logic;
+	button_in : IN  std_logic;
+	pulse_out : OUT  std_logic
+);
+END COMPONENT;
 
 --------------------------------------------
 -- MAIN ROUTINE
 --------------------------------------------
 begin
 
+DeBounce_module: DeBounce PORT MAP 
+(
+	Clock => CLOCK,
+	Reset => '0',
+	button_in => BUTTON,
+	pulse_out => key_button
+);
+		  
 -- GREEN LED
 PIN_112 <= 'Z';
 PIN_113 <= 'Z';
@@ -83,19 +103,20 @@ main_process:
 process(CLOCK)
 begin
 	if rising_edge(CLOCK) then
-		clock50MHz 	<= not(clock50MHz);
+		clock50MHz 	<= not(clock50MHz); -- Virtual Signal Clock
 		LED_1 		<= clock50MHz;
 	end if;
 end process;
 
-shift_process:
-process(CLOCK)
-begin
-	if rising_edge(CLOCK) then
-		shift_register <= shift_register(shift_register'high - 1 downto shift_register'low) & SCLK;
-		sclk_delayed <= shift_register(shift_register'high);
-	end if;
-end process;
+--K64F have clock process too fast with respect to data !!!
+--shift_process:
+--process(CLOCK)
+--begin
+--	if rising_edge(CLOCK) then
+--		shift_register <= shift_register(shift_register'high - 1 downto shift_register'low) & SCLK;
+--		sclk_delayed <= shift_register(shift_register'high);
+--	end if;
+--end process;
 
  
 end rtl;

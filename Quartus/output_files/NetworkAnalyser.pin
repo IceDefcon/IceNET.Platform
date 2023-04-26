@@ -207,4 +207,4 @@ GND                          : 140       : gnd    :                   :         
 PIN_141                      : 141       : output : 3.3-V LVTTL       :         : 2         : Y              
 GND*                         : 142       :        :                   :         : 2         :                
 GND*                         : 143       :        :                   :         : 2         :                
-GND*                         : 144       :        :                   :         : 2         :                
+BUTTON                       : 144       : input  : 3.3-V LVTTL       :         : 2         : Y              
