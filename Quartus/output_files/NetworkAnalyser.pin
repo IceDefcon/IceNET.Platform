@@ -205,6 +205,6 @@ VCCIO2                       : 138       : power  :                   : 3.3V    
 PIN_139                      : 139       : output : 3.3-V LVTTL       :         : 2         : Y              
 GND                          : 140       : gnd    :                   :         :           :                
 PIN_141                      : 141       : output : 3.3-V LVTTL       :         : 2         : Y              
-GND*                         : 142       :        :                   :         : 2         :                
-GND*                         : 143       :        :                   :         : 2         :                
-BUTTON                       : 144       : input  : 3.3-V LVTTL       :         : 2         : Y              
+BUTTON_OUT                   : 142       : output : 3.3-V LVTTL       :         : 2         : Y              
+PIN_143                      : 143       : output : 3.3-V LVTTL       :         : 2         : Y              
+BUTTON_IN                    : 144       : input  : 3.3-V LVTTL       :         : 2         : Y              

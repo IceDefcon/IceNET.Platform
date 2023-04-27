@@ -83,7 +83,20 @@ To check if QSYS is working or require some dependant libraries you can execute
 	cd /ice/altera/13.0sp1/quartus/sopc_builder/bin
 	./qsys-edit
 
---==[ IF PROBLEMS WITH  ]==--
+--==[ IF PROBLEMS WITH MODELSIM ]==--
+
+Application is under
+
+	cd /ice/q13/modelsim_ase/bin
+	./vsim
+
+Possibly need these
+
+	sudo apt install libxft-dev:i386
+	sudo apt install libncurses-dev:i386
+	
+	sudo add-apt-repository universe
+	sudo apt-get install libncurses5 libncurses5:i386
 
 	Fatal: Read failure in vlm process (0,0)
 
@@ -141,6 +154,10 @@ When: unable to lock chain(Insufficient port permissions)
 Bare metal drivers and low level sources:
 
 	https://mcuxpresso.nxp.com/en/welcome
+
+# MODELSIM SIMULATION
+
+
 
 # IN PROGRESS
 

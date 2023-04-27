@@ -18,7 +18,6 @@ port
 	LED_1 			: out std_logic; 	-- PIN_7
 	LED_2 			: out std_logic;	-- PIN_9
 
-
 	PIN_112 			: out std_logic;	-- High Impedance :: Connected to K64F
 	PIN_113 			: out std_logic; 	-- High Impedance :: Connected to K64F
 	PIN_114 			: out std_logic; 	-- High Impedance :: Connected to K64F
@@ -34,8 +33,10 @@ port
 	PIN_137 			: out std_logic; 	-- High Impedance :: Connected to K64F
 	PIN_139 			: out std_logic; 	-- High Impedance :: Connected to K64F
 	PIN_141 			: out std_logic; 	-- High Impedance :: Connected to K64F
+	PIN_143 			: out std_logic; 	-- High Impedance
 	
-	BUTTON 			: in std_logic 	-- Button
+	BUTTON_IN 			: in std_logic; 	-- Button PIN_144
+	BUTTON_OUT 			: out std_logic 	-- Button PIN_142
 );
 end NetworkAnalyser;
 
@@ -45,40 +46,25 @@ architecture rtl of NetworkAnalyser is
 -- SIGNAL DECLARATION
 --------------------------------------------
 
-signal clock50MHz 		: std_logic := '0';
-signal sclk_delayed 		: std_logic := '0';
-signal key_button			: std_logic := '0';
-
-constant depth: positive := 107;
-signal shift_register 	: std_logic_vector(depth - 2 downto 0) := (others => '0');
+signal button_debounced	: std_logic := '1';
 
 --------------------------------------------
 -- COMPONENTS DECLARATION
 --------------------------------------------
-COMPONENT DeBounce
-PORT
+component debounce
+port
 (
-	Clock : IN  std_logic;
-	Reset : IN  std_logic;
-	button_in : IN  std_logic;
-	pulse_out : OUT  std_logic
+	clock : in  std_logic;
+	button_in : in  std_logic;
+	button_out : out  std_logic
 );
-END COMPONENT;
+end component;
 
 --------------------------------------------
 -- MAIN ROUTINE
 --------------------------------------------
 begin
 
-DeBounce_module: DeBounce PORT MAP 
-(
-	Clock => CLOCK,
-	Reset => '0',
-	button_in => BUTTON,
-	pulse_out => key_button
-);
-		  
--- GREEN LED
 PIN_112 <= 'Z';
 PIN_113 <= 'Z';
 PIN_114 <= 'Z';
@@ -94,29 +80,25 @@ PIN_135 <= 'Z';
 PIN_137 <= 'Z';
 PIN_139 <= 'Z';
 PIN_141 <= 'Z';
+PIN_143 <= 'Z';
 
-LED_0 <= '0'; 	-- D2 Low Enable
---LED_1 <= '1'; 	-- D4 Low Enable
-LED_2 <= '0'; 	-- D5 Low Enable
+LED_0 <= '0'; 						-- D2 Low Enable
+LED_1 <= button_debounced; 	-- D4 Low Enable
+LED_2 <= '0'; 						-- D5 Low Enable
 
-main_process:
+DeBounce_module: debounce port map 
+(
+	clock => CLOCK,
+	button_in => BUTTON_IN,
+	button_out => button_debounced
+);
+
+button_process:
 process(CLOCK)
 begin
 	if rising_edge(CLOCK) then
-		clock50MHz 	<= not(clock50MHz); -- Virtual Signal Clock
-		LED_1 		<= clock50MHz;
+		BUTTON_OUT <= button_debounced;
 	end if;
 end process;
 
---K64F have clock process too fast with respect to data !!!
---shift_process:
---process(CLOCK)
---begin
---	if rising_edge(CLOCK) then
---		shift_register <= shift_register(shift_register'high - 1 downto shift_register'low) & SCLK;
---		sclk_delayed <= shift_register(shift_register'high);
---	end if;
---end process;
-
- 
 end rtl;
