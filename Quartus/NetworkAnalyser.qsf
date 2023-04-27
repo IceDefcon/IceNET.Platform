@@ -73,33 +73,11 @@ set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_TRIGGER_IN_ENABLE
 set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_ADVANCED_TRIGGER_ENTITY=basic,1," -section_id SPI_DEBUG
 set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_TRIGGER_LEVEL_PIPELINE=1" -section_id SPI_DEBUG
 set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_ENABLE_ADVANCED_TRIGGER=0" -section_id SPI_DEBUG
-set_location_assignment PIN_112 -to PIN_112
-set_location_assignment PIN_113 -to PIN_113
-set_location_assignment PIN_114 -to PIN_114
-set_location_assignment PIN_115 -to PIN_115
-set_location_assignment PIN_118 -to PIN_118
-set_location_assignment PIN_120 -to PIN_120
-set_location_assignment PIN_122 -to PIN_122
-set_location_assignment PIN_126 -to PIN_126
-set_location_assignment PIN_132 -to PIN_132
-set_location_assignment PIN_133 -to PIN_133
-set_location_assignment PIN_134 -to PIN_134
-set_location_assignment PIN_135 -to PIN_135
-set_location_assignment PIN_137 -to PIN_137
-set_location_assignment PIN_139 -to PIN_139
-set_location_assignment PIN_141 -to PIN_141
 set_location_assignment PIN_17 -to CLOCK
 set_location_assignment PIN_3 -to LED_0
 set_location_assignment PIN_7 -to LED_1
 set_location_assignment PIN_9 -to LED_2
-set_location_assignment PIN_136 -to RESET
-set_location_assignment PIN_125 -to MISO
-set_location_assignment PIN_121 -to MOSI
-set_location_assignment PIN_129 -to SCLK
-set_location_assignment PIN_119 -to SSEL
-set_location_assignment PIN_143 -to PIN_143
 set_location_assignment PIN_144 -to BUTTON_IN
-set_location_assignment PIN_142 -to BUTTON_OUT
 set_global_assignment -name VHDL_FILE NetworkAnalyser.vhd
 set_global_assignment -name SDC_FILE NetworkAnalyser.sdc
 set_global_assignment -name VHDL_FILE debounce.vhd
@@ -116,5 +94,7 @@ set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_INVERSION_MASK=00
 set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_INVERSION_MASK_LENGTH=34" -section_id SPI_DEBUG
 set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_NODE_CRC_LOWORD=57784" -section_id SPI_DEBUG
 set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_NODE_CRC_HIWORD=48995" -section_id SPI_DEBUG
+set_location_assignment PIN_143 -to GPIO_IN
+set_location_assignment PIN_142 -to GPIO_OUT
 set_global_assignment -name SLD_FILE /ice/code.lab/IceNET.NetworkAnalyser/Quartus/debug_auto_stripped.stp
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

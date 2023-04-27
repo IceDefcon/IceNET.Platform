@@ -175,36 +175,36 @@ GND_PLL2                     : 108       : gnd    :                   :         
 VCCA_PLL2                    : 109       : power  :                   : 1.2V    :           :                
 GNDA_PLL2                    : 110       : gnd    :                   :         :           :                
 GND                          : 111       : gnd    :                   :         :           :                
-PIN_112                      : 112       : output : 3.3-V LVTTL       :         : 2         : Y              
-PIN_113                      : 113       : output : 3.3-V LVTTL       :         : 2         : Y              
-PIN_114                      : 114       : output : 3.3-V LVTTL       :         : 2         : Y              
-PIN_115                      : 115       : output : 3.3-V LVTTL       :         : 2         : Y              
+GND*                         : 112       :        :                   :         : 2         :                
+GND*                         : 113       :        :                   :         : 2         :                
+GND*                         : 114       :        :                   :         : 2         :                
+GND*                         : 115       :        :                   :         : 2         :                
 VCCIO2                       : 116       : power  :                   : 3.3V    : 2         :                
 GND                          : 117       : gnd    :                   :         :           :                
-PIN_118                      : 118       : output : 3.3-V LVTTL       :         : 2         : Y              
-SSEL                         : 119       : input  : 3.3-V LVTTL       :         : 2         : Y              
-PIN_120                      : 120       : output : 3.3-V LVTTL       :         : 2         : Y              
-MOSI                         : 121       : input  : 3.3-V LVTTL       :         : 2         : Y              
-PIN_122                      : 122       : output : 3.3-V LVTTL       :         : 2         : Y              
+GND*                         : 118       :        :                   :         : 2         :                
+GND*                         : 119       :        :                   :         : 2         :                
+GND*                         : 120       :        :                   :         : 2         :                
+GND*                         : 121       :        :                   :         : 2         :                
+GND*                         : 122       :        :                   :         : 2         :                
 GND                          : 123       : gnd    :                   :         :           :                
 VCCINT                       : 124       : power  :                   : 1.2V    :           :                
-MISO                         : 125       : output : 3.3-V LVTTL       :         : 2         : Y              
-PIN_126                      : 126       : output : 3.3-V LVTTL       :         : 2         : Y              
+GND*                         : 125       :        :                   :         : 2         :                
+GND*                         : 126       :        :                   :         : 2         :                
 VCCIO2                       : 127       : power  :                   : 3.3V    : 2         :                
 GND                          : 128       : gnd    :                   :         :           :                
-SCLK                         : 129       : input  : 3.3-V LVTTL       :         : 2         : Y              
+GND*                         : 129       :        :                   :         : 2         :                
 GND                          : 130       : gnd    :                   :         :           :                
 VCCINT                       : 131       : power  :                   : 1.2V    :           :                
-PIN_132                      : 132       : output : 3.3-V LVTTL       :         : 2         : Y              
-PIN_133                      : 133       : output : 3.3-V LVTTL       :         : 2         : Y              
-PIN_134                      : 134       : output : 3.3-V LVTTL       :         : 2         : Y              
-PIN_135                      : 135       : output : 3.3-V LVTTL       :         : 2         : Y              
-RESET                        : 136       : input  : 3.3-V LVTTL       :         : 2         : Y              
-PIN_137                      : 137       : output : 3.3-V LVTTL       :         : 2         : Y              
+GND*                         : 132       :        :                   :         : 2         :                
+GND*                         : 133       :        :                   :         : 2         :                
+GND*                         : 134       :        :                   :         : 2         :                
+GND*                         : 135       :        :                   :         : 2         :                
+GND*                         : 136       :        :                   :         : 2         :                
+GND*                         : 137       :        :                   :         : 2         :                
 VCCIO2                       : 138       : power  :                   : 3.3V    : 2         :                
-PIN_139                      : 139       : output : 3.3-V LVTTL       :         : 2         : Y              
+GND*                         : 139       :        :                   :         : 2         :                
 GND                          : 140       : gnd    :                   :         :           :                
-PIN_141                      : 141       : output : 3.3-V LVTTL       :         : 2         : Y              
-BUTTON_OUT                   : 142       : output : 3.3-V LVTTL       :         : 2         : Y              
-PIN_143                      : 143       : output : 3.3-V LVTTL       :         : 2         : Y              
+GND*                         : 141       :        :                   :         : 2         :                
+GPIO_OUT                     : 142       : output : 3.3-V LVTTL       :         : 2         : Y              
+GPIO_IN                      : 143       : input  : 3.3-V LVTTL       :         : 2         : Y              
 BUTTON_IN                    : 144       : input  : 3.3-V LVTTL       :         : 2         : Y              
