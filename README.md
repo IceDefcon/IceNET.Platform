@@ -39,12 +39,18 @@ System is running without any problems on Machine:
 
 And operating system:
 
+	PRETTY_NAME="Ubuntu 22.04.2 LTS"
 	NAME="Ubuntu"
-	VERSION="18.04.6 LTS (Bionic Beaver)"
+	VERSION_ID="22.04"
+	VERSION="22.04.2 LTS (Jammy Jellyfish)"
+	VERSION_CODENAME=jammy
 	ID=ubuntu
 	ID_LIKE=debian
-	PRETTY_NAME="Ubuntu 18.04.6 LTS"
-	VERSION_ID="18.04"
+	HOME_URL="https://www.ubuntu.com/"
+	SUPPORT_URL="https://help.ubuntu.com/"
+	BUG_REPORT_URL="https://bugs.launchpad.net/ubuntu/"
+	PRIVACY_POLICY_URL="https://www.ubuntu.com/legal/terms-and-policies/privacy-policy"
+	UBUNTU_CODENAME=jammy
 
 To install Quartus 13.0sp1 you need
 
@@ -61,33 +67,28 @@ To launch quartus in 64-bit mode you need to download libpng12 library
 	sudo apt update
 	sudo apt install libpng12-0
 
-And to launch QSYS more grphical libraries are required
+And to launch QSYS
 
 	sudo apt-get install libpng-dev
 	sudo apt-get install libxtst-dev
 	sudo apt-get install libxi6 libgconf-2-4
-
-Possible those as well:
-
 	sudo apt-get install libxtst6:i386 
 	sudo apt install libxi6:i386
 	sudo apt install libz-dev:i386
 
-Execution links for 64-bit: 
+QUARTUS Execution links for 64-bit: 
 
-	cd /home/ice/altera/13.0sp1/quartus/bin
+	cd ../quartus/bin
 	./quartus --64bit
 
 To check if QSYS is working or require some dependant libraries you can execute
 
-	cd /ice/altera/13.0sp1/quartus/sopc_builder/bin
+	cd ../quartus/sopc_builder/bin
 	./qsys-edit
 
---==[ IF PROBLEMS WITH MODELSIM ]==--
+MODELSIM Application
 
-Application is under
-
-	cd /ice/q13/modelsim_ase/bin
+	cd ../modelsim_ase/bin
 	./vsim
 
 Possibly need these
@@ -98,7 +99,7 @@ Possibly need these
 	sudo add-apt-repository universe
 	sudo apt-get install libncurses5 libncurses5:i386
 
-	Fatal: Read failure in vlm process (0,0)
+For older kernels with:: Read failure in vlm process (0,0)
 
 	1. For 13.1ps1 Download ---> freetype-2.4.12
 	2. Configure
@@ -151,17 +152,17 @@ When: unable to lock chain(Insufficient port permissions)
 	./jtagd 
 	./jtagconfig
 
-Bare metal drivers and low level sources:
-
-	https://mcuxpresso.nxp.com/en/welcome
-
 # MODELSIM SIMULATION
 
-
+	1. Create new project
+	2. Add testing module + tb
+	3. Compile
+	4. Launch new simutaion usign tb
 
 # IN PROGRESS
-
-	1. FPGA SPI module testing 	:: Modelsim
-	2. x86_64 Linux application :: Command thread
+	
+	1. Testing kernel module for GPIO control
+	2. Desing FPGA SPI module :: Modelsim
+	3. x86_64 Linux application :: Command thread
 
 # ICE
