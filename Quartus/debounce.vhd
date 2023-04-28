@@ -29,7 +29,7 @@ architecture rtl of debounce is
                 button_out <= button_temp;
             else
                 count <= count + 1;
-					 button_out <= '1'; -- Active LOW so we keep it high
+					 button_out <= '0'; -- To avoid high debouncing signals output must be keept as low on idle
             end if;
         end if;
     end process;

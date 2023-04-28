@@ -25,6 +25,7 @@ architecture rtl of NetworkAnalyser is
 --------------------------------------------
 
 signal button_debounced	: std_logic := '1';
+signal inv_BUTTON_IN 	: std_logic := '1';
 
 --------------------------------------------
 -- COMPONENTS DECLARATION
@@ -43,12 +44,12 @@ end component;
 --------------------------------------------
 begin
 
-LED_0 <= '0'; 	-- D2 Low Enable :: To check if FPGA is configured
+inv_BUTTON_IN 	<= not BUTTON_IN; -- Buton is low active so must be inverted before debounce
 
 debounce_module: debounce port map 
 (
 	clock => CLOCK,
-	button_in => BUTTON_IN,
+	button_in => inv_BUTTON_IN,
 	button_out => button_debounced
 );
 
@@ -56,8 +57,9 @@ gpio_process:
 process(CLOCK)
 begin
 	if rising_edge(CLOCK) then
-		LED_2 	<= GPIO_IN;
-		LED_1 	<= button_debounced; 	-- D4 Low Enable
+		LED_2 	<= '1'; 							-- D5 Low Enable
+		LED_1 	<= not GPIO_IN; 					-- D4 Low Enable
+		LED_0 	<= not button_debounced; 	-- D2 Low Enable
 		GPIO_OUT <= button_debounced;
 	end if;
 end process;
