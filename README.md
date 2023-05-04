@@ -161,7 +161,7 @@ When: unable to lock chain(Insufficient port permissions)
 
 # IN PROGRESS
 	
-	1. Testing kernel module for GPIO control
+	1. Testing kernel module :: kthread for GPIO control
 	2. Desing FPGA SPI module :: Modelsim
 	3. x86_64 Linux application :: Command thread
 
