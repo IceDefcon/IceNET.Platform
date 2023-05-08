@@ -1,0 +1,10 @@
+sudo apt install gcc-multilib g++-multilib libpng-dev libxtst-dev libxi6 libgconf-2-4 libxtst6:i386  libxi6:i386 
+sudo apt install libz-dev:i386 libxft-dev:i386 
+
+
+sudo apt install libncurses-dev:i386
+sudo add-apt-repository universe
+sudo apt-get install libncurses5 libncurses5:i386
+sudo add-apt-repository ppa:linuxuprising/libpng12
+sudo apt update
+sudo apt install libpng12-0`
