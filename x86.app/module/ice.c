@@ -98,6 +98,11 @@ static ssize_t dev_read(struct file *filep, char *buffer, size_t len, loff_t *of
 	// copy_to_user has the format ( * to, *from, size) and returns 0 on success
 	error_count = copy_to_user(buffer, message, size_of_message);
 
+	for (int i = 0; i < 256; ++i)
+	{
+		message[i] = 0;
+	}
+
 	if (error_count==0) // if true then have success
 	{
 		printk(KERN_INFO "IceNET: Sent %d characters to the user\n", size_of_message);

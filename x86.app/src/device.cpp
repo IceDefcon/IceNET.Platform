@@ -17,8 +17,26 @@ using namespace std;
 
 int Device::device_open()
 {
-	m_file_device = open("/dev/chardev", O_RDWR);             // Open the device with read/write access
+	m_file_device = open("/dev/ttyICE", O_RDWR);             // Open the device with read/write access
 	if (m_file_device < 0) return -1;
+
+	return 0;
+}
+
+int Device::device_write()
+{
+	int ret;
+	char console_TX[256];
+
+	for (int i = 0; i < 256; ++i)
+	{
+		console_TX[i] = 0;
+	}
+
+	cout << "IceNET TX ---> ";
+	cin.getline(console_TX,256);
+
+	ret = write(m_file_device, console_TX, strlen(console_TX)); // Send the string to the LKM
 
 	return 0;
 }
@@ -30,26 +48,17 @@ int Device::device_read()
 
 	ret = read(m_file_device, console_RX, BUFFER_LENGTH);
 
-	cout << "Rx essage  is: " << console_RX  << endl;
-	cout << "Rx pointer is: " << &console_RX << endl;
+	cout << "IceNET RX ---> " << console_RX << endl;
+
+	// clear the buffer
+	memset (console_RX,0,256);
 
 	return 0;
 }
 
-int Device::device_write()
-{
-	int ret;
-	char console_TX[256];
 
-	cout << "IceNET ---> ";
-	cin  >> console_TX;
 
-	ret = write(m_file_device, console_TX, strlen(console_TX)); // Send the string to the LKM
-
-	return 0;
-}
-
-int Device::device_exit()
+int Device::device_close()
 {
 
 

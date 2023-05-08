@@ -14,8 +14,12 @@ int main()
 	Device * pDevice = new Device;
 
 	pDevice->device_open();
+
 	pDevice->device_write();
 	pDevice->device_read();
+	pDevice->device_close();
+
+
 
 
 

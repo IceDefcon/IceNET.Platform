@@ -7,14 +7,16 @@ using namespace std;
 
 class Device
 {
-	public:
+	private:
 
 	int m_file_device;
+
+	public:
 
 	int device_open();
 	int device_read();
 	int device_write();
-	int device_exit();
+	int device_close();
 };
 
 #endif // DEVICE_H
