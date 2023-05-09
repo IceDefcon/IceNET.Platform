@@ -30,7 +30,7 @@ $(DYNAMIC): $(CPP_OBJECTS) $(ASM_OBJECTS)
 $(STATIC): $(CPP_OBJECTS) $(ASM_OBJECTS)
 	$(GCC) $(CFLAGS) -T $(LDSCRIPT) $^ -o $@ 
 	size $(DYNAMIC)
-	cd module && $(MAKE)
+# 	cd module && $(MAKE)
 
 %.o: %.cpp
 	$(GCC) $(CFLAGS) -I $(INCLUDES) -c -o $@ $<
@@ -40,7 +40,7 @@ $(STATIC): $(CPP_OBJECTS) $(ASM_OBJECTS)
 
 clean:
 	rm -f $(DYNAMIC) $(STATIC) $(CPP_OBJECTS) $(ASM_OBJECTS)
-	cd module && $(MAKE) clean
+# 	cd module && $(MAKE) clean
 
 size:
 	size $(DYNAMIC)

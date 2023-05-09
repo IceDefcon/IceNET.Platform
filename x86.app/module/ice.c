@@ -26,6 +26,8 @@ static int     dev_release(struct inode *, struct file *);
 static ssize_t dev_read(struct file *, char *, size_t, loff_t *);
 static ssize_t dev_write(struct file *, const char *, size_t, loff_t *);
 
+static DEFINE_MUTEX(ebbchar_mutex);
+
 static struct file_operations fops =
 {
    .open = dev_open,
@@ -74,6 +76,8 @@ static int __init chardev_init(void)
 	
 	printk(KERN_INFO "IceNET: device class created correctly\n"); // Made it! device was initialized
 	
+	mutex_init(&ebbchar_mutex);       // Initialize the mutex lock dynamically at runtime
+
 	return 0;
 }
 static void __exit chardev_exit(void)
@@ -83,10 +87,18 @@ static void __exit chardev_exit(void)
 	class_destroy(iceClass);                             // remove the device class
 	unregister_chrdev(majorNumber, DEVICE_NAME);             // unregister the major number
 	printk(KERN_INFO "IceNET: Goodbye from the LKM!\n");
+	mutex_destroy(&ebbchar_mutex);        /// destroy the dynamically-allocated mutex
 }
 
 static int dev_open(struct inode *inodep, struct file *filep)
 {
+   if(!mutex_trylock(&ebbchar_mutex)) // Try to acquire the mutex (i.e., put the lock on/down)
+   {
+      // returns 1 if successful and 0 if there is contention
+      printk(KERN_ALERT "EBBChar: Device in use by another process");
+      return -EBUSY;
+   }
+
 	numberOpens++;
 	printk(KERN_INFO "IceNET: Device has been opened %d time(s)\n", numberOpens);
 	return 0;
@@ -135,6 +147,7 @@ static ssize_t dev_write(struct file *filep, const char *buffer, size_t len, lof
 
 static int dev_release(struct inode *inodep, struct file *filep)
 {
+	mutex_unlock(&ebbchar_mutex);  // Releases the mutex (i.e., the lock goes up)
 	printk(KERN_INFO "IceNET: Device successfully closed\n");
 	return 0;
 }

@@ -33,7 +33,8 @@ int Device::device_write()
 		console_TX[i] = 0;
 	}
 
-	cout << "IceNET TX ---> ";
+	Console::Info("TX >> KERNEL");
+	Console::Write();
 	cin.getline(console_TX,256);
 
 	ret = write(m_file_device, console_TX, strlen(console_TX)); // Send the string to the LKM
@@ -48,14 +49,14 @@ int Device::device_read()
 
 	ret = read(m_file_device, console_RX, BUFFER_LENGTH);
 
-	cout << "IceNET RX ---> " << console_RX << endl;
+	Console::Info("RX << KERNEL");
+	Console::Read(console_RX);
 
 	// clear the buffer
 	memset (console_RX,0,256);
 
 	return 0;
 }
-
 
 
 int Device::device_close()

@@ -1,11 +1,12 @@
-#ifndef DEVICE_H
-#define DEVICE_H
+#pragma once
+
+#include "debug.h"
 
 using namespace std;
 
 #define BUFFER_LENGTH 256 
 
-class Device
+class Device : public Console
 {
 	private:
 
@@ -18,5 +19,3 @@ class Device
 	int device_write();
 	int device_close();
 };
-
-#endif // DEVICE_H

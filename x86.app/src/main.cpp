@@ -3,11 +3,10 @@
 // IceNET Technology 2023
 //
 #include <iostream>
-
 #include "device.h"
+#include "debug.h"
 
 using namespace std;
-
 
 int main()
 {
@@ -18,10 +17,6 @@ int main()
 	pDevice->device_write();
 	pDevice->device_read();
 	pDevice->device_close();
-
-
-
-
 
 	return 0;
 }
