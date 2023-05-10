@@ -2,9 +2,8 @@
 # Author: Ice.Marek
 # 2023 IceNET Technology
 #
-TARGET 	= ice
 
-obj-m+=ice.o
+obj-m+=iceCOM.o
 
 all:
 	make -C /lib/modules/$(shell uname -r)/build/ M=$(PWD) modules

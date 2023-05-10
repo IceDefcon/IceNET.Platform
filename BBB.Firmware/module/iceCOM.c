@@ -5,7 +5,7 @@
 #include <linux/fs.h>             	// Header for the Linux file system support
 #include <linux/uaccess.h>       	// Required for the copy to user function
 
-#define  DEVICE_NAME "ttyICE"    	// The device will appear at /dev/ebbchar using this value
+#define  DEVICE_NAME "iceCOM"    	// The device will appear at /dev/ebbchar using this value
 #define  CLASS_NAME  "iceCOM"        	// The device class -- this is a character device driver
 
 MODULE_LICENSE("GPL");
@@ -38,18 +38,18 @@ static struct file_operations fops =
 
 static int __init spi_init(void)
 {
-	printk(KERN_INFO "COM[c]: Initializing the chardev\n");
+	printk(KERN_INFO "iceCOM :: Initializing the iceCOM [char] device\n");
 
 	// Try to dynamically allocate a major number for the device -- more difficult but worth it
 	majorNumber = register_chrdev(0, DEVICE_NAME, &fops);
 
 		if (majorNumber<0)
 	{
-		printk(KERN_ALERT "COM[c]: chardev failed to register a major number\n");
+		printk(KERN_ALERT "iceCOM :: chardev failed to register a major number\n");
 		return majorNumber;
 	}
 
-	printk(KERN_INFO "COM[c]: registered correctly with major number %d\n", majorNumber);
+	printk(KERN_INFO "iceCOM :: registered correctly with major number %d\n", majorNumber);
 
 	// Register the device class
 	iceClass = class_create(THIS_MODULE, CLASS_NAME);
@@ -57,11 +57,11 @@ static int __init spi_init(void)
 	if (IS_ERR(iceClass)) // Check for error and clean up if there is one
 	{
 		unregister_chrdev(majorNumber, DEVICE_NAME);
-		printk(KERN_ALERT "COM[c]: Failed to register device class\n");
+		printk(KERN_ALERT "iceCOM :: Failed to register device class\n");
 		return PTR_ERR(iceClass); // Correct way to return an error on a pointer
 	}
 	
-	printk(KERN_INFO "COM[c]: device class registered correctly\n");
+	printk(KERN_INFO "iceCOM :: device class registered correctly\n");
 
 	// Register the device driver
 	iceDevice = device_create(iceClass, NULL, MKDEV(majorNumber, 0), NULL, DEVICE_NAME);
@@ -70,11 +70,11 @@ static int __init spi_init(void)
 	{
 		class_destroy(iceClass);           // Repeated code but the alternative is goto statements
 		unregister_chrdev(majorNumber, DEVICE_NAME);
-		printk(KERN_ALERT "COM[c]: Failed to create the device\n");
+		printk(KERN_ALERT "iceCOM :: Failed to create the device\n");
 		return PTR_ERR(iceDevice);
 	}
 	
-	printk(KERN_INFO "COM[c]: device class created correctly\n"); // Made it! device was initialized
+	printk(KERN_INFO "iceCOM :: device class created correctly\n"); // Made it! device was initialized
 	
 	mutex_init(&com_mutex);       // Initialize the mutex lock dynamically at runtime
 
@@ -86,7 +86,7 @@ static void __exit spi_exit(void)
 	class_unregister(iceClass);                          // unregister the device class
 	class_destroy(iceClass);                             // remove the device class
 	unregister_chrdev(majorNumber, DEVICE_NAME);             // unregister the major number
-	printk(KERN_INFO "COM[c]: Goodbye from the LKM!\n");
+	printk(KERN_INFO "iceCOM :: Goodbye from the LKM!\n");
 	mutex_destroy(&com_mutex);        /// destroy the dynamically-allocated mutex
 }
 
@@ -95,12 +95,12 @@ static int dev_open(struct inode *inodep, struct file *filep)
    if(!mutex_trylock(&com_mutex)) // Try to acquire the mutex (i.e., put the lock on/down)
    {
       // returns 1 if successful and 0 if there is contention
-      printk(KERN_ALERT "COM[c]: Device in use by another process");
+      printk(KERN_ALERT "iceCOM :: Device in use by another process");
       return -EBUSY;
    }
 
 	numberOpens++;
-	printk(KERN_INFO "COM[c]: Device has been opened %d time(s)\n", numberOpens);
+	printk(KERN_INFO "iceCOM :: Device has been opened %d time(s)\n", numberOpens);
 	return 0;
 }
 
@@ -117,12 +117,12 @@ static ssize_t dev_read(struct file *filep, char *buffer, size_t len, loff_t *of
 
 	if (error_count==0) // if true then have success
 	{
-		printk(KERN_INFO "COM[c]: Sent %d characters to the user\n", size_of_message);
+		printk(KERN_INFO "iceCOM :: Sent %d characters to the user\n", size_of_message);
 		return (size_of_message=0);  // clear the position to the start and return 0
 	}
 	else 
 	{
-		printk(KERN_INFO "COM[c]: Failed to send %d characters to the user\n", error_count);
+		printk(KERN_INFO "iceCOM :: Failed to send %d characters to the user\n", error_count);
 		return -EFAULT; // Failed -- return a bad address message (i.e. -14)
 	}
 }
@@ -135,12 +135,12 @@ static ssize_t dev_write(struct file *filep, const char *buffer, size_t len, lof
 	if (error_count==0)
 	{
 		size_of_message = strlen(message); // store the length of the stored message
-		printk(KERN_INFO "COM[c]: Received %d characters from the user\n", len);
+		printk(KERN_INFO "iceCOM :: Received %d characters from the user\n", len);
 		return len;
 	} 
 	else 
 	{
-		printk(KERN_INFO "COM[c]: Failed to receive characters from the user\n");
+		printk(KERN_INFO "iceCOM :: Failed to receive characters from the user\n");
 		return -EFAULT;
 	}
 }
@@ -148,7 +148,7 @@ static ssize_t dev_write(struct file *filep, const char *buffer, size_t len, lof
 static int dev_release(struct inode *inodep, struct file *filep)
 {
 	mutex_unlock(&com_mutex);  // Releases the mutex (i.e., the lock goes up)
-	printk(KERN_INFO "COM[c]: Device successfully closed\n");
+	printk(KERN_INFO "iceCOM :: Device successfully closed\n");
 	return 0;
 }
 
