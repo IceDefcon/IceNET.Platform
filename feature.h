@@ -1,3 +1,9 @@
+# ---==[ CURRENT ]==---
+
+1. Continue kernel module Development
+2. SPI must work as a thread
+3. Application must talk to SPI via thread 
+
 # ---==[ DEVELOPMENT ]==---
 
 1. Upgrade CPU platform :: Cortex-M4 >> Cortex A8

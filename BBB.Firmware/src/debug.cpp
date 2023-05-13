@@ -16,7 +16,6 @@ Console::~Console()
 
 }
 
-
 void Console::SetLevel(LogLevel level)
 {
 	m_LogLevel = level;
