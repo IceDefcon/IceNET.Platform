@@ -98,5 +98,5 @@ set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_INVERSION_MASK=00
 set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_INVERSION_MASK_LENGTH=37" -section_id SPI_DEBUG
 set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_NODE_CRC_LOWORD=59141" -section_id SPI_DEBUG
 set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_NODE_CRC_HIWORD=37454" -section_id SPI_DEBUG
-set_global_assignment -name SLD_FILE /ice/code.lab/IceNET.NetworkAnalyser/Quartus/debug_auto_stripped.stp
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
+set_global_assignment -name SLD_FILE /ice/code.lab/IceNET/IceNET.NetworkAnalyser/Quartus/debug_auto_stripped.stp

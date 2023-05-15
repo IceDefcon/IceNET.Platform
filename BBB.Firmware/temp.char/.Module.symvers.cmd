@@ -1,0 +1,1 @@
+cmd_/ice/code.lab/IceNET/IceNET.NetworkAnalyser/BBB.Firmware/temp.char/Module.symvers := sed 's/ko$$/o/' /ice/code.lab/IceNET/IceNET.NetworkAnalyser/BBB.Firmware/temp.char/modules.order | scripts/mod/modpost -m -a  -o /ice/code.lab/IceNET/IceNET.NetworkAnalyser/BBB.Firmware/temp.char/Module.symvers -e -i Module.symvers   -T -

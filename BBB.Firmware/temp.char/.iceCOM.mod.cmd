@@ -1,0 +1,1 @@
+cmd_/ice/code.lab/IceNET/IceNET.NetworkAnalyser/BBB.Firmware/temp.char/iceCOM.mod := printf '%s\n'   iceCOM.o | awk '!x[$$0]++ { print("/ice/code.lab/IceNET/IceNET.NetworkAnalyser/BBB.Firmware/temp.char/"$$0) }' > /ice/code.lab/IceNET/IceNET.NetworkAnalyser/BBB.Firmware/temp.char/iceCOM.mod

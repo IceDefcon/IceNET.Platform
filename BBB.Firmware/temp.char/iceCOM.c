@@ -43,7 +43,7 @@ static int __init spi_init(void)
 	// Try to dynamically allocate a major number for the device -- more difficult but worth it
 	majorNumber = register_chrdev(0, DEVICE_NAME, &fops);
 
-		if (majorNumber<0)
+	if (majorNumber<0)
 	{
 		printk(KERN_ALERT "iceCOM :: chardev failed to register a major number\n");
 		return majorNumber;
@@ -110,10 +110,7 @@ static ssize_t dev_read(struct file *filep, char *buffer, size_t len, loff_t *of
 	// copy_to_user has the format ( * to, *from, size) and returns 0 on success
 	error_count = copy_to_user(buffer, message, size_of_message);
 
-	for (int i = 0; i < 256; ++i)
-	{
-		message[i] = 0;
-	}
+	memset(message, 0, sizeof(message));
 
 	if (error_count==0) // if true then have success
 	{

@@ -1,5 +1,5 @@
 Analysis & Synthesis report for NetworkAnalyser
-Mon May  8 23:14:58 2023
+Sat May 13 10:15:40 2023
 Quartus II 64-Bit Version 13.0.1 Build 232 06/12/2013 Service Pack 1 SJ Web Edition
 
 
@@ -48,13 +48,13 @@ applicable agreement for further details.
 +--------------------------------------------------------------------------------------+
 ; Analysis & Synthesis Summary                                                         ;
 +------------------------------------+-------------------------------------------------+
-; Analysis & Synthesis Status        ; Successful - Mon May  8 23:14:58 2023           ;
+; Analysis & Synthesis Status        ; Successful - Sat May 13 10:15:40 2023           ;
 ; Quartus II 64-Bit Version          ; 13.0.1 Build 232 06/12/2013 SP 1 SJ Web Edition ;
 ; Revision Name                      ; NetworkAnalyser                                 ;
 ; Top-level Entity Name              ; NetworkAnalyser                                 ;
 ; Family                             ; Cyclone II                                      ;
-; Total logic elements               ; 689                                             ;
-;     Total combinational functions  ; 480                                             ;
+; Total logic elements               ; 690                                             ;
+;     Total combinational functions  ; 481                                             ;
 ;     Dedicated logic registers      ; 503                                             ;
 ; Total registers                    ; 503                                             ;
 ; Total pins                         ; 7                                               ;
@@ -167,65 +167,65 @@ applicable agreement for further details.
 +----------------------------+-------------+
 
 
-+---------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-; Analysis & Synthesis Source Files Read                                                                                                                              ;
-+----------------------------------+-----------------+------------------------------+-----------------------------------------------------------------------+---------+
-; File Name with User-Entered Path ; Used in Netlist ; File Type                    ; File Name with Absolute Path                                          ; Library ;
-+----------------------------------+-----------------+------------------------------+-----------------------------------------------------------------------+---------+
-; NetworkAnalyser.vhd              ; yes             ; User VHDL File               ; /ice/code.lab/IceNET.NetworkAnalyser/Quartus/NetworkAnalyser.vhd      ;         ;
-; debounce.vhd                     ; yes             ; User VHDL File               ; /ice/code.lab/IceNET.NetworkAnalyser/Quartus/debounce.vhd             ;         ;
-; sld_signaltap.vhd                ; yes             ; Megafunction                 ; /ice/q13/quartus/libraries/megafunctions/sld_signaltap.vhd            ;         ;
-; sld_signaltap_impl.vhd           ; yes             ; Encrypted Megafunction       ; /ice/q13/quartus/libraries/megafunctions/sld_signaltap_impl.vhd       ;         ;
-; sld_ela_control.vhd              ; yes             ; Encrypted Megafunction       ; /ice/q13/quartus/libraries/megafunctions/sld_ela_control.vhd          ;         ;
-; lpm_shiftreg.tdf                 ; yes             ; Megafunction                 ; /ice/q13/quartus/libraries/megafunctions/lpm_shiftreg.tdf             ;         ;
-; lpm_constant.inc                 ; yes             ; Megafunction                 ; /ice/q13/quartus/libraries/megafunctions/lpm_constant.inc             ;         ;
-; dffeea.inc                       ; yes             ; Megafunction                 ; /ice/q13/quartus/libraries/megafunctions/dffeea.inc                   ;         ;
-; aglobal130.inc                   ; yes             ; Megafunction                 ; /ice/q13/quartus/libraries/megafunctions/aglobal130.inc               ;         ;
-; sld_mbpmg.vhd                    ; yes             ; Encrypted Megafunction       ; /ice/q13/quartus/libraries/megafunctions/sld_mbpmg.vhd                ;         ;
-; sld_ela_trigger_flow_mgr.vhd     ; yes             ; Encrypted Megafunction       ; /ice/q13/quartus/libraries/megafunctions/sld_ela_trigger_flow_mgr.vhd ;         ;
-; sld_buffer_manager.vhd           ; yes             ; Encrypted Megafunction       ; /ice/q13/quartus/libraries/megafunctions/sld_buffer_manager.vhd       ;         ;
-; altsyncram.tdf                   ; yes             ; Megafunction                 ; /ice/q13/quartus/libraries/megafunctions/altsyncram.tdf               ;         ;
-; stratix_ram_block.inc            ; yes             ; Megafunction                 ; /ice/q13/quartus/libraries/megafunctions/stratix_ram_block.inc        ;         ;
-; lpm_mux.inc                      ; yes             ; Megafunction                 ; /ice/q13/quartus/libraries/megafunctions/lpm_mux.inc                  ;         ;
-; lpm_decode.inc                   ; yes             ; Megafunction                 ; /ice/q13/quartus/libraries/megafunctions/lpm_decode.inc               ;         ;
-; a_rdenreg.inc                    ; yes             ; Megafunction                 ; /ice/q13/quartus/libraries/megafunctions/a_rdenreg.inc                ;         ;
-; altrom.inc                       ; yes             ; Megafunction                 ; /ice/q13/quartus/libraries/megafunctions/altrom.inc                   ;         ;
-; altram.inc                       ; yes             ; Megafunction                 ; /ice/q13/quartus/libraries/megafunctions/altram.inc                   ;         ;
-; altdpram.inc                     ; yes             ; Megafunction                 ; /ice/q13/quartus/libraries/megafunctions/altdpram.inc                 ;         ;
-; db/altsyncram_tp14.tdf           ; yes             ; Auto-Generated Megafunction  ; /ice/code.lab/IceNET.NetworkAnalyser/Quartus/db/altsyncram_tp14.tdf   ;         ;
-; db/altsyncram_5eq1.tdf           ; yes             ; Auto-Generated Megafunction  ; /ice/code.lab/IceNET.NetworkAnalyser/Quartus/db/altsyncram_5eq1.tdf   ;         ;
-; db/decode_4oa.tdf                ; yes             ; Auto-Generated Megafunction  ; /ice/code.lab/IceNET.NetworkAnalyser/Quartus/db/decode_4oa.tdf        ;         ;
-; db/mux_oib.tdf                   ; yes             ; Auto-Generated Megafunction  ; /ice/code.lab/IceNET.NetworkAnalyser/Quartus/db/mux_oib.tdf           ;         ;
-; altdpram.tdf                     ; yes             ; Megafunction                 ; /ice/q13/quartus/libraries/megafunctions/altdpram.tdf                 ;         ;
-; memmodes.inc                     ; yes             ; Megafunction                 ; /ice/q13/quartus/libraries/others/maxplus2/memmodes.inc               ;         ;
-; a_hdffe.inc                      ; yes             ; Megafunction                 ; /ice/q13/quartus/libraries/megafunctions/a_hdffe.inc                  ;         ;
-; alt_le_rden_reg.inc              ; yes             ; Megafunction                 ; /ice/q13/quartus/libraries/megafunctions/alt_le_rden_reg.inc          ;         ;
-; altsyncram.inc                   ; yes             ; Megafunction                 ; /ice/q13/quartus/libraries/megafunctions/altsyncram.inc               ;         ;
-; lpm_mux.tdf                      ; yes             ; Megafunction                 ; /ice/q13/quartus/libraries/megafunctions/lpm_mux.tdf                  ;         ;
-; muxlut.inc                       ; yes             ; Megafunction                 ; /ice/q13/quartus/libraries/megafunctions/muxlut.inc                   ;         ;
-; bypassff.inc                     ; yes             ; Megafunction                 ; /ice/q13/quartus/libraries/megafunctions/bypassff.inc                 ;         ;
-; altshift.inc                     ; yes             ; Megafunction                 ; /ice/q13/quartus/libraries/megafunctions/altshift.inc                 ;         ;
-; db/mux_foc.tdf                   ; yes             ; Auto-Generated Megafunction  ; /ice/code.lab/IceNET.NetworkAnalyser/Quartus/db/mux_foc.tdf           ;         ;
-; lpm_decode.tdf                   ; yes             ; Megafunction                 ; /ice/q13/quartus/libraries/megafunctions/lpm_decode.tdf               ;         ;
-; declut.inc                       ; yes             ; Megafunction                 ; /ice/q13/quartus/libraries/megafunctions/declut.inc                   ;         ;
-; lpm_compare.inc                  ; yes             ; Megafunction                 ; /ice/q13/quartus/libraries/megafunctions/lpm_compare.inc              ;         ;
-; db/decode_rqf.tdf                ; yes             ; Auto-Generated Megafunction  ; /ice/code.lab/IceNET.NetworkAnalyser/Quartus/db/decode_rqf.tdf        ;         ;
-; lpm_counter.tdf                  ; yes             ; Megafunction                 ; /ice/q13/quartus/libraries/megafunctions/lpm_counter.tdf              ;         ;
-; lpm_add_sub.inc                  ; yes             ; Megafunction                 ; /ice/q13/quartus/libraries/megafunctions/lpm_add_sub.inc              ;         ;
-; cmpconst.inc                     ; yes             ; Megafunction                 ; /ice/q13/quartus/libraries/megafunctions/cmpconst.inc                 ;         ;
-; lpm_counter.inc                  ; yes             ; Megafunction                 ; /ice/q13/quartus/libraries/megafunctions/lpm_counter.inc              ;         ;
-; alt_counter_stratix.inc          ; yes             ; Megafunction                 ; /ice/q13/quartus/libraries/megafunctions/alt_counter_stratix.inc      ;         ;
-; db/cntr_7ai.tdf                  ; yes             ; Auto-Generated Megafunction  ; /ice/code.lab/IceNET.NetworkAnalyser/Quartus/db/cntr_7ai.tdf          ;         ;
-; db/cmpr_6cc.tdf                  ; yes             ; Auto-Generated Megafunction  ; /ice/code.lab/IceNET.NetworkAnalyser/Quartus/db/cmpr_6cc.tdf          ;         ;
-; db/cntr_p6j.tdf                  ; yes             ; Auto-Generated Megafunction  ; /ice/code.lab/IceNET.NetworkAnalyser/Quartus/db/cntr_p6j.tdf          ;         ;
-; db/cntr_2ci.tdf                  ; yes             ; Auto-Generated Megafunction  ; /ice/code.lab/IceNET.NetworkAnalyser/Quartus/db/cntr_2ci.tdf          ;         ;
-; db/cmpr_9cc.tdf                  ; yes             ; Auto-Generated Megafunction  ; /ice/code.lab/IceNET.NetworkAnalyser/Quartus/db/cmpr_9cc.tdf          ;         ;
-; db/cntr_gui.tdf                  ; yes             ; Auto-Generated Megafunction  ; /ice/code.lab/IceNET.NetworkAnalyser/Quartus/db/cntr_gui.tdf          ;         ;
-; db/cmpr_5cc.tdf                  ; yes             ; Auto-Generated Megafunction  ; /ice/code.lab/IceNET.NetworkAnalyser/Quartus/db/cmpr_5cc.tdf          ;         ;
-; sld_rom_sr.vhd                   ; yes             ; Encrypted Megafunction       ; /ice/q13/quartus/libraries/megafunctions/sld_rom_sr.vhd               ;         ;
-; sld_hub.vhd                      ; yes             ; Encrypted Megafunction       ; /ice/q13/quartus/libraries/megafunctions/sld_hub.vhd                  ;         ;
-; sld_jtag_hub.vhd                 ; yes             ; Encrypted Megafunction       ; /ice/q13/quartus/libraries/megafunctions/sld_jtag_hub.vhd             ;         ;
-+----------------------------------+-----------------+------------------------------+-----------------------------------------------------------------------+---------+
++--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+; Analysis & Synthesis Source Files Read                                                                                                                                   ;
++----------------------------------+-----------------+------------------------------+----------------------------------------------------------------------------+---------+
+; File Name with User-Entered Path ; Used in Netlist ; File Type                    ; File Name with Absolute Path                                               ; Library ;
++----------------------------------+-----------------+------------------------------+----------------------------------------------------------------------------+---------+
+; NetworkAnalyser.vhd              ; yes             ; User VHDL File               ; /ice/code.lab/IceNET/IceNET.NetworkAnalyser/Quartus/NetworkAnalyser.vhd    ;         ;
+; debounce.vhd                     ; yes             ; User VHDL File               ; /ice/code.lab/IceNET/IceNET.NetworkAnalyser/Quartus/debounce.vhd           ;         ;
+; sld_signaltap.vhd                ; yes             ; Megafunction                 ; /ice/q13/quartus/libraries/megafunctions/sld_signaltap.vhd                 ;         ;
+; sld_signaltap_impl.vhd           ; yes             ; Encrypted Megafunction       ; /ice/q13/quartus/libraries/megafunctions/sld_signaltap_impl.vhd            ;         ;
+; sld_ela_control.vhd              ; yes             ; Encrypted Megafunction       ; /ice/q13/quartus/libraries/megafunctions/sld_ela_control.vhd               ;         ;
+; lpm_shiftreg.tdf                 ; yes             ; Megafunction                 ; /ice/q13/quartus/libraries/megafunctions/lpm_shiftreg.tdf                  ;         ;
+; lpm_constant.inc                 ; yes             ; Megafunction                 ; /ice/q13/quartus/libraries/megafunctions/lpm_constant.inc                  ;         ;
+; dffeea.inc                       ; yes             ; Megafunction                 ; /ice/q13/quartus/libraries/megafunctions/dffeea.inc                        ;         ;
+; aglobal130.inc                   ; yes             ; Megafunction                 ; /ice/q13/quartus/libraries/megafunctions/aglobal130.inc                    ;         ;
+; sld_mbpmg.vhd                    ; yes             ; Encrypted Megafunction       ; /ice/q13/quartus/libraries/megafunctions/sld_mbpmg.vhd                     ;         ;
+; sld_ela_trigger_flow_mgr.vhd     ; yes             ; Encrypted Megafunction       ; /ice/q13/quartus/libraries/megafunctions/sld_ela_trigger_flow_mgr.vhd      ;         ;
+; sld_buffer_manager.vhd           ; yes             ; Encrypted Megafunction       ; /ice/q13/quartus/libraries/megafunctions/sld_buffer_manager.vhd            ;         ;
+; altsyncram.tdf                   ; yes             ; Megafunction                 ; /ice/q13/quartus/libraries/megafunctions/altsyncram.tdf                    ;         ;
+; stratix_ram_block.inc            ; yes             ; Megafunction                 ; /ice/q13/quartus/libraries/megafunctions/stratix_ram_block.inc             ;         ;
+; lpm_mux.inc                      ; yes             ; Megafunction                 ; /ice/q13/quartus/libraries/megafunctions/lpm_mux.inc                       ;         ;
+; lpm_decode.inc                   ; yes             ; Megafunction                 ; /ice/q13/quartus/libraries/megafunctions/lpm_decode.inc                    ;         ;
+; a_rdenreg.inc                    ; yes             ; Megafunction                 ; /ice/q13/quartus/libraries/megafunctions/a_rdenreg.inc                     ;         ;
+; altrom.inc                       ; yes             ; Megafunction                 ; /ice/q13/quartus/libraries/megafunctions/altrom.inc                        ;         ;
+; altram.inc                       ; yes             ; Megafunction                 ; /ice/q13/quartus/libraries/megafunctions/altram.inc                        ;         ;
+; altdpram.inc                     ; yes             ; Megafunction                 ; /ice/q13/quartus/libraries/megafunctions/altdpram.inc                      ;         ;
+; db/altsyncram_tp14.tdf           ; yes             ; Auto-Generated Megafunction  ; /ice/code.lab/IceNET/IceNET.NetworkAnalyser/Quartus/db/altsyncram_tp14.tdf ;         ;
+; db/altsyncram_5eq1.tdf           ; yes             ; Auto-Generated Megafunction  ; /ice/code.lab/IceNET/IceNET.NetworkAnalyser/Quartus/db/altsyncram_5eq1.tdf ;         ;
+; db/decode_4oa.tdf                ; yes             ; Auto-Generated Megafunction  ; /ice/code.lab/IceNET/IceNET.NetworkAnalyser/Quartus/db/decode_4oa.tdf      ;         ;
+; db/mux_oib.tdf                   ; yes             ; Auto-Generated Megafunction  ; /ice/code.lab/IceNET/IceNET.NetworkAnalyser/Quartus/db/mux_oib.tdf         ;         ;
+; altdpram.tdf                     ; yes             ; Megafunction                 ; /ice/q13/quartus/libraries/megafunctions/altdpram.tdf                      ;         ;
+; memmodes.inc                     ; yes             ; Megafunction                 ; /ice/q13/quartus/libraries/others/maxplus2/memmodes.inc                    ;         ;
+; a_hdffe.inc                      ; yes             ; Megafunction                 ; /ice/q13/quartus/libraries/megafunctions/a_hdffe.inc                       ;         ;
+; alt_le_rden_reg.inc              ; yes             ; Megafunction                 ; /ice/q13/quartus/libraries/megafunctions/alt_le_rden_reg.inc               ;         ;
+; altsyncram.inc                   ; yes             ; Megafunction                 ; /ice/q13/quartus/libraries/megafunctions/altsyncram.inc                    ;         ;
+; lpm_mux.tdf                      ; yes             ; Megafunction                 ; /ice/q13/quartus/libraries/megafunctions/lpm_mux.tdf                       ;         ;
+; muxlut.inc                       ; yes             ; Megafunction                 ; /ice/q13/quartus/libraries/megafunctions/muxlut.inc                        ;         ;
+; bypassff.inc                     ; yes             ; Megafunction                 ; /ice/q13/quartus/libraries/megafunctions/bypassff.inc                      ;         ;
+; altshift.inc                     ; yes             ; Megafunction                 ; /ice/q13/quartus/libraries/megafunctions/altshift.inc                      ;         ;
+; db/mux_foc.tdf                   ; yes             ; Auto-Generated Megafunction  ; /ice/code.lab/IceNET/IceNET.NetworkAnalyser/Quartus/db/mux_foc.tdf         ;         ;
+; lpm_decode.tdf                   ; yes             ; Megafunction                 ; /ice/q13/quartus/libraries/megafunctions/lpm_decode.tdf                    ;         ;
+; declut.inc                       ; yes             ; Megafunction                 ; /ice/q13/quartus/libraries/megafunctions/declut.inc                        ;         ;
+; lpm_compare.inc                  ; yes             ; Megafunction                 ; /ice/q13/quartus/libraries/megafunctions/lpm_compare.inc                   ;         ;
+; db/decode_rqf.tdf                ; yes             ; Auto-Generated Megafunction  ; /ice/code.lab/IceNET/IceNET.NetworkAnalyser/Quartus/db/decode_rqf.tdf      ;         ;
+; lpm_counter.tdf                  ; yes             ; Megafunction                 ; /ice/q13/quartus/libraries/megafunctions/lpm_counter.tdf                   ;         ;
+; lpm_add_sub.inc                  ; yes             ; Megafunction                 ; /ice/q13/quartus/libraries/megafunctions/lpm_add_sub.inc                   ;         ;
+; cmpconst.inc                     ; yes             ; Megafunction                 ; /ice/q13/quartus/libraries/megafunctions/cmpconst.inc                      ;         ;
+; lpm_counter.inc                  ; yes             ; Megafunction                 ; /ice/q13/quartus/libraries/megafunctions/lpm_counter.inc                   ;         ;
+; alt_counter_stratix.inc          ; yes             ; Megafunction                 ; /ice/q13/quartus/libraries/megafunctions/alt_counter_stratix.inc           ;         ;
+; db/cntr_7ai.tdf                  ; yes             ; Auto-Generated Megafunction  ; /ice/code.lab/IceNET/IceNET.NetworkAnalyser/Quartus/db/cntr_7ai.tdf        ;         ;
+; db/cmpr_6cc.tdf                  ; yes             ; Auto-Generated Megafunction  ; /ice/code.lab/IceNET/IceNET.NetworkAnalyser/Quartus/db/cmpr_6cc.tdf        ;         ;
+; db/cntr_p6j.tdf                  ; yes             ; Auto-Generated Megafunction  ; /ice/code.lab/IceNET/IceNET.NetworkAnalyser/Quartus/db/cntr_p6j.tdf        ;         ;
+; db/cntr_2ci.tdf                  ; yes             ; Auto-Generated Megafunction  ; /ice/code.lab/IceNET/IceNET.NetworkAnalyser/Quartus/db/cntr_2ci.tdf        ;         ;
+; db/cmpr_9cc.tdf                  ; yes             ; Auto-Generated Megafunction  ; /ice/code.lab/IceNET/IceNET.NetworkAnalyser/Quartus/db/cmpr_9cc.tdf        ;         ;
+; db/cntr_gui.tdf                  ; yes             ; Auto-Generated Megafunction  ; /ice/code.lab/IceNET/IceNET.NetworkAnalyser/Quartus/db/cntr_gui.tdf        ;         ;
+; db/cmpr_5cc.tdf                  ; yes             ; Auto-Generated Megafunction  ; /ice/code.lab/IceNET/IceNET.NetworkAnalyser/Quartus/db/cmpr_5cc.tdf        ;         ;
+; sld_rom_sr.vhd                   ; yes             ; Encrypted Megafunction       ; /ice/q13/quartus/libraries/megafunctions/sld_rom_sr.vhd                    ;         ;
+; sld_hub.vhd                      ; yes             ; Encrypted Megafunction       ; /ice/q13/quartus/libraries/megafunctions/sld_hub.vhd                       ;         ;
+; sld_jtag_hub.vhd                 ; yes             ; Encrypted Megafunction       ; /ice/q13/quartus/libraries/megafunctions/sld_jtag_hub.vhd                  ;         ;
++----------------------------------+-----------------+------------------------------+----------------------------------------------------------------------------+---------+
 
 
 +------------------------------------------------------------------------+
@@ -233,16 +233,16 @@ applicable agreement for further details.
 +---------------------------------------------+--------------------------+
 ; Resource                                    ; Usage                    ;
 +---------------------------------------------+--------------------------+
-; Estimated Total logic elements              ; 689                      ;
+; Estimated Total logic elements              ; 690                      ;
 ;                                             ;                          ;
-; Total combinational functions               ; 480                      ;
+; Total combinational functions               ; 481                      ;
 ; Logic element usage by number of LUT inputs ;                          ;
-;     -- 4 input functions                    ; 168                      ;
-;     -- 3 input functions                    ; 160                      ;
-;     -- <=2 input functions                  ; 152                      ;
+;     -- 4 input functions                    ; 169                      ;
+;     -- 3 input functions                    ; 159                      ;
+;     -- <=2 input functions                  ; 153                      ;
 ;                                             ;                          ;
 ; Logic elements by mode                      ;                          ;
-;     -- normal mode                          ; 380                      ;
+;     -- normal mode                          ; 381                      ;
 ;     -- arithmetic mode                      ; 100                      ;
 ;                                             ;                          ;
 ; Total registers                             ; 503                      ;
@@ -254,7 +254,7 @@ applicable agreement for further details.
 ; Embedded Multiplier 9-bit elements          ; 0                        ;
 ; Maximum fan-out node                        ; altera_internal_jtag~TDO ;
 ; Maximum fan-out                             ; 301                      ;
-; Total fan-out                               ; 3428                     ;
+; Total fan-out                               ; 3431                     ;
 ; Average fan-out                             ; 3.40                     ;
 +---------------------------------------------+--------------------------+
 
@@ -264,10 +264,10 @@ applicable agreement for further details.
 +---------------------------------------------------------------------------------------------------------+-------------------+--------------+-------------+--------------+---------+-----------+------+--------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+--------------+
 ; Compilation Hierarchy Node                                                                              ; LC Combinationals ; LC Registers ; Memory Bits ; DSP Elements ; DSP 9x9 ; DSP 18x18 ; Pins ; Virtual Pins ; Full Hierarchy Name                                                                                                                                                                                                                                                                                                                           ; Library Name ;
 +---------------------------------------------------------------------------------------------------------+-------------------+--------------+-------------+--------------+---------+-----------+------+--------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+--------------+
-; |NetworkAnalyser                                                                                        ; 480 (3)           ; 503 (3)      ; 49152       ; 0            ; 0       ; 0         ; 7    ; 0            ; |NetworkAnalyser                                                                                                                                                                                                                                                                                                                              ; work         ;
+; |NetworkAnalyser                                                                                        ; 481 (3)           ; 503 (3)      ; 49152       ; 0            ; 0       ; 0         ; 7    ; 0            ; |NetworkAnalyser                                                                                                                                                                                                                                                                                                                              ; work         ;
 ;    |debounce:debounce_module|                                                                           ; 46 (46)           ; 34 (34)      ; 0           ; 0            ; 0       ; 0         ; 0    ; 0            ; |NetworkAnalyser|debounce:debounce_module                                                                                                                                                                                                                                                                                                     ; work         ;
-;    |sld_hub:auto_hub|                                                                                   ; 117 (1)           ; 86 (0)       ; 0           ; 0            ; 0       ; 0         ; 0    ; 0            ; |NetworkAnalyser|sld_hub:auto_hub                                                                                                                                                                                                                                                                                                             ; work         ;
-;       |sld_jtag_hub:\jtag_hub_gen:sld_jtag_hub_inst|                                                    ; 116 (78)          ; 86 (58)      ; 0           ; 0            ; 0       ; 0         ; 0    ; 0            ; |NetworkAnalyser|sld_hub:auto_hub|sld_jtag_hub:\jtag_hub_gen:sld_jtag_hub_inst                                                                                                                                                                                                                                                                ; work         ;
+;    |sld_hub:auto_hub|                                                                                   ; 118 (1)           ; 86 (0)       ; 0           ; 0            ; 0       ; 0         ; 0    ; 0            ; |NetworkAnalyser|sld_hub:auto_hub                                                                                                                                                                                                                                                                                                             ; work         ;
+;       |sld_jtag_hub:\jtag_hub_gen:sld_jtag_hub_inst|                                                    ; 117 (79)          ; 86 (58)      ; 0           ; 0            ; 0       ; 0         ; 0    ; 0            ; |NetworkAnalyser|sld_hub:auto_hub|sld_jtag_hub:\jtag_hub_gen:sld_jtag_hub_inst                                                                                                                                                                                                                                                                ; work         ;
 ;          |sld_rom_sr:hub_info_reg|                                                                      ; 21 (21)           ; 9 (9)        ; 0           ; 0            ; 0       ; 0         ; 0    ; 0            ; |NetworkAnalyser|sld_hub:auto_hub|sld_jtag_hub:\jtag_hub_gen:sld_jtag_hub_inst|sld_rom_sr:hub_info_reg                                                                                                                                                                                                                                        ; work         ;
 ;          |sld_shadow_jsm:shadow_jsm|                                                                    ; 17 (17)           ; 19 (19)      ; 0           ; 0            ; 0       ; 0         ; 0    ; 0            ; |NetworkAnalyser|sld_hub:auto_hub|sld_jtag_hub:\jtag_hub_gen:sld_jtag_hub_inst|sld_shadow_jsm:shadow_jsm                                                                                                                                                                                                                                      ; work         ;
 ;    |sld_signaltap:SPI_DEBUG|                                                                            ; 314 (1)           ; 380 (6)      ; 49152       ; 0            ; 0       ; 0         ; 0    ; 0            ; |NetworkAnalyser|sld_signaltap:SPI_DEBUG                                                                                                                                                                                                                                                                                                      ; work         ;
@@ -376,13 +376,19 @@ Note: For table entries with two numbers listed, the numbers in parentheses indi
 +-------------------------------------------------------------------------------------------------------------------------------------------------------------------------+---------+
 
 
-+------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-; Multiplexer Restructuring Statistics (Restructuring Performed)                                                                                                   ;
-+--------------------+-----------+---------------+----------------------+------------------------+------------+----------------------------------------------------+
-; Multiplexer Inputs ; Bus Width ; Baseline Area ; Area if Restructured ; Saving if Restructured ; Registered ; Example Multiplexer Output                         ;
-+--------------------+-----------+---------------+----------------------+------------------------+------------+----------------------------------------------------+
-; 3:1                ; 32 bits   ; 64 LEs        ; 32 LEs               ; 32 LEs                 ; Yes        ; |NetworkAnalyser|debounce:debounce_module|count[0] ;
-+--------------------+-----------+---------------+----------------------+------------------------+------------+----------------------------------------------------+
++--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+; Multiplexer Restructuring Statistics (Restructuring Performed)                                                                                                                                                                       ;
++--------------------+-----------+---------------+----------------------+------------------------+------------+------------------------------------------------------------------------------------------------------------------------+
+; Multiplexer Inputs ; Bus Width ; Baseline Area ; Area if Restructured ; Saving if Restructured ; Registered ; Example Multiplexer Output                                                                                             ;
++--------------------+-----------+---------------+----------------------+------------------------+------------+------------------------------------------------------------------------------------------------------------------------+
+; 3:1                ; 32 bits   ; 64 LEs        ; 32 LEs               ; 32 LEs                 ; Yes        ; |NetworkAnalyser|debounce:debounce_module|count[0]                                                                     ;
+; 3:1                ; 4 bits    ; 8 LEs         ; 4 LEs                ; 4 LEs                  ; Yes        ; |NetworkAnalyser|sld_hub:auto_hub|sld_jtag_hub:\jtag_hub_gen:sld_jtag_hub_inst|hub_minor_ver_reg[0]                    ;
+; 4:1                ; 5 bits    ; 10 LEs        ; 5 LEs                ; 5 LEs                  ; Yes        ; |NetworkAnalyser|sld_hub:auto_hub|sld_jtag_hub:\jtag_hub_gen:sld_jtag_hub_inst|mixer_addr_reg[4]                       ;
+; 5:1                ; 5 bits    ; 15 LEs        ; 5 LEs                ; 10 LEs                 ; Yes        ; |NetworkAnalyser|sld_hub:auto_hub|sld_jtag_hub:\jtag_hub_gen:sld_jtag_hub_inst|sld_rom_sr:hub_info_reg|word_counter[0] ;
+; 6:1                ; 7 bits    ; 28 LEs        ; 7 LEs                ; 21 LEs                 ; Yes        ; |NetworkAnalyser|sld_hub:auto_hub|sld_jtag_hub:\jtag_hub_gen:sld_jtag_hub_inst|irsr_reg[2]                             ;
+; 34:1               ; 4 bits    ; 88 LEs        ; 56 LEs               ; 32 LEs                 ; Yes        ; |NetworkAnalyser|sld_hub:auto_hub|sld_jtag_hub:\jtag_hub_gen:sld_jtag_hub_inst|design_hash_reg[3]                      ;
+; 20:1               ; 4 bits    ; 52 LEs        ; 36 LEs               ; 16 LEs                 ; Yes        ; |NetworkAnalyser|sld_hub:auto_hub|sld_jtag_hub:\jtag_hub_gen:sld_jtag_hub_inst|sld_rom_sr:hub_info_reg|WORD_SR[0]      ;
++--------------------+-----------+---------------+----------------------+------------------------+------------+------------------------------------------------------------------------------------------------------------------------+
 
 
 +----------------------------------------------------------------------------------------------------------+
@@ -454,13 +460,14 @@ Note: In order to hide this table in the UI and the text report file, please set
 +----------------+---------------+---------------------+------------------+--------------+----------+------------------------+----------------------+--------------------+-----------------------------+-----------------+------------------+--------------------------+
 
 
-+-------------------------------+
-; Elapsed Time Per Partition    ;
-+----------------+--------------+
-; Partition Name ; Elapsed Time ;
-+----------------+--------------+
-; Top            ; 00:00:00     ;
-+----------------+--------------+
++---------------------------------+
+; Elapsed Time Per Partition      ;
++------------------+--------------+
+; Partition Name   ; Elapsed Time ;
++------------------+--------------+
+; sld_hub:auto_hub ; 00:00:00     ;
+; Top              ; 00:00:00     ;
++------------------+--------------+
 
 
 +----------------------------------------------------------------------------------------------------------+
@@ -484,7 +491,7 @@ Note: In order to hide this table in the UI and the text report file, please set
 Info: *******************************************************************
 Info: Running Quartus II 64-Bit Analysis & Synthesis
     Info: Version 13.0.1 Build 232 06/12/2013 Service Pack 1 SJ Web Edition
-    Info: Processing started: Mon May  8 23:14:53 2023
+    Info: Processing started: Sat May 13 10:15:34 2023
 Info: Command: quartus_map --read_settings_files=on --write_settings_files=off NetworkAnalyser -c NetworkAnalyser
 Info (11104): Parallel Compilation has detected 4 hyper-threaded processors. However, the extra hyper-threaded processors will not be used by default. Parallel Compilation will use 2 of the 2 physical processors detected instead.
 Info (12021): Found 2 design units, including 1 entities, in source file NetworkAnalyser.vhd
@@ -524,18 +531,22 @@ Info (12021): Found 1 design units, including 1 entities, in source file db/cmpr
 Info (12033): Analysis and Synthesis generated SignalTap II or debug node instance "SPI_DEBUG"
 Warning (13024): Output pins are stuck at VCC or GND
     Warning (13410): Pin "LED_2" is stuck at VCC
+Info (13000): Registers with preset signals will power-up high
+Info (13003): DEV_CLRn pin will set, and not reset, register with preset signal due to NOT Gate Push-Back
+Warning (13024): Output pins are stuck at VCC or GND
+    Warning (13410): Pin "sld_hub:auto_hub|receive[0][0]" is stuck at GND
 Info (35024): Succesfully connected in-system debug instance "SPI_DEBUG" to all 7 required data inputs, trigger inputs, acquisition clocks, and dynamic pins
 Info (16010): Generating hard_block partition "hard_block:auto_generated_inst"
     Info (16011): Adding 0 node(s), including 0 DDIO, 0 PLL, 0 transceiver and 0 LCELL
-Info (21057): Implemented 731 device resources after synthesis - the final resource count might be different
+Info (21057): Implemented 732 device resources after synthesis - the final resource count might be different
     Info (21058): Implemented 6 input pins
     Info (21059): Implemented 5 output pins
-    Info (21061): Implemented 707 logic cells
+    Info (21061): Implemented 708 logic cells
     Info (21064): Implemented 12 RAM segments
-Info: Quartus II 64-Bit Analysis & Synthesis was successful. 0 errors, 2 warnings
-    Info: Peak virtual memory: 704 megabytes
-    Info: Processing ended: Mon May  8 23:14:58 2023
-    Info: Elapsed time: 00:00:05
-    Info: Total CPU time (on all processors): 00:00:04
+Info: Quartus II 64-Bit Analysis & Synthesis was successful. 0 errors, 4 warnings
+    Info: Peak virtual memory: 697 megabytes
+    Info: Processing ended: Sat May 13 10:15:40 2023
+    Info: Elapsed time: 00:00:06
+    Info: Total CPU time (on all processors): 00:00:05
 
 
