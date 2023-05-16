@@ -14,7 +14,6 @@
 DevSpi::DevSpi() 
 {
 	m_file_descriptor = 0;
-	m_tx_buffer[4] = {0};
 	m_rx_buffer[4] = {0};
 	m_mode = 0;
 	m_bits_per_word = 0;
@@ -63,6 +62,8 @@ DevSpi::device_read()
 
 int DevSpi::device_write()
 {
+	unsigned char tx_buffer[4] = {0x1, 0x2, 0x3, 0x4};
+
     // Transfer data over SPI
     struct spi_ioc_transfer transfer = 
     {

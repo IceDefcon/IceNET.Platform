@@ -11,7 +11,6 @@ class DevSpi : public Console, public DevBase
 {
 private:
 	int m_file_descriptor;
-    unsigned char m_tx_buffer[4];
     unsigned char m_rx_buffer[4];
     uint8_t m_mode;
     uint8_t m_bits_per_word;
