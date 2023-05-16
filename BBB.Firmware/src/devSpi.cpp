@@ -9,10 +9,18 @@
 #include <linux/spi/spidev.h>
 #include <sys/ioctl.h>
 
-// Application
 #include "devSpi.h"
 
-DevSpi::DevSpi() : m_file_descriptor(0) {}
+DevSpi::DevSpi() 
+{
+	m_file_descriptor = 0;
+	m_tx_buffer[4] = {0};
+	m_rx_buffer[4] = {0};
+	m_mode = 0;
+	m_bits_per_word = 0;
+	m_max_speed_hz = 0;
+}
+
 DevSpi::~DevSpi() {}
 
 int 
@@ -28,13 +36,12 @@ int
 DevSpi::device_init()
 {
     // Configure SPI mode, bits per word, and max speed
-    uint8_t mode = SPI_MODE_0;
-    uint8_t bits_per_word = 8;
-    uint32_t max_speed_hz = 1000000;
-
+    m_mode = SPI_MODE_0;
+	m_bits_per_word = 8;
+	m_max_speed_hz = 1000000;
     int ret = ioctl(m_file_descriptor, SPI_IOC_WR_MODE, &mode);
-    ret |= ioctl(m_file_descriptor, SPI_IOC_WR_BITS_PER_WORD, &bits_per_word);
-    ret |= ioctl(m_file_descriptor, SPI_IOC_WR_MAX_SPEED_HZ, &max_speed_hz);
+    ret |= ioctl(m_file_descriptor, SPI_IOC_WR_BITS_PER_WORD, &m_bits_per_word);
+    ret |= ioctl(m_file_descriptor, SPI_IOC_WR_MAX_SPEED_HZ, &m_max_speed_hz);
 
     if (ret < 0) return -1;
 	return 0;
@@ -45,9 +52,9 @@ DevSpi::device_read()
 {
 	// Print received data
     std::cout << "Received data:";
-    for (int i = 0; i < sizeof(rx_buffer); i++) 
+    for (int i = 0; i < sizeof(m_rx_buffer); i++) 
     {
-        std::cout << " 0x" << std::hex << (int)rx_buffer[i];
+        std::cout << " 0x" << std::hex << (int)m_rx_buffer[i];
     }
     std::cout << std::endl;
 
@@ -59,15 +66,15 @@ int DevSpi::device_write()
     // Transfer data over SPI
     struct spi_ioc_transfer transfer = 
     {
-    	.tx_buf = (unsigned long)tx_buffer,
-    	.rx_buf = (unsigned long)rx_buffer,
-    	.len = sizeof(tx_buffer),
-    	.speed_hz = max_speed_hz,
-    	.bits_per_word = bits_per_word,
+    	.tx_buf = (unsigned long)m_tx_buffer,
+    	.rx_buf = (unsigned long)m_rx_buffer,
+    	.len = sizeof(m_tx_buffer),
+    	.speed_hz = m_max_speed_hz,
+    	.bits_per_word = m_bits_per_word,
 		// .delay_usecs = 0,
     };
 
-    ret = ioctl(fd, SPI_IOC_MESSAGE(1), &transfer);
+    int ret = ioctl(m_file_descriptor, SPI_IOC_MESSAGE(1), &transfer);
     if (ret < 0) return -1;
 	
 	return 0;
