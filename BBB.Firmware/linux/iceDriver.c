@@ -48,12 +48,12 @@ static int dev_open(struct inode *inodep, struct file *filep)
    if(!mutex_trylock(&com_mutex)) // Try to acquire the mutex (i.e., put the lock on/down)
    {
       // returns 1 if successful and 0 if there is contention
-      printk(KERN_ALERT "[FPGA][C] Device in use by another process");
+      printk(KERN_ALERT "[FPGA][ C ] Device in use by another process");
       return -EBUSY;
    }
 
     numberOpens++;
-    printk(KERN_INFO "[FPGA][C] Device has been opened %d time(s)\n", numberOpens);
+    printk(KERN_INFO "[FPGA][ C ] Device has been opened %d time(s)\n", numberOpens);
     return 0;
 }
 
@@ -67,12 +67,12 @@ static ssize_t dev_read(struct file *filep, char *buffer, size_t len, loff_t *of
 
     if (error_count==0) // if true then have success
     {
-        printk(KERN_INFO "[FPGA][C] Sent %d characters to the user\n", size_of_message);
+        printk(KERN_INFO "[FPGA][ C ] Sent %d characters to the user\n", size_of_message);
         return (size_of_message=0);  // clear the position to the start and return 0
     }
     else 
     {
-        printk(KERN_INFO "[FPGA][C] Failed to send %d characters to the user\n", error_count);
+        printk(KERN_INFO "[FPGA][ C ] Failed to send %d characters to the user\n", error_count);
         return -EFAULT; // Failed -- return a bad address message (i.e. -14)
     }
 }
@@ -85,12 +85,12 @@ static ssize_t dev_write(struct file *filep, const char *buffer, size_t len, lof
     if (error_count==0)
     {
         size_of_message = strlen(message); // store the length of the stored message
-        printk(KERN_INFO "[FPGA][C] Received %d characters from the user\n", len);
+        printk(KERN_INFO "[FPGA][ C ] Received %d characters from the user\n", len);
         return len;
     } 
     else 
     {
-        printk(KERN_INFO "[FPGA][C] Failed to receive characters from the user\n");
+        printk(KERN_INFO "[FPGA][ C ] Failed to receive characters from the user\n");
         return -EFAULT;
     }
 }
@@ -98,7 +98,7 @@ static ssize_t dev_write(struct file *filep, const char *buffer, size_t len, lof
 static int dev_release(struct inode *inodep, struct file *filep)
 {
     mutex_unlock(&com_mutex);  // Releases the mutex (i.e., the lock goes up)
-    printk(KERN_INFO "[FPGA][C] Device successfully closed\n");
+    printk(KERN_INFO "[FPGA][ C ] Device successfully closed\n");
     return 0;
 }
 
@@ -155,13 +155,13 @@ static int __init fpga_driver_init(void)
     //
     // CHAR Device
     //
-    printk(KERN_INFO "[FPGA][C] Device Init\n");
+    printk(KERN_INFO "[FPGA][ C ] Device Init\n");
 
     // Try to dynamically allocate a major number for the device -- more difficult but worth it
     majorNumber = register_chrdev(0, DEVICE_NAME, &fops);
     if (majorNumber<0)
     {
-        printk(KERN_ALERT "[FPGA][C] Failed to register major number\n");
+        printk(KERN_ALERT "[FPGA][ C ] Failed to register major number\n");
         return majorNumber;
     }
 
@@ -170,7 +170,7 @@ static int __init fpga_driver_init(void)
     if (IS_ERR(C_Class)) // Check for error and clean up if there is one
     {
         unregister_chrdev(majorNumber, DEVICE_NAME);
-        printk(KERN_ALERT "[FPGA][C] Failed to register device class\n");
+        printk(KERN_ALERT "[FPGA][ C ] Failed to register device class\n");
         return PTR_ERR(C_Class); // Correct way to return an error on a pointer
     }
     
@@ -180,7 +180,7 @@ static int __init fpga_driver_init(void)
     {
         class_destroy(C_Class);           // Repeated code but the alternative is goto statements
         unregister_chrdev(majorNumber, DEVICE_NAME);
-        printk(KERN_ALERT "[FPGA][C] Failed to create the device\n");
+        printk(KERN_ALERT "[FPGA][ C ] Failed to create the device\n");
         return PTR_ERR(C_Device);
     }
 
@@ -194,7 +194,7 @@ static void __exit fpga_driver_exit(void)
     //
     // CHAR Device
     //
-    printk(KERN_INFO "[FPGA][C] Device Exit\n");
+    printk(KERN_INFO "[FPGA][ C ] Device Exit\n");
     device_destroy(C_Class, MKDEV(majorNumber, 0));     // remove the device
     class_unregister(C_Class);                          // unregister the device class
     class_destroy(C_Class);                             // remove the device class
