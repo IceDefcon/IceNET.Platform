@@ -15,15 +15,15 @@ CPP_OBJECTS = $(CPP_SOURCES:.cpp=.o)
 INCLUDES=\
 	include \
 
-all: $(APP) $(LINKED)
+all: $(APP) #$(LINKED)
 
 $(APP): $(CPP_OBJECTS)
 	$(GCC) $(CFLAGS) $^ -o $@ 
 	size $(APP)
 
-$(LINKED): $(CPP_OBJECTS)
-	$(GCC) $(CFLAGS) -T $(LDSCRIPT) $^ -o $@ 
-	size $(APP)
+# $(LINKED): $(CPP_OBJECTS)
+# 	$(GCC) $(CFLAGS) -T $(LDSCRIPT) $^ -o $@ 
+# 	size $(APP)
 
 %.o: %.cpp
 	$(GCC) $(CFLAGS) -I $(INCLUDES) -c -o $@ $<
