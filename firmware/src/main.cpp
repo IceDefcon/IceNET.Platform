@@ -3,6 +3,7 @@
 // IceNET Technology 2023
 //
 #include <iostream>
+#include <thread>
 
 #include "devChar.h"
 #include "devSpi.h"
@@ -11,15 +12,22 @@
 #define ICE_DEVICE "/dev/iceCOM"
 #define SPI_DEVICE "/dev/spidev1.0"
 
+void ConsoleThread() 
+{
+    // Code to be executed by the first thread
+    std::cout << "Thread 1 is executing." << std::endl;
+}
+
 int main(int argc, char* argv[])
 {
-	DevBase* pDevice;
+	DevBase* pDevice = nullptr;
 
 	//
-	// Sending to FPGA char device :: This is not linked with SPI device yet
+	// Sending text to Kernel :: Not linked with SPI
 	//
-	DevChar CharDevice;
-	pDevice = &CharDevice;
+	pDevice = new DevChar; 		// SLOW :: HEAP
+	// DevChar CharDevice; 		// FAST :: STACK
+	// pDevice = &CharDevice; 	// FAST :: STACK
 	pDevice->device_open(ICE_DEVICE);
 	pDevice->device_write();
 	pDevice->device_read();
@@ -28,8 +36,9 @@ int main(int argc, char* argv[])
 	//
 	// Testing SPI 
 	//
-	DevSpi SpiDevice;
-	pDevice = &SpiDevice;
+	pDevice = new DevSpi; 		// SLOW :: HEAP
+	// DevSpi SpiDevice; 		// FAST :: STACK
+	// pDevice = &SpiDevice; 	// FAST :: STACK
 	pDevice->device_open(SPI_DEVICE);
 	pDevice->device_write();
 	pDevice->device_read();
