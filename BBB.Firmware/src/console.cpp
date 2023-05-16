@@ -1,3 +1,7 @@
+//
+// Author: Ice.Marek
+// IceNET Technology 2023
+//
 #include <string>       // std::string
 #include <iostream>     // std::cout
 #include <sstream>      // std::stringstream

@@ -9,9 +9,8 @@
 //
 // C Device Init
 //
-
-#define  DEVICE_NAME "FPGA_C_Device"
-#define  CLASS_NAME  "FPGA_C_Device"
+#define  DEVICE_NAME "FPGA"
+#define  CLASS_NAME  "FPGA"
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Marek Ice");

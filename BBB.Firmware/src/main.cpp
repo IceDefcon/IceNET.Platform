@@ -3,19 +3,26 @@
 // IceNET Technology 2023
 //
 #include <iostream>
-#include "device.h"
+
+// #include "devBase.h"
+#include "devChar.h"
+#include "devSpi.h"
 #include "console.h"
 
 int main(int argc, char* argv[])
 {
 	if(argv[1] == NULL)
 	{
-		std::cout << "Missing device, try with /dev/FPGA_C_Device" << std::endl;
+		std::cout << "Missing device, try with /dev/FPGA" << std::endl;
 		return 0;
 	}
 
-	// Heap Allocaiotn
-	Device* pDevice = new Device;
+	DevBase* pDevice;
+	
+	DevChar CharDevice;
+	DevSpi SpiDevice;
+
+	pDevice = &CharDevice;
 
 	pDevice->device_open(argv[1]);
 	pDevice->device_write();

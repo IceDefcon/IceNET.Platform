@@ -4,7 +4,7 @@
 #
 APP 		= app
 GCC  		= g++
-CFLAGS 		= -Wall -Wextra -std=c++11 -O2 -g
+CFLAGS 		= -Wall -Wextra -std=c++20 -O2 -g
 
 CPP_SOURCES = $(shell find . -name "*.cpp")
 CPP_OBJECTS = $(CPP_SOURCES:.cpp=.o)

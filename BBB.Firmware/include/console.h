@@ -1,7 +1,9 @@
-#pragma once  			// same as #ifndef
+//
+// Author: Ice.Marek
+// IceNET Technology 2023
+//
+#pragma once
 #include <iostream>
-
-using namespace std;
 
 class Console
 {
