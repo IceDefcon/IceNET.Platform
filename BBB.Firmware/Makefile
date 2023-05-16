@@ -5,40 +5,31 @@
 APP 		= app
 LINKED  	= app.linked
 GCC  		= g++
-NASM 		= nasm 
-
-AFLAGS 		= -f elf64
-CFLAGS 		= -m64
+CFLAGS 		= -Wall -Wextra -std=c++11 -O2 -g
 
 LDSCRIPT    := linker/linker.ld
 
-ASM_SOURCES = $(shell find . -name "*.asm")
 CPP_SOURCES = $(shell find . -name "*.cpp")
+CPP_OBJECTS = $(CPP_SOURCES:.cpp=.o)
 
 INCLUDES=\
 	include \
 
-CPP_OBJECTS = $(CPP_SOURCES:.cpp=.o)
-ASM_OBJECTS = $(ASM_SOURCES:.asm=.o)
-
 all: $(APP) $(LINKED)
 
-$(APP): $(CPP_OBJECTS) $(ASM_OBJECTS)
+$(APP): $(CPP_OBJECTS)
 	$(GCC) $(CFLAGS) $^ -o $@ 
 	size $(APP)
 
-$(LINKED): $(CPP_OBJECTS) $(ASM_OBJECTS)
+$(LINKED): $(CPP_OBJECTS)
 	$(GCC) $(CFLAGS) -T $(LDSCRIPT) $^ -o $@ 
 	size $(APP)
 
 %.o: %.cpp
 	$(GCC) $(CFLAGS) -I $(INCLUDES) -c -o $@ $<
 
-%.o: %.asm
-	$(NASM) $(AFLAGS) $(ASM_SOURCES) -o $@
-
 clean:
-	rm -f $(APP) $(LINKED) $(CPP_OBJECTS) $(ASM_OBJECTS)
+	rm -f $(APP) $(LINKED) $(CPP_OBJECTS)
 
 size:
 	size $(APP)

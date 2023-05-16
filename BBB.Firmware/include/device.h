@@ -17,7 +17,7 @@ public:
 	Device();
 	~Device();
 
-	int device_open();
+	int device_open(const char* device);
 	int device_read();
 	int device_write();
 	int device_close();

@@ -3,26 +3,17 @@
 // IceNET Technology 2023
 //
 #include <iostream> 		// IO devices :: keyboard
-#include <string>
-#include "device.h"
-
-// #include <stdio.h>
-// #include <stdlib.h>
-// #include <errno.h>
 #include <fcntl.h> 			// Open device   
 #include <string.h> 		// for strlem
 #include <unistd.h> 		// read/write to the file
 
-using namespace std;
+#include "device.h"
 
 Device::Device() : m_file_device(0) {}
 
-int Device::device_open()
+int Device::device_open(const char* device)
 {
-	//
-	// TODO
-	//
-	m_file_device = open("/dev/FPGA_C_Device", O_RDWR);
+	m_file_device = open(device, O_RDWR);
 	if (m_file_device < 0) return -1;
 
 	return 0;

@@ -14,7 +14,7 @@ public:
 
 private:
 
-	LogLevel m_LogLevel = LevelInfo; 	// Convetion m_xxx
+	LogLevel m_LogLevel;
 
 public:
 

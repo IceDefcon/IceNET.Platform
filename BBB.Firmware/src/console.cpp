@@ -3,11 +3,9 @@
 #include <sstream>      // std::stringstream
 #include "console.h"
 
-using namespace std;
-
-Console::Console() : m_LogLevel (LevelInfo)
-{
-	Info("Log Level: 2 [Info]");
+Console::Console() : m_LogLevel (LevelInfo) 
+{ 
+	Info("Enable Logging Console"); 
 }
 
 Console::~Console()
@@ -23,33 +21,33 @@ void Console::SetLevel(LogLevel level)
 void Console::Error(const char * message)
 {
 	if(m_LogLevel >= LevelError)
-		cout << "[ERROR]: " << message << endl;
+		std::cout << "[ERROR]: " << message << std::endl;
 }
 
 void Console::Warning(const char * message)
 {
 	if(m_LogLevel >= LevelWarning)
-		cout << "[WARNING]: " << message << endl;
+		std::cout << "[WARNING]: " << message << std::endl;
 }
 
 void Console::Info(const char * message)
 {
 	if(m_LogLevel >= LevelInfo)
-		cout << "[INFO]: " << message << endl;
+		std::cout << "[INFO]: " << message << std::endl;
 }
 
 void Console::Todo(const char * message)
 {
 	if(m_LogLevel >= LevelTodo)
-		cout << "[TODO]: " << message << endl;
+		std::cout << "[TODO]: " << message << std::endl;
 }
 
 void Console::Read(const char * message)
 {
-	cout << "[ RX ]: " << message;
+	std::cout << "[ RX ]: " << message;
 }
 
 void Console::Write(void)
 {
-	cout << "[ TX ]: ";
+	std::cout << "[ TX ]: ";
 }
