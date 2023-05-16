@@ -1,6 +1,6 @@
 #pragma once
 
-#include "debug.h"
+#include "console.h"
 
 using namespace std;
 
@@ -8,11 +8,14 @@ using namespace std;
 
 class Device : public Console
 {
-	private:
+private:
 
 	int m_file_device;
 
-	public:
+public:
+
+	Device();
+	~Device();
 
 	int device_open();
 	int device_read();

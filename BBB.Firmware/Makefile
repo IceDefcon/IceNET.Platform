@@ -2,8 +2,8 @@
 # Author: Ice.Marek
 # 2023 IceNET Technology
 #
-DYNAMIC 	= dynamic
-STATIC  	= static
+APP 		= app
+LINKED  	= app.linked
 GCC  		= g++
 NASM 		= nasm 
 
@@ -21,15 +21,15 @@ INCLUDES=\
 CPP_OBJECTS = $(CPP_SOURCES:.cpp=.o)
 ASM_OBJECTS = $(ASM_SOURCES:.asm=.o)
 
-all: $(DYNAMIC) $(STATIC)
+all: $(APP) $(LINKED)
 
-$(DYNAMIC): $(CPP_OBJECTS) $(ASM_OBJECTS)
+$(APP): $(CPP_OBJECTS) $(ASM_OBJECTS)
 	$(GCC) $(CFLAGS) $^ -o $@ 
-	size $(DYNAMIC)
+	size $(APP)
 
-$(STATIC): $(CPP_OBJECTS) $(ASM_OBJECTS)
+$(LINKED): $(CPP_OBJECTS) $(ASM_OBJECTS)
 	$(GCC) $(CFLAGS) -T $(LDSCRIPT) $^ -o $@ 
-	size $(DYNAMIC)
+	size $(APP)
 
 %.o: %.cpp
 	$(GCC) $(CFLAGS) -I $(INCLUDES) -c -o $@ $<
@@ -38,9 +38,9 @@ $(STATIC): $(CPP_OBJECTS) $(ASM_OBJECTS)
 	$(NASM) $(AFLAGS) $(ASM_SOURCES) -o $@
 
 clean:
-	rm -f $(DYNAMIC) $(STATIC) $(CPP_OBJECTS) $(ASM_OBJECTS)
+	rm -f $(APP) $(LINKED) $(CPP_OBJECTS) $(ASM_OBJECTS)
 
 size:
-	size $(DYNAMIC)
+	size $(APP)
 
 .PHONY: all clean size

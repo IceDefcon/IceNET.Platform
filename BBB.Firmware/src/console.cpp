@@ -1,12 +1,11 @@
 #include <string>       // std::string
 #include <iostream>     // std::cout
 #include <sstream>      // std::stringstream
-#include "debug.h"
+#include "console.h"
 
 using namespace std;
 
-Console::Console()
-: m_LogLevel (LevelInfo)
+Console::Console() : m_LogLevel (LevelInfo)
 {
 	Info("Log Level: 2 [Info]");
 }
@@ -37,6 +36,12 @@ void Console::Info(const char * message)
 {
 	if(m_LogLevel >= LevelInfo)
 		cout << "[INFO]: " << message << endl;
+}
+
+void Console::Todo(const char * message)
+{
+	if(m_LogLevel >= LevelTodo)
+		cout << "[TODO]: " << message << endl;
 }
 
 void Console::Read(const char * message)

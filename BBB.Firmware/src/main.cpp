@@ -4,7 +4,7 @@
 //
 #include <iostream>
 #include "device.h"
-#include "debug.h"
+#include "console.h"
 
 using namespace std;
 

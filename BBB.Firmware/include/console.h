@@ -9,7 +9,7 @@ public:
 
 	enum LogLevel
 	{
-		LevelError = 0, LevelWarning, LevelInfo
+		LevelError = 0, LevelWarning, LevelInfo, LevelTodo
 	};
 
 private:
@@ -25,6 +25,7 @@ public:
 	void Error(const char * message);
 	void Warning(const char * message);
 	void Info(const char * message);
+	void Todo(const char * message);
 
 	void Read(const char * message);
 	void Write(void);

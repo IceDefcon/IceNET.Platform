@@ -1,26 +1,25 @@
-#include <linux/init.h>           	// Macros used to mark up functions e.g. __init __exit
-#include <linux/module.h>         	// Core header for loading LKMs into the kernel
-#include <linux/device.h>         	// Header to support the kernel Driver Model
-#include <linux/kernel.h>         	// Contains types, macros, functions for the kernel
-#include <linux/fs.h>             	// Header for the Linux file system support
-#include <linux/uaccess.h>       	// Required for the copy to user function
+#include <linux/init.h>
+#include <linux/module.h>
+#include <linux/device.h>
+#include <linux/kernel.h>
+#include <linux/fs.h>
+#include <linux/uaccess.h>
 
-#define  DEVICE_NAME "iceCOM"    	// The device will appear at /dev/ebbchar using this value
-#define  CLASS_NAME  "iceCOM"        	// The device class -- this is a character device driver
+#define  DEVICE_NAME "FPGA_C_Device"
+#define  CLASS_NAME  "FPGA_C_Device"
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Marek Ice");
 MODULE_DESCRIPTION("A simple Linux device driver.");
 MODULE_VERSION("1.0.0");
 
-static int    majorNumber;                  // Stores the device number -- determined automatically
-static char   message[256] = {0};           // Memory for the string that is passed from userspace
-static short  size_of_message;              // Used to remember the size of the string stored
-static int    numberOpens = 0;              // Counts the number of times the device is opened
-static struct class*  iceClass  = NULL; // The device-driver class struct pointer
-static struct device* iceDevice = NULL; // The device-driver device struct pointer
+static int    majorNumber;
+static char   message[256] = {0};
+static short  size_of_message;
+static int    numberOpens = 0;
+static struct class*  C_Class  = NULL;
+static struct device* C_Device = NULL;
 
-// The prototype functions for the character driver -- must come before the struct definition
 static int     dev_open(struct inode *, struct file *);
 static int     dev_release(struct inode *, struct file *);
 static ssize_t dev_read(struct file *, char *, size_t, loff_t *);
@@ -38,43 +37,39 @@ static struct file_operations fops =
 
 static int __init spi_init(void)
 {
-	printk(KERN_INFO "iceCOM :: Initializing the iceCOM [char] device\n");
+	printk(KERN_INFO "[FPGA][C] Initializing char device\n");
 
 	// Try to dynamically allocate a major number for the device -- more difficult but worth it
 	majorNumber = register_chrdev(0, DEVICE_NAME, &fops);
 
 	if (majorNumber<0)
 	{
-		printk(KERN_ALERT "iceCOM :: chardev failed to register a major number\n");
+		printk(KERN_ALERT "[FPGA][C] Failed to register major number\n");
 		return majorNumber;
 	}
 
-	printk(KERN_INFO "iceCOM :: registered correctly with major number %d\n", majorNumber);
-
 	// Register the device class
-	iceClass = class_create(THIS_MODULE, CLASS_NAME);
+	C_Class = class_create(THIS_MODULE, CLASS_NAME);
 	
-	if (IS_ERR(iceClass)) // Check for error and clean up if there is one
+	if (IS_ERR(C_Class)) // Check for error and clean up if there is one
 	{
 		unregister_chrdev(majorNumber, DEVICE_NAME);
-		printk(KERN_ALERT "iceCOM :: Failed to register device class\n");
-		return PTR_ERR(iceClass); // Correct way to return an error on a pointer
+		printk(KERN_ALERT "[FPGA][C] Failed to register device class\n");
+		return PTR_ERR(C_Class); // Correct way to return an error on a pointer
 	}
 	
-	printk(KERN_INFO "iceCOM :: device class registered correctly\n");
-
 	// Register the device driver
-	iceDevice = device_create(iceClass, NULL, MKDEV(majorNumber, 0), NULL, DEVICE_NAME);
+	C_Device = device_create(C_Class, NULL, MKDEV(majorNumber, 0), NULL, DEVICE_NAME);
 	
-	if (IS_ERR(iceDevice)) 	// Clean up if there is an error
+	if (IS_ERR(C_Device)) 	// Clean up if there is an error
 	{
-		class_destroy(iceClass);           // Repeated code but the alternative is goto statements
+		class_destroy(C_Class);           // Repeated code but the alternative is goto statements
 		unregister_chrdev(majorNumber, DEVICE_NAME);
-		printk(KERN_ALERT "iceCOM :: Failed to create the device\n");
-		return PTR_ERR(iceDevice);
+		printk(KERN_ALERT "[FPGA][C] Failed to create the device\n");
+		return PTR_ERR(C_Device);
 	}
 	
-	printk(KERN_INFO "iceCOM :: device class created correctly\n"); // Made it! device was initialized
+	printk(KERN_INFO "[FPGA][C] device class created correctly\n"); // Made it! device was initialized
 	
 	mutex_init(&com_mutex);       // Initialize the mutex lock dynamically at runtime
 
@@ -82,11 +77,11 @@ static int __init spi_init(void)
 }
 static void __exit spi_exit(void)
 {
-	device_destroy(iceClass, MKDEV(majorNumber, 0));     // remove the device
-	class_unregister(iceClass);                          // unregister the device class
-	class_destroy(iceClass);                             // remove the device class
+	device_destroy(C_Class, MKDEV(majorNumber, 0));     // remove the device
+	class_unregister(C_Class);                          // unregister the device class
+	class_destroy(C_Class);                             // remove the device class
 	unregister_chrdev(majorNumber, DEVICE_NAME);             // unregister the major number
-	printk(KERN_INFO "iceCOM :: Goodbye from the LKM!\n");
+	printk(KERN_INFO "[FPGA][C] Goodbye from the LKM!\n");
 	mutex_destroy(&com_mutex);        /// destroy the dynamically-allocated mutex
 }
 
@@ -95,12 +90,12 @@ static int dev_open(struct inode *inodep, struct file *filep)
    if(!mutex_trylock(&com_mutex)) // Try to acquire the mutex (i.e., put the lock on/down)
    {
       // returns 1 if successful and 0 if there is contention
-      printk(KERN_ALERT "iceCOM :: Device in use by another process");
+      printk(KERN_ALERT "[FPGA][C] Device in use by another process");
       return -EBUSY;
    }
 
 	numberOpens++;
-	printk(KERN_INFO "iceCOM :: Device has been opened %d time(s)\n", numberOpens);
+	printk(KERN_INFO "[FPGA][C] Device has been opened %d time(s)\n", numberOpens);
 	return 0;
 }
 
@@ -114,12 +109,12 @@ static ssize_t dev_read(struct file *filep, char *buffer, size_t len, loff_t *of
 
 	if (error_count==0) // if true then have success
 	{
-		printk(KERN_INFO "iceCOM :: Sent %d characters to the user\n", size_of_message);
+		printk(KERN_INFO "[FPGA][C] Sent %d characters to the user\n", size_of_message);
 		return (size_of_message=0);  // clear the position to the start and return 0
 	}
 	else 
 	{
-		printk(KERN_INFO "iceCOM :: Failed to send %d characters to the user\n", error_count);
+		printk(KERN_INFO "[FPGA][C] Failed to send %d characters to the user\n", error_count);
 		return -EFAULT; // Failed -- return a bad address message (i.e. -14)
 	}
 }
@@ -132,12 +127,12 @@ static ssize_t dev_write(struct file *filep, const char *buffer, size_t len, lof
 	if (error_count==0)
 	{
 		size_of_message = strlen(message); // store the length of the stored message
-		printk(KERN_INFO "iceCOM :: Received %d characters from the user\n", len);
+		printk(KERN_INFO "[FPGA][C] Received %d characters from the user\n", len);
 		return len;
 	} 
 	else 
 	{
-		printk(KERN_INFO "iceCOM :: Failed to receive characters from the user\n");
+		printk(KERN_INFO "[FPGA][C] Failed to receive characters from the user\n");
 		return -EFAULT;
 	}
 }
@@ -145,7 +140,7 @@ static ssize_t dev_write(struct file *filep, const char *buffer, size_t len, lof
 static int dev_release(struct inode *inodep, struct file *filep)
 {
 	mutex_unlock(&com_mutex);  // Releases the mutex (i.e., the lock goes up)
-	printk(KERN_INFO "iceCOM :: Device successfully closed\n");
+	printk(KERN_INFO "[FPGA][C] Device successfully closed\n");
 	return 0;
 }
 

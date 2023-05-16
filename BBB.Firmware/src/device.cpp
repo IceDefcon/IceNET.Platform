@@ -15,9 +15,14 @@
 
 using namespace std;
 
+Device::Device() : m_file_device(0) {}
+
 int Device::device_open()
 {
-	m_file_device = open("/dev/ttyICE", O_RDWR);             // Open the device with read/write access
+	//
+	// TODO
+	//
+	m_file_device = open("/dev/FPGA_C_Device", O_RDWR);
 	if (m_file_device < 0) return -1;
 
 	return 0;
