@@ -39,7 +39,7 @@ DevSpi::device_init()
     m_mode = SPI_MODE_0;
 	m_bits_per_word = 8;
 	m_max_speed_hz = 1000000;
-    int ret = ioctl(m_file_descriptor, SPI_IOC_WR_MODE, &mode);
+    int ret = ioctl(m_file_descriptor, SPI_IOC_WR_MODE, &m_mode);
     ret |= ioctl(m_file_descriptor, SPI_IOC_WR_BITS_PER_WORD, &m_bits_per_word);
     ret |= ioctl(m_file_descriptor, SPI_IOC_WR_MAX_SPEED_HZ, &m_max_speed_hz);
 
