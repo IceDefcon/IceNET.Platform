@@ -9,8 +9,8 @@
 //
 // C Device Init
 //
-#define  DEVICE_NAME "FPGA"
-#define  CLASS_NAME  "FPGA"
+#define  DEVICE_NAME "iceCOM"
+#define  CLASS_NAME  "iceCOM"
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Marek Ice");
