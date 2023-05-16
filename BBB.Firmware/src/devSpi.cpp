@@ -67,9 +67,9 @@ int DevSpi::device_write()
     // Transfer data over SPI
     struct spi_ioc_transfer transfer = 
     {
-    	.tx_buf = (unsigned long)m_tx_buffer,
+    	.tx_buf = (unsigned long)tx_buffer,
     	.rx_buf = (unsigned long)m_rx_buffer,
-    	.len = sizeof(m_tx_buffer),
+    	.len = sizeof(tx_buffer),
     	.speed_hz = m_max_speed_hz,
     	.bits_per_word = m_bits_per_word,
 		// .delay_usecs = 0,
