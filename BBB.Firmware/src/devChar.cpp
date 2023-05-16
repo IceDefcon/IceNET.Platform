@@ -3,7 +3,7 @@
 // IceNET Technology 2023
 //
 #include <iostream> 		// IO devices :: keyboard
-#include <fcntl.h> 			// Open device   
+#include <fcntl.h> 			// Open device
 #include <string.h> 		// for strlem
 #include <unistd.h> 		// read/write to the file
 
@@ -12,7 +12,8 @@
 DevChar::DevChar() : m_file_descriptor(0) {}
 DevChar::~DevChar() {}
 
-int DevChar::device_open(const char* device)
+int 
+DevChar::device_open(const char* device)
 {
 	m_file_descriptor = open(device, O_RDWR);
 	if (m_file_descriptor < 0) return -1;
@@ -20,7 +21,8 @@ int DevChar::device_open(const char* device)
 	return 0;
 }
 
-int DevChar::device_write()
+int 
+DevChar::device_write()
 {
 	int ret;
 	char console_TX[BUFFER_LENGTH];
@@ -39,7 +41,8 @@ int DevChar::device_write()
 	return ret;
 }
 
-int DevChar::device_read()
+int 
+DevChar::device_read()
 {
 	int ret;
 	char console_RX[BUFFER_LENGTH];
@@ -56,10 +59,9 @@ int DevChar::device_read()
 }
 
 
-int DevChar::device_close()
+int 
+DevChar::device_close()
 {
-
-
 	return 0;
 }
 

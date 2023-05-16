@@ -12,7 +12,6 @@
 class DevChar : public Console, public DevBase
 {
 private:
-
 	int m_file_descriptor;
 
 public:

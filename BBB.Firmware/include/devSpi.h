@@ -9,6 +9,9 @@
 
 class DevSpi : public Console, public DevBase
 {
+private:
+	int m_file_descriptor;
+
 public:
 	DevSpi();
 	~DevSpi();
@@ -18,6 +21,5 @@ public:
 	int device_write() override;
 	int device_close() override;
 
-private:
-
+	int device_init();
 };
