@@ -20,11 +20,11 @@ int main(int argc, char* argv[])
 	//
 	// Sending to FPGA char device :: This is not linked with SPI device yet
 	//
-	pDevice = &CharDevice;
-	pDevice->device_open(FPGA_DEVICE);
-	pDevice->device_write();
-	pDevice->device_read();
-	pDevice->device_close();
+	// pDevice = &CharDevice;
+	// pDevice->device_open(FPGA_DEVICE);
+	// pDevice->device_write();
+	// pDevice->device_read();
+	// pDevice->device_close();
 
 	//
 	// Sending trought the SPI device to 
