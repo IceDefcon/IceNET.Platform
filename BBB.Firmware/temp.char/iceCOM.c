@@ -35,7 +35,7 @@ static struct file_operations fops =
    .release = dev_release,
 };
 
-static int __init spi_init(void)
+static int __init chardev_init(void)
 {
 	printk(KERN_INFO "[FPGA][C] Initializing char device\n");
 
@@ -68,20 +68,18 @@ static int __init spi_init(void)
 		printk(KERN_ALERT "[FPGA][C] Failed to create the device\n");
 		return PTR_ERR(C_Device);
 	}
-	
-	printk(KERN_INFO "[FPGA][C] device class created correctly\n"); // Made it! device was initialized
-	
+
 	mutex_init(&com_mutex);       // Initialize the mutex lock dynamically at runtime
 
 	return 0;
 }
-static void __exit spi_exit(void)
+static void __exit chardev_exit(void)
 {
+	printk(KERN_INFO "[FPGA][C] Device Exit\n");
 	device_destroy(C_Class, MKDEV(majorNumber, 0));     // remove the device
 	class_unregister(C_Class);                          // unregister the device class
 	class_destroy(C_Class);                             // remove the device class
 	unregister_chrdev(majorNumber, DEVICE_NAME);             // unregister the major number
-	printk(KERN_INFO "[FPGA][C] Goodbye from the LKM!\n");
 	mutex_destroy(&com_mutex);        /// destroy the dynamically-allocated mutex
 }
 
@@ -144,5 +142,5 @@ static int dev_release(struct inode *inodep, struct file *filep)
 	return 0;
 }
 
-module_init(spi_init);
-module_exit(spi_exit);
+module_init(chardev_init);
+module_exit(chardev_exit);

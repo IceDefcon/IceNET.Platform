@@ -1,1 +1,0 @@
-cmd_/ice/code.lab/IceNET/IceNET.NetworkAnalyser/BBB.Firmware/temp.char/modules.order := {   echo /ice/code.lab/IceNET/IceNET.NetworkAnalyser/BBB.Firmware/temp.char/iceCOM.ko; :; } | awk '!x[$$0]++' - > /ice/code.lab/IceNET/IceNET.NetworkAnalyser/BBB.Firmware/temp.char/modules.order
