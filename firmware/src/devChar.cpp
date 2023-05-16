@@ -32,7 +32,6 @@ DevChar::device_write()
 		console_TX[i] = 0;
 	}
 
-	Console::Info("TX >> KERNEL");
 	Console::Write();
 	std::cin.getline(console_TX, BUFFER_LENGTH);
 
@@ -49,7 +48,6 @@ DevChar::device_read()
 
 	ret = read(m_file_descriptor, console_RX, BUFFER_LENGTH);
 
-	Console::Info("RX << KERNEL");
 	Console::Read(console_RX);
 
 	// clear the buffer

@@ -1,3 +1,7 @@
+//
+// Author: Ice.Marek
+// IceNET Technology 2023
+//
 #include <linux/module.h>
 #include <linux/kernel.h>
 #include <linux/init.h>

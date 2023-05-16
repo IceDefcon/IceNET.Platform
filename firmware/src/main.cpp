@@ -28,12 +28,12 @@ int main(int argc, char* argv[])
 	//
 	// Testing SPI 
 	//
-	// DevSpi SpiDevice;
-	// pDevice = &SpiDevice;
-	// pDevice->device_open(SPI_DEVICE);
-	// pDevice->device_write();
-	// pDevice->device_read();
-	// pDevice->device_close();
+	DevSpi SpiDevice;
+	pDevice = &SpiDevice;
+	pDevice->device_open(SPI_DEVICE);
+	pDevice->device_write();
+	pDevice->device_read();
+	pDevice->device_close();
 
 	return 0;
 }
