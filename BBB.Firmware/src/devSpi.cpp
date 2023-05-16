@@ -24,7 +24,8 @@ DevSpi::device_open(const char* device)
 	return 0;
 }
 
-int device_init()
+int 
+DevSpi::device_init()
 {
     // Configure SPI mode, bits per word, and max speed
     uint8_t mode = SPI_MODE_0;

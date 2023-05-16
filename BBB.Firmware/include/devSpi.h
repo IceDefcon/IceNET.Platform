@@ -16,10 +16,16 @@ public:
 	DevSpi();
 	~DevSpi();
 	
+	//
+	// Override functions
+	//
 	int device_open(const char* device) override;
 	int device_read() override;
 	int device_write() override;
 	int device_close() override;
 
+	//
+	// Normal public methods
+	//
 	int device_init();
 };
