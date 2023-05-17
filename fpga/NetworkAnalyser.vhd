@@ -57,8 +57,8 @@ gpio_process:
 process(CLOCK)
 begin
 	if rising_edge(CLOCK) then
-		LED_2 	<= '1'; 					-- D5 Low Enable
-		LED_1 	<= not GPIO_IN; 			-- D4 Low Enable
+		LED_2 	<= not BUTTON_IN; 			-- D5 Low Enable
+		LED_1 	<= not GPIO_IN; 				-- D4 Low Enable
 		LED_0 	<= not button_debounced; 	-- D2 Low Enable
 		GPIO_OUT <= button_debounced;
 	end if;

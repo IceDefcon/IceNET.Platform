@@ -18,7 +18,7 @@
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Marek Ice");
-MODULE_DESCRIPTION("A simple Linux device driver.");
+MODULE_DESCRIPTION("FPGA Comms Driver");
 MODULE_VERSION("1.0.0");
 
 static int    majorNumber;
