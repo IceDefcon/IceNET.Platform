@@ -84,16 +84,6 @@ set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_SEGMENT_SIZE=1638
 set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_SAMPLE_DEPTH=16384" -section_id SPI_DEBUG
 set_location_assignment PIN_143 -to GPIO_IN
 set_location_assignment PIN_142 -to GPIO_OUT
-set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[1] -to GPIO_IN -section_id SPI_DEBUG
-set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[2] -to GPIO_OUT -section_id SPI_DEBUG
-set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[1] -to GPIO_IN -section_id SPI_DEBUG
-set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[2] -to GPIO_OUT -section_id SPI_DEBUG
-set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_DATA_BITS=3" -section_id SPI_DEBUG
-set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_TRIGGER_BITS=3" -section_id SPI_DEBUG
-set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_INVERSION_MASK=0000000000000000000000000000000000000" -section_id SPI_DEBUG
-set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_INVERSION_MASK_LENGTH=37" -section_id SPI_DEBUG
-set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_NODE_CRC_LOWORD=59141" -section_id SPI_DEBUG
-set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_NODE_CRC_HIWORD=37454" -section_id SPI_DEBUG
 set_location_assignment PIN_125 -to CS
 set_location_assignment PIN_129 -to MISO
 set_location_assignment PIN_119 -to SCLK
@@ -103,5 +93,23 @@ set_global_assignment -name SDC_FILE NetworkAnalyser.sdc
 set_global_assignment -name VHDL_FILE debounce.vhd
 set_global_assignment -name VHDL_FILE spi_driver/spi_driver.vhd
 set_global_assignment -name SIGNALTAP_FILE debug.stp
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[1] -to CS -section_id SPI_DEBUG
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[2] -to MISO -section_id SPI_DEBUG
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[3] -to MOSI -section_id SPI_DEBUG
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[4] -to SCLK -section_id SPI_DEBUG
+set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[5] -to GPIO_IN -section_id SPI_DEBUG
+set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[6] -to GPIO_OUT -section_id SPI_DEBUG
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[1] -to CS -section_id SPI_DEBUG
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[2] -to MISO -section_id SPI_DEBUG
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[3] -to MOSI -section_id SPI_DEBUG
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[4] -to SCLK -section_id SPI_DEBUG
+set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[5] -to GPIO_IN -section_id SPI_DEBUG
+set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[6] -to GPIO_OUT -section_id SPI_DEBUG
+set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_DATA_BITS=7" -section_id SPI_DEBUG
+set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_TRIGGER_BITS=7" -section_id SPI_DEBUG
+set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_INVERSION_MASK=0000000000000000000000000000000000000000000000000" -section_id SPI_DEBUG
+set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_INVERSION_MASK_LENGTH=49" -section_id SPI_DEBUG
+set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_NODE_CRC_LOWORD=49224" -section_id SPI_DEBUG
+set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_NODE_CRC_HIWORD=9978" -section_id SPI_DEBUG
 set_global_assignment -name SLD_FILE /ice/code.lab/IceNET/IceNET.NetworkAnalyser/fpga/debug_auto_stripped.stp
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
