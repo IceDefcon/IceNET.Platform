@@ -10,11 +10,13 @@
 #include "console.h"
 
 #define ICE_DEVICE "/dev/iceCOM"
-#define SPI_DEVICE "/dev/spidev1.0"
+#define SPI_DEVICE "/dev/spidev0.0"
 
 void ConsoleThread() 
 {
-    // Code to be executed by the first thread
+	//
+    // TODO
+    //
     std::cout << "Thread 1 is executing." << std::endl;
 }
 
