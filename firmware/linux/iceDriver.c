@@ -2,24 +2,26 @@
 // Author: Ice.Marek
 // IceNET Technology 2023
 //
+#include <linux/fs.h>
+#include <linux/gpio.h>
+#include <linux/init.h>
+#include <linux/device.h>
 #include <linux/module.h>
 #include <linux/kernel.h>
-#include <linux/init.h>
-#include <linux/spi/spi.h>
-#include <linux/device.h>
-#include <linux/fs.h>
 #include <linux/uaccess.h>
+#include <linux/spi/spi.h>
+#include <linux/interrupt.h>
 
-//
-// C Device Init
-//
-#define  DEVICE_NAME "iceCOM"
-#define  CLASS_NAME  "iceCOM"
-
+MODULE_VERSION("2.0");
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Marek Ice");
 MODULE_DESCRIPTION("FPGA Comms Driver");
-MODULE_VERSION("1.0.0");
+
+//
+// [C] Device
+//
+#define  DEVICE_NAME "iceCOM"
+#define  CLASS_NAME  "iceCOM"
 
 static int    majorNumber;
 static char   message[256] = {0};
@@ -43,18 +45,13 @@ static struct file_operations fops =
    .release = dev_release,
 };
 
-//
-// C Device File Functions
-//
-
 static int dev_open(struct inode *inodep, struct file *filep)
 {
-   if(!mutex_trylock(&com_mutex)) // Try to acquire the mutex (i.e., put the lock on/down)
-   {
-      // returns 1 if successful and 0 if there is contention
-      printk(KERN_ALERT "[FPGA][ C ] Device in use by another process");
-      return -EBUSY;
-   }
+    if(!mutex_trylock(&com_mutex))
+    {
+        printk(KERN_ALERT "[FPGA][ C ] Device in use by another process");
+        return -EBUSY;
+    }
 
     numberOpens++;
     printk(KERN_INFO "[FPGA][ C ] Device has been opened %d time(s)\n", numberOpens);
@@ -64,15 +61,16 @@ static int dev_open(struct inode *inodep, struct file *filep)
 static ssize_t dev_read(struct file *filep, char *buffer, size_t len, loff_t *offset)
 {
     int error_count = 0;
-    // copy_to_user has the format ( * to, *from, size) and returns 0 on success
+    //
+    // Copy to user space :: *to, *from, size :: returns 0 on success
+    //
     error_count = copy_to_user(buffer, message, size_of_message);
-
     memset(message, 0, sizeof(message));
 
-    if (error_count==0) // if true then have success
+    if (error_count==0)
     {
         printk(KERN_INFO "[FPGA][ C ] Sent %d characters to the user\n", size_of_message);
-        return (size_of_message=0);  // clear the position to the start and return 0
+        return (size_of_message = 0);  // clear the position to the start and return 0
     }
     else 
     {
@@ -88,7 +86,7 @@ static ssize_t dev_write(struct file *filep, const char *buffer, size_t len, lof
 
     if (error_count==0)
     {
-        size_of_message = strlen(message); // store the length of the stored message
+        size_of_message = strlen(message);
         printk(KERN_INFO "[FPGA][ C ] Received %d characters from the user\n", len);
         return len;
     } 
@@ -101,7 +99,7 @@ static ssize_t dev_write(struct file *filep, const char *buffer, size_t len, lof
 
 static int dev_release(struct inode *inodep, struct file *filep)
 {
-    mutex_unlock(&com_mutex);  // Releases the mutex (i.e., the lock goes up)
+    mutex_unlock(&com_mutex);
     printk(KERN_INFO "[FPGA][ C ] Device successfully closed\n");
     return 0;
 }
@@ -109,9 +107,7 @@ static int dev_release(struct inode *inodep, struct file *filep)
 //
 // SPI Device
 //
-
 static struct spi_device *spi_device;
-
 static int spi_probe(struct spi_device *spi)
 {
     printk(KERN_INFO "[FPGA][SPI] Driver probe\n");
@@ -138,11 +134,78 @@ static struct spi_driver spi_driver_api =
 };
 
 //
-// FPGA Driver Init / Exit
+// GPIO Interrupt
 //
+#define GPIO_PIN 60 // P9_12
+#define GPIO_DESC "GPIO_ISR"
 
+static irqreturn_t gpio_isr(int irq, void *data)
+{
+    static int i = 0;
+
+    //////////////
+    //          //
+    //          //
+    //          //
+    // ISR code //
+    //          //
+    //          //
+    //          //
+    //////////////
+
+    printk(KERN_INFO "[FPGA][IRQ] GPIO interrupt [%d] @ Pin [%d]\n", i, GPIO_PIN);
+    i++;
+
+    return IRQ_HANDLED;
+}
+
+//
+// FPGA Driver
+//
 static int __init fpga_driver_init(void)
 {
+    //
+    // GPIO Interrupt
+    //
+    int irq, result;
+
+    // Request GPIO pin
+    result = gpio_request(GPIO_PIN, GPIO_DESC);
+    if (result < 0) 
+    {
+        printk(KERN_ERR "[FPGA][IRQ] Failed to request GPIO pin\n");
+        return result;
+    }
+
+    // Set GPIO pin as input
+    result = gpio_direction_input(GPIO_PIN);
+    if (result < 0) 
+    {
+        printk(KERN_ERR "[FPGA][IRQ] Failed to set GPIO direction\n");
+        gpio_free(GPIO_PIN);
+        return result;
+    }
+
+    // Get IRQ number for GPIO pin
+    irq = gpio_to_irq(GPIO_PIN);
+    if (irq < 0) 
+    {
+        printk(KERN_ERR "[FPGA][IRQ] Failed to get IRQ number\n");
+        gpio_free(GPIO_PIN);
+        return irq;
+    }
+
+    // Request IRQ for GPIO pin
+    result = request_irq(irq, gpio_isr, IRQF_TRIGGER_RISING, GPIO_DESC, NULL);
+    if (result < 0) 
+    {
+        printk(KERN_ERR "[FPGA][IRQ] Failed to request IRQ\n");
+        gpio_free(GPIO_PIN);
+        return result;
+    }
+
+    printk(KERN_INFO "[FPGA][IRQ] ISR initialized\n");
+
     //
     // SPI Driver
     //
@@ -157,7 +220,7 @@ static int __init fpga_driver_init(void)
     }
 
     //
-    // CHAR Device
+    // [C] Device
     //
     printk(KERN_INFO "[FPGA][ C ] Device Init\n");
 
@@ -196,7 +259,20 @@ static int __init fpga_driver_init(void)
 static void __exit fpga_driver_exit(void)
 {
     //
-    // CHAR Device
+    // IRQ
+    //
+    int irq = gpio_to_irq(GPIO_PIN);
+
+    // Free IRQ for GPIO pin
+    free_irq(irq, NULL);
+
+    // Free GPIO pin
+    gpio_free(GPIO_PIN);
+
+    printk(KERN_INFO "[FPGA][IRQ] ISR exited\n");
+
+    //
+    // [C] Device
     //
     printk(KERN_INFO "[FPGA][ C ] Device Exit\n");
     device_destroy(C_Class, MKDEV(majorNumber, 0));     // remove the device
