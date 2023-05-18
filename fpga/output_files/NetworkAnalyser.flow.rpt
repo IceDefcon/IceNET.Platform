@@ -1,5 +1,5 @@
 Flow report for NetworkAnalyser
-Thu May 18 03:03:14 2023
+Thu May 18 03:07:56 2023
 Quartus II 64-Bit Version 13.0.1 Build 232 06/12/2013 Service Pack 1 SJ Web Edition
 
 
@@ -40,20 +40,20 @@ applicable agreement for further details.
 +--------------------------------------------------------------------------------------+
 ; Flow Summary                                                                         ;
 +------------------------------------+-------------------------------------------------+
-; Flow Status                        ; Flow Failed - Thu May 18 03:03:14 2023          ;
+; Flow Status                        ; Successful - Thu May 18 03:07:56 2023           ;
 ; Quartus II 64-Bit Version          ; 13.0.1 Build 232 06/12/2013 SP 1 SJ Web Edition ;
 ; Revision Name                      ; NetworkAnalyser                                 ;
 ; Top-level Entity Name              ; NetworkAnalyser                                 ;
 ; Family                             ; Cyclone II                                      ;
 ; Device                             ; EP2C5T144C8                                     ;
 ; Timing Models                      ; Final                                           ;
-; Total logic elements               ; 763 / 4,608 ( 17 % )                            ;
-;     Total combinational functions  ; 515 / 4,608 ( 11 % )                            ;
-;     Dedicated logic registers      ; 557 / 4,608 ( 12 % )                            ;
-; Total registers                    ; 557                                             ;
+; Total logic elements               ; 702 / 4,608 ( 15 % )                            ;
+;     Total combinational functions  ; 488 / 4,608 ( 11 % )                            ;
+;     Dedicated logic registers      ; 537 / 4,608 ( 12 % )                            ;
+; Total registers                    ; 537                                             ;
 ; Total pins                         ; 11 / 89 ( 12 % )                                ;
 ; Total virtual pins                 ; 0                                               ;
-; Total memory bits                  ; 114,688 / 119,808 ( 96 % )                      ;
+; Total memory bits                  ; 57,344 / 119,808 ( 48 % )                       ;
 ; Embedded Multiplier 9-bit elements ; 0 / 26 ( 0 % )                                  ;
 ; Total PLLs                         ; 0 / 2 ( 0 % )                                   ;
 +------------------------------------+-------------------------------------------------+
@@ -64,7 +64,7 @@ applicable agreement for further details.
 +-------------------+---------------------+
 ; Option            ; Setting             ;
 +-------------------+---------------------+
-; Start date & time ; 05/18/2023 03:02:15 ;
+; Start date & time ; 05/18/2023 03:06:40 ;
 ; Main task         ; Compilation         ;
 ; Revision Name     ; NetworkAnalyser     ;
 +-------------------+---------------------+
@@ -75,7 +75,7 @@ applicable agreement for further details.
 +-------------------------------------+--------------------------------------------------------------------------+---------------+-------------+----------------+
 ; Assignment Name                     ; Value                                                                    ; Default Value ; Entity Name ; Section Id     ;
 +-------------------------------------+--------------------------------------------------------------------------+---------------+-------------+----------------+
-; COMPILER_SIGNATURE_ID               ; 0.168437173453806                                                        ; --            ; --          ; --             ;
+; COMPILER_SIGNATURE_ID               ; 0.168437199954590                                                        ; --            ; --          ; --             ;
 ; EDA_OUTPUT_DATA_FORMAT              ; None                                                                     ; --            ; --          ; eda_simulation ;
 ; ENABLE_SIGNALTAP                    ; On                                                                       ; --            ; --          ; --             ;
 ; MAX_CORE_JUNCTION_TEMP              ; 85                                                                       ; --            ; --          ; --             ;
@@ -102,14 +102,14 @@ applicable agreement for further details.
 ; SLD_NODE_PARAMETER_ASSIGNMENT       ; SLD_ADVANCED_TRIGGER_ENTITY=basic,1,                                     ; --            ; --          ; SPI_DEBUG      ;
 ; SLD_NODE_PARAMETER_ASSIGNMENT       ; SLD_TRIGGER_LEVEL_PIPELINE=1                                             ; --            ; --          ; SPI_DEBUG      ;
 ; SLD_NODE_PARAMETER_ASSIGNMENT       ; SLD_ENABLE_ADVANCED_TRIGGER=0                                            ; --            ; --          ; SPI_DEBUG      ;
-; SLD_NODE_PARAMETER_ASSIGNMENT       ; SLD_SEGMENT_SIZE=16384                                                   ; --            ; --          ; SPI_DEBUG      ;
-; SLD_NODE_PARAMETER_ASSIGNMENT       ; SLD_SAMPLE_DEPTH=16384                                                   ; --            ; --          ; SPI_DEBUG      ;
 ; SLD_NODE_PARAMETER_ASSIGNMENT       ; SLD_DATA_BITS=7                                                          ; --            ; --          ; SPI_DEBUG      ;
 ; SLD_NODE_PARAMETER_ASSIGNMENT       ; SLD_TRIGGER_BITS=7                                                       ; --            ; --          ; SPI_DEBUG      ;
-; SLD_NODE_PARAMETER_ASSIGNMENT       ; SLD_INVERSION_MASK=0000000000000000000000000000000000000000000000000     ; --            ; --          ; SPI_DEBUG      ;
-; SLD_NODE_PARAMETER_ASSIGNMENT       ; SLD_INVERSION_MASK_LENGTH=49                                             ; --            ; --          ; SPI_DEBUG      ;
 ; SLD_NODE_PARAMETER_ASSIGNMENT       ; SLD_NODE_CRC_LOWORD=49224                                                ; --            ; --          ; SPI_DEBUG      ;
-; SLD_NODE_PARAMETER_ASSIGNMENT       ; SLD_NODE_CRC_HIWORD=9978                                                 ; --            ; --          ; SPI_DEBUG      ;
+; SLD_NODE_PARAMETER_ASSIGNMENT       ; SLD_INVERSION_MASK=000000000000000000000000000000000000000000000000      ; --            ; --          ; SPI_DEBUG      ;
+; SLD_NODE_PARAMETER_ASSIGNMENT       ; SLD_INVERSION_MASK_LENGTH=48                                             ; --            ; --          ; SPI_DEBUG      ;
+; SLD_NODE_PARAMETER_ASSIGNMENT       ; SLD_SEGMENT_SIZE=8192                                                    ; --            ; --          ; SPI_DEBUG      ;
+; SLD_NODE_PARAMETER_ASSIGNMENT       ; SLD_NODE_CRC_HIWORD=21609                                                ; --            ; --          ; SPI_DEBUG      ;
+; SLD_NODE_PARAMETER_ASSIGNMENT       ; SLD_SAMPLE_DEPTH=8192                                                    ; --            ; --          ; SPI_DEBUG      ;
 ; USE_SIGNALTAP_FILE                  ; debug.stp                                                                ; --            ; --          ; --             ;
 +-------------------------------------+--------------------------------------------------------------------------+---------------+-------------+----------------+
 
@@ -119,9 +119,9 @@ applicable agreement for further details.
 +----------------------+--------------+-------------------------+---------------------+------------------------------------+
 ; Module Name          ; Elapsed Time ; Average Processors Used ; Peak Virtual Memory ; Total CPU Time (on all processors) ;
 +----------------------+--------------+-------------------------+---------------------+------------------------------------+
-; Analysis & Synthesis ; 00:00:17     ; 1.0                     ; 680 MB              ; 00:00:13                           ;
-; Fitter               ; 00:00:07     ; 1.2                     ; 658 MB              ; 00:00:06                           ;
-; Total                ; 00:00:24     ; --                      ; --                  ; 00:00:19                           ;
+; Analysis & Synthesis ; 00:00:21     ; 1.0                     ; 683 MB              ; 00:00:13                           ;
+; Fitter               ; 00:00:17     ; 1.2                     ; 687 MB              ; 00:00:11                           ;
+; Total                ; 00:00:38     ; --                      ; --                  ; 00:00:24                           ;
 +----------------------+--------------+-------------------------+---------------------+------------------------------------+
 
 

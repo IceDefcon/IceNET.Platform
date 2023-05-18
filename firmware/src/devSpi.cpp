@@ -50,7 +50,6 @@ int
 DevSpi::device_read()
 {
 	// Print received data
-	m_rx_buffer[4] = {0};
     std::cout << "Received data:";
     for (int i = 0; i < sizeof(m_rx_buffer); i++) 
     {
