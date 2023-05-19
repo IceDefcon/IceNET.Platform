@@ -182,17 +182,17 @@ GND*                         : 115       :        :                   :         
 VCCIO2                       : 116       : power  :                   : 3.3V    : 2         :                
 GND                          : 117       : gnd    :                   :         :           :                
 GND*                         : 118       :        :                   :         : 2         :                
-SCLK                         : 119       : input  : 3.3-V LVTTL       :         : 2         : Y              
+CS                           : 119       : input  : 3.3-V LVTTL       :         : 2         : Y              
 GND*                         : 120       :        :                   :         : 2         :                
 MOSI                         : 121       : input  : 3.3-V LVTTL       :         : 2         : Y              
 GND*                         : 122       :        :                   :         : 2         :                
 GND                          : 123       : gnd    :                   :         :           :                
 VCCINT                       : 124       : power  :                   : 1.2V    :           :                
-CS                           : 125       : input  : 3.3-V LVTTL       :         : 2         : Y              
+MISO                         : 125       : output : 3.3-V LVTTL       :         : 2         : Y              
 GND*                         : 126       :        :                   :         : 2         :                
 VCCIO2                       : 127       : power  :                   : 3.3V    : 2         :                
 GND                          : 128       : gnd    :                   :         :           :                
-MISO                         : 129       : output : 3.3-V LVTTL       :         : 2         : Y              
+SCLK                         : 129       : input  : 3.3-V LVTTL       :         : 2         : Y              
 GND                          : 130       : gnd    :                   :         :           :                
 VCCINT                       : 131       : power  :                   : 1.2V    :           :                
 GND*                         : 132       :        :                   :         : 2         :                

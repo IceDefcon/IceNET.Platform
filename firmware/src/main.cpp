@@ -27,9 +27,9 @@ int main(int argc, char* argv[])
 	//
 	// Sending text to Kernel :: Not linked with SPI
 	//
-	pDevice = new DevChar; 		// SLOW :: HEAP
-	// DevChar CharDevice; 		// FAST :: STACK
-	// pDevice = &CharDevice; 	// FAST :: STACK
+	// pDevice = new DevChar; 		// SLOW :: HEAP
+	DevChar CharDevice; 		// FAST :: STACK
+	pDevice = &CharDevice; 	// FAST :: STACK
 	pDevice->device_open(ICE_DEVICE);
 	pDevice->device_write();
 	pDevice->device_read();
@@ -38,9 +38,9 @@ int main(int argc, char* argv[])
 	//
 	// Testing SPI 
 	//
-	pDevice = new DevSpi; 		// SLOW :: HEAP
-	// DevSpi SpiDevice; 		// FAST :: STACK
-	// pDevice = &SpiDevice; 	// FAST :: STACK
+	// pDevice = new DevSpi; 		// SLOW :: HEAP
+	DevSpi SpiDevice; 		// FAST :: STACK
+	pDevice = &SpiDevice; 	// FAST :: STACK
 	pDevice->device_open(SPI_DEVICE);
 	pDevice->device_write();
 	pDevice->device_read();
