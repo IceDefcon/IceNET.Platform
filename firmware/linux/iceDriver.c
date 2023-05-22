@@ -105,35 +105,6 @@ static int dev_release(struct inode *inodep, struct file *filep)
 }
 
 //
-// SPI Device
-//
-static struct spi_device *spi_device;
-static int spi_probe(struct spi_device *spi)
-{
-    printk(KERN_INFO "[FPGA][SPI] Driver probe\n");
-    spi_device = spi;
-    return 0;
-}
-
-static int spi_remove(struct spi_device *spi)
-{
-    printk(KERN_INFO "[FPGA][SPI] Driver remove\n");
-    spi_device = NULL;
-    return 0;
-}
-
-static struct spi_driver spi_driver_api = 
-{
-    .driver = 
-    {
-        .name = "spi-driver",
-        .owner = THIS_MODULE,
-    },
-    .probe = spi_probe,
-    .remove = spi_remove,
-};
-
-//
 // GPIO Interrupt
 //
 #define GPIO_PIN 60 // P9_12
@@ -207,19 +178,6 @@ static int __init fpga_driver_init(void)
     printk(KERN_INFO "[FPGA][IRQ] ISR initialized\n");
 
     //
-    // SPI Driver
-    //
-    printk(KERN_INFO "[FPGA][SPI] Device init\n");
-
-    int ret;
-    ret = spi_register_driver(&spi_driver_api);
-    if (ret < 0) 
-    {
-        printk(KERN_ERR "Failed to register SPI driver\n");
-        return ret;
-    }
-
-    //
     // [C] Device
     //
     printk(KERN_INFO "[FPGA][ C ] Device Init\n");
@@ -278,14 +236,8 @@ static void __exit fpga_driver_exit(void)
     device_destroy(C_Class, MKDEV(majorNumber, 0));     // remove the device
     class_unregister(C_Class);                          // unregister the device class
     class_destroy(C_Class);                             // remove the device class
-    unregister_chrdev(majorNumber, DEVICE_NAME);             // unregister the major number
-    mutex_destroy(&com_mutex);        /// destroy the dynamically-allocated mutex
-
-    //
-    // SPI Device
-    //
-    printk(KERN_INFO "[FPGA][SPI] Driver exit\n");
-    spi_unregister_driver(&spi_driver_api);
+    unregister_chrdev(majorNumber, DEVICE_NAME);        // unregister the major number
+    mutex_destroy(&com_mutex);                          // destroy the dynamically-allocated mutex
 }
 
 module_init(fpga_driver_init);
