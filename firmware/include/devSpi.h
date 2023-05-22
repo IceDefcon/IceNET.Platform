@@ -7,7 +7,7 @@
 #include "console.h"
 #include "devBase.h"
 
-class DevSpi : public Console, public DevBase
+class DevSpi : public DevBase
 {
 private:
 	int m_file_descriptor;

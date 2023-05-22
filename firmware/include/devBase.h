@@ -4,7 +4,7 @@
 //
 #pragma once
 
-class DevBase
+class DevBase : public Console
 {
 public:
 

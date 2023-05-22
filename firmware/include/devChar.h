@@ -9,7 +9,7 @@
 
 #define BUFFER_LENGTH 256 
 
-class DevChar : public Console, public DevBase
+class DevChar : public DevBase
 {
 private:
 	int m_file_descriptor;

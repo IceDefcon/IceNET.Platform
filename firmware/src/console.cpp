@@ -9,7 +9,7 @@
 
 Console::Console() : m_LogLevel (LevelInfo) 
 { 
-	Info("Enable Logging Console"); 
+
 }
 
 Console::~Console()
