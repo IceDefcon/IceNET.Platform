@@ -4,7 +4,7 @@ JedecChain;
 	DefaultMfr(6E);
 
 	P ActionCode(Cfg)
-		Device PartName(EP2C5T144) Path("/ice/code.lab/IceNET/IceNET.NetworkAnalyser/fpga/output_files/") File("NetworkAnalyser.sof") MfrSpec(OpMask(1));
+		Device PartName(EP2C5T144) Path("/ice/code.lab/IceNET/IceNET.NetworkAnalyser/hardware/output_files/") File("NetworkAnalyser.sof") MfrSpec(OpMask(1));
 
 ChainEnd;
 
