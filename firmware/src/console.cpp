@@ -48,7 +48,7 @@ void Console::Todo(const char * message)
 
 void Console::Read(const char * message)
 {
-	std::cout << "[ RX ]: " << message;
+	std::cout << "[ RX ]: " << message << std::endl;
 }
 
 void Console::Write(void)
