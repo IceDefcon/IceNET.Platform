@@ -1,5 +1,5 @@
 Flow report for NetworkAnalyser
-Thu May 18 04:37:22 2023
+Mon May 22 17:23:48 2023
 Quartus II 64-Bit Version 13.0.1 Build 232 06/12/2013 Service Pack 1 SJ Web Edition
 
 
@@ -40,7 +40,7 @@ applicable agreement for further details.
 +--------------------------------------------------------------------------------------+
 ; Flow Summary                                                                         ;
 +------------------------------------+-------------------------------------------------+
-; Flow Status                        ; Successful - Thu May 18 04:36:43 2023           ;
+; Flow Status                        ; Successful - Mon May 22 17:23:02 2023           ;
 ; Quartus II 64-Bit Version          ; 13.0.1 Build 232 06/12/2013 SP 1 SJ Web Edition ;
 ; Revision Name                      ; NetworkAnalyser                                 ;
 ; Top-level Entity Name              ; NetworkAnalyser                                 ;
@@ -64,54 +64,54 @@ applicable agreement for further details.
 +-------------------+---------------------+
 ; Option            ; Setting             ;
 +-------------------+---------------------+
-; Start date & time ; 05/18/2023 04:35:05 ;
+; Start date & time ; 05/22/2023 17:20:30 ;
 ; Main task         ; Compilation         ;
 ; Revision Name     ; NetworkAnalyser     ;
 +-------------------+---------------------+
 
 
-+--------------------------------------------------------------------------------------------------------------------------------------------------------------+
-; Flow Non-Default Global Settings                                                                                                                             ;
-+-------------------------------------+-------------------------------------------------------------------------+---------------+-------------+----------------+
-; Assignment Name                     ; Value                                                                   ; Default Value ; Entity Name ; Section Id     ;
-+-------------------------------------+-------------------------------------------------------------------------+---------------+-------------+----------------+
-; COMPILER_SIGNATURE_ID               ; 0.168437730463266                                                       ; --            ; --          ; --             ;
-; EDA_OUTPUT_DATA_FORMAT              ; None                                                                    ; --            ; --          ; eda_simulation ;
-; ENABLE_SIGNALTAP                    ; On                                                                      ; --            ; --          ; --             ;
-; MAX_CORE_JUNCTION_TEMP              ; 85                                                                      ; --            ; --          ; --             ;
-; MIN_CORE_JUNCTION_TEMP              ; 0                                                                       ; --            ; --          ; --             ;
-; PARTITION_COLOR                     ; 16764057                                                                ; --            ; --          ; Top            ;
-; PARTITION_FITTER_PRESERVATION_LEVEL ; PLACEMENT_AND_ROUTING                                                   ; --            ; --          ; Top            ;
-; PARTITION_NETLIST_TYPE              ; SOURCE                                                                  ; --            ; --          ; Top            ;
-; POWER_BOARD_THERMAL_MODEL           ; None (CONSERVATIVE)                                                     ; --            ; --          ; --             ;
-; POWER_PRESET_COOLING_SOLUTION       ; 23 MM HEAT SINK WITH 200 LFPM AIRFLOW                                   ; --            ; --          ; --             ;
-; PROJECT_OUTPUT_DIRECTORY            ; output_files                                                            ; --            ; --          ; --             ;
-; SLD_FILE                            ; /ice/code.lab/IceNET/IceNET.NetworkAnalyser/fpga/SCLK_auto_stripped.stp ; --            ; --          ; --             ;
-; SLD_NODE_CREATOR_ID                 ; 110                                                                     ; --            ; --          ; SPI_DEBUG      ;
-; SLD_NODE_ENTITY_NAME                ; sld_signaltap                                                           ; --            ; --          ; SPI_DEBUG      ;
-; SLD_NODE_PARAMETER_ASSIGNMENT       ; SLD_NODE_INFO=805334528                                                 ; --            ; --          ; SPI_DEBUG      ;
-; SLD_NODE_PARAMETER_ASSIGNMENT       ; SLD_POWER_UP_TRIGGER=0                                                  ; --            ; --          ; SPI_DEBUG      ;
-; SLD_NODE_PARAMETER_ASSIGNMENT       ; SLD_STORAGE_QUALIFIER_INVERSION_MASK_LENGTH=0                           ; --            ; --          ; SPI_DEBUG      ;
-; SLD_NODE_PARAMETER_ASSIGNMENT       ; SLD_ATTRIBUTE_MEM_MODE=OFF                                              ; --            ; --          ; SPI_DEBUG      ;
-; SLD_NODE_PARAMETER_ASSIGNMENT       ; SLD_STATE_FLOW_USE_GENERATED=0                                          ; --            ; --          ; SPI_DEBUG      ;
-; SLD_NODE_PARAMETER_ASSIGNMENT       ; SLD_STATE_BITS=11                                                       ; --            ; --          ; SPI_DEBUG      ;
-; SLD_NODE_PARAMETER_ASSIGNMENT       ; SLD_BUFFER_FULL_STOP=1                                                  ; --            ; --          ; SPI_DEBUG      ;
-; SLD_NODE_PARAMETER_ASSIGNMENT       ; SLD_CURRENT_RESOURCE_WIDTH=1                                            ; --            ; --          ; SPI_DEBUG      ;
-; SLD_NODE_PARAMETER_ASSIGNMENT       ; SLD_TRIGGER_LEVEL=1                                                     ; --            ; --          ; SPI_DEBUG      ;
-; SLD_NODE_PARAMETER_ASSIGNMENT       ; SLD_TRIGGER_IN_ENABLED=0                                                ; --            ; --          ; SPI_DEBUG      ;
-; SLD_NODE_PARAMETER_ASSIGNMENT       ; SLD_ADVANCED_TRIGGER_ENTITY=basic,1,                                    ; --            ; --          ; SPI_DEBUG      ;
-; SLD_NODE_PARAMETER_ASSIGNMENT       ; SLD_TRIGGER_LEVEL_PIPELINE=1                                            ; --            ; --          ; SPI_DEBUG      ;
-; SLD_NODE_PARAMETER_ASSIGNMENT       ; SLD_ENABLE_ADVANCED_TRIGGER=0                                           ; --            ; --          ; SPI_DEBUG      ;
-; SLD_NODE_PARAMETER_ASSIGNMENT       ; SLD_DATA_BITS=1                                                         ; --            ; --          ; SPI_DEBUG      ;
-; SLD_NODE_PARAMETER_ASSIGNMENT       ; SLD_TRIGGER_BITS=1                                                      ; --            ; --          ; SPI_DEBUG      ;
-; SLD_NODE_PARAMETER_ASSIGNMENT       ; SLD_NODE_CRC_LOWORD=64222                                               ; --            ; --          ; SPI_DEBUG      ;
-; SLD_NODE_PARAMETER_ASSIGNMENT       ; SLD_INVERSION_MASK=000000000000000000000000000000000                    ; --            ; --          ; SPI_DEBUG      ;
-; SLD_NODE_PARAMETER_ASSIGNMENT       ; SLD_INVERSION_MASK_LENGTH=33                                            ; --            ; --          ; SPI_DEBUG      ;
-; SLD_NODE_PARAMETER_ASSIGNMENT       ; SLD_SEGMENT_SIZE=65536                                                  ; --            ; --          ; SPI_DEBUG      ;
-; SLD_NODE_PARAMETER_ASSIGNMENT       ; SLD_NODE_CRC_HIWORD=27858                                               ; --            ; --          ; SPI_DEBUG      ;
-; SLD_NODE_PARAMETER_ASSIGNMENT       ; SLD_SAMPLE_DEPTH=65536                                                  ; --            ; --          ; SPI_DEBUG      ;
-; USE_SIGNALTAP_FILE                  ; SCLK.stp                                                                ; --            ; --          ; --             ;
-+-------------------------------------+-------------------------------------------------------------------------+---------------+-------------+----------------+
++------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+; Flow Non-Default Global Settings                                                                                                                                 ;
++-------------------------------------+-----------------------------------------------------------------------------+---------------+-------------+----------------+
+; Assignment Name                     ; Value                                                                       ; Default Value ; Entity Name ; Section Id     ;
++-------------------------------------+-----------------------------------------------------------------------------+---------------+-------------+----------------+
+; COMPILER_SIGNATURE_ID               ; 0.168476882959515                                                           ; --            ; --          ; --             ;
+; EDA_OUTPUT_DATA_FORMAT              ; None                                                                        ; --            ; --          ; eda_simulation ;
+; ENABLE_SIGNALTAP                    ; On                                                                          ; --            ; --          ; --             ;
+; MAX_CORE_JUNCTION_TEMP              ; 85                                                                          ; --            ; --          ; --             ;
+; MIN_CORE_JUNCTION_TEMP              ; 0                                                                           ; --            ; --          ; --             ;
+; PARTITION_COLOR                     ; 16764057                                                                    ; --            ; --          ; Top            ;
+; PARTITION_FITTER_PRESERVATION_LEVEL ; PLACEMENT_AND_ROUTING                                                       ; --            ; --          ; Top            ;
+; PARTITION_NETLIST_TYPE              ; SOURCE                                                                      ; --            ; --          ; Top            ;
+; POWER_BOARD_THERMAL_MODEL           ; None (CONSERVATIVE)                                                         ; --            ; --          ; --             ;
+; POWER_PRESET_COOLING_SOLUTION       ; 23 MM HEAT SINK WITH 200 LFPM AIRFLOW                                       ; --            ; --          ; --             ;
+; PROJECT_OUTPUT_DIRECTORY            ; output_files                                                                ; --            ; --          ; --             ;
+; SLD_FILE                            ; /ice/code.lab/IceNET/IceNET.NetworkAnalyser/hardware/SCLK_auto_stripped.stp ; --            ; --          ; --             ;
+; SLD_NODE_CREATOR_ID                 ; 110                                                                         ; --            ; --          ; SPI_DEBUG      ;
+; SLD_NODE_ENTITY_NAME                ; sld_signaltap                                                               ; --            ; --          ; SPI_DEBUG      ;
+; SLD_NODE_PARAMETER_ASSIGNMENT       ; SLD_NODE_INFO=805334528                                                     ; --            ; --          ; SPI_DEBUG      ;
+; SLD_NODE_PARAMETER_ASSIGNMENT       ; SLD_POWER_UP_TRIGGER=0                                                      ; --            ; --          ; SPI_DEBUG      ;
+; SLD_NODE_PARAMETER_ASSIGNMENT       ; SLD_STORAGE_QUALIFIER_INVERSION_MASK_LENGTH=0                               ; --            ; --          ; SPI_DEBUG      ;
+; SLD_NODE_PARAMETER_ASSIGNMENT       ; SLD_ATTRIBUTE_MEM_MODE=OFF                                                  ; --            ; --          ; SPI_DEBUG      ;
+; SLD_NODE_PARAMETER_ASSIGNMENT       ; SLD_STATE_FLOW_USE_GENERATED=0                                              ; --            ; --          ; SPI_DEBUG      ;
+; SLD_NODE_PARAMETER_ASSIGNMENT       ; SLD_STATE_BITS=11                                                           ; --            ; --          ; SPI_DEBUG      ;
+; SLD_NODE_PARAMETER_ASSIGNMENT       ; SLD_BUFFER_FULL_STOP=1                                                      ; --            ; --          ; SPI_DEBUG      ;
+; SLD_NODE_PARAMETER_ASSIGNMENT       ; SLD_CURRENT_RESOURCE_WIDTH=1                                                ; --            ; --          ; SPI_DEBUG      ;
+; SLD_NODE_PARAMETER_ASSIGNMENT       ; SLD_TRIGGER_LEVEL=1                                                         ; --            ; --          ; SPI_DEBUG      ;
+; SLD_NODE_PARAMETER_ASSIGNMENT       ; SLD_TRIGGER_IN_ENABLED=0                                                    ; --            ; --          ; SPI_DEBUG      ;
+; SLD_NODE_PARAMETER_ASSIGNMENT       ; SLD_ADVANCED_TRIGGER_ENTITY=basic,1,                                        ; --            ; --          ; SPI_DEBUG      ;
+; SLD_NODE_PARAMETER_ASSIGNMENT       ; SLD_TRIGGER_LEVEL_PIPELINE=1                                                ; --            ; --          ; SPI_DEBUG      ;
+; SLD_NODE_PARAMETER_ASSIGNMENT       ; SLD_ENABLE_ADVANCED_TRIGGER=0                                               ; --            ; --          ; SPI_DEBUG      ;
+; SLD_NODE_PARAMETER_ASSIGNMENT       ; SLD_DATA_BITS=1                                                             ; --            ; --          ; SPI_DEBUG      ;
+; SLD_NODE_PARAMETER_ASSIGNMENT       ; SLD_TRIGGER_BITS=1                                                          ; --            ; --          ; SPI_DEBUG      ;
+; SLD_NODE_PARAMETER_ASSIGNMENT       ; SLD_NODE_CRC_LOWORD=64222                                                   ; --            ; --          ; SPI_DEBUG      ;
+; SLD_NODE_PARAMETER_ASSIGNMENT       ; SLD_INVERSION_MASK=000000000000000000000000000000000                        ; --            ; --          ; SPI_DEBUG      ;
+; SLD_NODE_PARAMETER_ASSIGNMENT       ; SLD_INVERSION_MASK_LENGTH=33                                                ; --            ; --          ; SPI_DEBUG      ;
+; SLD_NODE_PARAMETER_ASSIGNMENT       ; SLD_SEGMENT_SIZE=65536                                                      ; --            ; --          ; SPI_DEBUG      ;
+; SLD_NODE_PARAMETER_ASSIGNMENT       ; SLD_NODE_CRC_HIWORD=27858                                                   ; --            ; --          ; SPI_DEBUG      ;
+; SLD_NODE_PARAMETER_ASSIGNMENT       ; SLD_SAMPLE_DEPTH=65536                                                      ; --            ; --          ; SPI_DEBUG      ;
+; USE_SIGNALTAP_FILE                  ; SCLK.stp                                                                    ; --            ; --          ; --             ;
++-------------------------------------+-----------------------------------------------------------------------------+---------------+-------------+----------------+
 
 
 +-------------------------------------------------------------------------------------------------------------------------------+
@@ -119,11 +119,11 @@ applicable agreement for further details.
 +---------------------------+--------------+-------------------------+---------------------+------------------------------------+
 ; Module Name               ; Elapsed Time ; Average Processors Used ; Peak Virtual Memory ; Total CPU Time (on all processors) ;
 +---------------------------+--------------+-------------------------+---------------------+------------------------------------+
-; Analysis & Synthesis      ; 00:00:11     ; 1.0                     ; 676 MB              ; 00:00:08                           ;
-; Fitter                    ; 00:00:11     ; 1.2                     ; 692 MB              ; 00:00:10                           ;
-; Assembler                 ; 00:00:03     ; 1.0                     ; 555 MB              ; 00:00:02                           ;
-; TimeQuest Timing Analyzer ; 00:00:03     ; 1.0                     ; 536 MB              ; 00:00:02                           ;
-; Total                     ; 00:00:28     ; --                      ; --                  ; 00:00:22                           ;
+; Analysis & Synthesis      ; 00:00:24     ; 1.0                     ; 680 MB              ; 00:00:08                           ;
+; Fitter                    ; 00:00:37     ; 1.1                     ; 691 MB              ; 00:00:12                           ;
+; Assembler                 ; 00:00:05     ; 1.0                     ; 555 MB              ; 00:00:02                           ;
+; TimeQuest Timing Analyzer ; 00:00:07     ; 1.0                     ; 536 MB              ; 00:00:02                           ;
+; Total                     ; 00:01:13     ; --                      ; --                  ; 00:00:24                           ;
 +---------------------------+--------------+-------------------------+---------------------+------------------------------------+
 
 
