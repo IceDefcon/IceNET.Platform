@@ -12,17 +12,19 @@ port
 	LED_1 			: out std_logic; 	-- PIN_7
 	LED_2 			: out std_logic;	-- PIN_9
 
-	CS 				: in 	std_logic; 	-- PIN_119 :: BBB P9_17 :: CS
+	CS 				: in 	std_logic; 	-- PIN_119 :: BBB P9_17
 	MOSI 				: in 	std_logic; 	-- PIN_121 :: BBB P9_18
 	MISO 				: out std_logic; 	-- PIN_125 :: BBB P9_21
 	SCLK 				: in 	std_logic; 	-- PIN_129 :: BBB P9_22
 	
+	CAN0_RX 			: in 	std_logic; 	-- PIN_135 :: BBB P9_20
+	CAN0_TX 			: out std_logic; 	-- PIN_137 :: BBB P9_19
+	CAN1_RX 			: in  std_logic; 	-- PIN_134 :: BBB P9_26
+	CAN1_TX 			: out std_logic;	-- PIN_136 :: BBB P9_24
 	
-	
-	
-	BUTTON_IN 			: in std_logic; 	-- PIN_144
-	GPIO_IN 				: in std_logic; 	-- PIN_143
-	GPIO_OUT 			: out std_logic 	-- PIN_142
+	BUTTON_IN 		: in std_logic; 	-- PIN_144
+	GPIO_IN 			: in std_logic; 	-- PIN_143
+	GPIO_OUT 		: out std_logic 	-- PIN_142
 );
 end NetworkAnalyser;
 
@@ -85,7 +87,9 @@ debounce_module: debounce port map
 
 -- Assign the internal signals to the output ports
 --MISO <= s_miso;
-MISO <= MOSI;
+MISO 		<= MOSI;
+CAN1_TX 	<= CAN0_RX;
+CAN0_TX 	<= CAN1_RX;
 
 gpio_process:
 process(CLOCK)
