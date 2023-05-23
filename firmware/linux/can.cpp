@@ -88,8 +88,6 @@ int main() {
             std::cerr << "Failed to receive data on CAN1." << std::endl;
         }
 
-        // Process the received frame
-        // ...
     std::cout << "Debug 6c " << std::endl;
 
         // Delay before the next iteration

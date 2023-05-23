@@ -4,6 +4,7 @@
 //
 #include <iostream>
 #include <thread>
+#include <unistd.h> // sleep
 
 #include "devChar.h"
 #include "devSpi.h"
@@ -44,6 +45,7 @@ int main(int argc, char* argv[])
 	pDevice->device_open(SPI_DEVICE);
 	pDevice->device_init();
 	pDevice->device_write();
+	sleep(2000);
 	pDevice->device_read();
 	pDevice->device_close();
 
