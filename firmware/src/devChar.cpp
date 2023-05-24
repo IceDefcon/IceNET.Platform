@@ -22,6 +22,12 @@ DevChar::device_open(const char* device)
 }
 
 int 
+DevChar::device_init()
+{
+
+}
+
+int 
 DevChar::device_read()
 {
 	int ret;
