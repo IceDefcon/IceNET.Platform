@@ -55,21 +55,21 @@ DevSpi::device_open(const char* device)
 }
 
 int 
-DevSpi::device_read(uint8_t id)
+DevSpi::device_read()
 {
 	Console::Todo("Hardcoded device id");
 	// Print received data
     std::cout << "Received data:";
-    for (int i = 0; i < sizeof(m_SpiConfig[id].m_rx_buffer); i++) 
+    for (int i = 0; i < sizeof(m_SpiConfig[1].m_rx_buffer); i++) 
     {
-        std::cout << " 0x" << std::hex << (int)m_SpiConfig[id].m_rx_buffer[i];
+        std::cout << " 0x" << std::hex << (int)m_SpiConfig[1].m_rx_buffer[i];
     }
     std::cout << std::endl;
 
 	return 0;
 }
 
-int DevSpi::device_write(uint8_t id)
+int DevSpi::device_write()
 {
 	Console::Todo("Hardcoded device id");
 	unsigned char tx_buffer[32] = {
@@ -82,10 +82,10 @@ int DevSpi::device_write(uint8_t id)
     struct spi_ioc_transfer transfer = 
     {
     	.tx_buf = (unsigned long)tx_buffer,
-    	.rx_buf = (unsigned long)m_SpiConfig[id].m_rx_buffer,
+    	.rx_buf = (unsigned long)m_SpiConfig[0].m_rx_buffer,
     	.len = sizeof(tx_buffer),
-    	.speed_hz = m_SpiConfig[id].m_max_speed_hz,
-    	.bits_per_word = m_SpiConfig[id].m_bits_per_word,
+    	.speed_hz = m_SpiConfig[0].m_max_speed_hz,
+    	.bits_per_word = m_SpiConfig[0].m_bits_per_word,
     };
 
     int ret = ioctl(m_SpiConfig[0].m_file_descriptor, SPI_IOC_MESSAGE(1), &transfer);

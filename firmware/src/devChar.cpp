@@ -22,7 +22,7 @@ DevChar::device_open(const char* device)
 }
 
 int 
-DevChar::device_read(uint8_t id)
+DevChar::device_read()
 {
 	int ret;
 	char console_RX[BUFFER_LENGTH];
@@ -38,7 +38,7 @@ DevChar::device_read(uint8_t id)
 }
 
 int 
-DevChar::device_write(uint8_t id)
+DevChar::device_write()
 {
 	int ret;
 	char console_TX[BUFFER_LENGTH];
