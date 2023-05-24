@@ -98,7 +98,7 @@ int DevSpi::device_close()
 {
 	close(m_SpiConfig[m_id].m_file_descriptor);
 	
-	Console::Todo("Temorary solution for m_id");
+	Console::Todo("Temorary solution using m_id");
 	m_id--;
 
 	return 0;

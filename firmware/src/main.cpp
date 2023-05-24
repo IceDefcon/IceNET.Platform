@@ -45,9 +45,9 @@ int main(int argc, char* argv[])
 	// pDevice = &SpiDevice; 	// FAST :: STACK
 	pDevice->device_open(SPI0);
 	pDevice->device_open(SPI1);
-	pDevice->device_write(0);
+	pDevice->device_write();
 	sleep(2);	
-	pDevice->device_read(1);
+	pDevice->device_read();
 	pDevice->device_close();
 	pDevice->device_close();
 
