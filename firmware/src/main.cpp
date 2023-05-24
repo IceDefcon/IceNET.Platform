@@ -46,7 +46,7 @@ int main(int argc, char* argv[])
 	pDevice->device_open(SPI0);
 	pDevice->device_open(SPI1);
 	pDevice->device_write();
-	sleep(2);	
+	// sleep(2);	
 	pDevice->device_read();
 	pDevice->device_close();
 	pDevice->device_close();
