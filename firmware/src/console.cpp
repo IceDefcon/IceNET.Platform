@@ -7,7 +7,7 @@
 #include <sstream>      // std::stringstream
 #include "console.h"
 
-Console::Console() : m_LogLevel (LevelInfo) 
+Console::Console() : m_LogLevel (LevelTodo) 
 { 
 
 }

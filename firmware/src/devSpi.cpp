@@ -35,6 +35,7 @@ DevSpi::device_open(const char* device)
 		Console::Error("Max number of devices reached !!!");
 		return -1;
 	}
+	else Console::Info("SPI Init")
 
 	m_SpiConfig[m_id].m_file_descriptor = open(device, O_RDWR);
 	if (m_SpiConfig[m_id].m_file_descriptor < 0) return -1;
@@ -60,9 +61,9 @@ DevSpi::device_read()
 	Console::Todo("Hardcoded device id");
 	// Print received data
     std::cout << "Received data:";
-    for (int i = 0; i < sizeof(m_SpiConfig[1].m_rx_buffer); i++) 
+    for (int i = 0; i < sizeof(m_SpiConfig[0].m_rx_buffer); i++) 
     {
-        std::cout << " 0x" << std::hex << (int)m_SpiConfig[1].m_rx_buffer[i];
+        std::cout << " 0x" << std::hex << (int)m_SpiConfig[0].m_rx_buffer[i];
     }
     std::cout << std::endl;
 

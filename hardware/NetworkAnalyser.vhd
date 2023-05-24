@@ -71,10 +71,11 @@ begin
 inv_BUTTON_IN 	<= not BUTTON_IN; -- Buton is low active so must be inverted before debounce
 
 -- Passing slave inputs to master outputs
-M_CS 	 <= S_CS;
-M_MOSI <= S_MOSI;
-S_MISO <= M_MISO;
-M_SCLK <= S_SCLK;
+--M_CS 	 <= S_CS;
+--M_MOSI <= S_MOSI;
+--S_MISO <= M_MISO;
+--M_SCLK <= S_SCLK;
+S_MISO <= S_MOSI;
 
 debounce_module: debounce port map 
 (
