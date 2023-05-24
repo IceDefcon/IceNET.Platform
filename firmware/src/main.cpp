@@ -38,9 +38,9 @@ int main(int argc, char* argv[])
 	pDevice->device_close();
 
 	//
-	// Testing SPI 0
+	// SPI 0
 	//
-	pDevice = new DevSpi0; 		// SLOW :: HEAP
+	pDevice = new DevSpi; 		// SLOW :: HEAP
 	// DevSpi SpiDevice; 		// FAST :: STACK
 	// pDevice = &SpiDevice; 	// FAST :: STACK
 	pDevice->device_open(SPI0);
@@ -49,20 +49,15 @@ int main(int argc, char* argv[])
 	sleep(1);
 	pDevice->device_read();
 	pDevice->device_close();
-
 	//
-	// Testing SPI 1
+	// SPI 1
 	//
-	pDevice = new DevSpi1; 		// SLOW :: HEAP
-	// DevSpi SpiDevice; 		// FAST :: STACK
-	// pDevice = &SpiDevice; 	// FAST :: STACK
 	pDevice->device_open(SPI1);
 	pDevice->device_init();
 	pDevice->device_write();
 	sleep(1);
 	pDevice->device_read();
 	pDevice->device_close();
-	delete pDevice;
 
 	return 0;
 }
