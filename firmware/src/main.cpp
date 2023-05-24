@@ -44,7 +44,6 @@ int main(int argc, char* argv[])
 	// DevSpi SpiDevice; 		// FAST :: STACK
 	// pDevice = &SpiDevice; 	// FAST :: STACK
 	pDevice->device_open(SPI0);
-	pDevice->device_init();
 	pDevice->device_write();
 	sleep(1);
 	pDevice->device_read();
@@ -53,7 +52,6 @@ int main(int argc, char* argv[])
 	// SPI 1
 	//
 	pDevice->device_open(SPI1);
-	pDevice->device_init();
 	pDevice->device_write();
 	sleep(1);
 	pDevice->device_read();
