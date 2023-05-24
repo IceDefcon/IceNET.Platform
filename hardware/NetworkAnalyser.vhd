@@ -22,8 +22,8 @@ port
 	INT_MISO 		: out std_logic; 	-- PIN_122 :: BBB P9_29 :: RED 		:: SPI1_D0
 	INT_SCLK 		: in 	std_logic; 	-- PIN_126 :: BBB P9_31 :: ORANGE 	:: SPI1_SCLK
 	
-	BUTTON_IN 		: in std_logic; 	-- PIN_144
-	GPIO_IN 			: in std_logic; 	-- PIN_143
+	BUTTON_IN 		: in 	std_logic; 	-- PIN_144
+	GPIO_IN 			: in 	std_logic; 	-- PIN_143
 	GPIO_OUT 		: out std_logic 	-- PIN_142
 );
 end NetworkAnalyser;
