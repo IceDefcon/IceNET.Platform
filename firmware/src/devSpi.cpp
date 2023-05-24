@@ -57,14 +57,8 @@ DevSpi::device_read()
 	return 0;
 }
 
-int DevSpi::device_write()
+int DevSpi::device_write(unsigned char tx_buffer[SPI_TX_BUFFER])
 {
-	unsigned char tx_buffer[32] = {
-		0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08,
-		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-		0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08,
-		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,};
-
     // Transfer data over SPI
     struct spi_ioc_transfer transfer = 
     {
@@ -73,7 +67,6 @@ int DevSpi::device_write()
     	.len = sizeof(tx_buffer),
     	.speed_hz = m_SpiConfig[0].m_max_speed_hz,
     	.bits_per_word = m_SpiConfig[0].m_bits_per_word,
-		// .delay_usecs = 0,
     };
 
     int ret = ioctl(m_SpiConfig[0].m_file_descriptor, SPI_IOC_MESSAGE(1), &transfer);
