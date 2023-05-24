@@ -7,9 +7,13 @@
 #include "console.h"
 #include "devBase.h"
 
+#define MAX_SPI_DEVICES 2
+
 class DevSpi : public DevBase
 {
 private:
+
+	uint8_t m_id;
 
     typedef struct
     {
@@ -20,7 +24,7 @@ private:
         uint32_t m_max_speed_hz;
     } SpiConfig;
 
-    SpiConfig m_SpiConfig[4];
+    SpiConfig m_SpiConfig[MAX_SPI_DEVICES];
 
 public:
 	DevSpi();
@@ -30,8 +34,7 @@ public:
 	// Override functions
 	//
 	int device_open(const char* device) override;
-	int device_init() override;
-	int device_read() override;
-	int device_write() override;
+	int device_read(uint8_t id) override;
+	int device_write(uint8_t id) override;
 	int device_close() override;
 };

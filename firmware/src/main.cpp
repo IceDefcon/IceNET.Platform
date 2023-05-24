@@ -44,20 +44,14 @@ int main(int argc, char* argv[])
 	// DevSpi SpiDevice; 		// FAST :: STACK
 	// pDevice = &SpiDevice; 	// FAST :: STACK
 	pDevice->device_open(SPI0);
-	pDevice->device_init();
-	pDevice->device_write();
-	sleep(1);
-	// pDevice->device_read();
-	pDevice->device_close();
-	//
-	// SPI 1
-	//
 	pDevice->device_open(SPI1);
-	pDevice->device_init();
-	// pDevice->device_write();
-	sleep(1);
-	pDevice->device_read();
+	pDevice->device_write(0);
+	sleep(2);	
+	pDevice->device_read(1);
 	pDevice->device_close();
+	pDevice->device_close();
+
+	delete pDevice;
 
 	return 0;
 }

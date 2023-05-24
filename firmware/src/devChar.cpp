@@ -22,12 +22,23 @@ DevChar::device_open(const char* device)
 }
 
 int 
-DevChar::device_init()
+DevChar::device_read(uint8_t id)
 {
+	int ret;
+	char console_RX[BUFFER_LENGTH];
+
+	ret = read(m_file_descriptor, console_RX, BUFFER_LENGTH);
+
+	Console::Read(console_RX);
+
+	// clear the buffer
+	memset (console_RX, 0, BUFFER_LENGTH);
+
+	return ret;
 }
 
 int 
-DevChar::device_write()
+DevChar::device_write(uint8_t id)
 {
 	int ret;
 	char console_TX[BUFFER_LENGTH];
@@ -44,23 +55,6 @@ DevChar::device_write()
 
 	return ret;
 }
-
-int 
-DevChar::device_read()
-{
-	int ret;
-	char console_RX[BUFFER_LENGTH];
-
-	ret = read(m_file_descriptor, console_RX, BUFFER_LENGTH);
-
-	Console::Read(console_RX);
-
-	// clear the buffer
-	memset (console_RX, 0, BUFFER_LENGTH);
-
-	return ret;
-}
-
 
 int 
 DevChar::device_close()
