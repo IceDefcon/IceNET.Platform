@@ -24,7 +24,7 @@ public:
 	// Override functions
 	//
 	int device_open(const char* device) override;
-	int device_init(uint8_t mode, uint8_t bits_per_word, uint32_t max_speed_hz) override;
+	int device_init() override;
 	int device_read() override;
 	int device_write() override;
 	int device_close() override;
