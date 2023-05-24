@@ -26,8 +26,6 @@ int main(int argc, char* argv[])
 {
 	DevBase* pDevice = nullptr;
 
-	unsigned char tx_buffer[SPI_TX_BUFFER] = {0x11, 0x33, 0x55, 0x77, 0x99, 0xBB, 0xDD, 0xFF};
-	
 	//
 	// Sending text to Kernel :: Not linked with SPI
 	//
@@ -35,7 +33,7 @@ int main(int argc, char* argv[])
 	// DevChar CharDevice; 		// FAST :: STACK
 	// pDevice = &CharDevice; 	// FAST :: STACK
 	pDevice->device_open(ICE);
-	pDevice->device_write(tx_buffer);
+	pDevice->device_write();
 	pDevice->device_read();
 	pDevice->device_close();
 
@@ -46,7 +44,7 @@ int main(int argc, char* argv[])
 	// DevSpi SpiDevice; 		// FAST :: STACK
 	// pDevice = &SpiDevice; 	// FAST :: STACK
 	pDevice->device_open(SPI0);
-	pDevice->device_write(tx_buffer);
+	pDevice->device_write();
 	sleep(1);
 	pDevice->device_read();
 	pDevice->device_close();
@@ -54,7 +52,7 @@ int main(int argc, char* argv[])
 	// SPI 1
 	//
 	pDevice->device_open(SPI1);
-	pDevice->device_write(tx_buffer);
+	pDevice->device_write();
 	sleep(1);
 	pDevice->device_read();
 	pDevice->device_close();
