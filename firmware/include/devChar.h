@@ -21,5 +21,5 @@ public:
 
 	int device_open(const char* device) override;
 	int device_read() override;
-	int device_write(unsigned char tx_buffer[SPI_TX_BUFFER]) override;
+	int device_write() override;
 	int device_close() override;};

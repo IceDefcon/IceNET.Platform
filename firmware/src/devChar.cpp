@@ -38,7 +38,7 @@ DevChar::device_read()
 }
 
 int 
-DevChar::device_write(unsigned char tx_buffer[SPI_TX_BUFFER])
+DevChar::device_write()
 {
 	int ret;
 	char console_TX[BUFFER_LENGTH];
