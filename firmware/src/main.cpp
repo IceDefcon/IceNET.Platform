@@ -47,14 +47,14 @@ int main(int argc, char* argv[])
 	pDevice->device_init();
 	pDevice->device_write();
 	sleep(1);
-	pDevice->device_read();
+	// pDevice->device_read();
 	pDevice->device_close();
 	//
 	// SPI 1
 	//
 	pDevice->device_open(SPI1);
 	pDevice->device_init();
-	pDevice->device_write();
+	// pDevice->device_write();
 	sleep(1);
 	pDevice->device_read();
 	pDevice->device_close();

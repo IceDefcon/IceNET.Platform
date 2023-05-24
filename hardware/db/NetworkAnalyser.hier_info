@@ -4,20 +4,20 @@ CLOCK => GPIO_OUT~reg0.CLK
 CLOCK => LED_0~reg0.CLK
 CLOCK => LED_1~reg0.CLK
 CLOCK => LED_2~reg0.CLK
+CLOCK => FrequencyDivider:FrequencyDivider_module.clk_in
 LED_0 <= LED_0~reg0.DB_MAX_OUTPUT_PORT_TYPE
 LED_1 <= LED_1~reg0.DB_MAX_OUTPUT_PORT_TYPE
 LED_2 <= LED_2~reg0.DB_MAX_OUTPUT_PORT_TYPE
-CS => ~NO_FANOUT~
-MOSI => MISO.DATAIN
-MISO <= MOSI.DB_MAX_OUTPUT_PORT_TYPE
-SCLK => ~NO_FANOUT~
-INT_CS => ~NO_FANOUT~
-INT_MOSI => INT_MISO.DATAIN
-INT_MISO <= INT_MOSI.DB_MAX_OUTPUT_PORT_TYPE
-INT_SCLK => ~NO_FANOUT~
+S_CS => M_CS.DATAIN
+S_MOSI => M_MOSI.DATAIN
+S_MISO <= M_MISO.DB_MAX_OUTPUT_PORT_TYPE
+S_SCLK => M_SCLK.DATAIN
+M_CS <= S_CS.DB_MAX_OUTPUT_PORT_TYPE
+M_MOSI <= S_MOSI.DB_MAX_OUTPUT_PORT_TYPE
+M_MISO => S_MISO.DATAIN
+M_SCLK <= S_SCLK.DB_MAX_OUTPUT_PORT_TYPE
 BUTTON_IN => debounce:debounce_module.button_in
-BUTTON_IN => LED_2~reg0.DATAIN
-GPIO_IN => LED_1~reg0.DATAIN
+GPIO_IN => ~NO_FANOUT~
 GPIO_OUT <= GPIO_OUT~reg0.DB_MAX_OUTPUT_PORT_TYPE
 
 
@@ -59,5 +59,23 @@ clock => button_temp.CLK
 button_in => process_0.IN1
 button_in => button_temp.DATAIN
 button_out <= button_out~reg0.DB_MAX_OUTPUT_PORT_TYPE
+
+
+|NetworkAnalyser|FrequencyDivider:FrequencyDivider_module
+clk_in => clk_out~reg0.CLK
+clk_in => clk_out_internal.CLK
+clk_in => counter[0].CLK
+clk_in => counter[1].CLK
+clk_in => counter[2].CLK
+clk_in => counter[3].CLK
+clk_in => counter[4].CLK
+reset => clk_out~reg0.ACLR
+reset => counter[0].ACLR
+reset => counter[1].ACLR
+reset => counter[2].ACLR
+reset => counter[3].ACLR
+reset => counter[4].ACLR
+reset => clk_out_internal.ENA
+clk_out <= clk_out~reg0.DB_MAX_OUTPUT_PORT_TYPE
 
 

@@ -1,0 +1,41 @@
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+
+entity FrequencyDivider is
+    port (
+        clk_in : in std_logic;       -- 50 MHz input clock
+        reset : in std_logic;        -- Asynchronous reset signal
+        clk_out : out std_logic      -- 1 MHz output clock
+    );
+end entity FrequencyDivider;
+
+architecture Behavioral of FrequencyDivider is
+    signal counter : unsigned(5 downto 0) := (others => '0');
+    signal pulse : std_logic := '0';
+
+begin
+
+    -- Counter process to divide the clock
+    process(clk_in, reset)
+    begin
+        if reset = '1' then
+            counter <= (others => '0');  -- Reset the counter
+        elsif rising_edge(clk_in) then
+            if counter = "110001" then   -- Counter value for divide-by-50
+                counter <= (others => '0');
+                pulse <= '1';            -- Generate 1 MHz pulse
+            else
+                counter <= counter + 1;  -- Increment the counter
+                pulse <= '0';
+            end if;
+        end if;
+    end process;
+
+    -- Assign the output clock signal
+    process(pulse)
+    begin
+        clk_out <= pulse;
+    end process;
+
+end architecture Behavioral;

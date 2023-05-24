@@ -10,11 +10,17 @@
 class DevSpi : public DevBase
 {
 private:
-	int m_file_descriptor;
-    unsigned char m_rx_buffer[32];
-    uint8_t m_mode;
-    uint8_t m_bits_per_word;
-    uint32_t m_max_speed_hz;
+
+    typedef struct
+    {
+        int m_file_descriptor;
+        unsigned char m_rx_buffer[32];
+        uint8_t m_mode;
+        uint8_t m_bits_per_word;
+        uint32_t m_max_speed_hz;
+    } SpiConfig;
+
+    SpiConfig m_SpiConfig[4];
 
 public:
 	DevSpi();
