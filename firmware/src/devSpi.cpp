@@ -31,12 +31,6 @@ DevSpi::device_open(const char* device)
 	m_SpiConfig[0].m_file_descriptor = open(device, O_RDWR);
 	if (m_SpiConfig[0].m_file_descriptor < 0) return -1;
 
-	return 0;
-}
-
-int 
-DevSpi::device_init()
-{
     // Configure SPI mode, bits per word, and max speed
     m_SpiConfig[0].m_mode = SPI_MODE_0;
 	m_SpiConfig[0].m_bits_per_word = 8;
@@ -44,8 +38,8 @@ DevSpi::device_init()
     int ret = ioctl(m_SpiConfig[0].m_file_descriptor, SPI_IOC_WR_MODE, &m_SpiConfig[0].m_mode);
     ret |= ioctl(m_SpiConfig[0].m_file_descriptor, SPI_IOC_WR_BITS_PER_WORD, &m_SpiConfig[0].m_bits_per_word);
     ret |= ioctl(m_SpiConfig[0].m_file_descriptor, SPI_IOC_WR_MAX_SPEED_HZ, &m_SpiConfig[0].m_max_speed_hz);
-
     if (ret < 0) return -1;
+
 	return 0;
 }
 
