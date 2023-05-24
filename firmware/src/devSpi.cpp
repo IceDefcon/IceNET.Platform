@@ -35,7 +35,7 @@ DevSpi::device_open(const char* device)
 		Console::Error("Max number of devices reached !!!");
 		return -1;
 	}
-	else Console::Info("SPI Init")
+	else Console::Info("SPI Init");
 
 	m_SpiConfig[m_id].m_file_descriptor = open(device, O_RDWR);
 	if (m_SpiConfig[m_id].m_file_descriptor < 0) return -1;
