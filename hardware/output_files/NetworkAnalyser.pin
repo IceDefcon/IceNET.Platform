@@ -181,15 +181,15 @@ GND*                         : 114       :        :                   :         
 GND*                         : 115       :        :                   :         : 2         :                
 VCCIO2                       : 116       : power  :                   : 3.3V    : 2         :                
 GND                          : 117       : gnd    :                   :         :           :                
-GND*                         : 118       :        :                   :         : 2         :                
+INT_CS                       : 118       : input  : 3.3-V LVTTL       :         : 2         : Y              
 CS                           : 119       : input  : 3.3-V LVTTL       :         : 2         : Y              
-GND*                         : 120       :        :                   :         : 2         :                
+INT_MOSI                     : 120       : input  : 3.3-V LVTTL       :         : 2         : Y              
 MOSI                         : 121       : input  : 3.3-V LVTTL       :         : 2         : Y              
-GND*                         : 122       :        :                   :         : 2         :                
+INT_MISO                     : 122       : output : 3.3-V LVTTL       :         : 2         : Y              
 GND                          : 123       : gnd    :                   :         :           :                
 VCCINT                       : 124       : power  :                   : 1.2V    :           :                
 MISO                         : 125       : output : 3.3-V LVTTL       :         : 2         : Y              
-GND*                         : 126       :        :                   :         : 2         :                
+INT_SCLK                     : 126       : input  : 3.3-V LVTTL       :         : 2         : Y              
 VCCIO2                       : 127       : power  :                   : 3.3V    : 2         :                
 GND                          : 128       : gnd    :                   :         :           :                
 SCLK                         : 129       : input  : 3.3-V LVTTL       :         : 2         : Y              
@@ -197,10 +197,10 @@ GND                          : 130       : gnd    :                   :         
 VCCINT                       : 131       : power  :                   : 1.2V    :           :                
 GND*                         : 132       :        :                   :         : 2         :                
 GND*                         : 133       :        :                   :         : 2         :                
-CAN1_RX                      : 134       : input  : 3.3-V LVTTL       :         : 2         : Y              
-CAN0_RX                      : 135       : input  : 3.3-V LVTTL       :         : 2         : Y              
-CAN1_TX                      : 136       : output : 3.3-V LVTTL       :         : 2         : Y              
-CAN0_TX                      : 137       : output : 3.3-V LVTTL       :         : 2         : Y              
+GND*                         : 134       :        :                   :         : 2         :                
+GND*                         : 135       :        :                   :         : 2         :                
+GND*                         : 136       :        :                   :         : 2         :                
+GND*                         : 137       :        :                   :         : 2         :                
 VCCIO2                       : 138       : power  :                   : 3.3V    : 2         :                
 GND*                         : 139       :        :                   :         : 2         :                
 GND                          : 140       : gnd    :                   :         :           :                

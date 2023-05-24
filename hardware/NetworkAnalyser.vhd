@@ -12,15 +12,15 @@ port
 	LED_1 			: out std_logic; 	-- PIN_7
 	LED_2 			: out std_logic;	-- PIN_9
 
-	CS 				: in 	std_logic; 	-- PIN_119 :: BBB P9_17
-	MOSI 				: in 	std_logic; 	-- PIN_121 :: BBB P9_18
-	MISO 				: out std_logic; 	-- PIN_125 :: BBB P9_21
-	SCLK 				: in 	std_logic; 	-- PIN_129 :: BBB P9_22
+	CS 				: in 	std_logic; 	-- PIN_119 :: BBB P9_17 :: PULPLE 	:: SPI0_CS0
+	MOSI 				: in 	std_logic; 	-- PIN_121 :: BBB P9_18 :: BLUE 		:: SPI0_D1
+	MISO 				: out std_logic; 	-- PIN_125 :: BBB P9_21 :: BROWN 	:: SPI0_D0
+	SCLK 				: in 	std_logic; 	-- PIN_129 :: BBB P9_22 :: BLACK 	:: SPI0_SCLK
 	
-	CAN0_RX 			: in 	std_logic; 	-- PIN_135 :: BBB P9_20
-	CAN0_TX 			: out std_logic; 	-- PIN_137 :: BBB P9_19
-	CAN1_RX 			: in  std_logic; 	-- PIN_134 :: BBB P9_26
-	CAN1_TX 			: out std_logic;	-- PIN_136 :: BBB P9_24
+	INT_CS 			: in 	std_logic; 	-- PIN_118 :: BBB P9_28 :: YELOW 	:: SPI1_CS0
+	INT_MOSI 		: in 	std_logic; 	-- PIN_120 :: BBB P9_30 :: GREEN 	:: SPI1_D1 :: GPIO_112
+	INT_MISO 		: out std_logic; 	-- PIN_122 :: BBB P9_29 :: RED 		:: SPI1_D0
+	INT_SCLK 		: in 	std_logic; 	-- PIN_126 :: BBB P9_31 :: ORANGE 	:: SPI1_SCLK
 	
 	BUTTON_IN 		: in std_logic; 	-- PIN_144
 	GPIO_IN 			: in std_logic; 	-- PIN_143
@@ -37,9 +37,10 @@ architecture rtl of NetworkAnalyser is
 signal button_debounced	: std_logic := '1';
 signal inv_BUTTON_IN 	: std_logic := '1';
 
-signal s_miso				: std_logic;
-signal s_parallel_out	: std_logic_vector(7 downto 0);
-	 
+--signal s_miso				: std_logic;
+--signal s_parallel_out	: std_logic_vector(7 downto 0);
+
+
 --------------------------------------------
 -- COMPONENTS DECLARATION
 --------------------------------------------
@@ -67,7 +68,10 @@ end component;
 --------------------------------------------
 begin
 
+-- Combinational Logic
 inv_BUTTON_IN 	<= not BUTTON_IN; -- Buton is low active so must be inverted before debounce
+MISO 				<= MOSI;
+INT_MISO 		<= INT_MOSI;
 
 debounce_module: debounce port map 
 (
@@ -87,9 +91,7 @@ debounce_module: debounce port map
 
 -- Assign the internal signals to the output ports
 --MISO <= s_miso;
-MISO 		<= MOSI;
-CAN1_TX 	<= CAN0_RX;
-CAN0_TX 	<= CAN1_RX;
+
 
 gpio_process:
 process(CLOCK)

@@ -10,8 +10,9 @@
 #include "devSpi.h"
 #include "console.h"
 
-#define ICE_DEVICE "/dev/iceCOM"
-#define SPI_DEVICE "/dev/spidev0.0"
+#define ICE "/dev/iceCOM"
+#define SPI0 "/dev/spidev0.0"
+#define SPI1 "/dev/spidev1.0"
 
 void ConsoleThread() 
 {
@@ -31,24 +32,36 @@ int main(int argc, char* argv[])
 	pDevice = new DevChar; 		// SLOW :: HEAP
 	// DevChar CharDevice; 		// FAST :: STACK
 	// pDevice = &CharDevice; 	// FAST :: STACK
-	pDevice->device_open(ICE_DEVICE);
+	pDevice->device_open(ICE);
 	pDevice->device_write();
 	pDevice->device_read();
 	pDevice->device_close();
 
 	//
-	// Testing SPI 
+	// Testing SPI 0
 	//
-	pDevice = new DevSpi; 		// SLOW :: HEAP
+	pDevice = new DevSpi0; 		// SLOW :: HEAP
 	// DevSpi SpiDevice; 		// FAST :: STACK
 	// pDevice = &SpiDevice; 	// FAST :: STACK
-	pDevice->device_open(SPI_DEVICE);
+	pDevice->device_open(SPI0);
 	pDevice->device_init();
 	pDevice->device_write();
-	sleep(3);
+	sleep(1);
 	pDevice->device_read();
 	pDevice->device_close();
 
+	//
+	// Testing SPI 1
+	//
+	pDevice = new DevSpi1; 		// SLOW :: HEAP
+	// DevSpi SpiDevice; 		// FAST :: STACK
+	// pDevice = &SpiDevice; 	// FAST :: STACK
+	pDevice->device_open(SPI1);
+	pDevice->device_init();
+	pDevice->device_write();
+	sleep(1);
+	pDevice->device_read();
+	pDevice->device_close();
 	delete pDevice;
 
 	return 0;
