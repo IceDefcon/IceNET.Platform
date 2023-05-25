@@ -48,8 +48,8 @@ int main(int argc, char* argv[])
 	// This must be dynamically casted
 	// to have access to the non virtual methods
 	// that are out of the DevBase class
-	DevSpi* pSevSpi = dynamic_cast<DevSpi*>(pDevice);
-	int id = pSevSpi->device_getid();
+	DevSpi* pDevSpi = dynamic_cast<DevSpi*>(pDevice);
+	int id = pDevSpi->device_getid();
 
 	pDevice->device_write();
 	sleep(1);
