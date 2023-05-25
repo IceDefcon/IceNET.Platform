@@ -61,7 +61,7 @@ DevSpi::device_read()
     if(id == 1)
     {
     	unsigned char buffer[8] = {0};
-    	read(m_SpiConfig[id].m_file_descriptor, buffer, 8)
+    	read(m_SpiConfig[id].m_file_descriptor, buffer, 8);
     	// Process the received data
     	printf("Received data:");
   		for (int i = 0; i < 8; i++) 
