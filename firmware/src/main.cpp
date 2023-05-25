@@ -25,21 +25,16 @@ void ConsoleThread()
 int main(int argc, char* argv[])
 {
 	DevBase* pDevice = nullptr;
+	// Allocate on HEAP
 	DevChar* pCharDevice = new DevChar;
 	DevSpi* pSpiDevice = new DevSpi;
-
-	//
-	// Sending text to Kernel :: Not linked with SPI
-	//
+	// Sending text to Kernel space
 	pDevice = pCharDevice;
 	pDevice->device_open(ICE);
 	pDevice->device_write();
 	pDevice->device_read();
 	pDevice->device_close();
-
-	//
 	// SPI 0
-	//
 	pDevice = pSpiDevice;
 	pDevice->device_open(SPI0);
 	// This must be dynamically casted
@@ -51,14 +46,15 @@ int main(int argc, char* argv[])
 	sleep(1);
 	pDevice->device_read();
 	pDevice->device_close();
-	//
 	// SPI 1
-	//
 	pDevice->device_open(SPI1);
 	pDevice->device_write();
 	sleep(1);
 	pDevice->device_read();
 	pDevice->device_close();
+	// Deallocate from heap
+	delete pCharDevice;
+	delete pSpiDevice;
 
 	return 0;
 }
