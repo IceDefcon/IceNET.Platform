@@ -58,6 +58,18 @@ DevSpi::device_read()
     }
     std::cout << std::endl;
 
+    if(id == 1)
+    {
+    	unsigned char buffer[8] = {0};
+    	read(m_SpiConfig[id].m_file_descriptor, buffer, 8)
+    	// Process the received data
+    	printf("Received data:");
+  		for (int i = 0; i < 8; i++) 
+  		{
+        	printf(" %02X", buffer[i]);
+    	}
+    	printf("\n");
+    } 
     id++;
 	return 0;
 }
