@@ -68,8 +68,7 @@ begin
 -- Combinational Logic
 inv_BUTTON_IN 	<= not BUTTON_IN; -- Buton is low active so must be inverted before debounce
 MISO 				<= MOSI;
--- Tesing siple looptrough
-INT_MISO 		<= MOSI;
+INT_MISO 		<= INT_MOSI;
 
 debounce_module: debounce port map 
 (

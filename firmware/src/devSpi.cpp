@@ -28,49 +28,32 @@ DevSpi::~DevSpi() {}
 int 
 DevSpi::device_open(const char* device)
 {
-	static int id = 0;
-
-	m_SpiConfig[id].m_file_descriptor = open(device, O_RDWR);
-	if (m_SpiConfig[id].m_file_descriptor < 0) return -1;
+	m_SpiConfig[0].m_file_descriptor = open(device, O_RDWR);
+	if (m_SpiConfig[0].m_file_descriptor < 0) return -1;
 
     // Configure SPI mode, bits per word, and max speed
-    m_SpiConfig[id].m_mode = SPI_MODE_0;
-	m_SpiConfig[id].m_bits_per_word = 8;
-	m_SpiConfig[id].m_max_speed_hz = 1000000;
-    int ret = ioctl(m_SpiConfig[id].m_file_descriptor, SPI_IOC_WR_MODE, &m_SpiConfig[id].m_mode);
-    ret |= ioctl(m_SpiConfig[id].m_file_descriptor, SPI_IOC_WR_BITS_PER_WORD, &m_SpiConfig[id].m_bits_per_word);
-    ret |= ioctl(m_SpiConfig[id].m_file_descriptor, SPI_IOC_WR_MAX_SPEED_HZ, &m_SpiConfig[id].m_max_speed_hz);
+    m_SpiConfig[0].m_mode = SPI_MODE_0;
+	m_SpiConfig[0].m_bits_per_word = 8;
+	m_SpiConfig[0].m_max_speed_hz = 1000000;
+    int ret = ioctl(m_SpiConfig[0].m_file_descriptor, SPI_IOC_WR_MODE, &m_SpiConfig[0].m_mode);
+    ret |= ioctl(m_SpiConfig[0].m_file_descriptor, SPI_IOC_WR_BITS_PER_WORD, &m_SpiConfig[0].m_bits_per_word);
+    ret |= ioctl(m_SpiConfig[0].m_file_descriptor, SPI_IOC_WR_MAX_SPEED_HZ, &m_SpiConfig[0].m_max_speed_hz);
     if (ret < 0) return -1;
 
-    id++;
 	return 0;
 }
 
 int 
 DevSpi::device_read()
 {
-	static int id = 0;
 	// Print received data
     std::cout << "Received data:";
-    for (int i = 0; i < sizeof(m_SpiConfig[id].m_rx_buffer); i++) 
+    for (int i = 0; i < sizeof(m_SpiConfig[0].m_rx_buffer); i++) 
     {
-        std::cout << " 0x" << std::hex << (int)m_SpiConfig[id].m_rx_buffer[i];
+        std::cout << " 0x" << std::hex << (int)m_SpiConfig[0].m_rx_buffer[i];
     }
     std::cout << std::endl;
 
-    if(id == 1)
-    {
-    	unsigned char buffer[8] = {0};
-    	read(m_SpiConfig[id].m_file_descriptor, buffer, 8);
-    	// Process the received data
-    	printf("Received data:");
-  		for (int i = 0; i < 8; i++) 
-  		{
-        	printf(" %02X", buffer[i]);
-    	}
-    	printf("\n");
-    } 
-    id++;
 	return 0;
 }
 
