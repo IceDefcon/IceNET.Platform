@@ -29,13 +29,13 @@ int main(int argc, char* argv[])
 	//
 	// Sending text to Kernel :: Not linked with SPI
 	//
-	pDevice = new DevChar; 		// SLOW :: HEAP
+	DevChar* pCharDevice = new DevChar; 	// SLOW :: HEAP
 	// DevChar CharDevice; 		// FAST :: STACK
 	// pDevice = &CharDevice; 	// FAST :: STACK
-	pDevice->device_open(ICE);
-	pDevice->device_write();
-	pDevice->device_read();
-	pDevice->device_close();
+	pCharDevice->device_open(ICE);
+	pCharDevice->device_write();
+	pCharDevice->device_read();
+	pCharDevice->device_close();
 
 	//
 	// SPI 0
