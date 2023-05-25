@@ -13,7 +13,7 @@
 
 DevSpi::DevSpi() 
 {
-	for (int i = 0; i < MAX_SPI_DEVICES; ++i)
+	for (int i = 0; i < SPI_DEVICES; ++i)
 	{
 		m_SpiConfig[i].m_file_descriptor = 0;
 		memset(m_SpiConfig[i].m_rx_buffer, 0, sizeof(m_SpiConfig[i].m_rx_buffer));
@@ -59,7 +59,7 @@ DevSpi::device_read()
 
 int DevSpi::device_write()
 {
-	unsigned char tx_buffer[8] = {0x11, 0x33, 0x55, 0x77, 0x99, 0xBB, 0xDD, 0xFF};
+	unsigned char tx_buffer[SPI_BUFFER] = {0x11, 0x33, 0x55, 0x77, 0x99, 0xBB, 0xDD, 0xFF};
 
     // Transfer data over SPI
     struct spi_ioc_transfer transfer = 
@@ -81,5 +81,15 @@ int DevSpi::device_close()
 {
 	close(m_SpiConfig[0].m_file_descriptor);
 
+	return 0;
+}
+
+int DevSpi::device_getid()
+{
+	return 0;
+}
+
+int DevSpi::device_setid()
+{
 	return 0;
 }
