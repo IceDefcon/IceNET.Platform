@@ -39,17 +39,18 @@ int main(int argc, char* argv[])
 	pDevice->device_open(SPI0);
 	// This must be dynamically casted to have access 
 	// to the non virtual methods out of the DevBase
+	dynamic_cast<DevSpi*>(pDevice)->device_setid();
 	int id = dynamic_cast<DevSpi*>(pDevice)->device_getid();
 	pDevice->device_write();
 	sleep(1);
 	pDevice->device_read();
-	pDevice->device_close();
+	// pDevice->device_close();
 	// SPI 1
 	pDevice->device_open(SPI1);
-	pDevice->device_write();
+	// pDevice->device_write();
 	sleep(1);
 	pDevice->device_read();
-	pDevice->device_close();
+	// pDevice->device_close();
 	// Deallocate from heap
 	delete pCharDevice;
 	delete pSpiDevice;

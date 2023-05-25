@@ -7,8 +7,17 @@
 #include "console.h"
 #include "devBase.h"
 
+//////////////////////
+// 					//
+// 					//
+//		CONFIG		//
+// 					//
+// 					//
+//////////////////////
 #define SPI_DEVICES 2
 #define SPI_BUFFER 8
+#define SPI_WRITE 0
+#define SPI_READ 0
 
 class DevSpi : public DevBase
 {
