@@ -25,32 +25,28 @@ void ConsoleThread()
 int main(int argc, char* argv[])
 {
 	DevBase* pDevice = nullptr;
+	DevChar* pCharDevice = new DevChar;
+	DevSpi* pSpiDevice = new DevSpi;
 
 	//
 	// Sending text to Kernel :: Not linked with SPI
 	//
-	DevChar* pCharDevice = new DevChar; 	// SLOW :: HEAP
-	// DevChar CharDevice; 		// FAST :: STACK
-	// pDevice = &CharDevice; 	// FAST :: STACK
-	pCharDevice->device_open(ICE);
-	pCharDevice->device_write();
-	pCharDevice->device_read();
-	pCharDevice->device_close();
+	pDevice = pCharDevice;
+	pDevice->device_open(ICE);
+	pDevice->device_write();
+	pDevice->device_read();
+	pDevice->device_close();
 
 	//
 	// SPI 0
 	//
-	pDevice = new DevSpi; 		// SLOW :: HEAP
-	// DevSpi SpiDevice; 		// FAST :: STACK
-	// pDevice = &SpiDevice; 	// FAST :: STACK
+	pDevice = pSpiDevice;
 	pDevice->device_open(SPI0);
-
 	// This must be dynamically casted
 	// to have access to the non virtual methods
 	// that are out of the DevBase class
 	DevSpi* pDevSpi = dynamic_cast<DevSpi*>(pDevice);
 	int id = pDevSpi->device_getid();
-
 	pDevice->device_write();
 	sleep(1);
 	pDevice->device_read();
