@@ -45,8 +45,11 @@ int main(int argc, char* argv[])
 	// pDevice = &SpiDevice; 	// FAST :: STACK
 	pDevice->device_open(SPI0);
 
+	// This must be dynamically casted
+	// to have access to the non virtual methods
+	// that are out of the DevBase class
 	DevSpi* pSevSpi = dynamic_cast<DevSpi*>(pDevice);
-	pSevSpi->device_getid();
+	int id = pSevSpi->device_getid();
 
 	pDevice->device_write();
 	sleep(1);
