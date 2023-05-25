@@ -49,14 +49,16 @@ DevSpi::device_open(const char* device)
 int 
 DevSpi::device_read()
 {
+	static id = 0;
 	// Print received data
     std::cout << "Received data:";
-    for (int i = 0; i < sizeof(m_SpiConfig[0].m_rx_buffer); i++) 
+    for (int i = 0; i < sizeof(m_SpiConfig[id].m_rx_buffer); i++) 
     {
-        std::cout << " 0x" << std::hex << (int)m_SpiConfig[0].m_rx_buffer[i];
+        std::cout << " 0x" << std::hex << (int)m_SpiConfig[id].m_rx_buffer[i];
     }
     std::cout << std::endl;
 
+    id++;
 	return 0;
 }
 
