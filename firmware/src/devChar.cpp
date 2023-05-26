@@ -6,7 +6,6 @@
 #include <fcntl.h> 			// Open device
 #include <string.h> 		// strlem
 #include <unistd.h> 		// read/write to the file
-#include <cstring> 			// strcmp
 
 #include "devChar.h"
 
@@ -55,10 +54,7 @@ DevChar::device_write()
 
 	Console::Write();
 	std::cin.getline(console_TX, BUFFER_LENGTH);
-	if (strcmp(console_TX, "quit") == 0)
-	{
-	    return -2; // Quit on demand
-	}
+
 	ret = write(m_file_descriptor, console_TX, strlen(console_TX)); // Send the string to the LKM
 	if (ret == -1)
 	{
