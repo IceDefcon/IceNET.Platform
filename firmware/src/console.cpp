@@ -6,7 +6,7 @@
 
 Console::Console() : m_LogLevel (LevelTodo) 
 { 
-	iceThread = std::thread(&Console::iceCOMThread, this);
+	iceThread = std::thread(&iceCOMThread, this);
 }
 
 Console::~Console()
