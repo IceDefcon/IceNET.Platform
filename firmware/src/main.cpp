@@ -28,7 +28,7 @@ int main(void)
 	//
 	while(true)
 	{
-		pDevice->device_write();
+		// pDevice->device_write();
 	}
 
 	return 0;

@@ -15,8 +15,9 @@ class DevChar : public DevBase
 {
 public:
 
-	sem_t m_wait_iceCOM;
-	
+	sem_t m_wait_read;
+	sem_t m_wait_write;
+
 private:
 	int m_file_descriptor;
 	std::thread iceThread;
