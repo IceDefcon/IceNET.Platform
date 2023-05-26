@@ -40,7 +40,7 @@ DevChar::iceCOMThread()
         // 				//
         //////////////////
 
-        device_read()
+        device_read();
     }
 }
 
