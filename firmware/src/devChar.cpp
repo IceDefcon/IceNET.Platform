@@ -28,10 +28,8 @@ DevChar::iceCOMThread()
 {
     while (true) 
     {
-    	sem_wait(m_wait_iceCOM);
-    	device_write();
-        device_read();
-
+        sem_wait(&m_wait_iceCOM);
+        
         //////////////////
         // 				//
         // 				//
@@ -41,6 +39,8 @@ DevChar::iceCOMThread()
         // 				//
         // 				//
         //////////////////
+
+        device_read();
     }
 }
 
@@ -71,7 +71,7 @@ DevChar::device_read()
 	memset (console_RX, 0, BUFFER_LENGTH);
 
 	sem_post(&m_wait_iceCOM);
-
+	
 	return 1;
 }
 
