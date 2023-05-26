@@ -34,8 +34,8 @@ int main(int argc, char* argv[])
     // before program terminae
     //
     sem_init(&wait_iceCOM, 0, 0);
-    std::thread myThread(threadFunction);
-    myThread.join();
+    std::thread iceThread(iceCOMTHread);
+    iceThread.join();
     //
     // HEAP allocation
     //
@@ -57,7 +57,7 @@ int main(int argc, char* argv[])
 		pDevice->device_close();
 		delete pCharDevice;
 	}
-	else sem_post(&semaphore);
+	else sem_post(&wait_iceCOM);
 
 	pDevice->device_read();
 
