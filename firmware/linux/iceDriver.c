@@ -233,6 +233,7 @@ static int __init fpga_driver_init(void)
     struct spi_transfer xfer0;
     struct spi_transfer xfer1;
     int ret;
+    int i;
 
     // Get the SPI masters
     spi_master0 = spi_busnum_to_master(0);  // SPI0 on BeagleBone Black
@@ -327,13 +328,13 @@ static int __init fpga_driver_init(void)
 
     // Display the received data for SPI0
     pr_info("Received data for SPI0:");
-    for (int i = 0; i < sizeof(rx_buffer0); ++i) {
+    for (i = 0; i < sizeof(rx_buffer0); ++i) {
         pr_info("Byte %d: 0x%02x", i, rx_buffer0[i]);
     }
 
     // Display the received data for SPI1
     pr_info("Received data for SPI1:");
-    for (int i = 0; i < sizeof(rx_buffer1); ++i) {
+    for (i = 0; i < sizeof(rx_buffer1); ++i) {
         pr_info("Byte %d: 0x%02x", i, rx_buffer1[i]);
     }
 
