@@ -29,7 +29,6 @@ int main(void)
 	while(true)
 	{
 		pDevice->device_write();
-		pDevice->device_read();
 	}
 
 	return 0;

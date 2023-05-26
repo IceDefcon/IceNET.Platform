@@ -40,7 +40,7 @@ DevChar::iceCOMThread()
         // 				//
         //////////////////
 
-        std::cout << std::endl << "Testing thread " << std::endl;
+        device_read()
     }
 }
 
