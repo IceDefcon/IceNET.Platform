@@ -29,7 +29,6 @@ int main(void)
 	while(true)
 	{
 		pDevice->device_write();
-		sem_post(&m_wait_iceCOM);
 		pDevice->device_read();
 	}
 

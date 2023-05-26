@@ -67,6 +67,9 @@ DevChar::device_write()
 	    Console::Error("Write to kernel space was not successful");
 	}
 
+	sem_post(&m_wait_iceCOM);
+
+
 	return 1;
 }
 
