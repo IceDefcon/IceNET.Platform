@@ -29,7 +29,7 @@ public:
 	Console();
 	~Console();
 
-	void iceCOMTHread();
+	void iceCOMThread();
 
 	void SetLevel(LogLevel level);
 	void Error(const char * message);
