@@ -130,7 +130,7 @@ static struct spi_transfer xfer1;
 
 static irqreturn_t gpio_isr(int irq, void *data)
 {
-    static int i = 0;
+    static int j = 0;
 
     //////////////
     //          //
@@ -142,8 +142,39 @@ static irqreturn_t gpio_isr(int irq, void *data)
     //          //
     //////////////
 
-    printk(KERN_INFO "[FPGA][IRQ] GPIO interrupt [%d] @ Pin [%d]\n", i, GPIO_PIN);
-    i++;
+    printk(KERN_INFO "[FPGA][IRQ] GPIO interrupt [%d] @ Pin [%d]\n", j, GPIO_PIN);
+    j++;
+
+    static int i = 0;
+    // Transfer SPI messages for SPI0
+    ret = spi_sync(spi_dev0, &msg0);
+    if (ret < 0) {
+        pr_err("SPI transfer for SPI0 failed: %d\n", ret);
+        spi_dev_put(spi_dev0);
+        spi_dev_put(spi_dev1);
+        return ret;
+    }
+
+    // Transfer SPI messages for SPI1
+    ret = spi_sync(spi_dev1, &msg1);
+    if (ret < 0) {
+        pr_err("SPI transfer for SPI1 failed: %d\n", ret);
+        spi_dev_put(spi_dev0);
+        spi_dev_put(spi_dev1);
+        return ret;
+    }
+
+    // Display the received data for SPI0
+    pr_info("Received data for SPI0:");
+    for (i = 0; i < sizeof(rx_buffer0); ++i) {
+        pr_info("Byte %d: 0x%02x\n", i, rx_buffer0[i]);
+    }
+
+    // Display the received data for SPI1
+    pr_info("Received data for SPI1:");
+    for (i = 0; i < sizeof(rx_buffer1); ++i) {
+        pr_info("Byte %d: 0x%02x\n", i, rx_buffer1[i]);
+    }
 
     return IRQ_HANDLED;
 }
@@ -307,36 +338,6 @@ static int __init fpga_driver_init(void)
     spi_message_init(&msg1);
     spi_message_add_tail(&xfer0, &msg0);
     spi_message_add_tail(&xfer1, &msg1);
-
-    // Transfer SPI messages for SPI0
-    ret = spi_sync(spi_dev0, &msg0);
-    if (ret < 0) {
-        pr_err("SPI transfer for SPI0 failed: %d\n", ret);
-        spi_dev_put(spi_dev0);
-        spi_dev_put(spi_dev1);
-        return ret;
-    }
-
-    // Transfer SPI messages for SPI1
-    ret = spi_sync(spi_dev1, &msg1);
-    if (ret < 0) {
-        pr_err("SPI transfer for SPI1 failed: %d\n", ret);
-        spi_dev_put(spi_dev0);
-        spi_dev_put(spi_dev1);
-        return ret;
-    }
-
-    // Display the received data for SPI0
-    pr_info("Received data for SPI0:");
-    for (i = 0; i < sizeof(rx_buffer0); ++i) {
-        pr_info("Byte %d: 0x%02x\n", i, rx_buffer0[i]);
-    }
-
-    // Display the received data for SPI1
-    pr_info("Received data for SPI1:");
-    for (i = 0; i < sizeof(rx_buffer1); ++i) {
-        pr_info("Byte %d: 0x%02x\n", i, rx_buffer1[i]);
-    }
 
     return 0;
 }
