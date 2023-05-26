@@ -13,25 +13,9 @@
 #define ICE "/dev/iceCOM"
 
 static bool run = true;
-sem_t wait_iceCOM;
 
-void iceCOMTHread()
-{
-    while (run) 
-    {
-        sem_wait(&wait_iceCOM);
-        
-        //////////////////
-        // 				//
-        // 				//
-        // 				//
-        // Thread  Work //
-        // 				//
-        // 				//
-        // 				//
-        //////////////////
-    }
-}
+
+
 
 int main(int argc, char* argv[])
 {

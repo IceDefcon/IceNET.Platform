@@ -4,6 +4,9 @@
 //
 #pragma once
 #include <iostream>
+#include <thread>
+
+sem_t wait_iceCOM;
 
 class Console
 {
@@ -18,10 +21,14 @@ private:
 
 	LogLevel m_LogLevel;
 
+	std::thread iceThread;
+
 public:
 
 	Console();
 	~Console();
+
+	void iceCOMTHread();
 
 	void SetLevel(LogLevel level);
 	void Error(const char * message);

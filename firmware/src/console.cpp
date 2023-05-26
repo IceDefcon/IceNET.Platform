@@ -2,19 +2,39 @@
 // Author: Ice.Marek
 // IceNET Technology 2023
 //
-#include <string>       // std::string
-#include <iostream>     // std::cout
-#include <sstream>      // std::stringstream
 #include "console.h"
 
 Console::Console() : m_LogLevel (LevelTodo) 
 { 
-
+	iceThread = std::thread(&Console::iceCOMThread, this);
 }
 
 Console::~Console()
 {
+    if (myThread.joinable()) 
+    {
+    	iceThread.join();
+   	}
+}
 
+void Console::iceCOMTHread()
+{
+    while (run) 
+    {
+        sem_wait(&wait_iceCOM);
+        
+        //////////////////
+        // 				//
+        // 				//
+        // 				//
+        // Thread  Work //
+        // 				//
+        // 				//
+        // 				//
+        //////////////////
+
+        std::cout << "Testing exec" << endl;
+    }
 }
 
 void Console::SetLevel(LogLevel level)
