@@ -11,13 +11,14 @@ Console::Console() : m_LogLevel (LevelTodo)
 
 Console::~Console()
 {
-    if (myThread.joinable()) 
+    if (iceThread.joinable()) 
     {
     	iceThread.join();
    	}
 }
 
-void Console::iceCOMTHread()
+void 
+Console::iceCOMTHread()
 {
     while (run) 
     {
