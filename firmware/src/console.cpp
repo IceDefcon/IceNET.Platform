@@ -4,6 +4,8 @@
 //
 #include "console.h"
 
+void 
+Console::iceCOMTHread(){} // Default empty
 Console::Console() : m_LogLevel (LevelTodo) 
 { 
 	iceThread = std::thread(&Console::iceCOMThread, this);
