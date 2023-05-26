@@ -35,7 +35,6 @@ int main(int argc, char* argv[])
     //
     sem_init(&wait_iceCOM, 0, 0);
     std::thread iceThread(iceCOMTHread);
-    iceThread.join();
     //
     // HEAP allocation
     //
