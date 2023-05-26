@@ -125,6 +125,7 @@ static void spi_transfer_tasklet(unsigned long data)
     struct spi_transfer xfer0;
     struct spi_transfer xfer1;
     int ret;
+    int i;
 
     // Initialize SPI transfer for SPI0
     memset(&xfer0, 0, sizeof(xfer0));
@@ -160,13 +161,13 @@ static void spi_transfer_tasklet(unsigned long data)
 
     // Display the received data for SPI0
     pr_info("Received data for SPI0:");
-    for (int i = 0; i < sizeof(rx_buffer0); ++i) {
+    for (i = 0; i < sizeof(rx_buffer0); ++i) {
         pr_info("Byte %d: 0x%02x", i, rx_buffer0[i]);
     }
 
     // Display the received data for SPI1
     pr_info("Received data for SPI1:");
-    for (int i = 0; i < sizeof(rx_buffer1); ++i) {
+    for (i = 0; i < sizeof(rx_buffer1); ++i) {
         pr_info("Byte %d: 0x%02x", i, rx_buffer1[i]);
     }
 }
@@ -359,7 +360,7 @@ static void __exit fpga_driver_exit(void)
     tasklet_kill(&spi_tasklet);
     spi_dev_put(spi_dev0);
     spi_dev_put(spi_dev1);
-    
+
     //
     // IRQ
     //
