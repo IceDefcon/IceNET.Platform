@@ -12,7 +12,7 @@
 #include <linux/spi/spi.h>
 #include <linux/interrupt.h>
 
-MODULE_VERSION("2.0");
+MODULE_VERSION("3.0");
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Marek Ice");
 MODULE_DESCRIPTION("FPGA Comms Driver");
