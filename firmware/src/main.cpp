@@ -11,11 +11,6 @@
 
 #define ICE "/dev/iceCOM"
 
-static bool run = true;
-
-
-
-
 int main(int argc, char* argv[])
 {
 	//
@@ -37,7 +32,7 @@ int main(int argc, char* argv[])
 	//
 	// Main Comms
 	//
-	while(run)
+	while(true)
 	{
 		pDevice->device_write();
 		sem_post(&wait_iceCOM);

@@ -7,7 +7,7 @@
 void 
 Console::iceCOMTHread()
 {
-    while (run) 
+    while (true) 
     {
         sem_wait(&wait_iceCOM);
         
