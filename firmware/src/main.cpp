@@ -48,18 +48,22 @@ int main(int argc, char* argv[])
 	//
 	// Main Comms
 	//
-	ret = pDevice->device_write();
-	
-	if(-2 == ret)
+	while(true)
 	{
-		std::cout << "Closing Application" << std::endl;
-		pDevice->device_close();
-		delete pCharDevice;
+		ret = pDevice->device_write();
+		
+		if(-2 == ret)
+		{
+			std::cout << "Closing Application" << std::endl;
+			pDevice->device_close();
+			delete pCharDevice;
+		}
+		else sem_post(&wait_iceCOM);
+
+		pDevice->device_read();
 	}
-	else sem_post(&wait_iceCOM);
 
-	pDevice->device_read();
-
+    iceThread.join();
 	return 0;
 }
 
