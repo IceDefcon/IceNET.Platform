@@ -18,7 +18,7 @@ MODULE_AUTHOR("Marek Ice");
 MODULE_DESCRIPTION("FPGA Comms Driver");
 
 //
-// [C] Device
+// INIT :: [C] Device
 //
 #define  DEVICE_NAME "iceCOM"
 #define  CLASS_NAME  "iceCOM"
@@ -103,8 +103,9 @@ static int dev_release(struct inode *inodep, struct file *filep)
     printk(KERN_INFO "[FPGA][ C ] Device successfully closed\n");
     return 0;
 }
+
 //
-// Init :: SPI
+// INIT :: SPI
 //
 static struct spi_device *spi_dev0;
 static struct spi_device *spi_dev1;
@@ -115,22 +116,71 @@ static uint8_t rx_buffer0[4];                            // Buffer to receive da
 static uint8_t tx_buffer1[] = {0x05, 0x06, 0x07, 0x08};  // Data to be transmitted for SPI1
 static uint8_t rx_buffer1[4];                            // Buffer to receive data for SPI1
 
-static struct spi_master *spi_master0;
-static struct spi_master *spi_master1;
-static struct spi_message msg0;
-static struct spi_message msg1;
-static struct spi_transfer xfer0;
-static struct spi_transfer xfer1;
+static struct tasklet_struct spi_tasklet;  // Tasklet for SPI transfer
+
+static void spi_transfer_tasklet(unsigned long data)
+{
+    struct spi_message msg0;
+    struct spi_message msg1;
+    struct spi_transfer xfer0;
+    struct spi_transfer xfer1;
+    int ret;
+
+    // Initialize SPI transfer for SPI0
+    memset(&xfer0, 0, sizeof(xfer0));
+    xfer0.tx_buf = tx_buffer0;
+    xfer0.rx_buf = rx_buffer0;
+    xfer0.len = sizeof(tx_buffer0);
+
+    // Initialize SPI transfer for SPI1
+    memset(&xfer1, 0, sizeof(xfer1));
+    xfer1.tx_buf = tx_buffer1;
+    xfer1.rx_buf = rx_buffer1;
+    xfer1.len = sizeof(tx_buffer1);
+
+    // Initialize SPI messages
+    spi_message_init(&msg0);
+    spi_message_init(&msg1);
+    spi_message_add_tail(&xfer0, &msg0);
+    spi_message_add_tail(&xfer1, &msg1);
+
+    // Transfer SPI messages for SPI0
+    ret = spi_sync(spi_dev0, &msg0);
+    if (ret < 0) {
+        pr_err("SPI transfer for SPI0 failed: %d\n", ret);
+        return;
+    }
+
+    // Transfer SPI messages for SPI1
+    ret = spi_sync(spi_dev1, &msg1);
+    if (ret < 0) {
+        pr_err("SPI transfer for SPI1 failed: %d\n", ret);
+        return;
+    }
+
+    // Display the received data for SPI0
+    pr_info("Received data for SPI0:");
+    for (int i = 0; i < sizeof(rx_buffer0); ++i) {
+        pr_info("Byte %d: 0x%02x", i, rx_buffer0[i]);
+    }
+
+    // Display the received data for SPI1
+    pr_info("Received data for SPI1:");
+    for (int i = 0; i < sizeof(rx_buffer1); ++i) {
+        pr_info("Byte %d: 0x%02x", i, rx_buffer1[i]);
+    }
+}
+
 
 //
-// GPIO Interrupt
+// INIT :: GPIO Interrupt
 //
 #define GPIO_PIN 60 // P9_12
 #define GPIO_DESC "GPIO_ISR"
 
 static irqreturn_t gpio_isr(int irq, void *data)
 {
-    static int j = 0;
+    static int i = 0;
 
     //////////////
     //          //
@@ -142,40 +192,10 @@ static irqreturn_t gpio_isr(int irq, void *data)
     //          //
     //////////////
 
-    printk(KERN_INFO "[FPGA][IRQ] GPIO interrupt [%d] @ Pin [%d]\n", j, GPIO_PIN);
-    j++;
+    printk(KERN_INFO "[FPGA][IRQ] GPIO interrupt [%d] @ Pin [%d]\n", i, GPIO_PIN);
+    i++;
 
-    int i;
-    int ret;
-    // Transfer SPI messages for SPI0
-    ret = spi_sync(spi_dev0, &msg0);
-    if (ret < 0) {
-        pr_err("SPI transfer for SPI0 failed: %d\n", ret);
-        spi_dev_put(spi_dev0);
-        spi_dev_put(spi_dev1);
-        return ret;
-    }
-
-    // Transfer SPI messages for SPI1
-    ret = spi_sync(spi_dev1, &msg1);
-    if (ret < 0) {
-        pr_err("SPI transfer for SPI1 failed: %d\n", ret);
-        spi_dev_put(spi_dev0);
-        spi_dev_put(spi_dev1);
-        return ret;
-    }
-
-    // Display the received data for SPI0
-    pr_info("Received data for SPI0:");
-    for (i = 0; i < sizeof(rx_buffer0); ++i) {
-        pr_info("Byte %d: 0x%02x\n", i, rx_buffer0[i]);
-    }
-
-    // Display the received data for SPI1
-    pr_info("Received data for SPI1:");
-    for (i = 0; i < sizeof(rx_buffer1); ++i) {
-        pr_info("Byte %d: 0x%02x\n", i, rx_buffer1[i]);
-    }
+    tasklet_schedule(&spi_tasklet);
 
     return IRQ_HANDLED;
 }
@@ -186,86 +206,11 @@ static irqreturn_t gpio_isr(int irq, void *data)
 static int __init fpga_driver_init(void)
 {
     //
-    // GPIO Interrupt
-    //
-    int irq, result;
-
-    // Request GPIO pin
-    result = gpio_request(GPIO_PIN, GPIO_DESC);
-    if (result < 0) 
-    {
-        printk(KERN_ERR "[FPGA][IRQ] Failed to request GPIO pin\n");
-        return result;
-    }
-
-    // Set GPIO pin as input
-    result = gpio_direction_input(GPIO_PIN);
-    if (result < 0) 
-    {
-        printk(KERN_ERR "[FPGA][IRQ] Failed to set GPIO direction\n");
-        gpio_free(GPIO_PIN);
-        return result;
-    }
-
-    // Get IRQ number for GPIO pin
-    irq = gpio_to_irq(GPIO_PIN);
-    if (irq < 0) 
-    {
-        printk(KERN_ERR "[FPGA][IRQ] Failed to get IRQ number\n");
-        gpio_free(GPIO_PIN);
-        return irq;
-    }
-
-    // Request IRQ for GPIO pin
-    result = request_irq(irq, gpio_isr, IRQF_TRIGGER_RISING, GPIO_DESC, NULL);
-    if (result < 0) 
-    {
-        printk(KERN_ERR "[FPGA][IRQ] Failed to request IRQ\n");
-        gpio_free(GPIO_PIN);
-        return result;
-    }
-
-    printk(KERN_INFO "[FPGA][IRQ] ISR initialized\n");
-
-    //
-    // [C] Device
-    //
-    printk(KERN_INFO "[FPGA][ C ] Device Init\n");
-
-    // Try to dynamically allocate a major number for the device -- more difficult but worth it
-    majorNumber = register_chrdev(0, DEVICE_NAME, &fops);
-    if (majorNumber<0)
-    {
-        printk(KERN_ALERT "[FPGA][ C ] Failed to register major number\n");
-        return majorNumber;
-    }
-
-    // Register the device class
-    C_Class = class_create(THIS_MODULE, CLASS_NAME);
-    if (IS_ERR(C_Class)) // Check for error and clean up if there is one
-    {
-        unregister_chrdev(majorNumber, DEVICE_NAME);
-        printk(KERN_ALERT "[FPGA][ C ] Failed to register device class\n");
-        return PTR_ERR(C_Class); // Correct way to return an error on a pointer
-    }
-    
-    // Register the device driver
-    C_Device = device_create(C_Class, NULL, MKDEV(majorNumber, 0), NULL, DEVICE_NAME);
-    if (IS_ERR(C_Device))   // Clean up if there is an error
-    {
-        class_destroy(C_Class);           // Repeated code but the alternative is goto statements
-        unregister_chrdev(majorNumber, DEVICE_NAME);
-        printk(KERN_ALERT "[FPGA][ C ] Failed to create the device\n");
-        return PTR_ERR(C_Device);
-    }
-
-    mutex_init(&com_mutex);       // Initialize the mutex lock dynamically at runtime
-
-    //
     // SPI
     //
+    struct spi_master *spi_master0;
+    struct spi_master *spi_master1;
     int ret;
-    int i;
 
     // Get the SPI masters
     spi_master0 = spi_busnum_to_master(0);  // SPI0 on BeagleBone Black
@@ -322,23 +267,86 @@ static int __init fpga_driver_init(void)
         return ret;
     }
 
-    // Initialize SPI transfer for SPI0
-    memset(&xfer0, 0, sizeof(xfer0));
-    xfer0.tx_buf = tx_buffer0;
-    xfer0.rx_buf = rx_buffer0;
-    xfer0.len = sizeof(tx_buffer0);
+    // Initialize the tasklet
+    tasklet_init(&spi_tasklet, spi_transfer_tasklet, 0);
 
-    // Initialize SPI transfer for SPI1
-    memset(&xfer1, 0, sizeof(xfer1));
-    xfer1.tx_buf = tx_buffer1;
-    xfer1.rx_buf = rx_buffer1;
-    xfer1.len = sizeof(tx_buffer1);
+    //
+    // GPIO Interrupt
+    //
+    int irq, result;
 
-    // Initialize SPI messages
-    spi_message_init(&msg0);
-    spi_message_init(&msg1);
-    spi_message_add_tail(&xfer0, &msg0);
-    spi_message_add_tail(&xfer1, &msg1);
+    // Request GPIO pin
+    result = gpio_request(GPIO_PIN, GPIO_DESC);
+    if (result < 0) 
+    {
+        printk(KERN_ERR "[FPGA][IRQ] Failed to request GPIO pin\n");
+        return result;
+    }
+
+    // Set GPIO pin as input
+    result = gpio_direction_input(GPIO_PIN);
+    if (result < 0) 
+    {
+        printk(KERN_ERR "[FPGA][IRQ] Failed to set GPIO direction\n");
+        gpio_free(GPIO_PIN);
+        return result;
+    }
+
+    // Get IRQ number for GPIO pin
+    irq = gpio_to_irq(GPIO_PIN);
+    if (irq < 0) 
+    {
+        printk(KERN_ERR "[FPGA][IRQ] Failed to get IRQ number\n");
+        gpio_free(GPIO_PIN);
+        return irq;
+    }
+
+    // Request IRQ for GPIO pin
+    result = request_irq(irq, gpio_isr, IRQF_TRIGGER_RISING, GPIO_DESC, NULL);
+    if (result < 0) 
+    {
+        printk(KERN_ERR "[FPGA][IRQ] Failed to request IRQ\n");
+        gpio_free(GPIO_PIN);
+        spi_dev_put(spi_dev0);
+        spi_dev_put(spi_dev1);
+        return result;
+    }
+
+    printk(KERN_INFO "[FPGA][IRQ] ISR initialized\n");
+
+    //
+    // [C] Device
+    //
+    printk(KERN_INFO "[FPGA][ C ] Device Init\n");
+
+    // Try to dynamically allocate a major number for the device -- more difficult but worth it
+    majorNumber = register_chrdev(0, DEVICE_NAME, &fops);
+    if (majorNumber<0)
+    {
+        printk(KERN_ALERT "[FPGA][ C ] Failed to register major number\n");
+        return majorNumber;
+    }
+
+    // Register the device class
+    C_Class = class_create(THIS_MODULE, CLASS_NAME);
+    if (IS_ERR(C_Class)) // Check for error and clean up if there is one
+    {
+        unregister_chrdev(majorNumber, DEVICE_NAME);
+        printk(KERN_ALERT "[FPGA][ C ] Failed to register device class\n");
+        return PTR_ERR(C_Class); // Correct way to return an error on a pointer
+    }
+    
+    // Register the device driver
+    C_Device = device_create(C_Class, NULL, MKDEV(majorNumber, 0), NULL, DEVICE_NAME);
+    if (IS_ERR(C_Device))   // Clean up if there is an error
+    {
+        class_destroy(C_Class);           // Repeated code but the alternative is goto statements
+        unregister_chrdev(majorNumber, DEVICE_NAME);
+        printk(KERN_ALERT "[FPGA][ C ] Failed to create the device\n");
+        return PTR_ERR(C_Device);
+    }
+
+    mutex_init(&com_mutex);       // Initialize the mutex lock dynamically at runtime
 
     return 0;
 }
@@ -348,9 +356,10 @@ static void __exit fpga_driver_exit(void)
     //
     // SPI
     //
+    tasklet_kill(&spi_tasklet);
     spi_dev_put(spi_dev0);
     spi_dev_put(spi_dev1);
-
+    
     //
     // IRQ
     //
