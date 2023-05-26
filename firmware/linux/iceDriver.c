@@ -12,7 +12,7 @@
 #include <linux/spi/spi.h>
 #include <linux/interrupt.h>
 
-MODULE_VERSION("3.0");
+MODULE_VERSION("2.0");
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Marek Ice");
 MODULE_DESCRIPTION("FPGA Comms Driver");
@@ -105,25 +105,6 @@ static int dev_release(struct inode *inodep, struct file *filep)
 }
 
 //
-// SPI
-//
-static struct spi_device *spi_dev0;
-static struct spi_device *spi_dev1;
-
-static uint8_t tx_buffer0[] = {0x01, 0x02, 0x03, 0x04};  // Data to be transmitted for SPI0
-static uint8_t rx_buffer0[4];                            // Buffer to receive data for SPI0
-
-static uint8_t tx_buffer1[] = {0x05, 0x06, 0x07, 0x08};  // Data to be transmitted for SPI1
-static uint8_t rx_buffer1[4];                            // Buffer to receive data for SPI1
-
-static struct spi_master *spi_master0;
-static struct spi_master *spi_master1;
-static struct spi_message msg0;
-static struct spi_message msg1;
-static struct spi_transfer xfer0;
-static struct spi_transfer xfer1;
-
-//
 // GPIO Interrupt
 //
 #define GPIO_PIN 60 // P9_12
@@ -131,7 +112,7 @@ static struct spi_transfer xfer1;
 
 static irqreturn_t gpio_isr(int irq, void *data)
 {
-    int i = 0;
+    static int i = 0;
 
     //////////////
     //          //
@@ -146,62 +127,20 @@ static irqreturn_t gpio_isr(int irq, void *data)
     printk(KERN_INFO "[FPGA][IRQ] GPIO interrupt [%d] @ Pin [%d]\n", i, GPIO_PIN);
     i++;
 
-    //
-    // SPI
-    //
-    int j;
-    int ret;
-
-    // Initialize SPI transfer for SPI0
-    memset(&xfer0, 0, sizeof(xfer0));
-    xfer0.tx_buf = tx_buffer0;
-    xfer0.rx_buf = rx_buffer0;
-    xfer0.len = sizeof(tx_buffer0);
-
-    // Initialize SPI transfer for SPI1
-    memset(&xfer1, 0, sizeof(xfer1));
-    xfer1.tx_buf = tx_buffer1;
-    xfer1.rx_buf = rx_buffer1;
-    xfer1.len = sizeof(tx_buffer1);
-
-    // Initialize SPI messages
-    spi_message_init(&msg0);
-    spi_message_init(&msg1);
-    spi_message_add_tail(&xfer0, &msg0);
-    spi_message_add_tail(&xfer1, &msg1);
-
-    // Transfer SPI messages for SPI0
-    ret = spi_sync(spi_dev0, &msg0);
-    if (ret < 0) {
-        pr_err("SPI transfer for SPI0 failed: %d\n", ret);
-        spi_dev_put(spi_dev0);
-        spi_dev_put(spi_dev1);
-        return ret;
-    }
-
-    // Transfer SPI messages for SPI1
-    ret = spi_sync(spi_dev1, &msg1);
-    if (ret < 0) {
-        pr_err("SPI transfer for SPI1 failed: %d\n", ret);
-        spi_dev_put(spi_dev0);
-        spi_dev_put(spi_dev1);
-        return ret;
-    }
-
-    // Display the received data for SPI0
-    pr_info("Received data for SPI0:");
-    for (j = 0; j < sizeof(rx_buffer0); ++j) {
-        pr_info("Byte %d: 0x%02x", j, rx_buffer0[j]);
-    }
-
-    // Display the received data for SPI1
-    pr_info("Received data for SPI1:");
-    for (j = 0; j < sizeof(rx_buffer1); ++j) {
-        pr_info("Byte %d: 0x%02x", j, rx_buffer1[j]);
-    }
-
     return IRQ_HANDLED;
 }
+
+//
+// SPI
+//
+static struct spi_device *spi_dev0;
+static struct spi_device *spi_dev1;
+
+static uint8_t tx_buffer0[] = {0x01, 0x02, 0x03, 0x04};  // Data to be transmitted for SPI0
+static uint8_t rx_buffer0[4];                            // Buffer to receive data for SPI0
+
+static uint8_t tx_buffer1[] = {0x05, 0x06, 0x07, 0x08};  // Data to be transmitted for SPI1
+static uint8_t rx_buffer1[4];                            // Buffer to receive data for SPI1
 
 //
 // FPGA Driver
@@ -287,7 +226,12 @@ static int __init fpga_driver_init(void)
     //
     // SPI
     //
-
+    struct spi_master *spi_master0;
+    struct spi_master *spi_master1;
+    struct spi_message msg0;
+    struct spi_message msg1;
+    struct spi_transfer xfer0;
+    struct spi_transfer xfer1;
     int ret;
 
     // Get the SPI masters
@@ -345,6 +289,53 @@ static int __init fpga_driver_init(void)
         return ret;
     }
 
+    // Initialize SPI transfer for SPI0
+    memset(&xfer0, 0, sizeof(xfer0));
+    xfer0.tx_buf = tx_buffer0;
+    xfer0.rx_buf = rx_buffer0;
+    xfer0.len = sizeof(tx_buffer0);
+
+    // Initialize SPI transfer for SPI1
+    memset(&xfer1, 0, sizeof(xfer1));
+    xfer1.tx_buf = tx_buffer1;
+    xfer1.rx_buf = rx_buffer1;
+    xfer1.len = sizeof(tx_buffer1);
+
+    // Initialize SPI messages
+    spi_message_init(&msg0);
+    spi_message_init(&msg1);
+    spi_message_add_tail(&xfer0, &msg0);
+    spi_message_add_tail(&xfer1, &msg1);
+
+    // Transfer SPI messages for SPI0
+    ret = spi_sync(spi_dev0, &msg0);
+    if (ret < 0) {
+        pr_err("SPI transfer for SPI0 failed: %d\n", ret);
+        spi_dev_put(spi_dev0);
+        spi_dev_put(spi_dev1);
+        return ret;
+    }
+
+    // Transfer SPI messages for SPI1
+    ret = spi_sync(spi_dev1, &msg1);
+    if (ret < 0) {
+        pr_err("SPI transfer for SPI1 failed: %d\n", ret);
+        spi_dev_put(spi_dev0);
+        spi_dev_put(spi_dev1);
+        return ret;
+    }
+
+    // Display the received data for SPI0
+    pr_info("Received data for SPI0:");
+    for (int i = 0; i < sizeof(rx_buffer0); ++i) {
+        pr_info("Byte %d: 0x%02x", i, rx_buffer0[i]);
+    }
+
+    // Display the received data for SPI1
+    pr_info("Received data for SPI1:");
+    for (int i = 0; i < sizeof(rx_buffer1); ++i) {
+        pr_info("Byte %d: 0x%02x", i, rx_buffer1[i]);
+    }
 
     return 0;
 }
