@@ -143,6 +143,7 @@ static irqreturn_t gpio_isr(int irq, void *data)
     struct spi_message msg1;
     struct spi_transfer xfer0;
     struct spi_transfer xfer1;
+    int i;
     int ret;
 
     // Initialize SPI transfer for SPI0
@@ -183,13 +184,13 @@ static irqreturn_t gpio_isr(int irq, void *data)
 
     // Display the received data for SPI0
     pr_info("Received data for SPI0:");
-    for (int i = 0; i < sizeof(rx_buffer0); ++i) {
+    for (i = 0; i < sizeof(rx_buffer0); ++i) {
         pr_info("Byte %d: 0x%02x", i, rx_buffer0[i]);
     }
 
     // Display the received data for SPI1
     pr_info("Received data for SPI1:");
-    for (int i = 0; i < sizeof(rx_buffer1); ++i) {
+    for (i = 0; i < sizeof(rx_buffer1); ++i) {
         pr_info("Byte %d: 0x%02x", i, rx_buffer1[i]);
     }
 
