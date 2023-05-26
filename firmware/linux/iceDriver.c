@@ -11,6 +11,9 @@
 #include <linux/uaccess.h>
 #include <linux/spi/spi.h>
 #include <linux/interrupt.h>
+#include <linux/workqueue.h> // For workqueue-related functions and macros
+#include <linux/slab.h>      // For memory allocation functions like kmalloc
+
 
 MODULE_VERSION("2.0");
 MODULE_LICENSE("GPL");
@@ -116,9 +119,10 @@ static uint8_t rx_buffer0[4];                            // Buffer to receive da
 static uint8_t tx_buffer1[] = {0x05, 0x06, 0x07, 0x08};  // Data to be transmitted for SPI1
 static uint8_t rx_buffer1[4];                            // Buffer to receive data for SPI1
 
-static struct tasklet_struct spi_tasklet;  // Tasklet for SPI transfer
+static struct work_struct spi_work;
+static struct workqueue_struct *spi_wq;
 
-static void spi_transfer_tasklet(unsigned long data)
+static void spi_work_func(struct work_struct *work)
 {
     struct spi_message msg0;
     struct spi_message msg1;
@@ -172,7 +176,6 @@ static void spi_transfer_tasklet(unsigned long data)
     }
 }
 
-
 //
 // INIT :: GPIO Interrupt
 //
@@ -196,7 +199,7 @@ static irqreturn_t gpio_isr(int irq, void *data)
     printk(KERN_INFO "[FPGA][IRQ] GPIO interrupt [%d] @ Pin [%d]\n", i, GPIO_PIN);
     i++;
 
-    tasklet_schedule(&spi_tasklet);
+    queue_work(spi_wq, &spi_work);
 
     return IRQ_HANDLED;
 }
@@ -206,6 +209,18 @@ static irqreturn_t gpio_isr(int irq, void *data)
 //
 static int __init fpga_driver_init(void)
 {
+    //
+    // Initialize the work structure
+    //
+    INIT_WORK(&spi_work, spi_work_func);
+
+    // Create the workqueue
+    spi_wq = create_singlethread_workqueue("spi_workqueue");
+    if (!spi_wq) {
+        pr_err("Failed to create SPI workqueue\n");
+        return -ENOMEM;
+    }
+
     //
     // SPI
     //
@@ -267,9 +282,6 @@ static int __init fpga_driver_init(void)
         spi_dev_put(spi_dev1);
         return ret;
     }
-
-    // Initialize the tasklet
-    tasklet_init(&spi_tasklet, spi_transfer_tasklet, 0);
 
     //
     // GPIO Interrupt
@@ -355,9 +367,20 @@ static int __init fpga_driver_init(void)
 static void __exit fpga_driver_exit(void)
 {
     //
+    // Cancel and flush the work
+    //
+    cancel_work_sync(&spi_work);
+
+    // Destroy the workqueue
+    if (spi_wq) {
+        flush_workqueue(spi_wq);
+        destroy_workqueue(spi_wq);
+        spi_wq = NULL;
+    }
+    //
+    //
     // SPI
     //
-    tasklet_kill(&spi_tasklet);
     spi_dev_put(spi_dev0);
     spi_dev_put(spi_dev1);
 
