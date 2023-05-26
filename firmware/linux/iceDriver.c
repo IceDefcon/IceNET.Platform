@@ -329,13 +329,13 @@ static int __init fpga_driver_init(void)
     // Display the received data for SPI0
     pr_info("Received data for SPI0:");
     for (i = 0; i < sizeof(rx_buffer0); ++i) {
-        pr_info("Byte %d: 0x%02x", i, rx_buffer0[i]);
+        pr_info("Byte %d: 0x%02x\n", i, rx_buffer0[i]);
     }
 
     // Display the received data for SPI1
     pr_info("Received data for SPI1:");
     for (i = 0; i < sizeof(rx_buffer1); ++i) {
-        pr_info("Byte %d: 0x%02x", i, rx_buffer1[i]);
+        pr_info("Byte %d: 0x%02x\n", i, rx_buffer1[i]);
     }
 
     return 0;
