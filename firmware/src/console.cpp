@@ -37,7 +37,6 @@ Console::iceCOMThread()
         // 				//
         //////////////////
 
-        std::cout << "Testing exec" << std::endl;
     }
 }
 
