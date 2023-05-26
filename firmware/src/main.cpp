@@ -25,7 +25,6 @@ int main(int argc, char* argv[])
     // before program terminae
     //
     sem_init(&wait_iceCOM, 0, 0);
-    std::thread iceThread(iceCOMTHread);
     //
     // HEAP allocation
     //
