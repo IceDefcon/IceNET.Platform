@@ -5,21 +5,6 @@
 #include "console.h"
 
 void 
-Console::iceCOMTHread(){} // Default empty
-Console::Console() : m_LogLevel (LevelTodo) 
-{ 
-	iceThread = std::thread(&Console::iceCOMThread, this);
-}
-
-Console::~Console()
-{
-    if (iceThread.joinable()) 
-    {
-    	iceThread.join();
-   	}
-}
-
-void 
 Console::iceCOMTHread()
 {
     while (run) 
@@ -38,6 +23,19 @@ Console::iceCOMTHread()
 
         std::cout << "Testing exec" << std::endl;
     }
+}
+
+Console::Console() : m_LogLevel (LevelTodo) 
+{ 
+	iceThread = std::thread(&Console::iceCOMThread, this);
+}
+
+Console::~Console()
+{
+    if (iceThread.joinable()) 
+    {
+    	iceThread.join();
+   	}
 }
 
 void Console::SetLevel(LogLevel level)
