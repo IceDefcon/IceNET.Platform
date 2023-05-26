@@ -19,8 +19,16 @@ void iceCOMTHread()
     while (true) 
     {
         sem_wait(&wait_iceCOM);
-
-        std::cout << " iceCOM Work to do" << std::endl;
+        
+        //////////////////
+        // 				//
+        // 				//
+        // 				//
+        // Thread  Work //
+        // 				//
+        // 				//
+        // 				//
+        //////////////////
     }
 }
 
@@ -57,6 +65,7 @@ int main(int argc, char* argv[])
 			std::cout << "Closing Application" << std::endl;
 			pDevice->device_close();
 			delete pCharDevice;
+			break;
 		}
 		else sem_post(&wait_iceCOM);
 
