@@ -12,13 +12,13 @@
 
 #define ICE "/dev/iceCOM"
 
-std::counting_semaphore<int> wait_iceCOM(0);
+sem_t wait_iceCOM;
 
 void iceCOMTHread()
 {
     while (true) 
     {
-    	wait_iceCOM.acquire(); 
+        sem_wait(&wait_iceCOM);
 
         std::cout << " iceCOM Work to do" << std::endl;
     }
@@ -29,10 +29,11 @@ int main(int argc, char* argv[])
 	int ret;
 
 	//
-    // Create iceCOMThread and join
-    // to ensure thread will execute
+    // Init wait semaphore :: Permit number 0
+    // And join to ensure thread will execute
     // before program terminae
     //
+    sem_init(&wait_iceCOM, 0, 0);
     std::thread iceThread(iceCOMTHread);
     iceThread.join();
     //
@@ -56,8 +57,8 @@ int main(int argc, char* argv[])
 		pDevice->device_close();
 		delete pCharDevice;
 	}
-	else wait_iceCOM.release();
-	 
+	else sem_post(&wait_iceCOM);
+
 	pDevice->device_read();
 
 	return 0;
