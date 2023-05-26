@@ -13,12 +13,6 @@
 
 int main(void)
 {
-	//
-    // Init wait semaphore :: Permit number 0
-    // And join to ensure thread will execute
-    // before program terminae
-    //
-    sem_init(&wait_iceCOM, 0, 0);
     //
     // HEAP allocation
     //
