@@ -5,34 +5,61 @@
 #include <iostream>
 #include <thread>
 #include <unistd.h> // sleep
+#include <semaphore.h>
 
 #include "devChar.h"
 #include "console.h"
 
 #define ICE "/dev/iceCOM"
 
-void ConsoleThread() 
+sem_t wait_iceCOM;
+
+void iceCOMTHread()
 {
-	//
-    // TODO
-    //
-    std::cout << "Thread 1 is executing." << std::endl;
+    while (true) 
+    {
+        sem_wait(&wait_iceCOM);
+
+        std::cout << " iceCOM Work to do" << std::endl;
+    }
 }
 
 int main(int argc, char* argv[])
 {
-	DevBase* pDevice = nullptr;
-	// Allocate on HEAP
-	DevChar* pCharDevice = new DevChar;
+	int ret;
 
-	// Sending text to Kernel space
+	//
+    // Init wait semaphore :: Permit number 0
+    // And join to ensure thread will execute
+    // before program terminae
+    //
+    sem_init(&wait_iceCOM, 0, 0);
+    std::thread myThread(threadFunction);
+    myThread.join();
+    //
+    // HEAP allocation
+    //
+	DevBase* pDevice = nullptr;
+	DevChar* pCharDevice = new DevChar;
+	//
+	// Init Krenel Communication
+	//
 	pDevice = pCharDevice;
 	pDevice->device_open(ICE);
-	pDevice->device_write();
-	pDevice->device_read();
-	pDevice->device_close();
+	//
+	// Main Comms
+	//
+	ret = pDevice->device_write();
+	
+	if(-2 == ret)
+	{
+		std::cout << "Closing Application" << std::endl;
+		pDevice->device_close();
+		delete pCharDevice;
+	}
+	else sem_post(&semaphore);
 
-	delete pCharDevice;
+	pDevice->device_read();
 
 	return 0;
 }

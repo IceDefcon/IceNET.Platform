@@ -4,8 +4,9 @@
 //
 #include <iostream> 		// IO devices :: keyboard
 #include <fcntl.h> 			// Open device
-#include <string.h> 		// for strlem
+#include <string.h> 		// strlem
 #include <unistd.h> 		// read/write to the file
+#include <cstring> 			// strcmp
 
 #include "devChar.h"
 
@@ -18,7 +19,7 @@ DevChar::device_open(const char* device)
 	m_file_descriptor = open(device, O_RDWR);
 	if (m_file_descriptor < 0) return -1;
 
-	return 0;
+	return 1;
 }
 
 int 
@@ -28,13 +29,17 @@ DevChar::device_read()
 	char console_RX[BUFFER_LENGTH];
 
 	ret = read(m_file_descriptor, console_RX, BUFFER_LENGTH);
+	if (ret == -1)
+	{
+	    Console::Error("Read from kernel space was not successful");
+	}
 
 	Console::Read(console_RX);
 
 	// clear the buffer
 	memset (console_RX, 0, BUFFER_LENGTH);
 
-	return ret;
+	return 1;
 }
 
 int 
@@ -50,15 +55,22 @@ DevChar::device_write()
 
 	Console::Write();
 	std::cin.getline(console_TX, BUFFER_LENGTH);
-
+	if (strcmp(console_TX, "quit") == 0)
+	{
+	    return -2; // Quit on demand
+	}
 	ret = write(m_file_descriptor, console_TX, strlen(console_TX)); // Send the string to the LKM
+	if (ret == -1)
+	{
+	    Console::Error("Write to kernel space was not successful");
+	}
 
-	return ret;
+	return 1;
 }
 
 int 
 DevChar::device_close()
 {
-	return 0;
+	return 1;
 }
 
