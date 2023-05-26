@@ -377,7 +377,7 @@ static void __exit fpga_driver_exit(void)
         destroy_workqueue(spi_wq);
         spi_wq = NULL;
     }
-    //
+    
     //
     // SPI
     //
