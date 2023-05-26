@@ -116,6 +116,13 @@ static uint8_t rx_buffer0[4];                            // Buffer to receive da
 static uint8_t tx_buffer1[] = {0x05, 0x06, 0x07, 0x08};  // Data to be transmitted for SPI1
 static uint8_t rx_buffer1[4];                            // Buffer to receive data for SPI1
 
+static struct spi_master *spi_master0;
+static struct spi_master *spi_master1;
+static struct spi_message msg0;
+static struct spi_message msg1;
+static struct spi_transfer xfer0;
+static struct spi_transfer xfer1;
+
 //
 // GPIO Interrupt
 //
@@ -139,10 +146,9 @@ static irqreturn_t gpio_isr(int irq, void *data)
     printk(KERN_INFO "[FPGA][IRQ] GPIO interrupt [%d] @ Pin [%d]\n", i, GPIO_PIN);
     i++;
 
-    struct spi_message msg0;
-    struct spi_message msg1;
-    struct spi_transfer xfer0;
-    struct spi_transfer xfer1;
+    //
+    // SPI
+    //
     int j;
     int ret;
 
@@ -282,8 +288,6 @@ static int __init fpga_driver_init(void)
     // SPI
     //
 
-    struct spi_master *spi_master0;
-    struct spi_master *spi_master1;
     int ret;
 
     // Get the SPI masters
