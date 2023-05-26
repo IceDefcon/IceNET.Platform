@@ -127,6 +127,9 @@ static irqreturn_t gpio_isr(int irq, void *data)
     printk(KERN_INFO "[FPGA][IRQ] GPIO interrupt [%d] @ Pin [%d]\n", i, GPIO_PIN);
     i++;
 
+    struct spi_transfer xfer0;
+    struct spi_transfer xfer1;
+    
     // Prepare the SPI transfer for SPI0
     memset(&xfer0, 0, sizeof(struct spi_transfer));
     xfer0.tx_buf = tx_buffer0;
@@ -174,7 +177,7 @@ static irqreturn_t gpio_isr(int irq, void *data)
     // Print the received data for SPI1
     pr_info("Received data from SPI1: %02x %02x %02x %02x\n",
             rx_buffer1[0], rx_buffer1[1], rx_buffer1[2], rx_buffer1[3]);
-    
+
     return IRQ_HANDLED;
 }
 
@@ -278,8 +281,6 @@ static int __init fpga_driver_init(void)
     struct spi_master *spi_master1;
     struct spi_message msg0;
     struct spi_message msg1;
-    struct spi_transfer xfer0;
-    struct spi_transfer xfer1;
     int ret;
 
     // Get the SPI masters
