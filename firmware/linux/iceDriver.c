@@ -145,7 +145,8 @@ static irqreturn_t gpio_isr(int irq, void *data)
     printk(KERN_INFO "[FPGA][IRQ] GPIO interrupt [%d] @ Pin [%d]\n", j, GPIO_PIN);
     j++;
 
-    static int i = 0;
+    int i;
+    int ret;
     // Transfer SPI messages for SPI0
     ret = spi_sync(spi_dev0, &msg0);
     if (ret < 0) {
