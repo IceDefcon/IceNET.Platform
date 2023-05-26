@@ -103,6 +103,24 @@ static int dev_release(struct inode *inodep, struct file *filep)
     printk(KERN_INFO "[FPGA][ C ] Device successfully closed\n");
     return 0;
 }
+//
+// Init :: SPI
+//
+static struct spi_device *spi_dev0;
+static struct spi_device *spi_dev1;
+
+static uint8_t tx_buffer0[] = {0x01, 0x02, 0x03, 0x04};  // Data to be transmitted for SPI0
+static uint8_t rx_buffer0[4];                            // Buffer to receive data for SPI0
+
+static uint8_t tx_buffer1[] = {0x05, 0x06, 0x07, 0x08};  // Data to be transmitted for SPI1
+static uint8_t rx_buffer1[4];                            // Buffer to receive data for SPI1
+
+static struct spi_master *spi_master0;
+static struct spi_master *spi_master1;
+static struct spi_message msg0;
+static struct spi_message msg1;
+static struct spi_transfer xfer0;
+static struct spi_transfer xfer1;
 
 //
 // GPIO Interrupt
@@ -129,18 +147,6 @@ static irqreturn_t gpio_isr(int irq, void *data)
 
     return IRQ_HANDLED;
 }
-
-//
-// SPI
-//
-static struct spi_device *spi_dev0;
-static struct spi_device *spi_dev1;
-
-static uint8_t tx_buffer0[] = {0x01, 0x02, 0x03, 0x04};  // Data to be transmitted for SPI0
-static uint8_t rx_buffer0[4];                            // Buffer to receive data for SPI0
-
-static uint8_t tx_buffer1[] = {0x05, 0x06, 0x07, 0x08};  // Data to be transmitted for SPI1
-static uint8_t rx_buffer1[4];                            // Buffer to receive data for SPI1
 
 //
 // FPGA Driver
@@ -226,12 +232,6 @@ static int __init fpga_driver_init(void)
     //
     // SPI
     //
-    struct spi_master *spi_master0;
-    struct spi_master *spi_master1;
-    struct spi_message msg0;
-    struct spi_message msg1;
-    struct spi_transfer xfer0;
-    struct spi_transfer xfer1;
     int ret;
     int i;
 
