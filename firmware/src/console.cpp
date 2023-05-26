@@ -6,11 +6,14 @@
 
 Console::Console() : m_LogLevel (LevelTodo) 
 { 
+	std::cout << "Console :: Construct" << std::endl;
 	iceThread = std::thread(&Console::iceCOMThread, this);
 }
 
 Console::~Console()
 {
+	std::cout << "Console :: Destroy" << std::endl;
+
     if (iceThread.joinable()) 
     {
     	iceThread.join();

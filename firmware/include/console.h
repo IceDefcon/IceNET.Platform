@@ -7,7 +7,7 @@
 #include <thread>
 #include <semaphore.h>
 
-
+sem_t wait_iceCOM;
 
 class Console
 {
@@ -23,8 +23,6 @@ private:
 	LogLevel m_LogLevel;
 
 	std::thread iceThread;
-
-	sem_t m_wait_iceCOM;
 
 public:
 

@@ -9,8 +9,14 @@
 
 #include "devChar.h"
 
-DevChar::DevChar() : m_file_descriptor(0) {}
-DevChar::~DevChar() {}
+DevChar::DevChar() : m_file_descriptor(0) 
+{
+	std::cout << "DevChar :: Construct" << std::endl;
+}
+DevChar::~DevChar() 
+{
+	std::cout << "DevChar :: Destroy" << std::endl;	
+}
 
 int 
 DevChar::device_open(const char* device)
