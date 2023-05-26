@@ -7,12 +7,14 @@
 #include <thread>
 #include <semaphore.h>
 
-sem_t wait_iceCOM;
+
 
 class Console
 {
 public:
 
+	sem_t m_wait_iceCOM;
+	
 	enum LogLevel
 	{
 		LevelError = 0, LevelWarning, LevelInfo, LevelTodo
