@@ -139,7 +139,30 @@ static irqreturn_t gpio_isr(int irq, void *data)
     printk(KERN_INFO "[FPGA][IRQ] GPIO interrupt [%d] @ Pin [%d]\n", i, GPIO_PIN);
     i++;
 
+    struct spi_message msg0;
+    struct spi_message msg1;
+    struct spi_transfer xfer0;
+    struct spi_transfer xfer1;
     int ret;
+
+    // Initialize SPI transfer for SPI0
+    memset(&xfer0, 0, sizeof(xfer0));
+    xfer0.tx_buf = tx_buffer0;
+    xfer0.rx_buf = rx_buffer0;
+    xfer0.len = sizeof(tx_buffer0);
+
+    // Initialize SPI transfer for SPI1
+    memset(&xfer1, 0, sizeof(xfer1));
+    xfer1.tx_buf = tx_buffer1;
+    xfer1.rx_buf = rx_buffer1;
+    xfer1.len = sizeof(tx_buffer1);
+
+    // Initialize SPI messages
+    spi_message_init(&msg0);
+    spi_message_init(&msg1);
+    spi_message_add_tail(&xfer0, &msg0);
+    spi_message_add_tail(&xfer1, &msg1);
+
     // Transfer SPI messages for SPI0
     ret = spi_sync(spi_dev0, &msg0);
     if (ret < 0) {
@@ -260,10 +283,6 @@ static int __init fpga_driver_init(void)
 
     struct spi_master *spi_master0;
     struct spi_master *spi_master1;
-    struct spi_message msg0;
-    struct spi_message msg1;
-    struct spi_transfer xfer0;
-    struct spi_transfer xfer1;
     int ret;
 
     // Get the SPI masters
@@ -321,23 +340,6 @@ static int __init fpga_driver_init(void)
         return ret;
     }
 
-    // Initialize SPI transfer for SPI0
-    memset(&xfer0, 0, sizeof(xfer0));
-    xfer0.tx_buf = tx_buffer0;
-    xfer0.rx_buf = rx_buffer0;
-    xfer0.len = sizeof(tx_buffer0);
-
-    // Initialize SPI transfer for SPI1
-    memset(&xfer1, 0, sizeof(xfer1));
-    xfer1.tx_buf = tx_buffer1;
-    xfer1.rx_buf = rx_buffer1;
-    xfer1.len = sizeof(tx_buffer1);
-
-    // Initialize SPI messages
-    spi_message_init(&msg0);
-    spi_message_init(&msg1);
-    spi_message_add_tail(&xfer0, &msg0);
-    spi_message_add_tail(&xfer1, &msg1);
 
     return 0;
 }
