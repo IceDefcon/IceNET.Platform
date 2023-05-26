@@ -45,7 +45,6 @@ int main(int argc, char* argv[])
 		pDevice->device_read();
 	}
 
-    iceThread.join();
 	return 0;
 }
 
