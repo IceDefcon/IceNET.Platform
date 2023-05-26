@@ -25,7 +25,7 @@ Console::iceCOMThread()
 {
     while (true) 
     {
-        sem_wait(&m_wait_iceCOM);
+        sem_wait(&wait_iceCOM);
         
         //////////////////
         // 				//
