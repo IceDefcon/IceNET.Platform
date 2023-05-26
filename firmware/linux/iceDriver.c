@@ -105,6 +105,18 @@ static int dev_release(struct inode *inodep, struct file *filep)
 }
 
 //
+// SPI
+//
+static struct spi_device *spi_dev0;
+static struct spi_device *spi_dev1;
+
+static uint8_t tx_buffer0[] = {0x01, 0x02, 0x03, 0x04};  // Data to be transmitted for SPI0
+static uint8_t rx_buffer0[4];                            // Buffer to receive data for SPI0
+
+static uint8_t tx_buffer1[] = {0x05, 0x06, 0x07, 0x08};  // Data to be transmitted for SPI1
+static uint8_t rx_buffer1[4];                            // Buffer to receive data for SPI1
+
+//
 // GPIO Interrupt
 //
 #define GPIO_PIN 60 // P9_12
@@ -160,19 +172,6 @@ static irqreturn_t gpio_isr(int irq, void *data)
 
     return IRQ_HANDLED;
 }
-
-//
-// SPI
-//
-static struct spi_device *spi_dev0;
-static struct spi_device *spi_dev1;
-
-static uint8_t tx_buffer0[] = {0x01, 0x02, 0x03, 0x04};  // Data to be transmitted for SPI0
-static uint8_t rx_buffer0[4];                            // Buffer to receive data for SPI0
-
-static uint8_t tx_buffer1[] = {0x05, 0x06, 0x07, 0x08};  // Data to be transmitted for SPI1
-static uint8_t rx_buffer1[4];                            // Buffer to receive data for SPI1
-
 
 //
 // FPGA Driver
