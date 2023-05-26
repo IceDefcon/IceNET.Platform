@@ -7,37 +7,11 @@
 Console::Console() : m_LogLevel (LevelTodo) 
 { 
 	std::cout << "Console :: Construct" << std::endl;
-	iceThread = std::thread(&Console::iceCOMThread, this);
 }
 
 Console::~Console()
 {
 	std::cout << "Console :: Destroy" << std::endl;
-
-    if (iceThread.joinable()) 
-    {
-    	iceThread.join();
-   	}
-}
-
-void 
-Console::iceCOMThread()
-{
-    while (true) 
-    {
-        sem_wait(&m_wait_iceCOM);
-        
-        //////////////////
-        // 				//
-        // 				//
-        // 				//
-        // Thread  Work //
-        // 				//
-        // 				//
-        // 				//
-        //////////////////
-
-    }
 }
 
 void Console::SetLevel(LogLevel level)
