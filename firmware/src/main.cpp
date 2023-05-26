@@ -11,7 +11,7 @@
 
 #define ICE "/dev/iceCOM"
 
-int main(int argc, char* argv[])
+int main(void)
 {
 	//
     // Init wait semaphore :: Permit number 0
