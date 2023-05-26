@@ -127,8 +127,68 @@ static irqreturn_t gpio_isr(int irq, void *data)
     printk(KERN_INFO "[FPGA][IRQ] GPIO interrupt [%d] @ Pin [%d]\n", i, GPIO_PIN);
     i++;
 
+    // Prepare the SPI transfer for SPI0
+    memset(&xfer0, 0, sizeof(struct spi_transfer));
+    xfer0.tx_buf = tx_buffer0;
+    xfer0.rx_buf = rx_buffer0;
+    xfer0.len = sizeof(tx_buffer0);
+    xfer0.bits_per_word = spi_dev0->bits_per_word;
+
+    // Prepare the SPI message for SPI0
+    spi_message_init(&msg0);
+    spi_message_add_tail(&xfer0, &msg0);
+
+    // Perform the SPI transfer for SPI0
+    ret = spi_sync(spi_dev0, &msg0);
+    if (ret < 0) {
+        pr_err("SPI transfer failed for SPI0: %d\n", ret);
+        spi_dev_put(spi_dev0);
+        spi_dev_put(spi_dev1);
+        return ret;
+    }
+
+    // Print the received data for SPI0
+    pr_info("Received data from SPI0: %02x %02x %02x %02x\n",
+            rx_buffer0[0], rx_buffer0[1], rx_buffer0[2], rx_buffer0[3]);
+
+    // Prepare the SPI transfer for SPI1
+    memset(&xfer1, 0, sizeof(struct spi_transfer));
+    xfer1.tx_buf = tx_buffer1;
+    xfer1.rx_buf = rx_buffer1;
+    xfer1.len = sizeof(tx_buffer1);
+    xfer1.bits_per_word = spi_dev1->bits_per_word;
+
+    // Prepare the SPI message for SPI1
+    spi_message_init(&msg1);
+    spi_message_add_tail(&xfer1, &msg1);
+
+    // Perform the SPI transfer for SPI1
+    ret = spi_sync(spi_dev1, &msg1);
+    if (ret < 0) {
+        pr_err("SPI transfer failed for SPI1: %d\n", ret);
+        spi_dev_put(spi_dev0);
+        spi_dev_put(spi_dev1);
+        return ret;
+    }
+
+    // Print the received data for SPI1
+    pr_info("Received data from SPI1: %02x %02x %02x %02x\n",
+            rx_buffer1[0], rx_buffer1[1], rx_buffer1[2], rx_buffer1[3]);
+    
     return IRQ_HANDLED;
 }
+
+//
+// SPI
+//
+static struct spi_device *spi_dev0;
+static struct spi_device *spi_dev1;
+
+static uint8_t tx_buffer0[] = {0x01, 0x02, 0x03, 0x04};  // Data to be transmitted for SPI0
+static uint8_t rx_buffer0[4];                            // Buffer to receive data for SPI0
+
+static uint8_t tx_buffer1[] = {0x05, 0x06, 0x07, 0x08};  // Data to be transmitted for SPI1
+static uint8_t rx_buffer1[4];                            // Buffer to receive data for SPI1
 
 //
 // FPGA Driver
@@ -210,6 +270,72 @@ static int __init fpga_driver_init(void)
     }
 
     mutex_init(&com_mutex);       // Initialize the mutex lock dynamically at runtime
+
+    //
+    // SPI
+    //
+    struct spi_master *spi_master0;
+    struct spi_master *spi_master1;
+    struct spi_message msg0;
+    struct spi_message msg1;
+    struct spi_transfer xfer0;
+    struct spi_transfer xfer1;
+    int ret;
+
+    // Get the SPI masters
+    spi_master0 = spi_busnum_to_master(0);  // SPI0 on BeagleBone Black
+    if (!spi_master0) {
+        pr_err("SPI master for SPI0 not found\n");
+        return -ENODEV;
+    }
+
+    spi_master1 = spi_busnum_to_master(1);  // SPI1 on BeagleBone Black
+    if (!spi_master1) {
+        pr_err("SPI master for SPI1 not found\n");
+        return -ENODEV;
+    }
+
+    // Prepare the SPI devices
+    spi_dev0 = spi_alloc_device(spi_master0);
+    if (!spi_dev0) {
+        pr_err("Failed to allocate SPI device for SPI0\n");
+        return -ENOMEM;
+    }
+
+    spi_dev1 = spi_alloc_device(spi_master1);
+    if (!spi_dev1) {
+        pr_err("Failed to allocate SPI device for SPI1\n");
+        spi_dev_put(spi_dev0);
+        return -ENOMEM;
+    }
+
+    // Configure SPI0 device
+    spi_dev0->chip_select = 0;  // Set the chip select value (0 for SPI0 on BeagleBone Black)
+    spi_dev0->mode = SPI_MODE_0;  // Set the SPI mode (0 for mode 0)
+    spi_dev0->bits_per_word = 8;  // Set the number of bits per word
+
+    // Configure SPI1 device
+    spi_dev1->chip_select = 0;  // Set the chip select value (0 for SPI1 on BeagleBone Black)
+    spi_dev1->mode = SPI_MODE_0;  // Set the SPI mode (0 for mode 0)
+    spi_dev1->bits_per_word = 8;  // Set the number of bits per word
+
+    // Setup SPI0 device
+    ret = spi_setup(spi_dev0);
+    if (ret < 0) {
+        pr_err("Failed to setup SPI device for SPI0: %d\n", ret);
+        spi_dev_put(spi_dev0);
+        spi_dev_put(spi_dev1);
+        return ret;
+    }
+
+    // Setup SPI1 device
+    ret = spi_setup(spi_dev1);
+    if (ret < 0) {
+        pr_err("Failed to setup SPI device for SPI1: %d\n", ret);
+        spi_dev_put(spi_dev0);
+        spi_dev_put(spi_dev1);
+        return ret;
+    }
 
     return 0;
 }
