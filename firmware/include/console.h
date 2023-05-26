@@ -5,6 +5,7 @@
 #pragma once
 #include <iostream>
 #include <thread>
+#include <semaphore.h>
 
 sem_t wait_iceCOM;
 

@@ -5,7 +5,6 @@
 #include <iostream>
 #include <thread>
 #include <unistd.h> // sleep
-#include <semaphore.h>
 
 #include "devChar.h"
 #include "console.h"
