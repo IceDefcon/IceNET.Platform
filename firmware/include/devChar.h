@@ -20,9 +20,6 @@ private:
 
 	std::thread iceThread;
 
-	sem_t m_iceCOM_run;
-	sem_t m_iceCOM_kill;
-
 public:
 
 	DevChar();

@@ -26,10 +26,8 @@ int main(void)
 	//
 	// Main Comms
 	//
-	// dynamic_cast<DevChar*>(pDevice)->thread_run();
-
 	for(;;)
-		
+
 	return 0;
 }
 

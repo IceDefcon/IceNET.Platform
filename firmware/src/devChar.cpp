@@ -12,10 +12,7 @@
 DevChar::DevChar() : m_file_descriptor(0) 
 {
 	Console::Info("DevChar :: Construct");
-	sem_init(&m_iceCOM_run, 0, 0);
-	sem_init(&m_iceCOM_kill, 0, 0);
 	iceThread = std::thread(&DevChar::iceCOMThread, this);
-	sem_post(&m_iceCOM_run);
 }
 DevChar::~DevChar() 
 {
@@ -38,8 +35,6 @@ DevChar::iceCOMThread()
 
     while (true) 
     {
-    	sem_wait(&m_iceCOM_run);
-
         //////////////////
         // 				//
         // 				//
@@ -87,8 +82,6 @@ DevChar::device_read()
 
 	// clear the buffer
 	memset (console_RX, 0, BUFFER_LENGTH);
-
-	sem_post(&m_iceCOM_run);
 
 	return 1;
 }
