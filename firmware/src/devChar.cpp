@@ -15,6 +15,7 @@ DevChar::DevChar() : m_file_descriptor(0)
 	sem_init(&m_iceCOM_run, 0, 0);
 	sem_init(&m_iceCOM_kill, 0, 0);
 	iceThread = std::thread(&DevChar::iceCOMThread, this);
+	sem_post(&m_iceCOM_run);
 }
 DevChar::~DevChar() 
 {
@@ -118,17 +119,6 @@ DevChar::device_write()
 int 
 DevChar::device_close()
 {
+	close(m_file_descriptor);
 	return 1;
-}
-
-void
-DevChar::thread_run()
-{
-	sem_post(&m_iceCOM_run);
-}
-
-void
-DevChar::thread_kill()
-{
-	sem_post(&m_iceCOM_kill);
 }

@@ -34,7 +34,4 @@ public:
 	int device_read() override;
 	int device_write() override;
 	int device_close() override;
-
-	void thread_run();
-	void thread_kill();
 };
