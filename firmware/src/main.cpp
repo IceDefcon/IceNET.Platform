@@ -26,6 +26,7 @@ int main(void)
 	//
 	// Main Comms
 	//
+	Console::Todo("Need a proper termination of the program");
 	while(true)
 	{
 		dynamic_cast<DevChar*>(pDevice)->device_post();
