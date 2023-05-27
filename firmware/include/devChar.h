@@ -18,6 +18,13 @@ private:
 	int m_file_descriptor;
 	std::thread iceThread;
 
+	//
+	// Atomic in case if case if
+	// something interrupt atomic
+	// processing of variable
+	//
+	std::atomic<bool> m_killThread;
+
 public:
 
 	DevChar();
@@ -30,5 +37,5 @@ public:
 	int device_write() override;
 	int device_close() override;
 
-	void device_post();
+	bool terminate()
 };

@@ -12,6 +12,7 @@
 DevChar::DevChar() : m_file_descriptor(0) 
 {
 	Console::Info("DevChar :: Construct");
+	m_killThread = false;
 	iceThread = std::thread(&DevChar::iceCOMThread, this);
 }
 DevChar::~DevChar() 
@@ -33,7 +34,7 @@ DevChar::iceCOMThread()
 {
 	Console::Info("DevChar :: iceCOMThread Launched");
 
-    while (true) 
+    while (!killThread) 
     {
         //////////////////
         // 				//
@@ -114,4 +115,10 @@ DevChar::device_close()
 {
 	close(m_file_descriptor);
 	return 1;
+}
+
+bool 
+DevChar::terminate()
+{
+	return m_killThread;
 }

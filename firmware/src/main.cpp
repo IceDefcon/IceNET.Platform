@@ -28,8 +28,13 @@ int main(void)
 	//
 	while(true)
 	{
-		// dynamic_cast<DevChar*>(pDevice)->device_post();
+		//
+		// Kill everything if flag is set
+		//
+		if(dynamic_cast<DevChar*>(pDevice)->terminate()) break;
 	}
+
+	delete pCharDevice
 
 	return 0;
 }
