@@ -5,6 +5,7 @@
 #pragma once
 
 #include <thread>
+#include <atomic>
 #include <semaphore.h>
 #include "console.h"
 #include "devBase.h"

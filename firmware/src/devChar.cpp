@@ -9,10 +9,9 @@
 
 #include "devChar.h"
 
-DevChar::DevChar() : m_file_descriptor(0) 
+DevChar::DevChar() : m_file_descriptor(0), m_killThread(false)
 {
 	Console::Info("DevChar :: Construct");
-	m_killThread = false;
 	iceThread = std::thread(&DevChar::iceCOMThread, this);
 }
 DevChar::~DevChar() 
