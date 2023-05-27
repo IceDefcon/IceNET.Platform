@@ -27,7 +27,9 @@ void
 DevChar::iceCOMThread()
 {
     while (true) 
-    {        
+    {
+    	sem_wait(&m_wait_iceCOM);
+
         //////////////////
         // 				//
         // 				//
