@@ -12,7 +12,8 @@
 DevChar::DevChar() : m_file_descriptor(0) 
 {
 	Console::Info("DevChar :: Construct");
-	sem_init(&m_iceCOM, 0, 0);
+	sem_init(&m_iceCOM_run, 0, 0);
+	sem_init(&m_iceCOM_kill, 0, 0);
 	iceThread = std::thread(&DevChar::iceCOMThread, this);
 }
 DevChar::~DevChar() 
