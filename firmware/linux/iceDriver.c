@@ -205,7 +205,7 @@ static irqreturn_t gpio_isr(int irq, void *data)
 }
 
 //
-// FPGA Driver
+// FPGA Driver INIT
 //
 static int __init fpga_driver_init(void)
 {
