@@ -38,7 +38,6 @@ DevChar::iceCOMThread()
         // 				//
         //////////////////
 
-        sem_wait(&m_wait_iceCOM);
     	device_write();
         device_read();
     }
@@ -102,5 +101,11 @@ int
 DevChar::device_close()
 {
 	return 1;
+}
+
+void
+DevChar::device_post()
+{
+	sem_post(&m_wait_iceCOM);
 }
 

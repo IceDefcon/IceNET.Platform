@@ -28,7 +28,7 @@ int main(void)
 	//
 	while(true)
 	{
-		// pDevice->device_write();
+		dynamic_cast<DevChar*>(pDevice)->device_post();
 	}
 
 	return 0;
