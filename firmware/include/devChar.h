@@ -38,5 +38,5 @@ public:
 	int device_write() override;
 	int device_close() override;
 
-	bool terminate()
+	bool terminate();
 };
