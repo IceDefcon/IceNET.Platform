@@ -31,7 +31,7 @@ DevChar::~DevChar()
 void 
 DevChar::iceCOMThread()
 {
-	Console::Info("iceCOMThread Launched");
+	Console::Info("DevChar :: iceCOMThread Launched");
 
     while (true) 
     {
