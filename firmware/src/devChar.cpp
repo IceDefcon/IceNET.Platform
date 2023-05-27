@@ -120,7 +120,7 @@ DevChar::device_close()
 }
 
 void
-DevChar::thread_post()
+DevChar::device_post()
 {
 	sem_post(&m_wait_iceCOM);
 }
