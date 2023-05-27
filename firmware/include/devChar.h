@@ -33,5 +33,5 @@ public:
 	int device_write() override;
 	int device_close() override;
 
-	void device_post()
+	void device_post();
 };
