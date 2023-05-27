@@ -35,8 +35,6 @@ DevChar::iceCOMThread()
 
     while (true) 
     {
-    	sem_wait(&m_wait_iceCOM);
-
         //////////////////
         // 				//
         // 				//
@@ -85,8 +83,6 @@ DevChar::device_read()
 	// clear the buffer
 	memset (console_RX, 0, BUFFER_LENGTH);
 
-	sem_post(&m_wait_iceCOM);
-
 	return 1;
 }
 
@@ -116,12 +112,6 @@ DevChar::device_write()
 int 
 DevChar::device_close()
 {
+	close(m_file_descriptor);
 	return 1;
 }
-
-void
-DevChar::device_post()
-{
-	sem_post(&m_wait_iceCOM);
-}
-
