@@ -11,21 +11,28 @@
 
 DevChar::DevChar() : m_file_descriptor(0) 
 {
-	std::cout << "DevChar :: Construct" << std::endl;
+	Console::Info("DevChar :: Construct");
 	iceThread = std::thread(&DevChar::iceCOMThread, this);
 }
 DevChar::~DevChar() 
 {
-	std::cout << "DevChar :: Destroy" << std::endl;	
+	Console::Info("DevChar :: Destroy");
     if (iceThread.joinable()) 
     {
     	iceThread.join();
+   	}
+   	else
+   	{
+		Console::Warning("DevChar :: Thread is not Joinable");
+		Console::Warning("DevChar :: Cannot exute to the end");
    	}
 }
 
 void 
 DevChar::iceCOMThread()
 {
+	Console::Info("iceCOMThread Launched");
+
     while (true) 
     {
     	sem_wait(&m_wait_iceCOM);
@@ -48,8 +55,13 @@ DevChar::iceCOMThread()
 int 
 DevChar::device_open(const char* device)
 {
+	Console::Info("DevChar :: Open iceCOM Device");
 	m_file_descriptor = open(device, O_RDWR);
-	if (m_file_descriptor < 0) return -1;
+	if (m_file_descriptor < 0)
+	{
+		Console::Error("DevChar :: Failed to open iceCOM Device");
+		return -1;
+	}
 
 	return 1;
 }
@@ -63,7 +75,7 @@ DevChar::device_read()
 	ret = read(m_file_descriptor, console_RX, BUFFER_LENGTH);
 	if (ret == -1)
 	{
-	    Console::Error("Read from kernel space was not successful");
+	    Console::Error("DevChar :: Cannot read from kernel space");
 	}
 
 	Console::Read(console_RX);
@@ -93,7 +105,7 @@ DevChar::device_write()
 	ret = write(m_file_descriptor, console_TX, strlen(console_TX)); // Send the string to the LKM
 	if (ret == -1)
 	{
-	    Console::Error("Write to kernel space was not successful");
+	    Console::Error("DevChar :: Cannot write to kernel space");
 	}
 
 	return 1;

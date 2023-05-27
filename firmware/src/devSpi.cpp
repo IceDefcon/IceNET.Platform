@@ -6,12 +6,12 @@
 
 DevSpi::DevSpi() 
 {
-	std::cout << "DevSpi :: Construct" << std::endl;
+	Console::Info("DevSpi :: Construct");
 }
 
 DevSpi::~DevSpi() 
 {
-	std::cout << "DevSpi :: Destroy" << std::endl;
+	Console::Info("DevSpi :: Destroy");
 }
 
 

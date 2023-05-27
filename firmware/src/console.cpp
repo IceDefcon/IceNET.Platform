@@ -5,13 +5,13 @@
 #include "console.h"
 
 Console::Console() : m_LogLevel (LevelTodo) 
-{ 
-	std::cout << "Console :: Construct" << std::endl;
+{
+	Console::Info("Console :: Construct");
 }
 
 Console::~Console()
 {
-	std::cout << "Console :: Destroy" << std::endl;
+	Console::Info("Console :: Destroy");
 }
 
 void Console::SetLevel(LogLevel level)
