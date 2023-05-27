@@ -6,7 +6,7 @@
 #include <fcntl.h> 			// Open device
 #include <string.h> 		// strlem
 #include <unistd.h> 		// read/write to the file
-
+#include <cstring> 			// strcmp
 #include "devChar.h"
 
 DevChar::DevChar() : m_file_descriptor(0), m_killThread(false)
@@ -99,6 +99,8 @@ DevChar::device_write()
 
 	Console::Write();
 	std::cin.getline(console_TX, BUFFER_LENGTH);
+
+	if(std::strcmp(console_TX, "exit" || "quit") == 0) m_killThread = true;
 
 	ret = write(m_file_descriptor, console_TX, strlen(console_TX)); // Send the string to the LKM
 	if (ret == -1)
