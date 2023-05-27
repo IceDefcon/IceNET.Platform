@@ -26,10 +26,11 @@ int main(void)
 	//
 	// Main Comms
 	//
-	dynamic_cast<DevChar*>(pDevice)->device_post();
+	while(true)
+	{
+		dynamic_cast<DevChar*>(pDevice)->device_post();
+	}
 
-	for(;;)
-		
 	return 0;
 }
 
