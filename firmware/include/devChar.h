@@ -13,11 +13,12 @@
 
 class DevChar : public DevBase
 {
+public:
+
+	sem_t m_wait_iceCOM;
 
 private:
-
 	int m_file_descriptor;
-
 	std::thread iceThread;
 
 public:
@@ -31,4 +32,6 @@ public:
 	int device_read() override;
 	int device_write() override;
 	int device_close() override;
+
+	void device_post();
 };
