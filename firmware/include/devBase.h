@@ -13,7 +13,7 @@ public:
 		Console::Info("DevBase :: Construct");
 	}
 
-	virtual ~DevBase()
+	~DevBase()
 	{
 		Console::Info("DevBase :: Destroy");
 	}
