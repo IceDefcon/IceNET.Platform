@@ -33,7 +33,7 @@ DevChar::iceCOMThread()
 {
 	Console::Info("DevChar :: iceCOMThread Launched");
 
-    while (!killThread) 
+    while (!m_killThread) 
     {
         //////////////////
         // 				//

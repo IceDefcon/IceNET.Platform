@@ -29,7 +29,7 @@ private:
 public:
 
 	DevChar();
-	~DevChar();
+	~DevChar() override
 
 	void iceCOMThread();
 

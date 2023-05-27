@@ -6,6 +6,7 @@
 #include <thread>
 #include <unistd.h> // sleep
 
+#include "devBase.h"
 #include "devChar.h"
 #include "console.h"
 
@@ -32,6 +33,15 @@ int main(void)
 		// Kill everything if flag is set
 		//
 		if(dynamic_cast<DevChar*>(pDevice)->terminate()) break;
+
+		DevChar* pDevChar = dynamic_cast<DevChar*>(pDevice);
+		if (pDevChar != nullptr) 
+		{
+		    if (pDevChar->terminate()) 
+		    {
+		        break;
+		    }
+		}
 	}
 
 	delete pCharDevice;
