@@ -15,9 +15,13 @@ class DevChar : public DevBase
 {
 
 private:
+
 	int m_file_descriptor;
+
 	std::thread iceThread;
-	sem_t m_wait_iceCOM;
+
+	sem_t m_iceCOM_run;
+	sem_t m_iceCOM_kill;
 
 public:
 
@@ -31,5 +35,6 @@ public:
 	int device_write() override;
 	int device_close() override;
 
-	void device_post();
+	void thread_run();
+	void thread_kill();
 };
