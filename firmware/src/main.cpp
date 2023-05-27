@@ -34,7 +34,7 @@ int main(void)
 		if(dynamic_cast<DevChar*>(pDevice)->terminate()) break;
 	}
 
-	delete pCharDevice
+	delete pCharDevice;
 
 	return 0;
 }
