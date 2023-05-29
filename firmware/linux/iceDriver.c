@@ -122,8 +122,8 @@ static uint8_t rx_buffer1[4];                            // Buffer to receive da
 static struct work_struct spi_work;
 static struct workqueue_struct *spi_wq;
 
-static u8 rx_buff[256] = {0}; // Receive buffer
-static u8 tx_buff[256] = {0}; // Transmit buffer
+static u8 rx_buff[4] = {0}; // Receive buffer
+static u8 tx_buff[4] = {0}; // Transmit buffer
 
 static void spi_work_func(struct work_struct *work)
 {
