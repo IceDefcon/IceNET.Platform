@@ -1,5 +1,5 @@
 TimeQuest Timing Analyzer report for NetworkAnalyser
-Mon May 29 15:04:16 2023
+Mon May 29 18:46:41 2023
 Quartus II 64-Bit Version 13.0.1 Build 232 06/12/2013 Service Pack 1 SJ Web Edition
 
 
@@ -93,7 +93,7 @@ applicable agreement for further details.
 +---------------------+--------+--------------------------+
 ; SDC File Path       ; Status ; Read at                  ;
 +---------------------+--------+--------------------------+
-; NetworkAnalyser.sdc ; OK     ; Mon May 29 15:04:16 2023 ;
+; NetworkAnalyser.sdc ; OK     ; Mon May 29 18:46:40 2023 ;
 +---------------------+--------+--------------------------+
 
 
@@ -159,10 +159,10 @@ No paths to report.
 +------------+-------------+--------+----+----+--------+
 ; Input Port ; Output Port ; RR     ; RF ; FR ; FF     ;
 +------------+-------------+--------+----+----+--------+
-; CS         ; INT_CS      ; 10.516 ;    ;    ; 10.516 ;
-; MOSI       ; INT_MOSI    ; 10.536 ;    ;    ; 10.536 ;
-; MOSI       ; MISO        ; 10.527 ;    ;    ; 10.527 ;
-; SCLK       ; INT_SCLK    ; 10.570 ;    ;    ; 10.570 ;
+; CS         ; INT_CS      ; 10.065 ;    ;    ; 10.065 ;
+; INT_MISO   ; MISO        ; 10.521 ;    ;    ; 10.521 ;
+; MOSI       ; INT_MOSI    ; 10.525 ;    ;    ; 10.525 ;
+; SCLK       ; INT_SCLK    ; 10.491 ;    ;    ; 10.491 ;
 +------------+-------------+--------+----+----+--------+
 
 
@@ -171,10 +171,10 @@ No paths to report.
 +------------+-------------+--------+----+----+--------+
 ; Input Port ; Output Port ; RR     ; RF ; FR ; FF     ;
 +------------+-------------+--------+----+----+--------+
-; CS         ; INT_CS      ; 10.516 ;    ;    ; 10.516 ;
-; MOSI       ; INT_MOSI    ; 10.536 ;    ;    ; 10.536 ;
-; MOSI       ; MISO        ; 10.527 ;    ;    ; 10.527 ;
-; SCLK       ; INT_SCLK    ; 10.570 ;    ;    ; 10.570 ;
+; CS         ; INT_CS      ; 10.065 ;    ;    ; 10.065 ;
+; INT_MISO   ; MISO        ; 10.521 ;    ;    ; 10.521 ;
+; MOSI       ; INT_MOSI    ; 10.525 ;    ;    ; 10.525 ;
+; SCLK       ; INT_SCLK    ; 10.491 ;    ;    ; 10.491 ;
 +------------+-------------+--------+----+----+--------+
 
 
@@ -225,10 +225,10 @@ No paths to report.
 +------------+-------------+-------+----+----+-------+
 ; Input Port ; Output Port ; RR    ; RF ; FR ; FF    ;
 +------------+-------------+-------+----+----+-------+
-; CS         ; INT_CS      ; 5.068 ;    ;    ; 5.068 ;
-; MOSI       ; INT_MOSI    ; 5.092 ;    ;    ; 5.092 ;
-; MOSI       ; MISO        ; 5.077 ;    ;    ; 5.077 ;
-; SCLK       ; INT_SCLK    ; 5.098 ;    ;    ; 5.098 ;
+; CS         ; INT_CS      ; 4.908 ;    ;    ; 4.908 ;
+; INT_MISO   ; MISO        ; 5.073 ;    ;    ; 5.073 ;
+; MOSI       ; INT_MOSI    ; 5.077 ;    ;    ; 5.077 ;
+; SCLK       ; INT_SCLK    ; 5.050 ;    ;    ; 5.050 ;
 +------------+-------------+-------+----+----+-------+
 
 
@@ -237,10 +237,10 @@ No paths to report.
 +------------+-------------+-------+----+----+-------+
 ; Input Port ; Output Port ; RR    ; RF ; FR ; FF    ;
 +------------+-------------+-------+----+----+-------+
-; CS         ; INT_CS      ; 5.068 ;    ;    ; 5.068 ;
-; MOSI       ; INT_MOSI    ; 5.092 ;    ;    ; 5.092 ;
-; MOSI       ; MISO        ; 5.077 ;    ;    ; 5.077 ;
-; SCLK       ; INT_SCLK    ; 5.098 ;    ;    ; 5.098 ;
+; CS         ; INT_CS      ; 4.908 ;    ;    ; 4.908 ;
+; INT_MISO   ; MISO        ; 5.073 ;    ;    ; 5.073 ;
+; MOSI       ; INT_MOSI    ; 5.077 ;    ;    ; 5.077 ;
+; SCLK       ; INT_SCLK    ; 5.050 ;    ;    ; 5.050 ;
 +------------+-------------+-------+----+----+-------+
 
 
@@ -261,10 +261,10 @@ No paths to report.
 +------------+-------------+--------+----+----+--------+
 ; Input Port ; Output Port ; RR     ; RF ; FR ; FF     ;
 +------------+-------------+--------+----+----+--------+
-; CS         ; INT_CS      ; 10.516 ;    ;    ; 10.516 ;
-; MOSI       ; INT_MOSI    ; 10.536 ;    ;    ; 10.536 ;
-; MOSI       ; MISO        ; 10.527 ;    ;    ; 10.527 ;
-; SCLK       ; INT_SCLK    ; 10.570 ;    ;    ; 10.570 ;
+; CS         ; INT_CS      ; 10.065 ;    ;    ; 10.065 ;
+; INT_MISO   ; MISO        ; 10.521 ;    ;    ; 10.521 ;
+; MOSI       ; INT_MOSI    ; 10.525 ;    ;    ; 10.525 ;
+; SCLK       ; INT_SCLK    ; 10.491 ;    ;    ; 10.491 ;
 +------------+-------------+--------+----+----+--------+
 
 
@@ -273,10 +273,10 @@ No paths to report.
 +------------+-------------+-------+----+----+-------+
 ; Input Port ; Output Port ; RR    ; RF ; FR ; FF    ;
 +------------+-------------+-------+----+----+-------+
-; CS         ; INT_CS      ; 5.068 ;    ;    ; 5.068 ;
-; MOSI       ; INT_MOSI    ; 5.092 ;    ;    ; 5.092 ;
-; MOSI       ; MISO        ; 5.077 ;    ;    ; 5.077 ;
-; SCLK       ; INT_SCLK    ; 5.098 ;    ;    ; 5.098 ;
+; CS         ; INT_CS      ; 4.908 ;    ;    ; 4.908 ;
+; INT_MISO   ; MISO        ; 5.073 ;    ;    ; 5.073 ;
+; MOSI       ; INT_MOSI    ; 5.077 ;    ;    ; 5.077 ;
+; SCLK       ; INT_SCLK    ; 5.050 ;    ;    ; 5.050 ;
 +------------+-------------+-------+----+----+-------+
 
 
@@ -305,7 +305,7 @@ No dedicated SERDES Receiver circuitry present in device or used in design
 +---------------------------------+-------+------+
 ; Illegal Clocks                  ; 0     ; 0    ;
 ; Unconstrained Clocks            ; 1     ; 1    ;
-; Unconstrained Input Ports       ; 5     ; 5    ;
+; Unconstrained Input Ports       ; 6     ; 6    ;
 ; Unconstrained Input Port Paths  ; 48    ; 48   ;
 ; Unconstrained Output Ports      ; 8     ; 8    ;
 ; Unconstrained Output Port Paths ; 8     ; 8    ;
@@ -318,7 +318,7 @@ No dedicated SERDES Receiver circuitry present in device or used in design
 Info: *******************************************************************
 Info: Running Quartus II 64-Bit TimeQuest Timing Analyzer
     Info: Version 13.0.1 Build 232 06/12/2013 Service Pack 1 SJ Web Edition
-    Info: Processing started: Mon May 29 15:04:15 2023
+    Info: Processing started: Mon May 29 18:46:40 2023
 Info: Command: quartus_sta NetworkAnalyser -c NetworkAnalyser
 Info: qsta_default_script.tcl version: #1
 Info (11104): Parallel Compilation has detected 4 hyper-threaded processors. However, the extra hyper-threaded processors will not be used by default. Parallel Compilation will use 2 of the 2 physical processors detected instead.
@@ -356,8 +356,8 @@ Info (332001): The selected device family is not supported by the report_metasta
 Info (332102): Design is not fully constrained for setup requirements
 Info (332102): Design is not fully constrained for hold requirements
 Info: Quartus II 64-Bit TimeQuest Timing Analyzer was successful. 0 errors, 2 warnings
-    Info: Peak virtual memory: 522 megabytes
-    Info: Processing ended: Mon May 29 15:04:16 2023
+    Info: Peak virtual memory: 521 megabytes
+    Info: Processing ended: Mon May 29 18:46:41 2023
     Info: Elapsed time: 00:00:01
     Info: Total CPU time (on all processors): 00:00:01
 
