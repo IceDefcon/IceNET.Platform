@@ -224,43 +224,43 @@ static int __init fpga_driver_init(void)
     //
     // SPI
     //
-    struct spi_master *spi_master0;
-    struct spi_master *spi_master1;
+    struct spi_master *spi_master;
+    struct spi_master *spi_slave;
     int ret;
 
     // Get the SPI masters
-    spi_master0 = spi_busnum_to_master(0);  // SPI0 on BeagleBone Black
-    if (!spi_master0) {
+    spi_master = spi_busnum_to_master(0);  // SPI0 on BeagleBone Black
+    if (!spi_master) {
         pr_err("SPI master for SPI0 not found\n");
         return -ENODEV;
     }
 
-    spi_master1 = spi_busnum_to_master(1);  // SPI1 on BeagleBone Black
-    if (!spi_master1) {
-        pr_err("SPI master for SPI1 not found\n");
+    spi_slave = spi_busnum_to_master(1);  // SPI1 on BeagleBone Black
+    if (!spi_slave) {
+        pr_err("SPI slave for SPI1 not found\n"); // Updated error message
         return -ENODEV;
     }
 
     // Prepare the SPI devices
-    spi_dev0 = spi_alloc_device(spi_master0);
+    spi_dev0 = spi_alloc_device(spi_master);
     if (!spi_dev0) {
         pr_err("Failed to allocate SPI device for SPI0\n");
         return -ENOMEM;
     }
 
-    spi_dev1 = spi_alloc_device(spi_master1);
+    spi_dev1 = spi_alloc_device(spi_slave); // Updated spi_alloc_device argument
     if (!spi_dev1) {
         pr_err("Failed to allocate SPI device for SPI1\n");
         spi_dev_put(spi_dev0);
         return -ENOMEM;
     }
 
-    // Configure SPI0 device
+    // Configure SPI0 device (Master)
     spi_dev0->chip_select = 0;  // Set the chip select value (0 for SPI0 on BeagleBone Black)
     spi_dev0->mode = SPI_MODE_0;  // Set the SPI mode (0 for mode 0)
     spi_dev0->bits_per_word = 8;  // Set the number of bits per word
 
-    // Configure SPI1 device
+    // Configure SPI1 device (Slave)
     spi_dev1->chip_select = 0;  // Set the chip select value (0 for SPI1 on BeagleBone Black)
     spi_dev1->mode = SPI_MODE_0;  // Set the SPI mode (0 for mode 0)
     spi_dev1->bits_per_word = 8;  // Set the number of bits per word
@@ -282,7 +282,6 @@ static int __init fpga_driver_init(void)
         spi_dev_put(spi_dev1);
         return ret;
     }
-
     //
     // GPIO Interrupt
     //
