@@ -122,32 +122,47 @@ static uint8_t rx_buffer1[4];                            // Buffer to receive da
 static struct work_struct spi_work;
 static struct workqueue_struct *spi_wq;
 
+static u8 rx_buff[256] = {0}; // Receive buffer
+static u8 tx_buff[256] = {0}; // Transmit buffer
+
 static void spi_work_func(struct work_struct *work)
 {
+    struct spi_message msg;
     struct spi_message msg0;
     struct spi_message msg1;
-    struct spi_transfer xfer0;
-    struct spi_transfer xfer1;
+    struct spi_transfer transfer[2];
     int ret;
     int i;
 
+    // Clear buffers
+    memset(rx_buff, 0, sizeof(rx_buff));
+    memset(tx_buff, 0, sizeof(tx_buff));
+
+    spi_message_init(&msg);
+
     // Initialize SPI transfer for SPI0
-    memset(&xfer0, 0, sizeof(xfer0));
-    xfer0.tx_buf = tx_buffer0;
-    xfer0.rx_buf = rx_buffer0;
-    xfer0.len = sizeof(tx_buffer0);
+    memset(&transfer[0], 0, sizeof(transfer[0]));
+    transfer[0].tx_buf = tx_buffer0;
+    transfer[0].rx_buf = rx_buffer0;
+    transfer[0].len = sizeof(tx_buffer0);
 
     // Initialize SPI transfer for SPI1
-    memset(&xfer1, 0, sizeof(xfer1));
-    xfer1.tx_buf = tx_buffer1;
-    xfer1.rx_buf = rx_buffer1;
-    xfer1.len = sizeof(tx_buffer1);
+    // memset(&transfer[1], 0, sizeof(transfer[1]));
+    // transfer[1].tx_buf = tx_buffer1;
+    // transfer[1].rx_buf = rx_buffer1;
+    // transfer[1].len = sizeof(tx_buffer1);
+
+    // Set up transfer for SPI1 (slave)
+    transfer[1].tx_buf = NULL;
+    transfer[1].rx_buf = rx_buff;
+    transfer[1].len = sizeof(rx_buff);
+    spi_message_add_tail(&transfer[1], &msg);
 
     // Initialize SPI messages
     spi_message_init(&msg0);
-    spi_message_init(&msg1);
-    spi_message_add_tail(&xfer0, &msg0);
-    spi_message_add_tail(&xfer1, &msg1);
+    // spi_message_init(&msg1);
+    spi_message_add_tail(&transfer[0], &msg0);
+    // spi_message_add_tail(&transfer[1], &msg1);
 
     // Transfer SPI messages for SPI0
     ret = spi_sync(spi_dev0, &msg0);
@@ -157,11 +172,13 @@ static void spi_work_func(struct work_struct *work)
     }
 
     // Transfer SPI messages for SPI1
-    ret = spi_sync(spi_dev1, &msg1);
-    if (ret < 0) {
-        pr_err("SPI transfer for SPI1 failed: %d\n", ret);
-        return;
-    }
+    // ret = spi_sync(spi_dev1, &msg1);
+    // if (ret < 0) {
+    //     pr_err("SPI transfer for SPI1 failed: %d\n", ret);
+    //     return;
+    // }
+
+    spi_sync(spi_dev1, &msg); // Transfer for SPI1 (slave)
 
     // Display the received data for SPI0
     printk(KERN_INFO "[FPGA][SPI] Received data for SPI0:");
@@ -169,11 +186,13 @@ static void spi_work_func(struct work_struct *work)
         printk(KERN_INFO "[FPGA][SPI] Byte %d: 0x%02x\n", i, rx_buffer0[i]);
     }
 
-    // Display the received data for SPI1
-    printk(KERN_INFO "[FPGA][SPI] Received data for SPI1:");
-    for (i = 0; i < sizeof(rx_buffer1); ++i) {
-        printk(KERN_INFO "[FPGA][SPI] Byte %d: 0x%02x\n", i, rx_buffer1[i]);
-    }
+    // // Display the received data for SPI1
+    // printk(KERN_INFO "[FPGA][SPI] Received data for SPI1:");
+    // for (i = 0; i < sizeof(rx_buffer1); ++i) {
+    //     printk(KERN_INFO "[FPGA][SPI] Byte %d: 0x%02x\n", i, rx_buffer1[i]);
+    // }
+
+    printk(KERN_INFO "[FPGA][ C ] Received data from SPI1 (slave): %s\n", rx_buff);
 }
 
 //
@@ -184,7 +203,7 @@ static void spi_work_func(struct work_struct *work)
 
 static irqreturn_t gpio_isr(int irq, void *data)
 {
-    static int i = 0;
+    static int counter = 0;
 
     //////////////
     //          //
@@ -196,8 +215,8 @@ static irqreturn_t gpio_isr(int irq, void *data)
     //          //
     //////////////
 
-    printk(KERN_INFO "[FPGA][IRQ] GPIO interrupt [%d] @ Pin [%d]\n", i, GPIO_PIN);
-    i++;
+    printk(KERN_INFO "[FPGA][IRQ] GPIO interrupt [%d] @ Pin [%d]\n", counter, GPIO_PIN);
+    counter++;
 
     queue_work(spi_wq, &spi_work);
 
@@ -410,7 +429,3 @@ static void __exit fpga_driver_exit(void)
 
 module_init(fpga_driver_init);
 module_exit(fpga_driver_exit);
-
-MODULE_AUTHOR("Your Name");
-MODULE_DESCRIPTION("[FPGA][SPI] Driver");
-MODULE_LICENSE("GPL");
