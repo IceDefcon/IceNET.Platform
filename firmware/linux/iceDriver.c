@@ -186,13 +186,13 @@ static void spi_work_func(struct work_struct *work)
         printk(KERN_INFO "[FPGA][SPI] Byte %d: 0x%02x\n", i, rx_buffer0[i]);
     }
 
-    // // Display the received data for SPI1
-    // printk(KERN_INFO "[FPGA][SPI] Received data for SPI1:");
-    // for (i = 0; i < sizeof(rx_buffer1); ++i) {
-    //     printk(KERN_INFO "[FPGA][SPI] Byte %d: 0x%02x\n", i, rx_buffer1[i]);
-    // }
+    // Display the received data for SPI1
+    printk(KERN_INFO "[FPGA][SPI] Received data for SPI1:");
+    for (i = 0; i < sizeof(rx_buff); ++i) {
+        printk(KERN_INFO "[FPGA][SPI] Byte %d: 0x%02x\n", i, rx_buff[i]);
+    }
 
-    printk(KERN_INFO "[FPGA][ C ] Received data from SPI1 (slave): %s\n", rx_buff);
+    // printk(KERN_INFO "[FPGA][ C ] Received data from SPI1 (slave): %s\n", rx_buff);
 }
 
 //
