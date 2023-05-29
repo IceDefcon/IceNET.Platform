@@ -138,7 +138,7 @@ static void spi_work_func(struct work_struct *work)
 
     // Initialize SPI transfer for SPI1
     memset(&transfer[1], 0, sizeof(transfer[1]));
-    transfer[1].tx_buf = rx_buffer0;  // Send received data from SPI0
+    transfer[1].tx_buf = tx_buffer1;  // Send received data from SPI0
     transfer[1].rx_buf = rx_buffer1;  // Receive data from FPGA via SPI1
     transfer[1].len = sizeof(tx_buffer0);
 
