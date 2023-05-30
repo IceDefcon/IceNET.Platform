@@ -17,10 +17,10 @@ port
 	MISO 				: out std_logic; 	-- PIN_125 :: BBB P9_21 :: BROWN 	:: SPI0_D0
 	SCLK 				: in 	std_logic; 	-- PIN_129 :: BBB P9_22 :: BLACK 	:: SPI0_SCLK
 	
-	INT_CS 			: out 	std_logic; 	-- PIN_118 :: BBB P9_28 :: YELOW 	:: SPI1_CS0
-	INT_MOSI 		: out 	std_logic; 	-- PIN_120 :: BBB P9_30 :: GREEN 	:: SPI1_D1 :: GPIO_112
-	INT_MISO 		: in std_logic; 	-- PIN_122 :: BBB P9_29 :: RED 		:: SPI1_D0
-	INT_SCLK 		: out 	std_logic; 	-- PIN_126 :: BBB P9_31 :: ORANGE 	:: SPI1_SCLK
+	INT_CS 			: in 	std_logic; 	-- PIN_118 :: BBB P9_28 :: YELOW 	:: SPI1_CS0
+	INT_MOSI 		: in 	std_logic; 	-- PIN_120 :: BBB P9_30 :: GREEN 	:: SPI1_D1 :: GPIO_112
+	INT_MISO 		: out std_logic; 	-- PIN_122 :: BBB P9_29 :: RED 		:: SPI1_D0
+	INT_SCLK 		: in 	std_logic; 	-- PIN_126 :: BBB P9_31 :: ORANGE 	:: SPI1_SCLK
 	
 	BUTTON_IN 		: in 	std_logic; 	-- PIN_144
 	GPIO_IN 			: in 	std_logic; 	-- PIN_143
