@@ -5,6 +5,7 @@
 #include <linux/fs.h>
 #include <linux/gpio.h>
 #include <linux/init.h>
+#include <linux/delay.h>
 #include <linux/device.h>
 #include <linux/module.h>
 #include <linux/kernel.h>
@@ -154,6 +155,8 @@ static void spi_work_func(struct work_struct *work)
         printk(KERN_ERR "[FPGA][SPI] SPI transfer for SPI0 failed: %d\n", ret);
         return;
     }
+
+    msleep(1000);
 
     // Transfer SPI messages for SPI1
     ret = spi_sync(spi_dev1, &msg1);
