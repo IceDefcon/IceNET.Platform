@@ -260,15 +260,16 @@ static int __init fpga_driver_init(void)
 
     // Configure SPI0 device
     spi_dev0->chip_select = 0;   // Set the chip select value (0 for SPI0 on BeagleBone Black)
-    spi_dev0->mode = SPI_MODE_3; // Set the SPI mode (3 for mode 3)
+    spi_dev0->mode = SPI_MODE_0; // Set the SPI mode (0 for mode 0)
     spi_dev0->bits_per_word = 8; // Set the number of bits per word
     spi_dev0->max_speed_hz = 1000000; // Set the maximum speed to 1 MHz
 
     // Configure SPI1 device
     spi_dev1->chip_select = 0;   // Set the chip select value (0 for SPI1 on BeagleBone Black)
-    spi_dev1->mode = SPI_MODE_3; // Set the SPI mode (3 for mode 3)
+    spi_dev1->mode = SPI_MODE_0; // Set the SPI mode (0 for mode 0)
     spi_dev1->bits_per_word = 8; // Set the number of bits per word
     spi_dev1->max_speed_hz = 1000000; // Set the maximum speed to 1 MHz
+
 
     // Setup SPI0 device
     ret = spi_setup(spi_dev0);
