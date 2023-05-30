@@ -9,11 +9,15 @@
 #include <cstring> 			// strcmp
 #include "devChar.h"
 
-DevChar::DevChar() : m_file_descriptor(0), m_killThread(false)
+DevChar::DevChar() : 
+m_file_descriptor(0), 
+m_killThread(false),
+m_BUFFER_LENGTH(256)
 {
 	Console::Info("DevChar :: Construct");
 	iceThread = std::thread(&DevChar::iceCOMThread, this);
 }
+
 DevChar::~DevChar() 
 {
 	Console::Info("DevChar :: Destroy");
@@ -70,9 +74,9 @@ int
 DevChar::device_read()
 {
 	int ret;
-	char console_RX[BUFFER_LENGTH];
+	char console_RX[m_BUFFER_LENGTH];
 
-	ret = read(m_file_descriptor, console_RX, BUFFER_LENGTH);
+	ret = read(m_file_descriptor, console_RX, m_BUFFER_LENGTH);
 	if (ret == -1)
 	{
 	    Console::Error("DevChar :: Cannot read from kernel space");
@@ -81,7 +85,7 @@ DevChar::device_read()
 	Console::Read(console_RX);
 
 	// clear the buffer
-	memset (console_RX, 0, BUFFER_LENGTH);
+	memset (console_RX, 0, m_BUFFER_LENGTH);
 
 	return 1;
 }
@@ -90,15 +94,15 @@ int
 DevChar::device_write()
 {
 	int ret;
-	char console_TX[BUFFER_LENGTH];
+	char console_TX[m_BUFFER_LENGTH];
 
-	for (int i = 0; i < BUFFER_LENGTH; ++i)
+	for (int i = 0; i < m_BUFFER_LENGTH; ++i)
 	{
 		console_TX[i] = 0;
 	}
 
 	Console::Write();
-	std::cin.getline(console_TX, BUFFER_LENGTH);
+	std::cin.getline(console_TX, m_BUFFER_LENGTH);
 
 	if (std::strcmp(console_TX, "exit") == 0) 
 	{

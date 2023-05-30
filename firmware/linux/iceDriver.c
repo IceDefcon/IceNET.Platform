@@ -29,7 +29,7 @@ MODULE_DESCRIPTION("FPGA Comms Driver");
 
 static int    majorNumber;
 static char   message[256] = {0};
-static short  size_of_message;
+static unsigned long  size_of_message;
 static int    numberOpens = 0;
 static struct class*  C_Class  = NULL;
 static struct device* C_Device = NULL;

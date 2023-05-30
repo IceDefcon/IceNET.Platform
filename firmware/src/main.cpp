@@ -6,7 +6,6 @@
 #include <thread>
 #include <unistd.h> // sleep
 
-
 #include "devChar.h"
 #include "console.h"
 

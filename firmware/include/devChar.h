@@ -10,7 +10,6 @@
 #include "console.h"
 #include "devBase.h"
 
-#define BUFFER_LENGTH 256 
 
 class DevChar : public DevBase
 {
@@ -26,9 +25,12 @@ private:
 	//
 	std::atomic<bool> m_killThread;
 
+	const size_t m_BUFFER_LENGTH;
+
 public:
 
 	DevChar();
+	DevChar(size_t m_BUFFER_LENGTH);
 	~DevChar();
 
 	void iceCOMThread();
