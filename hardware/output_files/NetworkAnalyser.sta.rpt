@@ -1,5 +1,5 @@
 TimeQuest Timing Analyzer report for NetworkAnalyser
-Mon May 29 20:27:47 2023
+Tue May 30 08:46:05 2023
 Quartus II 64-Bit Version 13.0.1 Build 232 06/12/2013 Service Pack 1 SJ Web Edition
 
 
@@ -93,7 +93,7 @@ applicable agreement for further details.
 +---------------------+--------+--------------------------+
 ; SDC File Path       ; Status ; Read at                  ;
 +---------------------+--------+--------------------------+
-; NetworkAnalyser.sdc ; OK     ; Mon May 29 20:27:47 2023 ;
+; NetworkAnalyser.sdc ; OK     ; Tue May 30 08:46:04 2023 ;
 +---------------------+--------+--------------------------+
 
 
@@ -159,8 +159,10 @@ No paths to report.
 +------------+-------------+--------+----+----+--------+
 ; Input Port ; Output Port ; RR     ; RF ; FR ; FF     ;
 +------------+-------------+--------+----+----+--------+
-; INT_MOSI   ; INT_MISO    ; 10.470 ;    ;    ; 10.470 ;
-; MOSI       ; MISO        ; 10.470 ;    ;    ; 10.470 ;
+; CS         ; INT_CS      ; 11.055 ;    ;    ; 11.055 ;
+; MOSI       ; INT_MOSI    ; 10.498 ;    ;    ; 10.498 ;
+; MOSI       ; MISO        ; 10.457 ;    ;    ; 10.457 ;
+; SCLK       ; INT_SCLK    ; 10.567 ;    ;    ; 10.567 ;
 +------------+-------------+--------+----+----+--------+
 
 
@@ -169,8 +171,10 @@ No paths to report.
 +------------+-------------+--------+----+----+--------+
 ; Input Port ; Output Port ; RR     ; RF ; FR ; FF     ;
 +------------+-------------+--------+----+----+--------+
-; INT_MOSI   ; INT_MISO    ; 10.470 ;    ;    ; 10.470 ;
-; MOSI       ; MISO        ; 10.470 ;    ;    ; 10.470 ;
+; CS         ; INT_CS      ; 11.055 ;    ;    ; 11.055 ;
+; MOSI       ; INT_MOSI    ; 10.498 ;    ;    ; 10.498 ;
+; MOSI       ; MISO        ; 10.457 ;    ;    ; 10.457 ;
+; SCLK       ; INT_SCLK    ; 10.567 ;    ;    ; 10.567 ;
 +------------+-------------+--------+----+----+--------+
 
 
@@ -221,8 +225,10 @@ No paths to report.
 +------------+-------------+-------+----+----+-------+
 ; Input Port ; Output Port ; RR    ; RF ; FR ; FF    ;
 +------------+-------------+-------+----+----+-------+
-; INT_MOSI   ; INT_MISO    ; 5.044 ;    ;    ; 5.044 ;
-; MOSI       ; MISO        ; 5.043 ;    ;    ; 5.043 ;
+; CS         ; INT_CS      ; 5.254 ;    ;    ; 5.254 ;
+; MOSI       ; INT_MOSI    ; 5.060 ;    ;    ; 5.060 ;
+; MOSI       ; MISO        ; 5.032 ;    ;    ; 5.032 ;
+; SCLK       ; INT_SCLK    ; 5.102 ;    ;    ; 5.102 ;
 +------------+-------------+-------+----+----+-------+
 
 
@@ -231,8 +237,10 @@ No paths to report.
 +------------+-------------+-------+----+----+-------+
 ; Input Port ; Output Port ; RR    ; RF ; FR ; FF    ;
 +------------+-------------+-------+----+----+-------+
-; INT_MOSI   ; INT_MISO    ; 5.044 ;    ;    ; 5.044 ;
-; MOSI       ; MISO        ; 5.043 ;    ;    ; 5.043 ;
+; CS         ; INT_CS      ; 5.254 ;    ;    ; 5.254 ;
+; MOSI       ; INT_MOSI    ; 5.060 ;    ;    ; 5.060 ;
+; MOSI       ; MISO        ; 5.032 ;    ;    ; 5.032 ;
+; SCLK       ; INT_SCLK    ; 5.102 ;    ;    ; 5.102 ;
 +------------+-------------+-------+----+----+-------+
 
 
@@ -253,8 +261,10 @@ No paths to report.
 +------------+-------------+--------+----+----+--------+
 ; Input Port ; Output Port ; RR     ; RF ; FR ; FF     ;
 +------------+-------------+--------+----+----+--------+
-; INT_MOSI   ; INT_MISO    ; 10.470 ;    ;    ; 10.470 ;
-; MOSI       ; MISO        ; 10.470 ;    ;    ; 10.470 ;
+; CS         ; INT_CS      ; 11.055 ;    ;    ; 11.055 ;
+; MOSI       ; INT_MOSI    ; 10.498 ;    ;    ; 10.498 ;
+; MOSI       ; MISO        ; 10.457 ;    ;    ; 10.457 ;
+; SCLK       ; INT_SCLK    ; 10.567 ;    ;    ; 10.567 ;
 +------------+-------------+--------+----+----+--------+
 
 
@@ -263,8 +273,10 @@ No paths to report.
 +------------+-------------+-------+----+----+-------+
 ; Input Port ; Output Port ; RR    ; RF ; FR ; FF    ;
 +------------+-------------+-------+----+----+-------+
-; INT_MOSI   ; INT_MISO    ; 5.044 ;    ;    ; 5.044 ;
-; MOSI       ; MISO        ; 5.043 ;    ;    ; 5.043 ;
+; CS         ; INT_CS      ; 5.254 ;    ;    ; 5.254 ;
+; MOSI       ; INT_MOSI    ; 5.060 ;    ;    ; 5.060 ;
+; MOSI       ; MISO        ; 5.032 ;    ;    ; 5.032 ;
+; SCLK       ; INT_SCLK    ; 5.102 ;    ;    ; 5.102 ;
 +------------+-------------+-------+----+----+-------+
 
 
@@ -293,10 +305,10 @@ No dedicated SERDES Receiver circuitry present in device or used in design
 +---------------------------------+-------+------+
 ; Illegal Clocks                  ; 0     ; 0    ;
 ; Unconstrained Clocks            ; 1     ; 1    ;
-; Unconstrained Input Ports       ; 6     ; 6    ;
-; Unconstrained Input Port Paths  ; 46    ; 46   ;
-; Unconstrained Output Ports      ; 6     ; 6    ;
-; Unconstrained Output Port Paths ; 6     ; 6    ;
+; Unconstrained Input Ports       ; 5     ; 5    ;
+; Unconstrained Input Port Paths  ; 48    ; 48   ;
+; Unconstrained Output Ports      ; 8     ; 8    ;
+; Unconstrained Output Port Paths ; 8     ; 8    ;
 +---------------------------------+-------+------+
 
 
@@ -306,7 +318,7 @@ No dedicated SERDES Receiver circuitry present in device or used in design
 Info: *******************************************************************
 Info: Running Quartus II 64-Bit TimeQuest Timing Analyzer
     Info: Version 13.0.1 Build 232 06/12/2013 Service Pack 1 SJ Web Edition
-    Info: Processing started: Mon May 29 20:27:47 2023
+    Info: Processing started: Tue May 30 08:46:04 2023
 Info: Command: quartus_sta NetworkAnalyser -c NetworkAnalyser
 Info: qsta_default_script.tcl version: #1
 Info (11104): Parallel Compilation has detected 4 hyper-threaded processors. However, the extra hyper-threaded processors will not be used by default. Parallel Compilation will use 2 of the 2 physical processors detected instead.
@@ -345,8 +357,8 @@ Info (332102): Design is not fully constrained for setup requirements
 Info (332102): Design is not fully constrained for hold requirements
 Info: Quartus II 64-Bit TimeQuest Timing Analyzer was successful. 0 errors, 2 warnings
     Info: Peak virtual memory: 521 megabytes
-    Info: Processing ended: Mon May 29 20:27:47 2023
-    Info: Elapsed time: 00:00:00
+    Info: Processing ended: Tue May 30 08:46:05 2023
+    Info: Elapsed time: 00:00:01
     Info: Total CPU time (on all processors): 00:00:01
 
 

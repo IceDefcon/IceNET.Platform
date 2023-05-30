@@ -114,11 +114,11 @@ static int dev_release(struct inode *inodep, struct file *filep)
 static struct spi_device *spi_dev0;
 static struct spi_device *spi_dev1;
 
-static uint8_t tx_buffer0[] = {0x01, 0x02, 0x03, 0x04};  // Data to be transmitted for SPI0
-static uint8_t rx_buffer0[4];                            // Buffer to receive data for SPI0
+static uint8_t tx_buffer0[] = {0xAA};  // Data to be transmitted for SPI0
+static uint8_t rx_buffer0[1];                            // Buffer to receive data for SPI0
 
-static uint8_t tx_buffer1[] = {0x05, 0x06, 0x07, 0x08};  // Data to be transmitted for SPI1
-static uint8_t rx_buffer1[4];                            // Buffer to receive data for SPI1
+static uint8_t tx_buffer1[] = {0xBB};  // Data to be transmitted for SPI1
+static uint8_t rx_buffer1[1];                            // Buffer to receive data for SPI1
 
 static struct work_struct spi_work;
 static struct workqueue_struct *spi_wq;
