@@ -116,8 +116,8 @@ static struct spi_device *spi_dev1;
 static uint8_t tx_buffer0[] = {0x01, 0x02, 0x03, 0x04};  // Data to be transmitted for SPI0
 static uint8_t rx_buffer0[4];                            // Buffer to receive data for SPI0
 
-static uint8_t tx_buffer1[4];                            // Buffer to transmit data for SPI1
-static uint8_t rx_buffer1[] = {0x00, 0x00, 0x00, 0x00};  // Data to be received from FPGA via SPI1
+static uint8_t tx_buffer1[] = {0x05, 0x06, 0x07, 0x08};  // Data to be transmitted for SPI1
+static uint8_t rx_buffer1[4];                            // Buffer to receive data for SPI1
 
 static struct work_struct spi_work;
 static struct workqueue_struct *spi_wq;
@@ -138,9 +138,9 @@ static void spi_work_func(struct work_struct *work)
 
     // Initialize SPI transfer for SPI1
     memset(&transfer[1], 0, sizeof(transfer[1]));
-    transfer[1].tx_buf = tx_buffer1;  // Transmit data to FPGA via SPI1
+    transfer[1].tx_buf = tx_buffer1;  // Send received data from SPI0
     transfer[1].rx_buf = rx_buffer1;  // Receive data from FPGA via SPI1
-    transfer[1].len = sizeof(rx_buffer1);
+    transfer[1].len = sizeof(tx_buffer0);
 
     // Initialize SPI messages
     spi_message_init(&msg0);
@@ -174,6 +174,7 @@ static void spi_work_func(struct work_struct *work)
         printk(KERN_INFO "[FPGA][SPI] Byte %d: 0x%02x\n", i, rx_buffer1[i]);
     }
 }
+
 
 //
 // INIT :: GPIO Interrupt
@@ -221,68 +222,67 @@ static int __init fpga_driver_init(void)
     }
 
     //
-    // Initialize SPI0 as master
+    // SPI
     //
+    struct spi_master *spi_master0;
+    struct spi_master *spi_master1;
     int ret;
-    struct spi_master *master;
-    struct spi_board_info spi0_board_info = {
-        .modalias = "spidev",
-        .chip_select = 0,
-        .max_speed_hz = 10000000,  // Set your desired speed for SPI0
-    };
 
-    master = spi_busnum_to_master(0);
-    if (!master) {
-        printk(KERN_ERR "[FPGA][SPI] SPI master for bus 0 not found\n");
+    // Get the SPI masters
+    spi_master0 = spi_busnum_to_master(0);  // SPI0 on BeagleBone Black
+    if (!spi_master0) {
+        printk(KERN_ERR "[FPGA][SPI] SPI master for SPI0 not found\n");
         return -ENODEV;
     }
 
-    spi_dev0 = spi_new_device(master, &spi0_board_info);
+    spi_master1 = spi_busnum_to_master(1);  // SPI1 on BeagleBone Black
+    if (!spi_master1) {
+        printk(KERN_ERR "[FPGA][SPI] SPI master for SPI1 not found\n");
+        return -ENODEV;
+    }
+
+    // Prepare the SPI devices
+    spi_dev0 = spi_alloc_device(spi_master0);
     if (!spi_dev0) {
-        printk(KERN_ERR "[FPGA][SPI] Failed to create SPI device 0\n");
-        return -ENODEV;
+        printk(KERN_ERR "[FPGA][SPI] Failed to allocate SPI device for SPI0\n");
+        return -ENOMEM;
     }
 
-    spi_dev0->mode = SPI_MODE_0;
-    spi_dev0->bits_per_word = 8;
-    spi_dev0->chip_select = 0;
-    spi_dev0->max_speed_hz = 10000000;  // Set your desired speed for SPI0
+    spi_dev1 = spi_alloc_device(spi_master1);
+    if (!spi_dev1) {
+        printk(KERN_ERR "[FPGA][SPI] Failed to allocate SPI device for SPI1\n");
+        spi_dev_put(spi_dev0);
+        return -ENOMEM;
+    }
 
+    // Configure SPI0 device
+    spi_dev0->chip_select = 0;  // Set the chip select value (0 for SPI0 on BeagleBone Black)
+    spi_dev0->mode = SPI_MODE_0;  // Set the SPI mode (0 for mode 0)
+    spi_dev0->bits_per_word = 8;  // Set the number of bits per word
+
+    // Configure SPI1 device
+    spi_dev1->chip_select = 0;  // Set the chip select value (0 for SPI1 on BeagleBone Black)
+    spi_dev1->mode = SPI_MODE_0;  // Set the SPI mode (0 for mode 0)
+    spi_dev1->bits_per_word = 8;  // Set the number of bits per word
+
+    // Setup SPI0 device
     ret = spi_setup(spi_dev0);
     if (ret < 0) {
-        printk(KERN_ERR "[FPGA][SPI] Failed to setup SPI device 0: %d\n", ret);
-        spi_unregister_device(spi_dev0);
+        printk(KERN_ERR "[FPGA][SPI] Failed to setup SPI device for SPI0: %d\n", ret);
+        spi_dev_put(spi_dev0);
+        spi_dev_put(spi_dev1);
         return ret;
     }
 
-    //
-    // Initialize SPI1 as slave
-    //
-    struct spi_board_info spi1_board_info = {
-        .modalias = "spidev",
-        .chip_select = 1,
-        .max_speed_hz = 10000000,  // Set your desired speed for SPI1
-    };
-
-    spi_dev1 = spi_new_device(master, &spi1_board_info);
-    if (!spi_dev1) {
-        printk(KERN_ERR "[FPGA][SPI] Failed to create SPI device 1\n");
-        spi_unregister_device(spi_dev0);
-        return -ENODEV;
-    }
-
-    spi_dev1->mode = SPI_MODE_0;
-    spi_dev1->bits_per_word = 8;
-    spi_dev1->chip_select = 1;
-    spi_dev1->max_speed_hz = 10000000;  // Set your desired speed for SPI1
-
+    // Setup SPI1 device
     ret = spi_setup(spi_dev1);
     if (ret < 0) {
-        printk(KERN_ERR "[FPGA][SPI] Failed to setup SPI device 1: %d\n", ret);
-        spi_unregister_device(spi_dev0);
-        spi_unregister_device(spi_dev1);
+        printk(KERN_ERR "[FPGA][SPI] Failed to setup SPI device for SPI1: %d\n", ret);
+        spi_dev_put(spi_dev0);
+        spi_dev_put(spi_dev1);
         return ret;
     }
+
     //
     // GPIO Interrupt
     //
