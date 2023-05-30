@@ -223,6 +223,7 @@ static int __init fpga_driver_init(void)
     //
     // Initialize SPI0 as master
     //
+    int ret;
     struct spi_master *master;
     struct spi_board_info spi0_board_info = {
         .modalias = "spidev",
