@@ -117,5 +117,13 @@ set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_INVERSION_MASK=00
 set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_INVERSION_MASK_LENGTH=50" -section_id SPI_DEBUG
 set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_NODE_CRC_LOWORD=48970" -section_id SPI_DEBUG
 set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_NODE_CRC_HIWORD=15687" -section_id SPI_DEBUG
-set_global_assignment -name SLD_FILE /ice/code.lab/IceNET/IceNET.NetworkAnalyser/hardware/spi_auto_stripped.stp
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to CS
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to MISO
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to SCLK
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to MOSI
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to INT_CS
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to INT_MOSI
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to INT_MISO
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to INT_SCLK
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
+set_global_assignment -name SLD_FILE /ice/code.lab/IceNET/IceNET.NetworkAnalyser/hardware/spi_auto_stripped.stp

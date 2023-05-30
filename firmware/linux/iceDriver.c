@@ -156,7 +156,7 @@ static void spi_work_func(struct work_struct *work)
         return;
     }
 
-    msleep(1000);
+    // msleep(1000);
 
     // Transfer SPI messages for SPI1
     ret = spi_sync(spi_dev1, &msg1);
