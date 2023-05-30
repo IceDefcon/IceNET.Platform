@@ -1,5 +1,5 @@
 TimeQuest Timing Analyzer report for NetworkAnalyser
-Tue May 30 10:49:04 2023
+Tue May 30 11:28:52 2023
 Quartus II 64-Bit Version 13.0.1 Build 232 06/12/2013 Service Pack 1 SJ Web Edition
 
 
@@ -93,7 +93,7 @@ applicable agreement for further details.
 +---------------------+--------+--------------------------+
 ; SDC File Path       ; Status ; Read at                  ;
 +---------------------+--------+--------------------------+
-; NetworkAnalyser.sdc ; OK     ; Tue May 30 10:49:04 2023 ;
+; NetworkAnalyser.sdc ; OK     ; Tue May 30 11:28:52 2023 ;
 +---------------------+--------+--------------------------+
 
 
@@ -159,8 +159,8 @@ No paths to report.
 +------------+-------------+--------+----+----+--------+
 ; Input Port ; Output Port ; RR     ; RF ; FR ; FF     ;
 +------------+-------------+--------+----+----+--------+
-; INT_MOSI   ; MISO        ; 10.492 ;    ;    ; 10.492 ;
-; MOSI       ; INT_MISO    ; 10.466 ;    ;    ; 10.466 ;
+; INT_MOSI   ; INT_MISO    ; 10.539 ;    ;    ; 10.539 ;
+; MOSI       ; MISO        ; 10.525 ;    ;    ; 10.525 ;
 +------------+-------------+--------+----+----+--------+
 
 
@@ -169,8 +169,8 @@ No paths to report.
 +------------+-------------+--------+----+----+--------+
 ; Input Port ; Output Port ; RR     ; RF ; FR ; FF     ;
 +------------+-------------+--------+----+----+--------+
-; INT_MOSI   ; MISO        ; 10.492 ;    ;    ; 10.492 ;
-; MOSI       ; INT_MISO    ; 10.466 ;    ;    ; 10.466 ;
+; INT_MOSI   ; INT_MISO    ; 10.539 ;    ;    ; 10.539 ;
+; MOSI       ; MISO        ; 10.525 ;    ;    ; 10.525 ;
 +------------+-------------+--------+----+----+--------+
 
 
@@ -221,8 +221,8 @@ No paths to report.
 +------------+-------------+-------+----+----+-------+
 ; Input Port ; Output Port ; RR    ; RF ; FR ; FF    ;
 +------------+-------------+-------+----+----+-------+
-; INT_MOSI   ; MISO        ; 5.053 ;    ;    ; 5.053 ;
-; MOSI       ; INT_MISO    ; 5.041 ;    ;    ; 5.041 ;
+; INT_MOSI   ; INT_MISO    ; 5.093 ;    ;    ; 5.093 ;
+; MOSI       ; MISO        ; 5.076 ;    ;    ; 5.076 ;
 +------------+-------------+-------+----+----+-------+
 
 
@@ -231,8 +231,8 @@ No paths to report.
 +------------+-------------+-------+----+----+-------+
 ; Input Port ; Output Port ; RR    ; RF ; FR ; FF    ;
 +------------+-------------+-------+----+----+-------+
-; INT_MOSI   ; MISO        ; 5.053 ;    ;    ; 5.053 ;
-; MOSI       ; INT_MISO    ; 5.041 ;    ;    ; 5.041 ;
+; INT_MOSI   ; INT_MISO    ; 5.093 ;    ;    ; 5.093 ;
+; MOSI       ; MISO        ; 5.076 ;    ;    ; 5.076 ;
 +------------+-------------+-------+----+----+-------+
 
 
@@ -253,8 +253,8 @@ No paths to report.
 +------------+-------------+--------+----+----+--------+
 ; Input Port ; Output Port ; RR     ; RF ; FR ; FF     ;
 +------------+-------------+--------+----+----+--------+
-; INT_MOSI   ; MISO        ; 10.492 ;    ;    ; 10.492 ;
-; MOSI       ; INT_MISO    ; 10.466 ;    ;    ; 10.466 ;
+; INT_MOSI   ; INT_MISO    ; 10.539 ;    ;    ; 10.539 ;
+; MOSI       ; MISO        ; 10.525 ;    ;    ; 10.525 ;
 +------------+-------------+--------+----+----+--------+
 
 
@@ -263,8 +263,8 @@ No paths to report.
 +------------+-------------+-------+----+----+-------+
 ; Input Port ; Output Port ; RR    ; RF ; FR ; FF    ;
 +------------+-------------+-------+----+----+-------+
-; INT_MOSI   ; MISO        ; 5.053 ;    ;    ; 5.053 ;
-; MOSI       ; INT_MISO    ; 5.041 ;    ;    ; 5.041 ;
+; INT_MOSI   ; INT_MISO    ; 5.093 ;    ;    ; 5.093 ;
+; MOSI       ; MISO        ; 5.076 ;    ;    ; 5.076 ;
 +------------+-------------+-------+----+----+-------+
 
 
@@ -306,7 +306,7 @@ No dedicated SERDES Receiver circuitry present in device or used in design
 Info: *******************************************************************
 Info: Running Quartus II 64-Bit TimeQuest Timing Analyzer
     Info: Version 13.0.1 Build 232 06/12/2013 Service Pack 1 SJ Web Edition
-    Info: Processing started: Tue May 30 10:49:03 2023
+    Info: Processing started: Tue May 30 11:28:51 2023
 Info: Command: quartus_sta NetworkAnalyser -c NetworkAnalyser
 Info: qsta_default_script.tcl version: #1
 Info (11104): Parallel Compilation has detected 4 hyper-threaded processors. However, the extra hyper-threaded processors will not be used by default. Parallel Compilation will use 2 of the 2 physical processors detected instead.
@@ -345,7 +345,7 @@ Info (332102): Design is not fully constrained for setup requirements
 Info (332102): Design is not fully constrained for hold requirements
 Info: Quartus II 64-Bit TimeQuest Timing Analyzer was successful. 0 errors, 2 warnings
     Info: Peak virtual memory: 519 megabytes
-    Info: Processing ended: Tue May 30 10:49:04 2023
+    Info: Processing ended: Tue May 30 11:28:52 2023
     Info: Elapsed time: 00:00:01
     Info: Total CPU time (on all processors): 00:00:01
 
