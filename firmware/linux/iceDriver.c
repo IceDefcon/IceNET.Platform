@@ -185,7 +185,7 @@ static void spi_work_func(struct work_struct *work)
 #define GPIO_PIN 60 // P9_12
 #define GPIO_DESC "GPIO_ISR"
 
-static irqreturn_t gpio_isr(int irq, void *data)
+static irqreturn_t isr_response(int irq, void *data)
 {
     static int i = 0;
 
@@ -321,7 +321,7 @@ static int __init fpga_driver_init(void)
     }
 
     // Request IRQ for GPIO pin
-    result = request_irq(irq, gpio_isr, IRQF_TRIGGER_RISING, GPIO_DESC, NULL);
+    result = request_irq(irq, isr_response, IRQF_TRIGGER_RISING, GPIO_DESC, NULL);
     if (result < 0) 
     {
         printk(KERN_ERR "[FPGA][IRQ] Failed to request IRQ\n");
