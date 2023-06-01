@@ -158,8 +158,6 @@ static void spi_response_func(struct work_struct *work)
         return;
     }
 
-    // msleep(1000);
-
     // Transfer SPI messages for SPI1
     ret = spi_sync(spi_dev1, &msg1);
     if (ret < 0) {
@@ -207,6 +205,10 @@ static irqreturn_t isr_response(int irq, void *data)
 
     queue_work(spi_response_wq, &spi_response_work);
 
+    msleep(3000);
+
+    queue_work(spi_request_wq, &spi_request_work);
+
     return IRQ_HANDLED;
 }
 
@@ -232,7 +234,6 @@ static irqreturn_t isr_request(int irq, void *data)
 
     return IRQ_HANDLED;
 }
-
 
 //
 // FPGA Driver INIT
