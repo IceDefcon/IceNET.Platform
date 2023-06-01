@@ -126,7 +126,7 @@ When: unable to lock chain(Insufficient port permissions)
 # IN PROGRESS
 	
 	1. Testing kernel module :: kthreads
-	2. Desing FPGA SPI module :: Modelsim
+	2. Desing FPGA Coms :: Modelsim
 	3. Master application :: Core development
 
 # ICE
