@@ -183,7 +183,7 @@ static void spi_work_func(struct work_struct *work)
 // INIT :: GPIO Interrupt
 //
 #define GPIO_PIN 60 // P9_12
-#define GPIO_DESC "GPIO_ISR"
+#define GPIO_RESPONSE "GPIO_RESPONSE"
 
 static irqreturn_t isr_response(int irq, void *data)
 {
@@ -295,7 +295,7 @@ static int __init fpga_driver_init(void)
     int irq, result;
 
     // Request GPIO pin
-    result = gpio_request(GPIO_PIN, GPIO_DESC);
+    result = gpio_request(GPIO_PIN, GPIO_RESPONSE);
     if (result < 0) 
     {
         printk(KERN_ERR "[FPGA][IRQ] Failed to request GPIO pin\n");
@@ -321,7 +321,7 @@ static int __init fpga_driver_init(void)
     }
 
     // Request IRQ for GPIO pin
-    result = request_irq(irq, isr_response, IRQF_TRIGGER_RISING, GPIO_DESC, NULL);
+    result = request_irq(irq, isr_response, IRQF_TRIGGER_RISING, GPIO_RESPONSE, NULL);
     if (result < 0) 
     {
         printk(KERN_ERR "[FPGA][IRQ] Failed to request IRQ\n");
