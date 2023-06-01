@@ -190,7 +190,7 @@ static void spi_request_func(struct work_struct *work)
 //
 // GPIO :: HARDWARE INTERRUPTS
 //
-#define GPIO_PIN 60 // P9_12
+#define GPIO_RESPONSE_PIN 60 // P9_12
 #define GPIO_RESPONSE "GPIO_RESPONSE"
 
 static irqreturn_t isr_response(int irq, void *data)
@@ -208,7 +208,7 @@ static irqreturn_t isr_response(int irq, void *data)
     //          //
     //////////////
 
-    printk(KERN_INFO "[FPGA][ISR] GPIO interrupt [%d] @ Pin [%d]\n", counter, GPIO_PIN);
+    printk(KERN_INFO "[FPGA][ISR] Resonse interrupt [%d] @ Pin [%d]\n", counter, GPIO_RESPONSE_PIN);
     counter++;
 
     queue_work(spi_response_wq, &spi_response_work);
@@ -231,7 +231,7 @@ static irqreturn_t isr_request(int irq, void *data)
     //          //
     //////////////
 
-    printk(KERN_INFO "[FPGA][ISR] GPIO interrupt [%d] @ Pin [%d]\n", counter, GPIO_PIN);
+    printk(KERN_INFO "[FPGA][ISR] GPIO interrupt [%d] @ Pin [%d]\n", counter, GPIO_RESPONSE_PIN);
     counter++;
 
     queue_work(spi_request_wq, &spi_request_work);
@@ -334,7 +334,7 @@ static int __init fpga_driver_init(void)
     int irq, result;
 
     // Request GPIO pin
-    result = gpio_request(GPIO_PIN, GPIO_RESPONSE);
+    result = gpio_request(GPIO_RESPONSE_PIN, GPIO_RESPONSE);
     if (result < 0) 
     {
         printk(KERN_ERR "[FPGA][IRQ] Failed to request GPIO pin\n");
@@ -342,20 +342,20 @@ static int __init fpga_driver_init(void)
     }
 
     // Set GPIO pin as input
-    result = gpio_direction_input(GPIO_PIN);
+    result = gpio_direction_input(GPIO_RESPONSE_PIN);
     if (result < 0) 
     {
         printk(KERN_ERR "[FPGA][IRQ] Failed to set GPIO direction\n");
-        gpio_free(GPIO_PIN);
+        gpio_free(GPIO_RESPONSE_PIN);
         return result;
     }
 
     // Get IRQ number for GPIO pin
-    irq = gpio_to_irq(GPIO_PIN);
+    irq = gpio_to_irq(GPIO_RESPONSE_PIN);
     if (irq < 0) 
     {
         printk(KERN_ERR "[FPGA][IRQ] Failed to get IRQ number\n");
-        gpio_free(GPIO_PIN);
+        gpio_free(GPIO_RESPONSE_PIN);
         return irq;
     }
 
@@ -364,7 +364,7 @@ static int __init fpga_driver_init(void)
     if (result < 0) 
     {
         printk(KERN_ERR "[FPGA][IRQ] Failed to request IRQ\n");
-        gpio_free(GPIO_PIN);
+        gpio_free(GPIO_RESPONSE_PIN);
         spi_dev_put(spi_dev0);
         spi_dev_put(spi_dev1);
         return result;
@@ -439,13 +439,13 @@ static void __exit fpga_driver_exit(void)
     //
     // IRQ
     //
-    int irq = gpio_to_irq(GPIO_PIN);
+    int irq = gpio_to_irq(GPIO_RESPONSE_PIN);
 
     // Free IRQ for GPIO pin
     free_irq(irq, NULL);
 
     // Free GPIO pin
-    gpio_free(GPIO_PIN);
+    gpio_free(GPIO_RESPONSE_PIN);
 
     printk(KERN_INFO "[FPGA][IRQ] ISR exited\n");
 
