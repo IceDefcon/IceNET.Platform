@@ -120,8 +120,8 @@ static volatile uint8_t rx_buffer0[1];          // Buffer to receive data for SP
 static volatile uint8_t tx_buffer1[] = {0xBB};  // Data to be transmitted for SPI1
 static volatile uint8_t rx_buffer1[1];          // Buffer to receive data for SPI1
 
-static struct work_struct response_spi_work;
-static struct workqueue_struct *response_spi_wq;
+static struct work_struct spi_work;
+static struct workqueue_struct *spi_wq;
 
 static void spi_work_func(struct work_struct *work)
 {
@@ -183,14 +183,9 @@ static void spi_work_func(struct work_struct *work)
 // INIT :: GPIO Interrupt
 //
 #define GPIO_PIN 60 // P9_12
-#define GPIO_PIN 66 // R8_7
-#define GPIO_RESPONSE "GPIO_RESPONSE"
-#define GPIO_REQUEST "GPIO_REQUEST"
+#define GPIO_DESC "GPIO_ISR"
 
-//
-// FPGA ---> KERNEL
-//
-static irqreturn_t isr_response(int irq, void *data)
+static irqreturn_t gpio_isr(int irq, void *data)
 {
     static int i = 0;
 
@@ -204,10 +199,10 @@ static irqreturn_t isr_response(int irq, void *data)
     //          //
     //////////////
 
-    printk(KERN_INFO "[FPGA][ISR] Response interrupt [%d] @ Pin [%d]\n", i, GPIO_PIN);
+    printk(KERN_INFO "[FPGA][ISR] GPIO interrupt [%d] @ Pin [%d]\n", i, GPIO_PIN);
     i++;
 
-    queue_work(response_spi_wq, &response_spi_work);
+    queue_work(spi_wq, &spi_work);
 
     return IRQ_HANDLED;
 }
@@ -220,11 +215,11 @@ static int __init fpga_driver_init(void)
     //
     // Initialize the work structure
     //
-    INIT_WORK(&response_spi_work, spi_work_func);
+    INIT_WORK(&spi_work, spi_work_func);
 
     // Create the workqueue
-    response_spi_wq = create_singlethread_workqueue("spi_workqueue");
-    if (!response_spi_wq) {
+    spi_wq = create_singlethread_workqueue("spi_workqueue");
+    if (!spi_wq) {
         printk(KERN_ERR "[FPGA][WRK] Failed to create SPI workqueue\n");
         return -ENOMEM;
     }
@@ -300,7 +295,7 @@ static int __init fpga_driver_init(void)
     int irq, result;
 
     // Request GPIO pin
-    result = gpio_request(GPIO_PIN, GPIO_RESPONSE);
+    result = gpio_request(GPIO_PIN, GPIO_DESC);
     if (result < 0) 
     {
         printk(KERN_ERR "[FPGA][IRQ] Failed to request GPIO pin\n");
@@ -326,7 +321,7 @@ static int __init fpga_driver_init(void)
     }
 
     // Request IRQ for GPIO pin
-    result = request_irq(irq, isr_response, IRQF_TRIGGER_RISING, GPIO_RESPONSE, NULL);
+    result = request_irq(irq, gpio_isr, IRQF_TRIGGER_RISING, GPIO_DESC, NULL);
     if (result < 0) 
     {
         printk(KERN_ERR "[FPGA][IRQ] Failed to request IRQ\n");
@@ -380,13 +375,13 @@ static void __exit fpga_driver_exit(void)
     //
     // Cancel and flush the work
     //
-    cancel_work_sync(&response_spi_work);
+    cancel_work_sync(&spi_work);
 
     // Destroy the workqueue
-    if (response_spi_wq) {
-        flush_workqueue(response_spi_wq);
-        destroy_workqueue(response_spi_wq);
-        response_spi_wq = NULL;
+    if (spi_wq) {
+        flush_workqueue(spi_wq);
+        destroy_workqueue(spi_wq);
+        spi_wq = NULL;
     }
     
     //
