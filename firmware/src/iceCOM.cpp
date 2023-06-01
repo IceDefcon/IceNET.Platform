@@ -14,27 +14,27 @@ m_file_descriptor(0),
 m_killThread(false),
 m_BUFFER_LENGTH(256)
 {
-	Console::Info("iceCOM :: Construct");
+	Debug::Info("iceCOM :: Construct");
 	m_iceThread = std::thread(&iceCOM::iceCOMThread, this);
 }
 
 iceCOM::~iceCOM() 
 {
-	Console::Info("iceCOM :: Destroy");
+	Debug::Info("iceCOM :: Destroy");
     if (m_iceThread.joinable()) 
     {
     	m_iceThread.join();
    	}
    	else
    	{
-		Console::Warning("iceCOM :: Thread is not Joinable");
+		Debug::Warning("iceCOM :: Thread is not Joinable");
    	}
 }
 
 void 
 iceCOM::iceCOMThread()
 {
-	Console::Info("iceCOM :: iceCOMThread Launched");
+	Debug::Info("iceCOM :: iceCOMThread Launched");
 
     while (!m_killThread) 
     {
@@ -52,17 +52,17 @@ iceCOM::iceCOMThread()
         device_read();
     }
 
-	Console::Info("iceCOM :: iceCOMThread Termiation");
+	Debug::Info("iceCOM :: iceCOMThread Termiation");
 }
 
 int 
 iceCOM::device_open(const char* device)
 {
-	Console::Info("iceCOM :: Open iceCOM Device");
+	Debug::Info("iceCOM :: Open iceCOM Device");
 	m_file_descriptor = open(device, O_RDWR);
 	if (m_file_descriptor < 0)
 	{
-		Console::Error("iceCOM :: Failed to open iceCOM Device");
+		Debug::Error("iceCOM :: Failed to open iceCOM Device");
 		return -1;
 	}
 
@@ -78,10 +78,10 @@ iceCOM::device_read()
 	ret = read(m_file_descriptor, console_RX, m_BUFFER_LENGTH);
 	if (ret == -1)
 	{
-	    Console::Error("iceCOM :: Cannot read from kernel space");
+	    Debug::Error("iceCOM :: Cannot read from kernel space");
 	}
 
-	Console::Read(console_RX);
+	Debug::Read(console_RX);
 
 	// clear the buffer
 	memset (console_RX, 0, m_BUFFER_LENGTH);
@@ -100,7 +100,7 @@ iceCOM::device_write()
 		console_TX[i] = 0;
 	}
 
-	Console::Write();
+	Debug::Write();
 	std::cin.getline(console_TX, m_BUFFER_LENGTH);
 
 	if (std::strcmp(console_TX, "exit") == 0) 
@@ -111,7 +111,7 @@ iceCOM::device_write()
 	ret = write(m_file_descriptor, console_TX, strlen(console_TX)); // Send the string to the LKM
 	if (ret == -1)
 	{
-	    Console::Error("iceCOM :: Cannot write to kernel space");
+	    Debug::Error("iceCOM :: Cannot write to kernel space");
 	}
 
 	return 1;
