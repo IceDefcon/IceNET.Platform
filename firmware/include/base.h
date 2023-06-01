@@ -10,12 +10,12 @@ public:
 
 	Base()
 	{
-		Debug::Info("Base :: Init");
+		Debug::Info("Base :: Init Core");
 	}
 
 	~Base()
 	{
-		Debug::Info("Base :: Destroy");
+		Debug::Info("Base :: Destroy Core");
 	}
 
 	virtual int device_open(const char* device) = 0;

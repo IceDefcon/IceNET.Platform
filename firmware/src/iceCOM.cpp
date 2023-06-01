@@ -14,27 +14,27 @@ m_file_descriptor(0),
 m_killThread(false),
 m_BUFFER_LENGTH(256)
 {
-	Debug::Info("iceCOM :: Construct");
+	Debug::Info("iceCOM :: Init iceCOMThread");
 	m_iceThread = std::thread(&iceCOM::iceCOMThread, this);
 }
 
 iceCOM::~iceCOM() 
 {
-	Debug::Info("iceCOM :: Destroy");
+	Debug::Info("iceCOM :: iceCOMThread Destroy");
     if (m_iceThread.joinable()) 
     {
     	m_iceThread.join();
    	}
    	else
    	{
-		Debug::Warning("iceCOM :: Thread is not Joinable");
+		Debug::Warning("iceCOM :: iceCOMThread is not joinable");
    	}
 }
 
 void 
 iceCOM::iceCOMThread()
 {
-	Debug::Info("iceCOM :: iceCOMThread Launched");
+	Debug::Info("iceCOM :: iceCOMThread Start");
 
     while (!m_killThread) 
     {
@@ -52,7 +52,7 @@ iceCOM::iceCOMThread()
         device_read();
     }
 
-	Debug::Info("iceCOM :: iceCOMThread Termiation");
+	Debug::Info("iceCOM :: iceCOMThread Terminate");
 }
 
 int 
