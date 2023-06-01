@@ -52,6 +52,11 @@ And operating system:
 	PRIVACY_POLICY_URL="https://www.ubuntu.com/legal/terms-and-policies/privacy-policy"
 	UBUNTU_CODENAME=jammy
 
+To create symbolic link
+
+	cd /ice/q13//quartus/bin
+	ln -s $(pwd)/quartus /usr/local/bin/quartus
+
 To install Quartus 13.0sp1 you need
 
 	sudo apt-get install gcc-multilib g++-multilib

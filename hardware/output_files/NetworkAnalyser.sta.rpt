@@ -1,5 +1,5 @@
 TimeQuest Timing Analyzer report for NetworkAnalyser
-Thu Jun  1 19:57:31 2023
+Thu Jun  1 23:24:29 2023
 Quartus II 64-Bit Version 13.0.1 Build 232 06/12/2013 Service Pack 1 SJ Web Edition
 
 
@@ -93,7 +93,7 @@ applicable agreement for further details.
 +---------------------+--------+--------------------------+
 ; SDC File Path       ; Status ; Read at                  ;
 +---------------------+--------+--------------------------+
-; NetworkAnalyser.sdc ; OK     ; Thu Jun  1 19:57:30 2023 ;
+; NetworkAnalyser.sdc ; OK     ; Thu Jun  1 23:24:28 2023 ;
 +---------------------+--------+--------------------------+
 
 
@@ -159,8 +159,8 @@ No paths to report.
 +------------+-------------+--------+----+----+--------+
 ; Input Port ; Output Port ; RR     ; RF ; FR ; FF     ;
 +------------+-------------+--------+----+----+--------+
-; INT_MOSI   ; INT_MISO    ; 10.539 ;    ;    ; 10.539 ;
-; MOSI       ; MISO        ; 10.525 ;    ;    ; 10.525 ;
+; REQ_MOSI   ; REQ_MISO    ; 10.463 ;    ;    ; 10.463 ;
+; RES_MOSI   ; RES_MISO    ; 10.415 ;    ;    ; 10.415 ;
 +------------+-------------+--------+----+----+--------+
 
 
@@ -169,8 +169,8 @@ No paths to report.
 +------------+-------------+--------+----+----+--------+
 ; Input Port ; Output Port ; RR     ; RF ; FR ; FF     ;
 +------------+-------------+--------+----+----+--------+
-; INT_MOSI   ; INT_MISO    ; 10.539 ;    ;    ; 10.539 ;
-; MOSI       ; MISO        ; 10.525 ;    ;    ; 10.525 ;
+; REQ_MOSI   ; REQ_MISO    ; 10.463 ;    ;    ; 10.463 ;
+; RES_MOSI   ; RES_MISO    ; 10.415 ;    ;    ; 10.415 ;
 +------------+-------------+--------+----+----+--------+
 
 
@@ -221,8 +221,8 @@ No paths to report.
 +------------+-------------+-------+----+----+-------+
 ; Input Port ; Output Port ; RR    ; RF ; FR ; FF    ;
 +------------+-------------+-------+----+----+-------+
-; INT_MOSI   ; INT_MISO    ; 5.093 ;    ;    ; 5.093 ;
-; MOSI       ; MISO        ; 5.076 ;    ;    ; 5.076 ;
+; REQ_MOSI   ; REQ_MISO    ; 5.040 ;    ;    ; 5.040 ;
+; RES_MOSI   ; RES_MISO    ; 5.007 ;    ;    ; 5.007 ;
 +------------+-------------+-------+----+----+-------+
 
 
@@ -231,8 +231,8 @@ No paths to report.
 +------------+-------------+-------+----+----+-------+
 ; Input Port ; Output Port ; RR    ; RF ; FR ; FF    ;
 +------------+-------------+-------+----+----+-------+
-; INT_MOSI   ; INT_MISO    ; 5.093 ;    ;    ; 5.093 ;
-; MOSI       ; MISO        ; 5.076 ;    ;    ; 5.076 ;
+; REQ_MOSI   ; REQ_MISO    ; 5.040 ;    ;    ; 5.040 ;
+; RES_MOSI   ; RES_MISO    ; 5.007 ;    ;    ; 5.007 ;
 +------------+-------------+-------+----+----+-------+
 
 
@@ -253,8 +253,8 @@ No paths to report.
 +------------+-------------+--------+----+----+--------+
 ; Input Port ; Output Port ; RR     ; RF ; FR ; FF     ;
 +------------+-------------+--------+----+----+--------+
-; INT_MOSI   ; INT_MISO    ; 10.539 ;    ;    ; 10.539 ;
-; MOSI       ; MISO        ; 10.525 ;    ;    ; 10.525 ;
+; REQ_MOSI   ; REQ_MISO    ; 10.463 ;    ;    ; 10.463 ;
+; RES_MOSI   ; RES_MISO    ; 10.415 ;    ;    ; 10.415 ;
 +------------+-------------+--------+----+----+--------+
 
 
@@ -263,8 +263,8 @@ No paths to report.
 +------------+-------------+-------+----+----+-------+
 ; Input Port ; Output Port ; RR    ; RF ; FR ; FF    ;
 +------------+-------------+-------+----+----+-------+
-; INT_MOSI   ; INT_MISO    ; 5.093 ;    ;    ; 5.093 ;
-; MOSI       ; MISO        ; 5.076 ;    ;    ; 5.076 ;
+; REQ_MOSI   ; REQ_MISO    ; 5.040 ;    ;    ; 5.040 ;
+; RES_MOSI   ; RES_MISO    ; 5.007 ;    ;    ; 5.007 ;
 +------------+-------------+-------+----+----+-------+
 
 
@@ -293,8 +293,8 @@ No dedicated SERDES Receiver circuitry present in device or used in design
 +---------------------------------+-------+------+
 ; Illegal Clocks                  ; 0     ; 0    ;
 ; Unconstrained Clocks            ; 1     ; 1    ;
-; Unconstrained Input Ports       ; 8     ; 8    ;
-; Unconstrained Input Port Paths  ; 54    ; 54   ;
+; Unconstrained Input Ports       ; 4     ; 4    ;
+; Unconstrained Input Port Paths  ; 38    ; 38   ;
 ; Unconstrained Output Ports      ; 6     ; 6    ;
 ; Unconstrained Output Port Paths ; 6     ; 6    ;
 +---------------------------------+-------+------+
@@ -306,7 +306,7 @@ No dedicated SERDES Receiver circuitry present in device or used in design
 Info: *******************************************************************
 Info: Running Quartus II 64-Bit TimeQuest Timing Analyzer
     Info: Version 13.0.1 Build 232 06/12/2013 Service Pack 1 SJ Web Edition
-    Info: Processing started: Thu Jun  1 19:57:30 2023
+    Info: Processing started: Thu Jun  1 23:24:28 2023
 Info: Command: quartus_sta NetworkAnalyser -c NetworkAnalyser
 Info: qsta_default_script.tcl version: #1
 Info (11104): Parallel Compilation has detected 4 hyper-threaded processors. However, the extra hyper-threaded processors will not be used by default. Parallel Compilation will use 2 of the 2 physical processors detected instead.
@@ -346,7 +346,7 @@ Info (332102): Design is not fully constrained for setup requirements
 Info (332102): Design is not fully constrained for hold requirements
 Info: Quartus II 64-Bit TimeQuest Timing Analyzer was successful. 0 errors, 3 warnings
     Info: Peak virtual memory: 519 megabytes
-    Info: Processing ended: Thu Jun  1 19:57:31 2023
+    Info: Processing ended: Thu Jun  1 23:24:29 2023
     Info: Elapsed time: 00:00:01
     Info: Total CPU time (on all processors): 00:00:01
 

@@ -7,35 +7,34 @@
 #include <string.h> 		// strlem
 #include <unistd.h> 		// read/write to the file
 #include <cstring> 			// strcmp
-#include "devChar.h"
+#include "iceCOM.h"
 
-DevChar::DevChar() : 
+iceCOM::iceCOM() : 
 m_file_descriptor(0), 
 m_killThread(false),
 m_BUFFER_LENGTH(256)
 {
-	Console::Info("DevChar :: Construct");
-	iceThread = std::thread(&DevChar::iceCOMThread, this);
+	Console::Info("iceCOM :: Construct");
+	m_iceThread = std::thread(&iceCOM::iceCOMThread, this);
 }
 
-DevChar::~DevChar() 
+iceCOM::~iceCOM() 
 {
-	Console::Info("DevChar :: Destroy");
-    if (iceThread.joinable()) 
+	Console::Info("iceCOM :: Destroy");
+    if (m_iceThread.joinable()) 
     {
-    	iceThread.join();
+    	m_iceThread.join();
    	}
    	else
    	{
-		Console::Warning("DevChar :: Thread is not Joinable");
-		Console::Warning("DevChar :: Cannot exute to the end");
+		Console::Warning("iceCOM :: Thread is not Joinable");
    	}
 }
 
 void 
-DevChar::iceCOMThread()
+iceCOM::iceCOMThread()
 {
-	Console::Info("DevChar :: iceCOMThread Launched");
+	Console::Info("iceCOM :: iceCOMThread Launched");
 
     while (!m_killThread) 
     {
@@ -53,17 +52,17 @@ DevChar::iceCOMThread()
         device_read();
     }
 
-	Console::Info("DevChar :: iceCOMThread Termiation");
+	Console::Info("iceCOM :: iceCOMThread Termiation");
 }
 
 int 
-DevChar::device_open(const char* device)
+iceCOM::device_open(const char* device)
 {
-	Console::Info("DevChar :: Open iceCOM Device");
+	Console::Info("iceCOM :: Open iceCOM Device");
 	m_file_descriptor = open(device, O_RDWR);
 	if (m_file_descriptor < 0)
 	{
-		Console::Error("DevChar :: Failed to open iceCOM Device");
+		Console::Error("iceCOM :: Failed to open iceCOM Device");
 		return -1;
 	}
 
@@ -71,7 +70,7 @@ DevChar::device_open(const char* device)
 }
 
 int 
-DevChar::device_read()
+iceCOM::device_read()
 {
 	int ret;
 	char console_RX[m_BUFFER_LENGTH];
@@ -79,7 +78,7 @@ DevChar::device_read()
 	ret = read(m_file_descriptor, console_RX, m_BUFFER_LENGTH);
 	if (ret == -1)
 	{
-	    Console::Error("DevChar :: Cannot read from kernel space");
+	    Console::Error("iceCOM :: Cannot read from kernel space");
 	}
 
 	Console::Read(console_RX);
@@ -91,7 +90,7 @@ DevChar::device_read()
 }
 
 int 
-DevChar::device_write()
+iceCOM::device_write()
 {
 	int ret;
 	char console_TX[m_BUFFER_LENGTH];
@@ -112,21 +111,21 @@ DevChar::device_write()
 	ret = write(m_file_descriptor, console_TX, strlen(console_TX)); // Send the string to the LKM
 	if (ret == -1)
 	{
-	    Console::Error("DevChar :: Cannot write to kernel space");
+	    Console::Error("iceCOM :: Cannot write to kernel space");
 	}
 
 	return 1;
 }
 
 int 
-DevChar::device_close()
+iceCOM::device_close()
 {
 	close(m_file_descriptor);
 	return 1;
 }
 
 bool 
-DevChar::terminate()
+iceCOM::terminate()
 {
 	return m_killThread;
 }

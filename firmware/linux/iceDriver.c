@@ -183,6 +183,7 @@ static void spi_work_func(struct work_struct *work)
 // INIT :: GPIO Interrupt
 //
 #define GPIO_PIN 60 // P9_12
+#define GPIO_PIN 66 // R8_7
 #define GPIO_DESC "GPIO_ISR"
 
 static irqreturn_t gpio_isr(int irq, void *data)

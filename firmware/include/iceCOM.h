@@ -11,12 +11,12 @@
 #include "devBase.h"
 
 
-class DevChar : public DevBase
+class iceCOM : public DevBase
 {
 
 private:
 	int m_file_descriptor;
-	std::thread iceThread;
+	std::thread m_iceThread;
 
 	//
 	// Atomic in case if case if
@@ -29,9 +29,9 @@ private:
 
 public:
 
-	DevChar();
-	DevChar(size_t m_BUFFER_LENGTH);
-	~DevChar();
+	iceCOM();
+	iceCOM(size_t m_BUFFER_LENGTH);
+	~iceCOM();
 
 	void iceCOMThread();
 

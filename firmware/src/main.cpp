@@ -6,7 +6,7 @@
 #include <thread>
 #include <unistd.h> // sleep
 
-#include "devChar.h"
+#include "iceCOM.h"
 #include "console.h"
 
 #define ICE "/dev/iceCOM"
@@ -14,14 +14,14 @@
 int main(void)
 {
     //
-    // HEAP allocation
+    // Allocate on HEAP
     //
 	DevBase* pDevice = nullptr;
-	DevChar* pCharDevice = new DevChar;
+	iceCOM* iceCOMDevice = new iceCOM;
 	//
 	// Init Krenel Communication
 	//
-	pDevice = pCharDevice;
+	pDevice = iceCOMDevice;
 	pDevice->device_open(ICE);
 	//
 	// Main Comms
@@ -31,19 +31,16 @@ int main(void)
 		//
 		// Kill everything if flag is set
 		//
-		if(dynamic_cast<DevChar*>(pDevice)->terminate()) break;
-
-		DevChar* pDevChar = dynamic_cast<DevChar*>(pDevice);
-		if (pDevChar != nullptr) 
+		if (iceCOMDevice != nullptr) 
 		{
-		    if (pDevChar->terminate()) 
+		    if (iceCOMDevice->terminate()) 
 		    {
 		        break;
 		    }
 		}
 	}
 
-	delete pCharDevice;
+	delete iceCOMDevice;
 
 	return 0;
 }
