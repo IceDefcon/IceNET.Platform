@@ -8,7 +8,7 @@
 #include <atomic>
 #include <semaphore.h>
 
-#include "console.h"
+#include "debug.h"
 #include "base.h"
 
 
