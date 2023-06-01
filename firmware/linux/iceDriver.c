@@ -127,41 +127,25 @@ static struct workqueue_struct *spi_request_wq;
 
 static void spi_response_func(struct work_struct *work)
 {
-    struct spi_message msg0;
-    struct spi_message msg1;
-    struct spi_transfer transfer[2];
+    struct spi_message msg;
+    struct spi_transfer transfer;
     int ret;
     int i;
 
     // Initialize SPI transfer for SPI0
-    memset(&transfer[0], 0, sizeof(transfer[0]));
-    transfer[0].tx_buf = tx_buffer0;
-    transfer[0].rx_buf = rx_buffer0;
-    transfer[0].len = sizeof(tx_buffer0);
-
-    // Initialize SPI transfer for SPI1
-    memset(&transfer[1], 0, sizeof(transfer[1]));
-    transfer[1].tx_buf = tx_buffer1;  // Send received data from SPI0
-    transfer[1].rx_buf = rx_buffer1;  // Receive data from FPGA via SPI1
-    transfer[1].len = sizeof(tx_buffer0);
+    memset(&transfer, 0, sizeof(transfer));
+    transfer.tx_buf = tx_buffer0;
+    transfer.rx_buf = rx_buffer0;
+    transfer.len = sizeof(tx_buffer0);
 
     // Initialize SPI messages
-    spi_message_init(&msg0);
-    spi_message_init(&msg1);
-    spi_message_add_tail(&transfer[0], &msg0);
-    spi_message_add_tail(&transfer[1], &msg1);
+    spi_message_init(&msg);
+    spi_message_add_tail(&transfer, &msg);
 
     // Transfer SPI messages for SPI0
-    ret = spi_sync(spi_dev0, &msg0);
+    ret = spi_sync(spi_dev0, &msg);
     if (ret < 0) {
         printk(KERN_ERR "[FPGA][SPI] SPI transfer for SPI0 failed: %d\n", ret);
-        return;
-    }
-
-    // Transfer SPI messages for SPI1
-    ret = spi_sync(spi_dev1, &msg1);
-    if (ret < 0) {
-        printk(KERN_ERR "[FPGA][SPI] SPI transfer for SPI1 failed: %d\n", ret);
         return;
     }
 
@@ -169,59 +153,31 @@ static void spi_response_func(struct work_struct *work)
     printk(KERN_INFO "[FPGA][SPI] Received data for SPI0:");
     for (i = 0; i < sizeof(rx_buffer0); ++i) {
         printk(KERN_INFO "[FPGA][SPI] Byte %d: 0x%02x\n", i, rx_buffer0[i]);
-    }
-
-    // Display the received data for SPI1
-    printk(KERN_INFO "[FPGA][SPI] Received data for SPI1:");
-    for (i = 0; i < sizeof(rx_buffer1); ++i) {
-        printk(KERN_INFO "[FPGA][SPI] Byte %d: 0x%02x\n", i, rx_buffer1[i]);
     }
 }
 
 static void spi_request_func(struct work_struct *work)
 {
-    struct spi_message msg0;
-    struct spi_message msg1;
-    struct spi_transfer transfer[2];
+    struct spi_message msg;
+    struct spi_transfer transfer;
     int ret;
     int i;
 
-    // Initialize SPI transfer for SPI0
-    memset(&transfer[0], 0, sizeof(transfer[0]));
-    transfer[0].tx_buf = tx_buffer0;
-    transfer[0].rx_buf = rx_buffer0;
-    transfer[0].len = sizeof(tx_buffer0);
-
     // Initialize SPI transfer for SPI1
-    memset(&transfer[1], 0, sizeof(transfer[1]));
-    transfer[1].tx_buf = tx_buffer1;  // Send received data from SPI0
-    transfer[1].rx_buf = rx_buffer1;  // Receive data from FPGA via SPI1
-    transfer[1].len = sizeof(tx_buffer0);
+    memset(&transfer, 0, sizeof(transfer));
+    transfer.tx_buf = tx_buffer1;  // Send received data from SPI0
+    transfer.rx_buf = rx_buffer1;  // Receive data from FPGA via SPI1
+    transfer.len = sizeof(tx_buffer0);
 
     // Initialize SPI messages
-    spi_message_init(&msg0);
-    spi_message_init(&msg1);
-    spi_message_add_tail(&transfer[0], &msg0);
-    spi_message_add_tail(&transfer[1], &msg1);
-
-    // Transfer SPI messages for SPI0
-    ret = spi_sync(spi_dev0, &msg0);
-    if (ret < 0) {
-        printk(KERN_ERR "[FPGA][SPI] SPI transfer for SPI0 failed: %d\n", ret);
-        return;
-    }
+    spi_message_init(&msg);
+    spi_message_add_tail(&transfer, &msg);
 
     // Transfer SPI messages for SPI1
-    ret = spi_sync(spi_dev1, &msg1);
+    ret = spi_sync(spi_dev1, &msg);
     if (ret < 0) {
         printk(KERN_ERR "[FPGA][SPI] SPI transfer for SPI1 failed: %d\n", ret);
         return;
-    }
-
-    // Display the received data for SPI0
-    printk(KERN_INFO "[FPGA][SPI] Received data for SPI0:");
-    for (i = 0; i < sizeof(rx_buffer0); ++i) {
-        printk(KERN_INFO "[FPGA][SPI] Byte %d: 0x%02x\n", i, rx_buffer0[i]);
     }
 
     // Display the received data for SPI1
@@ -256,10 +212,6 @@ static irqreturn_t isr_response(int irq, void *data)
     counter++;
 
     queue_work(spi_response_wq, &spi_response_work);
-
-    msleep(3000);
-
-    queue_work(spi_request_wq, &spi_request_work);
 
     return IRQ_HANDLED;
 }
@@ -463,6 +415,7 @@ static void __exit fpga_driver_exit(void)
     // Cancel and flush the work
     //
     cancel_work_sync(&spi_response_work);
+    cancel_work_sync(&spi_request_work);
 
     // Destroy RESPONSE workqueue
     if (spi_response_wq) {
