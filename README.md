@@ -1,56 +1,15 @@
 # IceNET.NetworkAnalyser
-Detect and Report Security Anomalies inside Computer Network
-----------------------------------------------------------------
+
+Hardware firewall to detect, report and neutralise security threats inside computer networks
+-
 
 Current Hardware configuration:
 
 	- EP2C5T144C8N Cyclone II FPGA
-	- FRDM-K64F Platform ---> https://github.com/IceDefcon/K64F.FreeRTOS
-	- x64 Linux Terminal ---> TCP Server for SQL control
+	- BBB driven by Cortex-A8 :: Linux kernel
+	- Overall master controll application
 
 Intel Altera provide a support for Cyclon II FPGA in Quartus 13.0ps1
-
-System is running without any problems on Machine:
-
-	Architecture:        x86_64
-	CPU op-mode(s):      32-bit, 64-bit
-	Byte Order:          Little Endian
-	CPU(s):              4
-	On-line CPU(s) list: 0-3
-	Thread(s) per core:  2
-	Core(s) per socket:  2
-	Socket(s):           1
-	NUMA node(s):        1
-	Vendor ID:           GenuineIntel
-	CPU family:          6
-	Model:               142
-	Model name:          Intel(R) Core(TM) i7-7500U CPU @ 2.70GHz
-	Stepping:            9
-	CPU MHz:             882.018
-	CPU max MHz:         3500,0000
-	CPU min MHz:         400,0000
-	BogoMIPS:            5799.77
-	Virtualization:      VT-x
-	L1d cache:           32K
-	L1i cache:           32K
-	L2 cache:            256K
-	L3 cache:            4096K
-	NUMA node0 CPU(s):   0-3
-
-And operating system:
-
-	PRETTY_NAME="Ubuntu 22.04.2 LTS"
-	NAME="Ubuntu"
-	VERSION_ID="22.04"
-	VERSION="22.04.2 LTS (Jammy Jellyfish)"
-	VERSION_CODENAME=jammy
-	ID=ubuntu
-	ID_LIKE=debian
-	HOME_URL="https://www.ubuntu.com/"
-	SUPPORT_URL="https://help.ubuntu.com/"
-	BUG_REPORT_URL="https://bugs.launchpad.net/ubuntu/"
-	PRIVACY_POLICY_URL="https://www.ubuntu.com/legal/terms-and-policies/privacy-policy"
-	UBUNTU_CODENAME=jammy
 
 To create symbolic link
 
