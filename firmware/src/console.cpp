@@ -2,53 +2,53 @@
 // Author: Ice.Marek
 // IceNET Technology 2023
 //
-#include "console.h"
+#include "debug.h"
 
-Console::Console() : m_LogLevel (LevelTodo) 
+Debug::Debug() : m_LogLevel (LevelTodo) 
 {
-	Console::Info("Console :: Construct");
+	Debug::Info("Debug :: Init Debug Console");
 }
 
-Console::~Console()
+Debug::~Debug()
 {
-	Console::Info("Console :: Destroy");
+	Debug::Info("Debug :: Shutdown Debug Console");
 }
 
-void Console::SetLevel(LogLevel level)
+void Debug::SetLevel(LogLevel level)
 {
 	m_LogLevel = level;
 }
 
-void Console::Error(const char * message)
+void Debug::Error(const char * message)
 {
 	if(m_LogLevel >= LevelError)
 		std::cout << "[ERROR]: " << message << std::endl;
 }
 
-void Console::Warning(const char * message)
+void Debug::Warning(const char * message)
 {
 	if(m_LogLevel >= LevelWarning)
 		std::cout << "[WARNING]: " << message << std::endl;
 }
 
-void Console::Info(const char * message)
+void Debug::Info(const char * message)
 {
 	if(m_LogLevel >= LevelInfo)
 		std::cout << "[INFO]: " << message << std::endl;
 }
 
-void Console::Todo(const char * message)
+void Debug::Todo(const char * message)
 {
 	if(m_LogLevel >= LevelTodo)
 		std::cout << "[TODO]: " << message << std::endl;
 }
 
-void Console::Read(const char * message)
+void Debug::Read(const char * message)
 {
 	std::cout << "[ RX ]: " << message << std::endl;
 }
 
-void Console::Write(void)
+void Debug::Write(void)
 {
 	std::cout << "[ TX ]: ";
 }

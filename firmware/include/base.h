@@ -4,18 +4,18 @@
 //
 #pragma once
 
-class DevBase : public Console
+class Base : public Debug
 {
 public:
 
-	DevBase()
+	Base()
 	{
-		Console::Info("DevBase :: Construct");
+		Debug::Info("Base :: Init");
 	}
 
-	~DevBase()
+	~Base()
 	{
-		Console::Info("DevBase :: Destroy");
+		Debug::Info("Base :: Destroy");
 	}
 
 	virtual int device_open(const char* device) = 0;

@@ -5,7 +5,7 @@
 #pragma once
 #include <iostream>
 
-class Console
+class Debug
 {
 public:
 
@@ -20,8 +20,8 @@ private:
 
 public:
 
-	Console();
-	~Console();
+	Debug();
+	~Debug();
 
 	void SetLevel(LogLevel level);
 	void Error(const char * message);

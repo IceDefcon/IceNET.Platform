@@ -7,11 +7,12 @@
 #include <thread>
 #include <atomic>
 #include <semaphore.h>
+
 #include "console.h"
-#include "devBase.h"
+#include "base.h"
 
 
-class iceCOM : public DevBase
+class iceCOM : public Base
 {
 
 private:
@@ -19,9 +20,9 @@ private:
 	std::thread m_iceThread;
 
 	//
-	// Atomic in case if case if
-	// something interrupt atomic
-	// processing of variable
+	// Atomic in case if something 
+	// decide to interrupt kill 
+	// flag processing
 	//
 	std::atomic<bool> m_killThread;
 

@@ -7,7 +7,7 @@
 #include <unistd.h> // sleep
 
 #include "iceCOM.h"
-#include "console.h"
+#include "debug.h"
 
 #define ICE "/dev/iceCOM"
 
@@ -16,13 +16,13 @@ int main(void)
     //
     // Allocate on HEAP
     //
-	DevBase* pDevice = nullptr;
+	Base* BaseDevice = nullptr;
 	iceCOM* iceCOMDevice = new iceCOM;
 	//
 	// Init Krenel Communication
 	//
-	pDevice = iceCOMDevice;
-	pDevice->device_open(ICE);
+	BaseDevice = iceCOMDevice;
+	BaseDevice->device_open(ICE);
 	//
 	// Main Comms
 	//
