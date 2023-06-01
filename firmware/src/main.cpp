@@ -16,13 +16,13 @@ int main(void)
     //
     // Allocate on HEAP
     //
-	Base* BaseDevice = nullptr;
+	Core* CoreDevice = nullptr;
 	iceCOM* iceCOMDevice = new iceCOM;
 	//
 	// Init Krenel Communication
 	//
-	BaseDevice = iceCOMDevice;
-	BaseDevice->device_open(ICE);
+	CoreDevice = iceCOMDevice;
+	CoreDevice->device_open(ICE);
 	//
 	// Main Comms
 	//

@@ -9,10 +9,10 @@
 #include <semaphore.h>
 
 #include "debug.h"
-#include "base.h"
+#include "core.h"
 
 
-class iceCOM : public Base
+class iceCOM : public Core
 {
 
 private:
