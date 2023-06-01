@@ -121,9 +121,11 @@ static volatile uint8_t tx_buffer1[] = {0xBB};  // Data to be transmitted for SP
 static volatile uint8_t rx_buffer1[1];          // Buffer to receive data for SPI1
 
 static struct work_struct spi_response_work;
+static struct work_struct spi_request_work;
 static struct workqueue_struct *spi_response_wq;
+static struct workqueue_struct *spi_request_wq;
 
-static void spi_work_func(struct work_struct *work)
+static void spi_response_func(struct work_struct *work)
 {
     struct spi_message msg0;
     struct spi_message msg1;
@@ -180,32 +182,57 @@ static void spi_work_func(struct work_struct *work)
 
 
 //
-// INIT :: GPIO Interrupt
+// GPIO :: HARDWARE INTERRUPTS
 //
 #define GPIO_PIN 60 // P9_12
 #define GPIO_RESPONSE "GPIO_RESPONSE"
 
 static irqreturn_t isr_response(int irq, void *data)
 {
-    static int i = 0;
+    static int counter = 0;
 
     //////////////
     //          //
     //          //
     //          //
-    // ISR code //
+    // RESPONSE //
+    // ISR Code //
     //          //
     //          //
     //          //
     //////////////
 
-    printk(KERN_INFO "[FPGA][ISR] GPIO interrupt [%d] @ Pin [%d]\n", i, GPIO_PIN);
-    i++;
+    printk(KERN_INFO "[FPGA][ISR] GPIO interrupt [%d] @ Pin [%d]\n", counter, GPIO_PIN);
+    counter++;
 
     queue_work(spi_response_wq, &spi_response_work);
 
     return IRQ_HANDLED;
 }
+
+static irqreturn_t isr_request(int irq, void *data)
+{
+    static int counter = 0;
+
+    //////////////
+    //          //
+    //          //
+    //          //
+    // REQUEST  //
+    // ISR Code //
+    //          //
+    //          //
+    //          //
+    //////////////
+
+    printk(KERN_INFO "[FPGA][ISR] GPIO interrupt [%d] @ Pin [%d]\n", counter, GPIO_PIN);
+    counter++;
+
+    queue_work(spi_request_wq, &spi_request_work);
+
+    return IRQ_HANDLED;
+}
+
 
 //
 // FPGA Driver INIT
@@ -215,7 +242,7 @@ static int __init fpga_driver_init(void)
     //
     // Initialize the work structure
     //
-    INIT_WORK(&spi_response_work, spi_work_func);
+    INIT_WORK(&spi_response_work, spi_response_func);
 
     // Create the workqueue
     spi_response_wq = create_singlethread_workqueue("spi_workqueue");
