@@ -120,7 +120,7 @@ static volatile uint8_t rx_buffer0[1];          // Buffer to receive data for SP
 static volatile uint8_t tx_buffer1[] = {0xBB};  // Data to be transmitted for SPI1
 static volatile uint8_t rx_buffer1[1];          // Buffer to receive data for SPI1
 
-static struct work_struct spi_work;
+static struct work_struct spi_response_work;
 static struct workqueue_struct *spi_response_wq;
 
 static void spi_work_func(struct work_struct *work)
@@ -202,7 +202,7 @@ static irqreturn_t isr_response(int irq, void *data)
     printk(KERN_INFO "[FPGA][ISR] GPIO interrupt [%d] @ Pin [%d]\n", i, GPIO_PIN);
     i++;
 
-    queue_work(spi_response_wq, &spi_work);
+    queue_work(spi_response_wq, &spi_response_work);
 
     return IRQ_HANDLED;
 }
@@ -215,7 +215,7 @@ static int __init fpga_driver_init(void)
     //
     // Initialize the work structure
     //
-    INIT_WORK(&spi_work, spi_work_func);
+    INIT_WORK(&spi_response_work, spi_work_func);
 
     // Create the workqueue
     spi_response_wq = create_singlethread_workqueue("spi_workqueue");
@@ -375,7 +375,7 @@ static void __exit fpga_driver_exit(void)
     //
     // Cancel and flush the work
     //
-    cancel_work_sync(&spi_work);
+    cancel_work_sync(&spi_response_work);
 
     // Destroy the workqueue
     if (spi_response_wq) {
