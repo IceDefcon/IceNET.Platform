@@ -13,7 +13,7 @@ public:
 		Debug::Info("Core :: Init the Core");
 	}
 
-	~Core()
+	virtual ~Core()
 	{
 		Debug::Info("Core :: Destroy the Core");
 	}
