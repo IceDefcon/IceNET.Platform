@@ -14,26 +14,12 @@
 #include <linux/interrupt.h>
 #include <linux/workqueue.h> // For workqueue-related functions and macros
 #include <linux/slab.h>      // For memory allocation functions like kmalloc
-#include <linux/syscalls.h>
-#include "../include/syscall.h"
+
 
 MODULE_VERSION("2.0");
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Marek Ice");
 MODULE_DESCRIPTION("FPGA Comms Driver");
-
-//
-// SYSCALL
-//
-asmlinkage long sys_trigger_interrupt(void)
-{
-    // Trigger the interrupt manually
-    // gpio_irq_handler(irq_number, NULL);
-    printk(KERN_INFO "[FPGA][SYS] We are good \n");
-
-    return 0;
-}
-
 
 //
 // INIT :: [C] Device
@@ -255,6 +241,15 @@ static irqreturn_t isr_request(int irq, void *data)
     return IRQ_HANDLED;
 }
 
+irqreturn_t my_interrupt_handler(int irq, void *dev_id)
+{
+    // Handle the interrupt routine here
+    printk(KERN_INFO "[FPGA][ C ] Interrupt occurred!\n");
+
+    // Return appropriate value based on the interrupt handling result
+    return IRQ_HANDLED;
+}
+
 //
 // FPGA Driver INIT
 //
@@ -386,6 +381,14 @@ static int __init fpga_driver_init(void)
         return result;
     }
 
+    result = request_irq(IRQ_NUM, (irq_handler_t)my_interrupt_handler, IRQF_SHARED, "hello_interrupt", NULL);
+    if (result < 0)
+    {
+        printk(KERN_ALERT "Failed to request interrupt.\n");
+        unregister_chrdev(0, "hello_device");
+        return result;
+    }
+
     printk(KERN_INFO "[FPGA][IRQ] ISR initialized\n");
 
     //
@@ -478,6 +481,3 @@ static void __exit fpga_driver_exit(void)
 
 module_init(fpga_driver_init);
 module_exit(fpga_driver_exit);
-
-// Export the custom system call to user space
-EXPORT_SYMBOL(sys_trigger_interrupt);

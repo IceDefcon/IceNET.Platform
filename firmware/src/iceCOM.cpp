@@ -8,8 +8,6 @@
 #include <unistd.h> 		// read/write to the file
 #include <cstring> 			// strcmp
 #include "iceCOM.h"
-#include <sys/syscall.h>
-#include "syscall.h"
 
 iceCOM::iceCOM() : 
 m_file_descriptor(0), 
@@ -108,11 +106,6 @@ iceCOM::device_write()
 	if (std::strcmp(console_TX, "exit") == 0) 
 	{
     	m_killThread = true;
-	}
-
-	if (std::strcmp(console_TX, "int") == 0) 
-	{
-    	syscall(CUSTOM_SYSCALL_NUM);
 	}
 
 	ret = write(m_file_descriptor, console_TX, strlen(console_TX)); // Send the string to the LKM
