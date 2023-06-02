@@ -90,6 +90,17 @@ static ssize_t dev_read(struct file *filep, char *buffer, size_t len, loff_t *of
     }
 }
 
+#define SOFTWARE_INTERRUPT_NUMBER 0x80  // Software Interrupt Number
+
+static int irq = SOFTWARE_INTERRUPT_NUMBER;
+
+// Interrupt handler function
+static irqreturn_t software_interrupt_handler(int irq, void *dev_id)
+{
+    printk(KERN_INFO "Software Interrupt Handled\n");
+    return IRQ_HANDLED;
+}
+
 static ssize_t dev_write(struct file *filep, const char *buffer, size_t len, loff_t *offset)
 {
     int error_count = 0;
@@ -263,18 +274,6 @@ static irqreturn_t isr_response(int irq, void *data)
 
     return IRQ_HANDLED;
 }
-
-#define SOFTWARE_INTERRUPT_NUMBER 0x80  // Software Interrupt Number
-
-static int irq = SOFTWARE_INTERRUPT_NUMBER;
-
-// Interrupt handler function
-static irqreturn_t software_interrupt_handler(int irq, void *dev_id)
-{
-    printk(KERN_INFO "Software Interrupt Handled\n");
-    return IRQ_HANDLED;
-}
-
 
 //////////////////////////
 //                      //
