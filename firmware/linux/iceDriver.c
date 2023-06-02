@@ -14,12 +14,25 @@
 #include <linux/interrupt.h>
 #include <linux/workqueue.h> // For workqueue-related functions and macros
 #include <linux/slab.h>      // For memory allocation functions like kmalloc
-
+#include <linux/syscalls.h>
 
 MODULE_VERSION("2.0");
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Marek Ice");
 MODULE_DESCRIPTION("FPGA Comms Driver");
+
+//
+// SYSCALL
+//
+asmlinkage long sys_trigger_interrupt(void)
+{
+    // Trigger the interrupt manually
+    // gpio_irq_handler(irq_number, NULL);
+    printk(KERN_INFO "[FPGA][SYS] We are good \n");
+
+    return 0;
+}
+
 
 //
 // INIT :: [C] Device
@@ -191,7 +204,9 @@ static void spi_request_func(struct work_struct *work)
 // GPIO :: HARDWARE INTERRUPTS
 //
 #define GPIO_RESPONSE_PIN 60 // P9_12
+#define GPIO_REQUEST_PIN 66 // P8_7
 #define GPIO_RESPONSE "GPIO_RESPONSE"
+#define GPIO_REQUEST "GPIO_REQUEST"
 
 static irqreturn_t isr_response(int irq, void *data)
 {
@@ -231,7 +246,7 @@ static irqreturn_t isr_request(int irq, void *data)
     //          //
     //////////////
 
-    printk(KERN_INFO "[FPGA][ISR] GPIO interrupt [%d] @ Pin [%d]\n", counter, GPIO_RESPONSE_PIN);
+    printk(KERN_INFO "[FPGA][ISR] Request interrupt [%d] @ Pin [%d]\n", counter, GPIO_REQUEST_PIN);
     counter++;
 
     queue_work(spi_request_wq, &spi_request_work);
@@ -462,3 +477,9 @@ static void __exit fpga_driver_exit(void)
 
 module_init(fpga_driver_init);
 module_exit(fpga_driver_exit);
+
+// Define the custom system call number
+#define __NR_trigger_interrupt 437
+
+// Export the custom system call to user space
+EXPORT_SYMBOL(sys_trigger_interrupt);
