@@ -15,7 +15,11 @@
 #include <linux/workqueue.h> // For workqueue-related functions and macros
 #include <linux/slab.h>      // For memory allocation functions like kmalloc
 
-#define IRQ_NUM 42
+
+MODULE_VERSION("2.0");
+MODULE_LICENSE("GPL");
+MODULE_AUTHOR("Marek Ice");
+MODULE_DESCRIPTION("FPGA Comms Driver");
 
 //
 // INIT :: [C] Device
@@ -84,6 +88,11 @@ static ssize_t dev_write(struct file *filep, const char *buffer, size_t len, lof
     int error_count = 0;
     error_count = copy_from_user(message, buffer, len);
 
+    if (strncmp(message, "int", 3) == 0)
+    {
+        printk(KERN_INFO "[FPGA][ C ] Finally Got You!\n");
+    }
+        
     if (error_count==0)
     {
         size_of_message = strlen(message);
@@ -237,15 +246,6 @@ static irqreturn_t isr_request(int irq, void *data)
     return IRQ_HANDLED;
 }
 
-irqreturn_t my_interrupt_handler(int irq, void *dev_id)
-{
-    // Handle the interrupt routine here
-    printk(KERN_INFO "[FPGA][ C ] Interrupt occurred!\n");
-
-    // Return appropriate value based on the interrupt handling result
-    return IRQ_HANDLED;
-}
-
 //
 // FPGA Driver INIT
 //
@@ -377,14 +377,6 @@ static int __init fpga_driver_init(void)
         return result;
     }
 
-    result = request_irq(IRQ_NUM, (irq_handler_t)my_interrupt_handler, IRQF_SHARED, "hello_interrupt", NULL);
-    if (result < 0)
-    {
-        printk(KERN_ALERT "Failed to request interrupt.\n");
-        unregister_chrdev(0, "hello_device");
-        return result;
-    }
-
     printk(KERN_INFO "[FPGA][IRQ] ISR initialized\n");
 
     //
@@ -477,8 +469,3 @@ static void __exit fpga_driver_exit(void)
 
 module_init(fpga_driver_init);
 module_exit(fpga_driver_exit);
-
-MODULE_VERSION("2.0");
-MODULE_LICENSE("GPL");
-MODULE_AUTHOR("Marek Ice");
-MODULE_DESCRIPTION("FPGA Comms Driver");
