@@ -98,6 +98,14 @@ static ssize_t dev_write(struct file *filep, const char *buffer, size_t len, lof
     if (strncmp(message, "int", 3) == 0)
     {
         printk(KERN_INFO "[FPGA][ C ] Finally Got You!\n");
+
+        // Request software interrupt
+        int result = request_irq(irq, software_interrupt_handler, IRQF_SHARED, "software_interrupt", (void *)(software_interrupt_handler));
+        if (result) {
+            printk(KERN_ERR "Failed to request software interrupt: %d\n", result);
+            return result;
+        }
+
     }
 
     if (error_count==0)
@@ -256,6 +264,18 @@ static irqreturn_t isr_response(int irq, void *data)
     return IRQ_HANDLED;
 }
 
+#define SOFTWARE_INTERRUPT_NUMBER 0x80  // Software Interrupt Number
+
+static int irq = SOFTWARE_INTERRUPT_NUMBER;
+
+// Interrupt handler function
+static irqreturn_t software_interrupt_handler(int irq, void *dev_id)
+{
+    printk(KERN_INFO "Software Interrupt Handled\n");
+    return IRQ_HANDLED;
+}
+
+
 //////////////////////////
 //                      //
 //                      //
@@ -395,23 +415,23 @@ static int __init fpga_driver_init(void)
     }
 
     C_Class = class_create(THIS_MODULE, CLASS_NAME);
-    if (IS_ERR(C_Class)) // Check for error and clean up if there is one
+    if (IS_ERR(C_Class))
     {
         unregister_chrdev(majorNumber, DEVICE_NAME);
         printk(KERN_ALERT "[FPGA][ C ] Failed to register device class\n");
-        return PTR_ERR(C_Class); // Correct way to return an error on a pointer
+        return PTR_ERR(C_Class);
     }
     
     C_Device = device_create(C_Class, NULL, MKDEV(majorNumber, 0), NULL, DEVICE_NAME);
-    if (IS_ERR(C_Device))   // Clean up if there is an error
+    if (IS_ERR(C_Device))
     {
-        class_destroy(C_Class);           // Repeated code but the alternative is goto statements
+        class_destroy(C_Class);
         unregister_chrdev(majorNumber, DEVICE_NAME);
         printk(KERN_ALERT "[FPGA][ C ] Failed to create the device\n");
         return PTR_ERR(C_Device);
     }
 
-    mutex_init(&com_mutex);       // Initialize the mutex lock dynamically at runtime
+    mutex_init(&com_mutex);
 
     return 0;
 }
@@ -457,6 +477,7 @@ static void __exit fpga_driver_exit(void)
     free_irq(irq, NULL);
     gpio_free(GPIO_RESPONSE_PIN);
     printk(KERN_INFO "[FPGA][IRQ] Exit\n");
+    free_irq(irq, (void *)(software_interrupt_handler));
 
     //////////////////////////////////
     //                              //

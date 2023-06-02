@@ -20,7 +20,7 @@ m_BUFFER_LENGTH(256)
 
 iceCOM::~iceCOM() 
 {
-	Debug::Info("iceCOM :: iceCOMThread Destroy");
+	Debug::Info("iceCOM :: Destroy iceCOMThread");
     if (m_iceThread.joinable()) 
     {
     	m_iceThread.join();
@@ -34,7 +34,7 @@ iceCOM::~iceCOM()
 void 
 iceCOM::iceCOMThread()
 {
-	Debug::Info("iceCOM :: iceCOMThread Start");
+	Debug::Info("iceCOM :: Start iceCOMThread");
 
     while (!m_killThread) 
     {
