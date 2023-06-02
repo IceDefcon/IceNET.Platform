@@ -90,7 +90,7 @@ static ssize_t dev_read(struct file *filep, char *buffer, size_t len, loff_t *of
     }
 }
 
-#define SOFTWARE_INTERRUPT_NUMBER 50  // Software Interrupt Number
+#define SOFTWARE_INTERRUPT_NUMBER 0x80
 
 static int irq = SOFTWARE_INTERRUPT_NUMBER;
 
