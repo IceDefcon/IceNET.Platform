@@ -2,6 +2,11 @@
 // Author: Ice.Marek
 // IceNET Technology 2023
 //
+MODULE_VERSION("2.0");
+MODULE_LICENSE("GPL");
+MODULE_AUTHOR("Marek Ice");
+MODULE_DESCRIPTION("FPGA Comms Driver");
+
 #include <linux/fs.h>
 #include <linux/gpio.h>
 #include <linux/init.h>
@@ -15,15 +20,16 @@
 #include <linux/workqueue.h> // For workqueue-related functions and macros
 #include <linux/slab.h>      // For memory allocation functions like kmalloc
 
+//////////////////////
+//                  //
+//                  //
+//                  //
+//    [C] Device    //
+//                  //
+//                  //
+//                  //
+//////////////////////
 
-MODULE_VERSION("2.0");
-MODULE_LICENSE("GPL");
-MODULE_AUTHOR("Marek Ice");
-MODULE_DESCRIPTION("FPGA Comms Driver");
-
-//
-// INIT :: [C] Device
-//
 #define  DEVICE_NAME "iceCOM"
 #define  CLASS_NAME  "iceCOM"
 
@@ -113,9 +119,30 @@ static int dev_release(struct inode *inodep, struct file *filep)
     return 0;
 }
 
-//
-// INIT :: SPI
-//
+//////////////////////
+//                  //
+//                  //
+//                  //
+//   [SPI] Comms    //
+//                  //
+//                  //
+//                  //
+//////////////////////////////////////////////////////
+//                                                  //
+//                                                  //
+// PIN_119 :: BBB P9_17 :: PULPLE   :: SPI0_CS0     //
+// PIN_121 :: BBB P9_18 :: BLUE     :: SPI0_D1      //
+// PIN_125 :: BBB P9_21 :: BROWN    :: SPI0_D0      //
+// PIN_129 :: BBB P9_22 :: BLACK    :: SPI0_SCLK    //
+//                                                  //
+// BBB P9_28 :: YELOW    :: SPI1_CS0                //
+// BBB P9_30 :: GREEN    :: SPI1_D1 :: GPIO_112     //
+// BBB P9_29 :: RED      :: SPI1_D0                 //
+// BBB P9_31 :: ORANGE   :: SPI1_SCLK               //
+//                                                  //
+//                                                  //
+//////////////////////////////////////////////////////
+
 static struct spi_device *spi_dev0;
 static struct spi_device *spi_dev1;
 
@@ -190,9 +217,17 @@ static void spi_response_func(struct work_struct *work)
 //     }
 // }
 
-//
-// GPIO :: HARDWARE INTERRUPTS
-//
+//////////////////////////
+//                      //
+//                      //
+//                      //
+//        [GPIO]        //
+//      Interrupts      //
+//                      //
+//                      //
+//                      //
+//////////////////////////
+
 #define GPIO_RESPONSE_PIN 60 // P9_12
 #define GPIO_RESPONSE "GPIO_RESPONSE"
 
@@ -200,16 +235,17 @@ static irqreturn_t isr_response(int irq, void *data)
 {
     static int counter = 0;
 
-    //////////////
-    //          //
-    //          //
-    //          //
-    // RESPONSE //
-    // ISR Code //
-    //          //
-    //          //
-    //          //
-    //////////////
+    //////////////////
+    //              //
+    //              //
+    //              //
+    //     FPGA     //
+    //     COMS     //
+    //   ISR CODE   //
+    //              //
+    //              //
+    //              //
+    //////////////////
 
     printk(KERN_INFO "[FPGA][ISR] Resonse interrupt [%d] @ Pin [%d]\n", counter, GPIO_RESPONSE_PIN);
     counter++;
@@ -219,38 +255,36 @@ static irqreturn_t isr_response(int irq, void *data)
     return IRQ_HANDLED;
 }
 
-//
-// FPGA Driver INIT
-//
+//////////////////////////
+//                      //
+//                      //
+//                      //
+//        [FPGA]        //
+//        DRIVER        //
+//         INIT         //
+//                      //
+//                      //
+//                      //
+//////////////////////////
+
 static int __init fpga_driver_init(void)
 {
-    //
-    // Initialize the work structure
-    //
-    INIT_WORK(&spi_response_work, spi_response_func);
-
-    // Create RESPONSE workqueue
-    spi_response_wq = create_singlethread_workqueue("spi_workqueue");
-    if (!spi_response_wq) {
-        printk(KERN_ERR "[FPGA][WRK] Failed to create SPI workqueue\n");
-        return -ENOMEM;
-    }
-
-    //
-    // SPI
-    //
+    //////////////////////////////////
+    //                              //
+    // SPI :: CONFIG                //
+    //                              //
+    //////////////////////////////////
     struct spi_master *spi_master0;
     struct spi_master *spi_master1;
     int ret;
 
-    // Get the SPI masters
-    spi_master0 = spi_busnum_to_master(0);  // SPI0 on BeagleBone Black
+    spi_master0 = spi_busnum_to_master(0)
     if (!spi_master0) {
         printk(KERN_ERR "[FPGA][SPI] SPI master for SPI0 not found\n");
         return -ENODEV;
     }
 
-    spi_master1 = spi_busnum_to_master(1);  // SPI1 on BeagleBone Black
+    spi_master1 = spi_busnum_to_master(1);
     if (!spi_master1) {
         printk(KERN_ERR "[FPGA][SPI] SPI master for SPI1 not found\n");
         return -ENODEV;
@@ -270,20 +304,16 @@ static int __init fpga_driver_init(void)
         return -ENOMEM;
     }
 
-    // Configure SPI0 device
-    spi_dev0->chip_select = 0;   // Set the chip select value (0 for SPI0 on BeagleBone Black)
-    spi_dev0->mode = SPI_MODE_0; // Set the SPI mode (0 for mode 0)
-    spi_dev0->bits_per_word = 8; // Set the number of bits per word
-    spi_dev0->max_speed_hz = 1000000; // Set the maximum speed to 1 MHz
+    spi_dev0->chip_select = 0;
+    spi_dev0->mode = SPI_MODE_0;
+    spi_dev0->bits_per_word = 8;
+    spi_dev0->max_speed_hz = 1000000;
 
-    // Configure SPI1 device
-    spi_dev1->chip_select = 0;   // Set the chip select value (0 for SPI1 on BeagleBone Black)
-    spi_dev1->mode = SPI_MODE_0; // Set the SPI mode (0 for mode 0)
-    spi_dev1->bits_per_word = 8; // Set the number of bits per word
-    spi_dev1->max_speed_hz = 1000000; // Set the maximum speed to 1 MHz
+    spi_dev1->chip_select = 0;
+    spi_dev1->mode = SPI_MODE_0;
+    spi_dev1->bits_per_word = 8;
+    spi_dev1->max_speed_hz = 1000000;
 
-
-    // Setup SPI0 device
     ret = spi_setup(spi_dev0);
     if (ret < 0) {
         printk(KERN_ERR "[FPGA][SPI] Failed to setup SPI device for SPI0: %d\n", ret);
@@ -292,7 +322,6 @@ static int __init fpga_driver_init(void)
         return ret;
     }
 
-    // Setup SPI1 device
     ret = spi_setup(spi_dev1);
     if (ret < 0) {
         printk(KERN_ERR "[FPGA][SPI] Failed to setup SPI device for SPI1: %d\n", ret);
@@ -301,12 +330,20 @@ static int __init fpga_driver_init(void)
         return ret;
     }
 
-    //
-    // GPIO Interrupt
-    //
+    INIT_WORK(&spi_response_work, spi_response_func);
+    spi_response_wq = create_singlethread_workqueue("spi_workqueue");
+    if (!spi_response_wq) {
+        printk(KERN_ERR "[FPGA][WRK] Failed to create SPI workqueue\n");
+        return -ENOMEM;
+    }
+
+    //////////////////////////////////
+    //                              //
+    // ISR :: CONFIG                //
+    //                              //
+    //////////////////////////////////
     int irq, result;
 
-    // Request GPIO pin
     result = gpio_request(GPIO_RESPONSE_PIN, GPIO_RESPONSE);
     if (result < 0) 
     {
@@ -314,7 +351,6 @@ static int __init fpga_driver_init(void)
         return result;
     }
 
-    // Set GPIO pin as input
     result = gpio_direction_input(GPIO_RESPONSE_PIN);
     if (result < 0) 
     {
@@ -323,7 +359,6 @@ static int __init fpga_driver_init(void)
         return result;
     }
 
-    // Get IRQ number for GPIO pin
     irq = gpio_to_irq(GPIO_RESPONSE_PIN);
     if (irq < 0) 
     {
@@ -332,7 +367,6 @@ static int __init fpga_driver_init(void)
         return irq;
     }
 
-    // Request IRQ for GPIO pin
     result = request_irq(irq, isr_response, IRQF_TRIGGER_RISING, GPIO_RESPONSE, NULL);
     if (result < 0) 
     {
@@ -345,12 +379,13 @@ static int __init fpga_driver_init(void)
 
     printk(KERN_INFO "[FPGA][IRQ] ISR initialized\n");
 
-    //
-    // [C] Device
-    //
+    //////////////////////////////////
+    //                              //
+    // [C] Device :: CONFIG         //
+    //                              //
+    //////////////////////////////////
     printk(KERN_INFO "[FPGA][ C ] Device Init\n");
 
-    // Try to dynamically allocate a major number for the device -- more difficult but worth it
     majorNumber = register_chrdev(0, DEVICE_NAME, &fops);
     if (majorNumber<0)
     {
@@ -358,7 +393,6 @@ static int __init fpga_driver_init(void)
         return majorNumber;
     }
 
-    // Register the device class
     C_Class = class_create(THIS_MODULE, CLASS_NAME);
     if (IS_ERR(C_Class)) // Check for error and clean up if there is one
     {
@@ -367,7 +401,6 @@ static int __init fpga_driver_init(void)
         return PTR_ERR(C_Class); // Correct way to return an error on a pointer
     }
     
-    // Register the device driver
     C_Device = device_create(C_Class, NULL, MKDEV(majorNumber, 0), NULL, DEVICE_NAME);
     if (IS_ERR(C_Device))   // Clean up if there is an error
     {
@@ -382,11 +415,25 @@ static int __init fpga_driver_init(void)
     return 0;
 }
 
+//////////////////////////
+//                      //
+//                      //
+//                      //
+//        [FPGA]        //
+//        DRIVER        //
+//         EXIT         //
+//                      //
+//                      //
+//                      //
+//////////////////////////
+
 static void __exit fpga_driver_exit(void)
 {
-    //
-    // Cancel and flush the work
-    //
+    //////////////////////////////////
+    //                              //
+    // SPI :: CONFIG                //
+    //                              //
+    //////////////////////////////////
     cancel_work_sync(&spi_response_work);
 
     // Destroy RESPONSE workqueue
@@ -396,34 +443,31 @@ static void __exit fpga_driver_exit(void)
         spi_response_wq = NULL;
     }
 
-    //
-    // SPI
-    //
     spi_dev_put(spi_dev0);
     spi_dev_put(spi_dev1);
+    printk(KERN_INFO "[FPGA][SPI] Exit\n");
 
-    //
-    // IRQ
-    //
+    //////////////////////////////////
+    //                              //
+    // ISR :: DESTROY                //
+    //                              //
+    //////////////////////////////////
     int irq = gpio_to_irq(GPIO_RESPONSE_PIN);
-
-    // Free IRQ for GPIO pin
     free_irq(irq, NULL);
-
-    // Free GPIO pin
     gpio_free(GPIO_RESPONSE_PIN);
+    printk(KERN_INFO "[FPGA][IRQ] Exit\n");
 
-    printk(KERN_INFO "[FPGA][IRQ] ISR exited\n");
-
-    //
-    // [C] Device
-    //
+    //////////////////////////////////
+    //                              //
+    // [C] Device :: DESTROY        //
+    //                              //
+    //////////////////////////////////
+    device_destroy(C_Class, MKDEV(majorNumber, 0));
+    class_unregister(C_Class);
+    class_destroy(C_Class);
+    unregister_chrdev(majorNumber, DEVICE_NAME);
+    mutex_destroy(&com_mutex);
     printk(KERN_INFO "[FPGA][ C ] Device Exit\n");
-    device_destroy(C_Class, MKDEV(majorNumber, 0));     // remove the device
-    class_unregister(C_Class);                          // unregister the device class
-    class_destroy(C_Class);                             // remove the device class
-    unregister_chrdev(majorNumber, DEVICE_NAME);        // unregister the major number
-    mutex_destroy(&com_mutex);                          // destroy the dynamically-allocated mutex
 }
 
 module_init(fpga_driver_init);

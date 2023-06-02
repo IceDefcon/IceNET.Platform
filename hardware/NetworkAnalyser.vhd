@@ -12,15 +12,15 @@ port
 	LED_1 			: out std_logic; 	-- PIN_7
 	LED_2 			: out std_logic;	-- PIN_9
 
-	RES_CS 			: in 	std_logic; 	-- PIN_119 :: BBB P9_17 :: PULPLE 	:: SPI0_CS0
-	RES_MOSI 		: in 	std_logic; 	-- PIN_121 :: BBB P9_18 :: BLUE 		:: SPI0_D1
-	RES_MISO 		: out std_logic; 	-- PIN_125 :: BBB P9_21 :: BROWN 	:: SPI0_D0
-	RES_SCLK 		: in 	std_logic; 	-- PIN_129 :: BBB P9_22 :: BLACK 	:: SPI0_SCLK
+	KERNEL_CS 		: in 	std_logic; 	-- PIN_119 :: BBB P9_17 :: PULPLE 	:: SPI0_CS0
+	KERNEL_MOSI 	: in 	std_logic; 	-- PIN_121 :: BBB P9_18 :: BLUE 		:: SPI0_D1
+	KERNEL_MISO 	: out std_logic; 	-- PIN_125 :: BBB P9_21 :: BROWN 	:: SPI0_D0
+	KERNEL_SCLK 	: in 	std_logic; 	-- PIN_129 :: BBB P9_22 :: BLACK 	:: SPI0_SCLK
 	
-	REQ_CS 			: in 	std_logic; 	-- PIN_118 :: BBB P9_28 :: YELOW 	:: SPI1_CS0
-	REQ_MOSI 		: in 	std_logic; 	-- PIN_120 :: BBB P9_30 :: GREEN 	:: SPI1_D1 :: GPIO_112
-	REQ_MISO 		: out std_logic; 	-- PIN_122 :: BBB P9_29 :: RED 		:: SPI1_D0
-	REQ_SCLK 		: in 	std_logic; 	-- PIN_126 :: BBB P9_31 :: ORANGE 	:: SPI1_SCLK
+	--REQ_CS 		: in 	std_logic; 	-- PIN_118 :: BBB P9_28 :: YELOW 	:: SPI1_CS0
+	--REQ_MOSI 		: in 	std_logic; 	-- PIN_120 :: BBB P9_30 :: GREEN 	:: SPI1_D1 :: GPIO_112
+	--REQ_MISO 		: out std_logic; 	-- PIN_122 :: BBB P9_29 :: RED 		:: SPI1_D0
+	--REQ_SCLK 		: in 	std_logic; 	-- PIN_126 :: BBB P9_31 :: ORANGE 	:: SPI1_SCLK
 
 	INT_IN 			: in 	std_logic; 	-- PIN_143
 	INT_OUT 			: out std_logic; 	-- PIN_142
@@ -69,8 +69,7 @@ begin
 
 -- Combinational Logic
 inv_BUTTON_IN 	<= not BUTTON; -- Buton is low active so must be inverted before debounce
-RES_MISO 		<= RES_MOSI;
-REQ_MISO 		<= REQ_MOSI;
+KERNEL_MISO 	<= KERNEL_MOSI;
 
 debounce_module: debounce port map 
 (

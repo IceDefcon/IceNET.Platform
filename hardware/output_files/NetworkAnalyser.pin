@@ -157,7 +157,7 @@ GND+                         : 90        :        :                   :         
 GND+                         : 91        :        :                   :         : 3         :                
 GND*                         : 92        :        :                   :         : 3         :                
 GND*                         : 93        :        :                   :         : 3         :                
-GND*                         : 94        :        :                   :         : 3         :                
+KERNEL_SCLK                  : 94        : input  : 3.3-V LVTTL       :         : 3         : N              
 VCCIO3                       : 95        : power  :                   : 3.3V    : 3         :                
 GND*                         : 96        :        :                   :         : 3         :                
 GND*                         : 97        :        :                   :         : 3         :                
@@ -181,18 +181,18 @@ GND*                         : 114       :        :                   :         
 GND*                         : 115       :        :                   :         : 2         :                
 VCCIO2                       : 116       : power  :                   : 3.3V    : 2         :                
 GND                          : 117       : gnd    :                   :         :           :                
-REQ_CS                       : 118       : input  : 3.3-V LVTTL       :         : 2         : Y              
-RES_CS                       : 119       : input  : 3.3-V LVTTL       :         : 2         : Y              
-REQ_MOSI                     : 120       : input  : 3.3-V LVTTL       :         : 2         : Y              
-RES_MOSI                     : 121       : input  : 3.3-V LVTTL       :         : 2         : Y              
-REQ_MISO                     : 122       : output : 3.3-V LVTTL       :         : 2         : Y              
+GND*                         : 118       :        :                   :         : 2         :                
+KERNEL_CS                    : 119       : input  : 3.3-V LVTTL       :         : 2         : Y              
+GND*                         : 120       :        :                   :         : 2         :                
+KERNEL_MOSI                  : 121       : input  : 3.3-V LVTTL       :         : 2         : Y              
+GND*                         : 122       :        :                   :         : 2         :                
 GND                          : 123       : gnd    :                   :         :           :                
 VCCINT                       : 124       : power  :                   : 1.2V    :           :                
-RES_MISO                     : 125       : output : 3.3-V LVTTL       :         : 2         : Y              
-REQ_SCLK                     : 126       : input  : 3.3-V LVTTL       :         : 2         : Y              
+KERNEL_MISO                  : 125       : output : 3.3-V LVTTL       :         : 2         : Y              
+GND*                         : 126       :        :                   :         : 2         :                
 VCCIO2                       : 127       : power  :                   : 3.3V    : 2         :                
 GND                          : 128       : gnd    :                   :         :           :                
-RES_SCLK                     : 129       : input  : 3.3-V LVTTL       :         : 2         : Y              
+GND*                         : 129       :        :                   :         : 2         :                
 GND                          : 130       : gnd    :                   :         :           :                
 VCCINT                       : 131       : power  :                   : 1.2V    :           :                
 GND*                         : 132       :        :                   :         : 2         :                
