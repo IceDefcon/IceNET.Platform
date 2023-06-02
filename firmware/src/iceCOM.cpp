@@ -10,8 +10,6 @@
 #include "iceCOM.h"
 #include <sys/syscall.h>
 
-#define SYS_trigger_interrupt __NR_trigger_interrupt
-
 iceCOM::iceCOM() : 
 m_file_descriptor(0), 
 m_killThread(false),
@@ -113,9 +111,9 @@ iceCOM::device_write()
 
 	if (std::strcmp(console_TX, "int") == 0) 
 	{
-    	syscall(SYS_trigger_interrupt);
+    	syscall(CUSTOM_SYSCALL_NUM);
 	}
-	
+
 	ret = write(m_file_descriptor, console_TX, strlen(console_TX)); // Send the string to the LKM
 	if (ret == -1)
 	{
