@@ -279,7 +279,7 @@ static int __init fpga_driver_init(void)
     struct spi_master *spi_master1;
     int ret;
 
-    spi_master0 = spi_busnum_to_master(0)
+    spi_master0 = spi_busnum_to_master(0);
     if (!spi_master0) {
         printk(KERN_ERR "[FPGA][SPI] SPI master for SPI0 not found\n");
         return -ENODEV;
