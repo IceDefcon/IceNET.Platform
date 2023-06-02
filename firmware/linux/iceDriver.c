@@ -2,10 +2,6 @@
 // Author: Ice.Marek
 // IceNET Technology 2023
 //
-MODULE_VERSION("2.0");
-MODULE_LICENSE("GPL");
-MODULE_AUTHOR("Marek Ice");
-MODULE_DESCRIPTION("FPGA Comms Driver");
 
 #include <linux/fs.h>
 #include <linux/gpio.h>
@@ -19,6 +15,11 @@ MODULE_DESCRIPTION("FPGA Comms Driver");
 #include <linux/interrupt.h>
 #include <linux/workqueue.h> // For workqueue-related functions and macros
 #include <linux/slab.h>      // For memory allocation functions like kmalloc
+
+MODULE_VERSION("2.0");
+MODULE_LICENSE("GPL");
+MODULE_AUTHOR("Marek Ice");
+MODULE_DESCRIPTION("FPGA Comms Driver");
 
 //////////////////////
 //                  //
