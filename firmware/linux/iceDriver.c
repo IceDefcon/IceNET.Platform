@@ -15,15 +15,6 @@
 #include <linux/workqueue.h> // For workqueue-related functions and macros
 #include <linux/slab.h>      // For memory allocation functions like kmalloc
 
-#define CUSTOM_SOFTIRQ_NUMBER 5
-
-static void custom_softirq_action(struct softirq_action *action)
-{
-    // Handle the software interrupt here
-    printk(KERN_INFO "[FPGA][C] Custom software interrupt handler called\n");
-}
-
-DECLARE_SOFTIRQ(custom_softirq, custom_softirq_action);
 
 MODULE_VERSION("2.0");
 MODULE_LICENSE("GPL");
@@ -97,13 +88,11 @@ static ssize_t dev_write(struct file *filep, const char *buffer, size_t len, lof
     int error_count = 0;
     error_count = copy_from_user(message, buffer, len);
 
-        if (strncmp(message, "int", 3) == 0)
-        {
-            printk(KERN_INFO "[FPGA][C] Finally Got You!\n");
-            // Trigger the software interrupt here
-            raise_softirq(CUSTOM_SOFTIRQ_NUMBER);
-        }
-
+    if (strncmp(message, "int", 3) == 0)
+    {
+        printk(KERN_INFO "[FPGA][ C ] Finally Got You!\n");
+    }
+        
     if (error_count==0)
     {
         size_of_message = strlen(message);
@@ -387,7 +376,6 @@ static int __init fpga_driver_init(void)
         spi_dev_put(spi_dev1);
         return result;
     }
-
 
     printk(KERN_INFO "[FPGA][IRQ] ISR initialized\n");
 
