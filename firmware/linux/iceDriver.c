@@ -479,7 +479,10 @@ module_init(fpga_driver_init);
 module_exit(fpga_driver_exit);
 
 // Define the custom system call number
-#define __NR_trigger_interrupt 437
+#define CUSTOM_SYSCALL_NUM 437
 
 // Export the custom system call to user space
 EXPORT_SYMBOL(sys_trigger_interrupt);
+
+// Define the custom system call function pointer
+long (*custom_syscall_ptr)(void) = (long (*)(void))CUSTOM_SYSCALL_NUM;
