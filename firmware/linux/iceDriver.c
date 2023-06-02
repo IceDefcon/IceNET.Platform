@@ -15,11 +15,7 @@
 #include <linux/workqueue.h> // For workqueue-related functions and macros
 #include <linux/slab.h>      // For memory allocation functions like kmalloc
 
-
-MODULE_VERSION("2.0");
-MODULE_LICENSE("GPL");
-MODULE_AUTHOR("Marek Ice");
-MODULE_DESCRIPTION("FPGA Comms Driver");
+#define IRQ_NUM 42
 
 //
 // INIT :: [C] Device
@@ -481,3 +477,8 @@ static void __exit fpga_driver_exit(void)
 
 module_init(fpga_driver_init);
 module_exit(fpga_driver_exit);
+
+MODULE_VERSION("2.0");
+MODULE_LICENSE("GPL");
+MODULE_AUTHOR("Marek Ice");
+MODULE_DESCRIPTION("FPGA Comms Driver");
