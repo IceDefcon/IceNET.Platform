@@ -15,6 +15,7 @@
 #include <linux/workqueue.h> // For workqueue-related functions and macros
 #include <linux/slab.h>      // For memory allocation functions like kmalloc
 #include <linux/syscalls.h>
+#include "../include/syscall.h"
 
 MODULE_VERSION("2.0");
 MODULE_LICENSE("GPL");
@@ -478,11 +479,5 @@ static void __exit fpga_driver_exit(void)
 module_init(fpga_driver_init);
 module_exit(fpga_driver_exit);
 
-// Define the custom system call number
-#define CUSTOM_SYSCALL_NUM 437
-
 // Export the custom system call to user space
 EXPORT_SYMBOL(sys_trigger_interrupt);
-
-// Define the custom system call function pointer
-long (*custom_syscall_ptr)(void) = (long (*)(void))CUSTOM_SYSCALL_NUM;

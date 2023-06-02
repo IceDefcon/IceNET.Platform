@@ -9,6 +9,7 @@
 #include <cstring> 			// strcmp
 #include "iceCOM.h"
 #include <sys/syscall.h>
+#include "syscall.h"
 
 iceCOM::iceCOM() : 
 m_file_descriptor(0), 
