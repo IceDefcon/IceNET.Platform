@@ -404,12 +404,6 @@ static int __init fpga_driver_init(void)
     // [T] Tasklet :: CONFIG        //
     //                              //
     //////////////////////////////////
-    ret = tasklet_init(&my_tasklet, my_tasklet_handler, 0);
-    if (ret) 
-    {
-        printk(KERN_ERR "[FPGA][ T ] Failed to initialize tasklet: %d\n", ret);
-        return ret;
-    }
     tasklet_init(&my_tasklet, my_tasklet_handler, 0);
 
     //////////////////////////////////
