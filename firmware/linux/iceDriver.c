@@ -25,116 +25,6 @@ MODULE_DESCRIPTION("FPGA Comms Driver");
 //                  //
 //                  //
 //                  //
-//   [SPI] Comms    //
-//                  //
-//                  //
-//                  //
-//////////////////////////////////////////////////////
-//                                                  //
-//                                                  //
-// PIN_119 :: BBB P9_17 :: PULPLE   :: SPI0_CS0     //
-// PIN_121 :: BBB P9_18 :: BLUE     :: SPI0_D1      //
-// PIN_125 :: BBB P9_21 :: BROWN    :: SPI0_D0      //
-// PIN_129 :: BBB P9_22 :: BLACK    :: SPI0_SCLK    //
-//                                                  //
-// BBB P9_28 :: YELOW    :: SPI1_CS0                //
-// BBB P9_30 :: GREEN    :: SPI1_D1 :: GPIO_112     //
-// BBB P9_29 :: RED      :: SPI1_D0                 //
-// BBB P9_31 :: ORANGE   :: SPI1_SCLK               //
-//                                                  //
-//                                                  //
-//////////////////////////////////////////////////////
-
-static struct spi_device *spi_dev0;
-static struct spi_device *spi_dev1;
-
-static volatile uint8_t tx_buffer0[] = {0xAA};  // Data to be transmitted for SPI0
-static volatile uint8_t rx_buffer0[1];          // Buffer to receive data for SPI0
-
-static volatile uint8_t tx_buffer1[] = {0xBB};  // Data to be transmitted for SPI1
-static volatile uint8_t rx_buffer1[1];          // Buffer to receive data for SPI1
-
-static struct work_struct spi_response_work;
-static struct workqueue_struct *spi_response_wq;
-
-static void spi_response_func(struct work_struct *work)
-{
-    struct spi_message msg;
-    struct spi_transfer transfer;
-    int ret;
-    int i;
-
-    // Initialize SPI transfer for SPI0
-    memset(&transfer, 0, sizeof(transfer));
-    transfer.tx_buf = tx_buffer0;
-    transfer.rx_buf = rx_buffer0;
-    transfer.len = sizeof(tx_buffer0);
-
-    // Initialize SPI messages
-    spi_message_init(&msg);
-    spi_message_add_tail(&transfer, &msg);
-
-    // Transfer SPI messages for SPI0
-    ret = spi_sync(spi_dev0, &msg);
-    if (ret < 0) {
-        printk(KERN_ERR "[FPGA][SPI] SPI transfer for SPI0 failed: %d\n", ret);
-        return;
-    }
-
-    // Display the received data for SPI0
-    printk(KERN_INFO "[FPGA][SPI] Received data for SPI0:");
-    for (i = 0; i < sizeof(rx_buffer0); ++i) {
-        printk(KERN_INFO "[FPGA][SPI] Byte %d: 0x%02x\n", i, rx_buffer0[i]);
-    }
-}
-
-//////////////////////////
-//                      //
-//                      //
-//                      //
-//      [TASKLET]       //
-//                      //
-//                      //
-//                      //
-//////////////////////////
-
-static void spi_request_task(unsigned long data);
-DECLARE_TASKLET(spi_request_tasklet, spi_request_task, 0);
-
-static void spi_request_task(unsigned long data)
-{
-    struct spi_message msg;
-    struct spi_transfer transfer;
-    int ret;
-    int i;
-
-    memset(&transfer, 0, sizeof(transfer));
-    transfer.tx_buf = tx_buffer1;
-    transfer.rx_buf = rx_buffer1;
-    transfer.len = sizeof(tx_buffer0);
-
-    // Initialize SPI messages
-    spi_message_init(&msg);
-    spi_message_add_tail(&transfer, &msg);
-
-    // Transfer SPI messages for SPI1
-    ret = spi_sync(spi_dev1, &msg);
-    if (ret < 0) {
-        printk(KERN_ERR "[FPGA][SPI] SPI transfer for SPI1 failed: %d\n", ret);
-        return;
-    }
-
-    // Display the received data for SPI1
-    printk(KERN_INFO "[FPGA][SPI] Received data for SPI1:");
-    for (i = 0; i < sizeof(rx_buffer1); ++i) {
-        printk(KERN_INFO "[FPGA][SPI] Byte %d: 0x%02x\n", i, rx_buffer1[i]);
-    }
-}
-
-//////////////////////
-//                  //
-//                  //
-//                  //
 //    [C] Device    //
 //                  //
 //                  //
@@ -208,7 +98,6 @@ static ssize_t dev_write(struct file *filep, const char *buffer, size_t len, lof
     if (strncmp(message, "int", 3) == 0)
     {
         printk(KERN_INFO "[FPGA][ C ] Finally Got You!\n");
-        tasklet_schedule(&spi_request_tasklet);
     }
 
     if (error_count==0)
@@ -230,6 +119,104 @@ static int dev_release(struct inode *inodep, struct file *filep)
     printk(KERN_INFO "[FPGA][ C ] Device successfully closed\n");
     return 0;
 }
+
+//////////////////////
+//                  //
+//                  //
+//                  //
+//   [SPI] Comms    //
+//                  //
+//                  //
+//                  //
+//////////////////////////////////////////////////////
+//                                                  //
+//                                                  //
+// PIN_119 :: BBB P9_17 :: PULPLE   :: SPI0_CS0     //
+// PIN_121 :: BBB P9_18 :: BLUE     :: SPI0_D1      //
+// PIN_125 :: BBB P9_21 :: BROWN    :: SPI0_D0      //
+// PIN_129 :: BBB P9_22 :: BLACK    :: SPI0_SCLK    //
+//                                                  //
+// BBB P9_28 :: YELOW    :: SPI1_CS0                //
+// BBB P9_30 :: GREEN    :: SPI1_D1 :: GPIO_112     //
+// BBB P9_29 :: RED      :: SPI1_D0                 //
+// BBB P9_31 :: ORANGE   :: SPI1_SCLK               //
+//                                                  //
+//                                                  //
+//////////////////////////////////////////////////////
+
+static struct spi_device *spi_dev0;
+static struct spi_device *spi_dev1;
+
+static volatile uint8_t tx_buffer0[] = {0xAA};  // Data to be transmitted for SPI0
+static volatile uint8_t rx_buffer0[1];          // Buffer to receive data for SPI0
+
+static volatile uint8_t tx_buffer1[] = {0xBB};  // Data to be transmitted for SPI1
+static volatile uint8_t rx_buffer1[1];          // Buffer to receive data for SPI1
+
+static struct work_struct spi_response_work;
+static struct workqueue_struct *spi_response_wq;
+
+static void spi_response_func(struct work_struct *work)
+{
+    struct spi_message msg;
+    struct spi_transfer transfer;
+    int ret;
+    int i;
+
+    // Initialize SPI transfer for SPI0
+    memset(&transfer, 0, sizeof(transfer));
+    transfer.tx_buf = tx_buffer0;
+    transfer.rx_buf = rx_buffer0;
+    transfer.len = sizeof(tx_buffer0);
+
+    // Initialize SPI messages
+    spi_message_init(&msg);
+    spi_message_add_tail(&transfer, &msg);
+
+    // Transfer SPI messages for SPI0
+    ret = spi_sync(spi_dev0, &msg);
+    if (ret < 0) {
+        printk(KERN_ERR "[FPGA][SPI] SPI transfer for SPI0 failed: %d\n", ret);
+        return;
+    }
+
+    // Display the received data for SPI0
+    printk(KERN_INFO "[FPGA][SPI] Received data for SPI0:");
+    for (i = 0; i < sizeof(rx_buffer0); ++i) {
+        printk(KERN_INFO "[FPGA][SPI] Byte %d: 0x%02x\n", i, rx_buffer0[i]);
+    }
+}
+
+// static void spi_request_func(struct work_struct *work)
+// {
+//     struct spi_message msg;
+//     struct spi_transfer transfer;
+//     int ret;
+//     int i;
+
+//     // Initialize SPI transfer for SPI1
+//     memset(&transfer, 0, sizeof(transfer));
+//     transfer.tx_buf = tx_buffer1;  // Send received data from SPI0
+//     transfer.rx_buf = rx_buffer1;  // Receive data from FPGA via SPI1
+//     transfer.len = sizeof(tx_buffer0);
+
+//     // Initialize SPI messages
+//     spi_message_init(&msg);
+//     spi_message_add_tail(&transfer, &msg);
+
+//     // Transfer SPI messages for SPI1
+//     ret = spi_sync(spi_dev1, &msg);
+//     if (ret < 0) {
+//         printk(KERN_ERR "[FPGA][SPI] SPI transfer for SPI1 failed: %d\n", ret);
+//         return;
+//     }
+
+//     // Display the received data for SPI1
+//     printk(KERN_INFO "[FPGA][SPI] Received data for SPI1:");
+//     for (i = 0; i < sizeof(rx_buffer1); ++i) {
+//         printk(KERN_INFO "[FPGA][SPI] Byte %d: 0x%02x\n", i, rx_buffer1[i]);
+//     }
+// }
 
 //////////////////////////
 //                      //
@@ -268,6 +255,25 @@ static irqreturn_t isr_response(int irq, void *data)
 
     return IRQ_HANDLED;
 }
+
+//////////////////////////
+//                      //
+//                      //
+//                      //
+//      [TASKLET]       //
+//                      //
+//                      //
+//                      //
+//////////////////////////
+
+static void my_tasklet_handler(unsigned long data);
+DECLARE_TASKLET(my_tasklet, my_tasklet_handler, 0);
+
+static void my_tasklet_handler(unsigned long data)
+{
+    printk(KERN_INFO "[FPGA][ T ] Tasklet executed\n");
+}
+
 
 //////////////////////////
 //                      //
@@ -398,7 +404,7 @@ static int __init fpga_driver_init(void)
     // [T] Tasklet :: CONFIG        //
     //                              //
     //////////////////////////////////
-    tasklet_init(&spi_request_tasklet, spi_request_task, 0);
+    tasklet_init(&my_tasklet, my_tasklet_handler, 0);
 
     //////////////////////////////////
     //                              //
@@ -472,6 +478,7 @@ static void __exit fpga_driver_exit(void)
     // ISR :: DESTROY                //
     //                              //
     //////////////////////////////////
+    int irq = gpio_to_irq(GPIO_RESPONSE_PIN);
     free_irq(irq, NULL);
     gpio_free(GPIO_RESPONSE_PIN);
     printk(KERN_INFO "[FPGA][IRQ] Exit\n");
@@ -481,7 +488,7 @@ static void __exit fpga_driver_exit(void)
     // [T] Tasklet :: DESTROY        //
     //                              //
     //////////////////////////////////
-    tasklet_kill(&spi_request_tasklet);
+    tasklet_kill(&my_tasklet);
 
     //////////////////////////////////
     //                              //
