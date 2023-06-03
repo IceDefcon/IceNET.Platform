@@ -454,7 +454,6 @@ static void __exit fpga_driver_exit(void)
     // ISR :: DESTROY                //
     //                              //
     //////////////////////////////////
-    int irq = gpio_to_irq(GPIO_RESPONSE_PIN);
     free_irq(irq, NULL);
     gpio_free(GPIO_RESPONSE_PIN);
     printk(KERN_INFO "[FPGA][IRQ] Exit\n");
