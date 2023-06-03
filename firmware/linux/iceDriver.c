@@ -271,7 +271,7 @@ DECLARE_TASKLET(my_tasklet, my_tasklet_handler, 0);
 
 static void my_tasklet_handler(unsigned long data)
 {
-    printk(KERN_INFO "[FPGA][ T ] Tasklet executed\n");
+    printk(KERN_INFO "Tasklet executed\n");
 }
 
 
