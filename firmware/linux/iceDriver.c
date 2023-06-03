@@ -21,6 +21,24 @@ MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Marek Ice");
 MODULE_DESCRIPTION("FPGA Comms Driver");
 
+//////////////////////////
+//                      //
+//                      //
+//                      //
+//      [TASKLET]       //
+//                      //
+//                      //
+//                      //
+//////////////////////////
+
+static void my_tasklet_handler(unsigned long data);
+DECLARE_TASKLET(my_tasklet, my_tasklet_handler, 0);
+
+static void my_tasklet_handler(unsigned long data)
+{
+    printk(KERN_INFO "[FPGA][ T ] Tasklet executed\n");
+}
+
 //////////////////////
 //                  //
 //                  //
@@ -98,6 +116,7 @@ static ssize_t dev_write(struct file *filep, const char *buffer, size_t len, lof
     if (strncmp(message, "int", 3) == 0)
     {
         printk(KERN_INFO "[FPGA][ C ] Finally Got You!\n");
+        tasklet_schedule(&my_tasklet);
     }
 
     if (error_count==0)
@@ -255,25 +274,6 @@ static irqreturn_t isr_response(int irq, void *data)
 
     return IRQ_HANDLED;
 }
-
-//////////////////////////
-//                      //
-//                      //
-//                      //
-//      [TASKLET]       //
-//                      //
-//                      //
-//                      //
-//////////////////////////
-
-static void my_tasklet_handler(unsigned long data);
-DECLARE_TASKLET(my_tasklet, my_tasklet_handler, 0);
-
-static void my_tasklet_handler(unsigned long data)
-{
-    printk(KERN_INFO "Tasklet executed\n");
-}
-
 
 //////////////////////////
 //                      //
