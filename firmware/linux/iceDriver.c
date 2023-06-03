@@ -256,15 +256,22 @@ static irqreturn_t isr_response(int irq, void *data)
     return IRQ_HANDLED;
 }
 
-#define SOFTWARE_INTERRUPT_NUMBER 0x80  // Software Interrupt Number
+//////////////////////////
+//                      //
+//                      //
+//                      //
+//      [TASKLET]       //
+//                      //
+//                      //
+//                      //
+//////////////////////////
 
-static int irq = SOFTWARE_INTERRUPT_NUMBER;
+static void my_tasklet_handler(unsigned long data);
+DECLARE_TASKLET(my_tasklet, my_tasklet_handler, 0);
 
-// Interrupt handler function
-static irqreturn_t software_interrupt_handler(int irq, void *dev_id)
+static void my_tasklet_handler(unsigned long data)
 {
-    printk(KERN_INFO "Software Interrupt Handled\n");
-    return IRQ_HANDLED;
+    printk(KERN_INFO "Tasklet executed\n");
 }
 
 
@@ -280,23 +287,8 @@ static irqreturn_t software_interrupt_handler(int irq, void *dev_id)
 //                      //
 //////////////////////////
 
-static int irq_num = 1;  // Software interrupt number
-
-static irqreturn_t my_interrupt_handler(int irq, void *dev_id)
-{
-    printk(KERN_INFO "Software interrupt triggered!\n");
-    return IRQ_HANDLED;
-}
-
 static int __init fpga_driver_init(void)
 {
-    // Request the software interrupt
-    int returno = request_irq(irq_num, my_interrupt_handler, IRQF_TRIGGER_NONE, "my_interrupt", NULL);
-    if (returno) {
-        printk(KERN_ERR "Failed to request software interrupt\n");
-        return returno;
-    }
-
     //////////////////////////////////
     //                              //
     // SPI :: CONFIG                //
@@ -370,21 +362,21 @@ static int __init fpga_driver_init(void)
     // ISR :: CONFIG                //
     //                              //
     //////////////////////////////////
-    int irq, result;
+    int irq;
 
-    result = gpio_request(GPIO_RESPONSE_PIN, GPIO_RESPONSE);
-    if (result < 0) 
+    ret = gpio_request(GPIO_RESPONSE_PIN, GPIO_RESPONSE);
+    if (ret < 0) 
     {
         printk(KERN_ERR "[FPGA][IRQ] Failed to request GPIO pin\n");
-        return result;
+        return ret;
     }
 
-    result = gpio_direction_input(GPIO_RESPONSE_PIN);
-    if (result < 0) 
+    ret = gpio_direction_input(GPIO_RESPONSE_PIN);
+    if (ret < 0) 
     {
         printk(KERN_ERR "[FPGA][IRQ] Failed to set GPIO direction\n");
         gpio_free(GPIO_RESPONSE_PIN);
-        return result;
+        return ret;
     }
 
     irq = gpio_to_irq(GPIO_RESPONSE_PIN);
@@ -395,17 +387,30 @@ static int __init fpga_driver_init(void)
         return irq;
     }
 
-    result = request_irq(irq, isr_response, IRQF_TRIGGER_RISING, GPIO_RESPONSE, NULL);
-    if (result < 0) 
+    ret = request_irq(irq, isr_response, IRQF_TRIGGER_RISING, GPIO_RESPONSE, NULL);
+    if (ret < 0) 
     {
         printk(KERN_ERR "[FPGA][IRQ] Failed to request IRQ\n");
         gpio_free(GPIO_RESPONSE_PIN);
         spi_dev_put(spi_dev0);
         spi_dev_put(spi_dev1);
-        return result;
+        return ret;
     }
 
     printk(KERN_INFO "[FPGA][IRQ] ISR initialized\n");
+
+    //////////////////////////////////
+    //                              //
+    // [T] Tasklet :: CONFIG        //
+    //                              //
+    //////////////////////////////////
+    ret = tasklet_init(&my_tasklet, my_tasklet_handler, 0);
+    if (ret) 
+    {
+        printk(KERN_ERR "[FPGA][ T ] Failed to initialize tasklet: %d\n", ret);
+        return ret;
+    }
+    tasklet_init(&my_tasklet, my_tasklet_handler, 0);
 
     //////////////////////////////////
     //                              //
@@ -457,8 +462,6 @@ static int __init fpga_driver_init(void)
 
 static void __exit fpga_driver_exit(void)
 {
-    free_irq(irq_num, NULL);
-
     //////////////////////////////////
     //                              //
     // SPI :: CONFIG                //
@@ -466,7 +469,6 @@ static void __exit fpga_driver_exit(void)
     //////////////////////////////////
     cancel_work_sync(&spi_response_work);
 
-    // Destroy RESPONSE workqueue
     if (spi_response_wq) {
         flush_workqueue(spi_response_wq);
         destroy_workqueue(spi_response_wq);
@@ -486,7 +488,13 @@ static void __exit fpga_driver_exit(void)
     free_irq(irq, NULL);
     gpio_free(GPIO_RESPONSE_PIN);
     printk(KERN_INFO "[FPGA][IRQ] Exit\n");
-    free_irq(irq, (void *)(software_interrupt_handler));
+
+    //////////////////////////////////
+    //                              //
+    // [T] Tasklet :: DESTROY        //
+    //                              //
+    //////////////////////////////////
+    tasklet_kill(&my_tasklet);
 
     //////////////////////////////////
     //                              //
