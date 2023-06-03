@@ -291,7 +291,7 @@ static irqreturn_t my_interrupt_handler(int irq, void *dev_id)
 static int __init fpga_driver_init(void)
 {
     // Request the software interrupt
-    result = request_irq(irq_num, my_interrupt_handler, IRQF_TRIGGER_NONE, "my_interrupt", NULL);
+    int result = request_irq(irq_num, my_interrupt_handler, IRQF_TRIGGER_NONE, "my_interrupt", NULL);
     if (result) {
         printk(KERN_ERR "Failed to request software interrupt\n");
         return result;
@@ -458,7 +458,7 @@ static int __init fpga_driver_init(void)
 static void __exit fpga_driver_exit(void)
 {
     free_irq(irq_num, NULL);
-    
+
     //////////////////////////////////
     //                              //
     // SPI :: CONFIG                //
