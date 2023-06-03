@@ -174,7 +174,7 @@ static ssize_t dev_write(struct file *filep, const char *buffer, size_t len, lof
 
     if (strncmp(message, "int", 3) == 0)
     {
-        queue_work(spi_response_wq, &spi_response_work);
+        queue_work(spi_request_wq, &spi_request_work);
     }
 
     if (error_count==0)
