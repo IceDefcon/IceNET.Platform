@@ -96,11 +96,11 @@ static struct file_operations fops =
 static struct spi_device *spi_dev0;
 static struct spi_device *spi_dev1;
 
-static volatile uint8_t tx_buffer0[] = {0xAA};  // Data to be transmitted for SPI0
-static volatile uint8_t rx_buffer0[1];          // Buffer to receive data for SPI0
+static volatile uint8_t tx_res_buffer[] = {0xAA};  // Data to be transmitted for SPI0
+static volatile uint8_t rx_res_buffer[1];          // Buffer to receive data for SPI0
 
-static volatile uint8_t tx_buffer1[] = {0xBB};  // Data to be transmitted for SPI1
-static volatile uint8_t rx_buffer1[1];          // Buffer to receive data for SPI1
+static volatile uint8_t tx_req_buffer[] = {0xBB};  // Data to be transmitted for SPI1
+static volatile uint8_t rx_req_buffer[1];          // Buffer to receive data for SPI1
 
 //////////////////////////
 //                      //
@@ -227,27 +227,23 @@ static void spi_response_func(struct work_struct *work)
     int ret;
     int i;
 
-    // Initialize SPI transfer for SPI0
     memset(&transfer, 0, sizeof(transfer));
-    transfer.tx_buf = tx_buffer0;
-    transfer.rx_buf = rx_buffer0;
-    transfer.len = sizeof(tx_buffer0);
+    transfer.tx_buf = tx_res_buffer;
+    transfer.rx_buf = rx_res_buffer;
+    transfer.len = sizeof(tx_res_buffer);
 
-    // Initialize SPI messages
     spi_message_init(&msg);
     spi_message_add_tail(&transfer, &msg);
 
-    // Transfer SPI messages for SPI0
     ret = spi_sync(spi_dev0, &msg);
     if (ret < 0) {
         printk(KERN_ERR "[FPGA][SPI] SPI transfer for SPI0 failed: %d\n", ret);
         return;
     }
 
-    // Display the received data for SPI0
     printk(KERN_INFO "[FPGA][SPI] Received data for SPI0:");
-    for (i = 0; i < sizeof(rx_buffer0); ++i) {
-        printk(KERN_INFO "[FPGA][SPI] Byte %d: 0x%02x\n", i, rx_buffer0[i]);
+    for (i = 0; i < sizeof(rx_res_buffer); ++i) {
+        printk(KERN_INFO "[FPGA][SPI] Byte %d: 0x%02x\n", i, rx_res_buffer[i]);
     }
 }
 
@@ -258,27 +254,23 @@ static void spi_request_func(struct work_struct *work)
     int ret;
     int i;
 
-    // Initialize SPI transfer for SPI1
     memset(&transfer, 0, sizeof(transfer));
-    transfer.tx_buf = tx_buffer1;  // Send received data from SPI0
-    transfer.rx_buf = rx_buffer1;  // Receive data from FPGA via SPI1
-    transfer.len = sizeof(tx_buffer0);
+    transfer.tx_buf = tx_req_buffer;
+    transfer.rx_buf = rx_req_buffer;
+    transfer.len = sizeof(tx_req_buffer);
 
-    // Initialize SPI messages
     spi_message_init(&msg);
     spi_message_add_tail(&transfer, &msg);
 
-    // Transfer SPI messages for SPI1
-    ret = spi_sync(spi_dev1, &msg);
+    ret = spi_sync(spi_dev0, &msg);
     if (ret < 0) {
         printk(KERN_ERR "[FPGA][SPI] SPI transfer for SPI1 failed: %d\n", ret);
         return;
     }
 
-    // Display the received data for SPI1
     printk(KERN_INFO "[FPGA][SPI] Received data for SPI1:");
-    for (i = 0; i < sizeof(rx_buffer1); ++i) {
-        printk(KERN_INFO "[FPGA][SPI] Byte %d: 0x%02x\n", i, rx_buffer1[i]);
+    for (i = 0; i < sizeof(rx_req_buffer); ++i) {
+        printk(KERN_INFO "[FPGA][SPI] Byte %d: 0x%02x\n", i, rx_req_buffer[i]);
     }
 }
 
@@ -366,14 +358,12 @@ static int __init fpga_driver_init(void)
     if (ret < 0) {
         printk(KERN_ERR "[FPGA][SPI] Failed to setup SPI device for SPI0: %d\n", ret);
         spi_dev_put(spi_dev0);
-        spi_dev_put(spi_dev1);
         return ret;
     }
 
     ret = spi_setup(spi_dev1);
     if (ret < 0) {
         printk(KERN_ERR "[FPGA][SPI] Failed to setup SPI device for SPI1: %d\n", ret);
-        spi_dev_put(spi_dev0);
         spi_dev_put(spi_dev1);
         return ret;
     }
@@ -428,7 +418,6 @@ static int __init fpga_driver_init(void)
         printk(KERN_ERR "[FPGA][IRQ] Failed to request IRQ\n");
         gpio_free(GPIO_RESPONSE_PIN);
         spi_dev_put(spi_dev0);
-        spi_dev_put(spi_dev1);
         return result;
     }
 
