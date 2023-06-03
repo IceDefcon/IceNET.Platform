@@ -21,24 +21,6 @@ MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Marek Ice");
 MODULE_DESCRIPTION("FPGA Comms Driver");
 
-//////////////////////////
-//                      //
-//                      //
-//                      //
-//      [TASKLET]       //
-//                      //
-//                      //
-//                      //
-//////////////////////////
-
-static void my_tasklet_handler(unsigned long data);
-DECLARE_TASKLET(my_tasklet, my_tasklet_handler, 0);
-
-static void my_tasklet_handler(unsigned long data)
-{
-    printk(KERN_INFO "[FPGA][ T ] Tasklet executed\n");
-}
-
 //////////////////////
 //                  //
 //                  //
@@ -116,7 +98,7 @@ static ssize_t dev_write(struct file *filep, const char *buffer, size_t len, lof
     if (strncmp(message, "int", 3) == 0)
     {
         printk(KERN_INFO "[FPGA][ C ] Finally Got You!\n");
-        tasklet_schedule(&my_tasklet);
+        tasklet_schedule(&spi_request_tasklet);
     }
 
     if (error_count==0)
@@ -206,36 +188,48 @@ static void spi_response_func(struct work_struct *work)
     }
 }
 
-// static void spi_request_func(struct work_struct *work)
-// {
-//     struct spi_message msg;
-//     struct spi_transfer transfer;
-//     int ret;
-//     int i;
+//////////////////////////
+//                      //
+//                      //
+//                      //
+//      [TASKLET]       //
+//                      //
+//                      //
+//                      //
+//////////////////////////
 
-//     // Initialize SPI transfer for SPI1
-//     memset(&transfer, 0, sizeof(transfer));
-//     transfer.tx_buf = tx_buffer1;  // Send received data from SPI0
-//     transfer.rx_buf = rx_buffer1;  // Receive data from FPGA via SPI1
-//     transfer.len = sizeof(tx_buffer0);
+static void spi_request_task(unsigned long data);
+DECLARE_TASKLET(spi_request_tasklet, spi_request_task, 0);
 
-//     // Initialize SPI messages
-//     spi_message_init(&msg);
-//     spi_message_add_tail(&transfer, &msg);
+static void spi_request_task(unsigned long data)
+{
+    struct spi_message msg;
+    struct spi_transfer transfer;
+    int ret;
+    int i;
 
-//     // Transfer SPI messages for SPI1
-//     ret = spi_sync(spi_dev1, &msg);
-//     if (ret < 0) {
-//         printk(KERN_ERR "[FPGA][SPI] SPI transfer for SPI1 failed: %d\n", ret);
-//         return;
-//     }
+    memset(&transfer, 0, sizeof(transfer));
+    transfer.tx_buf = tx_buffer1;
+    transfer.rx_buf = rx_buffer1;
+    transfer.len = sizeof(tx_buffer0);
 
-//     // Display the received data for SPI1
-//     printk(KERN_INFO "[FPGA][SPI] Received data for SPI1:");
-//     for (i = 0; i < sizeof(rx_buffer1); ++i) {
-//         printk(KERN_INFO "[FPGA][SPI] Byte %d: 0x%02x\n", i, rx_buffer1[i]);
-//     }
-// }
+    // Initialize SPI messages
+    spi_message_init(&msg);
+    spi_message_add_tail(&transfer, &msg);
+
+    // Transfer SPI messages for SPI1
+    ret = spi_sync(spi_dev1, &msg);
+    if (ret < 0) {
+        printk(KERN_ERR "[FPGA][SPI] SPI transfer for SPI1 failed: %d\n", ret);
+        return;
+    }
+
+    // Display the received data for SPI1
+    printk(KERN_INFO "[FPGA][SPI] Received data for SPI1:");
+    for (i = 0; i < sizeof(rx_buffer1); ++i) {
+        printk(KERN_INFO "[FPGA][SPI] Byte %d: 0x%02x\n", i, rx_buffer1[i]);
+    }
+}
 
 //////////////////////////
 //                      //
@@ -404,7 +398,7 @@ static int __init fpga_driver_init(void)
     // [T] Tasklet :: CONFIG        //
     //                              //
     //////////////////////////////////
-    tasklet_init(&my_tasklet, my_tasklet_handler, 0);
+    tasklet_init(&spi_request_tasklet, spi_request_task, 0);
 
     //////////////////////////////////
     //                              //
@@ -478,7 +472,6 @@ static void __exit fpga_driver_exit(void)
     // ISR :: DESTROY                //
     //                              //
     //////////////////////////////////
-    int irq = gpio_to_irq(GPIO_RESPONSE_PIN);
     free_irq(irq, NULL);
     gpio_free(GPIO_RESPONSE_PIN);
     printk(KERN_INFO "[FPGA][IRQ] Exit\n");
@@ -488,7 +481,7 @@ static void __exit fpga_driver_exit(void)
     // [T] Tasklet :: DESTROY        //
     //                              //
     //////////////////////////////////
-    tasklet_kill(&my_tasklet);
+    tasklet_kill(&spi_request_tasklet);
 
     //////////////////////////////////
     //                              //
