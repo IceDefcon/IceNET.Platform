@@ -25,13 +25,15 @@ MODULE_DESCRIPTION("FPGA Comms Driver");
 //                  //
 //                  //
 //                  //
-//    [T] Tasklet   //
+//   [W] Workload   //
 //                  //
 //                  //
 //                  //
 //////////////////////
-static void my_tasklet_handler(unsigned long data);
-DECLARE_TASKLET(my_tasklet, my_tasklet_handler, 0);
+static struct work_struct spi_request_work;
+static struct work_struct spi_response_work;
+static struct workqueue_struct *spi_request_wq;
+static struct workqueue_struct *spi_response_wq;
 
 //////////////////////
 //                  //
@@ -42,7 +44,6 @@ DECLARE_TASKLET(my_tasklet, my_tasklet_handler, 0);
 //                  //
 //                  //
 //////////////////////
-
 #define  DEVICE_NAME "iceCOM"
 #define  CLASS_NAME  "iceCOM"
 
@@ -68,6 +69,70 @@ static struct file_operations fops =
    .release = dev_release,
 };
 
+//////////////////////
+//                  //
+//                  //
+//                  //
+//   [SPI] Comms    //
+//                  //
+//                  //
+//                  //
+//////////////////////////////////////////////////////
+//                                                  //
+//                                                  //
+// PIN_119 :: BBB P9_17 :: PULPLE   :: SPI0_CS0     //
+// PIN_121 :: BBB P9_18 :: BLUE     :: SPI0_D1      //
+// PIN_125 :: BBB P9_21 :: BROWN    :: SPI0_D0      //
+// PIN_129 :: BBB P9_22 :: BLACK    :: SPI0_SCLK    //
+//                                                  //
+// BBB P9_28 :: YELOW    :: SPI1_CS0                //
+// BBB P9_30 :: GREEN    :: SPI1_D1 :: GPIO_112     //
+// BBB P9_29 :: RED      :: SPI1_D0                 //
+// BBB P9_31 :: ORANGE   :: SPI1_SCLK               //
+//                                                  //
+//                                                  //
+//////////////////////////////////////////////////////
+
+static struct spi_device *spi_dev0;
+static struct spi_device *spi_dev1;
+
+static volatile uint8_t tx_buffer0[] = {0xAA};  // Data to be transmitted for SPI0
+static volatile uint8_t rx_buffer0[1];          // Buffer to receive data for SPI0
+
+static volatile uint8_t tx_buffer1[] = {0xBB};  // Data to be transmitted for SPI1
+static volatile uint8_t rx_buffer1[1];          // Buffer to receive data for SPI1
+
+//////////////////////////
+//                      //
+//                      //
+//                      //
+//        [GPIO]        //
+//      Interrupts      //
+//                      //
+//                      //
+//                      //
+//////////////////////////
+
+#define GPIO_RESPONSE_PIN 60 // P9_12
+#define GPIO_RESPONSE "GPIO_RESPONSE"
+
+//////////////////////////////////////////////////////////////
+//                                                          //
+////                                                      ////
+//////  C   O   D   E   :::  S   E   C   T   I   O   N  //////
+////                                                      ////
+//                                                          //
+//////////////////////////////////////////////////////////////
+
+//////////////////////
+//                  //
+//                  //
+//                  //
+//    [C] Device    //
+//                  //
+//                  //
+//                  //
+//////////////////////
 static int dev_open(struct inode *inodep, struct file *filep)
 {
     if(!mutex_trylock(&com_mutex))
@@ -109,8 +174,7 @@ static ssize_t dev_write(struct file *filep, const char *buffer, size_t len, lof
 
     if (strncmp(message, "int", 3) == 0)
     {
-        printk(KERN_INFO "[FPGA][ C ] Finally Got You!\n");
-        tasklet_schedule(&my_tasklet);
+        queue_work(spi_response_wq, &spi_response_work);
     }
 
     if (error_count==0)
@@ -156,19 +220,6 @@ static int dev_release(struct inode *inodep, struct file *filep)
 //                                                  //
 //                                                  //
 //////////////////////////////////////////////////////
-
-static struct spi_device *spi_dev0;
-static struct spi_device *spi_dev1;
-
-static volatile uint8_t tx_buffer0[] = {0xAA};  // Data to be transmitted for SPI0
-static volatile uint8_t rx_buffer0[1];          // Buffer to receive data for SPI0
-
-static volatile uint8_t tx_buffer1[] = {0xBB};  // Data to be transmitted for SPI1
-static volatile uint8_t rx_buffer1[1];          // Buffer to receive data for SPI1
-
-static struct work_struct spi_response_work;
-static struct workqueue_struct *spi_response_wq;
-
 static void spi_response_func(struct work_struct *work)
 {
     struct spi_message msg;
@@ -200,7 +251,7 @@ static void spi_response_func(struct work_struct *work)
     }
 }
 
-static void my_tasklet_handler(unsigned long data)
+static void spi_request_func(struct work_struct *work)
 {
     struct spi_message msg;
     struct spi_transfer transfer;
@@ -241,25 +292,9 @@ static void my_tasklet_handler(unsigned long data)
 //                      //
 //                      //
 //////////////////////////
-
-#define GPIO_RESPONSE_PIN 60 // P9_12
-#define GPIO_RESPONSE "GPIO_RESPONSE"
-
 static irqreturn_t isr_response(int irq, void *data)
 {
     static int counter = 0;
-
-    //////////////////
-    //              //
-    //              //
-    //              //
-    //     FPGA     //
-    //     COMS     //
-    //   ISR CODE   //
-    //              //
-    //              //
-    //              //
-    //////////////////
 
     printk(KERN_INFO "[FPGA][ISR] Resonse interrupt [%d] @ Pin [%d]\n", counter, GPIO_RESPONSE_PIN);
     counter++;
@@ -268,7 +303,6 @@ static irqreturn_t isr_response(int irq, void *data)
 
     return IRQ_HANDLED;
 }
-
 
 //////////////////////////
 //                      //
@@ -281,7 +315,6 @@ static irqreturn_t isr_response(int irq, void *data)
 //                      //
 //                      //
 //////////////////////////
-
 static int __init fpga_driver_init(void)
 {
     //////////////////////////////////
@@ -346,9 +379,16 @@ static int __init fpga_driver_init(void)
     }
 
     INIT_WORK(&spi_response_work, spi_response_func);
-    spi_response_wq = create_singlethread_workqueue("spi_workqueue");
+    spi_response_wq = create_singlethread_workqueue("spi_res_workqueue");
     if (!spi_response_wq) {
-        printk(KERN_ERR "[FPGA][WRK] Failed to create SPI workqueue\n");
+        printk(KERN_ERR "[FPGA][WRK] Failed to create SPI response workqueue\n");
+        return -ENOMEM;
+    }
+
+    INIT_WORK(&spi_request_work, spi_request_func);
+    spi_request_wq = create_singlethread_workqueue("spi_req_workqueue");
+    if (!spi_request_wq) {
+        printk(KERN_ERR "[FPGA][WRK] Failed to create SPI request workqueue\n");
         return -ENOMEM;
     }
 
@@ -393,13 +433,6 @@ static int __init fpga_driver_init(void)
     }
 
     printk(KERN_INFO "[FPGA][IRQ] ISR initialized\n");
-
-    //////////////////////////////////
-    //                              //
-    // [T] Tasklet :: CONFIG        //
-    //                              //
-    //////////////////////////////////
-    tasklet_init(&my_tasklet, my_tasklet_handler, 0);
 
     //////////////////////////////////
     //                              //
@@ -457,12 +490,17 @@ static void __exit fpga_driver_exit(void)
     //                              //
     //////////////////////////////////
     cancel_work_sync(&spi_response_work);
-
-    // Destroy RESPONSE workqueue
     if (spi_response_wq) {
         flush_workqueue(spi_response_wq);
         destroy_workqueue(spi_response_wq);
         spi_response_wq = NULL;
+    }
+
+    cancel_work_sync(&spi_request_work);
+    if (spi_request_wq) {
+        flush_workqueue(spi_request_wq);
+        destroy_workqueue(spi_request_wq);
+        spi_request_wq = NULL;
     }
 
     spi_dev_put(spi_dev0);
@@ -471,20 +509,13 @@ static void __exit fpga_driver_exit(void)
 
     //////////////////////////////////
     //                              //
-    // ISR :: DESTROY               //
+    // ISR :: DESTROY                //
     //                              //
     //////////////////////////////////
     int irq = gpio_to_irq(GPIO_RESPONSE_PIN);
     free_irq(irq, NULL);
     gpio_free(GPIO_RESPONSE_PIN);
     printk(KERN_INFO "[FPGA][IRQ] Exit\n");
-
-    //////////////////////////////////
-    //                              //
-    // [T] :: DESTROY               //
-    //                              //
-    //////////////////////////////////
-    tasklet_kill(&my_tasklet);
 
     //////////////////////////////////
     //                              //
