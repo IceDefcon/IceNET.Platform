@@ -237,7 +237,7 @@ static void spi_response_func(struct work_struct *work)
 
     ret = spi_sync(spi_dev0, &msg);
     if (ret < 0) {
-        printk(KERN_ERR "[FPGA][SPI] SPI transfer for SPI0 failed: %d\n", ret);
+        printk(KERN_ERR "[FPGA][SPI] SPI transfer for SPI response: %d\n", ret);
         return;
     }
 
@@ -268,7 +268,7 @@ static void spi_request_func(struct work_struct *work)
         return;
     }
 
-    printk(KERN_INFO "[FPGA][SPI] Received data for SPI1:");
+    printk(KERN_INFO "[FPGA][SPI] Received data for SPI request:");
     for (i = 0; i < sizeof(rx_req_buffer); ++i) {
         printk(KERN_INFO "[FPGA][SPI] Byte %d: 0x%02x\n", i, rx_req_buffer[i]);
     }
