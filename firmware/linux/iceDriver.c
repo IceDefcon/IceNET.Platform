@@ -143,7 +143,7 @@ static int dev_open(struct inode *inodep, struct file *filep)
 
     numberOpens++;
     printk(KERN_INFO "[FPGA][ C ] Device has been opened %d time(s)\n", numberOpens);
-    return 0;
+    return NULL;
 }
 
 static ssize_t dev_read(struct file *filep, char *buffer, size_t len, loff_t *offset)
@@ -158,7 +158,7 @@ static ssize_t dev_read(struct file *filep, char *buffer, size_t len, loff_t *of
     if (error_count==0)
     {
         printk(KERN_INFO "[FPGA][ C ] Sent %d characters to the user\n", size_of_message);
-        return (size_of_message = 0);  // clear the position to the start and return 0
+        return (size_of_message = 0);  // clear the position to the start and return NULL
     }
     else 
     {
@@ -194,7 +194,7 @@ static int dev_release(struct inode *inodep, struct file *filep)
 {
     mutex_unlock(&com_mutex);
     printk(KERN_INFO "[FPGA][ C ] Device successfully closed\n");
-    return 0;
+    return NULL;
 }
 
 //////////////////////
@@ -456,7 +456,7 @@ static int __init fpga_driver_init(void)
 
     mutex_init(&com_mutex);
 
-    return 0;
+    return NULL;
 }
 
 //////////////////////////
