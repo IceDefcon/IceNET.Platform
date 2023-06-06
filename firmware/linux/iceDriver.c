@@ -394,7 +394,7 @@ static int __init fpga_driver_init(void)
 
     //////////////////////////////////
     //                              //
-    // ISR :: CONFIG                //
+    // GPIO ISR :: CONFIG           //
     //                              //
     //////////////////////////////////
     int irq_spi;

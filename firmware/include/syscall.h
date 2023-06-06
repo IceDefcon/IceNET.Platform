@@ -1,6 +1,0 @@
-#ifndef CUSTOM_SYSCALLS_H
-#define CUSTOM_SYSCALLS_H
-
-#define CUSTOM_SYSCALL_NUM 437
-
-#endif
