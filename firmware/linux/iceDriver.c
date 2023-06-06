@@ -113,8 +113,8 @@ static volatile uint8_t rx_req_buffer[1];          // Buffer to receive data for
 //                      //
 //////////////////////////
 
-#define GPIO_RESPONSE_PIN 60 // P9_12
-#define GPIO_RESPONSE "GPIO_RESPONSE"
+#define GPIO_IN_SPI_INTERRUPT_PIN 60 // P9_12
+#define GPIO_IN_CAN_INTTERRUT_PIN 66 // P8_7
 
 //////////////////////////////////////////////////////////////
 //                                                          //
@@ -284,11 +284,11 @@ static void spi_request_func(struct work_struct *work)
 //                      //
 //                      //
 //////////////////////////
-static irqreturn_t isr_response(int irq, void *data)
+static irqreturn_t isr_spi_response(int irq, void *data)
 {
     static int counter = 0;
 
-    printk(KERN_INFO "[FPGA][ISR] Resonse interrupt [%d] @ Pin [%d]\n", counter, GPIO_RESPONSE_PIN);
+    printk(KERN_INFO "[FPGA][ISR] Resonse interrupt [%d] @ Pin [%d]\n", counter, GPIO_IN_SPI_INTERRUPT_PIN);
     counter++;
 
     queue_work(spi_response_wq, &spi_response_work);
@@ -387,41 +387,71 @@ static int __init fpga_driver_init(void)
     // ISR :: CONFIG                //
     //                              //
     //////////////////////////////////
-    int irq, result;
+    int irq_spi,
+    int irq_can;
+    int result;
 
-    result = gpio_request(GPIO_RESPONSE_PIN, GPIO_RESPONSE);
+    result = gpio_request(GPIO_IN_SPI_INTERRUPT_PIN, "Input GPIO SPI Interrupt");
     if (result < 0) 
     {
-        printk(KERN_ERR "[FPGA][IRQ] Failed to request GPIO pin\n");
+        printk(KERN_ERR "[FPGA][IRQ] Failed to request GPIO pin for SPI\n");
         return result;
     }
-
-    result = gpio_direction_input(GPIO_RESPONSE_PIN);
+    result = gpio_direction_input(GPIO_IN_SPI_INTERRUPT_PIN);
     if (result < 0) 
     {
-        printk(KERN_ERR "[FPGA][IRQ] Failed to set GPIO direction\n");
-        gpio_free(GPIO_RESPONSE_PIN);
+        printk(KERN_ERR "[FPGA][IRQ] Failed to set GPIO direction for SPI\n");
+        gpio_free(GPIO_IN_SPI_INTERRUPT_PIN);
         return result;
     }
-
-    irq = gpio_to_irq(GPIO_RESPONSE_PIN);
-    if (irq < 0) 
+    irq_spi = gpio_to_irq(GPIO_IN_SPI_INTERRUPT_PIN);
+    if (irq_spi < 0) 
     {
-        printk(KERN_ERR "[FPGA][IRQ] Failed to get IRQ number\n");
-        gpio_free(GPIO_RESPONSE_PIN);
-        return irq;
+        printk(KERN_ERR "[FPGA][IRQ] Failed to get IRQ number for SPI\n");
+        gpio_free(GPIO_IN_SPI_INTERRUPT_PIN);
+        return irq_spi;
     }
-
-    result = request_irq(irq, isr_response, IRQF_TRIGGER_RISING, GPIO_RESPONSE, NULL);
+    result = request_irq(irq_spi, isr_spi_response, IRQF_TRIGGER_RISING, "Input GPIO SPI Interrupt", NULL);
     if (result < 0) 
     {
-        printk(KERN_ERR "[FPGA][IRQ] Failed to request IRQ\n");
-        gpio_free(GPIO_RESPONSE_PIN);
+        printk(KERN_ERR "[FPGA][IRQ] Failed to request IRQ for SPI\n");
+        gpio_free(GPIO_IN_SPI_INTERRUPT_PIN);
         spi_dev_put(spi_dev0);
         return result;
     }
+    printk(KERN_INFO "[FPGA][IRQ] ISR for SPI initialized\n");
 
-    printk(KERN_INFO "[FPGA][IRQ] ISR initialized\n");
+    result = gpio_request(GPIO_IN_CAN_INTTERRUT_PIN, "Input GPIO CAN Interrupt");
+    if (result < 0) 
+    {
+        printk(KERN_ERR "[FPGA][IRQ] Failed to request GPIO pin for CAN\n");
+        return result;
+    }
+    result = gpio_direction_input(GPIO_IN_CAN_INTTERRUT_PIN);
+    if (result < 0) 
+    {
+        printk(KERN_ERR "[FPGA][IRQ] Failed to set GPIO direction for CAN\n");
+        gpio_free(GPIO_IN_CAN_INTTERRUT_PIN);
+        return result;
+    }
+    irq_can = gpio_to_irq(GPIO_IN_CAN_INTTERRUT_PIN);
+    if (irq_can < 0) 
+    {
+        printk(KERN_ERR "[FPGA][IRQ] Failed to get IRQ number for CAN\n");
+        gpio_free(GPIO_IN_CAN_INTTERRUT_PIN);
+        return irq_can;
+    }
+    result = request_irq(irq_can, isr_can_response, IRQF_TRIGGER_RISING, "Input GPIO CAN Interrupt", NULL);
+    if (result < 0) 
+    {
+        printk(KERN_ERR "[FPGA][IRQ] Failed to request IRQ for CAN\n");
+        gpio_free(GPIO_IN_CAN_INTTERRUT_PIN);
+        //
+        // CAN :: EQUIVALENT ---> of spi_dev_put(spi_dev0)
+        //
+        return result;
+    }
+    printk(KERN_INFO "[FPGA][IRQ] ISR for CAN initialized\n");
 
     //////////////////////////////////
     //                              //
@@ -501,10 +531,18 @@ static void __exit fpga_driver_exit(void)
     // ISR :: DESTROY                //
     //                              //
     //////////////////////////////////
-    int irq = gpio_to_irq(GPIO_RESPONSE_PIN);
-    free_irq(irq, NULL);
-    gpio_free(GPIO_RESPONSE_PIN);
-    printk(KERN_INFO "[FPGA][IRQ] Exit\n");
+    int irq_spi;
+    int irq_can;
+
+    irq_spi = gpio_to_irq(GPIO_IN_SPI_INTERRUPT_PIN);
+    free_irq(irq_spi, NULL);
+    gpio_free(GPIO_IN_SPI_INTERRUPT_PIN);
+    printk(KERN_INFO "[FPGA][IRQ] SPI Exit\n");
+
+    irq_can = gpio_to_irq(GPIO_IN_CAN_INTTERRUT_PIN);
+    free_irq(irq_can, NULL);
+    gpio_free(GPIO_IN_CAN_INTTERRUT_PIN);
+    printk(KERN_INFO "[FPGA][IRQ] CAN Exit\n");
 
     //////////////////////////////////
     //                              //
