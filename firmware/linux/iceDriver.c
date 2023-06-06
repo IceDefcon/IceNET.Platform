@@ -288,10 +288,20 @@ static irqreturn_t isr_spi_response(int irq, void *data)
 {
     static int counter = 0;
 
-    printk(KERN_INFO "[FPGA][ISR] Resonse interrupt [%d] @ Pin [%d]\n", counter, GPIO_IN_SPI_INTERRUPT_PIN);
+    printk(KERN_INFO "[FPGA][ISR] SPI Resonse interrupt [%d] @ Pin [%d]\n", counter, GPIO_IN_SPI_INTERRUPT_PIN);
     counter++;
 
     queue_work(spi_response_wq, &spi_response_work);
+
+    return IRQ_HANDLED;
+}
+
+static irqreturn_t isr_can_response(int irq, void *data)
+{
+    static int counter = 0;
+
+    printk(KERN_INFO "[FPGA][ISR] CAN Resonse interrupt [%d] @ Pin [%d]\n", counter, GPIO_IN_SPI_INTERRUPT_PIN);
+    counter++;
 
     return IRQ_HANDLED;
 }
