@@ -387,7 +387,7 @@ static int __init fpga_driver_init(void)
     // ISR :: CONFIG                //
     //                              //
     //////////////////////////////////
-    int irq_spi,
+    int irq_spi;
     int irq_can;
     int result;
 
