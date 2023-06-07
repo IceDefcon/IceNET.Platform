@@ -73,10 +73,10 @@ GND                          : 6         : gnd    :                   :         
 LED_1                        : 7         : output : 3.3-V LVTTL       :         : 1         : Y              
 GND*                         : 8         :        :                   :         : 1         :                
 LED_2                        : 9         : output : 3.3-V LVTTL       :         : 1         : Y              
-altera_reserved_tdo          : 10        : output : 3.3-V LVTTL       :         : 1         : N              
-altera_reserved_tms          : 11        : input  : 3.3-V LVTTL       :         : 1         : N              
-altera_reserved_tck          : 12        : input  : 3.3-V LVTTL       :         : 1         : N              
-altera_reserved_tdi          : 13        : input  : 3.3-V LVTTL       :         : 1         : N              
+TDO                          : 10        : output :                   :         : 1         :                
+TMS                          : 11        : input  :                   :         : 1         :                
+TCK                          : 12        : input  :                   :         : 1         :                
+TDI                          : 13        : input  :                   :         : 1         :                
 DATA0                        : 14        : input  :                   :         : 1         :                
 DCLK                         : 15        :        :                   :         : 1         :                
 nCE                          : 16        :        :                   :         : 1         :                
@@ -157,7 +157,7 @@ GND+                         : 90        :        :                   :         
 GND+                         : 91        :        :                   :         : 3         :                
 GND*                         : 92        :        :                   :         : 3         :                
 GND*                         : 93        :        :                   :         : 3         :                
-KERNEL_SCLK                  : 94        : input  : 3.3-V LVTTL       :         : 3         : N              
+GND*                         : 94        :        :                   :         : 3         :                
 VCCIO3                       : 95        : power  :                   : 3.3V    : 3         :                
 GND*                         : 96        :        :                   :         : 3         :                
 GND*                         : 97        :        :                   :         : 3         :                
@@ -192,7 +192,7 @@ KERNEL_MISO                  : 125       : output : 3.3-V LVTTL       :         
 GND*                         : 126       :        :                   :         : 2         :                
 VCCIO2                       : 127       : power  :                   : 3.3V    : 2         :                
 GND                          : 128       : gnd    :                   :         :           :                
-GND*                         : 129       :        :                   :         : 2         :                
+KERNEL_SCLK                  : 129       : input  : 3.3-V LVTTL       :         : 2         : Y              
 GND                          : 130       : gnd    :                   :         :           :                
 VCCINT                       : 131       : power  :                   : 1.2V    :           :                
 GND*                         : 132       :        :                   :         : 2         :                

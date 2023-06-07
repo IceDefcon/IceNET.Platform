@@ -13,7 +13,7 @@ end debounce;
 
 architecture rtl of debounce is
 
-    constant delay : integer := 50000; -- For 50Mhz :: 500,000 = 10ms :: 50000 = 1ms
+    constant delay : integer := 500000; -- For 50Mhz :: 500,000 = 10ms :: 50,000 = 1ms
     signal count : integer := 0;
     signal button_temp : std_logic := '0';
 

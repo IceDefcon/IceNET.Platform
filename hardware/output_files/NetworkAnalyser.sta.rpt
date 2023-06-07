@@ -1,5 +1,5 @@
 TimeQuest Timing Analyzer report for NetworkAnalyser
-Fri Jun  2 22:44:31 2023
+Wed Jun  7 07:10:03 2023
 Quartus II 64-Bit Version 13.0.1 Build 232 06/12/2013 Service Pack 1 SJ Web Edition
 
 
@@ -17,25 +17,42 @@ Quartus II 64-Bit Version 13.0.1 Build 232 06/12/2013 Service Pack 1 SJ Web Edit
   9. Slow Model Recovery Summary
  10. Slow Model Removal Summary
  11. Slow Model Minimum Pulse Width Summary
- 12. Slow Model Minimum Pulse Width: 'altera_reserved_tck'
- 13. Propagation Delay
- 14. Minimum Propagation Delay
- 15. Fast Model Setup Summary
- 16. Fast Model Hold Summary
- 17. Fast Model Recovery Summary
- 18. Fast Model Removal Summary
- 19. Fast Model Minimum Pulse Width Summary
- 20. Fast Model Minimum Pulse Width: 'altera_reserved_tck'
- 21. Propagation Delay
- 22. Minimum Propagation Delay
- 23. Multicorner Timing Analysis Summary
- 24. Progagation Delay
- 25. Minimum Progagation Delay
- 26. Clock Transfers
- 27. Report TCCS
- 28. Report RSKM
- 29. Unconstrained Paths
- 30. TimeQuest Timing Analyzer Messages
+ 12. Slow Model Setup: 'CLOCK'
+ 13. Slow Model Hold: 'CLOCK'
+ 14. Slow Model Minimum Pulse Width: 'CLOCK'
+ 15. Setup Times
+ 16. Hold Times
+ 17. Clock to Output Times
+ 18. Minimum Clock to Output Times
+ 19. Propagation Delay
+ 20. Minimum Propagation Delay
+ 21. Fast Model Setup Summary
+ 22. Fast Model Hold Summary
+ 23. Fast Model Recovery Summary
+ 24. Fast Model Removal Summary
+ 25. Fast Model Minimum Pulse Width Summary
+ 26. Fast Model Setup: 'CLOCK'
+ 27. Fast Model Hold: 'CLOCK'
+ 28. Fast Model Minimum Pulse Width: 'CLOCK'
+ 29. Setup Times
+ 30. Hold Times
+ 31. Clock to Output Times
+ 32. Minimum Clock to Output Times
+ 33. Propagation Delay
+ 34. Minimum Propagation Delay
+ 35. Multicorner Timing Analysis Summary
+ 36. Setup Times
+ 37. Hold Times
+ 38. Clock to Output Times
+ 39. Minimum Clock to Output Times
+ 40. Progagation Delay
+ 41. Minimum Progagation Delay
+ 42. Setup Transfers
+ 43. Hold Transfers
+ 44. Report TCCS
+ 45. Report RSKM
+ 46. Unconstrained Paths
+ 47. TimeQuest Timing Analyzer Messages
 
 
 
@@ -80,11 +97,12 @@ applicable agreement for further details.
 ; Maximum allowed            ; 2           ;
 ;                            ;             ;
 ; Average used               ; 1.00        ;
-; Maximum used               ; 1           ;
+; Maximum used               ; 2           ;
 ;                            ;             ;
 ; Usage by Processor         ; % Time Used ;
 ;     Processor 1            ; 100.0%      ;
-;     Processors 2-4         ;   0.0%      ;
+;     Processor 2            ; < 0.1%      ;
+;     Processors 3-4         ;   0.0%      ;
 +----------------------------+-------------+
 
 
@@ -93,35 +111,45 @@ applicable agreement for further details.
 +---------------------+--------+--------------------------+
 ; SDC File Path       ; Status ; Read at                  ;
 +---------------------+--------+--------------------------+
-; NetworkAnalyser.sdc ; OK     ; Fri Jun  2 22:44:31 2023 ;
+; NetworkAnalyser.sdc ; OK     ; Wed Jun  7 07:10:03 2023 ;
 +---------------------+--------+--------------------------+
 
 
-+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-; Clocks                                                                                                                                                                                                    ;
-+---------------------+------+---------+-----------+-------+--------+------------+-----------+-------------+-------+--------+-----------+------------+----------+--------+--------+-------------------------+
-; Clock Name          ; Type ; Period  ; Frequency ; Rise  ; Fall   ; Duty Cycle ; Divide by ; Multiply by ; Phase ; Offset ; Edge List ; Edge Shift ; Inverted ; Master ; Source ; Targets                 ;
-+---------------------+------+---------+-----------+-------+--------+------------+-----------+-------------+-------+--------+-----------+------------+----------+--------+--------+-------------------------+
-; altera_reserved_tck ; Base ; 100.000 ; 10.0 MHz  ; 0.000 ; 50.000 ;            ;           ;             ;       ;        ;           ;            ;          ;        ;        ; { altera_reserved_tck } ;
-+---------------------+------+---------+-----------+-------+--------+------------+-----------+-------------+-------+--------+-----------+------------+----------+--------+--------+-------------------------+
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+; Clocks                                                                                                                                                                            ;
++------------+------+--------+------------+-------+-------+------------+-----------+-------------+-------+--------+-----------+------------+----------+--------+--------+-----------+
+; Clock Name ; Type ; Period ; Frequency  ; Rise  ; Fall  ; Duty Cycle ; Divide by ; Multiply by ; Phase ; Offset ; Edge List ; Edge Shift ; Inverted ; Master ; Source ; Targets   ;
++------------+------+--------+------------+-------+-------+------------+-----------+-------------+-------+--------+-----------+------------+----------+--------+--------+-----------+
+; CLOCK      ; Base ; 1.000  ; 1000.0 MHz ; 0.000 ; 0.500 ;            ;           ;             ;       ;        ;           ;            ;          ;        ;        ; { CLOCK } ;
++------------+------+--------+------------+-------+-------+------------+-----------+-------------+-------+--------+-----------+------------+----------+--------+--------+-----------+
 
 
----------------------------
-; Slow Model Fmax Summary ;
----------------------------
-No paths to report.
++--------------------------------------------------+
+; Slow Model Fmax Summary                          ;
++------------+-----------------+------------+------+
+; Fmax       ; Restricted Fmax ; Clock Name ; Note ;
++------------+-----------------+------------+------+
+; 169.23 MHz ; 169.23 MHz      ; CLOCK      ;      ;
++------------+-----------------+------------+------+
+This panel reports FMAX for every clock in the design, regardless of the user-specified clock periods.  FMAX is only computed for paths where the source and destination registers or ports are driven by the same clock.  Paths of different clocks, including generated clocks, are ignored.  For paths between a clock and its inversion, FMAX is computed as if the rising and falling edges are scaled along with FMAX, such that the duty cycle (in terms of a percentage) is maintained. Altera recommends that you always use clock constraints and other slack reports for sign-off analysis.
 
 
-----------------------------
-; Slow Model Setup Summary ;
-----------------------------
-No paths to report.
++--------------------------------+
+; Slow Model Setup Summary       ;
++-------+--------+---------------+
+; Clock ; Slack  ; End Point TNS ;
++-------+--------+---------------+
+; CLOCK ; -4.909 ; -153.838      ;
++-------+--------+---------------+
 
 
----------------------------
-; Slow Model Hold Summary ;
----------------------------
-No paths to report.
++-------------------------------+
+; Slow Model Hold Summary       ;
++-------+-------+---------------+
+; Clock ; Slack ; End Point TNS ;
++-------+-------+---------------+
+; CLOCK ; 0.499 ; 0.000         ;
++-------+-------+---------------+
 
 
 -------------------------------
@@ -136,22 +164,381 @@ No paths to report.
 No paths to report.
 
 
-+----------------------------------------------+
-; Slow Model Minimum Pulse Width Summary       ;
-+---------------------+--------+---------------+
-; Clock               ; Slack  ; End Point TNS ;
-+---------------------+--------+---------------+
-; altera_reserved_tck ; 97.223 ; 0.000         ;
-+---------------------+--------+---------------+
++----------------------------------------+
+; Slow Model Minimum Pulse Width Summary ;
++-------+--------+-----------------------+
+; Clock ; Slack  ; End Point TNS         ;
++-------+--------+-----------------------+
+; CLOCK ; -1.941 ; -58.333               ;
++-------+--------+-----------------------+
 
 
-+-------------------------------------------------------------------------------------------------------------+
-; Slow Model Minimum Pulse Width: 'altera_reserved_tck'                                                       ;
-+--------+--------------+----------------+-----------+---------------------+------------+---------------------+
-; Slack  ; Actual Width ; Required Width ; Type      ; Clock               ; Clock Edge ; Target              ;
-+--------+--------------+----------------+-----------+---------------------+------------+---------------------+
-; 97.223 ; 100.000      ; 2.777          ; Port Rate ; altera_reserved_tck ; Rise       ; altera_reserved_tck ;
-+--------+--------------+----------------+-----------+---------------------+------------+---------------------+
++--------------------------------------------------------------------------------------------------------------------------------------------------------+
+; Slow Model Setup: 'CLOCK'                                                                                                                              ;
++--------+------------------------------------+------------------------------------+--------------+-------------+--------------+------------+------------+
+; Slack  ; From Node                          ; To Node                            ; Launch Clock ; Latch Clock ; Relationship ; Clock Skew ; Data Delay ;
++--------+------------------------------------+------------------------------------+--------------+-------------+--------------+------------+------------+
+; -4.909 ; debounce:debounce_module|count[11] ; debounce:debounce_module|count[1]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 5.949      ;
+; -4.909 ; debounce:debounce_module|count[11] ; debounce:debounce_module|count[2]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 5.949      ;
+; -4.909 ; debounce:debounce_module|count[11] ; debounce:debounce_module|count[3]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 5.949      ;
+; -4.909 ; debounce:debounce_module|count[11] ; debounce:debounce_module|count[4]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 5.949      ;
+; -4.909 ; debounce:debounce_module|count[11] ; debounce:debounce_module|count[5]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 5.949      ;
+; -4.909 ; debounce:debounce_module|count[11] ; debounce:debounce_module|count[6]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 5.949      ;
+; -4.909 ; debounce:debounce_module|count[11] ; debounce:debounce_module|count[7]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 5.949      ;
+; -4.909 ; debounce:debounce_module|count[11] ; debounce:debounce_module|count[8]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 5.949      ;
+; -4.909 ; debounce:debounce_module|count[11] ; debounce:debounce_module|count[9]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 5.949      ;
+; -4.909 ; debounce:debounce_module|count[11] ; debounce:debounce_module|count[10] ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 5.949      ;
+; -4.909 ; debounce:debounce_module|count[11] ; debounce:debounce_module|count[11] ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 5.949      ;
+; -4.909 ; debounce:debounce_module|count[11] ; debounce:debounce_module|count[12] ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 5.949      ;
+; -4.909 ; debounce:debounce_module|count[11] ; debounce:debounce_module|count[14] ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 5.949      ;
+; -4.909 ; debounce:debounce_module|count[11] ; debounce:debounce_module|count[15] ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 5.949      ;
+; -4.909 ; debounce:debounce_module|count[11] ; debounce:debounce_module|count[0]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 5.949      ;
+; -4.656 ; debounce:debounce_module|count[5]  ; debounce:debounce_module|count[1]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 5.696      ;
+; -4.656 ; debounce:debounce_module|count[5]  ; debounce:debounce_module|count[2]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 5.696      ;
+; -4.656 ; debounce:debounce_module|count[5]  ; debounce:debounce_module|count[3]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 5.696      ;
+; -4.656 ; debounce:debounce_module|count[5]  ; debounce:debounce_module|count[4]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 5.696      ;
+; -4.656 ; debounce:debounce_module|count[5]  ; debounce:debounce_module|count[5]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 5.696      ;
+; -4.656 ; debounce:debounce_module|count[5]  ; debounce:debounce_module|count[6]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 5.696      ;
+; -4.656 ; debounce:debounce_module|count[5]  ; debounce:debounce_module|count[7]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 5.696      ;
+; -4.656 ; debounce:debounce_module|count[5]  ; debounce:debounce_module|count[8]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 5.696      ;
+; -4.656 ; debounce:debounce_module|count[5]  ; debounce:debounce_module|count[9]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 5.696      ;
+; -4.656 ; debounce:debounce_module|count[5]  ; debounce:debounce_module|count[10] ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 5.696      ;
+; -4.656 ; debounce:debounce_module|count[5]  ; debounce:debounce_module|count[11] ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 5.696      ;
+; -4.656 ; debounce:debounce_module|count[5]  ; debounce:debounce_module|count[12] ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 5.696      ;
+; -4.656 ; debounce:debounce_module|count[5]  ; debounce:debounce_module|count[14] ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 5.696      ;
+; -4.656 ; debounce:debounce_module|count[5]  ; debounce:debounce_module|count[15] ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 5.696      ;
+; -4.656 ; debounce:debounce_module|count[5]  ; debounce:debounce_module|count[0]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 5.696      ;
+; -4.548 ; debounce:debounce_module|count[28] ; debounce:debounce_module|count[1]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.003      ; 5.591      ;
+; -4.548 ; debounce:debounce_module|count[28] ; debounce:debounce_module|count[2]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.003      ; 5.591      ;
+; -4.548 ; debounce:debounce_module|count[28] ; debounce:debounce_module|count[3]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.003      ; 5.591      ;
+; -4.548 ; debounce:debounce_module|count[28] ; debounce:debounce_module|count[4]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.003      ; 5.591      ;
+; -4.548 ; debounce:debounce_module|count[28] ; debounce:debounce_module|count[5]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.003      ; 5.591      ;
+; -4.548 ; debounce:debounce_module|count[28] ; debounce:debounce_module|count[6]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.003      ; 5.591      ;
+; -4.548 ; debounce:debounce_module|count[28] ; debounce:debounce_module|count[7]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.003      ; 5.591      ;
+; -4.548 ; debounce:debounce_module|count[28] ; debounce:debounce_module|count[8]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.003      ; 5.591      ;
+; -4.548 ; debounce:debounce_module|count[28] ; debounce:debounce_module|count[9]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.003      ; 5.591      ;
+; -4.548 ; debounce:debounce_module|count[28] ; debounce:debounce_module|count[10] ; CLOCK        ; CLOCK       ; 1.000        ; 0.003      ; 5.591      ;
+; -4.548 ; debounce:debounce_module|count[28] ; debounce:debounce_module|count[11] ; CLOCK        ; CLOCK       ; 1.000        ; 0.003      ; 5.591      ;
+; -4.548 ; debounce:debounce_module|count[28] ; debounce:debounce_module|count[12] ; CLOCK        ; CLOCK       ; 1.000        ; 0.003      ; 5.591      ;
+; -4.548 ; debounce:debounce_module|count[28] ; debounce:debounce_module|count[14] ; CLOCK        ; CLOCK       ; 1.000        ; 0.003      ; 5.591      ;
+; -4.548 ; debounce:debounce_module|count[28] ; debounce:debounce_module|count[15] ; CLOCK        ; CLOCK       ; 1.000        ; 0.003      ; 5.591      ;
+; -4.548 ; debounce:debounce_module|count[28] ; debounce:debounce_module|count[0]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.003      ; 5.591      ;
+; -4.514 ; debounce:debounce_module|count[11] ; debounce:debounce_module|count[16] ; CLOCK        ; CLOCK       ; 1.000        ; -0.003     ; 5.551      ;
+; -4.514 ; debounce:debounce_module|count[11] ; debounce:debounce_module|count[17] ; CLOCK        ; CLOCK       ; 1.000        ; -0.003     ; 5.551      ;
+; -4.514 ; debounce:debounce_module|count[11] ; debounce:debounce_module|count[18] ; CLOCK        ; CLOCK       ; 1.000        ; -0.003     ; 5.551      ;
+; -4.514 ; debounce:debounce_module|count[11] ; debounce:debounce_module|count[19] ; CLOCK        ; CLOCK       ; 1.000        ; -0.003     ; 5.551      ;
+; -4.514 ; debounce:debounce_module|count[11] ; debounce:debounce_module|count[20] ; CLOCK        ; CLOCK       ; 1.000        ; -0.003     ; 5.551      ;
+; -4.514 ; debounce:debounce_module|count[11] ; debounce:debounce_module|count[21] ; CLOCK        ; CLOCK       ; 1.000        ; -0.003     ; 5.551      ;
+; -4.514 ; debounce:debounce_module|count[11] ; debounce:debounce_module|count[22] ; CLOCK        ; CLOCK       ; 1.000        ; -0.003     ; 5.551      ;
+; -4.514 ; debounce:debounce_module|count[11] ; debounce:debounce_module|count[23] ; CLOCK        ; CLOCK       ; 1.000        ; -0.003     ; 5.551      ;
+; -4.514 ; debounce:debounce_module|count[11] ; debounce:debounce_module|count[24] ; CLOCK        ; CLOCK       ; 1.000        ; -0.003     ; 5.551      ;
+; -4.514 ; debounce:debounce_module|count[11] ; debounce:debounce_module|count[25] ; CLOCK        ; CLOCK       ; 1.000        ; -0.003     ; 5.551      ;
+; -4.514 ; debounce:debounce_module|count[11] ; debounce:debounce_module|count[26] ; CLOCK        ; CLOCK       ; 1.000        ; -0.003     ; 5.551      ;
+; -4.514 ; debounce:debounce_module|count[11] ; debounce:debounce_module|count[27] ; CLOCK        ; CLOCK       ; 1.000        ; -0.003     ; 5.551      ;
+; -4.514 ; debounce:debounce_module|count[11] ; debounce:debounce_module|count[28] ; CLOCK        ; CLOCK       ; 1.000        ; -0.003     ; 5.551      ;
+; -4.514 ; debounce:debounce_module|count[11] ; debounce:debounce_module|count[29] ; CLOCK        ; CLOCK       ; 1.000        ; -0.003     ; 5.551      ;
+; -4.514 ; debounce:debounce_module|count[11] ; debounce:debounce_module|count[30] ; CLOCK        ; CLOCK       ; 1.000        ; -0.003     ; 5.551      ;
+; -4.514 ; debounce:debounce_module|count[11] ; debounce:debounce_module|count[31] ; CLOCK        ; CLOCK       ; 1.000        ; -0.003     ; 5.551      ;
+; -4.496 ; debounce:debounce_module|count[22] ; debounce:debounce_module|count[1]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.003      ; 5.539      ;
+; -4.496 ; debounce:debounce_module|count[22] ; debounce:debounce_module|count[2]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.003      ; 5.539      ;
+; -4.496 ; debounce:debounce_module|count[22] ; debounce:debounce_module|count[3]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.003      ; 5.539      ;
+; -4.496 ; debounce:debounce_module|count[22] ; debounce:debounce_module|count[4]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.003      ; 5.539      ;
+; -4.496 ; debounce:debounce_module|count[22] ; debounce:debounce_module|count[5]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.003      ; 5.539      ;
+; -4.496 ; debounce:debounce_module|count[22] ; debounce:debounce_module|count[6]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.003      ; 5.539      ;
+; -4.496 ; debounce:debounce_module|count[22] ; debounce:debounce_module|count[7]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.003      ; 5.539      ;
+; -4.496 ; debounce:debounce_module|count[22] ; debounce:debounce_module|count[8]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.003      ; 5.539      ;
+; -4.496 ; debounce:debounce_module|count[22] ; debounce:debounce_module|count[9]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.003      ; 5.539      ;
+; -4.496 ; debounce:debounce_module|count[22] ; debounce:debounce_module|count[10] ; CLOCK        ; CLOCK       ; 1.000        ; 0.003      ; 5.539      ;
+; -4.496 ; debounce:debounce_module|count[22] ; debounce:debounce_module|count[11] ; CLOCK        ; CLOCK       ; 1.000        ; 0.003      ; 5.539      ;
+; -4.496 ; debounce:debounce_module|count[22] ; debounce:debounce_module|count[12] ; CLOCK        ; CLOCK       ; 1.000        ; 0.003      ; 5.539      ;
+; -4.496 ; debounce:debounce_module|count[22] ; debounce:debounce_module|count[14] ; CLOCK        ; CLOCK       ; 1.000        ; 0.003      ; 5.539      ;
+; -4.496 ; debounce:debounce_module|count[22] ; debounce:debounce_module|count[15] ; CLOCK        ; CLOCK       ; 1.000        ; 0.003      ; 5.539      ;
+; -4.496 ; debounce:debounce_module|count[22] ; debounce:debounce_module|count[0]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.003      ; 5.539      ;
+; -4.396 ; debounce:debounce_module|count[12] ; debounce:debounce_module|count[1]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 5.436      ;
+; -4.396 ; debounce:debounce_module|count[12] ; debounce:debounce_module|count[2]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 5.436      ;
+; -4.396 ; debounce:debounce_module|count[12] ; debounce:debounce_module|count[3]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 5.436      ;
+; -4.396 ; debounce:debounce_module|count[12] ; debounce:debounce_module|count[4]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 5.436      ;
+; -4.396 ; debounce:debounce_module|count[12] ; debounce:debounce_module|count[5]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 5.436      ;
+; -4.396 ; debounce:debounce_module|count[12] ; debounce:debounce_module|count[6]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 5.436      ;
+; -4.396 ; debounce:debounce_module|count[12] ; debounce:debounce_module|count[7]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 5.436      ;
+; -4.396 ; debounce:debounce_module|count[12] ; debounce:debounce_module|count[8]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 5.436      ;
+; -4.396 ; debounce:debounce_module|count[12] ; debounce:debounce_module|count[9]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 5.436      ;
+; -4.396 ; debounce:debounce_module|count[12] ; debounce:debounce_module|count[10] ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 5.436      ;
+; -4.396 ; debounce:debounce_module|count[12] ; debounce:debounce_module|count[11] ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 5.436      ;
+; -4.396 ; debounce:debounce_module|count[12] ; debounce:debounce_module|count[12] ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 5.436      ;
+; -4.396 ; debounce:debounce_module|count[12] ; debounce:debounce_module|count[14] ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 5.436      ;
+; -4.396 ; debounce:debounce_module|count[12] ; debounce:debounce_module|count[15] ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 5.436      ;
+; -4.396 ; debounce:debounce_module|count[12] ; debounce:debounce_module|count[0]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 5.436      ;
+; -4.391 ; debounce:debounce_module|count[10] ; debounce:debounce_module|count[1]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 5.431      ;
+; -4.391 ; debounce:debounce_module|count[10] ; debounce:debounce_module|count[2]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 5.431      ;
+; -4.391 ; debounce:debounce_module|count[10] ; debounce:debounce_module|count[3]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 5.431      ;
+; -4.391 ; debounce:debounce_module|count[10] ; debounce:debounce_module|count[4]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 5.431      ;
+; -4.391 ; debounce:debounce_module|count[10] ; debounce:debounce_module|count[5]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 5.431      ;
+; -4.391 ; debounce:debounce_module|count[10] ; debounce:debounce_module|count[6]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 5.431      ;
+; -4.391 ; debounce:debounce_module|count[10] ; debounce:debounce_module|count[7]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 5.431      ;
+; -4.391 ; debounce:debounce_module|count[10] ; debounce:debounce_module|count[8]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 5.431      ;
+; -4.391 ; debounce:debounce_module|count[10] ; debounce:debounce_module|count[9]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 5.431      ;
++--------+------------------------------------+------------------------------------+--------------+-------------+--------------+------------+------------+
+
+
++----------------------------------------------------------------------------------------------------------------------------------------------------------+
+; Slow Model Hold: 'CLOCK'                                                                                                                                 ;
++-------+--------------------------------------+-------------------------------------+--------------+-------------+--------------+------------+------------+
+; Slack ; From Node                            ; To Node                             ; Launch Clock ; Latch Clock ; Relationship ; Clock Skew ; Data Delay ;
++-------+--------------------------------------+-------------------------------------+--------------+-------------+--------------+------------+------------+
+; 0.499 ; debounce:debounce_module|button_out  ; debounce:debounce_module|button_out ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.805      ;
+; 0.751 ; debounce:debounce_module|button_out  ; LED_0~reg0                          ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 1.057      ;
+; 0.753 ; debounce:debounce_module|count[31]   ; debounce:debounce_module|count[31]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 1.059      ;
+; 0.758 ; debounce:debounce_module|button_out  ; INT_OUT~reg0                        ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 1.064      ;
+; 1.167 ; debounce:debounce_module|count[0]    ; debounce:debounce_module|count[0]   ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 1.473      ;
+; 1.171 ; debounce:debounce_module|count[16]   ; debounce:debounce_module|count[16]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 1.477      ;
+; 1.172 ; debounce:debounce_module|count[14]   ; debounce:debounce_module|count[14]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 1.478      ;
+; 1.172 ; debounce:debounce_module|count[15]   ; debounce:debounce_module|count[15]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 1.478      ;
+; 1.175 ; debounce:debounce_module|count[1]    ; debounce:debounce_module|count[1]   ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 1.481      ;
+; 1.175 ; debounce:debounce_module|count[17]   ; debounce:debounce_module|count[17]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 1.481      ;
+; 1.176 ; debounce:debounce_module|count[2]    ; debounce:debounce_module|count[2]   ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 1.482      ;
+; 1.176 ; debounce:debounce_module|count[9]    ; debounce:debounce_module|count[9]   ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 1.482      ;
+; 1.176 ; debounce:debounce_module|count[18]   ; debounce:debounce_module|count[18]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 1.482      ;
+; 1.176 ; debounce:debounce_module|count[25]   ; debounce:debounce_module|count[25]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 1.482      ;
+; 1.177 ; debounce:debounce_module|count[4]    ; debounce:debounce_module|count[4]   ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 1.483      ;
+; 1.177 ; debounce:debounce_module|count[7]    ; debounce:debounce_module|count[7]   ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 1.483      ;
+; 1.177 ; debounce:debounce_module|count[11]   ; debounce:debounce_module|count[11]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 1.483      ;
+; 1.177 ; debounce:debounce_module|count[20]   ; debounce:debounce_module|count[20]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 1.483      ;
+; 1.177 ; debounce:debounce_module|count[23]   ; debounce:debounce_module|count[23]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 1.483      ;
+; 1.177 ; debounce:debounce_module|count[27]   ; debounce:debounce_module|count[27]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 1.483      ;
+; 1.177 ; debounce:debounce_module|count[29]   ; debounce:debounce_module|count[29]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 1.483      ;
+; 1.177 ; debounce:debounce_module|count[30]   ; debounce:debounce_module|count[30]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 1.483      ;
+; 1.225 ; debounce:debounce_module|count[3]    ; debounce:debounce_module|count[3]   ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 1.531      ;
+; 1.225 ; debounce:debounce_module|count[8]    ; debounce:debounce_module|count[8]   ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 1.531      ;
+; 1.225 ; debounce:debounce_module|count[10]   ; debounce:debounce_module|count[10]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 1.531      ;
+; 1.225 ; debounce:debounce_module|count[19]   ; debounce:debounce_module|count[19]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 1.531      ;
+; 1.225 ; debounce:debounce_module|count[24]   ; debounce:debounce_module|count[24]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 1.531      ;
+; 1.225 ; debounce:debounce_module|count[26]   ; debounce:debounce_module|count[26]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 1.531      ;
+; 1.226 ; debounce:debounce_module|count[5]    ; debounce:debounce_module|count[5]   ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 1.532      ;
+; 1.226 ; debounce:debounce_module|count[6]    ; debounce:debounce_module|count[6]   ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 1.532      ;
+; 1.226 ; debounce:debounce_module|count[12]   ; debounce:debounce_module|count[12]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 1.532      ;
+; 1.226 ; debounce:debounce_module|count[21]   ; debounce:debounce_module|count[21]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 1.532      ;
+; 1.226 ; debounce:debounce_module|count[22]   ; debounce:debounce_module|count[22]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 1.532      ;
+; 1.226 ; debounce:debounce_module|count[28]   ; debounce:debounce_module|count[28]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 1.532      ;
+; 1.645 ; debounce:debounce_module|count[0]    ; debounce:debounce_module|count[1]   ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 1.951      ;
+; 1.650 ; debounce:debounce_module|count[16]   ; debounce:debounce_module|count[17]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 1.956      ;
+; 1.651 ; debounce:debounce_module|count[14]   ; debounce:debounce_module|count[15]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 1.957      ;
+; 1.654 ; debounce:debounce_module|count[1]    ; debounce:debounce_module|count[2]   ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 1.960      ;
+; 1.654 ; debounce:debounce_module|count[17]   ; debounce:debounce_module|count[18]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 1.960      ;
+; 1.655 ; debounce:debounce_module|count[2]    ; debounce:debounce_module|count[3]   ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 1.961      ;
+; 1.655 ; debounce:debounce_module|count[9]    ; debounce:debounce_module|count[10]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 1.961      ;
+; 1.655 ; debounce:debounce_module|count[18]   ; debounce:debounce_module|count[19]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 1.961      ;
+; 1.655 ; debounce:debounce_module|count[25]   ; debounce:debounce_module|count[26]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 1.961      ;
+; 1.656 ; debounce:debounce_module|count[30]   ; debounce:debounce_module|count[31]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 1.962      ;
+; 1.656 ; debounce:debounce_module|count[29]   ; debounce:debounce_module|count[30]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 1.962      ;
+; 1.656 ; debounce:debounce_module|count[4]    ; debounce:debounce_module|count[5]   ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 1.962      ;
+; 1.656 ; debounce:debounce_module|count[11]   ; debounce:debounce_module|count[12]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 1.962      ;
+; 1.656 ; debounce:debounce_module|count[20]   ; debounce:debounce_module|count[21]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 1.962      ;
+; 1.656 ; debounce:debounce_module|count[27]   ; debounce:debounce_module|count[28]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 1.962      ;
+; 1.705 ; debounce:debounce_module|count[8]    ; debounce:debounce_module|count[9]   ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 2.011      ;
+; 1.705 ; debounce:debounce_module|count[24]   ; debounce:debounce_module|count[25]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 2.011      ;
+; 1.705 ; debounce:debounce_module|count[3]    ; debounce:debounce_module|count[4]   ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 2.011      ;
+; 1.705 ; debounce:debounce_module|count[10]   ; debounce:debounce_module|count[11]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 2.011      ;
+; 1.705 ; debounce:debounce_module|count[19]   ; debounce:debounce_module|count[20]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 2.011      ;
+; 1.705 ; debounce:debounce_module|count[26]   ; debounce:debounce_module|count[27]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 2.011      ;
+; 1.706 ; debounce:debounce_module|count[6]    ; debounce:debounce_module|count[7]   ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 2.012      ;
+; 1.706 ; debounce:debounce_module|count[22]   ; debounce:debounce_module|count[23]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 2.012      ;
+; 1.706 ; debounce:debounce_module|count[28]   ; debounce:debounce_module|count[29]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 2.012      ;
+; 1.706 ; debounce:debounce_module|count[5]    ; debounce:debounce_module|count[6]   ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 2.012      ;
+; 1.706 ; debounce:debounce_module|count[21]   ; debounce:debounce_module|count[22]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 2.012      ;
+; 1.731 ; debounce:debounce_module|count[0]    ; debounce:debounce_module|count[2]   ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 2.037      ;
+; 1.736 ; debounce:debounce_module|count[16]   ; debounce:debounce_module|count[18]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 2.042      ;
+; 1.740 ; debounce:debounce_module|count[1]    ; debounce:debounce_module|count[3]   ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 2.046      ;
+; 1.740 ; debounce:debounce_module|count[17]   ; debounce:debounce_module|count[19]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 2.046      ;
+; 1.741 ; debounce:debounce_module|count[2]    ; debounce:debounce_module|count[4]   ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 2.047      ;
+; 1.741 ; debounce:debounce_module|count[9]    ; debounce:debounce_module|count[11]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 2.047      ;
+; 1.741 ; debounce:debounce_module|count[18]   ; debounce:debounce_module|count[20]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 2.047      ;
+; 1.741 ; debounce:debounce_module|count[25]   ; debounce:debounce_module|count[27]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 2.047      ;
+; 1.742 ; debounce:debounce_module|count[29]   ; debounce:debounce_module|count[31]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 2.048      ;
+; 1.742 ; debounce:debounce_module|count[27]   ; debounce:debounce_module|count[29]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 2.048      ;
+; 1.742 ; debounce:debounce_module|count[4]    ; debounce:debounce_module|count[6]   ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 2.048      ;
+; 1.742 ; debounce:debounce_module|count[20]   ; debounce:debounce_module|count[22]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 2.048      ;
+; 1.763 ; debounce:debounce_module|count[15]   ; debounce:debounce_module|count[16]  ; CLOCK        ; CLOCK       ; 0.000        ; -0.003     ; 2.066      ;
+; 1.766 ; debounce:debounce_module|count[7]    ; debounce:debounce_module|count[8]   ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 2.072      ;
+; 1.766 ; debounce:debounce_module|count[23]   ; debounce:debounce_module|count[24]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 2.072      ;
+; 1.791 ; debounce:debounce_module|count[8]    ; debounce:debounce_module|count[10]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 2.097      ;
+; 1.791 ; debounce:debounce_module|count[24]   ; debounce:debounce_module|count[26]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 2.097      ;
+; 1.791 ; debounce:debounce_module|count[3]    ; debounce:debounce_module|count[5]   ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 2.097      ;
+; 1.791 ; debounce:debounce_module|count[10]   ; debounce:debounce_module|count[12]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 2.097      ;
+; 1.791 ; debounce:debounce_module|count[19]   ; debounce:debounce_module|count[21]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 2.097      ;
+; 1.791 ; debounce:debounce_module|count[26]   ; debounce:debounce_module|count[28]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 2.097      ;
+; 1.792 ; debounce:debounce_module|count[12]   ; debounce:debounce_module|count[14]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 2.098      ;
+; 1.792 ; debounce:debounce_module|count[28]   ; debounce:debounce_module|count[30]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 2.098      ;
+; 1.792 ; debounce:debounce_module|count[5]    ; debounce:debounce_module|count[7]   ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 2.098      ;
+; 1.792 ; debounce:debounce_module|count[21]   ; debounce:debounce_module|count[23]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 2.098      ;
+; 1.817 ; debounce:debounce_module|count[0]    ; debounce:debounce_module|count[3]   ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 2.123      ;
+; 1.822 ; debounce:debounce_module|count[16]   ; debounce:debounce_module|count[19]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 2.128      ;
+; 1.826 ; debounce:debounce_module|count[1]    ; debounce:debounce_module|count[4]   ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 2.132      ;
+; 1.826 ; debounce:debounce_module|count[17]   ; debounce:debounce_module|count[20]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 2.132      ;
+; 1.827 ; debounce:debounce_module|count[2]    ; debounce:debounce_module|count[5]   ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 2.133      ;
+; 1.827 ; debounce:debounce_module|count[9]    ; debounce:debounce_module|count[12]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 2.133      ;
+; 1.827 ; debounce:debounce_module|count[18]   ; debounce:debounce_module|count[21]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 2.133      ;
+; 1.827 ; debounce:debounce_module|count[25]   ; debounce:debounce_module|count[28]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 2.133      ;
+; 1.828 ; debounce:debounce_module|count[11]   ; debounce:debounce_module|count[14]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 2.134      ;
+; 1.828 ; debounce:debounce_module|count[27]   ; debounce:debounce_module|count[30]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 2.134      ;
+; 1.828 ; debounce:debounce_module|count[4]    ; debounce:debounce_module|count[7]   ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 2.134      ;
+; 1.828 ; debounce:debounce_module|count[20]   ; debounce:debounce_module|count[23]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 2.134      ;
+; 1.829 ; debounce:debounce_module|count[14]   ; debounce:debounce_module|count[16]  ; CLOCK        ; CLOCK       ; 0.000        ; -0.003     ; 2.132      ;
+; 1.834 ; debounce:debounce_module|button_temp ; debounce:debounce_module|button_out ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 2.140      ;
+; 1.849 ; debounce:debounce_module|count[15]   ; debounce:debounce_module|count[17]  ; CLOCK        ; CLOCK       ; 0.000        ; -0.003     ; 2.152      ;
++-------+--------------------------------------+-------------------------------------+--------------+-------------+--------------+------------+------------+
+
+
++-----------------------------------------------------------------------------------------------------------------------+
+; Slow Model Minimum Pulse Width: 'CLOCK'                                                                               ;
++--------+--------------+----------------+------------------+-------+------------+--------------------------------------+
+; Slack  ; Actual Width ; Required Width ; Type             ; Clock ; Clock Edge ; Target                               ;
++--------+--------------+----------------+------------------+-------+------------+--------------------------------------+
+; -1.941 ; 1.000        ; 2.941          ; Port Rate        ; CLOCK ; Rise       ; CLOCK                                ;
+; -0.742 ; 0.500        ; 1.242          ; High Pulse Width ; CLOCK ; Rise       ; INT_OUT~reg0                         ;
+; -0.742 ; 0.500        ; 1.242          ; Low Pulse Width  ; CLOCK ; Rise       ; INT_OUT~reg0                         ;
+; -0.742 ; 0.500        ; 1.242          ; High Pulse Width ; CLOCK ; Rise       ; LED_0~reg0                           ;
+; -0.742 ; 0.500        ; 1.242          ; Low Pulse Width  ; CLOCK ; Rise       ; LED_0~reg0                           ;
+; -0.742 ; 0.500        ; 1.242          ; High Pulse Width ; CLOCK ; Rise       ; LED_1~reg0                           ;
+; -0.742 ; 0.500        ; 1.242          ; Low Pulse Width  ; CLOCK ; Rise       ; LED_1~reg0                           ;
+; -0.742 ; 0.500        ; 1.242          ; High Pulse Width ; CLOCK ; Rise       ; LED_2~reg0                           ;
+; -0.742 ; 0.500        ; 1.242          ; Low Pulse Width  ; CLOCK ; Rise       ; LED_2~reg0                           ;
+; -0.742 ; 0.500        ; 1.242          ; High Pulse Width ; CLOCK ; Rise       ; debounce:debounce_module|button_out  ;
+; -0.742 ; 0.500        ; 1.242          ; Low Pulse Width  ; CLOCK ; Rise       ; debounce:debounce_module|button_out  ;
+; -0.742 ; 0.500        ; 1.242          ; High Pulse Width ; CLOCK ; Rise       ; debounce:debounce_module|button_temp ;
+; -0.742 ; 0.500        ; 1.242          ; Low Pulse Width  ; CLOCK ; Rise       ; debounce:debounce_module|button_temp ;
+; -0.742 ; 0.500        ; 1.242          ; High Pulse Width ; CLOCK ; Rise       ; debounce:debounce_module|count[0]    ;
+; -0.742 ; 0.500        ; 1.242          ; Low Pulse Width  ; CLOCK ; Rise       ; debounce:debounce_module|count[0]    ;
+; -0.742 ; 0.500        ; 1.242          ; High Pulse Width ; CLOCK ; Rise       ; debounce:debounce_module|count[10]   ;
+; -0.742 ; 0.500        ; 1.242          ; Low Pulse Width  ; CLOCK ; Rise       ; debounce:debounce_module|count[10]   ;
+; -0.742 ; 0.500        ; 1.242          ; High Pulse Width ; CLOCK ; Rise       ; debounce:debounce_module|count[11]   ;
+; -0.742 ; 0.500        ; 1.242          ; Low Pulse Width  ; CLOCK ; Rise       ; debounce:debounce_module|count[11]   ;
+; -0.742 ; 0.500        ; 1.242          ; High Pulse Width ; CLOCK ; Rise       ; debounce:debounce_module|count[12]   ;
+; -0.742 ; 0.500        ; 1.242          ; Low Pulse Width  ; CLOCK ; Rise       ; debounce:debounce_module|count[12]   ;
+; -0.742 ; 0.500        ; 1.242          ; High Pulse Width ; CLOCK ; Rise       ; debounce:debounce_module|count[13]   ;
+; -0.742 ; 0.500        ; 1.242          ; Low Pulse Width  ; CLOCK ; Rise       ; debounce:debounce_module|count[13]   ;
+; -0.742 ; 0.500        ; 1.242          ; High Pulse Width ; CLOCK ; Rise       ; debounce:debounce_module|count[14]   ;
+; -0.742 ; 0.500        ; 1.242          ; Low Pulse Width  ; CLOCK ; Rise       ; debounce:debounce_module|count[14]   ;
+; -0.742 ; 0.500        ; 1.242          ; High Pulse Width ; CLOCK ; Rise       ; debounce:debounce_module|count[15]   ;
+; -0.742 ; 0.500        ; 1.242          ; Low Pulse Width  ; CLOCK ; Rise       ; debounce:debounce_module|count[15]   ;
+; -0.742 ; 0.500        ; 1.242          ; High Pulse Width ; CLOCK ; Rise       ; debounce:debounce_module|count[16]   ;
+; -0.742 ; 0.500        ; 1.242          ; Low Pulse Width  ; CLOCK ; Rise       ; debounce:debounce_module|count[16]   ;
+; -0.742 ; 0.500        ; 1.242          ; High Pulse Width ; CLOCK ; Rise       ; debounce:debounce_module|count[17]   ;
+; -0.742 ; 0.500        ; 1.242          ; Low Pulse Width  ; CLOCK ; Rise       ; debounce:debounce_module|count[17]   ;
+; -0.742 ; 0.500        ; 1.242          ; High Pulse Width ; CLOCK ; Rise       ; debounce:debounce_module|count[18]   ;
+; -0.742 ; 0.500        ; 1.242          ; Low Pulse Width  ; CLOCK ; Rise       ; debounce:debounce_module|count[18]   ;
+; -0.742 ; 0.500        ; 1.242          ; High Pulse Width ; CLOCK ; Rise       ; debounce:debounce_module|count[19]   ;
+; -0.742 ; 0.500        ; 1.242          ; Low Pulse Width  ; CLOCK ; Rise       ; debounce:debounce_module|count[19]   ;
+; -0.742 ; 0.500        ; 1.242          ; High Pulse Width ; CLOCK ; Rise       ; debounce:debounce_module|count[1]    ;
+; -0.742 ; 0.500        ; 1.242          ; Low Pulse Width  ; CLOCK ; Rise       ; debounce:debounce_module|count[1]    ;
+; -0.742 ; 0.500        ; 1.242          ; High Pulse Width ; CLOCK ; Rise       ; debounce:debounce_module|count[20]   ;
+; -0.742 ; 0.500        ; 1.242          ; Low Pulse Width  ; CLOCK ; Rise       ; debounce:debounce_module|count[20]   ;
+; -0.742 ; 0.500        ; 1.242          ; High Pulse Width ; CLOCK ; Rise       ; debounce:debounce_module|count[21]   ;
+; -0.742 ; 0.500        ; 1.242          ; Low Pulse Width  ; CLOCK ; Rise       ; debounce:debounce_module|count[21]   ;
+; -0.742 ; 0.500        ; 1.242          ; High Pulse Width ; CLOCK ; Rise       ; debounce:debounce_module|count[22]   ;
+; -0.742 ; 0.500        ; 1.242          ; Low Pulse Width  ; CLOCK ; Rise       ; debounce:debounce_module|count[22]   ;
+; -0.742 ; 0.500        ; 1.242          ; High Pulse Width ; CLOCK ; Rise       ; debounce:debounce_module|count[23]   ;
+; -0.742 ; 0.500        ; 1.242          ; Low Pulse Width  ; CLOCK ; Rise       ; debounce:debounce_module|count[23]   ;
+; -0.742 ; 0.500        ; 1.242          ; High Pulse Width ; CLOCK ; Rise       ; debounce:debounce_module|count[24]   ;
+; -0.742 ; 0.500        ; 1.242          ; Low Pulse Width  ; CLOCK ; Rise       ; debounce:debounce_module|count[24]   ;
+; -0.742 ; 0.500        ; 1.242          ; High Pulse Width ; CLOCK ; Rise       ; debounce:debounce_module|count[25]   ;
+; -0.742 ; 0.500        ; 1.242          ; Low Pulse Width  ; CLOCK ; Rise       ; debounce:debounce_module|count[25]   ;
+; -0.742 ; 0.500        ; 1.242          ; High Pulse Width ; CLOCK ; Rise       ; debounce:debounce_module|count[26]   ;
+; -0.742 ; 0.500        ; 1.242          ; Low Pulse Width  ; CLOCK ; Rise       ; debounce:debounce_module|count[26]   ;
+; -0.742 ; 0.500        ; 1.242          ; High Pulse Width ; CLOCK ; Rise       ; debounce:debounce_module|count[27]   ;
+; -0.742 ; 0.500        ; 1.242          ; Low Pulse Width  ; CLOCK ; Rise       ; debounce:debounce_module|count[27]   ;
+; -0.742 ; 0.500        ; 1.242          ; High Pulse Width ; CLOCK ; Rise       ; debounce:debounce_module|count[28]   ;
+; -0.742 ; 0.500        ; 1.242          ; Low Pulse Width  ; CLOCK ; Rise       ; debounce:debounce_module|count[28]   ;
+; -0.742 ; 0.500        ; 1.242          ; High Pulse Width ; CLOCK ; Rise       ; debounce:debounce_module|count[29]   ;
+; -0.742 ; 0.500        ; 1.242          ; Low Pulse Width  ; CLOCK ; Rise       ; debounce:debounce_module|count[29]   ;
+; -0.742 ; 0.500        ; 1.242          ; High Pulse Width ; CLOCK ; Rise       ; debounce:debounce_module|count[2]    ;
+; -0.742 ; 0.500        ; 1.242          ; Low Pulse Width  ; CLOCK ; Rise       ; debounce:debounce_module|count[2]    ;
+; -0.742 ; 0.500        ; 1.242          ; High Pulse Width ; CLOCK ; Rise       ; debounce:debounce_module|count[30]   ;
+; -0.742 ; 0.500        ; 1.242          ; Low Pulse Width  ; CLOCK ; Rise       ; debounce:debounce_module|count[30]   ;
+; -0.742 ; 0.500        ; 1.242          ; High Pulse Width ; CLOCK ; Rise       ; debounce:debounce_module|count[31]   ;
+; -0.742 ; 0.500        ; 1.242          ; Low Pulse Width  ; CLOCK ; Rise       ; debounce:debounce_module|count[31]   ;
+; -0.742 ; 0.500        ; 1.242          ; High Pulse Width ; CLOCK ; Rise       ; debounce:debounce_module|count[3]    ;
+; -0.742 ; 0.500        ; 1.242          ; Low Pulse Width  ; CLOCK ; Rise       ; debounce:debounce_module|count[3]    ;
+; -0.742 ; 0.500        ; 1.242          ; High Pulse Width ; CLOCK ; Rise       ; debounce:debounce_module|count[4]    ;
+; -0.742 ; 0.500        ; 1.242          ; Low Pulse Width  ; CLOCK ; Rise       ; debounce:debounce_module|count[4]    ;
+; -0.742 ; 0.500        ; 1.242          ; High Pulse Width ; CLOCK ; Rise       ; debounce:debounce_module|count[5]    ;
+; -0.742 ; 0.500        ; 1.242          ; Low Pulse Width  ; CLOCK ; Rise       ; debounce:debounce_module|count[5]    ;
+; -0.742 ; 0.500        ; 1.242          ; High Pulse Width ; CLOCK ; Rise       ; debounce:debounce_module|count[6]    ;
+; -0.742 ; 0.500        ; 1.242          ; Low Pulse Width  ; CLOCK ; Rise       ; debounce:debounce_module|count[6]    ;
+; -0.742 ; 0.500        ; 1.242          ; High Pulse Width ; CLOCK ; Rise       ; debounce:debounce_module|count[7]    ;
+; -0.742 ; 0.500        ; 1.242          ; Low Pulse Width  ; CLOCK ; Rise       ; debounce:debounce_module|count[7]    ;
+; -0.742 ; 0.500        ; 1.242          ; High Pulse Width ; CLOCK ; Rise       ; debounce:debounce_module|count[8]    ;
+; -0.742 ; 0.500        ; 1.242          ; Low Pulse Width  ; CLOCK ; Rise       ; debounce:debounce_module|count[8]    ;
+; -0.742 ; 0.500        ; 1.242          ; High Pulse Width ; CLOCK ; Rise       ; debounce:debounce_module|count[9]    ;
+; -0.742 ; 0.500        ; 1.242          ; Low Pulse Width  ; CLOCK ; Rise       ; debounce:debounce_module|count[9]    ;
+; 0.500  ; 0.500        ; 0.000          ; High Pulse Width ; CLOCK ; Rise       ; CLOCK|combout                        ;
+; 0.500  ; 0.500        ; 0.000          ; Low Pulse Width  ; CLOCK ; Rise       ; CLOCK|combout                        ;
+; 0.500  ; 0.500        ; 0.000          ; High Pulse Width ; CLOCK ; Rise       ; CLOCK~clkctrl|inclk[0]               ;
+; 0.500  ; 0.500        ; 0.000          ; Low Pulse Width  ; CLOCK ; Rise       ; CLOCK~clkctrl|inclk[0]               ;
+; 0.500  ; 0.500        ; 0.000          ; High Pulse Width ; CLOCK ; Rise       ; CLOCK~clkctrl|outclk                 ;
+; 0.500  ; 0.500        ; 0.000          ; Low Pulse Width  ; CLOCK ; Rise       ; CLOCK~clkctrl|outclk                 ;
+; 0.500  ; 0.500        ; 0.000          ; High Pulse Width ; CLOCK ; Rise       ; INT_OUT~reg0|clk                     ;
+; 0.500  ; 0.500        ; 0.000          ; Low Pulse Width  ; CLOCK ; Rise       ; INT_OUT~reg0|clk                     ;
+; 0.500  ; 0.500        ; 0.000          ; High Pulse Width ; CLOCK ; Rise       ; LED_0~reg0|clk                       ;
+; 0.500  ; 0.500        ; 0.000          ; Low Pulse Width  ; CLOCK ; Rise       ; LED_0~reg0|clk                       ;
+; 0.500  ; 0.500        ; 0.000          ; High Pulse Width ; CLOCK ; Rise       ; LED_1~reg0|clk                       ;
+; 0.500  ; 0.500        ; 0.000          ; Low Pulse Width  ; CLOCK ; Rise       ; LED_1~reg0|clk                       ;
+; 0.500  ; 0.500        ; 0.000          ; High Pulse Width ; CLOCK ; Rise       ; LED_2~reg0|clk                       ;
+; 0.500  ; 0.500        ; 0.000          ; Low Pulse Width  ; CLOCK ; Rise       ; LED_2~reg0|clk                       ;
+; 0.500  ; 0.500        ; 0.000          ; High Pulse Width ; CLOCK ; Rise       ; debounce_module|button_out|clk       ;
+; 0.500  ; 0.500        ; 0.000          ; Low Pulse Width  ; CLOCK ; Rise       ; debounce_module|button_out|clk       ;
+; 0.500  ; 0.500        ; 0.000          ; High Pulse Width ; CLOCK ; Rise       ; debounce_module|button_temp|clk      ;
+; 0.500  ; 0.500        ; 0.000          ; Low Pulse Width  ; CLOCK ; Rise       ; debounce_module|button_temp|clk      ;
+; 0.500  ; 0.500        ; 0.000          ; High Pulse Width ; CLOCK ; Rise       ; debounce_module|count[0]|clk         ;
+; 0.500  ; 0.500        ; 0.000          ; Low Pulse Width  ; CLOCK ; Rise       ; debounce_module|count[0]|clk         ;
+; 0.500  ; 0.500        ; 0.000          ; High Pulse Width ; CLOCK ; Rise       ; debounce_module|count[10]|clk        ;
+; 0.500  ; 0.500        ; 0.000          ; Low Pulse Width  ; CLOCK ; Rise       ; debounce_module|count[10]|clk        ;
+; 0.500  ; 0.500        ; 0.000          ; High Pulse Width ; CLOCK ; Rise       ; debounce_module|count[11]|clk        ;
++--------+--------------+----------------+------------------+-------+------------+--------------------------------------+
+
+
++-----------------------------------------------------------------------+
+; Setup Times                                                           ;
++-----------+------------+-------+-------+------------+-----------------+
+; Data Port ; Clock Port ; Rise  ; Fall  ; Clock Edge ; Clock Reference ;
++-----------+------------+-------+-------+------------+-----------------+
+; BUTTON    ; CLOCK      ; 9.949 ; 9.949 ; Rise       ; CLOCK           ;
+; INT_IN    ; CLOCK      ; 4.202 ; 4.202 ; Rise       ; CLOCK           ;
++-----------+------------+-------+-------+------------+-----------------+
+
+
++-------------------------------------------------------------------------+
+; Hold Times                                                              ;
++-----------+------------+--------+--------+------------+-----------------+
+; Data Port ; Clock Port ; Rise   ; Fall   ; Clock Edge ; Clock Reference ;
++-----------+------------+--------+--------+------------+-----------------+
+; BUTTON    ; CLOCK      ; -3.977 ; -3.977 ; Rise       ; CLOCK           ;
+; INT_IN    ; CLOCK      ; -3.936 ; -3.936 ; Rise       ; CLOCK           ;
++-----------+------------+--------+--------+------------+-----------------+
+
+
++-----------------------------------------------------------------------+
+; Clock to Output Times                                                 ;
++-----------+------------+-------+-------+------------+-----------------+
+; Data Port ; Clock Port ; Rise  ; Fall  ; Clock Edge ; Clock Reference ;
++-----------+------------+-------+-------+------------+-----------------+
+; INT_OUT   ; CLOCK      ; 9.376 ; 9.376 ; Rise       ; CLOCK           ;
+; LED_0     ; CLOCK      ; 9.425 ; 9.425 ; Rise       ; CLOCK           ;
+; LED_1     ; CLOCK      ; 6.814 ; 6.814 ; Rise       ; CLOCK           ;
+; LED_2     ; CLOCK      ; 6.816 ; 6.816 ; Rise       ; CLOCK           ;
++-----------+------------+-------+-------+------------+-----------------+
+
+
++-----------------------------------------------------------------------+
+; Minimum Clock to Output Times                                         ;
++-----------+------------+-------+-------+------------+-----------------+
+; Data Port ; Clock Port ; Rise  ; Fall  ; Clock Edge ; Clock Reference ;
++-----------+------------+-------+-------+------------+-----------------+
+; INT_OUT   ; CLOCK      ; 9.376 ; 9.376 ; Rise       ; CLOCK           ;
+; LED_0     ; CLOCK      ; 9.425 ; 9.425 ; Rise       ; CLOCK           ;
+; LED_1     ; CLOCK      ; 6.814 ; 6.814 ; Rise       ; CLOCK           ;
+; LED_2     ; CLOCK      ; 6.816 ; 6.816 ; Rise       ; CLOCK           ;
++-----------+------------+-------+-------+------------+-----------------+
 
 
 +-------------------------------------------------------+
@@ -172,16 +559,22 @@ No paths to report.
 +-------------+-------------+--------+----+----+--------+
 
 
-----------------------------
-; Fast Model Setup Summary ;
-----------------------------
-No paths to report.
++--------------------------------+
+; Fast Model Setup Summary       ;
++-------+--------+---------------+
+; Clock ; Slack  ; End Point TNS ;
++-------+--------+---------------+
+; CLOCK ; -0.954 ; -28.761       ;
++-------+--------+---------------+
 
 
----------------------------
-; Fast Model Hold Summary ;
----------------------------
-No paths to report.
++-------------------------------+
+; Fast Model Hold Summary       ;
++-------+-------+---------------+
+; Clock ; Slack ; End Point TNS ;
++-------+-------+---------------+
+; CLOCK ; 0.215 ; 0.000         ;
++-------+-------+---------------+
 
 
 -------------------------------
@@ -196,22 +589,381 @@ No paths to report.
 No paths to report.
 
 
-+----------------------------------------------+
-; Fast Model Minimum Pulse Width Summary       ;
-+---------------------+--------+---------------+
-; Clock               ; Slack  ; End Point TNS ;
-+---------------------+--------+---------------+
-; altera_reserved_tck ; 97.778 ; 0.000         ;
-+---------------------+--------+---------------+
++----------------------------------------+
+; Fast Model Minimum Pulse Width Summary ;
++-------+--------+-----------------------+
+; Clock ; Slack  ; End Point TNS         ;
++-------+--------+-----------------------+
+; CLOCK ; -1.380 ; -39.380               ;
++-------+--------+-----------------------+
 
 
-+-------------------------------------------------------------------------------------------------------------+
-; Fast Model Minimum Pulse Width: 'altera_reserved_tck'                                                       ;
-+--------+--------------+----------------+-----------+---------------------+------------+---------------------+
-; Slack  ; Actual Width ; Required Width ; Type      ; Clock               ; Clock Edge ; Target              ;
-+--------+--------------+----------------+-----------+---------------------+------------+---------------------+
-; 97.778 ; 100.000      ; 2.222          ; Port Rate ; altera_reserved_tck ; Rise       ; altera_reserved_tck ;
-+--------+--------------+----------------+-----------+---------------------+------------+---------------------+
++--------------------------------------------------------------------------------------------------------------------------------------------------------+
+; Fast Model Setup: 'CLOCK'                                                                                                                              ;
++--------+------------------------------------+------------------------------------+--------------+-------------+--------------+------------+------------+
+; Slack  ; From Node                          ; To Node                            ; Launch Clock ; Latch Clock ; Relationship ; Clock Skew ; Data Delay ;
++--------+------------------------------------+------------------------------------+--------------+-------------+--------------+------------+------------+
+; -0.954 ; debounce:debounce_module|count[11] ; debounce:debounce_module|count[1]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.986      ;
+; -0.954 ; debounce:debounce_module|count[11] ; debounce:debounce_module|count[2]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.986      ;
+; -0.954 ; debounce:debounce_module|count[11] ; debounce:debounce_module|count[3]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.986      ;
+; -0.954 ; debounce:debounce_module|count[11] ; debounce:debounce_module|count[4]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.986      ;
+; -0.954 ; debounce:debounce_module|count[11] ; debounce:debounce_module|count[5]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.986      ;
+; -0.954 ; debounce:debounce_module|count[11] ; debounce:debounce_module|count[6]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.986      ;
+; -0.954 ; debounce:debounce_module|count[11] ; debounce:debounce_module|count[7]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.986      ;
+; -0.954 ; debounce:debounce_module|count[11] ; debounce:debounce_module|count[8]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.986      ;
+; -0.954 ; debounce:debounce_module|count[11] ; debounce:debounce_module|count[9]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.986      ;
+; -0.954 ; debounce:debounce_module|count[11] ; debounce:debounce_module|count[10] ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.986      ;
+; -0.954 ; debounce:debounce_module|count[11] ; debounce:debounce_module|count[11] ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.986      ;
+; -0.954 ; debounce:debounce_module|count[11] ; debounce:debounce_module|count[12] ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.986      ;
+; -0.954 ; debounce:debounce_module|count[11] ; debounce:debounce_module|count[14] ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.986      ;
+; -0.954 ; debounce:debounce_module|count[11] ; debounce:debounce_module|count[15] ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.986      ;
+; -0.954 ; debounce:debounce_module|count[11] ; debounce:debounce_module|count[0]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.986      ;
+; -0.893 ; debounce:debounce_module|count[5]  ; debounce:debounce_module|count[1]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.925      ;
+; -0.893 ; debounce:debounce_module|count[5]  ; debounce:debounce_module|count[2]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.925      ;
+; -0.893 ; debounce:debounce_module|count[5]  ; debounce:debounce_module|count[3]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.925      ;
+; -0.893 ; debounce:debounce_module|count[5]  ; debounce:debounce_module|count[4]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.925      ;
+; -0.893 ; debounce:debounce_module|count[5]  ; debounce:debounce_module|count[5]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.925      ;
+; -0.893 ; debounce:debounce_module|count[5]  ; debounce:debounce_module|count[6]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.925      ;
+; -0.893 ; debounce:debounce_module|count[5]  ; debounce:debounce_module|count[7]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.925      ;
+; -0.893 ; debounce:debounce_module|count[5]  ; debounce:debounce_module|count[8]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.925      ;
+; -0.893 ; debounce:debounce_module|count[5]  ; debounce:debounce_module|count[9]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.925      ;
+; -0.893 ; debounce:debounce_module|count[5]  ; debounce:debounce_module|count[10] ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.925      ;
+; -0.893 ; debounce:debounce_module|count[5]  ; debounce:debounce_module|count[11] ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.925      ;
+; -0.893 ; debounce:debounce_module|count[5]  ; debounce:debounce_module|count[12] ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.925      ;
+; -0.893 ; debounce:debounce_module|count[5]  ; debounce:debounce_module|count[14] ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.925      ;
+; -0.893 ; debounce:debounce_module|count[5]  ; debounce:debounce_module|count[15] ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.925      ;
+; -0.893 ; debounce:debounce_module|count[5]  ; debounce:debounce_module|count[0]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.925      ;
+; -0.834 ; debounce:debounce_module|count[12] ; debounce:debounce_module|count[1]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.866      ;
+; -0.834 ; debounce:debounce_module|count[12] ; debounce:debounce_module|count[2]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.866      ;
+; -0.834 ; debounce:debounce_module|count[12] ; debounce:debounce_module|count[3]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.866      ;
+; -0.834 ; debounce:debounce_module|count[12] ; debounce:debounce_module|count[4]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.866      ;
+; -0.834 ; debounce:debounce_module|count[12] ; debounce:debounce_module|count[5]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.866      ;
+; -0.834 ; debounce:debounce_module|count[12] ; debounce:debounce_module|count[6]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.866      ;
+; -0.834 ; debounce:debounce_module|count[12] ; debounce:debounce_module|count[7]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.866      ;
+; -0.834 ; debounce:debounce_module|count[12] ; debounce:debounce_module|count[8]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.866      ;
+; -0.834 ; debounce:debounce_module|count[12] ; debounce:debounce_module|count[9]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.866      ;
+; -0.834 ; debounce:debounce_module|count[12] ; debounce:debounce_module|count[10] ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.866      ;
+; -0.834 ; debounce:debounce_module|count[12] ; debounce:debounce_module|count[11] ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.866      ;
+; -0.834 ; debounce:debounce_module|count[12] ; debounce:debounce_module|count[12] ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.866      ;
+; -0.834 ; debounce:debounce_module|count[12] ; debounce:debounce_module|count[14] ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.866      ;
+; -0.834 ; debounce:debounce_module|count[12] ; debounce:debounce_module|count[15] ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.866      ;
+; -0.834 ; debounce:debounce_module|count[12] ; debounce:debounce_module|count[0]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.866      ;
+; -0.833 ; debounce:debounce_module|count[0]  ; debounce:debounce_module|count[31] ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.865      ;
+; -0.827 ; debounce:debounce_module|count[6]  ; debounce:debounce_module|count[1]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.859      ;
+; -0.827 ; debounce:debounce_module|count[6]  ; debounce:debounce_module|count[2]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.859      ;
+; -0.827 ; debounce:debounce_module|count[6]  ; debounce:debounce_module|count[3]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.859      ;
+; -0.827 ; debounce:debounce_module|count[6]  ; debounce:debounce_module|count[4]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.859      ;
+; -0.827 ; debounce:debounce_module|count[6]  ; debounce:debounce_module|count[5]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.859      ;
+; -0.827 ; debounce:debounce_module|count[6]  ; debounce:debounce_module|count[6]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.859      ;
+; -0.827 ; debounce:debounce_module|count[6]  ; debounce:debounce_module|count[7]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.859      ;
+; -0.827 ; debounce:debounce_module|count[6]  ; debounce:debounce_module|count[8]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.859      ;
+; -0.827 ; debounce:debounce_module|count[6]  ; debounce:debounce_module|count[9]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.859      ;
+; -0.827 ; debounce:debounce_module|count[6]  ; debounce:debounce_module|count[10] ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.859      ;
+; -0.827 ; debounce:debounce_module|count[6]  ; debounce:debounce_module|count[11] ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.859      ;
+; -0.827 ; debounce:debounce_module|count[6]  ; debounce:debounce_module|count[12] ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.859      ;
+; -0.827 ; debounce:debounce_module|count[6]  ; debounce:debounce_module|count[14] ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.859      ;
+; -0.827 ; debounce:debounce_module|count[6]  ; debounce:debounce_module|count[15] ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.859      ;
+; -0.827 ; debounce:debounce_module|count[6]  ; debounce:debounce_module|count[0]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.859      ;
+; -0.826 ; debounce:debounce_module|count[11] ; debounce:debounce_module|count[16] ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.858      ;
+; -0.826 ; debounce:debounce_module|count[11] ; debounce:debounce_module|count[17] ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.858      ;
+; -0.826 ; debounce:debounce_module|count[11] ; debounce:debounce_module|count[18] ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.858      ;
+; -0.826 ; debounce:debounce_module|count[11] ; debounce:debounce_module|count[19] ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.858      ;
+; -0.826 ; debounce:debounce_module|count[11] ; debounce:debounce_module|count[20] ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.858      ;
+; -0.826 ; debounce:debounce_module|count[11] ; debounce:debounce_module|count[21] ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.858      ;
+; -0.826 ; debounce:debounce_module|count[11] ; debounce:debounce_module|count[22] ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.858      ;
+; -0.826 ; debounce:debounce_module|count[11] ; debounce:debounce_module|count[23] ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.858      ;
+; -0.826 ; debounce:debounce_module|count[11] ; debounce:debounce_module|count[24] ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.858      ;
+; -0.826 ; debounce:debounce_module|count[11] ; debounce:debounce_module|count[25] ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.858      ;
+; -0.826 ; debounce:debounce_module|count[11] ; debounce:debounce_module|count[26] ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.858      ;
+; -0.826 ; debounce:debounce_module|count[11] ; debounce:debounce_module|count[27] ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.858      ;
+; -0.826 ; debounce:debounce_module|count[11] ; debounce:debounce_module|count[28] ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.858      ;
+; -0.826 ; debounce:debounce_module|count[11] ; debounce:debounce_module|count[29] ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.858      ;
+; -0.826 ; debounce:debounce_module|count[11] ; debounce:debounce_module|count[30] ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.858      ;
+; -0.826 ; debounce:debounce_module|count[11] ; debounce:debounce_module|count[31] ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.858      ;
+; -0.816 ; debounce:debounce_module|count[14] ; debounce:debounce_module|count[1]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.848      ;
+; -0.816 ; debounce:debounce_module|count[14] ; debounce:debounce_module|count[2]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.848      ;
+; -0.816 ; debounce:debounce_module|count[14] ; debounce:debounce_module|count[3]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.848      ;
+; -0.816 ; debounce:debounce_module|count[14] ; debounce:debounce_module|count[4]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.848      ;
+; -0.816 ; debounce:debounce_module|count[14] ; debounce:debounce_module|count[5]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.848      ;
+; -0.816 ; debounce:debounce_module|count[14] ; debounce:debounce_module|count[6]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.848      ;
+; -0.816 ; debounce:debounce_module|count[14] ; debounce:debounce_module|count[7]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.848      ;
+; -0.816 ; debounce:debounce_module|count[14] ; debounce:debounce_module|count[8]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.848      ;
+; -0.816 ; debounce:debounce_module|count[14] ; debounce:debounce_module|count[9]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.848      ;
+; -0.816 ; debounce:debounce_module|count[14] ; debounce:debounce_module|count[10] ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.848      ;
+; -0.816 ; debounce:debounce_module|count[14] ; debounce:debounce_module|count[11] ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.848      ;
+; -0.816 ; debounce:debounce_module|count[14] ; debounce:debounce_module|count[12] ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.848      ;
+; -0.816 ; debounce:debounce_module|count[14] ; debounce:debounce_module|count[14] ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.848      ;
+; -0.816 ; debounce:debounce_module|count[14] ; debounce:debounce_module|count[15] ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.848      ;
+; -0.816 ; debounce:debounce_module|count[14] ; debounce:debounce_module|count[0]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.848      ;
+; -0.813 ; debounce:debounce_module|count[2]  ; debounce:debounce_module|count[1]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.845      ;
+; -0.813 ; debounce:debounce_module|count[2]  ; debounce:debounce_module|count[2]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.845      ;
+; -0.813 ; debounce:debounce_module|count[2]  ; debounce:debounce_module|count[3]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.845      ;
+; -0.813 ; debounce:debounce_module|count[2]  ; debounce:debounce_module|count[4]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.845      ;
+; -0.813 ; debounce:debounce_module|count[2]  ; debounce:debounce_module|count[5]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.845      ;
+; -0.813 ; debounce:debounce_module|count[2]  ; debounce:debounce_module|count[6]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.845      ;
+; -0.813 ; debounce:debounce_module|count[2]  ; debounce:debounce_module|count[7]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.845      ;
+; -0.813 ; debounce:debounce_module|count[2]  ; debounce:debounce_module|count[8]  ; CLOCK        ; CLOCK       ; 1.000        ; 0.000      ; 1.845      ;
++--------+------------------------------------+------------------------------------+--------------+-------------+--------------+------------+------------+
+
+
++----------------------------------------------------------------------------------------------------------------------------------------------------------+
+; Fast Model Hold: 'CLOCK'                                                                                                                                 ;
++-------+--------------------------------------+-------------------------------------+--------------+-------------+--------------+------------+------------+
+; Slack ; From Node                            ; To Node                             ; Launch Clock ; Latch Clock ; Relationship ; Clock Skew ; Data Delay ;
++-------+--------------------------------------+-------------------------------------+--------------+-------------+--------------+------------+------------+
+; 0.215 ; debounce:debounce_module|button_out  ; debounce:debounce_module|button_out ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.367      ;
+; 0.243 ; debounce:debounce_module|count[31]   ; debounce:debounce_module|count[31]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.395      ;
+; 0.248 ; debounce:debounce_module|button_out  ; INT_OUT~reg0                        ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.400      ;
+; 0.266 ; debounce:debounce_module|button_out  ; LED_0~reg0                          ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.418      ;
+; 0.355 ; debounce:debounce_module|count[0]    ; debounce:debounce_module|count[0]   ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.507      ;
+; 0.357 ; debounce:debounce_module|count[16]   ; debounce:debounce_module|count[16]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.509      ;
+; 0.358 ; debounce:debounce_module|count[14]   ; debounce:debounce_module|count[14]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.510      ;
+; 0.358 ; debounce:debounce_module|count[15]   ; debounce:debounce_module|count[15]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.510      ;
+; 0.359 ; debounce:debounce_module|count[1]    ; debounce:debounce_module|count[1]   ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.511      ;
+; 0.359 ; debounce:debounce_module|count[17]   ; debounce:debounce_module|count[17]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.511      ;
+; 0.360 ; debounce:debounce_module|count[2]    ; debounce:debounce_module|count[2]   ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.512      ;
+; 0.360 ; debounce:debounce_module|count[9]    ; debounce:debounce_module|count[9]   ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.512      ;
+; 0.360 ; debounce:debounce_module|count[11]   ; debounce:debounce_module|count[11]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.512      ;
+; 0.360 ; debounce:debounce_module|count[18]   ; debounce:debounce_module|count[18]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.512      ;
+; 0.360 ; debounce:debounce_module|count[25]   ; debounce:debounce_module|count[25]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.512      ;
+; 0.360 ; debounce:debounce_module|count[27]   ; debounce:debounce_module|count[27]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.512      ;
+; 0.361 ; debounce:debounce_module|count[4]    ; debounce:debounce_module|count[4]   ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.513      ;
+; 0.361 ; debounce:debounce_module|count[7]    ; debounce:debounce_module|count[7]   ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.513      ;
+; 0.361 ; debounce:debounce_module|count[20]   ; debounce:debounce_module|count[20]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.513      ;
+; 0.361 ; debounce:debounce_module|count[23]   ; debounce:debounce_module|count[23]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.513      ;
+; 0.361 ; debounce:debounce_module|count[29]   ; debounce:debounce_module|count[29]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.513      ;
+; 0.361 ; debounce:debounce_module|count[30]   ; debounce:debounce_module|count[30]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.513      ;
+; 0.371 ; debounce:debounce_module|count[3]    ; debounce:debounce_module|count[3]   ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.523      ;
+; 0.371 ; debounce:debounce_module|count[8]    ; debounce:debounce_module|count[8]   ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.523      ;
+; 0.371 ; debounce:debounce_module|count[10]   ; debounce:debounce_module|count[10]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.523      ;
+; 0.371 ; debounce:debounce_module|count[19]   ; debounce:debounce_module|count[19]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.523      ;
+; 0.371 ; debounce:debounce_module|count[24]   ; debounce:debounce_module|count[24]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.523      ;
+; 0.371 ; debounce:debounce_module|count[26]   ; debounce:debounce_module|count[26]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.523      ;
+; 0.372 ; debounce:debounce_module|count[5]    ; debounce:debounce_module|count[5]   ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.524      ;
+; 0.372 ; debounce:debounce_module|count[6]    ; debounce:debounce_module|count[6]   ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.524      ;
+; 0.372 ; debounce:debounce_module|count[12]   ; debounce:debounce_module|count[12]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.524      ;
+; 0.372 ; debounce:debounce_module|count[21]   ; debounce:debounce_module|count[21]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.524      ;
+; 0.372 ; debounce:debounce_module|count[22]   ; debounce:debounce_module|count[22]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.524      ;
+; 0.372 ; debounce:debounce_module|count[28]   ; debounce:debounce_module|count[28]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.524      ;
+; 0.493 ; debounce:debounce_module|count[0]    ; debounce:debounce_module|count[1]   ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.645      ;
+; 0.495 ; debounce:debounce_module|count[16]   ; debounce:debounce_module|count[17]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.647      ;
+; 0.496 ; debounce:debounce_module|count[14]   ; debounce:debounce_module|count[15]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.648      ;
+; 0.497 ; debounce:debounce_module|count[1]    ; debounce:debounce_module|count[2]   ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.649      ;
+; 0.497 ; debounce:debounce_module|count[17]   ; debounce:debounce_module|count[18]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.649      ;
+; 0.498 ; debounce:debounce_module|count[2]    ; debounce:debounce_module|count[3]   ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.650      ;
+; 0.498 ; debounce:debounce_module|count[9]    ; debounce:debounce_module|count[10]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.650      ;
+; 0.498 ; debounce:debounce_module|count[18]   ; debounce:debounce_module|count[19]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.650      ;
+; 0.498 ; debounce:debounce_module|count[25]   ; debounce:debounce_module|count[26]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.650      ;
+; 0.498 ; debounce:debounce_module|count[11]   ; debounce:debounce_module|count[12]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.650      ;
+; 0.498 ; debounce:debounce_module|count[27]   ; debounce:debounce_module|count[28]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.650      ;
+; 0.499 ; debounce:debounce_module|count[30]   ; debounce:debounce_module|count[31]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.651      ;
+; 0.499 ; debounce:debounce_module|count[29]   ; debounce:debounce_module|count[30]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.651      ;
+; 0.499 ; debounce:debounce_module|count[4]    ; debounce:debounce_module|count[5]   ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.651      ;
+; 0.499 ; debounce:debounce_module|count[20]   ; debounce:debounce_module|count[21]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.651      ;
+; 0.511 ; debounce:debounce_module|count[8]    ; debounce:debounce_module|count[9]   ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.663      ;
+; 0.511 ; debounce:debounce_module|count[10]   ; debounce:debounce_module|count[11]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.663      ;
+; 0.511 ; debounce:debounce_module|count[24]   ; debounce:debounce_module|count[25]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.663      ;
+; 0.511 ; debounce:debounce_module|count[26]   ; debounce:debounce_module|count[27]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.663      ;
+; 0.511 ; debounce:debounce_module|count[3]    ; debounce:debounce_module|count[4]   ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.663      ;
+; 0.511 ; debounce:debounce_module|count[19]   ; debounce:debounce_module|count[20]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.663      ;
+; 0.512 ; debounce:debounce_module|count[6]    ; debounce:debounce_module|count[7]   ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.664      ;
+; 0.512 ; debounce:debounce_module|count[22]   ; debounce:debounce_module|count[23]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.664      ;
+; 0.512 ; debounce:debounce_module|count[28]   ; debounce:debounce_module|count[29]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.664      ;
+; 0.512 ; debounce:debounce_module|count[5]    ; debounce:debounce_module|count[6]   ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.664      ;
+; 0.512 ; debounce:debounce_module|count[21]   ; debounce:debounce_module|count[22]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.664      ;
+; 0.528 ; debounce:debounce_module|count[0]    ; debounce:debounce_module|count[2]   ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.680      ;
+; 0.530 ; debounce:debounce_module|count[16]   ; debounce:debounce_module|count[18]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.682      ;
+; 0.532 ; debounce:debounce_module|count[1]    ; debounce:debounce_module|count[3]   ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.684      ;
+; 0.532 ; debounce:debounce_module|count[17]   ; debounce:debounce_module|count[19]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.684      ;
+; 0.533 ; debounce:debounce_module|count[9]    ; debounce:debounce_module|count[11]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.685      ;
+; 0.533 ; debounce:debounce_module|count[25]   ; debounce:debounce_module|count[27]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.685      ;
+; 0.533 ; debounce:debounce_module|count[2]    ; debounce:debounce_module|count[4]   ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.685      ;
+; 0.533 ; debounce:debounce_module|count[18]   ; debounce:debounce_module|count[20]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.685      ;
+; 0.533 ; debounce:debounce_module|count[27]   ; debounce:debounce_module|count[29]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.685      ;
+; 0.534 ; debounce:debounce_module|count[29]   ; debounce:debounce_module|count[31]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.686      ;
+; 0.534 ; debounce:debounce_module|count[4]    ; debounce:debounce_module|count[6]   ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.686      ;
+; 0.534 ; debounce:debounce_module|count[20]   ; debounce:debounce_module|count[22]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.686      ;
+; 0.543 ; debounce:debounce_module|count[15]   ; debounce:debounce_module|count[16]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.695      ;
+; 0.546 ; debounce:debounce_module|count[8]    ; debounce:debounce_module|count[10]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.698      ;
+; 0.546 ; debounce:debounce_module|count[24]   ; debounce:debounce_module|count[26]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.698      ;
+; 0.546 ; debounce:debounce_module|count[10]   ; debounce:debounce_module|count[12]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.698      ;
+; 0.546 ; debounce:debounce_module|count[26]   ; debounce:debounce_module|count[28]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.698      ;
+; 0.546 ; debounce:debounce_module|count[3]    ; debounce:debounce_module|count[5]   ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.698      ;
+; 0.546 ; debounce:debounce_module|count[19]   ; debounce:debounce_module|count[21]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.698      ;
+; 0.547 ; debounce:debounce_module|count[12]   ; debounce:debounce_module|count[14]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.699      ;
+; 0.547 ; debounce:debounce_module|count[28]   ; debounce:debounce_module|count[30]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.699      ;
+; 0.547 ; debounce:debounce_module|count[5]    ; debounce:debounce_module|count[7]   ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.699      ;
+; 0.547 ; debounce:debounce_module|count[21]   ; debounce:debounce_module|count[23]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.699      ;
+; 0.554 ; debounce:debounce_module|count[7]    ; debounce:debounce_module|count[8]   ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.706      ;
+; 0.554 ; debounce:debounce_module|count[23]   ; debounce:debounce_module|count[24]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.706      ;
+; 0.563 ; debounce:debounce_module|count[0]    ; debounce:debounce_module|count[3]   ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.715      ;
+; 0.565 ; debounce:debounce_module|count[16]   ; debounce:debounce_module|count[19]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.717      ;
+; 0.567 ; debounce:debounce_module|count[1]    ; debounce:debounce_module|count[4]   ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.719      ;
+; 0.567 ; debounce:debounce_module|count[17]   ; debounce:debounce_module|count[20]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.719      ;
+; 0.568 ; debounce:debounce_module|count[9]    ; debounce:debounce_module|count[12]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.720      ;
+; 0.568 ; debounce:debounce_module|count[25]   ; debounce:debounce_module|count[28]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.720      ;
+; 0.568 ; debounce:debounce_module|count[2]    ; debounce:debounce_module|count[5]   ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.720      ;
+; 0.568 ; debounce:debounce_module|count[18]   ; debounce:debounce_module|count[21]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.720      ;
+; 0.568 ; debounce:debounce_module|count[11]   ; debounce:debounce_module|count[14]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.720      ;
+; 0.568 ; debounce:debounce_module|count[27]   ; debounce:debounce_module|count[30]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.720      ;
+; 0.569 ; debounce:debounce_module|count[4]    ; debounce:debounce_module|count[7]   ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.721      ;
+; 0.569 ; debounce:debounce_module|count[20]   ; debounce:debounce_module|count[23]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.721      ;
+; 0.572 ; debounce:debounce_module|button_temp ; debounce:debounce_module|button_out ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.724      ;
+; 0.578 ; debounce:debounce_module|count[15]   ; debounce:debounce_module|count[17]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.730      ;
+; 0.581 ; debounce:debounce_module|count[8]    ; debounce:debounce_module|count[11]  ; CLOCK        ; CLOCK       ; 0.000        ; 0.000      ; 0.733      ;
++-------+--------------------------------------+-------------------------------------+--------------+-------------+--------------+------------+------------+
+
+
++-----------------------------------------------------------------------------------------------------------------------+
+; Fast Model Minimum Pulse Width: 'CLOCK'                                                                               ;
++--------+--------------+----------------+------------------+-------+------------+--------------------------------------+
+; Slack  ; Actual Width ; Required Width ; Type             ; Clock ; Clock Edge ; Target                               ;
++--------+--------------+----------------+------------------+-------+------------+--------------------------------------+
+; -1.380 ; 1.000        ; 2.380          ; Port Rate        ; CLOCK ; Rise       ; CLOCK                                ;
+; -0.500 ; 0.500        ; 1.000          ; High Pulse Width ; CLOCK ; Rise       ; INT_OUT~reg0                         ;
+; -0.500 ; 0.500        ; 1.000          ; Low Pulse Width  ; CLOCK ; Rise       ; INT_OUT~reg0                         ;
+; -0.500 ; 0.500        ; 1.000          ; High Pulse Width ; CLOCK ; Rise       ; LED_0~reg0                           ;
+; -0.500 ; 0.500        ; 1.000          ; Low Pulse Width  ; CLOCK ; Rise       ; LED_0~reg0                           ;
+; -0.500 ; 0.500        ; 1.000          ; High Pulse Width ; CLOCK ; Rise       ; LED_1~reg0                           ;
+; -0.500 ; 0.500        ; 1.000          ; Low Pulse Width  ; CLOCK ; Rise       ; LED_1~reg0                           ;
+; -0.500 ; 0.500        ; 1.000          ; High Pulse Width ; CLOCK ; Rise       ; LED_2~reg0                           ;
+; -0.500 ; 0.500        ; 1.000          ; Low Pulse Width  ; CLOCK ; Rise       ; LED_2~reg0                           ;
+; -0.500 ; 0.500        ; 1.000          ; High Pulse Width ; CLOCK ; Rise       ; debounce:debounce_module|button_out  ;
+; -0.500 ; 0.500        ; 1.000          ; Low Pulse Width  ; CLOCK ; Rise       ; debounce:debounce_module|button_out  ;
+; -0.500 ; 0.500        ; 1.000          ; High Pulse Width ; CLOCK ; Rise       ; debounce:debounce_module|button_temp ;
+; -0.500 ; 0.500        ; 1.000          ; Low Pulse Width  ; CLOCK ; Rise       ; debounce:debounce_module|button_temp ;
+; -0.500 ; 0.500        ; 1.000          ; High Pulse Width ; CLOCK ; Rise       ; debounce:debounce_module|count[0]    ;
+; -0.500 ; 0.500        ; 1.000          ; Low Pulse Width  ; CLOCK ; Rise       ; debounce:debounce_module|count[0]    ;
+; -0.500 ; 0.500        ; 1.000          ; High Pulse Width ; CLOCK ; Rise       ; debounce:debounce_module|count[10]   ;
+; -0.500 ; 0.500        ; 1.000          ; Low Pulse Width  ; CLOCK ; Rise       ; debounce:debounce_module|count[10]   ;
+; -0.500 ; 0.500        ; 1.000          ; High Pulse Width ; CLOCK ; Rise       ; debounce:debounce_module|count[11]   ;
+; -0.500 ; 0.500        ; 1.000          ; Low Pulse Width  ; CLOCK ; Rise       ; debounce:debounce_module|count[11]   ;
+; -0.500 ; 0.500        ; 1.000          ; High Pulse Width ; CLOCK ; Rise       ; debounce:debounce_module|count[12]   ;
+; -0.500 ; 0.500        ; 1.000          ; Low Pulse Width  ; CLOCK ; Rise       ; debounce:debounce_module|count[12]   ;
+; -0.500 ; 0.500        ; 1.000          ; High Pulse Width ; CLOCK ; Rise       ; debounce:debounce_module|count[13]   ;
+; -0.500 ; 0.500        ; 1.000          ; Low Pulse Width  ; CLOCK ; Rise       ; debounce:debounce_module|count[13]   ;
+; -0.500 ; 0.500        ; 1.000          ; High Pulse Width ; CLOCK ; Rise       ; debounce:debounce_module|count[14]   ;
+; -0.500 ; 0.500        ; 1.000          ; Low Pulse Width  ; CLOCK ; Rise       ; debounce:debounce_module|count[14]   ;
+; -0.500 ; 0.500        ; 1.000          ; High Pulse Width ; CLOCK ; Rise       ; debounce:debounce_module|count[15]   ;
+; -0.500 ; 0.500        ; 1.000          ; Low Pulse Width  ; CLOCK ; Rise       ; debounce:debounce_module|count[15]   ;
+; -0.500 ; 0.500        ; 1.000          ; High Pulse Width ; CLOCK ; Rise       ; debounce:debounce_module|count[16]   ;
+; -0.500 ; 0.500        ; 1.000          ; Low Pulse Width  ; CLOCK ; Rise       ; debounce:debounce_module|count[16]   ;
+; -0.500 ; 0.500        ; 1.000          ; High Pulse Width ; CLOCK ; Rise       ; debounce:debounce_module|count[17]   ;
+; -0.500 ; 0.500        ; 1.000          ; Low Pulse Width  ; CLOCK ; Rise       ; debounce:debounce_module|count[17]   ;
+; -0.500 ; 0.500        ; 1.000          ; High Pulse Width ; CLOCK ; Rise       ; debounce:debounce_module|count[18]   ;
+; -0.500 ; 0.500        ; 1.000          ; Low Pulse Width  ; CLOCK ; Rise       ; debounce:debounce_module|count[18]   ;
+; -0.500 ; 0.500        ; 1.000          ; High Pulse Width ; CLOCK ; Rise       ; debounce:debounce_module|count[19]   ;
+; -0.500 ; 0.500        ; 1.000          ; Low Pulse Width  ; CLOCK ; Rise       ; debounce:debounce_module|count[19]   ;
+; -0.500 ; 0.500        ; 1.000          ; High Pulse Width ; CLOCK ; Rise       ; debounce:debounce_module|count[1]    ;
+; -0.500 ; 0.500        ; 1.000          ; Low Pulse Width  ; CLOCK ; Rise       ; debounce:debounce_module|count[1]    ;
+; -0.500 ; 0.500        ; 1.000          ; High Pulse Width ; CLOCK ; Rise       ; debounce:debounce_module|count[20]   ;
+; -0.500 ; 0.500        ; 1.000          ; Low Pulse Width  ; CLOCK ; Rise       ; debounce:debounce_module|count[20]   ;
+; -0.500 ; 0.500        ; 1.000          ; High Pulse Width ; CLOCK ; Rise       ; debounce:debounce_module|count[21]   ;
+; -0.500 ; 0.500        ; 1.000          ; Low Pulse Width  ; CLOCK ; Rise       ; debounce:debounce_module|count[21]   ;
+; -0.500 ; 0.500        ; 1.000          ; High Pulse Width ; CLOCK ; Rise       ; debounce:debounce_module|count[22]   ;
+; -0.500 ; 0.500        ; 1.000          ; Low Pulse Width  ; CLOCK ; Rise       ; debounce:debounce_module|count[22]   ;
+; -0.500 ; 0.500        ; 1.000          ; High Pulse Width ; CLOCK ; Rise       ; debounce:debounce_module|count[23]   ;
+; -0.500 ; 0.500        ; 1.000          ; Low Pulse Width  ; CLOCK ; Rise       ; debounce:debounce_module|count[23]   ;
+; -0.500 ; 0.500        ; 1.000          ; High Pulse Width ; CLOCK ; Rise       ; debounce:debounce_module|count[24]   ;
+; -0.500 ; 0.500        ; 1.000          ; Low Pulse Width  ; CLOCK ; Rise       ; debounce:debounce_module|count[24]   ;
+; -0.500 ; 0.500        ; 1.000          ; High Pulse Width ; CLOCK ; Rise       ; debounce:debounce_module|count[25]   ;
+; -0.500 ; 0.500        ; 1.000          ; Low Pulse Width  ; CLOCK ; Rise       ; debounce:debounce_module|count[25]   ;
+; -0.500 ; 0.500        ; 1.000          ; High Pulse Width ; CLOCK ; Rise       ; debounce:debounce_module|count[26]   ;
+; -0.500 ; 0.500        ; 1.000          ; Low Pulse Width  ; CLOCK ; Rise       ; debounce:debounce_module|count[26]   ;
+; -0.500 ; 0.500        ; 1.000          ; High Pulse Width ; CLOCK ; Rise       ; debounce:debounce_module|count[27]   ;
+; -0.500 ; 0.500        ; 1.000          ; Low Pulse Width  ; CLOCK ; Rise       ; debounce:debounce_module|count[27]   ;
+; -0.500 ; 0.500        ; 1.000          ; High Pulse Width ; CLOCK ; Rise       ; debounce:debounce_module|count[28]   ;
+; -0.500 ; 0.500        ; 1.000          ; Low Pulse Width  ; CLOCK ; Rise       ; debounce:debounce_module|count[28]   ;
+; -0.500 ; 0.500        ; 1.000          ; High Pulse Width ; CLOCK ; Rise       ; debounce:debounce_module|count[29]   ;
+; -0.500 ; 0.500        ; 1.000          ; Low Pulse Width  ; CLOCK ; Rise       ; debounce:debounce_module|count[29]   ;
+; -0.500 ; 0.500        ; 1.000          ; High Pulse Width ; CLOCK ; Rise       ; debounce:debounce_module|count[2]    ;
+; -0.500 ; 0.500        ; 1.000          ; Low Pulse Width  ; CLOCK ; Rise       ; debounce:debounce_module|count[2]    ;
+; -0.500 ; 0.500        ; 1.000          ; High Pulse Width ; CLOCK ; Rise       ; debounce:debounce_module|count[30]   ;
+; -0.500 ; 0.500        ; 1.000          ; Low Pulse Width  ; CLOCK ; Rise       ; debounce:debounce_module|count[30]   ;
+; -0.500 ; 0.500        ; 1.000          ; High Pulse Width ; CLOCK ; Rise       ; debounce:debounce_module|count[31]   ;
+; -0.500 ; 0.500        ; 1.000          ; Low Pulse Width  ; CLOCK ; Rise       ; debounce:debounce_module|count[31]   ;
+; -0.500 ; 0.500        ; 1.000          ; High Pulse Width ; CLOCK ; Rise       ; debounce:debounce_module|count[3]    ;
+; -0.500 ; 0.500        ; 1.000          ; Low Pulse Width  ; CLOCK ; Rise       ; debounce:debounce_module|count[3]    ;
+; -0.500 ; 0.500        ; 1.000          ; High Pulse Width ; CLOCK ; Rise       ; debounce:debounce_module|count[4]    ;
+; -0.500 ; 0.500        ; 1.000          ; Low Pulse Width  ; CLOCK ; Rise       ; debounce:debounce_module|count[4]    ;
+; -0.500 ; 0.500        ; 1.000          ; High Pulse Width ; CLOCK ; Rise       ; debounce:debounce_module|count[5]    ;
+; -0.500 ; 0.500        ; 1.000          ; Low Pulse Width  ; CLOCK ; Rise       ; debounce:debounce_module|count[5]    ;
+; -0.500 ; 0.500        ; 1.000          ; High Pulse Width ; CLOCK ; Rise       ; debounce:debounce_module|count[6]    ;
+; -0.500 ; 0.500        ; 1.000          ; Low Pulse Width  ; CLOCK ; Rise       ; debounce:debounce_module|count[6]    ;
+; -0.500 ; 0.500        ; 1.000          ; High Pulse Width ; CLOCK ; Rise       ; debounce:debounce_module|count[7]    ;
+; -0.500 ; 0.500        ; 1.000          ; Low Pulse Width  ; CLOCK ; Rise       ; debounce:debounce_module|count[7]    ;
+; -0.500 ; 0.500        ; 1.000          ; High Pulse Width ; CLOCK ; Rise       ; debounce:debounce_module|count[8]    ;
+; -0.500 ; 0.500        ; 1.000          ; Low Pulse Width  ; CLOCK ; Rise       ; debounce:debounce_module|count[8]    ;
+; -0.500 ; 0.500        ; 1.000          ; High Pulse Width ; CLOCK ; Rise       ; debounce:debounce_module|count[9]    ;
+; -0.500 ; 0.500        ; 1.000          ; Low Pulse Width  ; CLOCK ; Rise       ; debounce:debounce_module|count[9]    ;
+; 0.500  ; 0.500        ; 0.000          ; High Pulse Width ; CLOCK ; Rise       ; CLOCK|combout                        ;
+; 0.500  ; 0.500        ; 0.000          ; Low Pulse Width  ; CLOCK ; Rise       ; CLOCK|combout                        ;
+; 0.500  ; 0.500        ; 0.000          ; High Pulse Width ; CLOCK ; Rise       ; CLOCK~clkctrl|inclk[0]               ;
+; 0.500  ; 0.500        ; 0.000          ; Low Pulse Width  ; CLOCK ; Rise       ; CLOCK~clkctrl|inclk[0]               ;
+; 0.500  ; 0.500        ; 0.000          ; High Pulse Width ; CLOCK ; Rise       ; CLOCK~clkctrl|outclk                 ;
+; 0.500  ; 0.500        ; 0.000          ; Low Pulse Width  ; CLOCK ; Rise       ; CLOCK~clkctrl|outclk                 ;
+; 0.500  ; 0.500        ; 0.000          ; High Pulse Width ; CLOCK ; Rise       ; INT_OUT~reg0|clk                     ;
+; 0.500  ; 0.500        ; 0.000          ; Low Pulse Width  ; CLOCK ; Rise       ; INT_OUT~reg0|clk                     ;
+; 0.500  ; 0.500        ; 0.000          ; High Pulse Width ; CLOCK ; Rise       ; LED_0~reg0|clk                       ;
+; 0.500  ; 0.500        ; 0.000          ; Low Pulse Width  ; CLOCK ; Rise       ; LED_0~reg0|clk                       ;
+; 0.500  ; 0.500        ; 0.000          ; High Pulse Width ; CLOCK ; Rise       ; LED_1~reg0|clk                       ;
+; 0.500  ; 0.500        ; 0.000          ; Low Pulse Width  ; CLOCK ; Rise       ; LED_1~reg0|clk                       ;
+; 0.500  ; 0.500        ; 0.000          ; High Pulse Width ; CLOCK ; Rise       ; LED_2~reg0|clk                       ;
+; 0.500  ; 0.500        ; 0.000          ; Low Pulse Width  ; CLOCK ; Rise       ; LED_2~reg0|clk                       ;
+; 0.500  ; 0.500        ; 0.000          ; High Pulse Width ; CLOCK ; Rise       ; debounce_module|button_out|clk       ;
+; 0.500  ; 0.500        ; 0.000          ; Low Pulse Width  ; CLOCK ; Rise       ; debounce_module|button_out|clk       ;
+; 0.500  ; 0.500        ; 0.000          ; High Pulse Width ; CLOCK ; Rise       ; debounce_module|button_temp|clk      ;
+; 0.500  ; 0.500        ; 0.000          ; Low Pulse Width  ; CLOCK ; Rise       ; debounce_module|button_temp|clk      ;
+; 0.500  ; 0.500        ; 0.000          ; High Pulse Width ; CLOCK ; Rise       ; debounce_module|count[0]|clk         ;
+; 0.500  ; 0.500        ; 0.000          ; Low Pulse Width  ; CLOCK ; Rise       ; debounce_module|count[0]|clk         ;
+; 0.500  ; 0.500        ; 0.000          ; High Pulse Width ; CLOCK ; Rise       ; debounce_module|count[10]|clk        ;
+; 0.500  ; 0.500        ; 0.000          ; Low Pulse Width  ; CLOCK ; Rise       ; debounce_module|count[10]|clk        ;
+; 0.500  ; 0.500        ; 0.000          ; High Pulse Width ; CLOCK ; Rise       ; debounce_module|count[11]|clk        ;
++--------+--------------+----------------+------------------+-------+------------+--------------------------------------+
+
+
++-----------------------------------------------------------------------+
+; Setup Times                                                           ;
++-----------+------------+-------+-------+------------+-----------------+
+; Data Port ; Clock Port ; Rise  ; Fall  ; Clock Edge ; Clock Reference ;
++-----------+------------+-------+-------+------------+-----------------+
+; BUTTON    ; CLOCK      ; 4.008 ; 4.008 ; Rise       ; CLOCK           ;
+; INT_IN    ; CLOCK      ; 1.988 ; 1.988 ; Rise       ; CLOCK           ;
++-----------+------------+-------+-------+------------+-----------------+
+
+
++-------------------------------------------------------------------------+
+; Hold Times                                                              ;
++-----------+------------+--------+--------+------------+-----------------+
+; Data Port ; Clock Port ; Rise   ; Fall   ; Clock Edge ; Clock Reference ;
++-----------+------------+--------+--------+------------+-----------------+
+; BUTTON    ; CLOCK      ; -1.889 ; -1.889 ; Rise       ; CLOCK           ;
+; INT_IN    ; CLOCK      ; -1.868 ; -1.868 ; Rise       ; CLOCK           ;
++-----------+------------+--------+--------+------------+-----------------+
+
+
++-----------------------------------------------------------------------+
+; Clock to Output Times                                                 ;
++-----------+------------+-------+-------+------------+-----------------+
+; Data Port ; Clock Port ; Rise  ; Fall  ; Clock Edge ; Clock Reference ;
++-----------+------------+-------+-------+------------+-----------------+
+; INT_OUT   ; CLOCK      ; 4.125 ; 4.125 ; Rise       ; CLOCK           ;
+; LED_0     ; CLOCK      ; 4.069 ; 4.069 ; Rise       ; CLOCK           ;
+; LED_1     ; CLOCK      ; 3.253 ; 3.253 ; Rise       ; CLOCK           ;
+; LED_2     ; CLOCK      ; 3.253 ; 3.253 ; Rise       ; CLOCK           ;
++-----------+------------+-------+-------+------------+-----------------+
+
+
++-----------------------------------------------------------------------+
+; Minimum Clock to Output Times                                         ;
++-----------+------------+-------+-------+------------+-----------------+
+; Data Port ; Clock Port ; Rise  ; Fall  ; Clock Edge ; Clock Reference ;
++-----------+------------+-------+-------+------------+-----------------+
+; INT_OUT   ; CLOCK      ; 4.125 ; 4.125 ; Rise       ; CLOCK           ;
+; LED_0     ; CLOCK      ; 4.069 ; 4.069 ; Rise       ; CLOCK           ;
+; LED_1     ; CLOCK      ; 3.253 ; 3.253 ; Rise       ; CLOCK           ;
+; LED_2     ; CLOCK      ; 3.253 ; 3.253 ; Rise       ; CLOCK           ;
++-----------+------------+-------+-------+------------+-----------------+
 
 
 +-----------------------------------------------------+
@@ -234,14 +986,58 @@ No paths to report.
 
 +--------------------------------------------------------------------------------+
 ; Multicorner Timing Analysis Summary                                            ;
-+----------------------+-------+------+----------+---------+---------------------+
-; Clock                ; Setup ; Hold ; Recovery ; Removal ; Minimum Pulse Width ;
-+----------------------+-------+------+----------+---------+---------------------+
-; Worst-case Slack     ; N/A   ; N/A  ; N/A      ; N/A     ; 97.223              ;
-;  altera_reserved_tck ; N/A   ; N/A  ; N/A      ; N/A     ; 97.223              ;
-; Design-wide TNS      ; 0.0   ; 0.0  ; 0.0      ; 0.0     ; 0.0                 ;
-;  altera_reserved_tck ; N/A   ; N/A  ; N/A      ; N/A     ; 0.000               ;
-+----------------------+-------+------+----------+---------+---------------------+
++------------------+----------+-------+----------+---------+---------------------+
+; Clock            ; Setup    ; Hold  ; Recovery ; Removal ; Minimum Pulse Width ;
++------------------+----------+-------+----------+---------+---------------------+
+; Worst-case Slack ; -4.909   ; 0.215 ; N/A      ; N/A     ; -1.941              ;
+;  CLOCK           ; -4.909   ; 0.215 ; N/A      ; N/A     ; -1.941              ;
+; Design-wide TNS  ; -153.838 ; 0.0   ; 0.0      ; 0.0     ; -58.333             ;
+;  CLOCK           ; -153.838 ; 0.000 ; N/A      ; N/A     ; -58.333             ;
++------------------+----------+-------+----------+---------+---------------------+
+
+
++-----------------------------------------------------------------------+
+; Setup Times                                                           ;
++-----------+------------+-------+-------+------------+-----------------+
+; Data Port ; Clock Port ; Rise  ; Fall  ; Clock Edge ; Clock Reference ;
++-----------+------------+-------+-------+------------+-----------------+
+; BUTTON    ; CLOCK      ; 9.949 ; 9.949 ; Rise       ; CLOCK           ;
+; INT_IN    ; CLOCK      ; 4.202 ; 4.202 ; Rise       ; CLOCK           ;
++-----------+------------+-------+-------+------------+-----------------+
+
+
++-------------------------------------------------------------------------+
+; Hold Times                                                              ;
++-----------+------------+--------+--------+------------+-----------------+
+; Data Port ; Clock Port ; Rise   ; Fall   ; Clock Edge ; Clock Reference ;
++-----------+------------+--------+--------+------------+-----------------+
+; BUTTON    ; CLOCK      ; -1.889 ; -1.889 ; Rise       ; CLOCK           ;
+; INT_IN    ; CLOCK      ; -1.868 ; -1.868 ; Rise       ; CLOCK           ;
++-----------+------------+--------+--------+------------+-----------------+
+
+
++-----------------------------------------------------------------------+
+; Clock to Output Times                                                 ;
++-----------+------------+-------+-------+------------+-----------------+
+; Data Port ; Clock Port ; Rise  ; Fall  ; Clock Edge ; Clock Reference ;
++-----------+------------+-------+-------+------------+-----------------+
+; INT_OUT   ; CLOCK      ; 9.376 ; 9.376 ; Rise       ; CLOCK           ;
+; LED_0     ; CLOCK      ; 9.425 ; 9.425 ; Rise       ; CLOCK           ;
+; LED_1     ; CLOCK      ; 6.814 ; 6.814 ; Rise       ; CLOCK           ;
+; LED_2     ; CLOCK      ; 6.816 ; 6.816 ; Rise       ; CLOCK           ;
++-----------+------------+-------+-------+------------+-----------------+
+
+
++-----------------------------------------------------------------------+
+; Minimum Clock to Output Times                                         ;
++-----------+------------+-------+-------+------------+-----------------+
+; Data Port ; Clock Port ; Rise  ; Fall  ; Clock Edge ; Clock Reference ;
++-----------+------------+-------+-------+------------+-----------------+
+; INT_OUT   ; CLOCK      ; 4.125 ; 4.125 ; Rise       ; CLOCK           ;
+; LED_0     ; CLOCK      ; 4.069 ; 4.069 ; Rise       ; CLOCK           ;
+; LED_1     ; CLOCK      ; 3.253 ; 3.253 ; Rise       ; CLOCK           ;
+; LED_2     ; CLOCK      ; 3.253 ; 3.253 ; Rise       ; CLOCK           ;
++-----------+------------+-------+-------+------------+-----------------+
 
 
 +-------------------------------------------------------+
@@ -262,10 +1058,24 @@ No paths to report.
 +-------------+-------------+-------+----+----+-------+
 
 
--------------------
-; Clock Transfers ;
--------------------
-Nothing to report.
++-------------------------------------------------------------------+
+; Setup Transfers                                                   ;
++------------+----------+----------+----------+----------+----------+
+; From Clock ; To Clock ; RR Paths ; FR Paths ; RF Paths ; FF Paths ;
++------------+----------+----------+----------+----------+----------+
+; CLOCK      ; CLOCK    ; 1653     ; 0        ; 0        ; 0        ;
++------------+----------+----------+----------+----------+----------+
+Entries labeled "false path" only account for clock-to-clock false paths and not path-based false paths. As a result, actual path counts may be lower than reported.
+
+
++-------------------------------------------------------------------+
+; Hold Transfers                                                    ;
++------------+----------+----------+----------+----------+----------+
+; From Clock ; To Clock ; RR Paths ; FR Paths ; RF Paths ; FF Paths ;
++------------+----------+----------+----------+----------+----------+
+; CLOCK      ; CLOCK    ; 1653     ; 0        ; 0        ; 0        ;
++------------+----------+----------+----------+----------+----------+
+Entries labeled "false path" only account for clock-to-clock false paths and not path-based false paths. As a result, actual path counts may be lower than reported.
 
 
 ---------------
@@ -286,7 +1096,7 @@ No dedicated SERDES Receiver circuitry present in device or used in design
 ; Property                        ; Setup ; Hold ;
 +---------------------------------+-------+------+
 ; Illegal Clocks                  ; 0     ; 0    ;
-; Unconstrained Clocks            ; 1     ; 1    ;
+; Unconstrained Clocks            ; 0     ; 0    ;
 ; Unconstrained Input Ports       ; 3     ; 3    ;
 ; Unconstrained Input Port Paths  ; 37    ; 37   ;
 ; Unconstrained Output Ports      ; 5     ; 5    ;
@@ -300,47 +1110,57 @@ No dedicated SERDES Receiver circuitry present in device or used in design
 Info: *******************************************************************
 Info: Running Quartus II 64-Bit TimeQuest Timing Analyzer
     Info: Version 13.0.1 Build 232 06/12/2013 Service Pack 1 SJ Web Edition
-    Info: Processing started: Fri Jun  2 22:44:30 2023
+    Info: Processing started: Wed Jun  7 07:10:02 2023
 Info: Command: quartus_sta NetworkAnalyser -c NetworkAnalyser
 Info: qsta_default_script.tcl version: #1
 Info (11104): Parallel Compilation has detected 4 hyper-threaded processors. However, the extra hyper-threaded processors will not be used by default. Parallel Compilation will use 2 of the 2 physical processors detected instead.
 Info (21077): Low junction temperature is 0 degrees C
 Info (21077): High junction temperature is 85 degrees C
-Info (332164): Evaluating HDL-embedded SDC commands
-    Info (332165): Entity sld_jtag_hub
-        Info (332166): create_clock -name altera_reserved_tck [get_ports {altera_reserved_tck}] -period 10MHz   
-        Info (332166): set_clock_groups -asynchronous -group {altera_reserved_tck}
 Info (332104): Reading SDC File: 'NetworkAnalyser.sdc'
 Warning (332145): Command "set_instance_assignment" found in SDC file is not a proper SDC command and is being ignored
-Warning (332060): Node: CLOCK was determined to be a clock but was found without an associated clock assignment.
+Info (332142): No user constrained base clocks found in the design. Calling "derive_clocks -period 1.0"
+Info (332105): Deriving Clocks
+    Info (332105): create_clock -period 1.000 -name CLOCK CLOCK
 Info: Found TIMEQUEST_REPORT_SCRIPT_INCLUDE_DEFAULT_ANALYSIS = ON
 Info: Analyzing Slow Model
-Info (332140): No fmax paths to report
-Info (332140): No Setup paths to report
-Info (332140): No Hold paths to report
-Info (332140): No Recovery paths to report
-Info (332140): No Removal paths to report
-Info (332146): Worst-case minimum pulse width slack is 97.223
+Critical Warning (332148): Timing requirements not met
+Info (332146): Worst-case setup slack is -4.909
     Info (332119):     Slack End Point TNS Clock 
     Info (332119): ========= ============= =====================
-    Info (332119):    97.223         0.000 altera_reserved_tck 
+    Info (332119):    -4.909      -153.838 CLOCK 
+Info (332146): Worst-case hold slack is 0.499
+    Info (332119):     Slack End Point TNS Clock 
+    Info (332119): ========= ============= =====================
+    Info (332119):     0.499         0.000 CLOCK 
+Info (332140): No Recovery paths to report
+Info (332140): No Removal paths to report
+Info (332146): Worst-case minimum pulse width slack is -1.941
+    Info (332119):     Slack End Point TNS Clock 
+    Info (332119): ========= ============= =====================
+    Info (332119):    -1.941       -58.333 CLOCK 
 Info (332001): The selected device family is not supported by the report_metastability command.
 Info: Analyzing Fast Model
-Warning (332060): Node: CLOCK was determined to be a clock but was found without an associated clock assignment.
-Info (332140): No Setup paths to report
-Info (332140): No Hold paths to report
-Info (332140): No Recovery paths to report
-Info (332140): No Removal paths to report
-Info (332146): Worst-case minimum pulse width slack is 97.778
+Critical Warning (332148): Timing requirements not met
+Info (332146): Worst-case setup slack is -0.954
     Info (332119):     Slack End Point TNS Clock 
     Info (332119): ========= ============= =====================
-    Info (332119):    97.778         0.000 altera_reserved_tck 
+    Info (332119):    -0.954       -28.761 CLOCK 
+Info (332146): Worst-case hold slack is 0.215
+    Info (332119):     Slack End Point TNS Clock 
+    Info (332119): ========= ============= =====================
+    Info (332119):     0.215         0.000 CLOCK 
+Info (332140): No Recovery paths to report
+Info (332140): No Removal paths to report
+Info (332146): Worst-case minimum pulse width slack is -1.380
+    Info (332119):     Slack End Point TNS Clock 
+    Info (332119): ========= ============= =====================
+    Info (332119):    -1.380       -39.380 CLOCK 
 Info (332001): The selected device family is not supported by the report_metastability command.
 Info (332102): Design is not fully constrained for setup requirements
 Info (332102): Design is not fully constrained for hold requirements
 Info: Quartus II 64-Bit TimeQuest Timing Analyzer was successful. 0 errors, 3 warnings
-    Info: Peak virtual memory: 519 megabytes
-    Info: Processing ended: Fri Jun  2 22:44:31 2023
+    Info: Peak virtual memory: 531 megabytes
+    Info: Processing ended: Wed Jun  7 07:10:03 2023
     Info: Elapsed time: 00:00:01
     Info: Total CPU time (on all processors): 00:00:01
 

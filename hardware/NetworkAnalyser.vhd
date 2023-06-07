@@ -56,8 +56,8 @@ end component;
 component FrequencyDivider
 port
 (
-	clk_in 	: in std_logic;       -- 50 MHz input clock
-	reset 	: in std_logic;        -- Asynchronous reset signal
+	clk_in 	: in std_logic;      -- 50 MHz input clock
+	reset 	: in std_logic;      -- Asynchronous reset signal
 	clk_out 	: out std_logic      -- 1 MHz output clock
 );
 end component;
