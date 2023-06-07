@@ -22,8 +22,8 @@ port
 	--REQ_MISO 		: out std_logic; 	-- PIN_122 :: BBB P9_29 :: RED 		:: SPI1_D0
 	--REQ_SCLK 		: in 	std_logic; 	-- PIN_126 :: BBB P9_31 :: ORANGE 	:: SPI1_SCLK
 
-	INT_IN 			: in 	std_logic; 	-- PIN_143
-	INT_OUT 			: out std_logic; 	-- PIN_142
+	INT_IN 			: in 	std_logic; 	-- PIN_143 :: YELLOW :: OPEN COLLECTOR
+	INT_OUT 			: out std_logic; 	-- PIN_142 :: BLUE :: P9_12 :: GPIO 66
 	
 	BUTTON 			: in 	std_logic 	-- PIN_144
 
