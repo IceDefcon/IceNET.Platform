@@ -1,0 +1,21 @@
+//
+// Default BBB Config
+//
+make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- bb.org_defconfig
+//
+// Compile kernel :: Using all CPUs
+//
+make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- -j$(nproc)
+//
+// Generate device tree
+//
+make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- dtbs
+//
+// Compile kernel modules
+//
+make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- modules
+//
+// Install kernel modules
+//
+make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- modules_install INSTALL_MOD_PATH=/lib/modules/6.1.26-ti-rt-r3
+

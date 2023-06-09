@@ -1,14 +1,14 @@
-Partition Merge Status : Successful - Tue May 30 10:47:51 2023
+Partition Merge Status : Successful - Wed Jun  7 07:16:54 2023
 Quartus II 64-Bit Version : 13.0.1 Build 232 06/12/2013 SP 1 SJ Web Edition
 Revision Name : NetworkAnalyser
 Top-level Entity Name : NetworkAnalyser
 Family : Cyclone II
-Total logic elements : 699
-    Total combinational functions : 460
-    Dedicated logic registers : 525
-Total registers : 525
-Total pins : 15
+Total logic elements : 528
+    Total combinational functions : 374
+    Dedicated logic registers : 380
+Total registers : 380
+Total pins : 12
 Total virtual pins : 0
-Total memory bits : 32,768
+Total memory bits : 512
 Embedded Multiplier 9-bit elements : 0
 Total PLLs : 0

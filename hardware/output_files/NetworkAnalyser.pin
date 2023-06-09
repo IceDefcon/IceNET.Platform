@@ -73,15 +73,15 @@ GND                          : 6         : gnd    :                   :         
 LED_1                        : 7         : output : 3.3-V LVTTL       :         : 1         : Y              
 GND*                         : 8         :        :                   :         : 1         :                
 LED_2                        : 9         : output : 3.3-V LVTTL       :         : 1         : Y              
-TDO                          : 10        : output :                   :         : 1         :                
-TMS                          : 11        : input  :                   :         : 1         :                
-TCK                          : 12        : input  :                   :         : 1         :                
-TDI                          : 13        : input  :                   :         : 1         :                
+altera_reserved_tdo          : 10        : output : 3.3-V LVTTL       :         : 1         : N              
+altera_reserved_tms          : 11        : input  : 3.3-V LVTTL       :         : 1         : N              
+altera_reserved_tck          : 12        : input  : 3.3-V LVTTL       :         : 1         : N              
+altera_reserved_tdi          : 13        : input  : 3.3-V LVTTL       :         : 1         : N              
 DATA0                        : 14        : input  :                   :         : 1         :                
 DCLK                         : 15        :        :                   :         : 1         :                
 nCE                          : 16        :        :                   :         : 1         :                
 CLOCK                        : 17        : input  : 3.3-V LVTTL       :         : 1         : Y              
-GND+                         : 18        :        :                   :         : 1         :                
+auto_stp_external_clock_0    : 18        : input  : 3.3-V LVTTL       :         : 1         : N              
 GND                          : 19        : gnd    :                   :         :           :                
 nCONFIG                      : 20        :        :                   :         : 1         :                
 GND+                         : 21        :        :                   :         : 1         :                
