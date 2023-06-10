@@ -3,6 +3,70 @@
 Hardware firewall to detect, report and neutralise security threats inside computer networks
 -
 
+# Linux Development
+
+//////////////////////////
+// 						//
+// 						//
+// 						//
+// 	GET and Prepaer 	//
+// 						//
+// 						//
+// 						//
+//////////////////////////
+//
+// Download
+//
+git clone git://github.com/beagleboard/linux.git
+
+//
+// Checkout
+//
+git checkout 6.1.26-ti-rt-r3
+
+//
+// Default BBB Config
+//
+make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- bb.org_defconfig
+
+//
+// Menuconfig
+//
+make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- menuconfig
+
+//////////////////////////
+// 						//
+// 						//
+// 						//
+// 	Compile Kernel 		//
+// 	Compile Modules 	//
+// 	And Device Tree 	//
+// 						//
+// 						//
+// 						//
+//////////////////////////
+//
+// Using all CPUs
+// 
+make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- LOADADDR=0x80000000 uImage dtbs -j$(nproc)
+
+//
+// Compile kernel modules
+//
+make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- modules
+
+//////////////////////////
+// 						//
+// 						//
+// 						//
+// 	Deploy new Kernel 	//
+// 						//
+// 						//
+// 						//
+//////////////////////////
+
+# FPGA
+
 Current Hardware configuration:
 
 	- EP2C5T144C8N Cyclone II FPGA
@@ -122,11 +186,5 @@ When: unable to lock chain(Insufficient port permissions)
 	2. Add testing module + tb
 	3. Compile
 	4. Launch new simutaion usign tb
-
-# IN PROGRESS
-	
-	1. Testing kernel module :: kthreads
-	2. Desing FPGA Coms :: Modelsim
-	3. Master application :: Core development
 
 # ICE

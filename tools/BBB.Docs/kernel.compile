@@ -1,21 +1,59 @@
+//////////////////////////
+// 						//
+// 						//
+// 						//
+// 	GET and Prepaer 	//
+// 						//
+// 						//
+// 						//
+//////////////////////////
+//
+// Download
+//
+git clone git://github.com/beagleboard/linux.git
+
+//
+// Checkout
+//
+git checkout 6.1.26-ti-rt-r3
+
 //
 // Default BBB Config
 //
 make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- bb.org_defconfig
+
 //
-// Compile kernel :: Using all CPUs
+// Menuconfig
 //
-make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- -j$(nproc)
+make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- menuconfig
+
+//////////////////////////
+// 						//
+// 						//
+// 						//
+// 	Compile Kernel 		//
+// 	Compile Modules 	//
+// 	And Device Tree 	//
+// 						//
+// 						//
+// 						//
+//////////////////////////
 //
-// Generate device tree
-//
-make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- dtbs
+// Using all CPUs
+// 
+make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- LOADADDR=0x80000000 uImage dtbs -j$(nproc)
+
 //
 // Compile kernel modules
 //
 make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- modules
-//
-// Install kernel modules
-//
-make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- modules_install INSTALL_MOD_PATH=/lib/modules/6.1.26-ti-rt-r3
 
+//////////////////////////
+// 						//
+// 						//
+// 						//
+// 	Deploy new Kernel 	//
+// 						//
+// 						//
+// 						//
+//////////////////////////
