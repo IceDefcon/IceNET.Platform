@@ -3,13 +3,37 @@
 Hardware firewall to detect, report and neutralise security threats inside computer networks
 -
 
+# U-Boot Development
+
+//////////////////////////
+// 						//
+// 						//
+// 						//
+// 	Get and Prepare 	//
+// 						//
+// 						//
+// 						//
+//////////////////////////
+//
+// Get
+//
+git clone git://git.denx.de/u-boot.git u-boot/
+//
+// Defaut config :: For BBB
+//
+make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- am335x_boneblack_vboot_defconfig
+//
+// Compile
+//
+make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf-
+
 # Linux Development
 
 //////////////////////////
 // 						//
 // 						//
 // 						//
-// 	GET and Prepaer 	//
+// 	Get and Prepare 	//
 // 						//
 // 						//
 // 						//
@@ -33,6 +57,8 @@ make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- bb.org_defconfig
 // Menuconfig
 //
 make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- menuconfig
+
+sudo make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- INSTALL_MOD_PATH=/media/ice/RFS/ modules_install
 
 //////////////////////////
 // 						//
@@ -64,6 +90,14 @@ make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- modules
 // 						//
 // 						//
 //////////////////////////
+//
+// Copy new image to SD
+//
+cp /ice/code.lab/linux/arch/arm/boot/zImage boot/vmlinuz-6.1.26-ti-rt-r3
+//
+// Install Kernel modules
+//
+make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- INSTALL_MOD_STRIP=1 INSTALL_MOD_PATH=/media/ice/rootfs modules_install
 
 # FPGA
 
