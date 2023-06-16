@@ -3,101 +3,62 @@
 Hardware firewall to detect, report and neutralise security threats inside computer networks
 -
 
+# TODO List
+
+1. Rquire JTAG socket to be soldered to PCB
+2. Boot Linux Kernel via U-Boot
+
 # U-Boot Development
 
-//////////////////////////
-// 						//
-// 						//
-// 						//
-// 	Get and Prepare 	//
-// 						//
-// 						//
-// 						//
-//////////////////////////
-//
-// Get
-//
-git clone git://git.denx.de/u-boot.git u-boot/
-//
-// Defaut config :: For BBB
-//
-make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- am335x_boneblack_vboot_defconfig
-//
-// Compile
-//
-make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf-
+Get
+
+	git clone git://git.denx.de/u-boot.git u-boot/
+
+Defaut config :: For BBB
+
+	make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- am335x_boneblack_vboot_defconfig
+
+Compile
+
+	make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf-
 
 # Linux Development
 
-//////////////////////////
-// 						//
-// 						//
-// 						//
-// 	Get and Prepare 	//
-// 						//
-// 						//
-// 						//
-//////////////////////////
-//
-// Download
-//
-git clone git://github.com/beagleboard/linux.git
+Get
 
-//
-// Checkout
-//
-git checkout 6.1.26-ti-rt-r3
+	git clone git://github.com/beagleboard/linux.git
 
-//
-// Default BBB Config
-//
-make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- bb.org_defconfig
+Checkout
 
-//
-// Menuconfig
-//
-make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- menuconfig
+	git checkout 6.1.26-ti-rt-r3
 
-sudo make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- INSTALL_MOD_PATH=/media/ice/RFS/ modules_install
+Default BBB Config
 
-//////////////////////////
-// 						//
-// 						//
-// 						//
-// 	Compile Kernel 		//
-// 	Compile Modules 	//
-// 	And Device Tree 	//
-// 						//
-// 						//
-// 						//
-//////////////////////////
-//
-// Using all CPUs
-// 
-make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- LOADADDR=0x80000000 uImage dtbs -j$(nproc)
+	make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- bb.org_defconfig
 
-//
-// Compile kernel modules
-//
-make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- modules
+Menuconfig
 
-//////////////////////////
-// 						//
-// 						//
-// 						//
-// 	Deploy new Kernel 	//
-// 						//
-// 						//
-// 						//
-//////////////////////////
-//
-// Copy new image to SD
-//
-cp /ice/code.lab/linux/arch/arm/boot/zImage boot/vmlinuz-6.1.26-ti-rt-r3
-//
-// Install Kernel modules
-//
-make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- INSTALL_MOD_STRIP=1 INSTALL_MOD_PATH=/media/ice/rootfs modules_install
+	make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- menuconfig
+	
+Install modules on the RFS
+
+	sudo make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- INSTALL_MOD_PATH=/media/ice/RFS/ modules_install
+
+Compile Kernel :: Using all CPUs
+
+	make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- LOADADDR=0x80000000 uImage dtbs -j$(nproc)
+
+Compile kernel modules
+
+	make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- modules
+
+Deploy new Kernel
+
+	cp /ice/code.lab/linux/arch/arm/boot/zImage boot/vmlinuz-6.1.26-ti-rt-r3
+
+Install Kernel modules
+
+	make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- INSTALL_MOD_STRIP=1 INSTALL_MOD_PATH=/media/ice/rootfs modules_install
 
 # FPGA
 
