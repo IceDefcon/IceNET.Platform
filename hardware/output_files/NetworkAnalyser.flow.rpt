@@ -1,5 +1,5 @@
 Flow report for NetworkAnalyser
-Fri Jun 16 12:23:12 2023
+Fri Jun 16 17:13:29 2023
 Quartus II 64-Bit Version 13.0.1 Build 232 06/12/2013 Service Pack 1 SJ Web Edition
 
 
@@ -40,22 +40,22 @@ applicable agreement for further details.
 +--------------------------------------------------------------------------------------+
 ; Flow Summary                                                                         ;
 +------------------------------------+-------------------------------------------------+
-; Flow Status                        ; Successful - Fri Jun 16 12:22:59 2023           ;
+; Flow Status                        ; Successful - Fri Jun 16 17:12:58 2023           ;
 ; Quartus II 64-Bit Version          ; 13.0.1 Build 232 06/12/2013 SP 1 SJ Web Edition ;
 ; Revision Name                      ; NetworkAnalyser                                 ;
 ; Top-level Entity Name              ; NetworkAnalyser                                 ;
-; Family                             ; Cyclone II                                      ;
-; Device                             ; EP2C5T144C8                                     ;
+; Family                             ; Cyclone IV E                                    ;
+; Device                             ; EP4CE15F23C8                                    ;
 ; Timing Models                      ; Final                                           ;
-; Total logic elements               ; 509 / 4,608 ( 11 % )                            ;
-;     Total combinational functions  ; 373 / 4,608 ( 8 % )                             ;
-;     Dedicated logic registers      ; 380 / 4,608 ( 8 % )                             ;
+; Total logic elements               ; 515 / 15,408 ( 3 % )                            ;
+;     Total combinational functions  ; 376 / 15,408 ( 2 % )                            ;
+;     Dedicated logic registers      ; 380 / 15,408 ( 2 % )                            ;
 ; Total registers                    ; 380                                             ;
-; Total pins                         ; 12 / 89 ( 13 % )                                ;
+; Total pins                         ; 12 / 344 ( 3 % )                                ;
 ; Total virtual pins                 ; 0                                               ;
-; Total memory bits                  ; 512 / 119,808 ( < 1 % )                         ;
-; Embedded Multiplier 9-bit elements ; 0 / 26 ( 0 % )                                  ;
-; Total PLLs                         ; 0 / 2 ( 0 % )                                   ;
+; Total memory bits                  ; 512 / 516,096 ( < 1 % )                         ;
+; Embedded Multiplier 9-bit elements ; 0 / 112 ( 0 % )                                 ;
+; Total PLLs                         ; 0 / 4 ( 0 % )                                   ;
 +------------------------------------+-------------------------------------------------+
 
 
@@ -64,7 +64,7 @@ applicable agreement for further details.
 +-------------------+---------------------+
 ; Option            ; Setting             ;
 +-------------------+---------------------+
-; Start date & time ; 06/16/2023 12:22:30 ;
+; Start date & time ; 06/16/2023 17:11:53 ;
 ; Main task         ; Compilation         ;
 ; Revision Name     ; NetworkAnalyser     ;
 +-------------------+---------------------+
@@ -75,7 +75,7 @@ applicable agreement for further details.
 +-------------------------------------+------------------------------------------------------------------------------+---------------+-------------+------------------+
 ; Assignment Name                     ; Value                                                                        ; Default Value ; Entity Name ; Section Id       ;
 +-------------------------------------+------------------------------------------------------------------------------+---------------+-------------+------------------+
-; COMPILER_SIGNATURE_ID               ; 0.168691095019262                                                            ; --            ; --          ; --               ;
+; COMPILER_SIGNATURE_ID               ; 0.168692831322353                                                            ; --            ; --          ; --               ;
 ; EDA_OUTPUT_DATA_FORMAT              ; None                                                                         ; --            ; --          ; eda_simulation   ;
 ; ENABLE_SIGNALTAP                    ; On                                                                           ; --            ; --          ; --               ;
 ; MAX_CORE_JUNCTION_TEMP              ; 85                                                                           ; --            ; --          ; --               ;
@@ -119,11 +119,11 @@ applicable agreement for further details.
 +---------------------------+--------------+-------------------------+---------------------+------------------------------------+
 ; Module Name               ; Elapsed Time ; Average Processors Used ; Peak Virtual Memory ; Total CPU Time (on all processors) ;
 +---------------------------+--------------+-------------------------+---------------------+------------------------------------+
-; Analysis & Synthesis      ; 00:00:04     ; 1.0                     ; 676 MB              ; 00:00:04                           ;
-; Fitter                    ; 00:00:03     ; 1.0                     ; 687 MB              ; 00:00:03                           ;
-; Assembler                 ; 00:00:01     ; 1.0                     ; 554 MB              ; 00:00:01                           ;
-; TimeQuest Timing Analyzer ; 00:00:00     ; 1.0                     ; 520 MB              ; 00:00:01                           ;
-; Total                     ; 00:00:08     ; --                      ; --                  ; 00:00:09                           ;
+; Analysis & Synthesis      ; 00:00:04     ; 1.0                     ; 665 MB              ; 00:00:04                           ;
+; Fitter                    ; 00:00:08     ; 1.0                     ; 809 MB              ; 00:00:08                           ;
+; Assembler                 ; 00:00:01     ; 1.0                     ; 561 MB              ; 00:00:01                           ;
+; TimeQuest Timing Analyzer ; 00:00:02     ; 1.5                     ; 596 MB              ; 00:00:02                           ;
+; Total                     ; 00:00:15     ; --                      ; --                  ; 00:00:15                           ;
 +---------------------------+--------------+-------------------------+---------------------+------------------------------------+
 
 

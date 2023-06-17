@@ -3,6 +3,14 @@ use ieee.numeric_std.all;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.all;
 
+--
+-- Previous Chip
+-- EP2C5T144C8
+--
+-- Current Chip
+-- EP4CE15F23C8
+--
+
 entity NetworkAnalyser is
 port
 (
