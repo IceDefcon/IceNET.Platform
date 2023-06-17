@@ -97,9 +97,9 @@ debug_led_process:
 process(CLOCK)
 begin
 	if rising_edge(CLOCK) then
-		LED_2 	<= BUTTON; 				-- D5 Low Enable
-		LED_1 	<= INT_IN; 				-- D4 Low Enable
-		LED_0 	<= not button_debounced; 	-- D2 Low Enable
+		--LED_2 	<= BUTTON; 				-- D5 Low Enable
+		--LED_1 	<= INT_IN; 				-- D4 Low Enable
+		--LED_0 	<= not button_debounced; 	-- D2 Low Enable
 	end if;
 end process;
 
