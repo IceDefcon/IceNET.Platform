@@ -1,5 +1,5 @@
 Flow report for NetworkAnalyser
-Fri Jun 16 17:13:29 2023
+Sun Jun 18 01:15:43 2023
 Quartus II 64-Bit Version 13.0.1 Build 232 06/12/2013 Service Pack 1 SJ Web Edition
 
 
@@ -40,17 +40,17 @@ applicable agreement for further details.
 +--------------------------------------------------------------------------------------+
 ; Flow Summary                                                                         ;
 +------------------------------------+-------------------------------------------------+
-; Flow Status                        ; Successful - Fri Jun 16 17:12:58 2023           ;
+; Flow Status                        ; Successful - Sun Jun 18 01:15:06 2023           ;
 ; Quartus II 64-Bit Version          ; 13.0.1 Build 232 06/12/2013 SP 1 SJ Web Edition ;
 ; Revision Name                      ; NetworkAnalyser                                 ;
 ; Top-level Entity Name              ; NetworkAnalyser                                 ;
 ; Family                             ; Cyclone IV E                                    ;
 ; Device                             ; EP4CE15F23C8                                    ;
 ; Timing Models                      ; Final                                           ;
-; Total logic elements               ; 515 / 15,408 ( 3 % )                            ;
-;     Total combinational functions  ; 376 / 15,408 ( 2 % )                            ;
-;     Dedicated logic registers      ; 380 / 15,408 ( 2 % )                            ;
-; Total registers                    ; 380                                             ;
+; Total logic elements               ; 507 / 15,408 ( 3 % )                            ;
+;     Total combinational functions  ; 369 / 15,408 ( 2 % )                            ;
+;     Dedicated logic registers      ; 377 / 15,408 ( 2 % )                            ;
+; Total registers                    ; 377                                             ;
 ; Total pins                         ; 12 / 344 ( 3 % )                                ;
 ; Total virtual pins                 ; 0                                               ;
 ; Total memory bits                  ; 512 / 516,096 ( < 1 % )                         ;
@@ -64,7 +64,7 @@ applicable agreement for further details.
 +-------------------+---------------------+
 ; Option            ; Setting             ;
 +-------------------+---------------------+
-; Start date & time ; 06/16/2023 17:11:53 ;
+; Start date & time ; 06/18/2023 01:13:41 ;
 ; Main task         ; Compilation         ;
 ; Revision Name     ; NetworkAnalyser     ;
 +-------------------+---------------------+
@@ -75,7 +75,7 @@ applicable agreement for further details.
 +-------------------------------------+------------------------------------------------------------------------------+---------------+-------------+------------------+
 ; Assignment Name                     ; Value                                                                        ; Default Value ; Entity Name ; Section Id       ;
 +-------------------------------------+------------------------------------------------------------------------------+---------------+-------------+------------------+
-; COMPILER_SIGNATURE_ID               ; 0.168692831322353                                                            ; --            ; --          ; --               ;
+; COMPILER_SIGNATURE_ID               ; 0.168704362159960                                                            ; --            ; --          ; --               ;
 ; EDA_OUTPUT_DATA_FORMAT              ; None                                                                         ; --            ; --          ; eda_simulation   ;
 ; ENABLE_SIGNALTAP                    ; On                                                                           ; --            ; --          ; --               ;
 ; MAX_CORE_JUNCTION_TEMP              ; 85                                                                           ; --            ; --          ; --               ;
@@ -119,11 +119,11 @@ applicable agreement for further details.
 +---------------------------+--------------+-------------------------+---------------------+------------------------------------+
 ; Module Name               ; Elapsed Time ; Average Processors Used ; Peak Virtual Memory ; Total CPU Time (on all processors) ;
 +---------------------------+--------------+-------------------------+---------------------+------------------------------------+
-; Analysis & Synthesis      ; 00:00:04     ; 1.0                     ; 665 MB              ; 00:00:04                           ;
-; Fitter                    ; 00:00:08     ; 1.0                     ; 809 MB              ; 00:00:08                           ;
-; Assembler                 ; 00:00:01     ; 1.0                     ; 561 MB              ; 00:00:01                           ;
-; TimeQuest Timing Analyzer ; 00:00:02     ; 1.5                     ; 596 MB              ; 00:00:02                           ;
-; Total                     ; 00:00:15     ; --                      ; --                  ; 00:00:15                           ;
+; Analysis & Synthesis      ; 00:00:05     ; 1.0                     ; 665 MB              ; 00:00:05                           ;
+; Fitter                    ; 00:00:10     ; 1.2                     ; 805 MB              ; 00:00:10                           ;
+; Assembler                 ; 00:00:02     ; 1.0                     ; 557 MB              ; 00:00:02                           ;
+; TimeQuest Timing Analyzer ; 00:00:03     ; 1.0                     ; 591 MB              ; 00:00:03                           ;
+; Total                     ; 00:00:20     ; --                      ; --                  ; 00:00:20                           ;
 +---------------------------+--------------+-------------------------+---------------------+------------------------------------+
 
 

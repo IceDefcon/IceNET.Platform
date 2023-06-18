@@ -100,6 +100,9 @@ begin
 		--LED_2 	<= BUTTON; 				-- D5 Low Enable
 		--LED_1 	<= INT_IN; 				-- D4 Low Enable
 		--LED_0 	<= not button_debounced; 	-- D2 Low Enable
+		LED_0 <= '0';
+		LED_1 <= '1';
+		LED_2 <= '0';
 	end if;
 end process;
 
