@@ -87,8 +87,8 @@ begin
 		LED_5 	<= '1';
 		LED_4 	<= '1';
 		LED_3 	<= '1';
-		LED_2 	<= BUTTON_0;
-		LED_1 	<= BUTTON_0;
+		LED_2 	<= '1';
+		LED_1 	<= '1';
 		LED_0 	<= BUTTON_0;
 	end if;
 end process;
