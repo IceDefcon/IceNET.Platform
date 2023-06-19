@@ -580,20 +580,27 @@ module_exit(fpga_driver_exit);
 //                                                      //
 //////////////////////////////////////////////////////////
 //                                                      //
-//                                                      //
+// config-pin P9_24 can                                 //
+// config-pin P9_26 can                                 //
+// config-pin P9_19 can                                 //
+// config-pin P9_20 can                                 //
 //                                                      //
 // sudo ip link set can0 up type can bitrate 500000     //
 // sudo ip link set can1 up type can bitrate 500000     //
 // candump can1                                         //
 // cansend can0 123#1122334455667788                    //
 //                                                      //
+// Yellow   :: Rx   :: P9_24                            //
+// Orange   :: Tx   :: P9_26                            //
+// Grey     :: GND  :: P9_2                             //
+// White    :: 3.3V :: P9_4                             //
 //                                                      //
-//                                                      //
-//                                                      //
-//                                                      //
+// Yellow   :: Rx   :: P9_19                            //
+// Green    :: Tx   :: P9_20                            //
+// Orange   :: GND  :: P9_1                             //
+// Red      :: 3.3V :: P9_3                             //
 //                                                      //
 //////////////////////////////////////////////////////////
-
 
 //////////////////////////////////////////////////////////
 //                                                      //

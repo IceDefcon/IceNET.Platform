@@ -48,8 +48,6 @@ architecture rtl of NetworkAnalyser is
 --------------------------------------------
 
 signal button_debounced	: std_logic := '1';
-signal inv_BUTTON_IN 	: std_logic := '1';
-
 signal clock_1Mhz 		: std_logic := '0';
 
 --------------------------------------------
@@ -64,23 +62,14 @@ port
 );
 end component;
 
-component FrequencyDivider
-port
-(
-	clk_in 	: in std_logic;      -- 50 MHz input clock
-	reset 	: in std_logic;      -- Asynchronous reset signal
-	clk_out 	: out std_logic      -- 1 MHz output clock
-);
-end component;
-	 
 --------------------------------------------
 -- MAIN ROUTINE
 --------------------------------------------
 begin
 
--- Combinational Logic
---inv_BUTTON_IN 	<= not BUTTON_0; -- Buton is low active so must be inverted before debounce
-KERNEL_MISO 	<= KERNEL_MOSI;
+--
+-- Clock Process Logic
+--
 
 debounce_module: debounce port map 
 (
@@ -89,7 +78,7 @@ debounce_module: debounce port map
 	button_out 	=> button_debounced
 );
 
-debug_led_process:
+status_led_process:
 process(CLOCK)
 begin
 	if rising_edge(CLOCK) then
@@ -111,5 +100,11 @@ begin
 		INT_OUT 	<= button_debounced;
 	end if;
 end process;
+
+--
+-- Combinational Logic
+--
+
+KERNEL_MISO 	<= KERNEL_MOSI;
 
 end rtl;
