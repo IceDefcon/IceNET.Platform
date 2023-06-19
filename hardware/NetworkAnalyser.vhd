@@ -16,24 +16,27 @@ port
 (
 	CLOCK 			: in std_logic; 	-- PIN_17
 	
-	LED_0 			: out std_logic; 	-- PIN_3
-	LED_1 			: out std_logic; 	-- PIN_7
-	LED_2 			: out std_logic;	-- PIN_9
-
-	KERNEL_CS 		: in 	std_logic; 	-- PIN_119 :: BBB P9_17 :: PULPLE 	:: SPI0_CS0
-	KERNEL_MOSI 	: in 	std_logic; 	-- PIN_121 :: BBB P9_18 :: BLUE 		:: SPI0_D1
-	KERNEL_MISO 	: out std_logic; 	-- PIN_125 :: BBB P9_21 :: BROWN 	:: SPI0_D0
-	KERNEL_SCLK 	: in 	std_logic; 	-- PIN_129 :: BBB P9_22 :: BLACK 	:: SPI0_SCLK
+	LED_0 			: out std_logic; 	-- PIN_3 :: U7
+	LED_1 			: out std_logic; 	-- PIN_7 :: U8
+	LED_2 			: out std_logic;	-- PIN_9 :: R7
+	LED_3 			: out std_logic; 	-- PIN_3 :: T8
+	LED_4 			: out std_logic; 	-- PIN_7 :: R8
+	LED_5 			: out std_logic;	-- PIN_9 :: P8
+	LED_6 			: out std_logic; 	-- PIN_3 :: M8
+	LED_7 			: out std_logic; 	-- PIN_7 :: N8
 	
-	--REQ_CS 		: in 	std_logic; 	-- PIN_118 :: BBB P9_28 :: YELOW 	:: SPI1_CS0
-	--REQ_MOSI 		: in 	std_logic; 	-- PIN_120 :: BBB P9_30 :: GREEN 	:: SPI1_D1 :: GPIO_112
-	--REQ_MISO 		: out std_logic; 	-- PIN_122 :: BBB P9_29 :: RED 		:: SPI1_D0
-	--REQ_SCLK 		: in 	std_logic; 	-- PIN_126 :: BBB P9_31 :: ORANGE 	:: SPI1_SCLK
-
-	INT_IN 			: in 	std_logic; 	-- PIN_143 :: YELLOW :: OPEN COLLECTOR
-	INT_OUT 			: out std_logic; 	-- PIN_142 :: BLUE :: P9_12 :: GPIO 66
+	KERNEL_CS 		: in 	std_logic; 	-- PIN_119 :: A5 :: BBB P9_17 :: PULPLE 	:: SPI0_CS0
+	KERNEL_MOSI 	: in 	std_logic; 	-- PIN_121 :: A7 :: BBB P9_18 :: BLUE 		:: SPI0_D1
+	KERNEL_MISO 	: out std_logic; 	-- PIN_125 :: A6 :: BBB P9_21 :: BROWN 	:: SPI0_D0
+	KERNEL_SCLK 	: in 	std_logic; 	-- PIN_129 :: A8 :: BBB P9_22 :: BLACK 	:: SPI0_SCLK
 	
-	BUTTON 			: in 	std_logic 	-- PIN_144
+	INT_IN 			: in 	std_logic; 	-- PIN_143 :: A3 :: YELLOW :: OPEN COLLECTOR
+	INT_OUT 			: out std_logic; 	-- PIN_142 :: A4 :: BLUE :: P9_12 :: GPIO 66
+	
+	BUTTON_0 		: in 	std_logic; 	-- PIN_144 :: H20
+	BUTTON_1 		: in 	std_logic; 	-- PIN_144 :: K19
+	BUTTON_2 		: in 	std_logic; 	-- PIN_144 :: J18
+	BUTTON_3 		: in 	std_logic 	-- PIN_144 :: K18
 
 );
 end NetworkAnalyser;
@@ -76,33 +79,28 @@ end component;
 begin
 
 -- Combinational Logic
-inv_BUTTON_IN 	<= not BUTTON; -- Buton is low active so must be inverted before debounce
+--inv_BUTTON_IN 	<= not BUTTON_0; -- Buton is low active so must be inverted before debounce
 KERNEL_MISO 	<= KERNEL_MOSI;
 
 debounce_module: debounce port map 
 (
 	clock 		=> CLOCK,
-	button_in 	=> inv_BUTTON_IN,
+	button_in 	=> BUTTON_0,
 	button_out 	=> button_debounced
-);
-
-FrequencyDivider_module: FrequencyDivider port map -- Divider :: 50/2 - 1 = Vector 24 downto 0 which is 50% duty cycle
-(
-	clk_in 	=> CLOCK,
-	reset 	=> '0',
-	clk_out 	=> clock_1Mhz
 );
 
 debug_led_process:
 process(CLOCK)
 begin
 	if rising_edge(CLOCK) then
-		--LED_2 	<= BUTTON; 				-- D5 Low Enable
-		--LED_1 	<= INT_IN; 				-- D4 Low Enable
-		--LED_0 	<= not button_debounced; 	-- D2 Low Enable
-		LED_0 <= '0';
-		LED_1 <= '1';
-		LED_2 <= '0';
+		LED_7 	<= '0';
+		LED_6 	<= '1';
+		LED_5 	<= '1';
+		LED_4 	<= '1';
+		LED_3 	<= '1';
+		LED_2 	<= BUTTON_0;
+		LED_1 	<= BUTTON_0;
+		LED_0 	<= BUTTON_0;
 	end if;
 end process;
 

@@ -1,20 +1,35 @@
 |NetworkAnalyser
 CLOCK => debounce:debounce_module.clock
 CLOCK => INT_OUT~reg0.CLK
-CLOCK => LED_2~reg0.CLK
-CLOCK => LED_1~reg0.CLK
 CLOCK => LED_0~reg0.CLK
-CLOCK => FrequencyDivider:FrequencyDivider_module.clk_in
+CLOCK => LED_1~reg0.CLK
+CLOCK => LED_2~reg0.CLK
+CLOCK => LED_3~reg0.CLK
+CLOCK => LED_4~reg0.CLK
+CLOCK => LED_5~reg0.CLK
+CLOCK => LED_6~reg0.CLK
+CLOCK => LED_7~reg0.CLK
 LED_0 <= LED_0~reg0.DB_MAX_OUTPUT_PORT_TYPE
 LED_1 <= LED_1~reg0.DB_MAX_OUTPUT_PORT_TYPE
 LED_2 <= LED_2~reg0.DB_MAX_OUTPUT_PORT_TYPE
+LED_3 <= LED_3~reg0.DB_MAX_OUTPUT_PORT_TYPE
+LED_4 <= LED_4~reg0.DB_MAX_OUTPUT_PORT_TYPE
+LED_5 <= LED_5~reg0.DB_MAX_OUTPUT_PORT_TYPE
+LED_6 <= LED_6~reg0.DB_MAX_OUTPUT_PORT_TYPE
+LED_7 <= LED_7~reg0.DB_MAX_OUTPUT_PORT_TYPE
 KERNEL_CS => ~NO_FANOUT~
 KERNEL_MOSI => KERNEL_MISO.DATAIN
 KERNEL_MISO <= KERNEL_MOSI.DB_MAX_OUTPUT_PORT_TYPE
 KERNEL_SCLK => ~NO_FANOUT~
 INT_IN => ~NO_FANOUT~
 INT_OUT <= INT_OUT~reg0.DB_MAX_OUTPUT_PORT_TYPE
-BUTTON => debounce:debounce_module.button_in
+BUTTON_0 => debounce:debounce_module.button_in
+BUTTON_0 => LED_0~reg0.DATAIN
+BUTTON_0 => LED_1~reg0.DATAIN
+BUTTON_0 => LED_2~reg0.DATAIN
+BUTTON_1 => ~NO_FANOUT~
+BUTTON_2 => ~NO_FANOUT~
+BUTTON_3 => ~NO_FANOUT~
 
 
 |NetworkAnalyser|debounce:debounce_module
@@ -55,23 +70,5 @@ clock => button_temp.CLK
 button_in => process_0.IN1
 button_in => button_temp.DATAIN
 button_out <= button_out~reg0.DB_MAX_OUTPUT_PORT_TYPE
-
-
-|NetworkAnalyser|FrequencyDivider:FrequencyDivider_module
-clk_in => clk_out~reg0.CLK
-clk_in => clk_out_internal.CLK
-clk_in => counter[0].CLK
-clk_in => counter[1].CLK
-clk_in => counter[2].CLK
-clk_in => counter[3].CLK
-clk_in => counter[4].CLK
-reset => clk_out~reg0.ACLR
-reset => counter[0].ACLR
-reset => counter[1].ACLR
-reset => counter[2].ACLR
-reset => counter[3].ACLR
-reset => counter[4].ACLR
-reset => clk_out_internal.ENA
-clk_out <= clk_out~reg0.DB_MAX_OUTPUT_PORT_TYPE
 
 
