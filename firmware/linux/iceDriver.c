@@ -234,7 +234,7 @@ static void spi_response_func(struct work_struct *work)
     transfer.rx_buf = rx_res_buffer;
     transfer.len = sizeof(tx_res_buffer);
 
-    tx_res_buffer = {0x12}; 
+    tx_res_buffer[0] = {0x12}; 
 
     spi_message_init(&msg);
     spi_message_add_tail(&transfer, &msg);
@@ -265,7 +265,7 @@ static void spi_request_func(struct work_struct *work)
     transfer.rx_buf = rx_req_buffer;
     transfer.len = sizeof(tx_req_buffer);
 
-    tx_req_buffer = {0x12}; 
+    tx_req_buffer[0] = {0x12}; 
 
     spi_message_init(&msg);
     spi_message_add_tail(&transfer, &msg);
