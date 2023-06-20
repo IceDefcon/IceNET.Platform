@@ -133,7 +133,7 @@ enum StateMachine
     SPI     = 1,
     CAN     = 2,    
     USER    = 3
-}
+};
 
 static struct task_struct *sm_thread;
 
