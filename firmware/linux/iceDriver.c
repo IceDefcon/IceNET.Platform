@@ -10,6 +10,7 @@
 #include <linux/device.h>
 #include <linux/module.h>
 #include <linux/kernel.h>
+#include <linux/kthread.h>
 #include <linux/uaccess.h>
 #include <linux/spi/spi.h>
 #include <linux/interrupt.h>
@@ -116,6 +117,26 @@ static volatile uint8_t rx_req_buffer[1];          // Buffer to receive data for
 #define GPIO_IN_SPI_INTERRUPT_PIN 60 // P9_12
 #define GPIO_IN_CAN_INTTERRUT_PIN 66 // P8_7
 
+///////////////////
+//               //
+//               //
+//               //
+// State Machine //
+//               //
+//               //
+//               //
+///////////////////
+
+enum StateMachine 
+{
+    IDLE    = 0,
+    SPI     = 1,
+    CAN     = 2,    
+    USER    = 3
+}
+
+static struct task_struct *sm_thread;
+
 //////////////////////////////////////////////////////////////
 //                                                          //
 ////                                                      ////
@@ -123,6 +144,32 @@ static volatile uint8_t rx_req_buffer[1];          // Buffer to receive data for
 ////                                                      ////
 //                                                          //
 //////////////////////////////////////////////////////////////
+
+///////////////////
+//               //
+//               //
+//               //
+// State Machine //
+//               //
+//               //
+//               //
+///////////////////
+
+
+int StateMachineThread(void)
+{
+    int counter = 0;
+
+    while (!kthread_should_stop()) 
+    {
+        // Thread code here
+        printk(KERN_INFO "[FPGA][ S ] State Machine is running [%d]\n",counter);
+        msleep(1000);  // Delay for 1 second
+        counter++;
+    }
+
+    return 0;
+}
 
 //////////////////////
 //                  //
@@ -319,6 +366,21 @@ static irqreturn_t isr_can_response(int irq, void *data)
 //////////////////////////
 static int __init fpga_driver_init(void)
 {
+    
+    ////////////////////////////////////
+    //                                //
+    // STATE MACHINE :: THREAD CONFIG //
+    //                                //
+    ////////////////////////////////////
+    sm_thread = kthread_create(StateMachineThread, NULL, "sm_thread");
+
+    if (IS_ERR(sm_thread)) {
+        printk(KERN_ERR "Failed to create kernel thread\n");
+        return PTR_ERR(sm_thread);
+    }
+
+    wake_up_process(sm_thread);
+
     //////////////////////////////////
     //                              //
     // SPI :: CONFIG                //
@@ -565,6 +627,18 @@ static void __exit fpga_driver_exit(void)
     unregister_chrdev(majorNumber, DEVICE_NAME);
     mutex_destroy(&com_mutex);
     printk(KERN_INFO "[FPGA][ C ] Device Exit\n");
+
+    //////////////////////////////////
+    //                              //
+    // State Machine :: DESTROY     //
+    //                              //
+    //////////////////////////////////
+    if (sm_thread) 
+    {
+        kthread_stop(sm_thread);
+        sm_thread = NULL;
+    }
+    printk(KERN_INFO "[FPGA][ S ] State Machine Exit\n");
 }
 
 module_init(fpga_driver_init);
