@@ -178,7 +178,7 @@ int StateMachineThread(void *data)
 
             case CAN:
                 printk(KERN_INFO "[FPGA][STM] CAN State [%d]\n",counter);
-                break
+                break;
 
             default:
                 printk(KERN_INFO "[FPGA][STM] Unknown State [%d]\n",counter);
