@@ -156,7 +156,7 @@ static struct task_struct *sm_thread;
 ///////////////////
 
 
-int StateMachineThread(void)
+int StateMachineThread(void *data)
 {
     int counter = 0;
 
