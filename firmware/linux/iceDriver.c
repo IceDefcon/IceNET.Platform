@@ -180,12 +180,17 @@ int StateMachineThread(void *data)
                 printk(KERN_INFO "[FPGA][STM] CAN State [%d]\n",counter);
                 break;
 
+            case USER:
+                printk(KERN_INFO "[FPGA][STM] USER State [%d]\n",counter);
+                break;
+
             default:
                 printk(KERN_INFO "[FPGA][STM] Unknown State [%d]\n",counter);
                 break;
         }
 
         msleep(1000);  // Delay for 1 second
+        STATE = IDLE;
         counter++;
     }
 
