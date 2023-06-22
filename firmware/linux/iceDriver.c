@@ -174,14 +174,17 @@ int StateMachineThread(void *data)
 
             case SPI:
                 printk(KERN_INFO "[FPGA][STM] SPI State [%d]\n",counter);
+                STATE = IDLE;
                 break;
 
             case CAN:
                 printk(KERN_INFO "[FPGA][STM] CAN State [%d]\n",counter);
+                STATE = IDLE;
                 break;
 
             case USER:
                 printk(KERN_INFO "[FPGA][STM] USER State [%d]\n",counter);
+                STATE = IDLE;
                 break;
 
             default:
@@ -190,7 +193,6 @@ int StateMachineThread(void *data)
         }
 
         msleep(1000);  // Delay for 1 second
-        STATE = IDLE;
         counter++;
     }
 
@@ -670,7 +672,25 @@ static void __exit fpga_driver_exit(void)
 module_init(fpga_driver_init);
 module_exit(fpga_driver_exit);
 
-
+//////////////////////////////////////////////////////////
+//                                                      //
+//                                                      //
+// I2C :: Interface                                     //
+//                                                      //
+//                                                      //
+//////////////////////////////////////////////////////////
+//                                                      //
+// Protocol Selectio                                    //
+// For I2C ---> CS must be connected to Vdd             //
+//                                                      //
+// ID = 0x68 when SA0 = GND                             //
+// ID = 0x69 when SA0 = Vdd                             //
+//                                                      //
+//                                                      //
+//                                                      //
+//                                                      //
+//                                                      //
+//////////////////////////////////////////////////////////
 
 //////////////////////////////////////////////////////////
 //                                                      //
