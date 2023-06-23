@@ -26,6 +26,11 @@ port
 	LED_6 			: out std_logic; 	-- PIN_M8
 	LED_7 			: out std_logic; 	-- PIN_N8
 	
+	I2C_SDA_I 		: inout std_logic; 	-- PIN_A9  :: BBB P9_20 :: BLUE
+	I2C_SCL_I 		: inout std_logic; 	-- PIN_A10 :: BBB P9_19 :: GREEN
+	I2C_SDA_O 		: inout std_logic; 	-- PIN_A13 :: GYROSCOPE :: WHITE
+	I2C_SCL_O 		: inout std_logic; 	-- PIN_A14 :: GYROSCOPE :: BLACK
+	
 	KERNEL_CS 		: in  std_logic; 	-- PIN_A5 :: BBB P9_17 :: PULPLE 	:: SPI0_CS0
 	KERNEL_MOSI 	: in  std_logic; 	-- PIN_A7 :: BBB P9_18 :: BLUE 		:: SPI0_D1
 	KERNEL_MISO 	: out std_logic; 	-- PIN_A6 :: BBB P9_21 :: BROWN 	:: SPI0_D0
@@ -47,9 +52,9 @@ architecture rtl of NetworkAnalyser is
 ------------------------
 -- SIGNAL DECLARATION --
 ------------------------
-
 signal button_debounced	: std_logic := '1';
 signal clock_1Mhz 		: std_logic := '0';
+signal direction 		: std_logic := '0';
 
 ----------------------------
 -- COMPONENTS DECLARATION --
@@ -105,7 +110,8 @@ end process;
 -------------------------
 -- Combinational Logic --
 -------------------------
-
 KERNEL_MISO 	<= KERNEL_MOSI;
 
+
+	
 end rtl;
