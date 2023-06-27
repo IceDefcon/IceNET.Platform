@@ -5,8 +5,8 @@ Hardware firewall to detect potential threats on Ethernet Wire
 
 # TODO List
 
-1. Rquire JTAG socket to be soldered to PCB
-2. Boot Linux Kernel via U-Boot
+1. JTAG socket need to be soldered to PCB
+2. Boot Kernel via U-Boot
 
 # Current Hardware configuration
 

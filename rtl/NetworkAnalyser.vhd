@@ -143,7 +143,11 @@ begin
 		counter <= (others => '0');
 	end if;
 	
-	if counter = "1001" then
+	if counter = "1000" then
+		direction <= '1';
+	elsif counter = "1001" then
+		direction <= '1';
+	elsif counter = "1010" then
 		direction <= '1';
 	else
 		direction <= '0';
@@ -151,11 +155,11 @@ begin
 end process;
 
 i2c_process:
-process(direction)
+process(direction, I2C_SCL_I, I2C_SCL_O, I2C_SDA_I, I2C_SDA_O, I2C_SCL_IS, I2C_SDA_IS)
 begin
 	if direction = '1' then
-		I2C_SCL_O 	<= 'Z';
-		I2C_SCL_O 	<= 'Z';
+		I2C_SCL_I 	<= 'Z';
+		I2C_SDA_I 	<= 'Z';
 	else
 		I2C_SCL_O 	<= I2C_SCL_IS;
 		I2C_SDA_O 	<= I2C_SDA_IS;
