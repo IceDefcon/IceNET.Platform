@@ -40,7 +40,7 @@ port
 	INT_OUT 		: out std_logic; 	-- PIN_A4 :: BBB P9_12 :: BLUE 		:: GPIO 66
 	
 	BUTTON_0 		: in  std_logic; 	-- PIN_H20
-	BUTTON_1 		: in  std_logic; 	-- PIN_K19
+	BUTTON_1 		: in  std_logic; 	-- PIN_K19 :: Doesnt Work
 	BUTTON_2 		: in  std_logic; 	-- PIN_J18
 	BUTTON_3 		: in  std_logic 	-- PIN_K18
 
@@ -55,6 +55,11 @@ architecture rtl of NetworkAnalyser is
 signal button_debounced	: std_logic := '1';
 signal clock_1Mhz 		: std_logic := '0';
 signal direction 		: std_logic := '0';
+signal counter 			: std_logic_vector(3 downto 0) 	:=  (others => '0');
+
+-- Synchronised I2C signal
+signal I2C_SDA_IS 		: std_logic := '0';
+signal I2C_SCL_IS 		: std_logic := '0';
 
 ----------------------------
 -- COMPONENTS DECLARATION --
@@ -64,7 +69,7 @@ port
 (
 	clock 		: in  std_logic;
 	button_in 	: in  std_logic;
-	button_out 	: out  std_logic
+	button_out 	: out std_logic
 );
 end component;
 
@@ -76,7 +81,9 @@ begin
 -------------------------
 -- Clock Process Logic --
 -------------------------
-
+--------------
+-- Debounce --
+--------------
 debounce_module: Debounce port map 
 (
 	clock 		=> CLOCK,
@@ -84,21 +91,27 @@ debounce_module: Debounce port map
 	button_out 	=> button_debounced
 );
 
+----------------
+-- Led Status --
+----------------
 status_led_process:
 process(CLOCK)
 begin
 	if rising_edge(CLOCK) then
-		LED_7 	<= '0';
-		LED_6 	<= '1';
-		LED_5 	<= '1';
-		LED_4 	<= '1';
-		LED_3 	<= '1';
-		LED_2 	<= '1';
-		LED_1 	<= '1';
+		LED_7 	<= counter(3);
+		LED_6 	<= counter(2);
+		LED_5 	<= counter(1);
+		LED_4 	<= counter(0);
+		LED_3 	<= BUTTON_3;
+		LED_2 	<= BUTTON_2;
+		LED_1 	<= not direction; -- BUTTON_1 is not working
 		LED_0 	<= BUTTON_0;
 	end if;
 end process;
 
+----------------
+-- Interrupts --
+----------------
 gpio_interrupt_process:
 process(CLOCK)
 begin
@@ -107,11 +120,51 @@ begin
 	end if;
 end process;
 
+---------
+-- I2C --
+---------
+synchronised_process:
+process(CLOCK, I2C_SDA_IS, I2C_SCL_IS, I2C_SDA_I, I2C_SCL_I)
+begin
+	if rising_edge(CLOCK) then
+		I2C_SDA_IS <= I2C_SDA_I;
+		I2C_SCL_IS <= I2C_SCL_I;
+	end if;
+end process;
+
+count_process:
+process(I2C_SCL_IS, BUTTON_2, counter, direction)
+begin
+	if rising_edge(I2C_SCL_IS) then
+		counter <= counter + 1;
+	end if;
+	
+	if BUTTON_2 = '0' then
+		counter <= (others => '0');
+	end if;
+	
+	if counter = "1001" then
+		direction <= '1';
+	else
+		direction <= '0';
+	end if;
+end process;
+
+i2c_process:
+process(direction)
+begin
+	if direction = '1' then
+		I2C_SCL_O 	<= 'Z';
+		I2C_SCL_O 	<= 'Z';
+	else
+		I2C_SCL_O 	<= I2C_SCL_IS;
+		I2C_SDA_O 	<= I2C_SDA_IS;
+	end if;
+end process;
+
 -------------------------
 -- Combinational Logic --
 -------------------------
-KERNEL_MISO 	<= KERNEL_MOSI;
-
-
+KERNEL_MISO <= KERNEL_MOSI;
 	
 end rtl;
