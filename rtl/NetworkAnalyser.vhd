@@ -61,6 +61,10 @@ signal counter 			: std_logic_vector(3 downto 0) 	:=  (others => '0');
 signal I2C_SDA_IS 		: std_logic := '0';
 signal I2C_SCL_IS 		: std_logic := '0';
 
+type StateType is (IDLE, COUNT);
+signal state 			: StateType := IDLE;
+
+signal reverse  		: std_logic_vector(15 downto 0) := (others => '0');
 ----------------------------
 -- COMPONENTS DECLARATION --
 ----------------------------
@@ -78,9 +82,6 @@ end component;
 ------------------
 begin
 
--------------------------
--- Clock Process Logic --
--------------------------
 --------------
 -- Debounce --
 --------------
@@ -104,7 +105,7 @@ begin
 		LED_4 	<= counter(0);
 		LED_3 	<= BUTTON_3;
 		LED_2 	<= BUTTON_2;
-		LED_1 	<= not direction; -- BUTTON_1 is not working
+		LED_1 	<= BUTTON_1; -- BUTTON_1 is not working
 		LED_0 	<= BUTTON_0;
 	end if;
 end process;
@@ -132,32 +133,25 @@ begin
 	end if;
 end process;
 
-count_process:
-process(I2C_SCL_IS, BUTTON_2, counter, direction)
+i2c_process:
+process(CLOCK, I2C_SCL_IS, BUTTON_2, counter, state, I2C_SCL_I, I2C_SDA_I, I2C_SCL_O, I2C_SDA_O, I2C_SCL_IS, I2C_SCL_IS)
 begin
 	if rising_edge(I2C_SCL_IS) then
 		counter <= counter + 1;
+		state 	<= COUNT;
+	end if;
+	
+	if rising_edge(CLOCK) then
+		if state = COUNT then
+			reverse <= reverse + 1;
+		end if;
 	end if;
 	
 	if BUTTON_2 = '0' then
 		counter <= (others => '0');
 	end if;
 	
-	if counter = "1000" then
-		direction <= '1';
-	elsif counter = "1001" then
-		direction <= '1';
-	elsif counter = "1010" then
-		direction <= '1';
-	else
-		direction <= '0';
-	end if;
-end process;
-
-i2c_process:
-process(direction, I2C_SCL_I, I2C_SCL_O, I2C_SDA_I, I2C_SDA_O, I2C_SCL_IS, I2C_SDA_IS)
-begin
-	if direction = '1' then
+	if counter = "1001" then
 		I2C_SCL_I 	<= 'Z';
 		I2C_SDA_I 	<= 'Z';
 	else
@@ -166,9 +160,9 @@ begin
 	end if;
 end process;
 
--------------------------
--- Combinational Logic --
--------------------------
+--------------------
+-- SPI Looptrough --
+--------------------
 KERNEL_MISO <= KERNEL_MOSI;
 	
 end rtl;
