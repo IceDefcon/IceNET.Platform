@@ -114,8 +114,7 @@ static volatile uint8_t rx_req_buffer[2];               // Buffer to receive dat
 //                      //
 //////////////////////////
 
-#define GPIO_IN_SPI_INTERRUPT_PIN 60 // P9_12
-#define GPIO_IN_CAN_INTTERRUT_PIN 66 // P8_7
+#define GPIO_IN_SPI_INTERRUPT_PIN 60    // P9_12
 
 ///////////////////
 //               //
@@ -280,21 +279,21 @@ static int dev_release(struct inode *inodep, struct file *filep)
 //                  //
 //                  //
 //                  //
-//////////////////////////////////////////////////////
-//                                                  //
-//                                                  //
-// PIN_119 :: BBB P9_17 :: PULPLE   :: SPI0_CS0     //
-// PIN_121 :: BBB P9_18 :: BLUE     :: SPI0_D1      //
-// PIN_125 :: BBB P9_21 :: BROWN    :: SPI0_D0      //
-// PIN_129 :: BBB P9_22 :: BLACK    :: SPI0_SCLK    //
-//                                                  //
-// BBB P9_28 :: YELOW    :: SPI1_CS0                //
-// BBB P9_30 :: GREEN    :: SPI1_D1 :: GPIO_112     //
-// BBB P9_29 :: RED      :: SPI1_D0                 //
-// BBB P9_31 :: ORANGE   :: SPI1_SCLK               //
-//                                                  //
-//                                                  //
-//////////////////////////////////////////////////////
+//////////////////////////////////////////////////
+//                                              //
+//                                              //
+// BBB P9_17 :: PULPLE   :: SPI0_CS0            //
+// BBB P9_18 :: BLUE     :: SPI0_D1             //
+// BBB P9_21 :: BROWN    :: SPI0_D0             //
+// BBB P9_22 :: BLACK    :: SPI0_SCLK           //
+//                                              //
+// BBB P9_28 :: YELOW    :: SPI1_CS0  :: NA     //
+// BBB P9_30 :: GREEN    :: SPI1_D1   :: NA     //
+// BBB P9_29 :: RED      :: SPI1_D0   :: NA     //
+// BBB P9_31 :: ORANGE   :: SPI1_SCLK :: NA     //
+//                                              //
+//                                              //
+//////////////////////////////////////////////////
 static void spi_response_func(struct work_struct *work)
 {
     struct spi_message msg;
@@ -367,16 +366,6 @@ static irqreturn_t isr_spi_response(int irq, void *data)
     counter++;
 
     queue_work(spi_response_wq, &spi_response_work);
-
-    return IRQ_HANDLED;
-}
-
-static irqreturn_t isr_can_response(int irq, void *data)
-{
-    static int counter = 0;
-
-    printk(KERN_INFO "[FPGA][ISR] CAN Resonse interrupt [%d] @ Pin [%d]\n", counter, GPIO_IN_SPI_INTERRUPT_PIN);
-    counter++;
 
     return IRQ_HANDLED;
 }
@@ -521,38 +510,6 @@ static int __init fpga_driver_init(void)
     }
     printk(KERN_INFO "[FPGA][IRQ] ISR for SPI initialized\n");
 
-    result = gpio_request(GPIO_IN_CAN_INTTERRUT_PIN, "Input GPIO CAN Interrupt");
-    if (result < 0) 
-    {
-        printk(KERN_ERR "[FPGA][IRQ] Failed to request GPIO pin for CAN\n");
-        return result;
-    }
-    result = gpio_direction_input(GPIO_IN_CAN_INTTERRUT_PIN);
-    if (result < 0) 
-    {
-        printk(KERN_ERR "[FPGA][IRQ] Failed to set GPIO direction for CAN\n");
-        gpio_free(GPIO_IN_CAN_INTTERRUT_PIN);
-        return result;
-    }
-    irq_can = gpio_to_irq(GPIO_IN_CAN_INTTERRUT_PIN);
-    if (irq_can < 0) 
-    {
-        printk(KERN_ERR "[FPGA][IRQ] Failed to get IRQ number for CAN\n");
-        gpio_free(GPIO_IN_CAN_INTTERRUT_PIN);
-        return irq_can;
-    }
-    result = request_irq(irq_can, isr_can_response, IRQF_TRIGGER_RISING, "Input GPIO CAN Interrupt", NULL);
-    if (result < 0) 
-    {
-        printk(KERN_ERR "[FPGA][IRQ] Failed to request IRQ for CAN\n");
-        gpio_free(GPIO_IN_CAN_INTTERRUT_PIN);
-        //
-        // CAN :: EQUIVALENT ---> of spi_dev_put(spi_dev0)
-        //
-        return result;
-    }
-    printk(KERN_INFO "[FPGA][IRQ] ISR for CAN initialized\n");
-
     //////////////////////////////////
     //                              //
     // [C] Device :: CONFIG         //
@@ -638,11 +595,6 @@ static void __exit fpga_driver_exit(void)
     free_irq(irq_spi, NULL);
     gpio_free(GPIO_IN_SPI_INTERRUPT_PIN);
     printk(KERN_INFO "[FPGA][IRQ] SPI Exit\n");
-
-    irq_can = gpio_to_irq(GPIO_IN_CAN_INTTERRUT_PIN);
-    free_irq(irq_can, NULL);
-    gpio_free(GPIO_IN_CAN_INTTERRUT_PIN);
-    printk(KERN_INFO "[FPGA][IRQ] CAN Exit\n");
 
     //////////////////////////////////
     //                              //
