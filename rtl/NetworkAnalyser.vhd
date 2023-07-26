@@ -40,7 +40,7 @@ port
 	INT_OUT 		: out std_logic; 	-- PIN_A4 :: BBB P9_12 :: BLUE 		:: GPIO 66
 	
 	BUTTON_0 		: in  std_logic; 	-- PIN_H20
-	BUTTON_1 		: in  std_logic; 	-- PIN_K19 :: Doesnt Work
+	BUTTON_1 		: in  std_logic; 	-- PIN_K19 :: Doesnt Work :: WTF xD Broken Button or Incorrect Schematic
 	BUTTON_2 		: in  std_logic; 	-- PIN_J18
 	BUTTON_3 		: in  std_logic 	-- PIN_K18
 
