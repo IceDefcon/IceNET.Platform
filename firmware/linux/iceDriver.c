@@ -315,7 +315,7 @@ static void spi_response_func(struct work_struct *work)
         return;
     }
 
-    printk(KERN_INFO "[FPGA][SPI] Received data for SPI 0 Response:");
+    printk(KERN_INFO "[FPGA][SPI] Received data for SPI 0 ---==[ RESPONSE ]==---");
     for (i = 0; i < sizeof(rx_res_buffer); ++i) {
         printk(KERN_INFO "[FPGA][SPI] Byte %d: 0x%02x\n", i, rx_res_buffer[i]);
     }
@@ -342,7 +342,7 @@ static void spi_request_func(struct work_struct *work)
         return;
     }
 
-    printk(KERN_INFO "[FPGA][SPI] Received data for SPI 0 request:");
+    printk(KERN_INFO "[FPGA][SPI] Received data for SPI 0---==[ REQUEST ]==---");
     for (i = 0; i < sizeof(rx_req_buffer); ++i) {
         printk(KERN_INFO "[FPGA][SPI] Byte %d: 0x%02x\n", i, rx_req_buffer[i]);
     }
