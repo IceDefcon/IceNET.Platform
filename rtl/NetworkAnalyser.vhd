@@ -117,7 +117,7 @@ gpio_interrupt_process:
 process(CLOCK)
 begin
 	if rising_edge(CLOCK) then
-		INT_OUT 	<= button_debounced;
+		INT_OUT 	<= button_debounced; -- Testing Response Interrupt back to CPU
 	end if;
 end process;
 

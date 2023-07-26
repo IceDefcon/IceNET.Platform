@@ -315,7 +315,7 @@ static void spi_response_func(struct work_struct *work)
         return;
     }
 
-    printk(KERN_INFO "[FPGA][SPI] Received data for SPI0:");
+    printk(KERN_INFO "[FPGA][SPI] Received data for SPI 0 Response:");
     for (i = 0; i < sizeof(rx_res_buffer); ++i) {
         printk(KERN_INFO "[FPGA][SPI] Byte %d: 0x%02x\n", i, rx_res_buffer[i]);
     }
@@ -338,11 +338,11 @@ static void spi_request_func(struct work_struct *work)
 
     ret = spi_sync(spi_dev0, &msg);
     if (ret < 0) {
-        printk(KERN_ERR "[FPGA][SPI] SPI transfer for SPI1 failed: %d\n", ret);
+        printk(KERN_ERR "[FPGA][SPI] SPI transfer for SPI 0 failed: %d\n", ret);
         return;
     }
 
-    printk(KERN_INFO "[FPGA][SPI] Received data for SPI request:");
+    printk(KERN_INFO "[FPGA][SPI] Received data for SPI 0 request:");
     for (i = 0; i < sizeof(rx_req_buffer); ++i) {
         printk(KERN_INFO "[FPGA][SPI] Byte %d: 0x%02x\n", i, rx_req_buffer[i]);
     }
@@ -362,7 +362,7 @@ static irqreturn_t isr_spi_response(int irq, void *data)
 {
     static int counter = 0;
 
-    printk(KERN_INFO "[FPGA][ISR] SPI Resonse interrupt [%d] @ Pin [%d]\n", counter, GPIO_IN_SPI_INTERRUPT_PIN);
+    printk(KERN_INFO "[FPGA][ISR] SPI Response interrupt [%d] @ Pin [%d]\n", counter, GPIO_IN_SPI_INTERRUPT_PIN);
     counter++;
 
     queue_work(spi_response_wq, &spi_response_work);
