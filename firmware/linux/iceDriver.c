@@ -2,7 +2,6 @@
 // Author: Ice.Marek
 // IceNET Technology 2023
 //
-
 #include <linux/fs.h>
 #include <linux/gpio.h>
 #include <linux/init.h>
@@ -78,21 +77,21 @@ static struct file_operations fops =
 //                  //
 //                  //
 //                  //
-//////////////////////////////////////////////////////
-//                                                  //
-//                                                  //
-// PIN_119 :: BBB P9_17 :: PULPLE   :: SPI0_CS0     //
-// PIN_121 :: BBB P9_18 :: BLUE     :: SPI0_D1      //
-// PIN_125 :: BBB P9_21 :: BROWN    :: SPI0_D0      //
-// PIN_129 :: BBB P9_22 :: BLACK    :: SPI0_SCLK    //
-//                                                  //
-// BBB P9_28 :: YELOW    :: SPI1_CS0                //
-// BBB P9_30 :: GREEN    :: SPI1_D1 :: GPIO_112     //
-// BBB P9_29 :: RED      :: SPI1_D0                 //
-// BBB P9_31 :: ORANGE   :: SPI1_SCLK               //
-//                                                  //
-//                                                  //
-//////////////////////////////////////////////////////
+//////////////////////////////////////////
+//                                      //
+//                                      //
+// BBB P9_17 :: PULPLE   :: SPI0_CS0    //
+// BBB P9_18 :: BLUE     :: SPI0_D1     //
+// BBB P9_21 :: BROWN    :: SPI0_D0     //
+// BBB P9_22 :: BLACK    :: SPI0_SCLK   //
+//                                      //
+// BBB P9_28 :: YELOW    :: SPI1_CS0    //
+// BBB P9_30 :: GREEN    :: SPI1_D1     //
+// BBB P9_29 :: RED      :: SPI1_D0     //
+// BBB P9_31 :: ORANGE   :: SPI1_SCLK   //
+//                                      //
+//                                      //
+//////////////////////////////////////////
 
 static struct spi_device *spi_dev0;
 static struct spi_device *spi_dev1;

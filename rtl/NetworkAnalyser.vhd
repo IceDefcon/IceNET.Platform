@@ -57,14 +57,10 @@ signal clock_1Mhz 		: std_logic := '0';
 signal direction 		: std_logic := '0';
 signal counter 			: std_logic_vector(3 downto 0) 	:=  (others => '0');
 
--- Synchronised I2C signal
-signal I2C_SDA_IS 		: std_logic := '0';
-signal I2C_SCL_IS 		: std_logic := '0';
-
+-- State Machine
 type StateType is (IDLE, COUNT);
 signal state 			: StateType := IDLE;
 
-signal reverse  		: std_logic_vector(15 downto 0) := (others => '0');
 ----------------------------
 -- COMPONENTS DECLARATION --
 ----------------------------
@@ -118,45 +114,6 @@ process(CLOCK)
 begin
 	if rising_edge(CLOCK) then
 		INT_OUT 	<= button_debounced; -- Testing Response Interrupt back to CPU
-	end if;
-end process;
-
----------
--- I2C --
----------
-synchronised_process:
-process(CLOCK, I2C_SDA_IS, I2C_SCL_IS, I2C_SDA_I, I2C_SCL_I)
-begin
-	if rising_edge(CLOCK) then
-		I2C_SDA_IS <= I2C_SDA_I;
-		I2C_SCL_IS <= I2C_SCL_I;
-	end if;
-end process;
-
-i2c_process:
-process(CLOCK, I2C_SCL_IS, BUTTON_2, counter, state, I2C_SCL_I, I2C_SDA_I, I2C_SCL_O, I2C_SDA_O, I2C_SCL_IS, I2C_SCL_IS)
-begin
-	if rising_edge(I2C_SCL_IS) then
-		counter <= counter + 1;
-		state 	<= COUNT;
-	end if;
-	
-	if rising_edge(CLOCK) then
-		if state = COUNT then
-			reverse <= reverse + 1;
-		end if;
-	end if;
-	
-	if BUTTON_2 = '0' then
-		counter <= (others => '0');
-	end if;
-	
-	if counter = "1001" then
-		I2C_SCL_I 	<= 'Z';
-		I2C_SDA_I 	<= 'Z';
-	else
-		I2C_SCL_O 	<= I2C_SCL_IS;
-		I2C_SDA_O 	<= I2C_SDA_IS;
 	end if;
 end process;
 

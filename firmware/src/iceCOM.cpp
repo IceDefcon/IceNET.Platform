@@ -9,7 +9,7 @@
 #include <cstring> 			// strcmp
 #include "iceCOM.h"
 
-iceCOM::iceCOM() : 
+iceCOM::iceCOM(): 
 m_file_descriptor(0), 
 m_killThread(false),
 m_BUFFER_LENGTH(256)
