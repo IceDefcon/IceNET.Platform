@@ -15,7 +15,7 @@ use ieee.std_logic_unsigned.all;
 entity NetworkAnalyser is
 port
 (
-	CLOCK 			: in std_logic; 	-- PIN_T2
+	CLOCK 			: in std_logic; 	-- PIN_T2 :: 50Mhz FPGA
 	
 	LED_0 			: out std_logic; 	-- PIN_U7
 	LED_1 			: out std_logic; 	-- PIN_U8
@@ -26,11 +26,6 @@ port
 	LED_6 			: out std_logic; 	-- PIN_M8
 	LED_7 			: out std_logic; 	-- PIN_N8
 	
-	I2C_SDA_I 		: inout std_logic; 	-- PIN_A9  :: BBB P9_20 :: BLUE
-	I2C_SCL_I 		: inout std_logic; 	-- PIN_A10 :: BBB P9_19 :: GREEN
-	I2C_SDA_O 		: inout std_logic; 	-- PIN_A13 :: GYROSCOPE :: WHITE
-	I2C_SCL_O 		: inout std_logic; 	-- PIN_A14 :: GYROSCOPE :: BLACK
-	
 	KERNEL_CS 		: in  std_logic; 	-- PIN_A5 :: BBB P9_17 :: PULPLE 	:: SPI0_CS0
 	KERNEL_MOSI 	: in  std_logic; 	-- PIN_A7 :: BBB P9_18 :: BLUE 		:: SPI0_D1
 	KERNEL_MISO 	: out std_logic; 	-- PIN_A6 :: BBB P9_21 :: BROWN 	:: SPI0_D0
@@ -39,7 +34,7 @@ port
 	INT_IN 			: in  std_logic; 	-- PIN_A3 :: BBB P8_7  :: YELLOW 	:: OPEN COLLECTOR
 	INT_OUT 		: out std_logic; 	-- PIN_A4 :: BBB P9_12 :: BLUE 		:: GPIO 66
 	
-	BUTTON_0 		: in  std_logic; 	-- PIN_H20
+	BUTTON_0 		: in  std_logic; 	-- PIN_H20 :: Reset
 	BUTTON_1 		: in  std_logic; 	-- PIN_K19 :: Doesnt Work :: WTF xD Broken Button or Incorrect Schematic
 	BUTTON_2 		: in  std_logic; 	-- PIN_J18
 	BUTTON_3 		: in  std_logic 	-- PIN_K18
@@ -61,6 +56,15 @@ signal counter 			: std_logic_vector(3 downto 0) 	:=  (others => '0');
 type StateType is (IDLE, COUNT);
 signal state 			: StateType := IDLE;
 
+-- Nios V System
+signal nios_address 	: std_logic_vector(9 downto 0)  := (others => 'X');
+signal nios_clken 		: std_logic                     := 'X';
+signal nios_chipselect 	: std_logic                     := 'X';
+signal nios_write 		: std_logic                     := 'X';
+signal nios_readdata 	: std_logic_vector(31 downto 0);
+signal nios_writedata 	: std_logic_vector(31 downto 0) := (others => 'X');
+signal nios_byteenable 	: std_logic_vector(3 downto 0)  := (others => 'X');
+
 ----------------------------
 -- COMPONENTS DECLARATION --
 ----------------------------
@@ -73,10 +77,42 @@ port
 );
 end component;
 
+component NiosFirmware is
+port 
+(
+	cpu_clk         : in  std_logic                     := 'X';
+	sys_reset_n     : in  std_logic                     := 'X';
+	nios_address    : in  std_logic_vector(9 downto 0)  := (others => 'X');
+	nios_clken      : in  std_logic                     := 'X';
+	nios_chipselect : in  std_logic                     := 'X';
+	nios_write      : in  std_logic                     := 'X';
+	nios_readdata   : out std_logic_vector(31 downto 0);
+	nios_writedata  : in  std_logic_vector(31 downto 0) := (others => 'X');
+	nios_byteenable : in  std_logic_vector(3 downto 0)  := (others => 'X')
+);
+end component NiosFirmware;
+
 ------------------
 -- MAIN ROUTINE --
 ------------------
 begin
+
+------------------
+-- CPU Firmware --
+------------------
+NiosFirmware_module : component NiosFirmware
+port map 
+(
+	cpu_clk         => CLOCK,
+	sys_reset_n     => '0',
+	nios_address    => nios_address,
+	nios_clken      => nios_clken,
+	nios_chipselect => nios_chipselect,
+	nios_write      => nios_write,
+	nios_readdata   => nios_readdata,
+	nios_writedata  => nios_writedata,
+	nios_byteenable => nios_byteenable
+);
 
 --------------
 -- Debounce --
