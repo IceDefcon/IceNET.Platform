@@ -4,6 +4,7 @@
 //
 #pragma once
 #include <iostream>
+#include "types.h"
 
 class Debug
 {
@@ -11,7 +12,10 @@ public:
 
 	enum LogLevel
 	{
-		LevelError = 0, LevelWarning, LevelInfo, LevelTodo
+		LevelError = 0, 
+		LevelWarning, 
+		LevelInfo, 
+		LevelTodo
 	};
 
 private:
@@ -23,7 +27,9 @@ public:
 	Debug();
 	~Debug();
 
+	// This is currently not in use !!
 	void SetLevel(LogLevel level);
+
 	void Error(const char * message);
 	void Warning(const char * message);
 	void Info(const char * message);

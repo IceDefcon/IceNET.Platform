@@ -14,7 +14,7 @@
 int main(void)
 {
     //
-    // Allocate on HEAP
+    // HEAP
     //
 	Core* CoreDevice = nullptr;
 	iceCOM* iceCOMDevice = new iceCOM;
@@ -29,7 +29,7 @@ int main(void)
 	while(true)
 	{
 		//
-		// Kill everything if flag is set
+		// Kill everything
 		//
 		if (iceCOMDevice != nullptr) 
 		{
@@ -42,18 +42,18 @@ int main(void)
 
 	delete iceCOMDevice;
 
-	return 0;
+	return OK;
 }
 
 //////////////////////////////////////////
-//
-// 		----===[ STRINGS ]===----
-//
+// 										//
+// 		----===[ STRINGS ]===---- 		//
+// 										//
 //////////////////////////////////////////
-//
-// char name[8] 	= {'0xD','0xE','0xA','0xD','0xC','0x0','0xD','0xE'}
-// char name[] 		= "some string";
-// const char* name = "some string";
-// std::string name = "some string";
-//
+// 										//
+// char name[2] 	= {'0xA','0x7'}; 	//
+// char name[] 		= "some string"; 	//
+// const char* name = "some string"; 	//
+// std::string name = "some string"; 	//
+// 										//
 //////////////////////////////////////////

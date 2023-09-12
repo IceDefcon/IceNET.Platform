@@ -11,7 +11,6 @@
 #include "debug.h"
 #include "core.h"
 
-
 class iceCOM : public Core
 {
 

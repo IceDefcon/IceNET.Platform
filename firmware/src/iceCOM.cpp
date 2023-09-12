@@ -48,8 +48,15 @@ iceCOM::iceCOMThread()
         // 				//
         //////////////////
 
-    	device_write();
-        device_read();
+    	if(OK != device_write())
+    	{
+			Debug::Error("iceCOM :: Cannot write into the console");
+    	}
+
+    	if(OK != device_read())
+    	{
+			Debug::Error("iceCOM :: Cannot read from the console");
+    	}
     }
 
 	Debug::Info("iceCOM :: iceCOMThread Terminate");
@@ -63,10 +70,10 @@ iceCOM::device_open(const char* device)
 	if (m_file_descriptor < 0)
 	{
 		Debug::Error("iceCOM :: Failed to open iceCOM Device");
-		return -1;
+		return ERROR;
 	}
 
-	return 1;
+	return OK;
 }
 
 int 
@@ -79,6 +86,7 @@ iceCOM::device_read()
 	if (ret == -1)
 	{
 	    Debug::Error("iceCOM :: Cannot read from kernel space");
+	    return ERROR;
 	}
 
 	Debug::Read(console_RX);
@@ -86,7 +94,7 @@ iceCOM::device_read()
 	// clear the buffer
 	memset (console_RX, 0, m_BUFFER_LENGTH);
 
-	return 1;
+	return OK;
 }
 
 int 
@@ -95,7 +103,7 @@ iceCOM::device_write()
 	int ret;
 	char console_TX[m_BUFFER_LENGTH];
 
-	for (int i = 0; i < m_BUFFER_LENGTH; ++i)
+	for (size_t i = 0; i < m_BUFFER_LENGTH; ++i)
 	{
 		console_TX[i] = 0;
 	}
@@ -112,16 +120,17 @@ iceCOM::device_write()
 	if (ret == -1)
 	{
 	    Debug::Error("iceCOM :: Cannot write to kernel space");
+	    return ERROR;
 	}
 
-	return 1;
+	return OK;
 }
 
 int 
 iceCOM::device_close()
 {
 	close(m_file_descriptor);
-	return 1;
+	return OK;
 }
 
 bool 
