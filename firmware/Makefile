@@ -5,6 +5,7 @@
 APP 		= app
 GCC  		= g++
 CFLAGS 		= -Wall -Wextra -std=c++11 -O2 -g -pthread
+MAKEFLAGS  += -j4
 
 CPP_SOURCES = $(shell find . -name "*.cpp")
 CPP_OBJECTS = $(CPP_SOURCES:.cpp=.o)
