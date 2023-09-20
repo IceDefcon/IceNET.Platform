@@ -24,6 +24,7 @@ private:
 	// flag processing
 	//
 	std::atomic<bool> m_killThread;
+	std::atomic<bool> m_deviceReady;
 
 	const size_t m_BUFFER_LENGTH;
 
@@ -33,6 +34,7 @@ public:
 	iceCOM(size_t m_BUFFER_LENGTH);
 	~iceCOM();
 
+	void initThread();
 	void iceCOMThread();
 
 	int device_open(const char* device) override;

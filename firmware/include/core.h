@@ -10,12 +10,12 @@ public:
 
 	Core()
 	{
-		Debug::Info("Core :: Init the Core");
+		Debug::Info("Core   :: Initialising the Core");
 	}
 
 	virtual ~Core()
 	{
-		Debug::Info("Core :: Destroy the Core");
+		Debug::Info("Core   :: Destroying the Core");
 	}
 
 	virtual int device_open(const char* device) = 0;

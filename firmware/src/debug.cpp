@@ -6,12 +6,12 @@
 
 Debug::Debug() : m_LogLevel (LevelTodo) 
 {
-	Debug::Info("Debug :: Init Debug Console");
+	Debug::Info("Debug  :: Initialising Debug Console");
 }
 
 Debug::~Debug()
 {
-	Debug::Info("Debug :: Shutdown Debug Console");
+	Debug::Info("Debug  :: Shutdown Debug Console");
 }
 
 void Debug::SetLevel(LogLevel level)
@@ -22,13 +22,13 @@ void Debug::SetLevel(LogLevel level)
 void Debug::Error(const char * message)
 {
 	if(m_LogLevel >= LevelError)
-		std::cout << "[ERROR]: " << message << std::endl;
+		std::cout << "[ERNO]: " << message << std::endl;
 }
 
 void Debug::Warning(const char * message)
 {
 	if(m_LogLevel >= LevelWarning)
-		std::cout << "[WARNING]: " << message << std::endl;
+		std::cout << "[WARN]: " << message << std::endl;
 }
 
 void Debug::Info(const char * message)

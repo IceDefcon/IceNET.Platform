@@ -12,10 +12,10 @@
 iceCOM::iceCOM(): 
 m_file_descriptor(0), 
 m_killThread(false),
+m_deviceReady(false),
 m_BUFFER_LENGTH(256)
 {
-	Debug::Info("iceCOM :: Init iceCOMThread");
-	m_iceThread = std::thread(&iceCOM::iceCOMThread, this);
+	Debug::Info("iceCOM :: Initialise iceCOM Module");
 }
 
 iceCOM::~iceCOM() 
@@ -27,8 +27,15 @@ iceCOM::~iceCOM()
    	}
    	else
    	{
-		Debug::Warning("iceCOM :: iceCOMThread is not joinable");
+		Debug::Warning("iceCOM :: iceCOMThread is not initialised or not joinable");
    	}
+}
+
+void
+iceCOM::initThread()
+{
+	Debug::Info("iceCOM :: Init iceCOMThread");
+	m_iceThread = std::thread(&iceCOM::iceCOMThread, this);
 }
 
 void 
@@ -36,7 +43,7 @@ iceCOM::iceCOMThread()
 {
 	Debug::Info("iceCOM :: Start iceCOMThread");
 
-    while (!m_killThread) 
+    while(!m_killThread) 
     {
         //////////////////
         // 				//
@@ -70,8 +77,12 @@ iceCOM::device_open(const char* device)
 	if (m_file_descriptor < 0)
 	{
 		Debug::Error("iceCOM :: Failed to open iceCOM Device");
+		m_killThread = true;
 		return ERROR;
 	}
+
+	m_deviceReady = true;
+	initThread();
 
 	return OK;
 }
