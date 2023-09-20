@@ -72,15 +72,15 @@ iceCOM::iceCOMThread()
 int 
 iceCOM::device_open(const char* device)
 {
-	Debug::Info("iceCOM :: Open iceCOM Device");
 	m_file_descriptor = open(device, O_RDWR);
 	if (m_file_descriptor < 0)
 	{
-		Debug::Error("iceCOM :: Failed to open iceCOM Device");
+		Debug::Error("iceCOM :: Failed to open Device");
 		m_killThread = true;
 		return ERROR;
 	}
 
+	Debug::Info("iceCOM :: Device opened successfuly");
 	m_deviceReady = true;
 	initThread();
 
