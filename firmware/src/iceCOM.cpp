@@ -12,22 +12,17 @@
 iceCOM::iceCOM(): 
 m_file_descriptor(0), 
 m_killThread(false),
-m_deviceReady(false),
 m_BUFFER_LENGTH(256)
 {
-	Debug::Info("iceCOM :: Initialise iceCOM Module");
+	Debug::Info("iceCOM :: Initialising iceCOM Module");
 }
 
 iceCOM::~iceCOM() 
 {
-	Debug::Info("iceCOM :: Destroy iceCOMThread");
+	Debug::Info("iceCOM :: Destroying iceCOM Module");
     if (m_iceThread.joinable()) 
     {
     	m_iceThread.join();
-   	}
-   	else
-   	{
-		Debug::Warning("iceCOM :: iceCOMThread is not initialised or not joinable");
    	}
 }
 
@@ -81,7 +76,6 @@ iceCOM::device_open(const char* device)
 	}
 
 	Debug::Info("iceCOM :: Device opened successfuly");
-	m_deviceReady = true;
 	initThread();
 
 	return OK;

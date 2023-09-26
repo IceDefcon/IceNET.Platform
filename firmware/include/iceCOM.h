@@ -24,7 +24,6 @@ private:
 	// flag processing
 	//
 	std::atomic<bool> m_killThread;
-	std::atomic<bool> m_deviceReady;
 
 	const size_t m_BUFFER_LENGTH;
 

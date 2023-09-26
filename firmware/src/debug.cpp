@@ -22,33 +22,33 @@ void Debug::SetLevel(LogLevel level)
 void Debug::Error(const char * message)
 {
 	if(m_LogLevel >= LevelError)
-		std::cout << "[ERNO]: " << message << std::endl;
+		std::cout << "[ERNO] " << message << std::endl;
 }
 
 void Debug::Warning(const char * message)
 {
 	if(m_LogLevel >= LevelWarning)
-		std::cout << "[WARN]: " << message << std::endl;
+		std::cout << "[WARN] " << message << std::endl;
 }
 
 void Debug::Info(const char * message)
 {
 	if(m_LogLevel >= LevelInfo)
-		std::cout << "[INFO]: " << message << std::endl;
+		std::cout << "[INFO] " << message << std::endl;
 }
 
 void Debug::Todo(const char * message)
 {
 	if(m_LogLevel >= LevelTodo)
-		std::cout << "[TODO]: " << message << std::endl;
+		std::cout << "[TODO] " << message << std::endl;
 }
 
 void Debug::Read(const char * message)
 {
-	std::cout << "[ RX ]: " << message << std::endl;
+	std::cout << "[ RX ] " << message << std::endl;
 }
 
 void Debug::Write(void)
 {
-	std::cout << "[ TX ]: ";
+	std::cout << "[ TX ] ";
 }
