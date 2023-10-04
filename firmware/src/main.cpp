@@ -11,6 +11,9 @@
 
 #define ICE "/dev/iceCOM"
 
+//
+// Testing new branch :: bbb_cycloneIV_develop
+//
 int main(void)
 {
     //

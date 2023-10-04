@@ -32,7 +32,7 @@ port
 	KERNEL_SCLK 	: in  std_logic; 	-- PIN_A8 :: BBB P9_22 :: BLACK 	:: SPI0_SCLK
 	
 	INT_IN 			: in  std_logic; 	-- PIN_A3 :: BBB P8_7  :: YELLOW 	:: OPEN COLLECTOR
-	INT_OUT 		: out std_logic; 	-- PIN_A4 :: BBB P9_12 :: BLUE 		:: GPIO 66
+	INT_OUT 			: out std_logic; 	-- PIN_A4 :: BBB P9_12 :: BLUE 		:: GPIO 60
 	
 	BUTTON_0 		: in  std_logic; 	-- PIN_H20 :: Reset
 	BUTTON_1 		: in  std_logic; 	-- PIN_K19 :: Doesnt Work :: WTF xD Broken Button or Incorrect Schematic
