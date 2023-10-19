@@ -302,6 +302,7 @@ static void spi_response_func(struct work_struct *work)
 
     memset(&transfer, 0, sizeof(transfer));
     transfer.tx_buf = tx_res_buffer;
+    //
     // transfer.rx_buf = rx_res_buffer;
     transfer.len = sizeof(tx_res_buffer);
 
