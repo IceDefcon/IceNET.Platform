@@ -52,19 +52,6 @@ signal clock_1Mhz 		: std_logic := '0';
 signal direction 		: std_logic := '0';
 signal counter 			: std_logic_vector(3 downto 0) 	:=  (others => '0');
 
--- State Machine
-type StateType is (IDLE, COUNT);
-signal state 			: StateType := IDLE;
-
--- Nios V System
-signal nios_address 	: std_logic_vector(9 downto 0)  := (others => 'X');
-signal nios_clken 		: std_logic                     := 'X';
-signal nios_chipselect 	: std_logic                     := 'X';
-signal nios_write 		: std_logic                     := 'X';
-signal nios_readdata 	: std_logic_vector(31 downto 0);
-signal nios_writedata 	: std_logic_vector(31 downto 0) := (others => 'X');
-signal nios_byteenable 	: std_logic_vector(3 downto 0)  := (others => 'X');
-
 ----------------------------
 -- COMPONENTS DECLARATION --
 ----------------------------
@@ -77,42 +64,10 @@ port
 );
 end component;
 
-component NiosFirmware is
-port 
-(
-	cpu_clk         : in  std_logic                     := 'X';
-	sys_reset_n     : in  std_logic                     := 'X';
-	nios_address    : in  std_logic_vector(9 downto 0)  := (others => 'X');
-	nios_clken      : in  std_logic                     := 'X';
-	nios_chipselect : in  std_logic                     := 'X';
-	nios_write      : in  std_logic                     := 'X';
-	nios_readdata   : out std_logic_vector(31 downto 0);
-	nios_writedata  : in  std_logic_vector(31 downto 0) := (others => 'X');
-	nios_byteenable : in  std_logic_vector(3 downto 0)  := (others => 'X')
-);
-end component NiosFirmware;
-
-------------------
+-----------------
 -- MAIN ROUTINE --
 ------------------
 begin
-
-------------------
--- CPU Firmware --
-------------------
-NiosFirmware_module : component NiosFirmware
-port map 
-(
-	cpu_clk         => CLOCK,
-	sys_reset_n     => '0',
-	nios_address    => nios_address,
-	nios_clken      => nios_clken,
-	nios_chipselect => nios_chipselect,
-	nios_write      => nios_write,
-	nios_readdata   => nios_readdata,
-	nios_writedata  => nios_writedata,
-	nios_byteenable => nios_byteenable
-);
 
 --------------
 -- Debounce --
