@@ -7,7 +7,7 @@ use ieee.std_logic_unsigned.all;
 -- Author: Ice.Marek 		--
 -- IceNET Technology 2023 	--
 -- 							--
--- Current Chip 			--
+-- FPGA Chip 				--
 -- Cyclone IV 				--
 -- EP4CE15F23C8 			--
 ------------------------------
@@ -48,9 +48,8 @@ architecture rtl of NetworkAnalyser is
 -- SIGNAL DECLARATION --
 ------------------------
 signal button_debounced	: std_logic := '1';
-signal clock_1Mhz 		: std_logic := '0';
-signal direction 		: std_logic := '0';
-signal counter 			: std_logic_vector(3 downto 0) 	:=  (others => '0');
+signal stop 				: std_logic := '0';
+signal pulse 				: std_logic := '0';
 
 ----------------------------
 -- COMPONENTS DECLARATION --
@@ -86,10 +85,10 @@ status_led_process:
 process(CLOCK)
 begin
 	if rising_edge(CLOCK) then
-		LED_7 	<= counter(3);
-		LED_6 	<= counter(2);
-		LED_5 	<= counter(1);
-		LED_4 	<= counter(0);
+		LED_7 	<= '0';
+		LED_6 	<= '0';
+		LED_5 	<= '0';
+		LED_4 	<= '0';
 		LED_3 	<= BUTTON_3;
 		LED_2 	<= BUTTON_2;
 		LED_1 	<= BUTTON_1; -- BUTTON_1 is not working
@@ -109,8 +108,32 @@ begin
 end process;
 
 --------------------
+-- SPI Process
+----------------------
+process(CLOCK, KERNEL_CS, KERNEL_SCLK, stop)
+begin
+	if rising_edge(CLOCK) then
+		if KERNEL_CS = '0' then
+			if KERNEL_SCLK = '0' then
+				if stop = '0' then
+					if (pulse = '0') then
+						pulse <= '1';
+					else
+						pulse <= '0';
+					end if;
+					KERNEL_MISO <= pulse;
+					stop <= '1';
+				end if;
+			elsif KERNEL_SCLK = '1' then
+				stop <= '0';
+			end if;
+		end if;
+	end if;
+end process;
+
+--------------------
 -- SPI Looptrough --
 --------------------
-KERNEL_MISO <= KERNEL_MOSI;
-	
+--KERNEL_MISO <= KERNEL_MOSI;
+
 end rtl;
