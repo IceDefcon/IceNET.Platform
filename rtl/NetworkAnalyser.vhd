@@ -47,19 +47,14 @@ architecture rtl of NetworkAnalyser is
 ------------------------
 -- SIGNAL DECLARATION --
 ------------------------
-signal button_debounced 	: std_logic := '1';
-signal pulse 					: std_logic := '1';
+signal button_debounced			: std_logic := '1';
 signal stop 					: std_logic := '0';
+signal pulse 					: std_logic := '0';
 
-signal clock_count 			: std_logic_vector(25 downto 0) := (others => '0');
-signal interrupt_count 		: std_logic_vector(3 downto 0) := (others => '0');
-signal interrupt_signal 	: std_logic := '0';
-signal interrupt_cutoff 	: std_logic := '0';
-
-constant DE : std_logic_vector(7 downto 0) := X"DE";
-constant AD : std_logic_vector(7 downto 0) := X"AD";
-constant C0 : std_logic_vector(7 downto 0) := X"C0";
-constant DE : std_logic_vector(7 downto 0) := X"DE";
+signal clock_count 				: std_logic_vector(25 downto 0) := (others => '0');
+signal interrupt_count 			: std_logic_vector(3 downto 0) := (others => '0');
+signal interrupt_signal 		: std_logic := '0';
+signal interrupt_cutoff 		: std_logic := '0';
 
 ----------------------------
 -- COMPONENTS DECLARATION --
@@ -136,6 +131,7 @@ end process;
 process(CLOCK, interrupt_cutoff, clock_count)
 begin
 	if rising_edge(CLOCK) then
+
 		if interrupt_cutoff = '1' then
 			interrupt_count <= interrupt_count + '1';
 			if interrupt_count = "1111" then
@@ -144,7 +140,9 @@ begin
 				interrupt_count <= (others => '0');
 			end if;
 		end if;
+
 		clock_count <= clock_count + '1';
+
 		if clock_count = "11111111111111111111111111" then
 			if interrupt_signal = '0' then
 				interrupt_signal <= '1';
@@ -152,6 +150,7 @@ begin
 			clock_count <= (others => '0');
 			interrupt_cutoff <= '1';
 		end if;
+		
 	end if;
 end process;
 
