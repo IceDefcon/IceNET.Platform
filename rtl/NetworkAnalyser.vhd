@@ -10,8 +10,8 @@ use ieee.std_logic_unsigned.all;
 -- FPGA Chip 				--
 -- Cyclone IV 				--
 -- EP4CE15F23C8 			--
-------------------------------
 
+------------------------------
 entity NetworkAnalyser is
 port
 (
@@ -32,7 +32,7 @@ port
 	KERNEL_SCLK 	: in  std_logic; 	-- PIN_A8 :: BBB P9_22 :: BLACK 	:: SPI0_SCLK
 	
 	INT_IN 			: in  std_logic; 	-- PIN_A3 :: BBB P8_7  :: YELLOW 	:: OPEN COLLECTOR
-	INT_OUT 		: out std_logic; 	-- PIN_A4 :: BBB P9_12 :: BLUE 		:: GPIO 66
+	INT_OUT 			: out std_logic; 	-- PIN_A4 :: BBB P9_12 :: BLUE 		:: GPIO 66
 	
 	BUTTON_0 		: in  std_logic; 	-- PIN_H20 :: Reset
 	BUTTON_1 		: in  std_logic; 	-- PIN_K19 :: Doesnt Work :: WTF xD Broken Button or Incorrect Schematic
@@ -48,11 +48,17 @@ architecture rtl of NetworkAnalyser is
 -- SIGNAL DECLARATION --
 ------------------------
 signal button_debounced			: std_logic := '1';
-signal stop 					: std_logic := '0';
-signal pulse 					: std_logic := '0';
 
-signal clock_count 				: std_logic_vector(25 downto 0) := (others => '0');
-signal interrupt_count 			: std_logic_vector(3 downto 0) := (others => '0');
+constant CMD : std_logic_vector(7 downto 0) := "10000001";
+signal pulse_stop 				: std_logic := '0';
+signal pulse_start 				: std_logic := '0';
+
+signal transmission 			: std_logic := '0';
+signal bit_length 				: std_logic_vector(5 downto 0) := (others => '0');
+signal total_length 			: std_logic_vector(8 downto 0) := (others => '0');
+
+signal interrupt_break 			: std_logic_vector(25 downto 0) := (others => '0');
+signal interrupt_length 		: std_logic_vector(3 downto 0) := (others => '0');
 signal interrupt_signal 		: std_logic := '0';
 signal interrupt_cutoff 		: std_logic := '0';
 
@@ -96,7 +102,7 @@ begin
 		LED_4 	<= '0';
 		LED_3 	<= BUTTON_3;
 		LED_2 	<= BUTTON_2;
-		LED_1 	<= BUTTON_1; -- BUTTON_1 is not working
+		LED_1 	<= BUTTON_0; -- BUTTON_1 is not working
 		LED_0 	<= BUTTON_0;
 	end if;
 end process;
@@ -104,50 +110,70 @@ end process;
 --------------------
 -- SPI Process
 --------------------
-process(CLOCK, KERNEL_CS, KERNEL_SCLK, stop)
+
+process(CLOCK, KERNEL_CS, KERNEL_SCLK, transmission, bit_length, total_length)
+	variable index : integer := 0;
 begin
 	if rising_edge(CLOCK) then
 		if KERNEL_CS = '0' then
-			if KERNEL_SCLK = '0' then
-				if stop = '0' then
-					if (pulse = '0') then
-						pulse <= '1';
-					else
-						pulse <= '0';
-					end if;
-					KERNEL_MISO <= pulse;
-					stop <= '1';
+
+			if transmission = '0' then
+				if KERNEL_SCLK = '1' then
+					transmission <= '1';
 				end if;
-			elsif KERNEL_SCLK = '1' then
-				stop <= '0';
 			end if;
+
+			if transmission = '1' then
+				KERNEL_MISO <= CMD(index);
+				bit_length <= bit_length + '1';
+				total_length <= total_length + '1';
+			end if;
+
+			if bit_length = "110010" then
+				index := index + 1;
+				bit_length <= "000000";
+			end if;
+
+			if index = 7 then
+				index := 0;
+			end if;
+			
+			if total_length = "110010000" then
+				transmission <= '0';
+				total_length <= "000000000";
+			end if;
+
+		else
+			KERNEL_MISO <= '0';
 		end if;
 	end if;
 end process;
 
---------------------
--- clock division
---------------------
-process(CLOCK, interrupt_cutoff, clock_count)
+-----------------------------------
+-- Interrupt pulse generator
+-- 0x3FFFFFF/50 MHz
+-- 67108863/50000000 Hz = 1.342 sec
+-----------------------------------
+process(CLOCK, interrupt_cutoff, interrupt_break)
 begin
 	if rising_edge(CLOCK) then
 
 		if interrupt_cutoff = '1' then
-			interrupt_count <= interrupt_count + '1';
-			if interrupt_count = "1111" then
+			interrupt_length <= interrupt_length + '1';
+			if interrupt_length = "1111" then
 				interrupt_signal <= '0';
 				interrupt_cutoff <= '0';
-				interrupt_count <= (others => '0');
+				interrupt_length <= (others => '0');
 			end if;
 		end if;
 
-		clock_count <= clock_count + '1';
+		interrupt_break <= interrupt_break + '1';
 
-		if clock_count = "11111111111111111111111111" then
+		if interrupt_break = "11111111111111111111111111" then
 			if interrupt_signal = '0' then
 				interrupt_signal <= '1';
 			end if;
-			clock_count <= (others => '0');
+			interrupt_break <= (others => '0');
 			interrupt_cutoff <= '1';
 		end if;
 		

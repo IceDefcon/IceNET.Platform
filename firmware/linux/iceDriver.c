@@ -96,8 +96,8 @@ static struct file_operations fops =
 static struct spi_device *spi_dev0;
 static struct spi_device *spi_dev1;
 
-static volatile uint8_t tx_res_buffer[] = {0xAB,0xCD};  // Data to be transmitted for SPI0
-static volatile uint8_t rx_res_buffer[2];               // Buffer to receive data for SPI0
+static volatile uint8_t tx_res_buffer[] = {0x81};  // Data to be transmitted for SPI0
+static volatile uint8_t rx_res_buffer[1];               // Buffer to receive data for SPI0
 
 static volatile uint8_t tx_req_buffer[] = {0xDC,0xBA};  // Data to be transmitted for SPI1
 static volatile uint8_t rx_req_buffer[2];               // Buffer to receive data for SPI1
