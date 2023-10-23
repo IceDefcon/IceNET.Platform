@@ -51,6 +51,8 @@ signal button_debounced			: std_logic := '1';
 
 constant CMD 					: std_logic_vector(7 downto 0) := "01000001";
 signal index 					: std_logic_vector(3 downto 0) := (others => '0');
+signal count 					: std_logic_vector(5 downto 0) := (others => '0');
+signal count_bit 				: std_logic_vector(4 downto 0) := (others => '0');
 signal count_HI 				: std_logic_vector(4 downto 0) := (others => '0');
 signal count_LO 				: std_logic_vector(4 downto 0) := (others => '0');
 
@@ -93,7 +95,7 @@ status_led_process:
 process(CLOCK)
 begin
 	if rising_edge(CLOCK) then
-		LED_7 	<= '0';
+		--LED_7 	<= '0';
 		LED_6 	<= '0';
 		LED_5 	<= '0';
 		LED_4 	<= '0';
@@ -108,23 +110,41 @@ end process;
 -- SPI Process
 --------------------
 spi_process:
-process(CLOCK, KERNEL_SCLK, count_HI, count_LO)
+process(CLOCK, KERNEL_SCLK, count, count_bit)
 begin
 	if rising_edge(CLOCK) then
-		if KERNEL_SCLK = '1' then
-			count_HI <= count_HI + '1';
 
-			if count_HI < "11000" then
-				KERNEL_MISO <= KERNEL_MOSI;
-			else
-				count_HI <= (others => '0');
-			end if;
+		if KERNEL_SCLK = '1' then
+			hold = '0';
+			
+
 		elsif KERNEL_SCLK = '0' then
-			if count_LO < 11000 then
-				KERNEL_MISO <= KERNEL_MOSI;
-			else
-				count_LO <= (others => '0');
-			end if;
+			count <= count + '1';
+			KERNEL_MISO <= KERNEL_MOSI;
+		end if;
+
+		if hold = '0' then
+			count <= count + '1';
+		end if;
+
+
+
+		if count = "00000" then
+			count_bit <= count_bit + '1';
+		end if;
+
+
+
+
+		KERNEL_MISO <= KERNEL_MOSI;
+
+
+
+
+		-- Dummy for the compiler 
+		-- to avoid optimisation
+		if count = "11111" or count_bit = "11111" then
+			LED_7 <= '1';
 		end if;
 	end if;		
 end process;

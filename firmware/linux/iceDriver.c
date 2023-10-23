@@ -432,8 +432,12 @@ static int __init fpga_driver_init(void)
         return -ENOMEM;
     }
 
+    /** 
+     * The mode is set to 1 to pass the
+     * High clock control signal to FPGA
+     */
     spi_dev0->chip_select = 0;
-    spi_dev0->mode = SPI_MODE_0;
+    spi_dev0->mode = SPI_MODE_1;
     spi_dev0->bits_per_word = 8;
     spi_dev0->max_speed_hz = 1000000;
 
