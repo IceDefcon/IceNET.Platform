@@ -49,12 +49,12 @@ architecture rtl of NetworkAnalyser is
 ------------------------
 signal button_debounced			: std_logic := '1';
 
-constant CMD 					: std_logic_vector(7 downto 0) := "01000001";
-signal index 					: std_logic_vector(3 downto 0) := (others => '0');
-signal count 					: std_logic_vector(5 downto 0) := (others => '0');
-signal count_bit 				: std_logic_vector(4 downto 0) := (others => '0');
-signal count_HI 				: std_logic_vector(4 downto 0) := (others => '0');
-signal count_LO 				: std_logic_vector(4 downto 0) := (others => '0');
+constant DATA					: std_logic_vector(7 downto 0) := "11101010"; -- 0xEA
+
+signal run 						: std_logic := '0';
+signal index 					: integer := 0;
+signal count 					: std_logic_vector(4 downto 0) := (others => '0');
+signal count_bit 				: std_logic_vector(3 downto 0) := (others => '0');
 
 signal interrupt_break 			: std_logic_vector(25 downto 0) := (others => '0');
 signal interrupt_length 		: std_logic_vector(3 downto 0) := (others => '0');
@@ -110,40 +110,37 @@ end process;
 -- SPI Process
 --------------------
 spi_process:
-process(CLOCK, KERNEL_SCLK, count, count_bit)
+process(CLOCK, KERNEL_SCLK, run, count, count_bit)
 begin
 	if rising_edge(CLOCK) then
 
+		if run = '1' then
+			if count = "00000" then
+				count_bit <= count_bit + '1';
+			end if;
+		end if;
+
+		index <= to_integer(unsigned(count_bit));
+
 		if KERNEL_SCLK = '1' then
-			hold = '0';
-			
-
+			run <= '1';
+			count <= count + '1';
+			KERNEL_MISO <= DATA(7 - index); -- Other way return on the wire
 		elsif KERNEL_SCLK = '0' then
-			count <= count + '1';
-			KERNEL_MISO <= KERNEL_MOSI;
+			if count > 0 then
+				count <= count - '1';
+			end if;
+			KERNEL_MISO <= DATA(7 - index); -- Other way return on the wire
+			if count_bit = "0111" then
+				run <= '0';
+				count_bit <= "0000";
+			end if;
 		end if;
-
-		if hold = '0' then
-			count <= count + '1';
-		end if;
-
-
-
-		if count = "00000" then
-			count_bit <= count_bit + '1';
-		end if;
-
-
-
-
-		KERNEL_MISO <= KERNEL_MOSI;
-
-
-
 
 		-- Dummy for the compiler 
 		-- to avoid optimisation
-		if count = "11111" or count_bit = "11111" then
+		-- of the logic signals
+		if count = "00000" or count_bit = "0000"  or run = '1' then
 			LED_7 <= '1';
 		end if;
 	end if;		
