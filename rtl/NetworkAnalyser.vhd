@@ -49,13 +49,10 @@ architecture rtl of NetworkAnalyser is
 ------------------------
 signal button_debounced			: std_logic := '1';
 
-constant CMD : std_logic_vector(7 downto 0) := "10000001";
-signal pulse_stop 				: std_logic := '0';
-signal pulse_start 				: std_logic := '0';
-
-signal transmission 			: std_logic := '0';
-signal bit_length 				: std_logic_vector(5 downto 0) := (others => '0');
-signal total_length 			: std_logic_vector(8 downto 0) := (others => '0');
+constant CMD 					: std_logic_vector(7 downto 0) := "01000001";
+signal index 					: std_logic_vector(3 downto 0) := (others => '0');
+signal count_HI 				: std_logic_vector(4 downto 0) := (others => '0');
+signal count_LO 				: std_logic_vector(4 downto 0) := (others => '0');
 
 signal interrupt_break 			: std_logic_vector(25 downto 0) := (others => '0');
 signal interrupt_length 		: std_logic_vector(3 downto 0) := (others => '0');
@@ -110,44 +107,29 @@ end process;
 --------------------
 -- SPI Process
 --------------------
-
-process(CLOCK, KERNEL_CS, KERNEL_SCLK, transmission, bit_length, total_length)
-	variable index : integer := 0;
+spi_process:
+process(CLOCK, KERNEL_SCLK, count_HI, count_LO)
 begin
 	if rising_edge(CLOCK) then
-		if KERNEL_CS = '0' then
+		if KERNEL_SCLK = '1' then
+			count_HI <= count_HI + '1';
 
-			if transmission = '0' then
-				if KERNEL_SCLK = '1' then
-					transmission <= '1';
-				end if;
+			if count_HI < "11000" then
+				KERNEL_MISO <= KERNEL_MOSI;
+			else
+				count_HI <= (others => '0');
 			end if;
-
-			if transmission = '1' then
-				KERNEL_MISO <= CMD(index);
-				bit_length <= bit_length + '1';
-				total_length <= total_length + '1';
+		elsif KERNEL_SCLK = '0' then
+			if count_LO < 11000 then
+				KERNEL_MISO <= KERNEL_MOSI;
+			else
+				count_LO <= (others => '0');
 			end if;
-
-			if bit_length = "110010" then
-				index := index + 1;
-				bit_length <= "000000";
-			end if;
-
-			if index = 7 then
-				index := 0;
-			end if;
-			
-			if total_length = "110010000" then
-				transmission <= '0';
-				total_length <= "000000000";
-			end if;
-
-		else
-			KERNEL_MISO <= '0';
 		end if;
-	end if;
+	end if;		
 end process;
+
+
 
 -----------------------------------
 -- Interrupt pulse generator
