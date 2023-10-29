@@ -31,8 +31,13 @@ port
 	KERNEL_MISO 	: out std_logic; 	-- PIN_A6 :: BBB P9_21 :: BROWN 	:: SPI0_D0
 	KERNEL_SCLK 	: in  std_logic; 	-- PIN_A8 :: BBB P9_22 :: BLACK 	:: SPI0_SCLK
 	
-	INT_IN 			: in  std_logic; 	-- PIN_A3 :: BBB P8_7  :: YELLOW 	:: OPEN COLLECTOR
-	INT_OUT 			: out std_logic; 	-- PIN_A4 :: BBB P9_12 :: BLUE 		:: GPIO 66
+	I2C_IN_SDA 		: in 	std_logic; 	-- PIN_A9 	:: BBB P9_20 :: BLUE
+	I2C_IN_SCK 		: in 	std_logic; 	-- PIN_A10	:: BBB P9_19 :: GREEN-ORANGE
+	I2C_OUT_SDA 	: out std_logic; 	-- PIN_A13 	:: BBB P9_20 :: WHITE
+	I2C_OUT_SCK 	: out std_logic; 	-- PIN_A14	:: BBB P9_19 :: PURPLE	
+	
+	INT_1 			: out std_logic; 	-- PIN_A3 :: BBB P9_12 :: BLACK
+	INT_2 			: out std_logic; 	-- PIN_A4 :: BBB P9_14 :: WHITE
 	
 	BUTTON_0 		: in  std_logic; 	-- PIN_H20 :: Reset
 	BUTTON_1 		: in  std_logic; 	-- PIN_K19 :: Doesnt Work :: WTF xD Broken Button or Incorrect Schematic
@@ -61,6 +66,10 @@ signal interrupt_length 		: std_logic_vector(3 downto 0) := (others => '0');
 signal interrupt_signal 		: std_logic := '0';
 signal interrupt_cutoff 		: std_logic := '0';
 
+signal ALIGNED_KERNEL_SCLK 	: std_logic := '0';
+
+signal count_i2c 					: std_logic_vector(7 downto 0) := (others => '0');
+signal clock_i2c 					: std_logic := '0';
 ----------------------------
 -- COMPONENTS DECLARATION --
 ----------------------------
@@ -96,7 +105,7 @@ process(CLOCK)
 begin
 	if rising_edge(CLOCK) then
 		--LED_7 	<= '0';
-		LED_6 	<= '0';
+		--LED_6 	<= '0';
 		LED_5 	<= '0';
 		LED_4 	<= '0';
 		LED_3 	<= BUTTON_3;
@@ -106,11 +115,24 @@ begin
 	end if;
 end process;
 
+clock_align_process:
+process(CLOCK, KERNEL_SCLK)
+begin
+	if rising_edge(CLOCK) then
+		if KERNEL_SCLK = '1' then
+			ALIGNED_KERNEL_SCLK <= '1';
+		elsif KERNEL_SCLK = '0' then
+			ALIGNED_KERNEL_SCLK <= '0';
+		end if;
+	end if;
+end process;
+
+
 --------------------
 -- SPI Process
 --------------------
 spi_process:
-process(CLOCK, KERNEL_SCLK, run, count, count_bit)
+process(CLOCK, ALIGNED_KERNEL_SCLK, run, count, count_bit)
 begin
 	if rising_edge(CLOCK) then
 
@@ -122,11 +144,11 @@ begin
 
 		index <= to_integer(unsigned(count_bit));
 
-		if KERNEL_SCLK = '1' then
+		if ALIGNED_KERNEL_SCLK = '1' then
 			run <= '1';
 			count <= count + '1';
 			KERNEL_MISO <= DATA(7 - index); -- Other way return on the wire
-		elsif KERNEL_SCLK = '0' then
+		elsif ALIGNED_KERNEL_SCLK = '0' then
 			if count > 0 then
 				count <= count - '1';
 			end if;
@@ -182,6 +204,28 @@ end process;
 ----------------
 -- Interrupts --
 ----------------
-INT_OUT 	<= interrupt_signal;
+INT_1 			<= interrupt_signal;
+
+------------------------------
+-- I2C Clock Generator
+-- 0xFA >> 2*250*20ns
+-- 10000ns = 10us >> 100kHz
+------------------------------
+
+i2c_command_process:
+process(CLOCK, count_i2c)
+begin
+	if rising_edge(CLOCK) then
+		count_i2c <= count_i2c + '1';	
+	
+		if count_i2c = "11111010" then
+			clock_i2c <= not clock_i2c;
+			count_i2c <= (others => '0');
+		end if;
+	end if;
+end process;
+
+LED_6 <= clock_i2c;
+INT_2 <= button_debounced;
 
 end rtl;

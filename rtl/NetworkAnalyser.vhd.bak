@@ -10,8 +10,8 @@ use ieee.std_logic_unsigned.all;
 -- FPGA Chip 				--
 -- Cyclone IV 				--
 -- EP4CE15F23C8 			--
-------------------------------
 
+------------------------------
 entity NetworkAnalyser is
 port
 (
@@ -32,7 +32,7 @@ port
 	KERNEL_SCLK 	: in  std_logic; 	-- PIN_A8 :: BBB P9_22 :: BLACK 	:: SPI0_SCLK
 	
 	INT_IN 			: in  std_logic; 	-- PIN_A3 :: BBB P8_7  :: YELLOW 	:: OPEN COLLECTOR
-	INT_OUT 		: out std_logic; 	-- PIN_A4 :: BBB P9_12 :: BLUE 		:: GPIO 66
+	INT_OUT 			: out std_logic; 	-- PIN_A4 :: BBB P9_12 :: BLUE 		:: GPIO 66
 	
 	BUTTON_0 		: in  std_logic; 	-- PIN_H20 :: Reset
 	BUTTON_1 		: in  std_logic; 	-- PIN_K19 :: Doesnt Work :: WTF xD Broken Button or Incorrect Schematic
@@ -47,9 +47,20 @@ architecture rtl of NetworkAnalyser is
 ------------------------
 -- SIGNAL DECLARATION --
 ------------------------
-signal button_debounced	: std_logic := '1';
-signal stop 				: std_logic := '0';
-signal pulse 				: std_logic := '0';
+signal button_debounced			: std_logic := '1';
+
+constant DATA					: std_logic_vector(7 downto 0) := "11101010"; -- 0xEA
+
+signal run 						: std_logic := '0';
+signal done 					: std_logic := '0';
+signal index 					: integer := 0;
+signal count 					: std_logic_vector(4 downto 0) := (others => '0');
+signal count_bit 				: std_logic_vector(3 downto 0) := (others => '0');
+
+signal interrupt_break 			: std_logic_vector(25 downto 0) := (others => '0');
+signal interrupt_length 		: std_logic_vector(3 downto 0) := (others => '0');
+signal interrupt_signal 		: std_logic := '0';
+signal interrupt_cutoff 		: std_logic := '0';
 
 ----------------------------
 -- COMPONENTS DECLARATION --
@@ -63,7 +74,7 @@ port
 );
 end component;
 
------------------
+------------------
 -- MAIN ROUTINE --
 ------------------
 begin
@@ -85,55 +96,102 @@ status_led_process:
 process(CLOCK)
 begin
 	if rising_edge(CLOCK) then
-		LED_7 	<= '0';
+		--LED_7 	<= '0';
 		LED_6 	<= '0';
 		LED_5 	<= '0';
 		LED_4 	<= '0';
 		LED_3 	<= BUTTON_3;
 		LED_2 	<= BUTTON_2;
-		LED_1 	<= BUTTON_1; -- BUTTON_1 is not working
+		LED_1 	<= BUTTON_0; -- BUTTON_1 is not working
 		LED_0 	<= BUTTON_0;
+	end if;
+end process;
+
+--------------------
+-- SPI Process
+--------------------
+spi_process:
+process(CLOCK, KERNEL_SCLK, run, done, count, count_bit)
+begin
+	if rising_edge(CLOCK) then
+
+		if run = '1' then
+			if done = '0' then
+				if count = "00000" then
+					count_bit <= count_bit + '1';
+					done <= '1';
+				end if;
+			end if;
+		end if;
+
+		-- This is to avoid metastability
+		-- When count = "0000"
+		if count = "1100" then
+			done = '0';
+		end if;
+
+		index <= to_integer(unsigned(count_bit));
+
+		if KERNEL_SCLK = '1' then
+			run <= '1';
+			count <= count + '1';
+			KERNEL_MISO <= DATA(7 - index); -- Other way return on the wire
+		elsif KERNEL_SCLK = '0' then
+			if count > 0 then
+				count <= count - '1';
+			end if;
+			KERNEL_MISO <= DATA(7 - index); -- Other way return on the wire
+			if count_bit = "0111" then
+				run <= '0';
+				count_bit <= "0000";
+			end if;
+		end if;
+
+		-- Dummy for the compiler 
+		-- to avoid optimisation
+		-- of the logic signals
+		if count = "00000" or count_bit = "0000"  or run = '1' then
+			LED_7 <= '1';
+		end if;
+	end if;		
+end process;
+
+
+
+-----------------------------------
+-- Interrupt pulse generator
+-- 0x3FFFFFF/50 MHz
+-- 67108863/50000000 Hz = 1.342 sec
+-----------------------------------
+process(CLOCK, interrupt_cutoff, interrupt_break)
+begin
+	if rising_edge(CLOCK) then
+
+		if interrupt_cutoff = '1' then
+			interrupt_length <= interrupt_length + '1';
+			if interrupt_length = "1111" then
+				interrupt_signal <= '0';
+				interrupt_cutoff <= '0';
+				interrupt_length <= (others => '0');
+			end if;
+		end if;
+
+		interrupt_break <= interrupt_break + '1';
+
+		if interrupt_break = "11111111111111111111111111" then
+			if interrupt_signal = '0' then
+				interrupt_signal <= '1';
+			end if;
+			interrupt_break <= (others => '0');
+			interrupt_cutoff <= '1';
+		end if;
+		
 	end if;
 end process;
 
 ----------------
 -- Interrupts --
 ----------------
-gpio_interrupt_process:
-process(CLOCK)
-begin
-	if rising_edge(CLOCK) then
-		INT_OUT 	<= button_debounced; -- Testing Response Interrupt back to CPU
-	end if;
-end process;
-
---------------------
--- SPI Process
-----------------------
-process(CLOCK, KERNEL_CS, KERNEL_SCLK, stop)
-begin
-	if rising_edge(CLOCK) then
-		if KERNEL_CS = '0' then
-			if KERNEL_SCLK = '0' then
-				if stop = '0' then
-					if (pulse = '0') then
-						pulse <= '1';
-					else
-						pulse <= '0';
-					end if;
-					KERNEL_MISO <= pulse;
-					stop <= '1';
-				end if;
-			elsif KERNEL_SCLK = '1' then
-				stop <= '0';
-			end if;
-		end if;
-	end if;
-end process;
-
---------------------
--- SPI Looptrough --
---------------------
---KERNEL_MISO <= KERNEL_MOSI;
+INT_OUT 	<= interrupt_signal;
 
 end rtl;
