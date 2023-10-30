@@ -369,6 +369,16 @@ static irqreturn_t isr_spi(int irq, void *data)
     return IRQ_HANDLED;
 }
 
+static irqreturn_t isr_api(int irq, void *data)
+{
+    static int counter = 0;
+
+    printk(KERN_INFO "[FPGA][ISR] API Response interrupt [%d] @ Pin [%d]\n", counter, GPIO_IN_INTERRUPT_API);
+    counter++;
+
+    return IRQ_HANDLED;
+}
+
 //////////////////////////
 //                      //
 //                      //
