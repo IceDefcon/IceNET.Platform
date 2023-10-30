@@ -93,10 +93,13 @@ static struct file_operations fops =
 //                                      //
 //////////////////////////////////////////
 
-static struct spi_device *spi_dev0;
+static struct spi_device *spi_dev;
 
 static volatile uint8_t tx_res_buffer[] = {0x41};  // Data to be transmitted for SPI0
 static volatile uint8_t rx_res_buffer[1];               // Buffer to receive data for SPI0
+
+static volatile uint8_t tx_req_buffer[] = {0xDC,0xBA};  // Data to be transmitted for SPI1
+static volatile uint8_t rx_req_buffer[2];               // Buffer to receive data for SPI1
 
 //////////////////////////
 //                      //
@@ -305,13 +308,13 @@ static void spi_response_func(struct work_struct *work)
     spi_message_init(&msg);
     spi_message_add_tail(&transfer, &msg);
 
-    ret = spi_sync(spi_dev0, &msg);
+    ret = spi_sync(spi_dev, &msg);
     if (ret < 0) {
-        printk(KERN_ERR "[FPGA][SPI] SPI transfer for SPI response: %d\n", ret);
+        printk(KERN_ERR "[FPGA][SPI] SPI transfer for SPI response failed: %d\n", ret);
         return;
     }
 
-    printk(KERN_INFO "[FPGA][SPI] Received data for SPI 0 ---==[ RESPONSE ]==---");
+    printk(KERN_INFO "[FPGA][SPI] Received data for SPI ---==[ RESPONSE ]==---");
     for (i = 0; i < sizeof(rx_res_buffer); ++i) {
         printk(KERN_INFO "[FPGA][SPI] Byte %d: 0x%02x\n", i, rx_res_buffer[i]);
     }
@@ -332,13 +335,13 @@ static void spi_request_func(struct work_struct *work)
     spi_message_init(&msg);
     spi_message_add_tail(&transfer, &msg);
 
-    ret = spi_sync(spi_dev0, &msg);
+    ret = spi_sync(spi_dev, &msg);
     if (ret < 0) {
-        printk(KERN_ERR "[FPGA][SPI] SPI transfer for SPI 0 failed: %d\n", ret);
+        printk(KERN_ERR "[FPGA][SPI] SPI transfer for SPI request failed: %d\n", ret);
         return;
     }
 
-    printk(KERN_INFO "[FPGA][SPI] Received data for SPI 0 ---==[ REQUEST ]==---");
+    printk(KERN_INFO "[FPGA][SPI] Received data for SPI ---==[ REQUEST ]==---");
     for (i = 0; i < sizeof(rx_req_buffer); ++i) {
         printk(KERN_INFO "[FPGA][SPI] Byte %d: 0x%02x\n", i, rx_req_buffer[i]);
     }
@@ -416,8 +419,8 @@ static int __init fpga_driver_init(void)
     }
 
     // Prepare the SPI devices
-    spi_dev0 = spi_alloc_device(spi_master0);
-    if (!spi_dev0) {
+    spi_dev = spi_alloc_device(spi_master0);
+    if (!spi_dev) {
         printk(KERN_ERR "[FPGA][SPI] Failed to allocate SPI device for SPI0\n");
         return -ENOMEM;
     }
@@ -426,15 +429,15 @@ static int __init fpga_driver_init(void)
      * The mode is set to 1 to pass the
      * High clock control signal to FPGA
      */
-    spi_dev0->chip_select = 0;
-    spi_dev0->mode = SPI_MODE_1;
-    spi_dev0->bits_per_word = 8;
-    spi_dev0->max_speed_hz = 1000000;
+    spi_dev->chip_select = 0;
+    spi_dev->mode = SPI_MODE_1;
+    spi_dev->bits_per_word = 8;
+    spi_dev->max_speed_hz = 1000000;
 
-    ret = spi_setup(spi_dev0);
+    ret = spi_setup(spi_dev);
     if (ret < 0) {
         printk(KERN_ERR "[FPGA][SPI] Failed to setup SPI device for SPI0: %d\n", ret);
-        spi_dev_put(spi_dev0);
+        spi_dev_put(spi_dev);
         return ret;
     }
 
@@ -489,7 +492,7 @@ static int __init fpga_driver_init(void)
     {
         printk(KERN_ERR "[FPGA][IRQ] Failed to request IRQ for SPI\n");
         gpio_free(GPIO_IN_INTERRUPT_SPI);
-        spi_dev_put(spi_dev0);
+        spi_dev_put(spi_dev);
         return result;
     }
     printk(KERN_INFO "[FPGA][IRQ] ISR for SPI initialized\n");
@@ -595,7 +598,7 @@ static void __exit fpga_driver_exit(void)
         spi_request_wq = NULL;
     }
 
-    spi_dev_put(spi_dev0);
+    spi_dev_put(spi_dev);
     printk(KERN_INFO "[FPGA][SPI] Exit\n");
 
     //////////////////////////////////
