@@ -66,6 +66,9 @@ signal interrupt_length 		: std_logic_vector(3 downto 0) := (others => '0');
 signal interrupt_signal 		: std_logic := '0';
 signal interrupt_cutoff 		: std_logic := '0';
 
+signal interrupt_button 		: std_logic := '0';
+signal interrupt_stop 			: std_logic := '0';
+
 signal ALIGNED_KERNEL_SCLK 	: std_logic := '0';
 
 signal count_i2c 					: std_logic_vector(7 downto 0) := (others => '0');
@@ -201,10 +204,32 @@ begin
 	end if;
 end process;
 
-----------------
--- Interrupts --
-----------------
-INT_1 			<= interrupt_signal;
+----------------------
+-- Interrupt button
+-- 50MHz Pulse
+----------------------
+interrupt_button_process:
+process(CLOCK, button_debounced, interrupt_stop)
+begin
+	if rising_edge(CLOCK) then
+		if button_debounced = '0' then
+			if interrupt_stop = '0' then
+				interrupt_button <= '1';
+				interrupt_stop <= '1';
+			else
+				interrupt_button <= '0';
+			end if;
+		else
+			interrupt_stop <= '0';
+		end if;
+	end if;
+end process;
+
+----------------------
+-- Interrupts
+----------------------
+INT_1 <= interrupt_signal;
+INT_2 <= interrupt_button;
 
 ------------------------------
 -- I2C Clock Generator
@@ -226,6 +251,6 @@ begin
 end process;
 
 LED_6 <= clock_i2c;
-INT_2 <= button_debounced;
+
 
 end rtl;
