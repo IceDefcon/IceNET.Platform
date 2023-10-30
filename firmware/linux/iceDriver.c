@@ -480,8 +480,8 @@ static int __init fpga_driver_init(void)
     // GPIO ISR :: CONFIG           //
     //                              //
     //////////////////////////////////
-    int irq_spi;
-    int irq_can;
+    int irq_1;
+    int irq_2;
     int result;
 
     result = gpio_request(GPIO_IN_SPI_INTERRUPT_1, "Input GPIO SPI Interrupt");
@@ -497,14 +497,14 @@ static int __init fpga_driver_init(void)
         gpio_free(GPIO_IN_SPI_INTERRUPT_1);
         return result;
     }
-    irq_spi = gpio_to_irq(GPIO_IN_SPI_INTERRUPT_1);
-    if (irq_spi < 0) 
+    irq_1 = gpio_to_irq(GPIO_IN_SPI_INTERRUPT_1);
+    if (irq_1 < 0) 
     {
         printk(KERN_ERR "[FPGA][IRQ] Failed to get IRQ number for SPI\n");
         gpio_free(GPIO_IN_SPI_INTERRUPT_1);
-        return irq_spi;
+        return irq_1;
     }
-    result = request_irq(irq_spi, isr_spi_response, IRQF_TRIGGER_RISING, "Input GPIO SPI Interrupt", NULL);
+    result = request_irq(irq_1, isr_spi_response, IRQF_TRIGGER_RISING, "Input GPIO SPI Interrupt", NULL);
     if (result < 0) 
     {
         printk(KERN_ERR "[FPGA][IRQ] Failed to request IRQ for SPI\n");
@@ -592,11 +592,11 @@ static void __exit fpga_driver_exit(void)
     // ISR :: DESTROY                //
     //                              //
     //////////////////////////////////
-    int irq_spi;
-    int irq_can;
+    int irq_1;
+    int irq_2;
 
-    irq_spi = gpio_to_irq(GPIO_IN_SPI_INTERRUPT_1);
-    free_irq(irq_spi, NULL);
+    irq_1 = gpio_to_irq(GPIO_IN_SPI_INTERRUPT_1);
+    free_irq(irq_1, NULL);
     gpio_free(GPIO_IN_SPI_INTERRUPT_1);
     printk(KERN_INFO "[FPGA][IRQ] SPI Exit\n");
 
