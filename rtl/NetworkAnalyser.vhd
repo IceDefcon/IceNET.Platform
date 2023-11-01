@@ -15,7 +15,7 @@ use ieee.std_logic_unsigned.all;
 entity NetworkAnalyser is
 port
 (
-	CLOCK 			: in std_logic; 	-- PIN_T2 :: 50Mhz FPGA
+	CLOCK 			: in std_logic; 	-- PIN_T2 :: 50Mhz Clock
 	
 	LED_0 			: out std_logic; 	-- PIN_U7
 	LED_1 			: out std_logic; 	-- PIN_U8
@@ -26,24 +26,43 @@ port
 	LED_6 			: out std_logic; 	-- PIN_M8
 	LED_7 			: out std_logic; 	-- PIN_N8
 	
-	KERNEL_CS 		: in  std_logic; 	-- PIN_A5 :: BBB P9_17 :: PULPLE 	:: SPI0_CS0
-	KERNEL_MOSI 	: in  std_logic; 	-- PIN_A7 :: BBB P9_18 :: BLUE 		:: SPI0_D1
-	KERNEL_MISO 	: out std_logic; 	-- PIN_A6 :: BBB P9_21 :: BROWN 	:: SPI0_D0
-	KERNEL_SCLK 	: in  std_logic; 	-- PIN_A8 :: BBB P9_22 :: BLACK 	:: SPI0_SCLK
+	KERNEL_CS 		: in  std_logic; 	-- PIN_A5 	:: BBB P9_17 :: PULPLE 	:: SPI0_CS0
+	KERNEL_MOSI 	: in  std_logic; 	-- PIN_A7 	:: BBB P9_18 :: BLUE 		:: SPI0_D1
+	KERNEL_MISO 	: out std_logic; 	-- PIN_A6 	:: BBB P9_21 :: BROWN 	:: SPI0_D0
+	KERNEL_SCLK 	: in  std_logic; 	-- PIN_A8 	:: BBB P9_22 :: BLACK 	:: SPI0_SCLK
 	
 	I2C_IN_SDA 		: in 	std_logic; 	-- PIN_A9 	:: BBB P9_20 :: BLUE
-	I2C_IN_SCK 		: in 	std_logic; 	-- PIN_A10	:: BBB P9_19 :: GREEN-ORANGE
-	I2C_OUT_SDA 	: out std_logic; 	-- PIN_A13 	:: BBB P9_20 :: WHITE
-	I2C_OUT_SCK 	: out std_logic; 	-- PIN_A14	:: BBB P9_19 :: PURPLE	
+	I2C_IN_SCK 		: in 	std_logic; 	-- PIN_A10 	:: BBB P9_19 :: GREEN-ORANGE
 	
-	INT_1 			: out std_logic; 	-- PIN_A3 :: BBB P9_12 :: BLACK
-	INT_2 			: out std_logic; 	-- PIN_A4 :: BBB P9_14 :: WHITE
+	INT_1 			: out std_logic; 	-- PIN_A3 	:: BBB P9_12 :: BLACK
+	INT_2 			: out std_logic; 	-- PIN_A4 	:: BBB P9_14 :: WHITE
 	
-	BUTTON_0 		: in  std_logic; 	-- PIN_H20 :: Reset
-	BUTTON_1 		: in  std_logic; 	-- PIN_K19 :: Doesnt Work :: WTF xD Broken Button or Incorrect Schematic
+	BUTTON_0 		: in  std_logic; 	-- PIN_H20 	:: Reset
+	BUTTON_1 		: in  std_logic; 	-- PIN_K19 	:: Doesnt Work :: Broken Button or Incorrect Schematic
 	BUTTON_2 		: in  std_logic; 	-- PIN_J18
-	BUTTON_3 		: in  std_logic 	-- PIN_K18
+	BUTTON_3 		: in  std_logic; 	-- PIN_K18
+	
+	MDC 			: out std_logic; 	-- PIN_AA14 :: Serial Management Interface Clock
+	MDIO 			: inout std_logic;	-- PIN_AB14 :: Serial Management Data IO
+	CRS 			: in std_logic; 	-- PIN_AA15 :: When 10BASE-T packet is received CRS is asserted
+	nINT 			: in std_logic; 	-- PIN_AB15 :: Active low interrupt output. Place an external resistor pull-up to VDDIO
+	Rx1 			: in std_logic; 	-- PIN_AA16 :: Rx[1]
+	Rx0 			: in std_logic; 	-- PIN_AB16 :: Rx[0]
+	Tx0 			: out std_logic; 	-- PIN_AA17 :: Tx[0]
+	Tx_EN 		: out std_logic; 	-- PIN_AB17 :: Indicates that valid transmission data is present on Tx[0:1]
+	NC 			: in std_logic; 	-- PIN_AA18 :: Not connected
+	Tx1 			: out std_logic; 	-- PIN_AB18 :: Tx[1]
 
+	O_MDC 			: out std_logic; 	-- PIN_N1 :: Serial Management Interface Clock
+	O_MDIO 			: inout std_logic;	-- PIN_N2 :: Serial Management Data IO
+	O_CRS 			: in std_logic; 	-- PIN_M1 :: When 10BASE-T packet is received CRS is asserted
+	O_nINT 			: in std_logic; 	-- PIN_M2 :: Active low interrupt output. Place an external resistor pull-up to VDDIO
+	O_Rx1 			: in std_logic; 	-- PIN_J1 :: Rx[1]
+	O_Rx0 			: in std_logic; 	-- PIN_J2 :: Rx[0]
+	O_Tx0 			: out std_logic; 	-- PIN_H1 :: Tx[0]
+	O_Tx_EN 		: out std_logic; 	-- PIN_H2 :: Indicates that valid transmission data is present on Tx[0:1]
+	O_NC 			: in std_logic; 	-- PIN_F1 :: Not connected
+	O_Tx1 			: out std_logic 	-- PIN_F2 :: Tx[1]
 );
 end NetworkAnalyser;
 
@@ -252,5 +271,14 @@ end process;
 
 LED_6 <= clock_i2c;
 
+-------------------------
+-- Ethernet Loopthrough
+-------------------------
+O_Tx0 	<= Rx0;
+O_Tx1 	<= Rx1;
+Tx0 		<= O_Rx0;
+Tx1 		<= O_Rx1;
+Tx_EN 	<= not O_nINT;
+O_Tx_EN 	<= not nINT;
 
 end rtl;

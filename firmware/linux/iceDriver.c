@@ -167,7 +167,7 @@ int StateMachineThread(void *data)
         switch(STATE)
         {
             case IDLE:
-                printk(KERN_INFO "[FPGA][STM] IDLE State [%d]\n",counter);
+                printk(KERN_INFO "[FPGA][STM] Config State [%d]\n",counter);
                 break;
 
             case SPI:

@@ -26,15 +26,13 @@ iceCOM::~iceCOM()
    	}
 }
 
-void
-iceCOM::initThread()
+void iceCOM::initThread()
 {
 	Debug::Info("iceCOM :: Init iceCOMThread");
 	m_iceThread = std::thread(&iceCOM::iceCOMThread, this);
 }
 
-void 
-iceCOM::iceCOMThread()
+void iceCOM::iceCOMThread()
 {
 	Debug::Info("iceCOM :: Start iceCOMThread");
 
@@ -64,8 +62,7 @@ iceCOM::iceCOMThread()
 	Debug::Info("iceCOM :: iceCOMThread Terminate");
 }
 
-int 
-iceCOM::device_open(const char* device)
+int iceCOM::device_open(const char* device)
 {
 	m_file_descriptor = open(device, O_RDWR);
 	if (m_file_descriptor < 0)
@@ -81,8 +78,7 @@ iceCOM::device_open(const char* device)
 	return OK;
 }
 
-int 
-iceCOM::device_read()
+int iceCOM::device_read()
 {
 	int ret;
 	char console_RX[m_BUFFER_LENGTH];
@@ -102,8 +98,7 @@ iceCOM::device_read()
 	return OK;
 }
 
-int 
-iceCOM::device_write()
+int iceCOM::device_write()
 {
 	int ret;
 	char console_TX[m_BUFFER_LENGTH];
@@ -131,15 +126,13 @@ iceCOM::device_write()
 	return OK;
 }
 
-int 
-iceCOM::device_close()
+int iceCOM::device_close()
 {
 	close(m_file_descriptor);
 	return OK;
 }
 
-bool 
-iceCOM::terminate()
+bool iceCOM::terminate()
 {
 	return m_killThread;
 }
