@@ -15,7 +15,7 @@ Hardware firewall to detect potential threats on Ethernet Wire
 
 1. Order FTR-110-03-G-D-06 :: JTAG Pin Header
 2. Solder JTAG Header to the PCB
-2. Boot Kernel trough the JTAG via U-Boot
+3. Boot Kernel trough the JTAG via U-Boot
 
 
 # ICE

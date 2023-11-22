@@ -261,6 +261,7 @@ process(CLOCK, count_i2c)
 begin
 	if rising_edge(CLOCK) then
 		count_i2c <= count_i2c + '1';	
+	
 		if count_i2c = "11111010" then
 			clock_i2c <= not clock_i2c;
 			count_i2c <= (others => '0');
