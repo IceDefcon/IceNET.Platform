@@ -16,7 +16,7 @@ entity Platform is
 port
 (
 	CLOCK 			: in std_logic; 	-- PIN_T2 :: 50Mhz Clock
-
+	
 	LED_0 			: out std_logic; 	-- PIN_U7
 	LED_1 			: out std_logic; 	-- PIN_U8
 	LED_2 			: out std_logic;	-- PIN_R7
@@ -25,18 +25,18 @@ port
 	LED_5 			: out std_logic;	-- PIN_P8
 	LED_6 			: out std_logic; 	-- PIN_M8
 	LED_7 			: out std_logic; 	-- PIN_N8
-
+	
 	KERNEL_CS 		: in  std_logic; 	-- PIN_A5 	:: BBB P9_17 :: PULPLE 	:: SPI0_CS0
 	KERNEL_MOSI 	: in  std_logic; 	-- PIN_A7 	:: BBB P9_18 :: BLUE 		:: SPI0_D1
 	KERNEL_MISO 	: out std_logic; 	-- PIN_A6 	:: BBB P9_21 :: BROWN 	:: SPI0_D0
 	KERNEL_SCLK 	: in  std_logic; 	-- PIN_A8 	:: BBB P9_22 :: BLACK 	:: SPI0_SCLK
-
+	
 	I2C_IN_SDA 		: in 	std_logic; 	-- PIN_A9 	:: BBB P9_20 :: BLUE
 	I2C_IN_SCK 		: in 	std_logic; 	-- PIN_A10 	:: BBB P9_19 :: GREEN-ORANGE
-
-	INT_CPU 			: out std_logic; 	-- PIN_A3 	:: BBB P9_12 :: BLACK
+	
+	INT_CPU 		: out std_logic; 	-- PIN_A3 	:: BBB P9_12 :: BLACK
 	INT_FPGA 		: in 	std_logic; 	-- PIN_A4 	:: BBB P9_14 :: WHITE
-
+	
 	BUTTON_0 		: in  std_logic; 	-- PIN_H20 	:: Reset
 	BUTTON_1 		: in  std_logic; 	-- PIN_K19 	:: Doesnt Work :: Broken Button or Incorrect Schematic
 	BUTTON_2 		: in  std_logic; 	-- PIN_J18
@@ -61,7 +61,7 @@ signal count 					: std_logic_vector(4 downto 0) := (others => '0');
 signal count_bit 				: std_logic_vector(3 downto 0) := (others => '0');
 
 -- Interrupt Pulse Generator
-signal interrupt_period 		: std_logic_vector(25 downto 0) := (others => '0');
+signal interrupt_break 			: std_logic_vector(25 downto 0) := (others => '0');
 signal interrupt_length 		: std_logic_vector(3 downto 0) := (others => '0');
 signal interrupt_signal 		: std_logic := '0';
 signal interrupt_cutoff 		: std_logic := '0';
@@ -161,14 +161,14 @@ end process;
 
 -----------------------------------
 -- Interrupt pulse generator
--- 0x2FAF07F/50 MHz
--- (49999999 + 1)/50000000 Hz = 1 sec
+-- 0x3FFFFFF/50 MHz
+-- 67108864/50000000 Hz = 1.342 sec
 -----------------------------------
-process(CLOCK, interrupt_cutoff, interrupt_period)
+process(CLOCK, interrupt_cutoff, interrupt_break)
 begin
 	if rising_edge(CLOCK) then
 
-		-- Interrupt is 16 * 20ns ---> 320ns Long
+		-- Interrupt is cut off after 0xF clock cycles
 		if interrupt_cutoff = '1' then
 			interrupt_length <= interrupt_length + '1';
 			if interrupt_length = "1111" then
@@ -178,14 +178,14 @@ begin
 			end if;
 		end if;
 
-		interrupt_period <= interrupt_period + '1';
+		interrupt_break <= interrupt_break + '1';
 
-		-- Interrupt is generated every (49999999 + 1) * 20ns ---> 1s
-		if interrupt_period = "10111110101111000001111111" then
+		-- Interrupt is generated when counter = 0x3FFFFFFF
+		if interrupt_break = "10111110101111000001111111" then
 			if interrupt_signal = '0' then
 				interrupt_signal <= '1';
 			end if;
-			interrupt_period <=(others => '0');
+			interrupt_break <= (others => '0');
 			interrupt_cutoff <= '1';
 		end if;
 		
