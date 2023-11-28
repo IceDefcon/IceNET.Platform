@@ -34,8 +34,8 @@ port
 	I2C_IN_SDA 		: in 	std_logic; 	-- PIN_A9 	:: BBB P9_20 :: BLUE
 	I2C_IN_SCK 		: in 	std_logic; 	-- PIN_A10 	:: BBB P9_19 :: GREEN-ORANGE
 	
-	INT_1 			: out std_logic; 	-- PIN_A3 	:: BBB P9_12 :: BLACK
-	INT_2 			: out std_logic; 	-- PIN_A4 	:: BBB P9_14 :: WHITE
+	INT_CPU 		: out std_logic; 	-- PIN_A3 	:: BBB P9_12 :: BLACK
+	INT_FPGA 		: in 	std_logic; 	-- PIN_A4 	:: BBB P9_14 :: WHITE
 	
 	BUTTON_0 		: in  std_logic; 	-- PIN_H20 	:: Reset
 	BUTTON_1 		: in  std_logic; 	-- PIN_K19 	:: Doesnt Work :: Broken Button or Incorrect Schematic
@@ -54,7 +54,7 @@ architecture rtl of Platform is
 signal button_debounced			: std_logic := '0';
 
 -- SPI
-constant DATA					: std_logic_vector(7 downto 0) := "11101010"; -- 0xE3
+constant DATA					: std_logic_vector(7 downto 0) := "10001000"; -- 0x88
 signal run 						: std_logic := '0';
 signal index 					: integer := 0;
 signal count 					: std_logic_vector(4 downto 0) := (others => '0');
@@ -65,9 +65,6 @@ signal interrupt_break 			: std_logic_vector(25 downto 0) := (others => '0');
 signal interrupt_length 		: std_logic_vector(3 downto 0) := (others => '0');
 signal interrupt_signal 		: std_logic := '0';
 signal interrupt_cutoff 		: std_logic := '0';
-
-signal interrupt_stop 		: std_logic := '0';
-signal interrupt_pulse 		: std_logic := '0';
 
 signal ALIGNED_KERNEL_SCLK 	: std_logic := '0';
 
@@ -196,30 +193,8 @@ begin
 end process;
 
 ----------------------
--- Interrupt button
--- 50MHz Pulse
-----------------------
-interrupt_button_process:
-process(CLOCK, button_debounced, interrupt_stop)
-begin
-	if rising_edge(CLOCK) then
-		if button_debounced = '0' then
-			if interrupt_stop = '0' then
-				interrupt_pulse <= '1';
-				interrupt_stop <= '1';
-			else
-				interrupt_pulse <= '0';
-			end if;
-		else
-			interrupt_stop <= '0';
-		end if;
-	end if;
-end process;
-
-----------------------
 -- Interrupts
 ----------------------
-INT_1 <= interrupt_signal;
-INT_2 <= interrupt_pulse;
+INT_CPU <= '0';--interrupt_signal;
 
 end rtl;

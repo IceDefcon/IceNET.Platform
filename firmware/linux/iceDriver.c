@@ -95,11 +95,11 @@ static struct file_operations fops =
 
 static struct spi_device *spi_dev;
 
-static volatile uint8_t tx_res_buffer[] = {0x41};  // Data to be transmitted for SPI0
+static volatile uint8_t tx_res_buffer[] = {0x11};       // Data to be transmitted for SPI0
 static volatile uint8_t rx_res_buffer[1];               // Buffer to receive data for SPI0
 
-static volatile uint8_t tx_req_buffer[] = {0xDC,0xBA};  // Data to be transmitted for SPI1
-static volatile uint8_t rx_req_buffer[2];               // Buffer to receive data for SPI1
+static volatile uint8_t tx_req_buffer[] = {0x22};       // Data to be transmitted for SPI0
+static volatile uint8_t rx_req_buffer[1];               // Buffer to receive data for SPI0
 
 //////////////////////////
 //                      //
@@ -293,7 +293,7 @@ static int dev_release(struct inode *inodep, struct file *filep)
 //                                              //
 //                                              //
 //////////////////////////////////////////////////
-static void spi_response_func(struct work_struct *work)
+static void spi_response(struct work_struct *work)
 {
     struct spi_message msg;
     struct spi_transfer transfer;
@@ -320,7 +320,7 @@ static void spi_response_func(struct work_struct *work)
     }
 }
 
-static void spi_request_func(struct work_struct *work)
+static void spi_request(struct work_struct *work)
 {
     struct spi_message msg;
     struct spi_transfer transfer;
@@ -413,18 +413,11 @@ static int __init fpga_driver_init(void)
     //                              //
     //////////////////////////////////
     struct spi_master *spi_master0;
-    struct spi_master *spi_master1;
     int ret;
 
     spi_master0 = spi_busnum_to_master(0);
     if (!spi_master0) {
         printk(KERN_ERR "[FPGA][SPI] SPI master for SPI0 not found\n");
-        return -ENODEV;
-    }
-
-    spi_master1 = spi_busnum_to_master(1);
-    if (!spi_master1) {
-        printk(KERN_ERR "[FPGA][SPI] SPI master for SPI1 not found\n");
         return -ENODEV;
     }
 
@@ -435,7 +428,7 @@ static int __init fpga_driver_init(void)
         return -ENOMEM;
     }
 
-    /** 
+    /*! 
      * The mode is set to 1 to pass the
      * High clock control signal to FPGA
      */
@@ -451,14 +444,19 @@ static int __init fpga_driver_init(void)
         return ret;
     }
 
-    INIT_WORK(&spi_response_work, spi_response_func);
+    /*!
+     * Work config for
+     * SPI operations
+     * Request and Response
+     */
+    INIT_WORK(&spi_response_work, spi_response);
     spi_response_wq = create_singlethread_workqueue("spi_res_workqueue");
     if (!spi_response_wq) {
         printk(KERN_ERR "[FPGA][WRK] Failed to create SPI response workqueue\n");
         return -ENOMEM;
     }
 
-    INIT_WORK(&spi_request_work, spi_request_func);
+    INIT_WORK(&spi_request_work, spi_request);
     spi_request_wq = create_singlethread_workqueue("spi_req_workqueue");
     if (!spi_request_wq) {
         printk(KERN_ERR "[FPGA][WRK] Failed to create SPI request workqueue\n");
