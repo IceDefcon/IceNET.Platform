@@ -13,26 +13,22 @@
 
 int main(void)
 {
-    //
-    // HEAP
-    //
+    /* Stack Allocation */
 	Core* CoreDevice = nullptr;
+
+	/* Heap Allocation*/
 	iceCOM* iceCOMDevice = new iceCOM;
-	//
-	// Init Krenel Communication
-	//
+
+	/* Initialise Krenel Communication*/
 	CoreDevice = iceCOMDevice;
 	CoreDevice->device_open(ICE);
-	//
-	// Main Comms
-	//
+
+	/* Kill Loop */
 	while(true)
 	{
-		//
-		// Kill everything
-		//
 		if (iceCOMDevice != nullptr) 
 		{
+			/* Shutdown Everything */
 		    if (iceCOMDevice->terminate()) 
 		    {
 		        break;
