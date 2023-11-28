@@ -240,10 +240,38 @@ static ssize_t dev_read(struct file *filep, char *buffer, size_t len, loff_t *of
     }
 }
 
+struct Move
+{
+    int Left;
+    int Right;
+    int Up;
+    int Down;
+}
+
+
 static ssize_t dev_write(struct file *filep, const char *buffer, size_t len, loff_t *offset)
 {
     int error_count = 0;
     error_count = copy_from_user(message, buffer, len);
+
+    switch(message)
+    {
+        case "L":
+        printk(KERN_INFO "[FPGA][ C ] Left \n");
+
+        case "R":
+        printk(KERN_INFO "[FPGA][ C ] Right \n");
+
+        case "U":
+        printk(KERN_INFO "[FPGA][ C ] Up \n");
+
+        case "D":
+        printk(KERN_INFO "[FPGA][ C ] Down \n");
+    }
+
+
+    if (strncmp(message, "L", 1) == 0)
+
 
     if (strncmp(message, "int", 3) == 0)
     {
@@ -293,7 +321,7 @@ static int dev_release(struct inode *inodep, struct file *filep)
 //                                              //
 //                                              //
 //////////////////////////////////////////////////
-static void spi_response(struct work_struct *work)
+static void spi_response_execute(struct work_struct *work)
 {
     struct spi_message msg;
     struct spi_transfer transfer;
@@ -320,7 +348,7 @@ static void spi_response(struct work_struct *work)
     }
 }
 
-static void spi_request(struct work_struct *work)
+static void spi_request_execute(struct work_struct *work)
 {
     struct spi_message msg;
     struct spi_transfer transfer;
@@ -449,14 +477,14 @@ static int __init fpga_driver_init(void)
      * SPI operations
      * Request and Response
      */
-    INIT_WORK(&spi_response_work, spi_response);
+    INIT_WORK(&spi_response_work, spi_response_execute);
     spi_response_wq = create_singlethread_workqueue("spi_res_workqueue");
     if (!spi_response_wq) {
         printk(KERN_ERR "[FPGA][WRK] Failed to create SPI response workqueue\n");
         return -ENOMEM;
     }
 
-    INIT_WORK(&spi_request_work, spi_request);
+    INIT_WORK(&spi_request_work, spi_request_execute);
     spi_request_wq = create_singlethread_workqueue("spi_req_workqueue");
     if (!spi_request_wq) {
         printk(KERN_ERR "[FPGA][WRK] Failed to create SPI request workqueue\n");
