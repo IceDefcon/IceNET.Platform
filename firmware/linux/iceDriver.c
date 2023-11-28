@@ -21,6 +21,18 @@ MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Marek Ice");
 MODULE_DESCRIPTION("FPGA Comms Driver");
 
+/* Direction commands */
+struct Direction 
+{
+    bool Left;
+    bool Right;
+    bool Up;
+    bool Down;
+    bool Go;
+};
+
+static struct Direction Move;
+
 //////////////////////
 //                  //
 //                  //
@@ -98,8 +110,8 @@ static struct spi_device *spi_dev;
 static volatile uint8_t tx_res_buffer[] = {0x11};       // Data to be transmitted for SPI0
 static volatile uint8_t rx_res_buffer[1];               // Buffer to receive data for SPI0
 
-static volatile uint8_t tx_req_buffer[] = {0x22};       // Data to be transmitted for SPI0
-static volatile uint8_t rx_req_buffer[1];               // Buffer to receive data for SPI0
+static volatile uint8_t tx_req_buffer[1];  // Data to be transmitted for SPI0
+static volatile uint8_t rx_req_buffer[1];  // Buffer to receive data for SPI0
 
 //////////////////////////
 //                      //
@@ -240,38 +252,40 @@ static ssize_t dev_read(struct file *filep, char *buffer, size_t len, loff_t *of
     }
 }
 
-struct Direction 
-{
-    int Left;
-    int Right;
-    int Up;
-    int Down;
-};
-
 static ssize_t dev_write(struct file *filep, const char *buffer, size_t len, loff_t *offset)
 {
     int error_count = 0;
     error_count = copy_from_user(message, buffer, len);
 
+    memset(&Move, 0, sizeof(struct Move));
+
     switch (message[0]) {
-        case 'L':
-            printk(KERN_INFO "[FPGA][ C ] Left \n");
-            break;
-        case 'R':
-            printk(KERN_INFO "[FPGA][ C ] Right \n");
-            break;
         case 'U':
-            printk(KERN_INFO "[FPGA][ C ] Up \n");
+            Move.Up = true;
+            Move.Go = true;
             break;
+
         case 'D':
-            printk(KERN_INFO "[FPGA][ C ] Down \n");
+            Move.Down = true;
+            Move.Go = true;
             break;
+
+        case 'L':
+            Move.Left = true;
+            Move.Go = true;
+            break;
+
+        case 'R':
+            Move.Right = true;
+            Move.Go = true;
+            break;
+
         default:
-            printk(KERN_INFO "[FPGA][ C ] Default \n");
     }
 
-    if (strncmp(message, "int", 3) == 0)
+    if (Move.Go)
     {
+        Move.Go = false;
         queue_work(spi_request_wq, &spi_request_work);
     }
 
@@ -351,6 +365,15 @@ static void spi_request_execute(struct work_struct *work)
     struct spi_transfer transfer;
     int ret;
     int i;
+
+    /* Error Value */
+    tx_req_buffer[0] = 0xE7;
+
+    /* Direction commands to the FPGA */
+    if(Move.Up) tx_req_buffer[0] = 0x81;
+    if(Move.Down) tx_req_buffer[0] = 0x82;
+    if(Move.Left) tx_req_buffer[0] = 0x83;
+    if(Move.Right) tx_req_buffer[0] = 0x84;
 
     memset(&transfer, 0, sizeof(transfer));
     transfer.tx_buf = tx_req_buffer;
