@@ -257,7 +257,7 @@ static ssize_t dev_write(struct file *filep, const char *buffer, size_t len, lof
     int error_count = 0;
     error_count = copy_from_user(message, buffer, len);
 
-    memset(&Move, 0, sizeof(struct Move));
+    memset(&Move, 0, sizeof(struct Direction));
 
     switch (message[0]) {
         case 'U':
