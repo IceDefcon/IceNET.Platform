@@ -253,7 +253,7 @@ static ssize_t dev_write(struct file *filep, const char *buffer, size_t len, lof
     int error_count = 0;
     error_count = copy_from_user(message, buffer, len);
 
-    switch (message) {
+    switch (message[0]) {
         case 'L':
             printk(KERN_INFO "[FPGA][ C ] Left \n");
             break;
