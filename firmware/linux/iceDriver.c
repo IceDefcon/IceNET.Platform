@@ -42,10 +42,10 @@ static struct Direction Move;
 //                  //
 //                  //
 //////////////////////
-static struct work_struct spi_request_work;
-static struct work_struct spi_response_work;
-static struct workqueue_struct *spi_request_wq;
-static struct workqueue_struct *spi_response_wq;
+static struct work_struct fpga_work;
+static struct work_struct kernel_work;
+static struct workqueue_struct *fpga_wq;
+static struct workqueue_struct *kernel_wq;
 
 //////////////////////
 //                  //
@@ -107,11 +107,11 @@ static struct file_operations fops =
 
 static struct spi_device *spi_dev;
 
-static volatile uint8_t tx_res_buffer[] = {0x11};       // Data to be transmitted for SPI0
-static volatile uint8_t rx_res_buffer[1];               // Buffer to receive data for SPI0
+static volatile uint8_t tx_kernel[] = {0xE3};
+static volatile uint8_t rx_kernel[1];
 
-static volatile uint8_t tx_req_buffer[1];  // Data to be transmitted for SPI0
-static volatile uint8_t rx_req_buffer[1];  // Buffer to receive data for SPI0
+static volatile uint8_t tx_fpga[] = {0xE3};
+static volatile uint8_t rx_fpga[1];
 
 //////////////////////////
 //                      //
@@ -124,8 +124,7 @@ static volatile uint8_t rx_req_buffer[1];  // Buffer to receive data for SPI0
 //                      //
 //////////////////////////
 
-#define GPIO_IN_INTERRUPT_SPI 60    // P9_12
-#define GPIO_IN_INTERRUPT_API 50    // P9_14
+#define GPIO_KERNEL_INTERRUPT 60    // P9_12
 
 ///////////////////
 //               //
@@ -287,7 +286,7 @@ static ssize_t dev_write(struct file *filep, const char *buffer, size_t len, lof
     if (Move.Go)
     {
         Move.Go = false;
-        queue_work(spi_request_wq, &spi_request_work);
+        queue_work(fpga_wq, &fpga_work);
     }
 
     if (error_count==0)
@@ -333,7 +332,7 @@ static int dev_release(struct inode *inodep, struct file *filep)
 //                                              //
 //                                              //
 //////////////////////////////////////////////////
-static void spi_response_execute(struct work_struct *work)
+static void kernel_execute(struct work_struct *work)
 {
     struct spi_message msg;
     struct spi_transfer transfer;
@@ -341,26 +340,37 @@ static void spi_response_execute(struct work_struct *work)
     int i;
 
     memset(&transfer, 0, sizeof(transfer));
-    transfer.tx_buf = tx_res_buffer;
-    transfer.rx_buf = rx_res_buffer;
-    transfer.len = sizeof(tx_res_buffer);
+    transfer.tx_buf = tx_kernel;
+    transfer.rx_buf = rx_kernel;
+    transfer.len = sizeof(tx_kernel);
 
     spi_message_init(&msg);
     spi_message_add_tail(&transfer, &msg);
 
     ret = spi_sync(spi_dev, &msg);
     if (ret < 0) {
-        printk(KERN_ERR "[FPGA][SPI] SPI transfer for SPI response failed: %d\n", ret);
+        printk(KERN_ERR "[FPGA][SPI] SPI transfer for Kernel failed: %d\n", ret);
         return;
     }
 
-    printk(KERN_INFO "[FPGA][SPI] Received data for SPI ---==[ RESPONSE ]==---");
-    for (i = 0; i < sizeof(rx_res_buffer); ++i) {
-        printk(KERN_INFO "[FPGA][SPI] Byte %d: 0x%02x\n", i, rx_res_buffer[i]);
+    printk(KERN_INFO "[FPGA][SPI] Command Data for Kernel Processing");
+    for (i = 0; i < sizeof(rx_kernel); ++i) {
+        printk(KERN_INFO "[FPGA][SPI] Byte %d: 0x%02x\n", i, rx_kernel[i]);
     }
+
+    /*!
+     * 
+     * 
+     * 
+     * Here we should receive data from
+     * FPGA for kernel processing
+     * 
+     * 
+     * 
+     */
 }
 
-static void spi_request_execute(struct work_struct *work)
+static void fpga_execute(struct work_struct *work)
 {
     struct spi_message msg;
     struct spi_transfer transfer;
@@ -368,32 +378,44 @@ static void spi_request_execute(struct work_struct *work)
     int i;
 
     /* Error Value */
-    tx_req_buffer[0] = 0xE7;
+    tx_fpga[0] = 0xE7;
 
     /* Direction commands to the FPGA */
-    if(Move.Up) tx_req_buffer[0] = 0x81;
-    if(Move.Down) tx_req_buffer[0] = 0x82;
-    if(Move.Left) tx_req_buffer[0] = 0x83;
-    if(Move.Right) tx_req_buffer[0] = 0x84;
+    if(Move.Up) tx_fpga[0] = 0x81;
+    if(Move.Down) tx_fpga[0] = 0x82;
+    if(Move.Left) tx_fpga[0] = 0x83;
+    if(Move.Right) tx_fpga[0] = 0x84;
 
     memset(&transfer, 0, sizeof(transfer));
-    transfer.tx_buf = tx_req_buffer;
-    transfer.rx_buf = rx_req_buffer;
-    transfer.len = sizeof(tx_req_buffer);
+    transfer.tx_buf = tx_fpga;
+    transfer.rx_buf = rx_fpga;
+    transfer.len = sizeof(tx_fpga);
 
     spi_message_init(&msg);
     spi_message_add_tail(&transfer, &msg);
 
     ret = spi_sync(spi_dev, &msg);
     if (ret < 0) {
-        printk(KERN_ERR "[FPGA][SPI] SPI transfer for SPI request failed: %d\n", ret);
+        printk(KERN_ERR "[FPGA][SPI] SPI transfer for FPGA failed: %d\n", ret);
         return;
     }
 
-    printk(KERN_INFO "[FPGA][SPI] Received data for SPI ---==[ REQUEST ]==---");
-    for (i = 0; i < sizeof(rx_req_buffer); ++i) {
-        printk(KERN_INFO "[FPGA][SPI] Byte %d: 0x%02x\n", i, rx_req_buffer[i]);
+    printk(KERN_INFO "[FPGA][SPI] Feedback Data for Kernel Processing");
+    for (i = 0; i < sizeof(rx_fpga); ++i) {
+        printk(KERN_INFO "[FPGA][SPI] Byte %d: 0x%02x\n", i, rx_fpga[i]);
     }
+
+    /*!
+     * 
+     * 
+     * 
+     * Here we should receive movement
+     * feedback data for kernel processing
+     * 
+     * 
+     * 
+     */
+
 }
 
 //////////////////////////
@@ -406,24 +428,14 @@ static void spi_request_execute(struct work_struct *work)
 //                      //
 //                      //
 //////////////////////////
-static irqreturn_t isr_spi(int irq, void *data)
+static irqreturn_t isr_kernel(int irq, void *data)
 {
     static int counter = 0;
 
-    printk(KERN_INFO "[FPGA][ISR] SPI Response interrupt [%d] @ Pin [%d]\n", counter, GPIO_IN_INTERRUPT_SPI);
+    printk(KERN_INFO "[FPGA][ISR] Kernel interrupt [%d] @ Pin [%d]\n", counter, GPIO_KERNEL_INTERRUPT);
     counter++;
 
-    queue_work(spi_response_wq, &spi_response_work);
-
-    return IRQ_HANDLED;
-}
-
-static irqreturn_t isr_api(int irq, void *data)
-{
-    static int counter = 0;
-
-    printk(KERN_INFO "[FPGA][ISR] API Response interrupt [%d] @ Pin [%d]\n", counter, GPIO_IN_INTERRUPT_API);
-    counter++;
+    queue_work(kernel_wq, &kernel_work);
 
     return IRQ_HANDLED;
 }
@@ -488,7 +500,7 @@ static int __init fpga_driver_init(void)
 
     ret = spi_setup(spi_dev);
     if (ret < 0) {
-        printk(KERN_ERR "[FPGA][SPI] Failed to setup SPI device for SPI0: %d\n", ret);
+        printk(KERN_ERR "[FPGA][SPI] Failed to setup SPI device: %d\n", ret);
         spi_dev_put(spi_dev);
         return ret;
     }
@@ -496,19 +508,19 @@ static int __init fpga_driver_init(void)
     /*!
      * Work config for
      * SPI operations
-     * Request and Response
+     * Kernel and Fpga
      */
-    INIT_WORK(&spi_response_work, spi_response_execute);
-    spi_response_wq = create_singlethread_workqueue("spi_res_workqueue");
-    if (!spi_response_wq) {
-        printk(KERN_ERR "[FPGA][WRK] Failed to create SPI response workqueue\n");
+    INIT_WORK(&kernel_work, kernel_execute);
+    kernel_wq = create_singlethread_workqueue("kernel_workqueue");
+    if (!kernel_wq) {
+        printk(KERN_ERR "[FPGA][WRK] Failed to create kernel workqueue\n");
         return -ENOMEM;
     }
 
-    INIT_WORK(&spi_request_work, spi_request_execute);
-    spi_request_wq = create_singlethread_workqueue("spi_req_workqueue");
-    if (!spi_request_wq) {
-        printk(KERN_ERR "[FPGA][WRK] Failed to create SPI request workqueue\n");
+    INIT_WORK(&fpga_work, fpga_execute);
+    fpga_wq = create_singlethread_workqueue("fpga_workqueue");
+    if (!fpga_wq) {
+        printk(KERN_ERR "[FPGA][WRK] Failed to create fpga workqueue\n");
         return -ENOMEM;
     }
 
@@ -517,74 +529,41 @@ static int __init fpga_driver_init(void)
     // GPIO ISR :: CONFIG           //
     //                              //
     //////////////////////////////////
-    int irq_spi;
-    int irq_api;
+    int irq_kernel;
     int result;
 
     //
     // SPI Interrupt
     //
-    result = gpio_request(GPIO_IN_INTERRUPT_SPI, "Input GPIO SPI Interrupt");
+    result = gpio_request(GPIO_KERNEL_INTERRUPT, "   Request");
     if (result < 0) 
     {
-        printk(KERN_ERR "[FPGA][IRQ] Failed to request GPIO pin for SPI\n");
+        printk(KERN_ERR "[FPGA][IRQ] Failed GPIO Request :: Pin [%d]\n", GPIO_KERNEL_INTERRUPT);
         return result;
     }
-    result = gpio_direction_input(GPIO_IN_INTERRUPT_SPI);
+    result = gpio_direction_input(GPIO_KERNEL_INTERRUPT);
     if (result < 0) 
     {
-        printk(KERN_ERR "[FPGA][IRQ] Failed to set GPIO direction for SPI\n");
-        gpio_free(GPIO_IN_INTERRUPT_SPI);
+        printk(KERN_ERR "[FPGA][IRQ] Failed to set GPIO direction :: Pin [%d]\n", GPIO_KERNEL_INTERRUPT);
+        gpio_free(GPIO_KERNEL_INTERRUPT);
         return result;
     }
-    irq_spi = gpio_to_irq(GPIO_IN_INTERRUPT_SPI);
-    if (irq_spi < 0) 
+    irq_kernel = gpio_to_irq(GPIO_KERNEL_INTERRUPT);
+    if (irq_kernel < 0) 
     {
-        printk(KERN_ERR "[FPGA][IRQ] Failed to get IRQ number for SPI\n");
-        gpio_free(GPIO_IN_INTERRUPT_SPI);
-        return irq_spi;
+        printk(KERN_ERR "[FPGA][IRQ] Failed to get IRQ number :: Pin [%d]\n", GPIO_KERNEL_INTERRUPT);
+        gpio_free(GPIO_KERNEL_INTERRUPT);
+        return irq_kernel;
     }
-    result = request_irq(irq_spi, isr_spi, IRQF_TRIGGER_RISING, "Input GPIO SPI Interrupt", NULL);
+    result = request_irq(irq_kernel, isr_kernel, IRQF_TRIGGER_RISING, "Request IRQ", NULL);
     if (result < 0) 
     {
-        printk(KERN_ERR "[FPGA][IRQ] Failed to request IRQ for SPI\n");
-        gpio_free(GPIO_IN_INTERRUPT_SPI);
+        printk(KERN_ERR "[FPGA][IRQ] Failed to request IRQ number :: Pin [%d]\n", GPIO_KERNEL_INTERRUPT);
+        gpio_free(GPIO_KERNEL_INTERRUPT);
         spi_dev_put(spi_dev);
         return result;
     }
-    printk(KERN_INFO "[FPGA][IRQ] ISR for SPI initialized\n");
-
-    //
-    // API Interrupt
-    //
-    result = gpio_request(GPIO_IN_INTERRUPT_API, "Input GPIO API Interrupt");
-    if (result < 0) 
-    {
-        printk(KERN_ERR "[FPGA][IRQ] Failed to request GPIO pin for API\n");
-        return result;
-    }
-    result = gpio_direction_input(GPIO_IN_INTERRUPT_API);
-    if (result < 0) 
-    {
-        printk(KERN_ERR "[FPGA][IRQ] Failed to set GPIO direction for API\n");
-        gpio_free(GPIO_IN_INTERRUPT_API);
-        return result;
-    }
-    irq_api = gpio_to_irq(GPIO_IN_INTERRUPT_API);
-    if (irq_api < 0) 
-    {
-        printk(KERN_ERR "[FPGA][IRQ] Failed to get IRQ number for API\n");
-        gpio_free(GPIO_IN_INTERRUPT_API);
-        return irq_api;
-    }
-    result = request_irq(irq_api, isr_api, IRQF_TRIGGER_RISING, "Input GPIO API Interrupt", NULL);
-    if (result < 0) 
-    {
-        printk(KERN_ERR "[FPGA][IRQ] Failed to request IRQ for API\n");
-        gpio_free(GPIO_IN_INTERRUPT_API);
-        return result;
-    }
-    printk(KERN_INFO "[FPGA][IRQ] ISR for API initialized\n");
+    printk(KERN_INFO "[FPGA][IRQ] Initialized\n");
 
     //////////////////////////////////
     //                              //
@@ -641,18 +620,18 @@ static void __exit fpga_driver_exit(void)
     // SPI :: CONFIG                //
     //                              //
     //////////////////////////////////
-    cancel_work_sync(&spi_response_work);
-    if (spi_response_wq) {
-        flush_workqueue(spi_response_wq);
-        destroy_workqueue(spi_response_wq);
-        spi_response_wq = NULL;
+    cancel_work_sync(&kernel_work);
+    if (kernel_wq) {
+        flush_workqueue(kernel_wq);
+        destroy_workqueue(kernel_wq);
+        kernel_wq = NULL;
     }
 
-    cancel_work_sync(&spi_request_work);
-    if (spi_request_wq) {
-        flush_workqueue(spi_request_wq);
-        destroy_workqueue(spi_request_wq);
-        spi_request_wq = NULL;
+    cancel_work_sync(&fpga_work);
+    if (fpga_wq) {
+        flush_workqueue(fpga_wq);
+        destroy_workqueue(fpga_wq);
+        fpga_wq = NULL;
     }
 
     spi_dev_put(spi_dev);
@@ -663,18 +642,12 @@ static void __exit fpga_driver_exit(void)
     // ISR :: DESTROY               //
     //                              //
     //////////////////////////////////
-    int irq_spi;
-    int irq_api;
+    int irq_kernel;
 
-    irq_spi = gpio_to_irq(GPIO_IN_INTERRUPT_SPI);
-    free_irq(irq_spi, NULL);
-    gpio_free(GPIO_IN_INTERRUPT_SPI);
-
-    irq_api = gpio_to_irq(GPIO_IN_INTERRUPT_API);
-    free_irq(irq_api, NULL);
-    gpio_free(GPIO_IN_INTERRUPT_API);
-
-    printk(KERN_INFO "[FPGA][IRQ] SPI Exit\n");
+    irq_kernel = gpio_to_irq(GPIO_KERNEL_INTERRUPT);
+    free_irq(irq_kernel, NULL);
+    gpio_free(GPIO_KERNEL_INTERRUPT);
+     printk(KERN_INFO "[FPGA][IRQ] Exit\n");
 
     //////////////////////////////////
     //                              //
