@@ -253,20 +253,19 @@ static ssize_t dev_write(struct file *filep, const char *buffer, size_t len, lof
     int error_count = 0;
     error_count = copy_from_user(message, buffer, len);
 
-    switch(message)
-    {
-        case "L":
+    switch (message) {
+        case 'L':
             printk(KERN_INFO "[FPGA][ C ] Left \n");
-
-        case "R":
+            break;
+        case 'R':
             printk(KERN_INFO "[FPGA][ C ] Right \n");
-
-        case "U":
+            break;
+        case 'U':
             printk(KERN_INFO "[FPGA][ C ] Up \n");
-
-        case "D":
+            break;
+        case 'D':
             printk(KERN_INFO "[FPGA][ C ] Down \n");
-
+            break;
         default:
             printk(KERN_INFO "[FPGA][ C ] Default \n");
     }
