@@ -1,6 +1,6 @@
-# IceNET.NetworkAnalyser
+# IceNET.Platform
 
-Hardware firewall to detect potential threats on Ethernet Wire
+Computer Hardware Platform
 -
 
 # Current Hardware configuration
