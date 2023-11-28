@@ -281,6 +281,7 @@ static ssize_t dev_write(struct file *filep, const char *buffer, size_t len, lof
             break;
 
         default:
+            break;
     }
 
     if (Move.Go)
