@@ -240,14 +240,13 @@ static ssize_t dev_read(struct file *filep, char *buffer, size_t len, loff_t *of
     }
 }
 
-struct Move
+struct Direction 
 {
     int Left;
     int Right;
     int Up;
     int Down;
-}
-
+};
 
 static ssize_t dev_write(struct file *filep, const char *buffer, size_t len, loff_t *offset)
 {
