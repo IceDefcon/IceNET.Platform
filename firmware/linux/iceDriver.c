@@ -129,13 +129,13 @@ enum StateMachine
 {
     IDLE    = 0,
     SPI     = 1,
-    CAN     = 2,    
+    I2C     = 2,    
     USER    = 3
 };
 
 enum StateMachine STATE;
 
-static struct task_struct *stm_thread;
+static struct task_struct *thread_handle;
 
 //////////////////////////////////////////////////////////////
 //                                                          //
@@ -167,7 +167,7 @@ int StateMachineThread(void *data)
         switch(STATE)
         {
             case IDLE:
-                printk(KERN_INFO "[FPGA][STM] Config State [%d]\n",counter);
+                // printk(KERN_INFO "[FPGA][STM] Idle State [%d]\n",counter);
                 break;
 
             case SPI:
@@ -175,8 +175,8 @@ int StateMachineThread(void *data)
                 STATE = IDLE;
                 break;
 
-            case CAN:
-                printk(KERN_INFO "[FPGA][STM] CAN State [%d]\n",counter);
+            case I2C:
+                printk(KERN_INFO "[FPGA][STM] I2C State [%d]\n",counter);
                 STATE = IDLE;
                 break;
 
@@ -398,14 +398,14 @@ static int __init fpga_driver_init(void)
     // STATE MACHINE :: THREAD CONFIG //
     //                                //
     ////////////////////////////////////
-    stm_thread = kthread_create(StateMachineThread, NULL, "stm_thread");
+    thread_handle = kthread_create(StateMachineThread, NULL, "thread_handle");
 
-    if (IS_ERR(stm_thread)) {
+    if (IS_ERR(thread_handle)) {
         printk(KERN_ERR "Failed to create kernel thread\n");
-        return PTR_ERR(stm_thread);
+        return PTR_ERR(thread_handle);
     }
 
-    wake_up_process(stm_thread);
+    wake_up_process(thread_handle);
 
     //////////////////////////////////
     //                              //
@@ -646,10 +646,10 @@ static void __exit fpga_driver_exit(void)
     // State Machine :: DESTROY     //
     //                              //
     //////////////////////////////////
-    if (stm_thread) 
+    if (thread_handle) 
     {
-        kthread_stop(stm_thread);
-        stm_thread = NULL;
+        kthread_stop(thread_handle);
+        thread_handle = NULL;
     }
     printk(KERN_INFO "[FPGA][STM] State Machine Exit\n");
 }

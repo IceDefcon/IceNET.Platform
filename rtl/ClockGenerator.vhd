@@ -5,8 +5,8 @@ use IEEE.numeric_std.all;
 entity ClockGenerator is
 generic 
 (
-    SRC     : integer := 10     -- Source :: half clock cycle in ns
-    DEST    : integer := 100    -- Destination :: half clock cycle in ns  
+    SRC     : integer := 10     -- Source :: half clock cycle in ns :: 50Hms
+    DEST    : integer := 1000   -- Destination :: half clock cycle in ns  :: 1MHz
 );
 port
 (    

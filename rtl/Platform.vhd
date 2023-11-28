@@ -49,27 +49,28 @@ architecture rtl of Platform is
 ------------------------
 -- SIGNAL DECLARATION --
 ------------------------
-signal button_debounced			: std_logic := '1';
 
-constant DATA					: std_logic_vector(7 downto 0) := "11101010"; -- 0xEA
+-- BUTTON
+signal button_debounced			: std_logic := '0';
 
+-- SPI
+constant DATA					: std_logic_vector(7 downto 0) := "11101010"; -- 0xE3
 signal run 						: std_logic := '0';
 signal index 					: integer := 0;
 signal count 					: std_logic_vector(4 downto 0) := (others => '0');
 signal count_bit 				: std_logic_vector(3 downto 0) := (others => '0');
 
+-- Interrupt Pulse Generator
 signal interrupt_break 			: std_logic_vector(25 downto 0) := (others => '0');
 signal interrupt_length 		: std_logic_vector(3 downto 0) := (others => '0');
 signal interrupt_signal 		: std_logic := '0';
 signal interrupt_cutoff 		: std_logic := '0';
 
-signal interrupt_button 		: std_logic := '0';
-signal interrupt_stop 			: std_logic := '0';
+signal interrupt_stop 		: std_logic := '0';
+signal interrupt_pulse 		: std_logic := '0';
 
 signal ALIGNED_KERNEL_SCLK 	: std_logic := '0';
 
-signal count_i2c 					: std_logic_vector(7 downto 0) := (others => '0');
-signal clock_i2c 					: std_logic := '0';
 ----------------------------
 -- COMPONENTS DECLARATION --
 ----------------------------
@@ -104,13 +105,13 @@ status_led_process:
 process(CLOCK)
 begin
 	if rising_edge(CLOCK) then
-		--LED_7 	<= '0';
-		--LED_6 	<= '0';
-		LED_5 	<= '0';
-		LED_4 	<= '0';
+		LED_7 	<= '1';
+		LED_6 	<= '1';
+		LED_5 	<= '1';
+		LED_4 	<= '1';
 		LED_3 	<= BUTTON_3;
 		LED_2 	<= BUTTON_2;
-		LED_1 	<= BUTTON_0; -- BUTTON_1 is not working
+		LED_1 	<= BUTTON_1; -- BUTTON_1 is not working
 		LED_0 	<= BUTTON_0;
 	end if;
 end process;
@@ -158,27 +159,19 @@ begin
 				count_bit <= "0000";
 			end if;
 		end if;
-
-		-- Dummy for the compiler 
-		-- to avoid optimisation
-		-- of the logic signals
-		if count = "00000" or count_bit = "0000"  or run = '1' then
-			LED_7 <= '1';
-		end if;
 	end if;		
 end process;
-
-
 
 -----------------------------------
 -- Interrupt pulse generator
 -- 0x3FFFFFF/50 MHz
--- 67108863/50000000 Hz = 1.342 sec
+-- 67108864/50000000 Hz = 1.342 sec
 -----------------------------------
 process(CLOCK, interrupt_cutoff, interrupt_break)
 begin
 	if rising_edge(CLOCK) then
 
+		-- Interrupt is cut off after 0xF clock cycles
 		if interrupt_cutoff = '1' then
 			interrupt_length <= interrupt_length + '1';
 			if interrupt_length = "1111" then
@@ -190,7 +183,8 @@ begin
 
 		interrupt_break <= interrupt_break + '1';
 
-		if interrupt_break = "11111111111111111111111111" then
+		-- Interrupt is generated when counter = 0x3FFFFFFF
+		if interrupt_break = "10111110101111000001111111" then
 			if interrupt_signal = '0' then
 				interrupt_signal <= '1';
 			end if;
@@ -211,10 +205,10 @@ begin
 	if rising_edge(CLOCK) then
 		if button_debounced = '0' then
 			if interrupt_stop = '0' then
-				interrupt_button <= '1';
+				interrupt_pulse <= '1';
 				interrupt_stop <= '1';
 			else
-				interrupt_button <= '0';
+				interrupt_pulse <= '0';
 			end if;
 		else
 			interrupt_stop <= '0';
@@ -226,26 +220,6 @@ end process;
 -- Interrupts
 ----------------------
 INT_1 <= interrupt_signal;
-INT_2 <= interrupt_button;
-
-------------------------------
--- I2C Clock Generator
--- 0xFA >> 2*250*20ns
--- 10000ns = 10us >> 100kHz
-------------------------------
-
-i2c_command_process:
-process(CLOCK, count_i2c)
-begin
-	if rising_edge(CLOCK) then
-		count_i2c <= count_i2c + '1';	
-		if count_i2c = "11111010" then
-			clock_i2c <= not clock_i2c;
-			count_i2c <= (others => '0');
-		end if;
-	end if;
-end process;
-
-LED_6 <= clock_i2c;
+INT_2 <= interrupt_pulse;
 
 end rtl;
