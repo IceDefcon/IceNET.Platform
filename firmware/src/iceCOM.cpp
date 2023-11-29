@@ -139,6 +139,8 @@ int iceCOM::device_read()
 
 int iceCOM::device_write()
 {
+	Debug::Write();
+	
     char inputChar;
 
     // Read a single character
