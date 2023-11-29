@@ -1,6 +1,8 @@
 #
+#
 # Author: Ice.Marek
 # 2023 IceNET Technology
+#
 #
 APP 		= app
 GCC  		= g++

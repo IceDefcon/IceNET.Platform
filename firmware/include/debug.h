@@ -1,7 +1,9 @@
-//
-// Author: Ice.Marek
-// IceNET Technology 2023
-//
+/*!
+ * 
+ * Author: Ice.Marek
+ * IceNET Technology 2024
+ * 
+ */
 #pragma once
 #include <iostream>
 #include "types.h"

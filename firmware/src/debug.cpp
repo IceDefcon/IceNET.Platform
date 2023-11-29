@@ -1,7 +1,9 @@
-//
-// Author: Ice.Marek
-// IceNET Technology 2023
-//
+/*!
+ * 
+ * Author: Ice.Marek
+ * IceNET Technology 2024
+ * 
+ */
 #include "debug.h"
 
 Debug::Debug() : m_LogLevel (LevelTodo) 

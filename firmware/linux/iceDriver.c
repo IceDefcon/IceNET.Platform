@@ -1,7 +1,9 @@
-//
-// Author: Ice.Marek
-// IceNET Technology 2023
-//
+/*!
+ * 
+ * Author: Ice.Marek
+ * IceNET Technology 2024
+ * 
+ */
 #include <linux/fs.h>
 #include <linux/gpio.h>
 #include <linux/init.h>
