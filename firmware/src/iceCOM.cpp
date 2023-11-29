@@ -40,6 +40,13 @@ void iceCOM::iceCOMThread()
 
     struct termios old_tio, new_tio;
 
+    /*!
+     * 
+     * Begin of experimental
+     * control of keyboard
+     * 
+     */
+
     // Get the terminal settings
     tcgetattr(STDIN_FILENO, &old_tio);
 
@@ -74,7 +81,14 @@ void iceCOM::iceCOMThread()
 
     // Restore the original terminal settings
     tcsetattr(STDIN_FILENO, TCSANOW, &old_tio);
-    
+
+    /*!
+     * 
+     * End of experimental
+     * control of keyboard
+     * 
+     */
+
 	Debug::Info("iceCOM :: iceCOMThread Terminate");
 }
 
@@ -116,7 +130,6 @@ int iceCOM::device_read()
 
 int iceCOM::device_write()
 {
-	int ret;
     char ch;
 
 	Debug::Write();
@@ -137,7 +150,8 @@ int iceCOM::device_write()
         if (ch == 'r') break;
     }
 
-	ret = write(m_file_descriptor, &ch, 1); // Send the string to the LKM
+	char buffer[2] = {ch, '\r'};
+    int ret = write(m_file_descriptor, buffer, 2);
 	if (ret == -1)
 	{
 	    Debug::Error("iceCOM :: Cannot write to kernel space");
@@ -146,6 +160,34 @@ int iceCOM::device_write()
 
 	return OK;
 }
+
+// int iceCOM::device_write()
+// {
+// 	int ret;
+// 	char console_TX[m_BUFFER_LENGTH];
+
+// 	for (size_t i = 0; i < m_BUFFER_LENGTH; ++i)
+// 	{
+// 		console_TX[i] = 0;
+// 	}
+
+// 	Debug::Write();
+// 	std::cin.getline(console_TX, m_BUFFER_LENGTH);
+
+// 	if (std::strcmp(console_TX, "exit") == 0) 
+// 	{
+//     	m_killThread = true;
+// 	}
+
+// 	ret = write(m_file_descriptor, console_TX, strlen(console_TX)); // Send the string to the LKM
+// 	if (ret == -1)
+// 	{
+// 	    Debug::Error("iceCOM :: Cannot write to kernel space");
+// 	    return ERROR;
+// 	}
+
+// 	return OK;
+// }
 
 int iceCOM::device_close()
 {
