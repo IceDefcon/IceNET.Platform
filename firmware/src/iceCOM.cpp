@@ -38,16 +38,16 @@ void iceCOM::iceCOMThread()
 {
 	Debug::Info("iceCOM :: Start iceCOMThread");
 
-    // struct termios old_tio, new_tio;
+    struct termios old_tio, new_tio;
 
-    // // Get the terminal settings
-    // tcgetattr(STDIN_FILENO, &old_tio);
+    // Get the terminal settings
+    tcgetattr(STDIN_FILENO, &old_tio);
 
-    // new_tio = old_tio;
-    // new_tio.c_lflag &= (~ICANON & ~ECHO); // Disable canonical mode and echoing
+    new_tio = old_tio;
+    new_tio.c_lflag &= (~ICANON & ~ECHO); // Disable canonical mode and echoing
 
-    // // Set the new terminal settings
-    // tcsetattr(STDIN_FILENO, TCSANOW, &new_tio);
+    // Set the new terminal settings
+    tcsetattr(STDIN_FILENO, TCSANOW, &new_tio);
 
     while(!m_killThread) 
     {
@@ -72,8 +72,8 @@ void iceCOM::iceCOMThread()
     	}
     }
 
-    // // Restore the original terminal settings
-    // tcsetattr(STDIN_FILENO, TCSANOW, &old_tio);
+    // Restore the original terminal settings
+    tcsetattr(STDIN_FILENO, TCSANOW, &old_tio);
     
 	Debug::Info("iceCOM :: iceCOMThread Terminate");
 }
