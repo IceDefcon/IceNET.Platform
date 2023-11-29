@@ -72,6 +72,9 @@ void iceCOM::iceCOMThread()
     	}
     }
 
+    // Restore the original terminal settings
+    tcsetattr(STDIN_FILENO, TCSANOW, &old_tio);
+    
 	Debug::Info("iceCOM :: iceCOMThread Terminate");
 }
 
