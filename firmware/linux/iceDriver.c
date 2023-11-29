@@ -261,22 +261,22 @@ static ssize_t dev_write(struct file *filep, const char *buffer, size_t len, lof
     memset(&Move, 0, sizeof(struct Direction));
 
     switch (message[0]) {
-        case 'u':
+        case 'U':
             Move.Up = true;
             Move.Go = true;
             break;
 
-        case 'd':
+        case 'D':
             Move.Down = true;
             Move.Go = true;
             break;
 
-        case 'l':
+        case 'L':
             Move.Left = true;
             Move.Go = true;
             break;
 
-        case 'r':
+        case 'R':
             Move.Right = true;
             Move.Go = true;
             break;
