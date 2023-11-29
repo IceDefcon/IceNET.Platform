@@ -110,25 +110,14 @@ int iceCOM::device_write()
 	}
 
 	Debug::Write();
-    // Read a single character
-    std::cin >> console_TX[0];
+	std::cin.getline(console_TX, BUFFER_LENGTH);
 
-    if (console_TX[0] == 'q') 
-    {
-        m_killThread = true;
-    }
+	if (std::strcmp(console_TX, "exit") == 0) 
+	{
+    	m_killThread = true;
+	}
 
-    // Write the single character to the character device
-    ret = write(m_file_descriptor, &console_TX[0], 1);
-	// std::cin.getline(console_TX, BUFFER_LENGTH);
-
-	// if (std::strcmp(console_TX, "exit") == 0) 
-	// {
-    // 	m_killThread = true;
-	// }
-
-	// ret = write(m_file_descriptor, console_TX, strlen(console_TX)); // Send the string to the LKM
-
+	ret = write(m_file_descriptor, console_TX, strlen(console_TX)); // Send the string to the LKM
 	if (ret == -1)
 	{
 	    Debug::Error("iceCOM :: Cannot write to kernel space");
