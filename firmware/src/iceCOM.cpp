@@ -140,8 +140,8 @@ int iceCOM::device_read()
 int iceCOM::device_write()
 {
 	Debug::Write();
-	
-    char inputChar;
+
+    char inputChar = '\0';
 
     // Read a single character
     std::cin >> inputChar;
