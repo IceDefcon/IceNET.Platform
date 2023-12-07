@@ -16,7 +16,7 @@ iceCOM::iceCOM():
 m_file_descriptor(0), 
 m_killThread(false)
 {
-	Debug::Info("iceCOM :: Initialising iceCOM Module");
+	Debug::Info("iceCOM :: Initialise iceCOM Module");
 }
 
 iceCOM::~iceCOM() 
@@ -30,20 +30,20 @@ iceCOM::~iceCOM()
 
 void iceCOM::initThread()
 {
-	Debug::Info("iceCOM :: Init iceCOMThread");
+	Debug::Info("iceCOM :: Init the iceCOMThread");
 	m_iceThread = std::thread(&iceCOM::iceCOMThread, this);
 }
 
 void iceCOM::iceCOMThread()
 {
-	Debug::Info("iceCOM :: Start iceCOMThread");
+	Debug::Info("iceCOM :: Enter iceCOMThread");
 
     struct termios old_tio, new_tio;
 
     /*!
      * 
      * Begin of experimental
-     * control of keyboard
+     * keyboard control
      * 
      */
 
@@ -89,21 +89,24 @@ void iceCOM::iceCOMThread()
      * 
      */
 
-	Debug::Info("iceCOM :: iceCOMThread Terminate");
+	Debug::Info("iceCOM :: Terminate iceCOMThread");
 }
 
 int iceCOM::device_open(const char* device)
 {
 	m_file_descriptor = open(device, O_RDWR);
+
 	if (m_file_descriptor < 0)
 	{
 		Debug::Error("iceCOM :: Failed to open Device");
 		m_killThread = true;
 		return ERROR;
 	}
-
-	Debug::Info("iceCOM :: Device opened successfuly");
-	initThread();
+	else
+	{
+		Debug::Info("iceCOM :: Device opened successfuly");
+		initThread();
+	}
 
 	return OK;
 }

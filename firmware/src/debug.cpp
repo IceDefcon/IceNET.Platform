@@ -8,12 +8,12 @@
 
 Debug::Debug() : m_LogLevel (LevelTodo) 
 {
-	Debug::Info("Debug  :: Initialising Debug Console");
+	Debug::Info("Debug  :: Initialise Debug Console");
 }
 
 Debug::~Debug()
 {
-	Debug::Info("Debug  :: Shutdown Debug Console");
+	Debug::Info("Debug  :: Terminate Debug Console");
 }
 
 void Debug::SetLevel(LogLevel level)

@@ -25,7 +25,12 @@ int main(void)
 	CoreDevice = iceCOMDevice;
 	CoreDevice->device_open(ICE);
 
-	/* Kill Loop */
+	/** 
+	 * 
+	 * 1. Terminate Program
+	 * 2. Clean Memory 
+	 * 
+	 */
 	while(true)
 	{
 		if (iceCOMDevice != nullptr) 
