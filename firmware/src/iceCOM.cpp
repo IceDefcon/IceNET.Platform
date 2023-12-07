@@ -147,10 +147,10 @@ int iceCOM::device_write()
             m_killThread = true;
             break;
         }
-        if (ch == 'u') break;
+        if (ch == 'w') break;
+        if (ch == 's') break;
+        if (ch == 'a') break;
         if (ch == 'd') break;
-        if (ch == 'l') break;
-        if (ch == 'r') break;
     }
 
 	char buffer[2] = {ch, '\r'};
