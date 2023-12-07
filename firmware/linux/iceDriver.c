@@ -383,10 +383,10 @@ static void fpga_execute(struct work_struct *work)
     tx_fpga[0] = 0xE7;
 
     /* Direction commands to the FPGA */
-    if(Move.Up) tx_fpga[0] = 0x81;
-    if(Move.Down) tx_fpga[0] = 0x82;
-    if(Move.Left) tx_fpga[0] = 0x83;
-    if(Move.Right) tx_fpga[0] = 0x84;
+    if(Move.Up) tx_fpga[0] = 0x18;
+    if(Move.Down) tx_fpga[0] = 0x24;
+    if(Move.Left) tx_fpga[0] = 0x42;
+    if(Move.Right) tx_fpga[0] = 0x81;
 
     memset(&transfer, 0, sizeof(transfer));
     transfer.tx_buf = tx_fpga;
