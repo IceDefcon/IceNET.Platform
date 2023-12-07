@@ -380,7 +380,7 @@ static void fpga_execute(struct work_struct *work)
     int i;
 
     /* Error Value */
-    tx_fpga[0] = 0xE7;
+    tx_fpga[0] = 0xFF;
 
     /* Direction commands to the FPGA */
     if(Move.Up) tx_fpga[0] = 0x18;
