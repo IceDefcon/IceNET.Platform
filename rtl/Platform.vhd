@@ -17,6 +17,7 @@ port
 (
 	CLOCK 			: in std_logic; 	-- PIN_T2 :: 50Mhz Clock
 
+	-- For debuging
 	LED_0 			: out std_logic; 	-- PIN_U7
 	LED_1 			: out std_logic; 	-- PIN_U8
 	LED_2 			: out std_logic;	-- PIN_R7
@@ -68,6 +69,7 @@ signal synced_sclk  : STD_LOGIC := '0';
 signal synced_cs    : STD_LOGIC := '0';
 signal synced_mosi  : STD_LOGIC := '0';
 
+signal synced_miso  : STD_LOGIC := '0';
 
 ----------------------------
 -- COMPONENTS DECLARATION --
@@ -94,6 +96,16 @@ port
 );
 end component;
 
+component SPI_Data
+Port 
+(
+    CLOCK 		: in  std_logic;
+    DATA 		: in  std_logic_vector(7 downto 0);
+    synced_sclk : in std_logic;
+    synced_miso : out std_logic
+);
+end component;
+
 ------------------
 -- MAIN ROUTINE --
 ------------------
@@ -117,13 +129,27 @@ Debounce_module: Debounce port map
 	button_out 	=> button_debounced
 );
 
+SPI_Data_module: SPI_Data port map 
+(
+	CLOCK 			=> CLOCK,
+	DATA 			=> DATA,
+	synced_sclk 	=> synced_sclk,
+	synced_miso 	=> synced_miso
+);
+
+KERNEL_MISO <= synced_miso;
+
+------------------
+-- PROCESS 		--
+------------------
+
 status_led_process:
 process(CLOCK)
 begin
 	if rising_edge(CLOCK) then
-		LED_7 	<= '1';
-		LED_6 	<= '1';
-		LED_5 	<= '1';
+		LED_7 	<= synced_sclk;
+		LED_6 	<= synced_cs;
+		LED_5 	<= synced_mosi;
 		LED_4 	<= '1';
 		LED_3 	<= BUTTON_3;
 		LED_2 	<= BUTTON_2;
@@ -132,38 +158,7 @@ begin
 	end if;
 end process;
 
---------------------
--- SPI Process
---------------------
-spi_process:
-process(CLOCK, synced_sclk, run, count, count_bit)
-begin
-	if rising_edge(CLOCK) then
 
-		if run = '1' then
-			if count = "00000" then
-				count_bit <= count_bit + '1';
-			end if;
-		end if;
-
-		index <= to_integer(unsigned(count_bit));
-
-		if synced_sclk = '1' then
-			run <= '1';
-			count <= count + '1';
-			KERNEL_MISO <= DATA(7 - index); -- Other way return on the wire
-		elsif synced_sclk = '0' then
-			if count > 0 then
-				count <= count - '1';
-			end if;
-			KERNEL_MISO <= DATA(7 - index); -- Other way return on the wire
-			if count_bit = "0111" then
-				run <= '0';
-				count_bit <= "0000";
-			end if;
-		end if;
-	end if;		
-end process;
 
 -----------------------------------
 -- Interrupt pulse generator
