@@ -1,7 +1,9 @@
-# IceNET.Platform
+# IceNET.Platform :: CPU & FPGA Computer System
 
-Computer Hardware Platform
--
+# Active :: Sub Applications
+
+	1. Artificial Inteligence Drone :: Manual Override
+	2. Network Protocol Analyser 	:: Defence Protocol
 
 # Current Hardware configuration
 
@@ -13,9 +15,9 @@ Computer Hardware Platform
 
 # TODO List
 
-1. Order FTR-110-03-G-D-06 :: JTAG Pin Header
-2. Attach JTAG Header to the PCB
-3. Boot Kernel trough the JTAG via U-Boot
-4. Customize Root File System
+	1. Order FTR-110-03-G-D-06 :: JTAG Pin Header
+	2. Attach JTAG Header to the PCB
+	3. Boot Kernel trough the JTAG via U-Boot
+	4. Customize Root File System
 
 # ICE
