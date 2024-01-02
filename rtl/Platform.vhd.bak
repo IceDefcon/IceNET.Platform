@@ -46,6 +46,10 @@ end Platform;
 
 architecture rtl of Platform is
 
+------------------------
+-- SIGNAL DECLARATION --
+------------------------
+
 -- BUTTON
 signal button_debounced			: std_logic := '0';
 
@@ -62,29 +66,11 @@ signal interrupt_length 		: std_logic_vector(3 downto 0) := (others => '0');
 signal interrupt_signal 		: std_logic := '0';
 signal interrupt_cutoff 		: std_logic := '0';
 
--- SPI Synchronise
 signal ALIGNED_KERNEL_SCLK 	: std_logic := '0';
-signal synced_sclk  : STD_LOGIC := '0';
-signal synced_cs    : STD_LOGIC := '0';
-signal synced_mosi  : STD_LOGIC := '0';
-
 
 ----------------------------
 -- COMPONENTS DECLARATION --
 ----------------------------
-component SPI_Synchronizer
-port
-(
-    CLK_50MHz : in  std_logic;
-    IN_SCLK   : in  std_logic;
-    IN_CS     : in  std_logic;
-    IN_MOSI   : in  std_logic;
-    OUT_SCLK  : out std_logic;
-    OUT_CS    : out std_logic;
-    OUT_MOSI  : out std_logic
-);
-end component;
-
 component Debounce
 port
 (
@@ -99,24 +85,19 @@ end component;
 ------------------
 begin
 
-SPI_Synchronizer_module: SPI_Synchronizer port map 
-(
-    CLK_50MHz => CLOCK,
-    IN_SCLK   => KERNEL_SCLK,
-    IN_CS     => KERNEL_CS,
-    IN_MOSI   => KERNEL_MOSI,
-    OUT_SCLK  => synced_sclk,
-    OUT_CS    => synced_cs,
-    OUT_MOSI  => synced_mosi
-);
-
-Debounce_module: Debounce port map 
+--------------
+-- Debounce --
+--------------
+debounce_module: Debounce port map 
 (
 	clock 		=> CLOCK,
 	button_in 	=> BUTTON_0,
 	button_out 	=> button_debounced
 );
 
+----------------
+-- Led Status --
+----------------
 status_led_process:
 process(CLOCK)
 begin
@@ -132,11 +113,24 @@ begin
 	end if;
 end process;
 
+clock_align_process:
+process(CLOCK, KERNEL_SCLK)
+begin
+	if rising_edge(CLOCK) then
+		if KERNEL_SCLK = '1' then
+			ALIGNED_KERNEL_SCLK <= '1';
+		elsif KERNEL_SCLK = '0' then
+			ALIGNED_KERNEL_SCLK <= '0';
+		end if;
+	end if;
+end process;
+
+
 --------------------
 -- SPI Process
 --------------------
 spi_process:
-process(CLOCK, synced_sclk, run, count, count_bit)
+process(CLOCK, ALIGNED_KERNEL_SCLK, run, count, count_bit)
 begin
 	if rising_edge(CLOCK) then
 
@@ -148,11 +142,11 @@ begin
 
 		index <= to_integer(unsigned(count_bit));
 
-		if synced_sclk = '1' then
+		if ALIGNED_KERNEL_SCLK = '1' then
 			run <= '1';
 			count <= count + '1';
 			KERNEL_MISO <= DATA(7 - index); -- Other way return on the wire
-		elsif synced_sclk = '0' then
+		elsif ALIGNED_KERNEL_SCLK = '0' then
 			if count > 0 then
 				count <= count - '1';
 			end if;
