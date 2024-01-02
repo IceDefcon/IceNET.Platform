@@ -1,7 +1,7 @@
 #
 #
 # Author: Ice.Marek
-# 2023 IceNET Technology
+# IceNET Technology 2024
 #
 #
 APP 		= app

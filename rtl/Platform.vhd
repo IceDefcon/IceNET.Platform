@@ -5,7 +5,7 @@ use ieee.std_logic_unsigned.all;
 
 ------------------------------
 -- Author: Ice.Marek 		--
--- IceNET Technology 2023 	--
+-- IceNET Technology 2024 	--
 -- 							--
 -- FPGA Chip 				--
 -- Cyclone IV 				--
