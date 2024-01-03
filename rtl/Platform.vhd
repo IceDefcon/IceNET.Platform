@@ -58,10 +58,14 @@ signal count 					: std_logic_vector(4 downto 0) := (others => '0');
 signal count_bit 				: std_logic_vector(3 downto 0) := (others => '0');
 
 -- Interrupt Pulse Generator
-signal interrupt_period 		: std_logic_vector(25 downto 0) := (others => '0');
-signal interrupt_length 		: std_logic_vector(3 downto 0) := (others => '0');
+signal interrupt_divider 		: integer := 2;
+signal interrupt_period 		: std_logic_vector(25 downto 0) := "10111110101111000001111111";
+signal interrupt_length 		: std_logic_vector(3 downto 0) := "1111";
 signal interrupt_signal 		: std_logic := '0';
-signal interrupt_cutoff 		: std_logic := '0';
+
+-- Debug Interrupt
+signal diode_check 			: std_logic := '0';
+signal diode_done 			: std_logic := '0';
 
 -- SPI Synchronise
 signal ALIGNED_KERNEL_SCLK 	: std_logic := '0';
@@ -106,6 +110,16 @@ Port
 );
 end component;
 
+component Interrupt
+Port 
+(
+    CLOCK 				: in  std_logic;
+    interrupt_period 	: in  std_logic_vector(25 downto 0);
+    interrupt_length 	: in  std_logic_vector(3 downto 0);
+    interrupt_signal 	: out std_logic
+);
+end component;
+
 ------------------
 -- MAIN ROUTINE --
 ------------------
@@ -139,18 +153,36 @@ SPI_Data_module: SPI_Data port map
 
 KERNEL_MISO <= synced_miso;
 
-------------------
--- PROCESS 		--
-------------------
+------------------------------------------
+-- Interrupt pulse :: 0x2FAF07F/50 MHz
+-- (49999999 + 1)/50000000 Hz = 1 sec
+--
+-- This is adjsted by the divider
+-- Currently divider = 2
+-- Gives 250ms interrupt
+--
+-- Interrupt length :: 0xF
+-- 16 * 2ns = 32 ns
+------------------------------------------
+Interrupt_module: Interrupt port map 
+(
+	CLOCK 				=> CLOCK,
+	interrupt_period 	=> std_logic_vector(unsigned(interrupt_period) srl interrupt_divider),
+	interrupt_length 	=> interrupt_length,
+	interrupt_signal 	=> interrupt_signal
+);
 
-status_led_process:
+----------------------
+-- DEBUG PROCESS
+----------------------
+led_process:
 process(CLOCK)
 begin
 	if rising_edge(CLOCK) then
 		LED_7 	<= synced_sclk;
 		LED_6 	<= synced_cs;
 		LED_5 	<= synced_mosi;
-		LED_4 	<= '1';
+		LED_4 	<= diode_check;
 		LED_3 	<= BUTTON_3;
 		LED_2 	<= BUTTON_2;
 		LED_1 	<= BUTTON_1; -- BUTTON_1 is not working
@@ -158,44 +190,26 @@ begin
 	end if;
 end process;
 
-
-
------------------------------------
--- Interrupt pulse generator
--- 0x2FAF07F/50 MHz
--- (49999999 + 1)/50000000 Hz = 1 sec
------------------------------------
-process(CLOCK, interrupt_cutoff, interrupt_period)
+interrupt_process:
+process(CLOCK, interrupt_signal, diode_check, diode_done)
 begin
 	if rising_edge(CLOCK) then
-
-		-- Interrupt is 16 * 20ns ---> 320ns Long
-		if interrupt_cutoff = '1' then
-			interrupt_length <= interrupt_length + '1';
-			if interrupt_length = "1111" then
-				interrupt_signal <= '0';
-				interrupt_cutoff <= '0';
-				interrupt_length <= (others => '0');
+		if interrupt_signal = '1' then
+			if diode_done = '0' then
+				diode_check <= not diode_check;
+				diode_done 	<= '1';
 			end if;
+		else
+			diode_done <= '0';
 		end if;
-
-		interrupt_period <= interrupt_period + '1';
-
-		-- Interrupt is generated every (49999999 + 1) * 20ns ---> 1s
-		if interrupt_period = "10111110101111000001111111" then
-			if interrupt_signal = '0' then
-				interrupt_signal <= '1';
-			end if;
-			interrupt_period <=(others => '0');
-			interrupt_cutoff <= '1';
-		end if;
-		
 	end if;
 end process;
 
-----------------------
--- Interrupts
-----------------------
-INT_CPU <= '0';--interrupt_signal;
+-- --------------------------------
+-- Interrupt is pulled down
+-- In order to adjust PID
+-- Controler for the gyroscope
+-----------------------------------
+INT_CPU <= '0'; -- interrupt_signal;
 
 end rtl;
