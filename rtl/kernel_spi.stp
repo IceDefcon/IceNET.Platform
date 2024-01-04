@@ -5,7 +5,7 @@
   <instance enabled="true" entity_name="sld_signaltap" is_auto_node="yes" is_expanded="true" name="auto_signaltap_0" source_file="sld_signaltap.vhd">
     <node_ip_info instance_id="0" mfg_id="110" node_id="0" version="6"/>
     <position_info>
-      <single attribute="active tab" value="0"/>
+      <single attribute="active tab" value="1"/>
       <single attribute="data horizontal scroll position" value="4027"/>
       <single attribute="data vertical scroll position" value="0"/>
       <single attribute="setup horizontal scroll position" value="0"/>
