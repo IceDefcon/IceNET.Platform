@@ -65,7 +65,7 @@ signal synced_miso  			: std_logic := '0';
 signal reset_button			: std_logic := '0';
 
 -- i2c clocks
-signal i2c_half_wave : std_logic_vector(7 downto 0) := (others => '0');
+signal i2c_half_wave : std_logic := '0';
 signal i2c_clock_d0 : std_logic := '0';
 signal i2c_clock_d1 : std_logic := '0';
 signal i2c_clock_d2 : std_logic := '0';
@@ -76,13 +76,7 @@ signal clocks_aligned : std_logic := '0';
 signal init_time : std_logic_vector(26 downto 0) := (others => '0');
 signal init_complete : std_logic := '0';
 
---i2c state machine
-type TX is (IDLE, INIT, DEVICE, ACK, NAK);
-signal tx_current_state, tx_next_state: TX;
 
-i2c flags
-signal isDEVICE : std_logic := '0';
-signal isACK 	: std_logic := '0';
 
 -- Debug Interrupt
 signal diode_check 				: std_logic := '0';
@@ -240,11 +234,11 @@ begin
 end process;
 
 init_process:
-process(CLOCK_50MHz, reset_button, init_time, tx_current_state)
+process(CLOCK_50MHz, reset_button, init_time, tx_current)
 begin
     if rising_edge(CLOCK_50MHz) then
         if reset_button = '1' then
-            tx_current_state <= INIT;
+            tx_current <= INIT
             --
             -- Reset other variables or states
             --
@@ -260,33 +254,33 @@ begin
 end process;
 
 state_machine_process:
-process(CLOCK_50MHz, init_complete, isACK, tx_current_state)
+process(CLOCK_50MHz, init_complete, isACK, tx_current)
 begin
     if rising_edge(CLOCK_50MHz) then
-        case tx_current_state is
+        case tx_current is
             when INIT =>
                 if init_complete = '1' then
-                    tx_next_state <= DEVICE;
+                    tx_next <= DEVICE;
                 else
-                    tx_next_state <= INIT;
+                    tx_next <= INIT;
                 end if;
             when DEVICE =>
                 if isDEVICE = '1' then
-                    tx_next_state <= ACK;
+                    tx_next <= ACK;
                 else
-                    tx_next_state <= DEVICE;
+                    tx_next <= DEVICE;
                 end if;
             when ACK =>
                 if isACK = '1' then
-                    tx_next_state <= REG;
+                    tx_next <= REG;
                 else
-                    tx_next_state <= DEVICE;
+                    tx_next <= DEVICE;
                 end if;
             when others =>
                 -- DEFAULT
         end case;
 
-        tx_current_state <= tx_next_state;  -- Update current state
+        tx_current <= tx_next;  -- Update current state
     end if;
 end process;
 
@@ -297,12 +291,12 @@ begin
 
         -- PIPE :: 1
         if i2c_clock_d0 = '1' then
-            clocks_aligned <= '1';
+            clocks_aligned 1';
         end if;
 
         -- PIPE :: 2
         -- Clock is aligned
-        if clocks_aligned = '1' then
+        if clocks_aligned ' then
             if write_address = '1' then
                 if i2c_clock_d0 = '0' then  -- First '0' after aligned '1'
                     cycle_detected <= '1';  -- Delays :: d0, d1, d2, d3
