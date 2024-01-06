@@ -61,21 +61,22 @@ signal synced_cs    			: std_logic := '0';
 signal synced_mosi  			: std_logic := '0';
 signal synced_miso  			: std_logic := '0';
 
--- I2c
-signal clock_1MHz 				: std_logic := '0';
-signal clock_1MHz_count			: std_logic_vector(7 downto 0) := "00000000";
-signal delay_pause 				: std_logic := '0';
-signal delay_count 				: std_logic_vector(27 downto 0) := (others => '0');
-signal read_clock 				: std_logic := '0';
-signal read_clock_count 		: std_logic_vector(3 downto 0) := "0000";
-signal read_half 				: std_logic := '0';
-signal read_address 			: std_logic := '0';
-signal read_barier 				: std_logic := '0';
-signal read_barier_count 		: std_logic_vector(9 downto 0) := "0000000000";
-signal read_register 			: std_logic := '0';
+-- Reset Button
+signal reset_button			: std_logic := '0';
 
--- Debug Button
-signal button_debounced			: std_logic := '0';
+-- i2c clocks
+signal i2c_half_wave : std_logic := '0';
+signal i2c_clock_d0 : std_logic := '0';
+signal i2c_clock_d1 : std_logic := '0';
+signal i2c_clock_d2 : std_logic := '0';
+signal i2c_clock_d3 : std_logic := '0';
+signal clocks_aligned : std_logic := '0';
+
+-- i2c init
+signal init_time : std_logic_vector(26 downto 0) := (others => '0');
+signal init_complete : std_logic := '0';
+
+
 
 -- Debug Interrupt
 signal diode_check 				: std_logic := '0';
@@ -150,7 +151,7 @@ Debounce_module: Debounce port map
 (
 	clock 		=> CLOCK_50MHz,
 	button_in 	=> BUTTON_0,
-	button_out 	=> button_debounced
+	button_out 	=> reset_button
 );
 
 SPI_Data_module: SPI_Data port map 
@@ -185,20 +186,6 @@ Interrupt_module: Interrupt port map
 ----------------------
 -- DEBUG PROCESS
 ----------------------
-led_process:
-process(CLOCK_50MHz)
-begin
-	if rising_edge(CLOCK_50MHz) then
-		LED_7 	<= synced_sclk;
-		LED_6 	<= synced_cs;
-		LED_5 	<= synced_mosi;
-		LED_4 	<= diode_check;
-		LED_3 	<= sda;
-		LED_2 	<= sck;
-		LED_1 	<= BUTTON_1; -- BUTTON_1 is not working
-		LED_0 	<= clock_1MHz;
-	end if;
-end process;
 
 interrupt_process:
 process(CLOCK_50MHz, interrupt_signal, diode_check, diode_done)
@@ -228,97 +215,116 @@ end process;
 -- Stop  == SDA >> Low.to.High after SCL Low.to.High
 --
 ---------------------------------------------------------------------------------------
-clock_1MHz_process:
-process(CLOCK_50MHz, clock_1MHz_count, clock_1MHz)
+clock_free_process:
+process(CLOCK_50MHz)
 begin
-	if rising_edge(CLOCK_50MHz) then
-		if clock_1MHz_count = "11111001" then
-			clock_1MHz_count <= "00000000";
-			clock_1MHz 	<= not clock_1MHz;
-		end if;
+    if rising_edge(CLOCK_50MHz) then
+        if i2c_half_wave = "11111001" then
+            i2c_clock_d0 <= not i2c_clock_d0;
+            i2c_half_wave <= (others => '0'); -- Reset count
+        else
+            i2c_half_wave <= i2c_half_wave + '1';
+        end if;
 
-		clock_1MHz_count <= clock_1MHz_count + '1';
-
-	end if;
+        -- Assign delayed clocks unconditionally on every clock edge
+        i2c_clock_d1 <= i2c_clock_d0;
+        i2c_clock_d2 <= i2c_clock_d1;
+        i2c_clock_d3 <= i2c_clock_d2;
+    end if;
 end process;
 
-read_process:
-process(CLOCK_50MHz, clock_1MHz, delay_pause, delay_count, read_clock, read_half, read_clock_count, read_address, read_barier, read_barier_count, read_register)
+init_process:
+process(CLOCK_50MHz, reset_button, init_time, tx_current)
+begin
+    if rising_edge(CLOCK_50MHz) then
+        if reset_button = '1' then
+            tx_current <= INIT
+            --
+            -- Reset other variables or states
+            --
+        else
+            if init_time = "101111101011110000011111111" then -- TIME @ 2s
+                init_time <= (others => '0');
+                init_complete <= '1';
+            else
+                init_time <= init_time + '1';
+            end if;
+        end if;
+    end if;
+end process;
+
+state_machine_process:
+process(CLOCK_50MHz, init_complete, isACK, tx_current)
+begin
+    if rising_edge(CLOCK_50MHz) then
+        case tx_current is
+            when INIT =>
+                if init_complete = '1' then
+                    tx_next <= DEVICE;
+                else
+                    tx_next <= INIT;
+                end if;
+            when DEVICE =>
+                if isDEVICE = '1' then
+                    tx_next <= ACK;
+                else
+                    tx_next <= DEVICE;
+                end if;
+            when ACK =>
+                if isACK = '1' then
+                    tx_next <= REG;
+                else
+                    tx_next <= DEVICE;
+                end if;
+            when others =>
+                -- DEFAULT
+        end case;
+
+        tx_current <= tx_next;  -- Update current state
+    end if;
+end process;
+
+device_process:
+process(CLOCK_50MHz)
+begin
+    if rising_edge(CLOCK_50MHz) then
+
+        -- PIPE :: 1
+        if i2c_clock_d0 = '1' then
+            clocks_aligned 1';
+        end if;
+
+        -- PIPE :: 2
+        -- Clock is aligned
+        if clocks_aligned ' then
+            if write_address = '1' then
+                if i2c_clock_d0 = '0' then  -- First '0' after aligned '1'
+                    cycle_detected <= '1';  -- Delays :: d0, d1, d2, d3
+
+                    -- End of Address zone
+                    if write_clock_count = "1001" then
+                        write_address        <= '0';
+                        write_barier         <= '1';
+                        write_clock_count    <= "0000";
+                    end if;
+                end if;
+            end if;
+        end if;
+    end if;
+end process;
+
+	led_process:
+process(CLOCK_50MHz)
 begin
 	if rising_edge(CLOCK_50MHz) then
-
-		if delay_pause = '0' then
-			if delay_count = "1110111001101011001010000000" then
-				read_address <= '1';
-				delay_pause <= '1';
-			end if;
-
-			delay_count <= delay_count +'1';
-
-		end if;
-
-		if read_barier = '1' then
-
-			if read_barier_count = "1111111111" then
-				read_barier 		<= '0';
-				read_register 		<= '1';
-				read_barier_count 	<= "0000000000";
-				read_clock 			<= '0';
-			end if;
-
-			read_barier_count <= read_barier_count + '1';
-
-		end if;
-
-		if clock_1MHz = '1' then
-			read_ready <= '1';
-		end if;
-
-		if read_ready = '1';
-
-		if read_address = '1' then
-			if clock_1MHz = '0' then
-
-				read_clock 			<= clock_1MHz;
-
-				if read_clock_count = "1111" then
-					read_address 		<= '0';
-					read_barier 		<= '1';
-					read_clock_count	<= "0000";
-				end if;
-
-				if read_half = '0' then
-					read_clock_count 	<= read_clock_count + '1';
-					read_half 			<= '1';
-				end if;
-			else 
-				read_clock 			<= clock_1MHz;
-				read_half 			<= '0';
-			end if;
-		end if;
-
-		if read_register = '1' then
-			if clock_1MHz = '0' then
-
-				read_clock 	<= clock_1MHz;
-
-				if read_clock_count = "1000" then
-					read_register 		<= '0';
-					read_barier 		<= '0';
-					read_clock_count	<= "0000";
-					read_clock 			<= '0';
-					delay_pause 		<= '0';
-				end if;
-
-				if read_half = '0' then
-					read_clock_count 	<= read_clock_count + '1';
-					read_half 			<= '1';
-				end if;
-			else 
-				read_clock 			<= clock_1MHz;
-				read_half 			<= '0';
-			end if;
-		end if;
+		LED_7 	<= '1';
+		LED_6 	<= '1';
+		LED_5 	<= '1';
+		LED_4 	<= '1';
+		LED_3 	<= '1';
+		LED_2 	<= '1';
+		LED_1 	<= BUTTON_1; -- BUTTON_1 is not working
+		LED_0 	<= read_clock;
 	end if;
 end process;
 
@@ -326,8 +332,8 @@ i2c_process:
 process(CLOCK_50MHz, read_clock, sda, sck)
 begin
 	if rising_edge(CLOCK_50MHz) then
-		sck <= read_clock;
-		sda <= '0';
+		sck <= I2C_IN_SCK;
+		sda <= I2C_IN_SDA;
 	end if;
 end process;
 
