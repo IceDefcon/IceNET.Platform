@@ -70,27 +70,38 @@ signal i2c_clock_d0 : std_logic := '0';
 signal i2c_clock_d1 : std_logic := '0';
 signal i2c_clock_d2 : std_logic := '0';
 signal i2c_clock_d3 : std_logic := '0';
-signal clocks_aligned : std_logic := '0';
+signal clock_detected : std_logic := '0';
+signal clock_aligned : std_logic := '0';
+signal clock_data : std_logic := '0';
 
 -- i2c init
 signal init_time : std_logic_vector(26 downto 0) := (others => '0');
-signal init_complete : std_logic := '0';
 
 --i2c state machine
-type TX is (IDLE, INIT, DEVICE, ACK, NAK);
+type TX is (IDLE, INIT, DEVICE, ACK, REG);
 signal tx_current_state, tx_next_state: TX;
 
-i2c flags
+-- i2c flags
+signal isINIT : std_logic := '0';
 signal isDEVICE : std_logic := '0';
-signal isACK 	: std_logic := '0';
+signal isACK : std_logic := '0';
+signal isNAK : std_logic := '0';
+signal isREG : std_logic := '0';
+
+-- i2c write
+signal write_clock : std_logic := '0';
+signal write_address : std_logic := '0';
+signal write_barier : std_logic := '0';
+signal write_clock_count : std_logic_vector(3 downto 0) := "0000";
+
+-- i2c debug
+signal sda : std_logic := '0';
+signal sck : std_logic := '0';
+signal optimisation_off : std_logic := '0';
 
 -- Debug Interrupt
-signal diode_check 				: std_logic := '0';
-signal diode_done 				: std_logic := '0';
-
--- Debug I2c
-signal sda 						: std_logic := '0';
-signal sck 						: std_logic := '0';
+signal diode_check : std_logic := '0';
+signal diode_done : std_logic := '0';
 
 ----------------------------
 -- COMPONENTS DECLARATION --
@@ -239,8 +250,8 @@ begin
     end if;
 end process;
 
-init_process:
-process(CLOCK_50MHz, reset_button, init_time, tx_current_state)
+state_machine_process:
+process(CLOCK_50MHz, reset_button, tx_current_state, tx_next_state, isINIT, isACK, isDEVICE)
 begin
     if rising_edge(CLOCK_50MHz) then
         if reset_button = '1' then
@@ -251,21 +262,15 @@ begin
         else
             if init_time = "101111101011110000011111111" then -- TIME @ 2s
                 init_time <= (others => '0');
-                init_complete <= '1';
+                isINIT <= '1';
             else
                 init_time <= init_time + '1';
             end if;
         end if;
-    end if;
-end process;
 
-state_machine_process:
-process(CLOCK_50MHz, init_complete, isACK, tx_current_state)
-begin
-    if rising_edge(CLOCK_50MHz) then
         case tx_current_state is
             when INIT =>
-                if init_complete = '1' then
+                if isINIT = '1' then
                     tx_next_state <= DEVICE;
                 else
                     tx_next_state <= INIT;
@@ -297,21 +302,22 @@ begin
 
         -- PIPE :: 1
         if i2c_clock_d0 = '1' then
-            clocks_aligned <= '1';
+            clock_aligned <= '1';
         end if;
 
         -- PIPE :: 2
         -- Clock is aligned
-        if clocks_aligned = '1' then
+        if clock_aligned = '1' then
             if write_address = '1' then
                 if i2c_clock_d0 = '0' then  -- First '0' after aligned '1'
-                    cycle_detected <= '1';  -- Delays :: d0, d1, d2, d3
+                    clock_detected <= '1';  -- Delays :: d0, d1, d2, d3
 
                     -- End of Address zone
                     if write_clock_count = "1001" then
-                        write_address        <= '0';
-                        write_barier         <= '1';
-                        write_clock_count    <= "0000";
+                        write_address     	<= '0';
+                        write_barier      	<= '1';
+                        write_clock_count  	<= "0000";
+                        optimisation_off 	<= '1';
                     end if;
                 end if;
             end if;
@@ -323,19 +329,19 @@ end process;
 process(CLOCK_50MHz)
 begin
 	if rising_edge(CLOCK_50MHz) then
-		LED_7 	<= '1';
+		LED_7 	<= optimisation_off;
 		LED_6 	<= '1';
 		LED_5 	<= '1';
 		LED_4 	<= '1';
 		LED_3 	<= '1';
 		LED_2 	<= '1';
 		LED_1 	<= BUTTON_1; -- BUTTON_1 is not working
-		LED_0 	<= read_clock;
+		LED_0 	<= write_clock;
 	end if;
 end process;
 
 i2c_process:
-process(CLOCK_50MHz, read_clock, sda, sck)
+process(CLOCK_50MHz, sda, sck)
 begin
 	if rising_edge(CLOCK_50MHz) then
 		sck <= I2C_IN_SCK;
