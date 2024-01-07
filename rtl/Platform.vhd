@@ -74,19 +74,20 @@ signal clock_detected : std_logic := '0';
 signal clock_aligned : std_logic := '0';
 signal clock_data : std_logic := '0';
 
--- i2c init
+-- i2c initialise time
 signal init_time : std_logic_vector(26 downto 0) := (others => '0');
 
 --i2c state machine
 type TX is (IDLE, INIT, DEVICE, ACK, REG);
-signal tx_current_state, tx_next_state: TX;
+signal tx_current_state, tx_next_state: TX := IDLE;
 
--- i2c flags
+-- i2c state machine flags
+signal isIDLE : std_logic := '0';
 signal isINIT : std_logic := '0';
 signal isDEVICE : std_logic := '0';
 signal isACK : std_logic := '0';
 signal isNAK : std_logic := '0';
-signal isREG : std_logic := '0';
+signal isREG: std_logic := '0';
 
 -- i2c write
 signal write_clock : std_logic := '0';
@@ -251,61 +252,74 @@ begin
 end process;
 
 state_machine_process:
-process(CLOCK_50MHz, reset_button, tx_current_state, tx_next_state, isINIT, isACK, isDEVICE)
+process(CLOCK_50MHz, reset_button, tx_current_state, tx_next_state, 
+	isIDLE, isINIT, isDEVICE, isACK, isNAK, isREG)
 begin
     if rising_edge(CLOCK_50MHz) then
-        if reset_button = '1' then
-            tx_current_state <= INIT;
+
+    	--
+    	-- SM :: State Process
+    	--
+        case tx_current_state is
+
+            when IDLE =>
+            	if isIDLE <= '1' then
+            		tx_next_state <= INIT;
+            		isIDLE <= '0';
+            	else
+            		tx_next_state <= IDLE;
+            	end if;
+
+            when INIT =>
+            	if isINIT <= '1' then
+            		tx_next_state <= DEVICE;
+            	else
+            		tx_next_state <= INIT;
+            	end if;
+
+            when DEVICE =>
+                if isDEVICEdone = '1' then
+                    tx_next_state <= IDLE;
+                else
+                    tx_next_state <= DEVICE;
+                end if;
+            when others =>
+                	tx_next_state <= IDLE;
+        end case;
+
+        tx_current_state <= tx_next_state;  -- Update current state
+
+        ----------------------------------------
+        -- SM :: IDLE Process
+        ----------------------------------------
+        if tx_current_state = IDLE then
+	        if reset_button = '1' then
+	        	isIDLE <= '1';
+	        end if;
+	    end if;
+
+        ----------------------------------------
+        -- SM :: INIT Process
+        ----------------------------------------
+        if tx_current_state = INIT then
             --
             -- Reset other variables or states
             --
-        else
-            if init_time = "101111101011110000011111111" then -- TIME @ 2s
+            if init_time = "101111101011110000011111111" then -- Transition to DEVIE @ 2s Time
                 init_time <= (others => '0');
                 isINIT <= '1';
             else
                 init_time <= init_time + '1';
             end if;
-        end if;
+	    end if;
 
-        case tx_current_state is
-            when INIT =>
-                if isINIT = '1' then
-                    tx_next_state <= DEVICE;
-                else
-                    tx_next_state <= INIT;
-                end if;
-            when DEVICE =>
-                if isDEVICE = '1' then
-                    tx_next_state <= ACK;
-                else
-                    tx_next_state <= DEVICE;
-                end if;
-            when ACK =>
-                if isACK = '1' then
-                    tx_next_state <= REG;
-                else
-                    tx_next_state <= DEVICE;
-                end if;
-            when others =>
-                -- DEFAULT
-        end case;
-
-        tx_current_state <= tx_next_state;  -- Update current state
-    end if;
-end process;
-
-device_process:
-process(CLOCK_50MHz)
-begin
-    if rising_edge(CLOCK_50MHz) then
-
-        -- PIPE :: 1
+        ----------------------------------------
+        -- SM :: DEVICE Process
+        ----------------------------------------
         if i2c_clock_d0 = '1' then
             clock_aligned <= '1';
         end if;
 
-        -- PIPE :: 2
         -- Clock is aligned
         if clock_aligned = '1' then
             if write_address = '1' then
@@ -322,10 +336,12 @@ begin
                 end if;
             end if;
         end if;
+
     end if;
 end process;
 
-	led_process:
+
+led_process:
 process(CLOCK_50MHz)
 begin
 	if rising_edge(CLOCK_50MHz) then
