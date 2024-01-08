@@ -12,9 +12,9 @@ port
     button_in_3 : in std_logic;
     button_in_4 : in std_logic;
 
-    button_out_1 : out std_logic;
-    button_out_2 : out std_logic;
-    button_out_3 : out std_logic;
+    button_out_1 : out std_logic
+    button_out_2 : out std_logic
+    button_out_3 : out std_logic
     button_out_4 : out std_logic
 );
 end Debounce;
@@ -43,40 +43,40 @@ architecture rtl of Debounce is
                 button_temp_1 <= button_in_1;
                 count_1 <= 0;
             elsif (count_1 = delay) then
-                button_out_1 <= not button_temp_1;
+                button_out <= not button_temp_1;
             else
                 count_1 <= count_1 + 1;
-					button_out_1 <= '0'; -- To avoid high debouncing signals output must be keept as low on idle
+					button_out <= '0'; -- To avoid high debouncing signals output must be keept as low on idle
             end if;
 
             if (button_in_2 /= button_temp_2) then -- if not equal
                 button_temp_2 <= button_in_2;
                 count_2 <= 0;
             elsif (count_2 = delay) then
-                button_out_2 <= not button_temp_2;
+                button_out <= not button_temp_2;
             else
                 count_2 <= count_2 + 1;
-                    button_out_2 <= '0'; -- To avoid high debouncing signals output must be keept as low on idle
+                    button_out <= '0'; -- To avoid high debouncing signals output must be keept as low on idle
             end if;
 
             if (button_in_3 /= button_temp_3) then -- if not equal
                 button_temp_3 <= button_in_3;
                 count_3 <= 0;
             elsif (count_3 = delay) then
-                button_out_3 <= not button_temp_3;
+                button_out <= not button_temp_3;
             else
                 count_3 <= count_3 + 1;
-                    button_out_3 <= '0'; -- To avoid high debouncing signals output must be keept as low on idle
+                    button_out <= '0'; -- To avoid high debouncing signals output must be keept as low on idle
             end if;
 
             if (button_in_4 /= button_temp_4) then -- if not equal
                 button_temp_4 <= button_in_4;
                 count_4 <= 0;
             elsif (count_4 = delay) then
-                button_out_4 <= not button_temp_4;
+                button_out <= not button_temp_4;
             else
                 count_4 <= count_4 + 1;
-                    button_out_4 <= '0'; -- To avoid high debouncing signals output must be keept as low on idle
+                    button_out <= '0'; -- To avoid high debouncing signals output must be keept as low on idle
             end if;
             
         end if;
