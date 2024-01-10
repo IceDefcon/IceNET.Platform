@@ -32,7 +32,10 @@ port
 	KERNEL_SCLK 	: in  std_logic; 	-- PIN_A8 	:: BBB P9_22 :: BLACK 	:: SPI0_SCLK
 
 	I2C_IN_SDA 		: in 	std_logic; 	-- PIN_A9 	:: BBB P9_20 :: BLUE
-	I2C_IN_SCK 		: in 	std_logic; 	-- PIN_A10 	:: BBB P9_19 :: GREEN-ORANGE
+	I2C_IN_SCK 		: in 	std_logic; 	-- PIN_A10 	:: BBB P9_19 :: GREEN
+
+	I2C_OUT_SDA 	: out 	std_logic; 	-- PIN_B9 	:: BBB P9_20 :: RED
+	I2C_OUT_SCK 	: out 	std_logic; 	-- PIN_B10 	:: BBB P9_19 :: ORANGE
 
 	INT_CPU 			: out std_logic; 	-- PIN_A3 	:: BBB P9_12 :: BLACK
 	INT_FPGA 		: in 	std_logic; 	-- PIN_A4 	:: BBB P9_14 :: WHITE
@@ -81,9 +84,9 @@ type TX is (IDLE, INIT, DEVICE);
 signal tx_current_state, tx_next_state: TX := IDLE;
 
 -- i2c state machine flags
-signal isIDLE : std_logic := '0';
-signal isINIT : std_logic := '0';
-signal isDEVICE : std_logic := '0';
+signal isIDLEdone : std_logic := '0';
+signal isINITdone : std_logic := '0';
+signal isDEVICEdone : std_logic := '0';
 
 -- i2c write clock
 signal write_clock : std_logic := '0';
@@ -273,9 +276,9 @@ begin
 end process;
 
 state_machine_process:
-process(CLOCK_50MHz, i2c_clock_d0, i2c_clock_d1, i2c_clock_d2, i2c_clock_d3, isIDLE, isINIT, isDEVICE, tx_current_state, tx_next_state,
+process(CLOCK_50MHz, i2c_clock_d0, i2c_clock_d1, i2c_clock_d2, i2c_clock_d3, isIDLEdone, isINITdone, isDEVICEdone, tx_current_state, tx_next_state,
 	reset_button, init_time, clock_aligned, write_clock, write_clock_count, write_clock_detected,
-	ice_go)
+	ice_go, ice_start)
 begin
     if rising_edge(CLOCK_50MHz) then
 
@@ -304,8 +307,9 @@ begin
 	        case tx_current_state is
 
 	            when IDLE =>
-	            	if isIDLE = '1' then
+	            	if isIDLEdone = '1' then
 	            		tx_next_state <= INIT;
+	            		isIDLEdone <= '0';
 						LED_3 <= '0';
 	            	else
 						LED_2 <= '0';
@@ -313,7 +317,7 @@ begin
 	            	end if;
 
 	            when INIT =>
-	            	if isINIT = '1' then
+	            	if isINITdone = '1' then
 	            		tx_next_state <= DEVICE;
 						LED_5 	<= '0';
 	            	else
@@ -322,7 +326,7 @@ begin
 	            	end if;
 
 	            when DEVICE =>
-	                if isDEVICE = '1' then
+	                if isDEVICEdone = '1' then
 	                    tx_next_state <= IDLE;
 						LED_7 	<= '0';
 	                else
@@ -338,7 +342,7 @@ begin
 	        ----------------------------------------
 	        if tx_current_state = IDLE then
 		        if reset_button = '1' then
-		        	isIDLE <= '1';
+		        	isIDLEdone <= '1';
 		        end if;
 		    end if;
 
@@ -351,7 +355,7 @@ begin
 	            --
 	            if init_time = "101111101011110000011111111" then -- Transition to DEVIE @ 2s Time
 	                init_time <= (others => '0');
-	                isINIT <= '1';
+	                isINITdone <= '1';
 					LED_5 	<= '0';
 	            else
 	                init_time <= init_time + '1';
@@ -361,46 +365,47 @@ begin
 	        ----------------------------------------
 	        -- SM :: DEVICE Process
 	        ----------------------------------------
-	        --if tx_current_state = INIT then
-		    --    if i2c_clock_d0 = '1' then
-		    --        clock_aligned <= '1';
-		    --    end if;
+	        if tx_current_state = DEVICE then
+		        if i2c_clock_d0 = '1' then
+		            clock_aligned <= '1';
+		            LED_8 <= clock_aligned;
+		        end if;
 
-		    --    -- Clock is aligned
-		    --    if clock_aligned = '1' then
+		        -- Clock is aligned
+		        if clock_aligned = '1' then
 
-		    --    	write_clock <= i2c_clock_d0;
+		        	write_clock <= i2c_clock_d0;
 
-	        --        if i2c_clock_d0 = '0' then  -- First '0' after aligned '1'
+	                if i2c_clock_d0 = '0' then  -- First '0' after aligned '1'
 
 	        --            -- End of DEVICE address transmission
 	        --            if write_clock_count = "1001" then
 	        --                write_clock_count  	<= "0000";
-	        --                isDEVICE 	<= '1';
+	        --                isDEVICEdone 	<= '1';
 	        --            end if;
 
-	        --            -- Write clock cycle is detected
-			--			if write_clock_detected = '0' then
-		    --                write_clock_count <= write_clock_count + '1';
-			--				write_clock_detected <= '1';
-			--			end if;
-			--		else 
-			--			write_clock	<= i2c_clock_d0;
-			--			write_clock_detected <= '0';
-	        --        end if;
-		    --    end if;
-		    --end if;
+	                    -- Write clock cycle is detected
+						if write_clock_detected = '0' then
+		                    write_clock_count <= write_clock_count + '1';
+							write_clock_detected <= '1';
+						end if;
+					else 
+						write_clock	<= i2c_clock_d0;
+						write_clock_detected <= '0';
+	                end if;
+		        end if;
+		    end if;
 		end if;
     end if;
 end process;
 
 
 i2c_process:
-process(CLOCK_50MHz, sda, sck)
+process(CLOCK_50MHz, sda, sck, write_clock)
 begin
 	if rising_edge(CLOCK_50MHz) then
-		sck <= I2C_IN_SCK;
-		sda <= I2C_IN_SDA;
+		I2C_OUT_SDA <= '0';
+		I2C_OUT_SCK <= write_clock;
 	end if;
 end process;
 
