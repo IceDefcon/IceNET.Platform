@@ -172,7 +172,7 @@ SPI_Synchronizer_module: SPI_Synchronizer port map
 
 Debounce_module: Debounce port map 
 (
-	clock 		=> CLOCK_50MHz,
+	clock => CLOCK_50MHz,
 	button_in_1 => BUTTON_1,
 	button_in_2 => BUTTON_2,
 	button_in_3 => BUTTON_3,
@@ -301,41 +301,6 @@ begin
     	if ice_go = '1' then
 			
 			LED_1 	<= '0';
-	    	--
-	    	-- SM :: State Process
-	    	--
-	        case tx_current_state is
-
-	            when IDLE =>
-	            	if isIDLEdone = '1' then
-	            		tx_next_state <= INIT;
-	            		isIDLEdone <= '0';
-						LED_3 <= '0';
-	            	else
-						LED_2 <= '0';
-	            		tx_next_state <= IDLE;
-	            	end if;
-
-	            when INIT =>
-	            	if isINITdone = '1' then
-	            		tx_next_state <= DEVICE;
-						LED_5 	<= '0';
-	            	else
-						LED_4 	<= '0';
-	            		tx_next_state <= INIT;
-	            	end if;
-
-	            when DEVICE =>
-	                if isDEVICEdone = '1' then
-	                    tx_next_state <= IDLE;
-						LED_7 	<= '0';
-	                else
-						LED_6 	<= '0';
-	                    tx_next_state <= DEVICE;
-	                end if;
-	        end case;
-
-	        tx_current_state <= tx_next_state;  -- Update current state
 
 	        ----------------------------------------
 	        -- SM :: IDLE Process
@@ -366,7 +331,7 @@ begin
 	        -- SM :: DEVICE Process
 	        ----------------------------------------
 	        if tx_current_state = DEVICE then
-		        if i2c_clock_d0 = '1' then
+		        if i2c_clock_d0 = '0' then
 		            clock_aligned <= '1';
 		            LED_8 <= clock_aligned;
 		        end if;
@@ -378,11 +343,11 @@ begin
 
 	                if i2c_clock_d0 = '0' then  -- First '0' after aligned '1'
 
-	        --            -- End of DEVICE address transmission
-	        --            if write_clock_count = "1001" then
-	        --                write_clock_count  	<= "0000";
-	        --                isDEVICEdone 	<= '1';
-	        --            end if;
+	                    -- End of DEVICE address transmission
+	                    if write_clock_count = "1001" then
+	                        write_clock_count  	<= "0000";
+	                        isDEVICEdone 	<= '1';
+	                    end if;
 
 	                    -- Write clock cycle is detected
 						if write_clock_detected = '0' then
@@ -395,6 +360,36 @@ begin
 	                end if;
 		        end if;
 		    end if;
+
+	    	--
+	    	-- SM :: State Process
+	    	--
+	        case tx_current_state is
+
+	            when IDLE =>
+	            	if isIDLEdone = '1' then
+	            		tx_next_state <= INIT;
+	                	isIDLEdone <= '0';
+						LED_2 <= '0';
+	            	end if;
+
+	            when INIT =>
+	            	if isINITdone = '1' then
+	            		tx_next_state <= DEVICE;
+						isINITdone <= '0';
+						LED_3 <= '0';
+	            	end if;
+
+	            when DEVICE =>
+	                if isDEVICEdone = '1' then
+	                    tx_next_state <= IDLE;
+						isDEVICEdone <= '0';
+						LED_4 	<= '0';
+	                end if;
+	        end case;
+
+	        tx_current_state <= tx_next_state;  -- Update current state
+
 		end if;
     end if;
 end process;
