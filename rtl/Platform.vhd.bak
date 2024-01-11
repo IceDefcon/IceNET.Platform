@@ -196,6 +196,8 @@ SPI_Data_module: SPI_Data port map
 
 KERNEL_MISO <= synced_miso;
 
+kernel_interrupt <= INT_FPGA;
+
 ------------------------------------------
 -- Interrupt pulse :: 0x2FAF07F/50 MHz
 -- (49999999 + 1)/50000000 Hz = 1 sec
@@ -265,13 +267,19 @@ begin
     end if;
 end process;
 
+ice_process:
+process(CLOCK_50MHz)
+begin
+    if rising_edge(CLOCK_50MHz) then
+
+	end if;
+end process;
+
 state_machine_process:
 process(CLOCK_50MHz, reset_button, sm_delay, init_delay, device_delay, sm_run, 
 	tx_current_state, tx_next_state, isRESET, isINIT, isDEVICE)
 begin
     if rising_edge(CLOCK_50MHz) then
-
-    	kernel_interrupt <= INT_FPGA;
 
     	if sm_run = '0' then
 		    if sm_delay = "101111101011110000011111111" then -- 2s delay
@@ -280,6 +288,7 @@ begin
 				isRESET <= '0';
 				isINIT <= '0';
 				isDEVICE <= '0';
+		    else
 		        LED_1 <= '0'; -- Debuging LED's
 				LED_2 <= '0';
 				LED_3 <= '0';
@@ -288,7 +297,6 @@ begin
 				LED_6 <= '0';
 				LED_7 <= '0';
 				LED_8 <= '0';
-		    else
 		        sm_delay <= sm_delay + '1';
 		    end if;
     	elsif sm_run = '1' then
@@ -297,7 +305,7 @@ begin
 	        -- State Machine :: RESET Process
 	        ----------------------------------------
 	        if tx_current_state = RESET then
-		        if reset_button = '1' or kernel_interrupt <= '0' then
+		        if reset_button = '1' or kernel_interrupt then
             		tx_next_state <= INIT;
 	                isRESET <= '1';
 		        end if;
