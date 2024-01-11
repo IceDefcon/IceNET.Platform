@@ -77,7 +77,7 @@ signal i2c_clock_d0 : std_logic := '0';
 signal i2c_clock_d1 : std_logic := '0';
 signal i2c_clock_d2 : std_logic := '0';
 signal i2c_clock_d3 : std_logic := '0';
-signal clock_aligned : std_logic := '0';
+signal i2c_clock_align : std_logic := '0';
 
 -- i2c initialise time
 signal init_delay : std_logic_vector(26 downto 0) := (others => '0');
@@ -94,8 +94,8 @@ signal isDEVICE : std_logic := '0';
 
 -- i2c write clock
 signal write_clock : std_logic := '0';
-signal write_clock_detected : std_logic := '0';
-signal write_clock_count : std_logic_vector(3 downto 0) := "0000";
+signal write_detect : std_logic := '0';
+signal write_count : std_logic_vector(3 downto 0) := "0000";
 
 -- i2c debug
 signal sda : std_logic := '0';
@@ -269,8 +269,10 @@ begin
 end process;
 
 state_machine_process:
-process(CLOCK_50MHz, reset_button, sm_delay, init_delay, device_delay, sm_run, 
-	tx_current_state, tx_next_state, isRESET, isINIT, isDEVICE)
+process(CLOCK_50MHz, reset_button, sm_delay, init_delay, device_delay, sm_run,
+	i2c_clock_d0, i2c_clock_d1, i2c_clock_d2, i2c_clock_d3, i2c_clock_align,
+	tx_current_state, tx_next_state, isRESET, isINIT, isDEVICE,
+	write_clock, write_detect, write_count)
 begin
     if rising_edge(CLOCK_50MHz) then
 
@@ -323,15 +325,35 @@ begin
 	        -- State Machine :: DEVICE Process
 	        ----------------------------------------
 	        if tx_current_state = DEVICE then
-	            if device_delay = "101111101011110000011111111" then
-	                device_delay <= (others => '0');
-	            	tx_next_state <= RESET;
-	                isDEVICE <= '1';
+			    if i2c_clock_d0 = '1' then 	-- Align @ 1 to achieve cycle from '0'
+			        i2c_clock_align <= '1';
+			    end if;
 
-	            	sm_run <= '0'; -- Stop State Machine
-	            else
-	                device_delay <= device_delay + '1';
-	            end if;
+			    -- Clock is aligned
+			    if i2c_clock_align = '1' then
+			        if i2c_clock_d0 = '0' then  -- First '0' after aligned '1'
+
+			        	write_clock <= i2c_clock_d0;
+
+			            -- End of DEVICE address transmission
+			            if write_count = "1001" then
+			                write_count <= "0000";
+			                write_clock <= '0';
+			            	tx_next_state <= RESET;
+			                isDEVICE <= '1';
+			                sm_run <= '0'; -- Stop State Machine
+			            end if;
+
+			            -- Write clock cycle is detected
+						if write_detect = '0' then
+			                write_count <= write_count + '1';
+							write_detect <= '1';
+						end if;
+					else 
+						write_clock	<= i2c_clock_d0;
+						write_detect <= '0';
+			        end if;
+			    end if;
 		    end if;
 
 	        ----------------------------------------
@@ -355,8 +377,8 @@ i2c_process:
 process(CLOCK_50MHz, sda, sck)
 begin
 	if rising_edge(CLOCK_50MHz) then
-		sck <= sm_run;
-		sda <= reset_button;
+		I2C_OUT_SCK <= write_clock;
+		I2C_OUT_SDA <= '0';
 	end if;
 end process;
 
@@ -369,35 +391,4 @@ FPGA_INT <= '0'; -- interrupt_signal;
 
 end rtl;
 
-----------------------------------------
--- SM :: DEVICE Process
-----------------------------------------
---if tx_current_state = INIT then
---    if i2c_clock_d0 = '1' then
---        clock_aligned <= '1';
---    end if;
 
---    -- Clock is aligned
---    if clock_aligned = '1' then
-
---    	write_clock <= i2c_clock_d0;
-
---        if i2c_clock_d0 = '0' then  -- First '0' after aligned '1'
-
---            -- End of DEVICE address transmission
---            if write_clock_count = "1001" then
---                write_clock_count  	<= "0000";
---                isDEVICE 	<= '1';
---            end if;
-
---            -- Write clock cycle is detected
---			if write_clock_detected = '0' then
---                write_clock_count <= write_clock_count + '1';
---				write_clock_detected <= '1';
---			end if;
---		else 
---			write_clock	<= i2c_clock_d0;
---			write_clock_detected <= '0';
---        end if;
---    end if;
---end if;
