@@ -32,10 +32,13 @@ port
 	KERNEL_SCLK 	: in  std_logic; 	-- PIN_A8 	:: BBB P9_22 :: BLACK 	:: SPI0_SCLK
 
 	I2C_IN_SDA 		: in 	std_logic; 	-- PIN_A9 	:: BBB P9_20 :: BLUE
-	I2C_IN_SCK 		: in 	std_logic; 	-- PIN_A10 	:: BBB P9_19 :: GREEN-ORANGE
+	I2C_IN_SCK 		: in 	std_logic; 	-- PIN_A10 	:: BBB P9_19 :: GREEN
 
-	INT_CPU 			: out std_logic; 	-- PIN_A3 	:: BBB P9_12 :: BLACK
-	INT_FPGA 		: in 	std_logic; 	-- PIN_A4 	:: BBB P9_14 :: WHITE
+	I2C_OUT_SDA 	: out 	std_logic; 	-- PIN_B9 	::  		 :: RED
+	I2C_OUT_SCK 	: out 	std_logic; 	-- PIN_B10 	:: 			 :: ORANGE
+
+	FPGA_INT		: out std_logic; 	-- PIN_A3 	:: BBB P9_12 :: BLACK
+	KERNEL_INT 		: in 	std_logic; 	-- PIN_A4 	:: BBB P9_14 :: WHITE
 
 	BUTTON_1 		: in  std_logic; 	-- PIN_H20 	:: Reset
 	BUTTON_2 		: in  std_logic; 	-- PIN_K19 	:: Doesnt Work :: Broken Button or Incorrect Schematic
@@ -271,7 +274,7 @@ process(CLOCK_50MHz, reset_button, sm_delay, init_delay, device_delay, sm_run,
 begin
     if rising_edge(CLOCK_50MHz) then
 
-    	kernel_interrupt <= INT_FPGA;
+    	kernel_interrupt <= KERNEL_INT;
 
     	if sm_run = '0' then
 		    if sm_delay = "101111101011110000011111111" then -- 2s delay
@@ -362,7 +365,7 @@ end process;
 -- In order to adjust PID
 -- Controler for the gyroscope
 -----------------------------------
-INT_CPU <= '0'; -- interrupt_signal;
+FPGA_INT <= '0'; -- interrupt_signal;
 
 end rtl;
 
