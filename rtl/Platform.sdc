@@ -1,12 +1,7 @@
-# 
-#
-#
+##################################################
 # Clock constraints
+##################################################
 
-# Automatically constrain PLL and other generated clocks
-derive_pll_clocks -create_base_clocks
-
-
-
-
+# Satisfy constraint of the Quartus clock
+create_clock -name {CLOCK_50MHz} -period 6 CLOCK_50MHz
 

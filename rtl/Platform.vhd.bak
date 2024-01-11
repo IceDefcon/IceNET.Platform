@@ -78,7 +78,6 @@ signal clock_aligned : std_logic := '0';
 
 -- i2c initialise time
 signal init_time : std_logic_vector(26 downto 0) := (others => '0');
-signal device_time : std_logic_vector(26 downto 0) := (others => '0');
 
 --i2c state machine
 type TX is (IDLE, INIT, DEVICE);
@@ -278,7 +277,7 @@ end process;
 
 state_machine_process:
 process(CLOCK_50MHz, i2c_clock_d0, i2c_clock_d1, i2c_clock_d2, i2c_clock_d3, isIDLEdone, isINITdone, isDEVICEdone, tx_current_state, tx_next_state,
-	reset_button, init_time, device_time, clock_aligned, write_clock, write_clock_count, write_clock_detected,
+	reset_button, init_time, clock_aligned, write_clock, write_clock_count, write_clock_detected,
 	ice_go, ice_start)
 begin
     if rising_edge(CLOCK_50MHz) then
@@ -293,98 +292,112 @@ begin
 			LED_7 <= '1';
 			LED_8 <= '1';
 			ice_start <= '1';
-		elsif idle_button <= '1' then
+		end if;
+
+		if idle_button <= '1' then
 			tx_next_state <= IDLE;
 		end if;
 		
     	if ice_go = '1' then
+			
+			LED_1 	<= '0';
+	    	--
+	    	-- SM :: State Process
+	    	--
+	        case tx_current_state is
 
-    		LED_1 	<= '0';
-			tx_current_state <= tx_next_state;  -- Update current state
+	            when IDLE =>
+	            	if isIDLEdone = '1' then
+	            		tx_next_state <= INIT;
+	                	isIDLEdone <= '0';
+						LED_2 <= '0';
+	            	end if;
 
-			case tx_current_state is
+	            when INIT =>
+	            	if isINITdone = '1' then
+	            		tx_next_state <= DEVICE;
+						isINITdone <= '0';
+						LED_3 <= '0';
+	            	end if;
 
-			    when IDLE =>
-			        if reset_button = '1' then
-			            tx_next_state <= INIT;
-						LED_5 <= '0';
-						LED_6 <= '0';
-			        else
-			            tx_next_state <= IDLE;
-			        end if;
+	            when DEVICE =>
+	                if isDEVICEdone = '1' then
+	                    tx_next_state <= IDLE;
+						isDEVICEdone <= '0';
+						LED_4 	<= '0';
+	                end if;
+	        end case;
 
-			    when INIT =>
-			        if init_time = "101111101011110000011111111" then
-			            init_time <= (others => '0');
-			            tx_next_state <= DEVICE;
-						LED_5 <= '1';
-						LED_6 <= '0';
-			        else
-			            tx_next_state <= INIT;
-						LED_5 <= '0';
-						LED_6 <= '1';
-			            init_time <= init_time + '1';
-			        end if;
+	        tx_current_state <= tx_next_state;  -- Update current state
 
-			    when DEVICE =>
-			        if device_time = "101111101011110000011111111" then
-			            device_time <= (others => '0');
-			            tx_next_state <= IDLE;
-			        else
-			            tx_next_state <= DEVICE;
-						LED_5 <= '1';
-						LED_6 <= '1';
-			            device_time <= device_time + '1';
-			        end if;
+	        ----------------------------------------
+	        -- SM :: IDLE Process
+	        ----------------------------------------
+	        if tx_current_state.IDLE = '1' then
+		        if reset_button = '1' then
+		        	isIDLEdone <= '1';
+		        end if;
+		    end if;
 
-			    when others =>
-			        tx_next_state <= IDLE;
+	        ----------------------------------------
+	        -- SM :: INIT Process
+	        ----------------------------------------
+	        if tx_current_state.INIT = '1' then
+	            --
+	            -- Reset other variables or states
+	            --
+	            if init_time = "101111101011110000011111111" then -- Transition to DEVIE @ 2s Time
+	                init_time <= (others => '0');
+	                isINITdone <= '1';
+					LED_5 	<= '0';
+	            else
+	                init_time <= init_time + '1';
+	            end if;
+		    end if;
 
-			end case;
+	        ----------------------------------------
+	        -- SM :: DEVICE Process
+	        ----------------------------------------
+	        if tx_current_state.DEVICE = '1' then
+		        if i2c_clock_d0 = '0' then
+		            clock_aligned <= '1';
+		            LED_8 <= clock_aligned;
+		        end if;
 
-	        ------------------------------------------
-	        ---- SM :: DEVICE Process
-	        ------------------------------------------
-	        --if tx_current_state = DEVICE then
-		    --    if i2c_clock_d0 = '0' then
-		    --        clock_aligned <= '1';
-		    --        LED_8 <= clock_aligned;
-		    --    end if;
+		        -- Clock is aligned
+		        if clock_aligned = '1' then
 
-		    --    -- Clock is aligned
-		    --    if clock_aligned = '1' then
+		        	write_clock <= i2c_clock_d0;
 
-		    --    	write_clock <= i2c_clock_d0;
+	                if i2c_clock_d0 = '0' then  -- First '0' after aligned '1'
 
-	        --        if i2c_clock_d0 = '0' then  -- First '0' after aligned '1'
+	                    -- End of DEVICE address transmission
+	                    if write_clock_count = "1001" then
+	                        write_clock_count  	<= "0000";
+	                        isDEVICEdone 	<= '1';
+	                    end if;
 
-	        --            -- End of DEVICE address transmission
-	        --            if write_clock_count = "1001" then
-	        --                write_clock_count  	<= "0000";
-	        --                isDEVICEdone 	<= '1';
-	        --            end if;
-
-	        --            -- Write clock cycle is detected
-			--			if write_clock_detected = '0' then
-		    --                write_clock_count <= write_clock_count + '1';
-			--				write_clock_detected <= '1';
-			--			end if;
-			--		else 
-			--			write_clock	<= i2c_clock_d0;
-			--			write_clock_detected <= '0';
-	        --        end if;
-		    --    end if;
-		    --end if;
+	                    -- Write clock cycle is detected
+						if write_clock_detected = '0' then
+		                    write_clock_count <= write_clock_count + '1';
+							write_clock_detected <= '1';
+						end if;
+					else 
+						write_clock	<= i2c_clock_d0;
+						write_clock_detected <= '0';
+	                end if;
+		        end if;
+		    end if;
 		end if;
     end if;
 end process;
 
 
 i2c_process:
-process(CLOCK_50MHz, reset_button, write_clock)
+process(CLOCK_50MHz, sda, sck, write_clock)
 begin
 	if rising_edge(CLOCK_50MHz) then
-		I2C_OUT_SDA <= reset_button;
+		I2C_OUT_SDA <= '0';
 		I2C_OUT_SCK <= write_clock;
 	end if;
 end process;
