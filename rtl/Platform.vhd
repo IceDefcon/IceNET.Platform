@@ -46,6 +46,9 @@ end Platform;
 
 architecture rtl of Platform is
 
+-- Kernel interrupt
+signal kernel_interrupt 		: std_logic := '0';
+
 -- Interrupt Pulse Generator
 signal interrupt_divider 		: integer := 2;
 signal interrupt_period 		: std_logic_vector(25 downto 0) := "10111110101111000001111111";
@@ -74,25 +77,17 @@ signal i2c_clock_d3 : std_logic := '0';
 signal clock_aligned : std_logic := '0';
 
 -- i2c initialise time
-signal init_time : std_logic_vector(26 downto 0) := (others => '0');
-signal device_time : std_logic_vector(26 downto 0) := (others => '0');
+signal init_delay : std_logic_vector(26 downto 0) := (others => '0');
+signal device_delay : std_logic_vector(26 downto 0) := (others => '0');
 
 --i2c state machine
-type TX is (IDLE, INIT, DEVICE);
-signal tx_current_state, tx_next_state: TX := IDLE;
+type TX is (RESET, INIT, DEVICE);
+signal tx_current_state, tx_next_state: TX := RESET;
 
 -- i2c state machine flags
-signal isIDLE_start : std_logic := '0';
-signal isINIT_start : std_logic := '0';
-signal isDEVICE_start : std_logic := '0';
-
-signal isIDLE_stop : std_logic := '0';
-signal isINIT_stop : std_logic := '0';
-signal isDEVICE_stop : std_logic := '0';
-
-signal isIDLE_error : std_logic := '0';
-signal isINIT_error : std_logic := '0';
-signal isDEVICE_error : std_logic := '0';
+signal isRESET : std_logic := '0';
+signal isINIT : std_logic := '0';
+signal isDEVICE : std_logic := '0';
 
 -- i2c write clock
 signal write_clock : std_logic := '0';
@@ -106,8 +101,11 @@ signal sck : std_logic := '0';
 -- Debug Interrupt
 signal diode_check : std_logic := '0';
 signal diode_done : std_logic := '0';
-signal ice_time : std_logic_vector(26 downto 0) := (others => '0');
-signal ice_start : std_logic := '0';
+
+-- Ice Init
+signal sm_run : std_logic := '0';
+signal sm_delay : std_logic_vector(26 downto 0) := (others => '0');
+
 ----------------------------
 -- COMPONENTS DECLARATION --
 ----------------------------
@@ -198,6 +196,8 @@ SPI_Data_module: SPI_Data port map
 
 KERNEL_MISO <= synced_miso;
 
+kernel_interrupt <= INT_FPGA;
+
 ------------------------------------------
 -- Interrupt pulse :: 0x2FAF07F/50 MHz
 -- (49999999 + 1)/50000000 Hz = 1 sec
@@ -276,17 +276,20 @@ begin
 end process;
 
 state_machine_process:
-process(CLOCK_50MHz, ice_start, ice_time, tx_current_state, tx_next_state,
-    	isIDLE_start, isINIT_start, isDEVICE_start,
-    	reset_button, init_time, device_time)
+process(CLOCK_50MHz, reset_button, sm_delay, init_delay, device_delay, sm_run, 
+	tx_current_state, tx_next_state, isRESET, isINIT, isDEVICE)
 begin
     if rising_edge(CLOCK_50MHz) then
 
-    	if ice_start = '0' then
-		    if ice_time = "101111101011110000011111111" then -- 2s delay until state machin launch
-		        ice_time <= (others => '0');
-		        ice_start <= '1';
-		        LED_1 <= '0';
+    	if sm_run = '0' then
+		    if sm_delay = "101111101011110000011111111" then -- 2s delay
+		        sm_delay <= (others => '0');
+		        sm_run <= '1';
+				isRESET <= '0';
+				isINIT <= '0';
+				isDEVICE <= '0';
+		    else
+		        LED_1 <= '0'; -- Debuging LED's
 				LED_2 <= '0';
 				LED_3 <= '0';
 				LED_4 <= '0';
@@ -294,131 +297,60 @@ begin
 				LED_6 <= '0';
 				LED_7 <= '0';
 				LED_8 <= '0';
-		    else
-		        ice_time <= ice_time + '1';
+		        sm_delay <= sm_delay + '1';
 		    end if;
-		end if;
-
-    	if ice_start = '1' then
-
-	        case tx_current_state is
-	            when IDLE =>
-	            	if isIDLE_start = '1' then
-	            		tx_next_state <= INIT;
-	            		isIDLE_stop <= '1';
-
-	            		if isIDLE_error = '1' then
-		        			--LED_1 <= '0'; 			-- Check for ERROR in second interation inside IF
-	            		end if;
-
-	            		isIDLE_error <= '1';
-
-	            	elsif isIDLE_stop = '1' then
-	            		LED_6 <= '1'; 				-- Check for ERROR in second interation inside ELSIF
-		            end if;
-
-	            when INIT =>
-	            	if isINIT_start = '1' then
-	            		tx_next_state <= DEVICE;
-	            		isINIT_stop <= '1';
-
-	            		if isINIT_error = '1' then
-		        			--LED_2 <= '0'; 			-- Check for ERROR in second interation inside IF
-	            		end if;
-
-	            		isINIT_error <= '1';
-
-	            	elsif isINIT_stop = '1' then
-	            		LED_7 <= '1'; 				-- Check for ERROR in second interation inside ELSIF
-	            	end if;
-
-	            when DEVICE =>
-	            	if isDEVICE_start = '1' then
-	            		tx_next_state <= IDLE;
-	            		isDEVICE_stop <= '1';
-
-	            		if isDEVICE_error = '1' then
-		        			--LED_3 <= '0'; 			-- Check for ERROR in second interation inside IF
-	            		end if;
-
-	            		isDEVICE_error <= '1';
-
-	            	elsif isDEVICE_stop = '1' then
-	            		LED_8 <= '1'; 				-- Check for ERROR in second interation inside ELSIF
-	            	end if;
-	        end case;
-
-	        tx_current_state <= tx_next_state;  -- Update current state
+    	elsif sm_run = '1' then
 
 	        ----------------------------------------
-	        -- SM :: IDLE Process
+	        -- State Machine :: RESET Process
 	        ----------------------------------------
-	        if tx_current_state = IDLE then
-		        if reset_button = '1' then
-		        	isIDLE_start <= '1';
-		        	LED_1 <= '1';
+	        if tx_current_state = RESET then
+		        if reset_button = '1' or kernel_interrupt then
+            		tx_next_state <= INIT;
+	                isRESET <= '1';
 		        end if;
 		    end if;
 
 	        ----------------------------------------
-	        -- SM :: INIT Process
+	        -- State Machine :: INIT Process
 	        ----------------------------------------
 	        if tx_current_state = INIT then
-	            if init_time = "101111101011110000011111111" then -- Transition to DEVIE @ 2s Time
-	                init_time <= (others => '0');
-	                isINIT_start <= '1';
-		        	LED_2 <= '1';
+	            if init_delay = "101111101011110000011111111" then
+	                init_delay <= (others => '0');
+	            	tx_next_state <= DEVICE;
+	                isINIT <= '1';
 	            else
-	                init_time <= init_time + '1';
+	                init_delay <= init_delay + '1';
 	            end if;
 		    end if;
 
 	        ----------------------------------------
-	        -- SM :: INIT Process
+	        -- State Machine :: DEVICE Process
 	        ----------------------------------------
 	        if tx_current_state = DEVICE then
-	            if device_time = "101111101011110000011111111" then -- Transition to IDLE @ 2s Time
-	                device_time <= (others => '0');
-	                isDEVICE_start <= '1';
-		        	LED_3 <= '1';
+	            if device_delay = "101111101011110000011111111" then
+	                device_delay <= (others => '0');
+	            	tx_next_state <= RESET;
+	                isDEVICE <= '1';
+
+	            	sm_run <= '0'; -- Stop State Machine
 	            else
-	                device_time <= device_time + '1';
+	                device_delay <= device_delay + '1';
 	            end if;
 		    end if;
 
+	        ----------------------------------------
+	        -- SM :: State update
+	        ----------------------------------------
+	        tx_current_state <= tx_next_state;
 
 	        ----------------------------------------
-	        -- SM :: DEVICE Process
+	        -- SM :: Current LED State
 	        ----------------------------------------
-	        --if tx_current_state = INIT then
-		    --    if i2c_clock_d0 = '1' then
-		    --        clock_aligned <= '1';
-		    --    end if;
+	        LED_1 <= isRESET;
+        	LED_2 <= isINIT;
+        	LED_3 <= isDEVICE;
 
-		    --    -- Clock is aligned
-		    --    if clock_aligned = '1' then
-
-		    --    	write_clock <= i2c_clock_d0;
-
-	        --        if i2c_clock_d0 = '0' then  -- First '0' after aligned '1'
-
-	        --            -- End of DEVICE address transmission
-	        --            if write_clock_count = "1001" then
-	        --                write_clock_count  	<= "0000";
-	        --                isDEVICE 	<= '1';
-	        --            end if;
-
-	        --            -- Write clock cycle is detected
-			--			if write_clock_detected = '0' then
-		    --                write_clock_count <= write_clock_count + '1';
-			--				write_clock_detected <= '1';
-			--			end if;
-			--		else 
-			--			write_clock	<= i2c_clock_d0;
-			--			write_clock_detected <= '0';
-	        --        end if;
-		    --    end if;
-		    --end if;
 		end if;
     end if;
 end process;
@@ -428,8 +360,8 @@ i2c_process:
 process(CLOCK_50MHz, sda, sck)
 begin
 	if rising_edge(CLOCK_50MHz) then
-		sck <= I2C_IN_SCK;
-		sda <= I2C_IN_SDA;
+		sck <= sm_run;
+		sda <= reset_button;
 	end if;
 end process;
 
@@ -441,3 +373,36 @@ end process;
 INT_CPU <= '0'; -- interrupt_signal;
 
 end rtl;
+
+----------------------------------------
+-- SM :: DEVICE Process
+----------------------------------------
+--if tx_current_state = INIT then
+--    if i2c_clock_d0 = '1' then
+--        clock_aligned <= '1';
+--    end if;
+
+--    -- Clock is aligned
+--    if clock_aligned = '1' then
+
+--    	write_clock <= i2c_clock_d0;
+
+--        if i2c_clock_d0 = '0' then  -- First '0' after aligned '1'
+
+--            -- End of DEVICE address transmission
+--            if write_clock_count = "1001" then
+--                write_clock_count  	<= "0000";
+--                isDEVICE 	<= '1';
+--            end if;
+
+--            -- Write clock cycle is detected
+--			if write_clock_detected = '0' then
+--                write_clock_count <= write_clock_count + '1';
+--				write_clock_detected <= '1';
+--			end if;
+--		else 
+--			write_clock	<= i2c_clock_d0;
+--			write_clock_detected <= '0';
+--        end if;
+--    end if;
+--end if;
