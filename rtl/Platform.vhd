@@ -325,8 +325,10 @@ begin
 	        -- State Machine :: DEVICE Process
 	        ----------------------------------------
 	        if tx_current_state = DEVICE then
-			    if i2c_clock_d0 = '1' then 	-- Align @ 1 to achieve cycle from '0'
+			    if i2c_clock_d1 = '0' then 	-- Align @ 1 to achieve cycle from '0'
 			        i2c_clock_align <= '1';
+			    else
+			        i2c_clock_align <= '0';
 			    end if;
 
 			    -- Clock is aligned
@@ -336,12 +338,13 @@ begin
 			        	write_clock <= i2c_clock_d0;
 
 			            -- End of DEVICE address transmission
-			            if write_count = "1001" then
+			            if write_count = "1111" then
 			                write_count <= "0000";
 			                write_clock <= '0';
 			            	tx_next_state <= RESET;
 			                isDEVICE <= '1';
-			                sm_run <= '0'; -- Stop State Machine
+			                sm_run <= '0'; 			-- Stop State Machine
+			                i2c_clock_align <= '0'; -- Reset Alignment
 			            end if;
 
 			            -- Write clock cycle is detected
