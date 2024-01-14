@@ -1,0 +1,12 @@
+Start	a0	a1	a2	a3	a4	a5	a6	Rd/Wr	Ack/Nak 	Stop
+
+
+HL     	1  1  0    		1  0  0  1    		0  0  		LH
+HL    	LH LH LH   		LH LH LH LH   		LH LH 		LH
+HL 			6 				9 				W  ACK 		LH
+
+
+1. Start
+
+SDA :: LO
+SCL :: Write Start

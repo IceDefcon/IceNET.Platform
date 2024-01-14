@@ -28,7 +28,8 @@ port
 
     KERNEL_CS : in std_logic;    -- PIN_A5   :: BBB P9_17 :: PULPLE  :: SPI0_CS0
     KERNEL_MOSI : in std_logic;  -- PIN_A7   :: BBB P9_18 :: BLUE        :: SPI0_D1
-    KERNEL_MISO : out std_logic; -- PIN_A6   :: BBB P9_21 :: BROWN   :: SPI0_D0
+    KERNEL_MISO : out std_logic; -- PIN_A6   
+-- Controler for the gyroscope:: BBB P9_21 :: BROWN   :: SPI0_D0
     KERNEL_SCLK : in std_logic;  -- PIN_A8   :: BBB P9_22 :: BLACK   :: SPI0_SCLK
 
     I2C_IN_SDA : in std_logic;  -- PIN_A9   :: BBB P9_20 :: BLUE
@@ -81,14 +82,15 @@ signal i2c_clock_last : std_logic := '0';
 -- i2c initialise time
 signal init_delay : std_logic_vector(26 downto 0) := (others => '0');
 signal config_delay : std_logic_vector(26 downto 0) := (others => '0');
-signal device_delay : std_logic_vector(26 downto 0) := (others => '0');
+signal send_delay : std_logic_vector(26 downto 0) := (others => '0');
 
 --i2c state machine
 type TX is (IDLE, INIT, CONFIG, SEND, RECEIVE);
 signal tx_current_state, tx_next_state: TX := IDLE;
 
 -- i2c write clock
-signal write_clock : std_logic := '1';
+signal write_sck : std_logic := '1';
+signal write_sda : std_logic := '1';
 signal write_go : std_logic := '0';
 signal write_count : std_logic_vector(12 downto 0) := (others => '0');
 
@@ -276,8 +278,8 @@ begin
 end process;
 
 state_machine_process:
-process(CLOCK_50MHz, reset_button, i2c_clock, i2c_clock_next, i2c_clock_align, write_clock,
-	sm_delay, init_delay, config_delay, device_delay, sm_run,
+process(CLOCK_50MHz, reset_button, i2c_clock, i2c_clock_next, i2c_clock_align, write_sck, write_sda,
+	sm_delay, init_delay, config_delay, send_delay, sm_run,
 	tx_current_state, tx_next_state, 
 	isIDLE, isINIT, isCONFIG, isDEVICE)
 begin
@@ -292,6 +294,8 @@ begin
 		    if sm_delay = "101111101011110000011111111" then -- 2s delay
 				sm_delay <= (others => '0');
 				sm_run <= '1';
+				write_sck <= '1';
+				write_sda <= '1';
 
 				-- Ice Debug
 				isIDLE <= '0';
@@ -355,32 +359,40 @@ begin
 	        -- State Machine :: SEND Process
 	        ----------------------------------------
 	        if tx_current_state = SEND then
-			    if i2c_clock = '1' then 	-- Align @ 1 to achieve cycle from '0'
-			        i2c_clock_align <= '1'; -- Stay HI until reset
-			    end if;
 
-			    -- Clock is aligned
-			    if i2c_clock_align = '1' then
-					if write_go = '0' and i2c_clock = '0' then
-						write_go <= '1';
-					end if;
+	        	if send_delay = "010111110101111000001111111" then
 
-					if write_go = '1' then
-						if write_count = "1110101001100" then
-			                write_count <= (others => '0');
-			                write_go <= '0';
-			            	tx_next_state <= IDLE;
+				    if i2c_clock = '1' then 	-- Align @ 1 to achieve cycle from '0'
+				        i2c_clock_align <= '1'; -- Stay HI until reset
+				    end if;
 
-			                i2c_clock_align <= '0'; -- Reset Alignment
-							write_clock <= '0'; 	-- Pull up after TX is complete
-
-			                --sm_run <= '0'; 			-- Hold State Machine :: Debug
-						else
-							write_clock <= i2c_clock_next; 	-----===[ OUT ]===-----
-							write_count <= write_count + '1';
+				    -- Clock is aligned
+				    if i2c_clock_align = '1' then
+						if write_go = '0' and i2c_clock = '0' then
+							write_go <= '1';
 						end if;
-					end if;
-			    end if;
+
+						if write_go = '1' then
+							if write_count = "1000110010100" then
+				                write_count <= (others => '0');
+				                send_delay <= (others => '0');
+				                write_go <= '0';
+				            	tx_next_state <= IDLE;
+
+				                i2c_clock_align <= '0'; -- Reset Alignment
+								write_sck <= '0'; -- Congig this after TX is complete
+
+				                --sm_run <= '0'; -- Hold State Machine :: Debug
+							else
+								write_sck <= i2c_clock_next; -----===[ OUT ]===-----
+								write_count <= write_count + '1';
+							end if;
+						end if;
+				    end if;
+
+				else
+					send_delay <= send_delay + '1';
+				end if;
 
 				isIDLE <= '0';
 				isINIT <= '0';
@@ -405,15 +417,12 @@ begin
     end if;
 end process;
 
-
 i2c_process:
-process(CLOCK_50MHz, write_clock, sda, sck)
+process(CLOCK_50MHz, write_sck, write_sda)
 begin
 	if rising_edge(CLOCK_50MHz) then
-		I2C_OUT_SCK <= write_clock;
-		I2C_OUT_SDA <= '0';
-		sck <= I2C_IN_SCK;
-		sda <= I2C_IN_SDA;
+		I2C_OUT_SCK <= write_sck;
+		I2C_OUT_SDA <= write_sda;
 	end if;
 end process;
 
@@ -423,6 +432,12 @@ end process;
 -- Controler for the gyroscope
 -----------------------------------
 FPGA_INT <= '0'; -- interrupt_signal;
+
+-----------------------------------------------
+--
+-- Ice Debug
+--
+-----------------------------------------------
 
 end rtl;
 
