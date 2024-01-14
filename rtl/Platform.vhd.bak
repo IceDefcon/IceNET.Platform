@@ -86,10 +86,16 @@ signal config_delay : std_logic_vector(26 downto 0) := (others => '0');
 type TX is (RESET, INIT, CONFIG, SEND, RECEIVE);
 signal tx_current_state, tx_next_state: TX := RESET;
 
+-- i2c state machine flags
+signal isRESET : std_logic := '0';
+signal isINIT : std_logic := '0';
+signal isDEVICE : std_logic := '0';
+
 -- i2c write clock
 signal write_clock : std_logic := '1';
-signal write_go : std_logic := '0';
-signal write_count : std_logic_vector(12 downto 0) := (others => '0');
+signal write_detect : std_logic := '0';
+signal write_count : std_logic_vector(3 downto 0) := "0000";
+signal write_count_last : std_logic_vector(7 downto 0) := "00000000";
 
 -- i2c debug
 signal sda : std_logic := '0';
@@ -103,18 +109,9 @@ signal diode_done : std_logic := '0';
 signal sm_run : std_logic := '0';
 signal sm_delay : std_logic_vector(26 downto 0) := (others => '0');
 
------------------------------------
---
 -- Ice Debug
---
--- State Machine Flags
---
------------------------------------
-signal isRESET : std_logic := '0';
-signal isINIT : std_logic := '0';
-signal isCONFIG : std_logic := '0';
-signal isDEVICE : std_logic := '0';
-
+signal ice_go : std_logic := '0';
+signal ice_count : std_logic_vector(12 downto 0) := (others => '0');
 
 ----------------------------
 -- COMPONENTS DECLARATION --
@@ -275,7 +272,7 @@ begin
 end process;
 
 state_machine_process:
-process(CLOCK_50MHz, reset_button, i2c_clock, i2c_clock_next, i2c_clock_align, write_clock,
+process(CLOCK_50MHz, reset_button, i2c_clock, i2c_clock_next, i2c_clock_align, write_clock
 	sm_delay, init_delay, config_delay, sm_run,
 	tx_current_state, tx_next_state, 
 	isRESET, isINIT, isCONFIG, isDEVICE)
@@ -288,12 +285,17 @@ begin
 		    if sm_delay = "101111101011110000011111111" then -- 2s delay
 				sm_delay <= (others => '0');
 				sm_run <= '1';
-
-				-- Ice Debug
 				isRESET <= '0';
 				isINIT <= '0';
-				isCONFIG <= '0';
 				isDEVICE <= '0';
+				LED_1 <= '0'; -- Debuging LED's
+				LED_2 <= '0';
+				LED_3 <= '0';
+				LED_4 <= '0';
+				LED_5 <= '0';
+				LED_6 <= '0';
+				LED_7 <= '0';
+				LED_8 <= '0';
 		    else
 		        sm_delay <= sm_delay + '1';
 		    end if;
@@ -305,10 +307,7 @@ begin
 	        if tx_current_state = RESET then
 		        if reset_button = '1' or kernel_interrupt <= '0' then
             		tx_next_state <= INIT;
-					isRESET <= '1';
-					isINIT <= '0';
-					isCONFIG <= '0';
-					isDEVICE <= '0';
+	                isRESET <= '1';
 		        end if;
 		    end if;
 
@@ -319,10 +318,7 @@ begin
 	            if init_delay = "101111101011110000011111111" then
 	                init_delay <= (others => '0');
 	            	tx_next_state <= CONFIG;
-					isRESET <= '0';
-					isINIT <= '1';
-					isCONFIG <= '0';
-					isDEVICE <= '0';
+	                isINIT <= '1';
 	            else
 	                init_delay <= init_delay + '1';
 	            end if;
@@ -335,10 +331,7 @@ begin
 	            if config_delay = "101111101011110000011111111" then
 	                config_delay <= (others => '0');
 	            	tx_next_state <= SEND;
-					isRESET <= '0';
-					isINIT <= '0';
-					isCONFIG <= '1';
-					isDEVICE <= '0';
+	                isCONFIG <= '1';
 	            else
 	                config_delay <= config_delay + '1';
 	            end if;
@@ -354,28 +347,24 @@ begin
 
 			    -- Clock is aligned
 			    if i2c_clock_align = '1' then
-					if write_go = '0' and i2c_clock = '0' then
-						write_go <= '1';
+					if ice_go = '0' and i2c_clock = '0' then
+						ice_go <= '1';
 					end if;
 
-					if write_go = '1' then
-						if write_count = "1110101001100" then
-			                write_count <= (others => '0');
-			                write_go <= '0';
+					if ice_go = '1' then
+						if ice_count = "1110101001100" then
+			                ice_count <= (others => '0');
+			                ice_go <= '0';
 			            	tx_next_state <= RESET;
-
-							isRESET <= '0';
-							isINIT <= '0';
-							isCONFIG <= '0';
-							isDEVICE <= '1';
+			                isDEVICE <= '1';
 
 			                i2c_clock_align <= '0'; -- Reset Alignment
 							write_clock <= '0'; 	-- Pull up after TX is complete
 
-			                --sm_run <= '0'; 			-- Hold State Machine :: Debug
+			                sm_run <= '0'; 			-- Hold State Machine
 						else
 							write_clock <= i2c_clock_next; 	-----===[ OUT ]===-----
-							write_count <= write_count + '1';
+							ice_count <= ice_count + '1';
 						end if;
 					end if;
 			    end if;
