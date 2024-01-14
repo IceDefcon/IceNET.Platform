@@ -4,12 +4,12 @@ use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.all;
 
 ------------------------------
--- Author: Ice.Marek 		--
--- IceNET Technology 2024 	--
--- 							--
--- FPGA Chip 				--
--- Cyclone IV 				--
--- EP4CE15F23C8 			--
+-- Author: Ice.Marek
+-- IceNET Technology 2024
+--
+-- FPGA Chip
+-- Cyclone IV
+-- EP4CE15F23C8
 ------------------------------
 entity Platform is
 port
@@ -81,10 +81,11 @@ signal i2c_clock_last : std_logic := '0';
 -- i2c initialise time
 signal init_delay : std_logic_vector(26 downto 0) := (others => '0');
 signal config_delay : std_logic_vector(26 downto 0) := (others => '0');
+signal device_delay : std_logic_vector(26 downto 0) := (others => '0');
 
 --i2c state machine
-type TX is (RESET, INIT, CONFIG, SEND, RECEIVE);
-signal tx_current_state, tx_next_state: TX := RESET;
+type TX is (IDLE, INIT, CONFIG, SEND, RECEIVE);
+signal tx_current_state, tx_next_state: TX := IDLE;
 
 -- i2c write clock
 signal write_clock : std_logic := '1';
@@ -110,14 +111,14 @@ signal sm_delay : std_logic_vector(26 downto 0) := (others => '0');
 -- State Machine Flags
 --
 -----------------------------------
-signal isRESET : std_logic := '0';
+signal isIDLE : std_logic := '0';
 signal isINIT : std_logic := '0';
 signal isCONFIG : std_logic := '0';
 signal isDEVICE : std_logic := '0';
 
 
 ----------------------------
--- COMPONENTS DECLARATION --
+-- COMPONENTS DECLARATION
 ----------------------------
 component SPI_Synchronizer
 port
@@ -168,7 +169,7 @@ Port
 end component;
 
 ------------------
--- MAIN ROUTINE --
+-- MAIN ROUTINE
 ------------------
 begin
 
@@ -276,21 +277,24 @@ end process;
 
 state_machine_process:
 process(CLOCK_50MHz, reset_button, i2c_clock, i2c_clock_next, i2c_clock_align, write_clock,
-	sm_delay, init_delay, config_delay, sm_run,
+	sm_delay, init_delay, config_delay, device_delay, sm_run,
 	tx_current_state, tx_next_state, 
-	isRESET, isINIT, isCONFIG, isDEVICE)
+	isIDLE, isINIT, isCONFIG, isDEVICE)
 begin
     if rising_edge(CLOCK_50MHz) then
 
     	kernel_interrupt <= KERNEL_INT;
 
+        ----------------------------------------
+        -- Reset State Machine
+        ----------------------------------------
     	if sm_run = '0' then
 		    if sm_delay = "101111101011110000011111111" then -- 2s delay
 				sm_delay <= (others => '0');
 				sm_run <= '1';
 
 				-- Ice Debug
-				isRESET <= '0';
+				isIDLE <= '0';
 				isINIT <= '0';
 				isCONFIG <= '0';
 				isDEVICE <= '0';
@@ -300,48 +304,51 @@ begin
     	elsif sm_run = '1' then
 
 	        ----------------------------------------
-	        -- State Machine :: RESET Process
+	        -- State Machine :: IDLE Process
 	        ----------------------------------------
-	        if tx_current_state = RESET then
+	        if tx_current_state = IDLE then
 		        if reset_button = '1' or kernel_interrupt <= '0' then
             		tx_next_state <= INIT;
-					isRESET <= '1';
-					isINIT <= '0';
-					isCONFIG <= '0';
-					isDEVICE <= '0';
 		        end if;
+
+				isIDLE <= '1';
+				isINIT <= '0';
+				isCONFIG <= '0';
+				isDEVICE <= '0';
 		    end if;
 
 	        ----------------------------------------
 	        -- State Machine :: INIT Process
 	        ----------------------------------------
 	        if tx_current_state = INIT then
-	            if init_delay = "101111101011110000011111111" then
+	            if init_delay = "010111110101111000001111111" then
 	                init_delay <= (others => '0');
 	            	tx_next_state <= CONFIG;
-					isRESET <= '0';
-					isINIT <= '1';
-					isCONFIG <= '0';
-					isDEVICE <= '0';
 	            else
 	                init_delay <= init_delay + '1';
 	            end if;
+	            
+				isIDLE <= '0';
+				isINIT <= '1';
+				isCONFIG <= '0';
+				isDEVICE <= '0';
 		    end if;
 
 	        ----------------------------------------
 	        -- State Machine :: CONFIG Process
 	        ----------------------------------------
 	        if tx_current_state = CONFIG then
-	            if config_delay = "101111101011110000011111111" then
+	            if config_delay = "010111110101111000001111111" then
 	                config_delay <= (others => '0');
 	            	tx_next_state <= SEND;
-					isRESET <= '0';
-					isINIT <= '0';
-					isCONFIG <= '1';
-					isDEVICE <= '0';
 	            else
 	                config_delay <= config_delay + '1';
 	            end if;
+
+				isIDLE <= '0';
+				isINIT <= '0';
+				isCONFIG <= '1';
+				isDEVICE <= '0';
 		    end if;
 
 	        ----------------------------------------
@@ -362,12 +369,7 @@ begin
 						if write_count = "1110101001100" then
 			                write_count <= (others => '0');
 			                write_go <= '0';
-			            	tx_next_state <= RESET;
-
-							isRESET <= '0';
-							isINIT <= '0';
-							isCONFIG <= '0';
-							isDEVICE <= '1';
+			            	tx_next_state <= IDLE;
 
 			                i2c_clock_align <= '0'; -- Reset Alignment
 							write_clock <= '0'; 	-- Pull up after TX is complete
@@ -379,6 +381,11 @@ begin
 						end if;
 					end if;
 			    end if;
+
+				isIDLE <= '0';
+				isINIT <= '0';
+				isCONFIG <= '0';
+				isDEVICE <= '1';
 		    end if;
 
 	        ----------------------------------------
@@ -389,7 +396,7 @@ begin
 	        ----------------------------------------
 	        -- SM :: Current LED State
 	        ----------------------------------------
-	        LED_1 <= isRESET;
+	        LED_1 <= isIDLE;
         	LED_2 <= isINIT;
         	LED_3 <= isCONFIG;
         	LED_4 <= isDEVICE;
