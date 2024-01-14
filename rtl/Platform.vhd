@@ -75,6 +75,7 @@ signal i2c_clock : std_logic := '0';
 signal i2c_clock_delay : std_logic_vector(7 downto 0) := (others => '0');
 signal i2c_clock_align : std_logic := '0';
 signal i2c_clock_first : std_logic := '0';
+signal i2c_clock_last : std_logic := '0';
 
 -- i2c initialise time
 signal init_delay : std_logic_vector(26 downto 0) := (others => '0');
@@ -93,6 +94,7 @@ signal isDEVICE : std_logic := '0';
 signal write_clock : std_logic := '1';
 signal write_detect : std_logic := '0';
 signal write_count : std_logic_vector(3 downto 0) := "0000";
+signal write_count_last : std_logic_vector(7 downto 0) := "00000000";
 
 -- i2c debug
 signal sda : std_logic := '0';
@@ -324,29 +326,36 @@ begin
 			        if i2c_clock = '0' then  -- First '0' after aligned '1'
 
 				    	i2c_clock_first <= '1';
-
+				    	write_clock <= i2c_clock; 	-----===[ OUT HI ]===-----
+				    	
 			            -- End of DEVICE address transmission
 			            if write_count = "1111" then
-			                write_count <= "0000";
-			            	tx_next_state <= RESET;
-			                isDEVICE <= '1';
+			            	if write_count_last = "11111001" then
+				                write_count <= "0000";
+				            	tx_next_state <= RESET;
+				                isDEVICE <= '1';
 
-			                i2c_clock_align <= '0'; -- Reset Alignment
-				    		i2c_clock_first <= '0'; -- Reset clock first
-				    		write_detect <= '0'; 	-- Reset clock detection
-							write_clock <= '1'; 	-- Pull up after TX is complete
+				                i2c_clock_align <= '0'; -- Reset Alignment
+					    		i2c_clock_first <= '0'; -- Reset clock first
+					    		write_detect <= '0'; 	-- Reset clock detection
+								write_clock <= '0'; 	-- Pull up after TX is complete
 
-			                sm_run <= '0'; 			-- Hold State Machine
+				                sm_run <= '0'; 			-- Hold State Machine
+				            else
+				            	write_count_last <= write_count_last + '1';
+				            end if;
 			            end if;
 
 			            -- Write clock cycle is detected
 						if write_detect = '0' then
-			                write_count <= write_count + '1';
 							write_detect <= '1';
-							write_clock <= '0'; 				-----===[ OUT LO ]===-----
+			                write_count <= write_count + '1';
+			                if write_count = "1111" then
+			                	i2c_clock_last <= '1';
+			                end if;
 						end if;
 					elsif i2c_clock_first = '1' then
-						write_clock <= '1'; 					-----===[ OUT HI ]===-----
+				    	write_clock <= i2c_clock;  		-----===[ OUT LO ]===-----
 						write_detect <= '0';
 			        end if;
 			    end if;
@@ -375,8 +384,8 @@ begin
 	if rising_edge(CLOCK_50MHz) then
 		I2C_OUT_SCK <= write_clock;
 		I2C_OUT_SDA <= '0';
-		--sck <= I2C_IN_SCK;
-		--sda <= I2C_IN_SDA;
+		sck <= I2C_IN_SCK;
+		sda <= I2C_IN_SDA;
 	end if;
 end process;
 
