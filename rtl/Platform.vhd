@@ -60,7 +60,8 @@ signal interrupt_length 		: std_logic_vector(3 downto 0) := "1111";
 signal interrupt_signal 		: std_logic := '0';
 
 -- SPI
-constant DATA					: std_logic_vector(7 downto 0) := "10001000"; -- 0x88
+constant data_SPI : std_logic_vector(7 downto 0) := "10001000"; -- 0x88
+constant data_I2C : std_logic_vector(7 downto 0) := "00111001"; -- 0x88
 
 -- SPI Synchronise
 signal synced_sclk  			: std_logic := '0';
@@ -202,7 +203,7 @@ Debounce_module: Debounce port map
 SPI_Data_module: SPI_Data port map 
 (
 	CLOCK 			=> CLOCK_50MHz,
-	DATA 			=> DATA,
+	DATA 			=> data_SPI,
 	synced_sclk 	=> synced_sclk,
 	synced_miso 	=> synced_miso
 );
@@ -377,21 +378,25 @@ begin
 				                write_count <= (others => '0');
 				                send_delay <= (others => '0');
 				                write_go <= '0';
+
 				            	tx_next_state <= IDLE;
 
 				                i2c_clock_align <= '0'; -- Reset Alignment
-								write_sck <= '0'; -- Congig this after TX is complete
+								write_sck <= '0'; -- Config this after TX is complete
 
-				                --sm_run <= '0'; -- Hold State Machine :: Debug
+				                --sm_run <= '0'; -- Hold State Machine :: Debug q
 							else
 								write_sck <= i2c_clock_next; -----===[ OUT ]===-----
 								write_count <= write_count + '1';
 							end if;
 						end if;
 				    end if;
-
 				else
 					send_delay <= send_delay + '1';
+				end if;
+
+				if send_delay = "010111110101110111101010011" then
+					write_sda <= '0';
 				end if;
 
 				isIDLE <= '0';
