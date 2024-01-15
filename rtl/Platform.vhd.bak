@@ -27,15 +27,16 @@ port
     LED_8 : out std_logic;    -- PIN_N8
 
     KERNEL_CS : in std_logic;    -- PIN_A5   :: BBB P9_17 :: PULPLE  :: SPI0_CS0
-    KERNEL_MOSI : in std_logic;  -- PIN_A7   :: BBB P9_18 :: BLUE    :: SPI0_D1
-    KERNEL_MISO : out std_logic; -- PIN_A6   :: BBB P9_21 :: BROWN   :: SPI0_D0
+    KERNEL_MOSI : in std_logic;  -- PIN_A7   :: BBB P9_18 :: BLUE        :: SPI0_D1
+    KERNEL_MISO : out std_logic; -- PIN_A6   
+-- Controler for the gyroscope:: BBB P9_21 :: BROWN   :: SPI0_D0
     KERNEL_SCLK : in std_logic;  -- PIN_A8   :: BBB P9_22 :: BLACK   :: SPI0_SCLK
 
-    I2C_IN_SDA : in std_logic;  -- PIN_A9   :: BBB P9_20 :: CPU.BLUE <> FPGA.BLUE <> GYRO.WHITE
-    I2C_IN_SCK : in std_logic;  -- PIN_A10  :: BBB P9_19 :: CPU.ORANGE <> FPGA.GREEN <> GYRO.PURPLE
-	 
-    I2C_OUT_SDA : out std_logic;  -- PIN_B9   :: GYRO.RED
-    I2C_OUT_SCK : out std_logic;  -- PIN_B10  :: GYRO.ORANGE
+    I2C_IN_SDA : in std_logic;  -- PIN_A9   :: BBB P9_20 :: BLUE
+    I2C_IN_SCK : in std_logic;  -- PIN_A10  :: BBB P9_19 :: GREEN
+
+    I2C_OUT_SDA : out std_logic;  -- PIN_B9   ::           :: RED
+    I2C_OUT_SCK : out std_logic;  -- PIN_B10  ::           :: ORANGE
 
     FPGA_INT : out std_logic;   -- PIN_A3   :: BBB P9_12 :: BLACK
     KERNEL_INT : in std_logic;  -- PIN_A4   :: BBB P9_14 :: WHITE
@@ -83,8 +84,6 @@ signal i2c_clock_last : std_logic := '0';
 signal init_delay : std_logic_vector(26 downto 0) := (others => '0');
 signal config_delay : std_logic_vector(26 downto 0) := (others => '0');
 signal send_delay : std_logic_vector(26 downto 0) := (others => '0');
-signal sck_delay : std_logic_vector(8 downto 0) := (others => '0');
-signal sda_delay : std_logic_vector(8 downto 0) := (others => '0');
 
 --i2c state machine
 type TX is (IDLE, INIT, CONFIG, SEND, RECEIVE);
@@ -375,40 +374,29 @@ begin
 						end if;
 
 						if write_go = '1' then
-							-------------------------------------
-							-- SCK
-							-------------------------------------
-							if sck_delay = "111111111" then
-								if write_count = "1000110010100" then
-					                write_count <= (others => '0');
-					                send_delay <= (others => '0');
-					                write_go <= '0';
+							if write_count = "1000110010100" then
+				                write_count <= (others => '0');
+				                send_delay <= (others => '0');
+				                write_go <= '0';
 
-					            	tx_next_state <= IDLE;
+				            	tx_next_state <= IDLE;
 
-					                i2c_clock_align <= '0'; -- Reset Alignment
-									write_sck <= '0'; -- Config this after TX is complete
+				                i2c_clock_align <= '0'; -- Reset Alignment
+								write_sck <= '0'; -- Config this after TX is complete
 
-					                --sm_run <= '0'; -- Hold State Machine :: Debug q
-								else
-									write_sck <= i2c_clock_next; -----===[ OUT ]===-----
-									write_count <= write_count + '1';
-								end if;
+				                --sm_run <= '0'; -- Hold State Machine :: Debug q
 							else
-								sck_delay <= sck_delay + '1';
-							end if;
-							-------------------------------------
-							-- SDA
-							-------------------------------------
-							if sda_delay = "011111111" then
-								write_sda <= '0';
-							else
-								sda_delay <= sda_delay + '1';
+								write_sck <= i2c_clock_next; -----===[ OUT ]===-----
+								write_count <= write_count + '1';
 							end if;
 						end if;
 				    end if;
 				else
 					send_delay <= send_delay + '1';
+				end if;
+
+				if send_delay = "010111110101110111101010011" then
+					write_sda <= '0';
 				end if;
 
 				isIDLE <= '0';
