@@ -1,12 +1,44 @@
-Start	a0	a1	a2	a3	a4	a5	a6	Rd/Wr	Ack/Nak 	Stop
+state_machine_process:
+process(CLOCK_50MHz, reset_button, kernel_interrupt, i2c_clock, i2c_clock_next, i2c_clock_align, write_sck, write_sda,
+	sm_timer, init_timer, config_timer, send_timer, done_timer, sm_run, tx_current_state, tx_next_state, 
+	isIDLE, isINIT, isCONFIG, isDEVICE, isDONE, sck_timer, sda_timer, prcess_sda_timer,
+	write_sck_timer, write_sda_timer, write_go, sda_index)
+begin
+    if rising_edge(CLOCK_50MHz) then
 
+    	kernel_interrupt <= KERNEL_INT;
 
-HL     	1  1  0    		1  0  0  1    		0  0  		LH
-HL    	LH LH LH   		LH LH LH LH   		LH LH 		LH
-HL 			6 				9 				W  ACK 		LH
+        ----------------------------------------
+        -- Reset State Machine
+        ----------------------------------------
+		if sm_run = '0' then
+		    if sm_timer = "101111101011110000011111111" then -- 2s delay
+		        sm_timer <= (others => '0');
+		        sm_run <= '1';
+		        write_sck <= '1';
+		        write_sda <= '1';
 
+		        tx_next_state <= IDLE; -- Set Reset state IDLE as next state :: Otherwise both IDLE and INIT are set
+		    else
+		        sm_timer <= sm_timer + '1';
+		    end if;
 
-1. Start
+    	elsif sm_run = '1' then
 
-SDA :: LO
-SCL :: Write Start
+	        ----------------------------------------
+	        -- State Machine :: IDLE Process
+	        ----------------------------------------
+	        if tx_current_state = IDLE then
+		        if reset_button = '1' or kernel_interrupt <= '0' then
+            		tx_next_state <= INIT;
+		        end if;
+
+		    end if;
+
+	        ----------------------------------------
+	        -- SM :: State update
+	        ----------------------------------------
+	        tx_current_state <= tx_next_state;
+		end if;
+    end if;
+end process;

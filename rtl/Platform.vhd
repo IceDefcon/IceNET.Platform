@@ -14,36 +14,36 @@ use ieee.std_logic_unsigned.all;
 entity Platform is
 port
 (
-    CLOCK_50MHz : in std_logic;     -- PIN_T2
+    CLOCK_50MHz : in std_logic; -- PIN_T2
 
     -- For debuging
-    LED_1 : out std_logic;    -- PIN_U7
-    LED_2 : out std_logic;    -- PIN_U8
-    LED_3 : out std_logic;    -- PIN_R7
-    LED_4 : out std_logic;    -- PIN_T8
-    LED_5 : out std_logic;    -- PIN_R8
-    LED_6 : out std_logic;    -- PIN_P8
-    LED_7 : out std_logic;    -- PIN_M8
-    LED_8 : out std_logic;    -- PIN_N8
+    LED_1 : out std_logic; -- PIN_U7
+    LED_2 : out std_logic; -- PIN_U8
+    LED_3 : out std_logic; -- PIN_R7
+    LED_4 : out std_logic; -- PIN_T8
+    LED_5 : out std_logic; -- PIN_R8
+    LED_6 : out std_logic; -- PIN_P8
+    LED_7 : out std_logic; -- PIN_M8
+    LED_8 : out std_logic; -- PIN_N8
 
     KERNEL_CS : in std_logic;    -- PIN_A5   :: BBB P9_17 :: PULPLE  :: SPI0_CS0
     KERNEL_MOSI : in std_logic;  -- PIN_A7   :: BBB P9_18 :: BLUE    :: SPI0_D1
     KERNEL_MISO : out std_logic; -- PIN_A6   :: BBB P9_21 :: BROWN   :: SPI0_D0
     KERNEL_SCLK : in std_logic;  -- PIN_A8   :: BBB P9_22 :: BLACK   :: SPI0_SCLK
 
-    I2C_IN_SDA : in std_logic;  -- PIN_A9   :: BBB P9_20 :: CPU.BLUE <> FPGA.BLUE <> GYRO.WHITE
-    I2C_IN_SCK : in std_logic;  -- PIN_A10  :: BBB P9_19 :: CPU.ORANGE <> FPGA.GREEN <> GYRO.PURPLE
+    I2C_IN_SDA : in std_logic; -- PIN_A9   :: BBB P9_20 :: CPU.BLUE <> FPGA.BLUE <> GYRO.WHITE
+    I2C_IN_SCK : in std_logic; -- PIN_A10  :: BBB P9_19 :: CPU.ORANGE <> FPGA.GREEN <> GYRO.PURPLE
 	 
-    I2C_OUT_SDA : out std_logic;  -- PIN_B9   :: GYRO.RED
-    I2C_OUT_SCK : out std_logic;  -- PIN_B10  :: GYRO.ORANGE
+    I2C_OUT_SDA : out std_logic; -- PIN_B9   :: GYRO.RED
+    I2C_OUT_SCK : out std_logic; -- PIN_B10  :: GYRO.ORANGE
 
-    FPGA_INT : out std_logic;   -- PIN_A3   :: BBB P9_12 :: BLACK
-    KERNEL_INT : in std_logic;  -- PIN_A4   :: BBB P9_14 :: WHITE
+    FPGA_INT : out std_logic;  -- PIN_A3   :: BBB P9_12 :: BLACK
+    KERNEL_INT : in std_logic; -- PIN_A4   :: BBB P9_14 :: WHITE
 
-    BUTTON_1 : in std_logic;    -- PIN_H20  :: Reset
-    BUTTON_2 : in std_logic;    -- PIN_K19  :: Doesnt Work :: Broken Button or Incorrect Schematic
-    BUTTON_3 : in std_logic;    -- PIN_J18
-    BUTTON_4 : in std_logic     -- PIN_K18
+    BUTTON_1 : in std_logic; -- PIN_H20  :: Reset
+    BUTTON_2 : in std_logic; -- PIN_K19  :: Doesnt Work :: Broken Button or Incorrect Schematic
+    BUTTON_3 : in std_logic; -- PIN_J18
+    BUTTON_4 : in std_logic  -- PIN_K18
 );
 end Platform;
 
@@ -60,41 +60,47 @@ signal interrupt_signal 		: std_logic := '0';
 
 -- SPI
 constant data_SPI : std_logic_vector(7 downto 0) := "10001000"; -- 0x88
-constant data_I2C : std_logic_vector(7 downto 0) := "00111001"; -- 0x88
+-- I2C
+constant address_I2C : std_logic_vector(9 downto 0) := "0010011110"; -- 0x69
+signal sda_index : integer range 0 to 15 := 0;
 
 -- SPI Synchronise
-signal synced_sclk  			: std_logic := '0';
-signal synced_cs    			: std_logic := '0';
-signal synced_mosi  			: std_logic := '0';
-signal synced_miso  			: std_logic := '0';
+signal synced_sclk : std_logic := '0';
+signal synced_cs : std_logic := '0';
+signal synced_mosi : std_logic := '0';
+signal synced_miso : std_logic := '0';
 
 -- Reset Button
-signal reset_button			: std_logic := '0';
+signal reset_button : std_logic := '0';
 
 -- i2c clocks
 signal i2c_clock : std_logic := '0';
 signal i2c_clock_next : std_logic := '0';
-signal i2c_clock_delay : std_logic_vector(7 downto 0) := (others => '0');
 signal i2c_clock_align : std_logic := '0';
 signal i2c_clock_first : std_logic := '0';
 signal i2c_clock_last : std_logic := '0';
 
 -- i2c initialise time
-signal init_delay : std_logic_vector(26 downto 0) := (others => '0');
-signal config_delay : std_logic_vector(26 downto 0) := (others => '0');
-signal send_delay : std_logic_vector(26 downto 0) := (others => '0');
-signal sck_delay : std_logic_vector(8 downto 0) := (others => '0');
-signal sda_delay : std_logic_vector(8 downto 0) := (others => '0');
+signal i2c_clock_timer : std_logic_vector(7 downto 0) := (others => '0');
+signal init_timer : std_logic_vector(26 downto 0) := (others => '0');
+signal config_timer : std_logic_vector(26 downto 0) := (others => '0');
+signal send_timer : std_logic_vector(26 downto 0) := (others => '0');
+signal done_timer : std_logic_vector(26 downto 0) := (others => '0');
+signal sck_timer : std_logic_vector(8 downto 0) := (others => '0');
+signal sda_timer : std_logic_vector(8 downto 0) := (others => '0');
+signal sm_timer : std_logic_vector(26 downto 0) := (others => '0');
+signal prcess_sda_timer : std_logic_vector(8 downto 0) := "111110011"; -- Initial for tbe start bit
 
 --i2c state machine
-type TX is (IDLE, INIT, CONFIG, SEND, RECEIVE);
+type TX is (IDLE, INIT, CONFIG, SEND, DONE, RECEIVE);
 signal tx_current_state, tx_next_state: TX := IDLE;
 
 -- i2c write clock
-signal write_sck : std_logic := '1';
-signal write_sda : std_logic := '1';
+signal write_sck : std_logic := '0';
+signal write_sda : std_logic := '0';
 signal write_go : std_logic := '0';
-signal write_count : std_logic_vector(12 downto 0) := (others => '0');
+signal write_sck_timer : std_logic_vector(12 downto 0) := (others => '0');
+signal write_sda_timer : std_logic_vector(12 downto 0) := (others => '0');
 
 -- i2c debug
 signal sda : std_logic := '0';
@@ -106,7 +112,6 @@ signal diode_done : std_logic := '0';
 
 -- State Machine Init
 signal sm_run : std_logic := '0';
-signal sm_delay : std_logic_vector(26 downto 0) := (others => '0');
 
 -----------------------------------
 --
@@ -119,6 +124,7 @@ signal isIDLE : std_logic := '0';
 signal isINIT : std_logic := '0';
 signal isCONFIG : std_logic := '0';
 signal isDEVICE : std_logic := '0';
+signal isDONE : std_logic := '0';
 
 
 ----------------------------
@@ -266,11 +272,11 @@ clock_free_process:
 process(CLOCK_50MHz)
 begin
     if rising_edge(CLOCK_50MHz) then
-        if i2c_clock_delay = "11111001" then
+        if i2c_clock_timer = "11111001" then
             i2c_clock <= not i2c_clock;
-            i2c_clock_delay <= (others => '0'); -- Reset count
+            i2c_clock_timer <= (others => '0'); -- Reset count
         else
-            i2c_clock_delay <= i2c_clock_delay + '1';
+            i2c_clock_timer <= i2c_clock_timer + '1';
         end if;
 
         -- Assign delayed clocks unconditionally on every clock edge
@@ -280,10 +286,10 @@ begin
 end process;
 
 state_machine_process:
-process(CLOCK_50MHz, reset_button, i2c_clock, i2c_clock_next, i2c_clock_align, write_sck, write_sda,
-	sm_delay, init_delay, config_delay, send_delay, sm_run,
-	tx_current_state, tx_next_state, 
-	isIDLE, isINIT, isCONFIG, isDEVICE)
+process(CLOCK_50MHz, reset_button, kernel_interrupt, i2c_clock, i2c_clock_next, i2c_clock_align, write_sck, write_sda,
+	sm_timer, init_timer, config_timer, send_timer, done_timer, sm_run, tx_current_state, tx_next_state, 
+	isIDLE, isINIT, isCONFIG, isDEVICE, isDONE, sck_timer, sda_timer, prcess_sda_timer,
+	write_sck_timer, write_sda_timer, write_go, sda_index)
 begin
     if rising_edge(CLOCK_50MHz) then
 
@@ -292,69 +298,75 @@ begin
         ----------------------------------------
         -- Reset State Machine
         ----------------------------------------
-    	if sm_run = '0' then
-		    if sm_delay = "101111101011110000011111111" then -- 2s delay
-				sm_delay <= (others => '0');
-				sm_run <= '1';
-				write_sck <= '1';
-				write_sda <= '1';
-
-				-- Ice Debug
-				isIDLE <= '0';
-				isINIT <= '0';
-				isCONFIG <= '0';
-				isDEVICE <= '0';
+		if sm_run = '0' then
+		    if sm_timer = "101111101011110000011111111" then -- 2s delay
+		        sm_timer <= (others => '0');
+		        sm_run <= '1';
+		        write_sck <= '1';
+		        write_sda <= '1';
 		    else
-		        sm_delay <= sm_delay + '1';
+		        isIDLE <= '1';
+		        isINIT <= '0';
+		        isCONFIG <= '0';
+		        isDEVICE <= '0';
+		        isDONE <= '0';
+		        sm_timer <= sm_timer + '1';
 		    end if;
+
     	elsif sm_run = '1' then
 
 	        ----------------------------------------
-	        -- State Machine :: IDLE Process
+	        -- State Machine :: INIT Process
 	        ----------------------------------------
 	        if tx_current_state = IDLE then
-		        if reset_button = '1' or kernel_interrupt <= '0' then
-            		tx_next_state <= INIT;
-		        end if;
-
 				isIDLE <= '1';
 				isINIT <= '0';
 				isCONFIG <= '0';
 				isDEVICE <= '0';
+				isDONE <= '0';
 		    end if;
+
+    		----------------------------------------
+    		-- State Machine :: HW & SW Reset
+    		----------------------------------------
+	        if reset_button = '1' or kernel_interrupt <= '0' then
+        		tx_next_state <= INIT;
+	        end if;
 
 	        ----------------------------------------
 	        -- State Machine :: INIT Process
 	        ----------------------------------------
 	        if tx_current_state = INIT then
-	            if init_delay = "010111110101111000001111111" then
-	                init_delay <= (others => '0');
+	            if init_timer = "010111110101111000001111111" then
+	                init_timer <= (others => '0');
 	            	tx_next_state <= CONFIG;
 	            else
-	                init_delay <= init_delay + '1';
+	                init_timer <= init_timer + '1';
 	            end if;
 	            
 				isIDLE <= '0';
 				isINIT <= '1';
 				isCONFIG <= '0';
 				isDEVICE <= '0';
+				isDONE <= '0';
 		    end if;
 
 	        ----------------------------------------
 	        -- State Machine :: CONFIG Process
 	        ----------------------------------------
 	        if tx_current_state = CONFIG then
-	            if config_delay = "010111110101111000001111111" then
-	                config_delay <= (others => '0');
+	            if config_timer = "010111110101111000001111111" then
+	                config_timer <= (others => '0');
 	            	tx_next_state <= SEND;
 	            else
-	                config_delay <= config_delay + '1';
+	                config_timer <= config_timer + '1';
 	            end if;
 
 				isIDLE <= '0';
 				isINIT <= '0';
 				isCONFIG <= '1';
 				isDEVICE <= '0';
+				isDONE <= '0';
 		    end if;
 
 	        ----------------------------------------
@@ -362,7 +374,7 @@ begin
 	        ----------------------------------------
 	        if tx_current_state = SEND then
 
-	        	if send_delay = "010111110101111000001111111" then
+	        	if send_timer = "010111110101111000001111111" then
 
 				    if i2c_clock = '1' then 	-- Align @ 1 to achieve cycle from '0'
 				        i2c_clock_align <= '1'; -- Stay HI until reset
@@ -378,43 +390,87 @@ begin
 							-------------------------------------
 							-- SCK
 							-------------------------------------
-							if sck_delay = "111111111" then
-								if write_count = "1000110010100" then
-					                write_count <= (others => '0');
-					                send_delay <= (others => '0');
-					                write_go <= '0';
-
-					            	tx_next_state <= IDLE;
-
-					                i2c_clock_align <= '0'; -- Reset Alignment
-									write_sck <= '0'; -- Config this after TX is complete
-
-					                --sm_run <= '0'; -- Hold State Machine :: Debug q
+							if sck_timer = "111111111" then
+								if write_sck_timer = "1000110010100" then
+									-------------------------------------
+									-- Body
+									-------------------------------------
 								else
 									write_sck <= i2c_clock_next; -----===[ OUT ]===-----
-									write_count <= write_count + '1';
+									write_sck_timer <= write_sck_timer + '1';
 								end if;
 							else
-								sck_delay <= sck_delay + '1';
+								sck_timer <= sck_timer + '1';
 							end if;
 							-------------------------------------
 							-- SDA
 							-------------------------------------
-							if sda_delay = "011111111" then
-								write_sda <= '0';
+							if sda_timer = "000111111" then
+								if write_sda_timer = "1010101111100" then
+									-------------------------------------
+									-- Body
+									-------------------------------------
+									write_sck <= '1'; -- For now :: Config this '1' after TX is complete
+									write_sda <= '1'; -- Take '1' from 'Z'
+					            	tx_next_state <= DONE; -- Must change state here :: SDA is longer
+								else
+							        if prcess_sda_timer = "111110011" then
+							        	if sda_index < 10 then
+							            	write_sda <= address_I2C(sda_index); -----===[ OUT ]===-----
+							            	sda_index <= sda_index + 1;
+							            else 
+							            	write_sda <= 'Z';
+							            end if;
+
+							            prcess_sda_timer <= (others => '0'); -- Reset count
+							        else
+							            prcess_sda_timer <= prcess_sda_timer + '1';
+							        end if;
+
+									write_sda_timer <= write_sda_timer + '1';
+								end if;
 							else
-								sda_delay <= sda_delay + '1';
+								sda_timer <= sda_timer + '1';
 							end if;
 						end if;
 				    end if;
 				else
-					send_delay <= send_delay + '1';
+					send_timer <= send_timer + '1';
 				end if;
 
 				isIDLE <= '0';
 				isINIT <= '0';
 				isCONFIG <= '0';
 				isDEVICE <= '1';
+				isDONE <= '0';
+		    end if;
+
+	        ----------------------------------------
+	        -- State Machine :: DONE Process
+	        ----------------------------------------
+	        if tx_current_state = DONE then
+	            if done_timer = "010111110101111000001111111" then
+	            	sck_timer <= (others => '0');
+					sda_timer <= (others => '0');
+	                done_timer <= (others => '0');
+	                write_sck_timer <= (others => '0');
+	                write_sda_timer <= (others => '0');
+	                send_timer <= (others => '0');
+
+	                sda_index <= 0;
+	                write_go <= '0';
+	            	tx_next_state <= IDLE; -- Back to idle wait for another interrupt
+	                i2c_clock_align <= '0'; -- Reset Alignment
+	                --sm_run <= '0'; -- Hold State Machine :: Debug
+	            else
+	                done_timer <= done_timer + '1';
+	            end if;
+	            
+				isIDLE <= '0';
+				isINIT <= '0';
+				isCONFIG <= '0';
+				isDEVICE <= '0';
+				isDONE <= '1';
 		    end if;
 
 	        ----------------------------------------
@@ -429,7 +485,10 @@ begin
         	LED_2 <= isINIT;
         	LED_3 <= isCONFIG;
         	LED_4 <= isDEVICE;
-
+        	LED_5 <= isDONE;
+        	LED_6 <= '0';
+        	LED_7 <= '0';
+        	LED_8 <= '0';
 		end if;
     end if;
 end process;
@@ -451,7 +510,7 @@ end process;
 -- In order to adjust PID
 -- Controler for the gyroscope
 -----------------------------------
-FPGA_INT <= '0'; -- interrupt_signal;
+FPGA_INT <= interrupt_signal;
 
 -----------------------------------------------
 --
