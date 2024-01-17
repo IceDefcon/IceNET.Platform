@@ -409,9 +409,6 @@ begin
 
 
 
-
-
-
 				else
 					send_timer <= send_timer + '1';
 				end if;
