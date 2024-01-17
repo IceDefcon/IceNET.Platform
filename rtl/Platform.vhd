@@ -383,6 +383,11 @@ begin
 	            if config_timer = "010111110101111000001111111" then
 	                config_timer <= (others => '0');
 	            	tx_next_state <= SEND;
+	            	-----------------------------------
+	            	--
+	            	-- Body
+	            	--
+	            	-----------------------------------
 	            else
 	                config_timer <= config_timer + '1';
 	            end if;
@@ -400,14 +405,13 @@ begin
 	        if tx_current_state = SEND then
 
 	        	if send_timer = "010111110101111000001111111" then
-
-
-
-
-
-
-
-
+	        		send_timer <= (others => '0');
+	        		tx_next_state <= DONE;
+	            	-----------------------------------
+	            	--
+	            	-- Body
+	            	--
+	            	-----------------------------------
 				else
 					send_timer <= send_timer + '1';
 				end if;
@@ -418,6 +422,27 @@ begin
 				isDEVICE <= '1';
 				isDONE <= '0';
 		    end if;
+
+	        ----------------------------------------
+	        -- State Machine :: DONE Process
+	        ----------------------------------------
+	        if tx_current_state = DONE then
+	            if done_timer = "010111110101111000001111111" then
+	            	done_timer <= (others => '0');
+	        		tx_next_state <= IDLE;
+
+
+	            else
+	                done_timer <= done_timer + '1';
+	            end if;
+	            
+				isIDLE <= '0';
+				isINIT <= '0';
+				isCONFIG <= '0';
+				isDEVICE <= '0';
+				isDONE <= '1';
+		    end if;
+
 
 	        ----------------------------------------
 	        -- State Machine :: SEND Process
