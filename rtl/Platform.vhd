@@ -76,6 +76,19 @@ signal reset_button : std_logic := '0';
 -- i2c clocks
 signal i2c_clock : std_logic := '0';
 signal i2c_clock_next : std_logic := '0';
+signal i2c_clock_next01 : std_logic := '0';
+signal i2c_clock_next02 : std_logic := '0';
+signal i2c_clock_next03 : std_logic := '0';
+signal i2c_clock_next04 : std_logic := '0';
+signal i2c_clock_next05 : std_logic := '0';
+signal i2c_clock_next06 : std_logic := '0';
+signal i2c_clock_next07 : std_logic := '0';
+signal i2c_clock_next08 : std_logic := '0';
+signal i2c_clock_next09 : std_logic := '0';
+signal i2c_clock_next10 : std_logic := '0';
+signal i2c_clock_next11 : std_logic := '0';
+signal i2c_clock_next12 : std_logic := '0';
+
 signal i2c_clock_align : std_logic := '0';
 signal i2c_clock_first : std_logic := '0';
 signal i2c_clock_last : std_logic := '0';
@@ -281,6 +294,18 @@ begin
 
         -- Assign delayed clocks unconditionally on every clock edge
         i2c_clock_next <= i2c_clock;
+        i2c_clock_next01 <= i2c_clock_next;
+        i2c_clock_next02 <= i2c_clock_next01;
+        i2c_clock_next03 <= i2c_clock_next02;
+        i2c_clock_next04 <= i2c_clock_next03;
+        i2c_clock_next05 <= i2c_clock_next04;
+        i2c_clock_next06 <= i2c_clock_next05;
+        i2c_clock_next07 <= i2c_clock_next06;
+        i2c_clock_next08 <= i2c_clock_next07;
+        i2c_clock_next09 <= i2c_clock_next08;
+        i2c_clock_next10 <= i2c_clock_next09;
+        i2c_clock_next11 <= i2c_clock_next10;
+        i2c_clock_next12 <= i2c_clock_next11;
 
     end if;
 end process;
@@ -376,64 +401,17 @@ begin
 
 	        	if send_timer = "010111110101111000001111111" then
 
-				    if i2c_clock = '1' then 	-- Align @ 1 to achieve cycle from '0'
-				        i2c_clock_align <= '1'; -- Stay HI until reset
-				    end if;
 
-				    -- Clock is aligned
-				    if i2c_clock_align = '1' then
-						if write_go = '0' and i2c_clock = '0' then
-							write_go <= '1';
-						end if;
 
-						if write_go = '1' then
-							-------------------------------------
-							-- SCK
-							-------------------------------------
-							if sck_timer = "111111111" then
-								if write_sck_timer = "1000110010100" then
-									-------------------------------------
-									-- Body
-									-------------------------------------
-								else
-									write_sck <= i2c_clock_next; -----===[ OUT ]===-----
-									write_sck_timer <= write_sck_timer + '1';
-								end if;
-							else
-								sck_timer <= sck_timer + '1';
-							end if;
-							-------------------------------------
-							-- SDA
-							-------------------------------------
-							if sda_timer = "000111111" then
-								if write_sda_timer = "1010101111100" then
-									-------------------------------------
-									-- Body
-									-------------------------------------
-									write_sck <= '1'; -- For now :: Config this '1' after TX is complete
-									write_sda <= '1'; -- Take '1' from 'Z'
-					            	tx_next_state <= DONE; -- Must change state here :: SDA is longer
-								else
-							        if prcess_sda_timer = "111110011" then
-							        	if sda_index < 10 then
-							            	write_sda <= address_I2C(sda_index); -----===[ OUT ]===-----
-							            	sda_index <= sda_index + 1;
-							            else 
-							            	write_sda <= 'Z';
-							            end if;
 
-							            prcess_sda_timer <= (others => '0'); -- Reset count
-							        else
-							            prcess_sda_timer <= prcess_sda_timer + '1';
-							        end if;
 
-									write_sda_timer <= write_sda_timer + '1';
-								end if;
-							else
-								sda_timer <= sda_timer + '1';
-							end if;
-						end if;
-				    end if;
+
+
+
+
+
+
+
 				else
 					send_timer <= send_timer + '1';
 				end if;
@@ -446,32 +424,109 @@ begin
 		    end if;
 
 	        ----------------------------------------
+	        -- State Machine :: SEND Process
+	        ----------------------------------------
+	        --if tx_current_state = SEND then
+
+	        --	if send_timer = "010111110101111000001111111" then
+
+			--	    if i2c_clock = '1' then 	-- Align @ 1 to achieve cycle from '0'
+			--	        i2c_clock_align <= '1'; -- Stay HI until reset
+			--	    end if;
+
+			--	    -- Clock is aligned
+			--	    if i2c_clock_align = '1' then
+			--			if write_go = '0' and i2c_clock = '0' then
+			--				write_go <= '1';
+			--			end if;
+
+			--			if write_go = '1' then
+			--				-------------------------------------
+			--				-- SCK
+			--				-------------------------------------
+			--				if sck_timer = "111111111" then
+			--					if write_sck_timer = "1000110010100" then
+			--						-------------------------------------
+			--						-- Body
+			--						-------------------------------------
+			--						write_sck <= '0'; -- Kill the clock :: For now '0'
+			--					else
+			--						write_sck <= i2c_clock_next12; -----===[ OUT ]===-----
+			--						write_sck_timer <= write_sck_timer + '1';
+			--					end if;
+			--				else
+			--					sck_timer <= sck_timer + '1';
+			--				end if;
+			--				-------------------------------------
+			--				-- SDA
+			--				-------------------------------------
+			--				if sda_timer = "001000010" then
+			--					if write_sda_timer = "1010101111100" then
+			--						-------------------------------------
+			--						-- Body
+			--						-------------------------------------
+			--						write_sda <= '1'; -- Take '1' from 'Z'
+			--		            	tx_next_state <= DONE; -- Must change state here :: SDA is longer
+			--					else
+			--				        if prcess_sda_timer = "111110011" then
+			--				        	if sda_index < 9 then
+			--				            	write_sda <= address_I2C(sda_index); -----===[ OUT ]===-----
+			--				            	sda_index <= sda_index + 1;
+			--				            else 
+			--				            	ice_debug <= '1';
+			--				            	write_sda <= 'Z';
+			--				            end if;
+
+			--				            prcess_sda_timer <= (others => '0'); -- Reset count
+			--				        else
+			--				            prcess_sda_timer <= prcess_sda_timer + '1';
+			--				        end if;
+
+			--						write_sda_timer <= write_sda_timer + '1';
+			--					end if;
+			--				else
+			--					sda_timer <= sda_timer + '1';
+			--				end if;
+			--			end if;
+			--	    end if;
+			--	else
+			--		send_timer <= send_timer + '1';
+			--	end if;
+
+			--	isIDLE <= '0';
+			--	isINIT <= '0';
+			--	isCONFIG <= '0';
+			--	isDEVICE <= '1';
+			--	isDONE <= '0';
+		    --end if;
+
+	        ----------------------------------------
 	        -- State Machine :: DONE Process
 	        ----------------------------------------
-	        if tx_current_state = DONE then
-	            if done_timer = "010111110101111000001111111" then
-	            	sck_timer <= (others => '0');
-					sda_timer <= (others => '0');
-	                done_timer <= (others => '0');
-	                write_sck_timer <= (others => '0');
-	                write_sda_timer <= (others => '0');
-	                send_timer <= (others => '0');
+	        --if tx_current_state = DONE then
+	        --    if done_timer = "010111110101111000001111111" then
+	        --    	sck_timer <= (others => '0');
+			--		sda_timer <= (others => '0');
+	        --        done_timer <= (others => '0');
+	        --        write_sck_timer <= (others => '0');
+	        --        write_sda_timer <= (others => '0');
+	        --        send_timer <= (others => '0');
 
-	                sda_index <= 0;
-	                write_go <= '0';
-	            	tx_next_state <= IDLE; -- Back to idle wait for another interrupt
-	                i2c_clock_align <= '0'; -- Reset Alignment
-	                --sm_run <= '0'; -- Hold State Machine :: Debug
-	            else
-	                done_timer <= done_timer + '1';
-	            end if;
+	        --        sda_index <= 0;
+	        --        write_go <= '0';
+	        --    	tx_next_state <= IDLE; -- Back to idle wait for another interrupt
+	        --        i2c_clock_align <= '0'; -- Reset Alignment
+	        --        --sm_run <= '0'; -- Hold State Machine :: Debug
+	        --    else
+	        --        done_timer <= done_timer + '1';
+	        --    end if;
 	            
-				isIDLE <= '0';
-				isINIT <= '0';
-				isCONFIG <= '0';
-				isDEVICE <= '0';
-				isDONE <= '1';
-		    end if;
+			--	isIDLE <= '0';
+			--	isINIT <= '0';
+			--	isCONFIG <= '0';
+			--	isDEVICE <= '0';
+			--	isDONE <= '1';
+		    --end if;
 
 	        ----------------------------------------
 	        -- SM :: State update
