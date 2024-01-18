@@ -109,9 +109,9 @@ type TX is (IDLE, INIT, CONFIG, SEND, DONE, RECEIVE);
 signal tx_current_state, tx_next_state: TX := IDLE;
 
 -- i2c write clock
-signal write_sck : std_logic := '0';
 signal write_sda : std_logic := '0';
-signal write_go : std_logic := '0';
+signal write_sck : std_logic := '0';
+signal write_sck_enable : std_logic := '0';
 signal write_sck_timer : std_logic_vector(12 downto 0) := (others => '0');
 signal write_sda_timer : std_logic_vector(12 downto 0) := (others => '0');
 
@@ -311,10 +311,11 @@ begin
 end process;
 
 state_machine_process:
-process(CLOCK_50MHz, reset_button, kernel_interrupt, i2c_clock, i2c_clock_next, i2c_clock_align, write_sck, write_sda,
-	sm_timer, init_timer, config_timer, send_timer, done_timer, sm_run, tx_current_state, tx_next_state, 
-	isIDLE, isINIT, isCONFIG, isDEVICE, isDONE, sck_timer, sda_timer, prcess_sda_timer,
-	write_sck_timer, write_sda_timer, write_go, sda_index)
+process(CLOCK_50MHz, reset_button, kernel_interrupt, sm_run, 
+	sm_timer, init_timer, config_timer, send_timer, 
+	isIDLE, isINIT, isCONFIG, isDEVICE, isDONE, 
+	tx_current_state, tx_next_state,
+	write_sda, write_sck_enable, write_sck)
 begin
     if rising_edge(CLOCK_50MHz) then
 
@@ -326,9 +327,9 @@ begin
 		if sm_run = '0' then
 		    if sm_timer = "101111101011110000011111111" then -- 2s delay
 		        sm_timer <= (others => '0');
+				write_sda <= '1';
+				write_sck <= '1';
 		        sm_run <= '1';
-		        write_sck <= '1';
-		        write_sda <= '1';
 		    else
 		        isIDLE <= '1';
 		        isINIT <= '0';
@@ -363,7 +364,6 @@ begin
 	        ----------------------------------------
 	        if tx_current_state = INIT then
 	            if init_timer = "010111110101111000001111111" then
-	                init_timer <= (others => '0');
 	            	tx_next_state <= CONFIG;
 	            else
 	                init_timer <= init_timer + '1';
@@ -381,12 +381,9 @@ begin
 	        ----------------------------------------
 	        if tx_current_state = CONFIG then
 	            if config_timer = "010111110101111000001111111" then
-	                config_timer <= (others => '0');
 	            	tx_next_state <= SEND;
 	            	-----------------------------------
-	            	--
 	            	-- Body
-	            	--
 	            	-----------------------------------
 	            else
 	                config_timer <= config_timer + '1';
@@ -403,15 +400,35 @@ begin
 	        -- State Machine :: SEND Process
 	        ----------------------------------------
 	        if tx_current_state = SEND then
-
 	        	if send_timer = "010111110101111000001111111" then
-	        		send_timer <= (others => '0');
-	        		tx_next_state <= DONE;
-	            	-----------------------------------
-	            	--
-	            	-- Body
-	            	--
-	            	-----------------------------------
+
+	            	---> SDA :: Start bit
+	            	if sda_timer = "111110100" then
+	            		-- Toogle
+	            		write_sda <= '1';
+	            	else
+	            		sda_timer <= sda_timer + '1';
+	            		write_sda <= '0';
+	            	end if;
+
+	            	---> SCK :: Enable
+	            	if sda_timer = "000110001" then
+	            		write_sck_enable <= '1';
+	            	end if;
+
+	            	---> SCK
+	            	if write_sck_enable = '1' then
+		            	if sck_timer = "111110100" then
+	            			-- Toogle
+		            		write_sck <= '1';
+		            		-- Change State
+		        			tx_next_state <= DONE;
+		            	else
+		            		sck_timer <= sck_timer + '1';
+		            		write_sck <= '0';
+		            	end if;
+		            end if;
+
 				else
 					send_timer <= send_timer + '1';
 				end if;
@@ -428,10 +445,17 @@ begin
 	        ----------------------------------------
 	        if tx_current_state = DONE then
 	            if done_timer = "010111110101111000001111111" then
+	            	-- Reset Timers
+	            	sda_timer <= (others => '0');
+	            	sck_timer <= (others => '0');
+	                init_timer <= (others => '0');
+	                config_timer <= (others => '0');
+	            	send_timer <= (others => '0');
 	            	done_timer <= (others => '0');
+	            	-- Change State
 	        		tx_next_state <= IDLE;
-
-
+	            	-- Reset Others
+	            	write_sck_enable <= '0';
 	            else
 	                done_timer <= done_timer + '1';
 	            end if;
@@ -443,6 +467,28 @@ begin
 				isDONE <= '1';
 		    end if;
 
+	        ----------------------------------------
+	        -- SM :: State update
+	        ----------------------------------------
+	        tx_current_state <= tx_next_state;
+
+	        ----------------------------------------
+	        -- SM :: Current LED State
+	        ----------------------------------------
+	        LED_1 <= isIDLE;
+        	LED_2 <= isINIT;
+        	LED_3 <= isCONFIG;
+        	LED_4 <= isDEVICE;
+        	LED_5 <= isDONE;
+        	LED_6 <= '0';
+        	LED_7 <= '0';
+        	LED_8 <= write_sck_enable;
+
+	        ----------------------------------------
+	        -- SM :: Output
+	        ----------------------------------------
+			I2C_OUT_SCK <= write_sck;
+			I2C_OUT_SDA <= write_sda;
 
 	        ----------------------------------------
 	        -- State Machine :: SEND Process
@@ -552,19 +598,19 @@ begin
 	        ----------------------------------------
 	        -- SM :: State update
 	        ----------------------------------------
-	        tx_current_state <= tx_next_state;
+	        --tx_current_state <= tx_next_state;
 
 	        ----------------------------------------
 	        -- SM :: Current LED State
 	        ----------------------------------------
-	        LED_1 <= isIDLE;
-        	LED_2 <= isINIT;
-        	LED_3 <= isCONFIG;
-        	LED_4 <= isDEVICE;
-        	LED_5 <= isDONE;
-        	LED_6 <= '0';
-        	LED_7 <= '0';
-        	LED_8 <= '0';
+	        --LED_1 <= isIDLE;
+        	--LED_2 <= isINIT;
+        	--LED_3 <= isCONFIG;
+        	--LED_4 <= isDEVICE;
+        	--LED_5 <= isDONE;
+        	--LED_6 <= '0';
+        	--LED_7 <= '0';
+        	--LED_8 <= '0';
 		end if;
     end if;
 end process;
@@ -573,8 +619,7 @@ i2c_process:
 process(CLOCK_50MHz, write_sck, write_sda, sck, sda)
 begin
 	if rising_edge(CLOCK_50MHz) then
-		I2C_OUT_SCK <= write_sck;
-		I2C_OUT_SDA <= write_sda;
+
 
 		sck <= I2C_IN_SCK;
 		sda <= I2C_IN_SDA;
