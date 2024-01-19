@@ -49,8 +49,13 @@ end Platform;
 
 architecture rtl of Platform is
 
+----------------------------------------------------------------------------------------------------------------
+-- 
+----------------------------------------------------------------------------------------------------------------
+
 -- Reset
 signal reset_button : std_logic := '0';
+signal reset_hold : std_logic := '0';
 -- SM Init
 signal sm_run : std_logic := '0';
 -- Interrupt
@@ -75,6 +80,7 @@ signal synced_miso : std_logic := '0';
 
 -- Timers
 signal sm_timer : std_logic_vector(26 downto 0) := (others => '0');
+signal reset_timer : std_logic_vector(26 downto 0) := (others => '0');
 signal init_timer : std_logic_vector(26 downto 0) := (others => '0');
 signal config_timer : std_logic_vector(26 downto 0) := (others => '0');
 signal send_timer : std_logic_vector(26 downto 0) := (others => '0');
@@ -247,7 +253,7 @@ end process;
 --
 ---------------------------------------------------------------------------------------
 state_machine_process:
-process(CLOCK_50MHz, reset_button, kernel_interrupt, sm_run, tx_current_state, tx_next_state,
+process(CLOCK_50MHz, reset_button, reset_hold, kernel_interrupt, sm_run, tx_current_state, tx_next_state,
 	sm_timer, init_timer, config_timer, send_timer, sda_timer, sck_timer, byte_timer, bit_timer,
 	write_sda, write_sck_go, write_sck, read_sck, read_sda,
 	isIDLE, isINIT, isCONFIG, isDEVICE, isDONE)
@@ -291,7 +297,18 @@ begin
     		-- State Machine :: HW & SW Reset
     		----------------------------------------
 	        if reset_button = '1' or kernel_interrupt <= '0' then
-        		tx_next_state <= INIT;
+	            if reset_timer = "010111110101111000001111111" then -- 1s Hold reset
+        			tx_next_state <= INIT;
+	            	reset_hold <= '0';
+	            else
+	            	reset_timer <= reset_timer + '1';
+	            	reset_hold <= '1';
+	            end if;
+        	else
+        		if reset_hold = '1' then
+        			tx_next_state <= INIT;
+	            	reset_hold <= '0';
+        		end if;
 	        end if;
 
 	        ----------------------------------------
@@ -319,7 +336,7 @@ begin
 	            	-----------------------------------
 	            	-- Body
 	            	-----------------------------------
-	            	byte_timer <= "11111010"; -- Set @ LO Cycle
+	            	byte_timer <= "11111001"; -- Clock bit @ Zero [0]
 	            else
 	                config_timer <= config_timer + '1';
 	            end if;
@@ -359,11 +376,11 @@ begin
 		        			tx_next_state <= DONE;
 	            		else
 	            			sck_timer <= sck_timer + '1';
-			            	if byte_timer = "11111010" then
+			            	if byte_timer = "11111001" then -- Clock bit @ Zero [0]
 			            		byte_timer <= (others => '0');
 		            			-- Toogle
 			            		write_sck <= not write_sck;
-			            		if bit_timer = "1000" then
+			            		if bit_timer = "1111" then
 			            			write_sck <= '1';
 			            		else
 			            			bit_timer <= bit_timer + '1';
