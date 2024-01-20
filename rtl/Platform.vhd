@@ -16,7 +16,6 @@ port
 (
     CLOCK_50MHz : in std_logic; -- PIN_T2
 
-    -- For debuging
     LED_1 : out std_logic; -- PIN_U7
     LED_2 : out std_logic; -- PIN_U8
     LED_3 : out std_logic; -- PIN_R7
@@ -55,9 +54,8 @@ architecture rtl of Platform is
 
 -- Reset
 signal reset_button : std_logic := '0';
-signal reset_hold : std_logic := '0';
 -- SM Init
-signal sm_run : std_logic := '0';
+signal system_start : std_logic := '0';
 -- Interrupt
 signal kernel_interrupt : std_logic := '0';
 
@@ -79,12 +77,12 @@ signal synced_mosi : std_logic := '0';
 signal synced_miso : std_logic := '0';
 
 -- Timers
-signal sm_timer : std_logic_vector(26 downto 0) := (others => '0');
-signal reset_timer : std_logic_vector(26 downto 0) := (others => '0');
-signal init_timer : std_logic_vector(26 downto 0) := (others => '0');
-signal config_timer : std_logic_vector(26 downto 0) := (others => '0');
-signal send_timer : std_logic_vector(26 downto 0) := (others => '0');
-signal done_timer : std_logic_vector(26 downto 0) := (others => '0');
+signal system_timer : std_logic_vector(26 downto 0) := (others => '0');
+signal idle_timer : std_logic_vector(24 downto 0) := (others => '0');
+signal init_timer : std_logic_vector(24 downto 0) := (others => '0');
+signal config_timer : std_logic_vector(24 downto 0) := (others => '0');
+signal send_timer : std_logic_vector(24 downto 0) := (others => '0');
+signal done_timer : std_logic_vector(24 downto 0) := (others => '0');
 signal byte_timer : std_logic_vector(7 downto 0) := (others => '0');
 signal bit_timer : std_logic_vector(3 downto 0) := (others => '0');
 signal sck_timer : std_logic_vector(11 downto 0) := (others => '0');
@@ -97,7 +95,6 @@ signal tx_current_state, tx_next_state: TX := IDLE;
 -- i2c signals 
 signal write_sda : std_logic := '0';
 signal write_sck : std_logic := '0';
-signal write_sck_go : std_logic := '0';
 signal read_sda : std_logic := '1';
 signal read_sck : std_logic := '1';
 
@@ -253,69 +250,44 @@ end process;
 --
 ---------------------------------------------------------------------------------------
 state_machine_process:
-process(CLOCK_50MHz, reset_button, reset_hold, kernel_interrupt, sm_run, tx_current_state, tx_next_state,
-	sm_timer, init_timer, config_timer, send_timer, sda_timer, sck_timer, byte_timer, bit_timer,
-	write_sda, write_sck_go, write_sck, read_sck, read_sda,
+process(CLOCK_50MHz, reset_button, kernel_interrupt, tx_current_state, tx_next_state, system_start,
+	system_timer,init_timer, config_timer, send_timer, done_timer, sck_timer, byte_timer,
+	write_sda, write_sck, read_sck, read_sda,
 	isIDLE, isINIT, isCONFIG, isDEVICE, isDONE)
 begin
     if rising_edge(CLOCK_50MHz) then
 
     	kernel_interrupt <= KERNEL_INT;
 
-        ----------------------------------------
-        -- Reset State Machine
-        ----------------------------------------
-		if sm_run = '0' then
-		    if sm_timer = "101111101011110000011111111" then -- 2s delay
-		        sm_timer <= (others => '0');
-				write_sda <= '1';
-				write_sck <= '1';
-		        sm_run <= '1';
-		    else
-		        isIDLE <= '1';
-		        isINIT <= '0';
-		        isCONFIG <= '0';
-		        isDEVICE <= '0';
-		        isDONE <= '0';
-		        sm_timer <= sm_timer + '1';
-		    end if;
+		if system_start = '0' then
+			if system_timer = "101111101011110000011111111" then
+				system_start <= '1';
+	            tx_next_state <= IDLE;
+			else
+				system_timer <= system_timer + '1';
+			end if;
+		else
 
-    	elsif sm_run = '1' then
-
-	        ----------------------------------------
-	        -- State Machine :: INIT Process
-	        ----------------------------------------
-	        if tx_current_state = IDLE then
+	    	if tx_current_state = IDLE then
 				isIDLE <= '1';
 				isINIT <= '0';
 				isCONFIG <= '0';
 				isDEVICE <= '0';
 				isDONE <= '0';
-		    end if;
-
-    		----------------------------------------
-    		-- State Machine :: HW & SW Reset
-    		----------------------------------------
-	        if reset_button = '1' or kernel_interrupt <= '0' then
-	            if reset_timer = "010111110101111000001111111" then -- 1s Hold reset
-        			tx_next_state <= INIT;
-	            	reset_hold <= '0';
-	            else
-	            	reset_timer <= reset_timer + '1';
-	            	reset_hold <= '1';
-	            end if;
-        	else
-        		if reset_hold = '1' then
-        			tx_next_state <= INIT;
-	            	reset_hold <= '0';
-        		end if;
-	        end if;
+			end if;
 
 	        ----------------------------------------
 	        -- State Machine :: INIT Process
 	        ----------------------------------------
+	        if reset_button = '1' or kernel_interrupt <= '0' then
+	    		tx_next_state <= INIT;
+	        end if;
+
 	        if tx_current_state = INIT then
-	            if init_timer = "010111110101111000001111111" then
+	            if init_timer = "1011111010111100000111111" then -- delay for the reset to stabilise
+
+	            	write_sda <= '1';
+					write_sck <= '1';
 	            	tx_next_state <= CONFIG;
 	            else
 	                init_timer <= init_timer + '1';
@@ -331,7 +303,7 @@ begin
 	        -- State Machine :: CONFIG Process
 	        ----------------------------------------
 	        if tx_current_state = CONFIG then
-	            if config_timer = "010111110101111000001111111" then
+	            if config_timer = "1011111010111100000111111" then
 	            	tx_next_state <= SEND;
 	            	-----------------------------------
 	            	-- Body
@@ -352,45 +324,8 @@ begin
 	        -- State Machine :: SEND Process
 	        ----------------------------------------
 	        if tx_current_state = SEND then
-	        	if send_timer = "010111110101111000001111111" then
-
-	            	---> SDA :: Start bit
-	            	if sda_timer = "111110100000" then
-	            		-- Toogle
-	            		write_sda <= '1';
-	            	else
-	            		sda_timer <= sda_timer + '1';
-	            		write_sda <= '0';
-	            	end if;
-
-	            	---> SCK :: Enable
-	            	if sda_timer = "000000110001" then
-	            		write_sck_go <= '1';
-	            	end if;
-
-	            	---> SCK
-	            	if write_sck_go = '1' then
-	            		if sck_timer = "111110100000" then
-	            			sck_timer <= (others => '0');
-		            		-- Change State
-		        			tx_next_state <= DONE;
-	            		else
-	            			sck_timer <= sck_timer + '1';
-			            	if byte_timer = "11111001" then -- Clock bit @ Zero [0]
-			            		byte_timer <= (others => '0');
-		            			-- Toogle
-			            		write_sck <= not write_sck;
-			            		if bit_timer = "1111" then
-			            			write_sck <= '1';
-			            		else
-			            			bit_timer <= bit_timer + '1';
-			            		end if;
-			            	else
-			            		byte_timer <= byte_timer + '1';
-			            	end if;
-			            end if;
-		            end if;
-
+	        	if send_timer = "1011111010111100000111111" then
+		        	tx_next_state <= DONE;
 				else
 					send_timer <= send_timer + '1';
 				end if;
@@ -406,7 +341,7 @@ begin
 	        -- State Machine :: DONE Process
 	        ----------------------------------------
 	        if tx_current_state = DONE then
-	            if done_timer = "010111110101111000001111111" then
+	            if done_timer = "1011111010111100000111111" then
 	            	-- Reset Timers
 	            	sda_timer <= (others => '0');
 	            	sck_timer <= (others => '0');
@@ -416,11 +351,7 @@ begin
 	                config_timer <= (others => '0');
 	            	send_timer <= (others => '0');
 	            	done_timer <= (others => '0');
-	            	-- Change State
-	        		tx_next_state <= IDLE;
-	            	-- Reset Others
-	            	write_sck_go <= '0';
-	            	-- Set Tri-State
+		        	tx_next_state <= IDLE;
 	            else
 	                done_timer <= done_timer + '1';
 	            end if;
@@ -448,16 +379,16 @@ begin
 	        ----------------------------------------
 	        -- SM :: Current LED State
 	        ----------------------------------------
-	        LED_1 <= isIDLE;
-        	LED_2 <= isINIT;
-        	LED_3 <= isCONFIG;
-        	LED_4 <= isDEVICE;
-        	LED_5 <= isDONE;
-        	LED_6 <= '0';
-        	LED_7 <= '0';
-        	LED_8 <= '0';
+	    	LED_1 <= isIDLE;
+	    	LED_2 <= isINIT;
+	    	LED_3 <= isCONFIG;
+	    	LED_4 <= isDEVICE;
+	    	LED_5 <= isDONE;
+	    	LED_6 <= '0';
+	    	LED_7 <= '0';
+	    	LED_8 <= '0';
 
-		end if;
+    end if;
     end if;
 end process;
 

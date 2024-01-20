@@ -14,7 +14,7 @@ Port
 );
 end SPI_Synchronizer;
 
-architecture rtl of SPI_Synchronizer is
+architecture Behavioral of SPI_Synchronizer is
 
 signal synced_sclk  : STD_LOGIC := '0';
 signal synced_cs    : STD_LOGIC := '0';
@@ -40,4 +40,4 @@ begin
     end if;
 end process;
 
-end rtl;
+end Behavioral;
