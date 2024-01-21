@@ -40,7 +40,7 @@ port
     KERNEL_INT : in std_logic; -- PIN_A4   :: BBB P9_14 :: WHITE
 
     BUTTON_1 : in std_logic; -- PIN_H20  :: Reset
-    BUTTON_2 : in std_logic; -- PIN_K19  :: Doesnt Work :: Broken Button or Incorrect Schematic
+    BUTTON_2 : in std_logic; -- PIN_K19  :: Doesnt Work :: Incorrect Schematic or Broken Button
     BUTTON_3 : in std_logic; -- PIN_J18
     BUTTON_4 : in std_logic  -- PIN_K18
 );
