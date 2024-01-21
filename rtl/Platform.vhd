@@ -3,14 +3,14 @@ use ieee.numeric_std.all;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.all;
 
-------------------------------
+----------------------------------------
 -- Author: Ice.Marek
 -- IceNET Technology 2024
 --
 -- FPGA Chip
 -- Cyclone IV
 -- EP4CE15F23C8
-------------------------------
+----------------------------------------
 entity Platform is
 port
 (
@@ -49,7 +49,7 @@ end Platform;
 architecture rtl of Platform is
 
 ----------------------------------------------------------------------------------------------------------------
--- 
+-- Signals
 ----------------------------------------------------------------------------------------------------------------
 
 -- Reset
@@ -98,11 +98,11 @@ signal write_sck : std_logic := '0';
 signal read_sda : std_logic := '1';
 signal read_sck : std_logic := '1';
 
--- Debug Interrupt
+-- Interrupt
 signal diode_check : std_logic := '0';
 signal diode_done : std_logic := '0';
 
--- Debug Led
+-- LED Signals
 signal isIDLE : std_logic := '0';
 signal isINIT : std_logic := '0';
 signal isCONFIG : std_logic := '0';
@@ -116,12 +116,12 @@ component SPI_Synchronizer
 port
 (
     CLK_50MHz : in  std_logic;
-    IN_SCLK   : in  std_logic;
-    IN_CS     : in  std_logic;
-    IN_MOSI   : in  std_logic;
-    OUT_SCLK  : out std_logic;
-    OUT_CS    : out std_logic;
-    OUT_MOSI  : out std_logic
+    IN_SCLK : in  std_logic;
+    IN_CS : in  std_logic;
+    IN_MOSI : in  std_logic;
+    OUT_SCLK : out std_logic;
+    OUT_CS : out std_logic;
+    OUT_MOSI : out std_logic
 );
 end component;
 
@@ -143,8 +143,8 @@ end component;
 component SPI_Data
 Port 
 (
-    CLOCK 		: in  std_logic;
-    DATA 		: in  std_logic_vector(7 downto 0);
+    CLOCK : in  std_logic;
+    DATA : in  std_logic_vector(7 downto 0);
     synced_sclk : in std_logic;
     synced_miso : out std_logic
 );
@@ -153,10 +153,10 @@ end component;
 component Interrupt
 Port 
 (
-    CLOCK 				: in  std_logic;
-    interrupt_period 	: in  std_logic_vector(25 downto 0);
-    interrupt_length 	: in  std_logic_vector(3 downto 0);
-    interrupt_signal 	: out std_logic
+    CLOCK : in  std_logic;
+    interrupt_period : in  std_logic_vector(25 downto 0);
+    interrupt_length : in  std_logic_vector(3 downto 0);
+    interrupt_signal : out std_logic
 );
 end component;
 
@@ -168,17 +168,17 @@ begin
 SPI_Synchronizer_module: SPI_Synchronizer port map 
 (
     CLK_50MHz => CLOCK_50MHz,
-    IN_SCLK   => KERNEL_SCLK,
-    IN_CS     => KERNEL_CS,
-    IN_MOSI   => KERNEL_MOSI,
+    IN_SCLK => KERNEL_SCLK,
+    IN_CS => KERNEL_CS,
+    IN_MOSI => KERNEL_MOSI,
     OUT_SCLK  => synced_sclk,
-    OUT_CS    => synced_cs,
+    OUT_CS => synced_cs,
     OUT_MOSI  => synced_mosi
 );
 
 Debounce_module: Debounce port map 
 (
-	clock 		=> CLOCK_50MHz,
+	clock => CLOCK_50MHz,
 	button_in_1 => BUTTON_1,
 	button_in_2 => BUTTON_2,
 	button_in_3 => BUTTON_3,
@@ -191,15 +191,15 @@ Debounce_module: Debounce port map
 
 SPI_Data_module: SPI_Data port map 
 (
-	CLOCK 			=> CLOCK_50MHz,
-	DATA 			=> data_SPI,
-	synced_sclk 	=> synced_sclk,
-	synced_miso 	=> synced_miso
+	CLOCK => CLOCK_50MHz,
+	DATA => data_SPI,
+	synced_sclk => synced_sclk,
+	synced_miso => synced_miso
 );
 
 KERNEL_MISO <= synced_miso;
 
-------------------------------------------
+----------------------------------------
 -- Interrupt pulse :: 0x2FAF07F/50 MHz
 -- (49999999 + 1)/50000000 Hz = 1 sec
 --
@@ -209,18 +209,15 @@ KERNEL_MISO <= synced_miso;
 --
 -- Interrupt length :: 0xF
 -- 16 * 2ns = 32 ns
-------------------------------------------
+----------------------------------------
 Interrupt_module: Interrupt port map 
 (
-	CLOCK 				=> CLOCK_50MHz,
-	interrupt_period 	=> std_logic_vector(unsigned(interrupt_period) srl interrupt_divider),
-	interrupt_length 	=> interrupt_length,
-	interrupt_signal 	=> interrupt_signal
+	CLOCK => CLOCK_50MHz,
+	interrupt_period => std_logic_vector(unsigned(interrupt_period) srl interrupt_divider),
+	interrupt_length => interrupt_length,
+	interrupt_signal => interrupt_signal
 );
 
-----------------------
--- DEBUG PROCESS
-----------------------
 interrupt_process:
 process(CLOCK_50MHz, interrupt_signal, diode_check, diode_done)
 begin
@@ -251,7 +248,7 @@ end process;
 ---------------------------------------------------------------------------------------
 state_machine_process:
 process(CLOCK_50MHz, reset_button, kernel_interrupt, tx_current_state, tx_next_state, system_start,
-	system_timer,init_timer, config_timer, send_timer, done_timer, sck_timer, byte_timer,
+	system_timer, init_timer, config_timer, send_timer, done_timer, sck_timer, byte_timer,
 	write_sda, write_sck, read_sck, read_sda,
 	isIDLE, isINIT, isCONFIG, isDEVICE, isDONE)
 begin
@@ -259,6 +256,9 @@ begin
 
     	kernel_interrupt <= KERNEL_INT;
 
+        --------------------------------------------
+        -- State Machine :: Start
+        --------------------------------------------
 		if system_start = '0' then
 			if system_timer = "101111101011110000011111111" then
 				system_start <= '1';
@@ -267,143 +267,140 @@ begin
 				system_timer <= system_timer + '1';
 			end if;
 		else
-
-	    	if tx_current_state = IDLE then
-				isIDLE <= '1';
-				isINIT <= '0';
-				isCONFIG <= '0';
-				isDEVICE <= '0';
-				isDONE <= '0';
-			end if;
-
 	        ----------------------------------------
-	        -- State Machine :: INIT Process
+	        -- State Machine :: Reset
 	        ----------------------------------------
 	        if reset_button = '1' or kernel_interrupt <= '0' then
-	    		tx_next_state <= INIT;
-	        end if;
-
-	        if tx_current_state = INIT then
-	            if init_timer = "1011111010111100000111111" then -- delay for the reset to stabilise
-
-	            	write_sda <= '1';
-					write_sck <= '1';
-	            	tx_next_state <= CONFIG;
-	            else
-	                init_timer <= init_timer + '1';
-	            end if;
-				isIDLE <= '0';
-				isINIT <= '1';
-				isCONFIG <= '0';
-				isDEVICE <= '0';
-				isDONE <= '0';
-		    end if;
-
-	        ----------------------------------------
-	        -- State Machine :: CONFIG Process
-	        ----------------------------------------
-	        if tx_current_state = CONFIG then
-	            if config_timer = "1011111010111100000111111" then
-	            	tx_next_state <= SEND;
-	            	-----------------------------------
-	            	-- Body
-	            	-----------------------------------
-	            	byte_timer <= "11111001"; -- Clock bit @ Zero [0]
-	            else
-	                config_timer <= config_timer + '1';
-	            end if;
-
-				isIDLE <= '0';
-				isINIT <= '0';
-				isCONFIG <= '1';
-				isDEVICE <= '0';
-				isDONE <= '0';
-		    end if;
-
-	        ----------------------------------------
-	        -- State Machine :: SEND Process
-	        ----------------------------------------
-	        if tx_current_state = SEND then
-	        	if send_timer = "1011111010111100000111111" then
-		        	tx_next_state <= DONE;
-				else
-					send_timer <= send_timer + '1';
+	        	tx_next_state <= INIT;
+	    	else
+		        ------------------------------------
+		        -- State Machine :: IDLE
+		        ------------------------------------
+		    	if tx_current_state = IDLE then
+	            	write_sda <= 'Z';
+					write_sck <= 'Z';
+					isIDLE <= '1';
+					isINIT <= '0';
+					isCONFIG <= '0';
+					isDEVICE <= '0';
+					isDONE <= '0';
 				end if;
+		        ------------------------------------
+		        -- State Machine :: INIT
+		        ------------------------------------
+		        if tx_current_state = INIT then
+		            if init_timer = "1011111010111100000111111" then -- delay for the reset to stabilise
+		            	write_sda <= '1';
+						write_sck <= '1';
+		            	tx_next_state <= CONFIG;
+		            else
+		                init_timer <= init_timer + '1';
+		            end if;
+					isIDLE <= '0';
+					isINIT <= '1';
+					isCONFIG <= '0';
+					isDEVICE <= '0';
+					isDONE <= '0';
+			    end if;
+		        ------------------------------------
+		        -- State Machine :: CONFIG
+		        ------------------------------------
+		        if tx_current_state = CONFIG then
+		            if config_timer = "1011111010111100000111111" then
+		            	tx_next_state <= SEND;
+		            	----------------------------
+		            	-- Body
+		            	----------------------------
+		            	byte_timer <= "11111001"; -- Clock bit @ Zero [0]
+		            else
+		                config_timer <= config_timer + '1';
+		            end if;
 
-				isIDLE <= '0';
-				isINIT <= '0';
-				isCONFIG <= '0';
-				isDEVICE <= '1';
-				isDONE <= '0';
-		    end if;
+					isIDLE <= '0';
+					isINIT <= '0';
+					isCONFIG <= '1';
+					isDEVICE <= '0';
+					isDONE <= '0';
+			    end if;
+		        ------------------------------------
+		        -- State Machine :: SEND
+		        ------------------------------------
+		        if tx_current_state = SEND then
+		        	if send_timer = "1011111010111100000111111" then
+		        		--
+		        		--
+		        		-- Devel
+		        		--
+		        		--
+			        	tx_next_state <= DONE;
+					else
+						send_timer <= send_timer + '1';
+					end if;
 
-	        ----------------------------------------
-	        -- State Machine :: DONE Process
-	        ----------------------------------------
-	        if tx_current_state = DONE then
-	            if done_timer = "1011111010111100000111111" then
-	            	-- Reset Timers
-	            	sda_timer <= (others => '0');
-	            	sck_timer <= (others => '0');
-	            	byte_timer <= (others => '0');
-	            	bit_timer <= (others => '0');
-	                init_timer <= (others => '0');
-	                config_timer <= (others => '0');
-	            	send_timer <= (others => '0');
-	            	done_timer <= (others => '0');
-		        	tx_next_state <= IDLE;
-	            else
-	                done_timer <= done_timer + '1';
-	            end if;
-	            
-				isIDLE <= '0';
-				isINIT <= '0';
-				isCONFIG <= '0';
-				isDEVICE <= '0';
-				isDONE <= '1';
-		    end if;
-
-	        ----------------------------------------
-	        -- SM :: State update
-	        ----------------------------------------
-	        tx_current_state <= tx_next_state;
-
-	        ----------------------------------------
-	        -- SM :: Output
-	        ----------------------------------------
-			I2C_SCK <= write_sck;
-			I2C_SDA <= write_sda;
-			read_sck <= I2C_SCK_TEST;
-			read_sda <= I2C_SDA_TEST;
-
-	        ----------------------------------------
-	        -- SM :: Current LED State
-	        ----------------------------------------
-	    	LED_1 <= isIDLE;
-	    	LED_2 <= isINIT;
-	    	LED_3 <= isCONFIG;
-	    	LED_4 <= isDEVICE;
-	    	LED_5 <= isDONE;
-	    	LED_6 <= '0';
-	    	LED_7 <= '0';
-	    	LED_8 <= '0';
-
-    end if;
+					isIDLE <= '0';
+					isINIT <= '0';
+					isCONFIG <= '0';
+					isDEVICE <= '1';
+					isDONE <= '0';
+			    end if;
+		        ------------------------------------
+		        -- State Machine :: DONE
+		        ------------------------------------
+		        if tx_current_state = DONE then
+		            if done_timer = "1011111010111100000111111" then
+		            	-- Reset Timers
+		            	sda_timer <= (others => '0');
+		            	sck_timer <= (others => '0');
+		            	byte_timer <= (others => '0');
+		            	bit_timer <= (others => '0');
+		                init_timer <= (others => '0');
+		                config_timer <= (others => '0');
+		            	send_timer <= (others => '0');
+		            	done_timer <= (others => '0');
+			        	tx_next_state <= IDLE;
+		            else
+		                done_timer <= done_timer + '1';
+		            end if;
+		            
+					isIDLE <= '0';
+					isINIT <= '0';
+					isCONFIG <= '0';
+					isDEVICE <= '0';
+					isDONE <= '1';
+			    end if;
+		        ------------------------------------
+		        -- State Machine :: Update
+		        ------------------------------------
+		        tx_current_state <= tx_next_state;
+		        ------------------------------------
+		        -- State Machine :: Output
+		        ------------------------------------
+				I2C_SCK <= write_sck;
+				I2C_SDA <= write_sda;
+				read_sck <= I2C_SCK_TEST;
+				read_sda <= I2C_SDA_TEST;
+		        ------------------------------------
+		        -- State Machine :: Status
+		        ------------------------------------
+		    	LED_1 <= isIDLE;
+		    	LED_2 <= isINIT;
+		    	LED_3 <= isCONFIG;
+		    	LED_4 <= isDEVICE;
+		    	LED_5 <= isDONE;
+		    	LED_6 <= '0';
+		    	LED_7 <= '0';
+		    	LED_8 <= '0';
+	        end if;
+    	end if;
     end if;
 end process;
 
--- --------------------------------
+-----------------------------------------------
 -- Interrupt is pulled down
 -- In order to adjust PID
 -- Controler for the gyroscope
------------------------------------
+-----------------------------------------------
 FPGA_INT <= '0'; --interrupt_signal;
-
------------------------------------------------
---
--- Ice Debug
---
------------------------------------------------
 
 end rtl;
 
