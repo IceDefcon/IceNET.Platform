@@ -106,6 +106,9 @@ signal isCONFIG : std_logic := '0';
 signal isDEVICE : std_logic := '0';
 signal isDONE : std_logic := '0';
 
+-- Status Register
+signal status_register : std_logic_vector(2 downto 0) := "000";
+
 -- Debug
 signal debug_1 : std_logic := '0';
 signal debug_2 : std_logic := '0';
@@ -249,11 +252,10 @@ end process;
 --
 ---------------------------------------------------------------------------------------
 state_machine_process:
-process(CLOCK_50MHz, reset_button, kernel_interrupt, system_start, main_current, main_next,
+process(CLOCK_50MHz, reset_button, kernel_interrupt, system_start, main_current, main_next, status_register,
 	system_timer, init_timer, config_timer, send_timer, done_timer, i2c_timer, sck_timer, sda_timer,
 	isIDLE, isINIT, isCONFIG, isDEVICE, isDONE,
-	write_sda, write_sck, read_sck, read_sda,
-	debug_1, debug_2, debug_3)
+	write_sda, write_sck, read_sck, read_sda)
 begin
     if rising_edge(CLOCK_50MHz) then
 
@@ -344,15 +346,15 @@ begin
 			                end if;
 			                
 			                if i2c_timer = "00110111011110" then -- RW
-			                	debug_1 <= '1';
+			                	status_register <= "001";
 			                end if;
 
 			                if i2c_timer = "00111111010010" then -- ACK/NAK
-			                	debug_2 <= '1';
+			                	status_register <= "010";
 			                end if;
 
 			                if i2c_timer = "01000111000110" then -- BARIER
-			                	debug_3 <= '1';
+			                	status_register <= "100";
 			                end if;
 
 		                	write_sda <= '0';
@@ -418,9 +420,9 @@ LED_2 <= isINIT;
 LED_3 <= isCONFIG;
 LED_4 <= isDEVICE;
 LED_5 <= isDONE;
-LED_6 <= debug_1;
-LED_7 <= debug_2;
-LED_8 <= debug_3;
+LED_6 <= status_register(0);
+LED_7 <= status_register(1);
+LED_8 <= status_register(2);
 -----------------------------------------------
 -- Interrupt is pulled down
 -- In order to adjust PID
