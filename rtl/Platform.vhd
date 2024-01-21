@@ -66,9 +66,8 @@ signal interrupt_length : std_logic_vector(3 downto 0) := "1111";
 signal interrupt_signal : std_logic := '0';
 
 -- I2C & SPA Data
-signal sda_index : integer range 0 to 15 := 0;
 constant data_SPI : std_logic_vector(7 downto 0) := "10001000"; -- 0x88
-constant address_I2C : std_logic_vector(9 downto 0) := "0010011110"; -- 0x69
+constant address_I2C : std_logic_vector(7 downto 0) := "01001111"; -- 0x69
 
 -- SPI Synchronise
 signal synced_sclk : std_logic := '0';
@@ -78,19 +77,17 @@ signal synced_miso : std_logic := '0';
 
 -- Timers
 signal system_timer : std_logic_vector(26 downto 0) := (others => '0');
-signal idle_timer : std_logic_vector(24 downto 0) := (others => '0');
 signal init_timer : std_logic_vector(24 downto 0) := (others => '0');
 signal config_timer : std_logic_vector(24 downto 0) := (others => '0');
 signal send_timer : std_logic_vector(24 downto 0) := (others => '0');
 signal done_timer : std_logic_vector(24 downto 0) := (others => '0');
-signal byte_timer : std_logic_vector(7 downto 0) := (others => '0');
-signal bit_timer : std_logic_vector(3 downto 0) := (others => '0');
+signal i2c_timer : std_logic_vector(13 downto 0) := (others => '0');
 signal sck_timer : std_logic_vector(11 downto 0) := (others => '0');
 signal sda_timer : std_logic_vector(11 downto 0) := (others => '0');
 
 --i2c state machine
-type TX is (IDLE, INIT, CONFIG, SEND, DONE, RECEIVE);
-signal tx_current_state, tx_next_state: TX := IDLE;
+type MAIN is (IDLE, INIT, CONFIG, SEND, DONE, RECEIVE);
+signal main_current, main_next: MAIN := IDLE;
 
 -- i2c signals 
 signal write_sda : std_logic := '0';
@@ -108,6 +105,11 @@ signal isINIT : std_logic := '0';
 signal isCONFIG : std_logic := '0';
 signal isDEVICE : std_logic := '0';
 signal isDONE : std_logic := '0';
+
+-- Debug
+signal debug_1 : std_logic := '0';
+signal debug_2 : std_logic := '0';
+signal debug_3 : std_logic := '0';
 
 ----------------------------------------------------------------------------------------------------------------
 -- COMPONENTS DECLARATION
@@ -247,10 +249,11 @@ end process;
 --
 ---------------------------------------------------------------------------------------
 state_machine_process:
-process(CLOCK_50MHz, reset_button, kernel_interrupt, tx_current_state, tx_next_state, system_start,
-	system_timer, init_timer, config_timer, send_timer, done_timer, sck_timer, byte_timer,
+process(CLOCK_50MHz, reset_button, kernel_interrupt, system_start, main_current, main_next,
+	system_timer, init_timer, config_timer, send_timer, done_timer, i2c_timer, sck_timer, sda_timer,
+	isIDLE, isINIT, isCONFIG, isDEVICE, isDONE,
 	write_sda, write_sck, read_sck, read_sda,
-	isIDLE, isINIT, isCONFIG, isDEVICE, isDONE)
+	debug_1, debug_2, debug_3)
 begin
     if rising_edge(CLOCK_50MHz) then
 
@@ -262,7 +265,7 @@ begin
 		if system_start = '0' then
 			if system_timer = "101111101011110000011111111" then
 				system_start <= '1';
-	            tx_next_state <= IDLE;
+	            main_next <= IDLE;
 			else
 				system_timer <= system_timer + '1';
 			end if;
@@ -271,14 +274,12 @@ begin
 	        -- State Machine :: Reset
 	        ----------------------------------------
 	        if reset_button = '1' or kernel_interrupt <= '0' then
-	        	tx_next_state <= INIT;
+	        	main_next <= INIT;
 	    	else
 		        ------------------------------------
 		        -- State Machine :: IDLE
 		        ------------------------------------
-		    	if tx_current_state = IDLE then
-	            	write_sda <= 'Z';
-					write_sck <= 'Z';
+		    	if main_current = IDLE then
 					isIDLE <= '1';
 					isINIT <= '0';
 					isCONFIG <= '0';
@@ -288,11 +289,11 @@ begin
 		        ------------------------------------
 		        -- State Machine :: INIT
 		        ------------------------------------
-		        if tx_current_state = INIT then
+		        if main_current = INIT then
 		            if init_timer = "1011111010111100000111111" then -- delay for the reset to stabilise
 		            	write_sda <= '1';
 						write_sck <= '1';
-		            	tx_next_state <= CONFIG;
+		            	main_next <= CONFIG;
 		            else
 		                init_timer <= init_timer + '1';
 		            end if;
@@ -305,13 +306,12 @@ begin
 		        ------------------------------------
 		        -- State Machine :: CONFIG
 		        ------------------------------------
-		        if tx_current_state = CONFIG then
+		        if main_current = CONFIG then
 		            if config_timer = "1011111010111100000111111" then
-		            	tx_next_state <= SEND;
+		            	main_next <= SEND;
 		            	----------------------------
 		            	-- Body
 		            	----------------------------
-		            	byte_timer <= "11111001"; -- Clock bit @ Zero [0]
 		            else
 		                config_timer <= config_timer + '1';
 		            end if;
@@ -325,15 +325,41 @@ begin
 		        ------------------------------------
 		        -- State Machine :: SEND
 		        ------------------------------------
-		        if tx_current_state = SEND then
+		        if main_current = SEND then
 		        	if send_timer = "1011111010111100000111111" then
-		        		--
+			        	main_next <= DONE;
+					else
+		        		-------------------------------
 		        		--
 		        		-- Devel
 		        		--
-		        		--
-			        	tx_next_state <= DONE;
-					else
+		        		-------------------------------
+		        		if i2c_timer = "10011101000010" then -- Length :: ADDRESS + BARIER + REGISTER
+			            	write_sda <= '1';
+							write_sck <= '1';
+				        else
+
+			                if i2c_timer = "00000000110010" then -- Address
+			                	write_sck <= '0';
+			                end if;
+			                
+			                if i2c_timer = "00110111011110" then -- RW
+			                	debug_1 <= '1';
+			                end if;
+
+			                if i2c_timer = "00111111010010" then -- ACK/NAK
+			                	debug_2 <= '1';
+			                end if;
+
+			                if i2c_timer = "01000111000110" then -- BARIER
+			                	debug_3 <= '1';
+			                end if;
+
+		                	write_sda <= '0';
+		                	
+				        	i2c_timer <= i2c_timer + '1';
+				        end if;
+
 						send_timer <= send_timer + '1';
 					end if;
 
@@ -346,18 +372,17 @@ begin
 		        ------------------------------------
 		        -- State Machine :: DONE
 		        ------------------------------------
-		        if tx_current_state = DONE then
+		        if main_current = DONE then
 		            if done_timer = "1011111010111100000111111" then
 		            	-- Reset Timers
+		        		i2c_timer <= (others => '0');
 		            	sda_timer <= (others => '0');
 		            	sck_timer <= (others => '0');
-		            	byte_timer <= (others => '0');
-		            	bit_timer <= (others => '0');
 		                init_timer <= (others => '0');
 		                config_timer <= (others => '0');
 		            	send_timer <= (others => '0');
 		            	done_timer <= (others => '0');
-			        	tx_next_state <= IDLE;
+			        	main_next <= IDLE;
 		            else
 		                done_timer <= done_timer + '1';
 		            end if;
@@ -371,7 +396,7 @@ begin
 		        ------------------------------------
 		        -- State Machine :: Update
 		        ------------------------------------
-		        tx_current_state <= tx_next_state;
+		        main_current <= main_next;
 		        ------------------------------------
 		        -- State Machine :: Output
 		        ------------------------------------
@@ -387,9 +412,9 @@ begin
 		    	LED_3 <= isCONFIG;
 		    	LED_4 <= isDEVICE;
 		    	LED_5 <= isDONE;
-		    	LED_6 <= '0';
-		    	LED_7 <= '0';
-		    	LED_8 <= '0';
+		    	LED_6 <= debug_1;
+		    	LED_7 <= debug_2;
+		    	LED_8 <= debug_3;
 	        end if;
     	end if;
     end if;
