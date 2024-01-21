@@ -67,7 +67,7 @@ signal interrupt_signal : std_logic := '0';
 
 -- I2C & SPA Data
 constant data_SPI : std_logic_vector(7 downto 0) := "10001000"; -- 0x88
-constant address_I2C : std_logic_vector(6 downto 0) := "1001011"; -- 0x69 -- should be 1001011
+constant address_I2C : std_logic_vector(6 downto 0) := "1001111"; -- 0x69 -- should be 1001011
 signal index : integer range 0 to 15 := 0;
 
 -- SPI Synchronise
@@ -494,8 +494,8 @@ begin
 
 				--I2C_SCK <= write_sck;
 				--I2C_SDA <= write_sda;
-				read_sck <= I2C_SCK_TEST;
-				read_sda <= I2C_SDA_TEST;
+				--read_sck <= I2C_SCK_TEST;
+				--read_sda <= I2C_SDA_TEST;
 
 				------------------------------------
 				-- State Machine :: Status
