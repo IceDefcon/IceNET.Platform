@@ -397,29 +397,30 @@ begin
 		        -- State Machine :: Update
 		        ------------------------------------
 		        main_current <= main_next;
-		        ------------------------------------
-		        -- State Machine :: Output
-		        ------------------------------------
-				I2C_SCK <= write_sck;
-				I2C_SDA <= write_sda;
-				read_sck <= I2C_SCK_TEST;
-				read_sda <= I2C_SDA_TEST;
-		        ------------------------------------
-		        -- State Machine :: Status
-		        ------------------------------------
-		    	LED_1 <= isIDLE;
-		    	LED_2 <= isINIT;
-		    	LED_3 <= isCONFIG;
-		    	LED_4 <= isDEVICE;
-		    	LED_5 <= isDONE;
-		    	LED_6 <= debug_1;
-		    	LED_7 <= debug_2;
-		    	LED_8 <= debug_3;
+
 	        end if;
     	end if;
     end if;
 end process;
 
+------------------------------------
+-- State Machine :: Output
+------------------------------------
+I2C_SCK <= write_sck;
+I2C_SDA <= write_sda;
+read_sck <= I2C_SCK_TEST;
+read_sda <= I2C_SDA_TEST;
+------------------------------------
+-- State Machine :: Status
+------------------------------------
+LED_1 <= isIDLE;
+LED_2 <= isINIT;
+LED_3 <= isCONFIG;
+LED_4 <= isDEVICE;
+LED_5 <= isDONE;
+LED_6 <= debug_1;
+LED_7 <= debug_2;
+LED_8 <= debug_3;
 -----------------------------------------------
 -- Interrupt is pulled down
 -- In order to adjust PID
