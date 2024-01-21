@@ -82,7 +82,7 @@ signal config_timer : std_logic_vector(24 downto 0) := (others => '0');
 signal send_timer : std_logic_vector(24 downto 0) := (others => '0');
 signal done_timer : std_logic_vector(24 downto 0) := (others => '0');
 signal i2c_timer : std_logic_vector(13 downto 0) := (others => '0');
-signal sck_timer : std_logic_vector(7 downto 0) := (others => '0');
+signal sck_timer : std_logic_vector(11 downto 0) := (others => '0');
 signal sda_timer : std_logic_vector(11 downto 0) := (others => '0');
 
 --i2c state machine
@@ -314,7 +314,6 @@ begin
 		            	----------------------------
 		            	-- Body
 		            	----------------------------
-		            	sck_timer <= "11111001"; -- Initially @ LO
 		            else
 		                config_timer <= config_timer + '1';
 		            end if;
@@ -337,42 +336,37 @@ begin
 							write_sck <= '1';
 				        else
 				        	------------------------------------------------------
-				        	-- PIPE[0] :: Read Status Register
+				        	-- Status Register
 				        	------------------------------------------------------
-			                if i2c_timer = "00000000110001" then -- [50-1] :: Address >> Clock generate
+			                if i2c_timer = "00000000110010" then -- 50 :: Address
 			                	status_register <= "0001";
 			                end if;
 			                
-			                if i2c_timer = "00110111011101" then -- [3550-1] :: RW
+			                if i2c_timer = "00110111011110" then -- 3550 :: RW
 			                	status_register <= "0010";
 			                end if;
 
-			                if i2c_timer = "00111111010001" then -- [4050-1] :: ACK/NAK
+			                if i2c_timer = "00111111010010" then -- 4050 :: ACK/NAK
 			                	status_register <= "0100";
 			                end if;
 
-			                if i2c_timer = "01000111000101" then -- [4550-1] :: BARIER
+			                if i2c_timer = "01000111000110" then -- 4550 :: BARIER
 			                	status_register <= "1000";
 			                end if;
 
+			                if status_register /= "0000" then
+			                	status_register <= "0000"
+			                end if;
+
+
+
+
+
+
+			                write_sck <= '0';
 		                	write_sda <= '0';
-		                	i2c_timer <= i2c_timer + '1';
-
-				        	------------------------------------------------------
-				        	-- PIPE[1] :: Process Status Register
-				        	------------------------------------------------------
-			                if status_register = "0001" or status_register = "0010" or status_register = "0100" then
-			                	if sck_timer = "11111001" then
-			                		sck_timer <= (others => '0');
-			                		write_sck <= not write_sck;
-			                	else
-			                		sck_timer <= sck_timer + '1';
-			                	end if;
-			                end if;
-
-			                if status_register = "1000" then -- Stop the clock @ BARIER
-			                	write_sck <= '0';
-			                end if;
+		                	
+				        	i2c_timer <= i2c_timer + '1';
 				        end if;
 
 						send_timer <= send_timer + '1';
