@@ -67,8 +67,7 @@ signal interrupt_signal : std_logic := '0';
 
 -- I2C & SPA Data
 constant data_SPI : std_logic_vector(7 downto 0) := "10001000"; -- 0x88
-constant address_I2C : std_logic_vector(6 downto 0) := "1001011"; -- 0x69 ---> GOOD :: 1001011 & BAD :: 1001111
-constant register_I2C : std_logic_vector(7 downto 0) := "00000000"; -- 0x00 ---> ID :: 0xd1
+constant address_I2C : std_logic_vector(6 downto 0) := "1001011"; -- 0x69 -- GOOD :: 1001011 BAD :: 1001111
 signal index : integer range 0 to 15 := 0;
 
 -- SPI Synchronise
@@ -337,12 +336,12 @@ begin
 		        	if send_timer = "1011111010111100000111111" then
 			        	main_next <= DONE;
 					else
-		        		if status_timer = "11001011001000" then -- Length :: 13000 clock cycles
+		        		if status_timer = "10101011111000" then -- Length :: 11000 clock cycles
 				        else
 ------------------------------------------------------
 -- PIPE[0] :: Read SCK Status Registers
 ------------------------------------------------------
-			                if status_timer = "00000111110011" then -- [500-1] :: Address Clock
+			                if status_timer = "00000111110011" then -- [500-1] :: Clock
 			                	status_sck <= "0001";
 			                end if;
 
@@ -356,18 +355,6 @@ begin
 
 			                if status_timer = "01001110000111" then -- [5000-1] :: BARIER
 			                	status_sck <= "1000";
-			                end if;
-
-			                if status_timer = "01101101010111" then -- [7000-1] :: Data Clock
-			                	status_sck <= "1001";
-			                end if;
-
-			                if status_timer = "10101011110111" then -- [11000-1] :: ACK/NAK
-			                	status_sck <= "1010";
-			                end if;
-
-			                if status_timer = "10110011101011" then -- [11500-1] :: BARIER
-			                	status_sck <= "1100";
 			                end if;
 ------------------------------------------------------
 -- PIPE[0] :: Read SDA Status Registers
@@ -384,25 +371,15 @@ begin
 			                	status_sda <= "0100";
 			                end if;
 
-			                if status_timer = "00111111010001" then -- [4050-1] :: BARIER
+			                if status_timer = "01000111000101" then -- [4550-1] :: Stop
 			                	status_sda <= "1000";
-			                end if;
-
-			                if status_timer = "01100110010101" then -- [6550-1] :: Data
-			                	status_sda <= "1001";
-			                end if;
-
-			                if status_timer = "10100100110101" then -- [10550-1] :: BARIER
-			                	status_sda <= "1010";
 			                end if;
 ------------------------------------------------------
 -- PIPE[1] :: Process SCK Status Register
 ------------------------------------------------------
 			                if status_sck = "0001"
 			                or status_sck = "0010" 
-			                or status_sck = "0100" 
-			                or status_sck = "1001" 
-			                or status_sck = "1010" then -- Clock active @ ACK/NAK
+			                or status_sck = "0100" then -- Clock active @ ACK/NAK
 			                	if sck_timer = "11111001" then -- Half bit time
 			                		sck_timer_toggle <= not sck_timer_toggle;
 
@@ -419,11 +396,6 @@ begin
 			                end if;
 
 			                if status_sck = "1000" then -- Stop the clock @ BARIER
-			                	status_sck <= "0000";
-			                	I2C_SCK <= '0';
-			                end if;
-
-			                if status_sck = "1100" then -- Stop the clock @ BARIER
 			                	status_sck <= "0000";
 			                	I2C_SCK <= '0';
 			                end if;
@@ -459,33 +431,20 @@ begin
 			                	end if;
 			                end if;
 
-			                --if status_sda = "1000" then -- ACK/NAK
-			                --	if sda_timer = "111110011" then -- Half bit time
-			                --		sda_timer <= (others => '0');
-			                --		I2C_SDA <= 'Z';
-			                --		index <= 0;
-			                --	else
-			                --		sda_timer <= sda_timer + '1';
-			                --	end if;
-			                --end if;
+			                if status_sda = "1000" then -- ACK/NAK
+			                	if sda_timer = "111110011" then -- Half bit time
+			                		sda_timer <= (others => '0');
+			                		I2C_SDA <= 'Z';
+			                		index <= 0;
+			                	else
+			                		sda_timer <= sda_timer + '1';
+			                	end if;
+			                end if;
 
-			                --if status_sda = "1001" then -- Data 
-			                --	if sda_timer = "111110011" then -- Half bit time
-			                --		sda_timer <= (others => '0');
-			                --		I2C_SDA <= register_I2C(index);
-			                --		index <= index + 1;
-			                --	else
-			                --		sda_timer <= sda_timer + '1';
-			                --	end if;
-			                --end if;
-
-			                --if status_sda = "1000" 
-			                --or status_sda = "1010" then -- Stop the clock @ BARIER
-			                --	status_sda <= "0000";
-			                --	I2C_SDA <= 'Z';
-			                --	index <= 0;
-			                --end if;
-
+			                if status_sda = "1000" then -- Stop the clock @ BARIER
+			                	status_sda <= "0000";
+			                	I2C_SDA <= 'Z';
+			                end if;
 ------------------------------------------------------
 -- PIPE[1] :: Increment Status Timer
 ------------------------------------------------------
