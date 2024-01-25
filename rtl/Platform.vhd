@@ -519,8 +519,8 @@ begin
 				------------------------------------
 				-- State Machine :: Output
 				------------------------------------
-				read_sck <= I2C_SCK_TEST;
-				read_sda <= I2C_SDA_TEST;
+				--read_sck <= I2C_SCK_TEST;
+				--read_sda <= I2C_SDA_TEST;
 
 				------------------------------------
 				-- State Machine :: Status
@@ -530,7 +530,7 @@ begin
 				LED_3 <= isCONFIG;
 				LED_4 <= isDEVICE;
 				LED_5 <= isDONE;
-				LED_6 <= read_sck, read_sda;
+				LED_6 <= '0'
 				LED_7 <= status_sda(0) or status_sda(1) or status_sda(2) or status_sda(3);
 				LED_8 <= status_sck(0) or status_sck(1) or status_sck(2) or status_sck(3);
 
