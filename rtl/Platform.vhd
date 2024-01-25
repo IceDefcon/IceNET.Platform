@@ -31,10 +31,10 @@ port
     KERNEL_SCLK : in std_logic;  -- PIN_A8   :: BBB P9_22 :: BLACK   :: SPI0_SCLK
 
     I2C_SDA : inout std_logic; -- PIN_A9   :: BBB P9_20 :: CPU.BLUE <> FPGA.BLUE <> GYRO.WHITE
-    I2C_SCK : out std_logic; -- PIN_A10  :: BBB P9_19 :: CPU.ORANGE <> FPGA.GREEN <> GYRO.PURPLE
+    I2C_SCK : inout std_logic; -- PIN_A10  :: BBB P9_19 :: CPU.ORANGE <> FPGA.GREEN <> GYRO.PURPLE
 	 
 	I2C_SDA_TEST : inout std_logic; -- PIN_B9 :: YELLOW
-	I2C_SCK_TEST : in std_logic; -- PIN_B10 :: GREEN
+	I2C_SCK_TEST : inout std_logic; -- PIN_B10 :: GREEN
 	 
     FPGA_INT : out std_logic;  -- PIN_A3   :: BBB P9_12 :: BLACK
     KERNEL_INT : in std_logic; -- PIN_A4   :: BBB P9_14 :: WHITE
@@ -68,7 +68,7 @@ signal interrupt_signal : std_logic := '0';
 -- I2C & SPA Data
 constant data_SPI : std_logic_vector(7 downto 0) := "10001000"; -- 0x88
 constant address_I2C : std_logic_vector(6 downto 0) := "1001011"; -- 0x69 ---> ID :: GOOD == 1001011 :: BAD == 1001111
-constant register_I2C : std_logic_vector(7 downto 0) := "00000000"; -- 0x00 ---> REG
+constant register_I2C : std_logic_vector(7 downto 0) := "10100101"; -- 0x00 ---> REG
 signal index : integer range 0 to 15 := 0;
 
 -- SPI Synchronise
@@ -291,8 +291,8 @@ begin
 					isCONFIG <= '0';
 					isDEVICE <= '0';
 					isDONE <= '0';
-					I2C_SCK <= '1';
-					I2C_SDA <= '1';
+					I2C_SCK <= 'Z';
+					I2C_SDA <= 'Z';
 				end if;
 		        ------------------------------------
 		        -- State Machine :: INIT
@@ -519,11 +519,8 @@ begin
 				------------------------------------
 				-- State Machine :: Output
 				------------------------------------
-
-				--I2C_SCK <= write_sck;
-				--I2C_SDA <= write_sda;
-				--read_sck <= I2C_SCK_TEST;
-				--read_sda <= I2C_SDA_TEST;
+				read_sck <= I2C_SCK_TEST;
+				read_sda <= I2C_SDA_TEST;
 
 				------------------------------------
 				-- State Machine :: Status
@@ -533,7 +530,7 @@ begin
 				LED_3 <= isCONFIG;
 				LED_4 <= isDEVICE;
 				LED_5 <= isDONE;
-				LED_6 <= '0';
+				LED_6 <= read_sck, read_sda;
 				LED_7 <= status_sda(0) or status_sda(1) or status_sda(2) or status_sda(3);
 				LED_8 <= status_sck(0) or status_sck(1) or status_sck(2) or status_sck(3);
 
