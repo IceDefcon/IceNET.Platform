@@ -68,7 +68,7 @@ signal interrupt_signal : std_logic := '0';
 -- I2C & SPA Data
 constant data_SPI : std_logic_vector(7 downto 0) := "10001000"; -- 0x88
 constant address_I2C : std_logic_vector(6 downto 0) := "1001011"; -- 0x69 ---> ID :: GOOD == 1001011 :: BAD == 1001111
-constant register_I2C : std_logic_vector(7 downto 0) := "00000010"; -- 0x40 ---> REG
+constant register_I2C : std_logic_vector(7 downto 0) := "01000000"; -- 0x00 ---> REG
 signal index : integer range 0 to 15 := 0;
 
 -- SPI Synchronise
@@ -83,7 +83,7 @@ signal init_timer : std_logic_vector(24 downto 0) := (others => '0');
 signal config_timer : std_logic_vector(24 downto 0) := (others => '0');
 signal send_timer : std_logic_vector(24 downto 0) := (others => '0');
 signal done_timer : std_logic_vector(24 downto 0) := (others => '0');
-signal status_timer : std_logic_vector(15 downto 0) := (others => '0');
+signal status_timer : std_logic_vector(13 downto 0) := (others => '0');
 signal sck_timer : std_logic_vector(7 downto 0) := (others => '0');
 signal sda_timer : std_logic_vector(8 downto 0) := (others => '0');
 signal sck_timer_toggle : std_logic := '0';
@@ -337,94 +337,72 @@ begin
 		        	if send_timer = "1011111010111100000111111" then
 			        	main_next <= DONE;
 					else
-		        		if status_timer = "1000100010111000" then -- Length :: 25k clock cycles :: -----===[ RESET ]===----
+		        		if status_timer = "11111010000000" then -- Length :: 16k clock cycles
 				        else
 ------------------------------------------------------
 -- PIPE[0] :: Read SCK Status Registers
 ------------------------------------------------------
-			                if status_timer = "0000000111110011" then -- [500-1] :: Address Clock
+			                if status_timer = "00000111110011" then -- [500-1] :: Address Clock
 			                	status_sck <= "0001";
 			                end if;
 
-			                if status_timer = "0000111110011111" then -- [4000-1] :: RW
+			                if status_timer = "00111110011111" then -- [4000-1] :: RW
 			                	status_sck <= "0010";
 			                end if;
 
-			                if status_timer = "0001000110010011" then -- [4500-1] :: ACK/NAK
-			                	status_sck <= "0011";
-			                end if;
-
-			                if status_timer = "0001001110000111" then -- [5000-1] :: BARIER
+			                if status_timer = "01000110010011" then -- [4500-1] :: ACK/NAK
 			                	status_sck <= "0100";
 			                end if;
 
-			                if status_timer = "0001101101010111" then -- [7000-1] :: Data Clock
-			                	status_sck <= "0101";
-			                end if;
-
-					        if status_timer = "0010101011110111" then -- [11000-1] :: ACK/NAK
-			                	status_sck <= "0110";
-			                end if;
-
-					        if status_timer = "0010110011101011" then -- [11500-1] :: BARIER
-			                	status_sck <= "0111";
-			                end if;
-
-					        if status_timer = "0011010010111011" then -- [13500-1] :: INIT SDA RETURN
+			                if status_timer = "01001110000111" then -- [5000-1] :: BARIER
 			                	status_sck <= "1000";
 			                end if;
 
-					        if status_timer = "0011011010101111" then -- [14000-1] :: Return Clock
+			                if status_timer = "01101101010111" then -- [7000-1] :: Data Clock
 			                	status_sck <= "1001";
 			                end if;
 
-			 				if status_timer = "0101110110111111" then -- [24000-1] :: BARIER
+					        if status_timer = "10101011110111" then -- [11000-1] :: ACK/NAK
 			                	status_sck <= "1010";
-			                end if;               
+			                end if;
+
+					        if status_timer = "10110011101011" then -- [11500-1] :: BARIER
+			                	status_sck <= "1100";
+			                end if;
 ------------------------------------------------------
 -- PIPE[0] :: Read SDA Status Registers
 ------------------------------------------------------
-			                if status_timer = "0000000001100011" then -- [100-1] :: Start bit
+			                if status_timer = "00000000110001" then -- [50-1] :: Start bit
 			                	status_sda <= "0001";
 			                end if;
 
-			                if status_timer = "0000001001010111" then -- [600-1] :: Data
+			                if status_timer = "00001000100101" then -- [550-1] :: Data
 			                	status_sda <= "0010";
 			                end if;
 
-			                if status_timer = "0001000000000011" then -- [4100-1] :: WR
-			                	status_sda <= "0011";
-			                end if;
-
-			                if status_timer = "0001000111110111" then -- [4600-1] :: BARIER
+			                if status_timer = "00111111010001" then -- [4050-1] :: WR
 			                	status_sda <= "0100";
 			                end if;
 
-			                if status_timer = "0001101110111011" then -- [7100-1] :: Data
-			                	status_sda <= "0101";
-			                end if;
-
-			                if status_timer = "0010101101011011" then -- [11100-1] :: Z
-			                	status_sda <= "0110";
-			                end if;
-
-					        if status_timer = "0011011000011001" then -- [13850-1] :: INIT SDA RETURN
-			                	status_sda <= "0111";
-			                end if;
-
-					        if status_timer = "0011011100010011" then -- [14100-1] :: Z
+			                if status_timer = "01000111000101" then -- [4550-1] :: BARIER
 			                	status_sda <= "1000";
+			                end if;
+
+			                if status_timer = "01101110001001" then -- [7050-1] :: Data
+			                	status_sda <= "1001";
+			                end if;
+
+			                if status_timer = "10101100101001" then -- [11050-1] :: BARIER
+			                	status_sda <= "1010";
 			                end if;
 ------------------------------------------------------
 -- PIPE[1] :: Process SCK Status Register
 ------------------------------------------------------
-			                if status_sck = "0001" -- Clock 1
+			                if status_sck = "0001" -- Clock :: 1
 			                or status_sck = "0010" -- RW
-			                or status_sck = "0011" -- ACK/NAK 1
-			                or status_sck = "0101" -- Clock 2
-			                or status_sck = "0110" -- ACK/NAK 2
-			                or status_sck = "1001" -- Clock 3
-			                then
+			                or status_sck = "0100" -- ACK/NAK :: 1
+			                or status_sck = "1001" -- Clock :: 2
+			                or status_sck = "1010" then -- ACK/NAK :: 2
 			                	if sck_timer = "11111001" then -- Half bit time
 			                		sck_timer_toggle <= not sck_timer_toggle;
 
@@ -440,16 +418,9 @@ begin
 			                	end if;
 			                end if;
 
-			                if status_sck = "0100" -- BARIER 1
-			                or status_sck = "0111" -- BARIER 2
-			                or status_sck = "1010" -- BARIER 3
-			                then
+			                if status_sck = "1000" -- BARIER :: 1
+			                or status_sck = "1100" then -- BARIER :: 2
 			                	I2C_SCK <= '0';
-			                end if;
-
-			                if status_sck = "1000" -- INIT SDA
-			                then
-			                	I2C_SCK <= '1';
 			                end if;
 ------------------------------------------------------
 -- PIPE[1] :: Process SDA Status Register
@@ -473,7 +444,7 @@ begin
 			                	end if;
 			                end if;
 
-			                if status_sda = "0011" then -- RW
+			                if status_sda = "0100" then -- RW
 			                	if sda_timer = "111110011" then -- Half bit time
 			                		sda_timer <= (others => '0');
 			                		I2C_SDA <= '0';
@@ -483,11 +454,11 @@ begin
 			                	end if;
 			                end if;
 
-			                if status_sda = "0100" then -- BARIER
+			                if status_sda = "1000" then -- BARIER
 			                	I2C_SDA <= 'Z';
 			                end if;
 
-			                if status_sda = "0101" then -- Data 
+			                if status_sda = "1001" then -- Data 
 			                	if sda_timer = "111110011" then -- Half bit time
 			                		sda_timer <= (others => '0');
 			                		I2C_SDA <= register_I2C(index);
@@ -497,13 +468,7 @@ begin
 			                	end if;
 			                end if;
 
-			                if status_sda = "0111" then -- BARIER :: '0'
-			                	I2C_SDA <= 'Z';
-			                end if;
-
-			                if status_sda = "0110" 
-			                or status_sda = "1000" 
-			                then -- BARIER :: 'Z'
+			                if status_sda = "1010" then -- BARIER
 			                	I2C_SDA <= 'Z';
 			                end if;
 ------------------------------------------------------
@@ -565,7 +530,7 @@ begin
 				LED_3 <= isCONFIG;
 				LED_4 <= isDEVICE;
 				LED_5 <= isDONE;
-				LED_6 <= '0';
+				LED_6 <= '0'
 				LED_7 <= status_sda(0) or status_sda(1) or status_sda(2) or status_sda(3);
 				LED_8 <= status_sck(0) or status_sck(1) or status_sck(2) or status_sck(3);
 
