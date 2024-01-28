@@ -112,8 +112,8 @@ static struct spi_device *spi_dev;
 static volatile uint8_t tx_kernel[] = {0xE3};
 static volatile uint8_t rx_kernel[1];
 
-static volatile uint8_t tx_fpga[] = {0xE3, 0x81, 0x13};
-static volatile uint8_t rx_fpga[3];
+static volatile uint8_t tx_fpga[] = {0x00};
+static volatile uint8_t rx_fpga[1];
 
 //////////////////////////
 //                      //
