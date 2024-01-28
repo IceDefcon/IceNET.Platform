@@ -30,12 +30,14 @@ port
     KERNEL_MISO : out std_logic; -- PIN_A6   :: BBB P9_21 :: BROWN   :: SPI0_D0
     KERNEL_SCLK : in std_logic;  -- PIN_A8   :: BBB P9_22 :: BLACK   :: SPI0_SCLK
 
+    LOOP_CS : out std_logic; 		-- PIN_A16 :: ORANGE
+    LOOP_SDX_MOSI : out std_logic; 	-- PIN_A15 :: RED
+    LOOP_SA0_MISO : in std_logic; 	-- PIN_A17 :: YELLOW
+    LOOP_SCX_SLCK : out std_logic; 	-- PIN_A14 :: BROWN
+
     I2C_SDA : inout std_logic; -- PIN_A9   :: BBB P9_20 :: CPU.BLUE <> FPGA.BLUE <> GYRO.WHITE
     I2C_SCK : inout std_logic; -- PIN_A10  :: BBB P9_19 :: CPU.ORANGE <> FPGA.GREEN <> GYRO.PURPLE
-	 
-	I2C_SDA_TEST : inout std_logic; -- PIN_B9 :: YELLOW
-	I2C_SCK_TEST : inout std_logic; -- PIN_B10 :: GREEN
-	 
+ 
     FPGA_INT : out std_logic;  -- PIN_A3   :: BBB P9_12 :: BLACK
     KERNEL_INT : in std_logic; -- PIN_A4   :: BBB P9_14 :: WHITE
 
@@ -88,15 +90,14 @@ signal sck_timer : std_logic_vector(7 downto 0) := (others => '0');
 signal sda_timer : std_logic_vector(8 downto 0) := (others => '0');
 signal sck_timer_toggle : std_logic := '0';
 
+-- parametric offset
+signal sda_offset : std_logic_vector(15 downto 0) := (others => '0');
+signal offset : std_logic_vector(15 downto 0) := (others => '0');
+signal read_sda : std_logic := '0';
+
 --i2c state machine
 type MAIN is (IDLE, INIT, CONFIG, SEND, DONE, RECEIVE);
 signal main_current, main_next: MAIN := IDLE;
-
--- i2c signals 
-signal write_sda : std_logic := 'Z';
-signal write_sck : std_logic := 'Z';
-signal read_sda : std_logic := 'Z';
-signal read_sck : std_logic := 'Z';
 
 -- Interrupt
 signal diode_check : std_logic := '0';
@@ -121,18 +122,18 @@ signal debug_3 : std_logic := '0';
 ----------------------------------------------------------------------------------------------------------------
 -- COMPONENTS DECLARATION
 ----------------------------------------------------------------------------------------------------------------
-component SPI_Synchronizer
-port
-(
-    CLK_50MHz : in  std_logic;
-    IN_SCLK : in  std_logic;
-    IN_CS : in  std_logic;
-    IN_MOSI : in  std_logic;
-    OUT_SCLK : out std_logic;
-    OUT_CS : out std_logic;
-    OUT_MOSI : out std_logic
-);
-end component;
+--component SPI_Synchronizer
+--port
+--(
+--    CLK_50MHz : in  std_logic;
+--    IN_SCLK : in  std_logic;
+--    IN_CS : in  std_logic;
+--    IN_MOSI : in  std_logic;
+--    OUT_SCLK : out std_logic;
+--    OUT_CS : out std_logic;
+--    OUT_MOSI : out std_logic
+--);
+--end component;
 
 component Debounce
 port
@@ -149,15 +150,15 @@ port
 );
 end component;
 
-component SPI_Data
-Port 
-(
-    CLOCK : in  std_logic;
-    DATA : in  std_logic_vector(7 downto 0);
-    synced_sclk : in std_logic;
-    synced_miso : out std_logic
-);
-end component;
+--component SPI_Data
+--Port 
+--(
+--    CLOCK : in  std_logic;
+--    DATA : in  std_logic_vector(7 downto 0);
+--    synced_sclk : in std_logic;
+--    synced_miso : out std_logic
+--);
+--end component;
 
 component Interrupt
 Port 
@@ -174,16 +175,16 @@ end component;
 ----------------------------------------------------------------------------------------------------------------
 begin
 
-SPI_Synchronizer_module: SPI_Synchronizer port map 
-(
-    CLK_50MHz => CLOCK_50MHz,
-    IN_SCLK => KERNEL_SCLK,
-    IN_CS => KERNEL_CS,
-    IN_MOSI => KERNEL_MOSI,
-    OUT_SCLK  => synced_sclk,
-    OUT_CS => synced_cs,
-    OUT_MOSI  => synced_mosi
-);
+--SPI_Synchronizer_module: SPI_Synchronizer port map 
+--(
+--    CLK_50MHz => CLOCK_50MHz,
+--    IN_SCLK => KERNEL_SCLK,
+--    IN_CS => KERNEL_CS,
+--    IN_MOSI => KERNEL_MOSI,
+--    OUT_SCLK  => synced_sclk,
+--    OUT_CS => synced_cs,
+--    OUT_MOSI  => synced_mosi
+--);
 
 Debounce_module: Debounce port map 
 (
@@ -198,15 +199,23 @@ Debounce_module: Debounce port map
 	button_out_4 => open
 );
 
-SPI_Data_module: SPI_Data port map 
-(
-	CLOCK => CLOCK_50MHz,
-	DATA => data_SPI,
-	synced_sclk => synced_sclk,
-	synced_miso => synced_miso
-);
+--SPI_Data_module: SPI_Data port map 
+--(
+--	CLOCK => CLOCK_50MHz,
+--	DATA => data_SPI,
+--	synced_sclk => synced_sclk,
+--	synced_miso => synced_miso
+--);
 
-KERNEL_MISO <= synced_miso;
+--KERNEL_MISO <= synced_miso;
+
+
+LOOP_CS <= KERNEL_CS;
+LOOP_SDX_MOSI <= KERNEL_MOSI;
+KERNEL_MISO <= LOOP_SA0_MISO;
+LOOP_SCX_SLCK <= KERNEL_SCLK;
+
+
 
 ----------------------------------------
 -- Interrupt pulse :: 0x2FAF07F/50 MHz
@@ -259,7 +268,7 @@ state_machine_process:
 process(CLOCK_50MHz, reset_button, kernel_interrupt, system_start, main_current, main_next, status_sck, status_sda,
 	system_timer, init_timer, config_timer, send_timer, done_timer, status_timer, sck_timer, sda_timer, sck_timer_toggle,
 	isIDLE, isINIT, isCONFIG, isDEVICE, isDONE,
-	write_sda, write_sck, read_sck, read_sda)
+	read_sda, sda_offset)
 begin
     if rising_edge(CLOCK_50MHz) then
 
@@ -320,6 +329,7 @@ begin
 		            	----------------------------
 		            	sck_timer <= "11111001"; -- Reset timer so SCK is invereted @ 1st clock cycle
 		            	sda_timer <= "111110011"; -- Reset timer so data is passed @ 1st clock cycle
+		            	sda_offset <= "0000000000110011"; -- [10-1] :: SDA Offset
 		            else
 		                config_timer <= config_timer + '1';
 		            end if;
@@ -337,12 +347,12 @@ begin
 		        	if send_timer = "1011111010111100000111111" then
 			        	main_next <= DONE;
 					else
-		        		if status_timer = "1000100010111000" then -- Length :: 25k clock cycles :: -----===[ RESET ]===----
+		        		if status_timer = "1111111111111111" then -- Length :: 25k clock cycles :: -----===[ RESET ]===----
 				        else
 ------------------------------------------------------
 -- PIPE[0] :: Read SCK Status Registers
 ------------------------------------------------------
-			                if status_timer = "0000000111110011" then -- [500-1] :: Address Clock
+			                if status_timer = "0000000111110011" then -- [500-1] :: Address Clock 1
 			                	status_sck <= "0001";
 			                end if;
 
@@ -350,70 +360,78 @@ begin
 			                	status_sck <= "0010";
 			                end if;
 
-			                if status_timer = "0001000110010011" then -- [4500-1] :: ACK/NAK
+			                if status_timer = "0001000110010011" then -- [4500-1] :: ACK/NAK 1
 			                	status_sck <= "0011";
 			                end if;
 
-			                if status_timer = "0001001110000111" then -- [5000-1] :: BARIER
+			                if status_timer = "0001001110000111" then -- [5000-1] :: BARIER 1
 			                	status_sck <= "0100";
 			                end if;
 
-			                if status_timer = "0001101101010111" then -- [7000-1] :: Data Clock
+			                if status_timer = "0001101101010111" then -- [7000-1] :: Data Clock 2
 			                	status_sck <= "0101";
 			                end if;
 
-					        if status_timer = "0010101011110111" then -- [11000-1] :: ACK/NAK
+					        if status_timer = "0010101011110111" then -- [11000-1] :: ACK/NAK 2
 			                	status_sck <= "0110";
 			                end if;
 
-					        if status_timer = "0010110011101011" then -- [11500-1] :: BARIER
+					        if status_timer = "0010110011101011" then -- [11500-1] :: BARIER 2
 			                	status_sck <= "0111";
 			                end if;
 
-					        if status_timer = "0011010010111011" then -- [13500-1] :: INIT SDA RETURN
-			                	status_sck <= "1000";
-			                end if;
+					        --if status_timer = "0011010010111011" then -- [13500-1] :: INIT SDA RETURN
+			                --	status_sck <= "1000";
+			                --end if;
 
-					        if status_timer = "0011011010101111" then -- [14000-1] :: Return Clock
+					        if status_timer = "0011011010101111" then -- [14000-1] :: Return Clock 3
 			                	status_sck <= "1001";
 			                end if;
 
-			 				if status_timer = "0101110110111111" then -- [24000-1] :: BARIER
+			 				if status_timer = "1111111111111111" then -- [24000-1] :: BARIER 3
 			                	status_sck <= "1010";
 			                end if;               
 ------------------------------------------------------
 -- PIPE[0] :: Read SDA Status Registers
 ------------------------------------------------------
-			                if status_timer = "0000000001100011" then -- [100-1] :: Start bit
+			                if status_timer = sda_offset then -- [50-1] :: Start bit
 			                	status_sda <= "0001";
 			                end if;
 
-			                if status_timer = "0000001001010111" then -- [600-1] :: Data
+			                if status_timer = sda_offset + "0000000111110100" then -- [500] :: Address Data 1
 			                	status_sda <= "0010";
 			                end if;
 
-			                if status_timer = "0001000000000011" then -- [4100-1] :: WR
+			                if status_timer = sda_offset + "0000111110100000" then -- [4000] :: RW
 			                	status_sda <= "0011";
 			                end if;
 
-			                if status_timer = "0001000111110111" then -- [4600-1] :: BARIER
+			                if status_timer = sda_offset + "0001000110010100" then -- [4500] :: ACK/NAK 1
 			                	status_sda <= "0100";
 			                end if;
 
-			                if status_timer = "0001101110111011" then -- [7100-1] :: Data
+			                if status_timer = sda_offset + "0001001110001000" then -- [5000] :: BARIER 1
 			                	status_sda <= "0101";
 			                end if;
 
-			                if status_timer = "0010101101011011" then -- [11100-1] :: Z
+			                if status_timer = sda_offset + "0001101101011000" then -- [7000] :: Register Data 2
 			                	status_sda <= "0110";
 			                end if;
 
-					        if status_timer = "0011011000011001" then -- [13850-1] :: INIT SDA RETURN
+			                if status_timer = sda_offset + "0010101011111000" then -- [11000] :: ACK/NAK 2
 			                	status_sda <= "0111";
 			                end if;
 
-					        if status_timer = "0011011100010011" then -- [14100-1] :: Z
+			                if status_timer = sda_offset + "0010110011101100" then -- [11500] :: BARIER 1
 			                	status_sda <= "1000";
+			                end if;
+
+					        --if status_timer = sda_offset + "0011010110110110" then -- [13750] :: INIT SDA RETURN
+			                --	status_sda <= "1001";
+			                --end if;
+
+					        if status_timer = sda_offset + "0011011010110000" then -- [14000] :: RETURN BARIER 3
+			                	status_sda <= "1010";
 			                end if;
 ------------------------------------------------------
 -- PIPE[1] :: Process SCK Status Register
@@ -483,11 +501,7 @@ begin
 			                	end if;
 			                end if;
 
-			                if status_sda = "0100" then -- BARIER
-			                	I2C_SDA <= 'Z';
-			                end if;
-
-			                if status_sda = "0101" then -- Data 
+			                if status_sda = "0110" then -- Data 
 			                	if sda_timer = "111110011" then -- Half bit time
 			                		sda_timer <= (others => '0');
 			                		I2C_SDA <= register_I2C(index);
@@ -497,14 +511,17 @@ begin
 			                	end if;
 			                end if;
 
-			                if status_sda = "0111" then -- BARIER :: '0'
+			                if status_sda = "1001" then --  INIT SDA
 			                	I2C_SDA <= 'Z';
 			                end if;
 
-			                if status_sda = "0110" 
-			                or status_sda = "1000" 
+			                if status_sda = "0100" -- ACK/NAK 1
+			                or status_sda = "0101" -- BARIER 1
+			                or status_sda = "0111" -- ACK/NAK 2
+			                or status_sda = "1000" -- BARIER 2
+			                or status_sda = "1010" -- RETURN BARIER 3
 			                then -- BARIER :: 'Z'
-			                	I2C_SDA <= 'Z';
+			                	read_sda <= I2C_SDA;
 			                end if;
 ------------------------------------------------------
 -- PIPE[1] :: Increment Status Timer
@@ -554,8 +571,6 @@ begin
 				------------------------------------
 				-- State Machine :: Output
 				------------------------------------
-				--read_sck <= I2C_SCK_TEST;
-				--read_sda <= I2C_SDA_TEST;
 
 				------------------------------------
 				-- State Machine :: Status
@@ -565,7 +580,7 @@ begin
 				LED_3 <= isCONFIG;
 				LED_4 <= isDEVICE;
 				LED_5 <= isDONE;
-				LED_6 <= '0';
+				LED_6 <= read_sda;
 				LED_7 <= status_sda(0) or status_sda(1) or status_sda(2) or status_sda(3);
 				LED_8 <= status_sck(0) or status_sck(1) or status_sck(2) or status_sck(3);
 
