@@ -112,8 +112,8 @@ static struct spi_device *spi_dev;
 static volatile uint8_t tx_kernel[] = {0xE3};
 static volatile uint8_t rx_kernel[1];
 
-static volatile uint8_t tx_fpga[] = {0, 0};
-static volatile uint8_t rx_fpga[2];
+static volatile uint8_t tx_fpga[] = {0x00};
+static volatile uint8_t rx_fpga[1];
 
 //////////////////////////
 //                      //
@@ -258,8 +258,14 @@ static ssize_t dev_write(struct file *filep, const char *buffer, size_t len, lof
     int error_count = 0;
     error_count = copy_from_user(message, buffer, len);
 
-    if (strncmp(message, "int", 3) == 0)
+    if(strncmp(message, "dummy", 3) == 0)
     {
+        tx_fpga[0] = 0x7F;
+        queue_work(fpga_wq, &fpga_work);
+    }
+    else if(strncmp(message, "read", 3) == 0)
+    {
+        tx_fpga[0] = 0x00;
         queue_work(fpga_wq, &fpga_work);
     }
 
