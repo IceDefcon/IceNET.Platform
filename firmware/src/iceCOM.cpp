@@ -172,15 +172,15 @@ int iceCOM::device_read()
 int iceCOM::device_write()
 {
 	int ret;
-	char console_TX[m_BUFFER_LENGTH];
+	char console_TX[BUFFER_LENGTH];
 
-	for (size_t i = 0; i < m_BUFFER_LENGTH; ++i)
+	for (size_t i = 0; i < BUFFER_LENGTH; ++i)
 	{
 		console_TX[i] = 0;
 	}
 
 	Debug::Write();
-	std::cin.getline(console_TX, m_BUFFER_LENGTH);
+	std::cin.getline(console_TX, BUFFER_LENGTH);
 
 	if (std::strcmp(console_TX, "exit") == 0) 
 	{
