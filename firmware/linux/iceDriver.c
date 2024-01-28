@@ -407,8 +407,8 @@ static void fpga_command(struct work_struct *work)
     int ret;
     int i;
 
-    /* Default Value */
-    tx_fpga[0] = 0x41;
+    /* Error Value */
+    // tx_fpga[0] = 0xFF;
 
     /* Direction commands to the FPGA */
     // if(Move.Up) tx_fpga[0] = 0x18;
