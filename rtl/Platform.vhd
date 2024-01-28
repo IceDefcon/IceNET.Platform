@@ -30,10 +30,10 @@ port
     KERNEL_MISO : out std_logic; -- PIN_A6   :: BBB P9_21 :: BROWN   :: SPI0_D0
     KERNEL_SCLK : in std_logic;  -- PIN_A8   :: BBB P9_22 :: BLACK   :: SPI0_SCLK
 
-    LOOP_CS : out std_logic; 		-- PIN_A16 :: ORANGE
-    LOOP_SDX_MOSI : out std_logic; 	-- PIN_A15 :: RED
-    LOOP_SA0_MISO : in std_logic; 	-- PIN_A17 :: YELLOW
     LOOP_SCX_SLCK : out std_logic; 	-- PIN_A14 :: BROWN
+    LOOP_SDX_MOSI : out std_logic; 	-- PIN_A15 :: RED
+    LOOP_CS : out std_logic; 		-- PIN_A16 :: ORANGE
+    LOOP_SA0_MISO : in std_logic; 	-- PIN_A17 :: YELLOW
 
     I2C_SDA : inout std_logic; -- PIN_A9   :: BBB P9_20 :: CPU.BLUE <> FPGA.BLUE <> GYRO.WHITE
     I2C_SCK : inout std_logic; -- PIN_A10  :: BBB P9_19 :: CPU.ORANGE <> FPGA.GREEN <> GYRO.PURPLE
@@ -209,11 +209,10 @@ Debounce_module: Debounce port map
 
 --KERNEL_MISO <= synced_miso;
 
-
-LOOP_CS <= KERNEL_CS;
 LOOP_SDX_MOSI <= KERNEL_MOSI;
-KERNEL_MISO <= LOOP_SA0_MISO;
 LOOP_SCX_SLCK <= KERNEL_SCLK;
+LOOP_CS <= KERNEL_CS;
+KERNEL_MISO <= LOOP_SA0_MISO;
 
 
 
