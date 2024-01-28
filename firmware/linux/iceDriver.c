@@ -109,10 +109,10 @@ static struct file_operations fops =
 
 static struct spi_device *spi_dev;
 
-static volatile uint8_t tx_kernel[1] = {0xE3};
+static volatile uint8_t tx_kernel[] = {0xE3};
 static volatile uint8_t rx_kernel[1];
 
-static volatile uint8_t tx_fpga[1] = {0x00};
+static volatile uint8_t tx_fpga[] = {0x00};
 static volatile uint8_t rx_fpga[1];
 
 //////////////////////////
@@ -524,9 +524,9 @@ static int __init fpga_driver_init(void)
      * High clock control signal to FPGA
      */
     spi_dev->chip_select = 0;
-    spi_dev->mode = SPI_MODE_0;
+    spi_dev->mode = SPI_MODE_2;
     spi_dev->bits_per_word = 8;
-    spi_dev->max_speed_hz = 8000000;
+    spi_dev->max_speed_hz = 1000000;
 
     ret = spi_setup(spi_dev);
     if (ret < 0) {
