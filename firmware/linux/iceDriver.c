@@ -112,8 +112,8 @@ static struct spi_device *spi_dev;
 static volatile uint8_t tx_kernel[] = {0xE3};
 static volatile uint8_t rx_kernel[1];
 
-static volatile uint8_t tx_fpga[] = {0x00};
-static volatile uint8_t rx_fpga[1];
+static volatile uint8_t tx_fpga[] = {0x00, 0x00};
+static volatile uint8_t rx_fpga[2];
 
 //////////////////////////
 //                      //
@@ -260,22 +260,20 @@ static ssize_t dev_write(struct file *filep, const char *buffer, size_t len, lof
 
     if(strncmp(message, "in", 2) == 0)
     {
-        tx_fpga[0] = ((0x00) & 0x7F ) | 0x80;
+        tx_fpga[0] = 0xff;;
+        tx_fpga[1] = 0x00;;
+        queue_work(fpga_wq, &fpga_work);
+    }
+    else if(strncmp(message, "sr", 2) == 0)
+    {
+        tx_fpga[0] = 0x7e;;
+        tx_fpga[1] = 0xb6;;
         queue_work(fpga_wq, &fpga_work);
     }
     else if(strncmp(message, "rd", 2) == 0)
     {
-        tx_fpga[0] = ((0x40) & 0x7F ) | 0x80;;
-        queue_work(fpga_wq, &fpga_work);
-    }
-    else if(strncmp(message, "xx", 2) == 0)
-    {
-        tx_fpga[0] = 0x7F;;
-        queue_work(fpga_wq, &fpga_work);
-    }
-    else if(strncmp(message, "yy", 2) == 0)
-    {
-        tx_fpga[0] = 0x00;;
+        tx_fpga[0] = 0xff;;
+        tx_fpga[1] = 0x00;;
         queue_work(fpga_wq, &fpga_work);
     }
 
