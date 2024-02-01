@@ -258,16 +258,16 @@ static ssize_t dev_write(struct file *filep, const char *buffer, size_t len, lof
     int error_count = 0;
     error_count = copy_from_user(message, buffer, len);
 
-    if(strncmp(message, "in", 2) == 0)
+    if(strncmp(message, "a", 1) == 0)
     {
-        tx_fpga[0] = 0xFf;
-        tx_fpga[1] = 0xb6;
+        tx_fpga[0] = 0x7f;
+        tx_fpga[1] = 0x00;
         queue_work(fpga_wq, &fpga_work);
     }
-    else if(strncmp(message, "rd", 2) == 0)
+    else if(strncmp(message, "b", 1) == 0)
     {
         tx_fpga[0] = 0x00;
-        tx_fpga[1] = 0xb6;
+        tx_fpga[1] = 0x40;
         queue_work(fpga_wq, &fpga_work);
     }
 
