@@ -316,7 +316,7 @@ begin
 		            	----------------------------
 		            	sck_timer <= "11111001"; -- Reset timer so SCK is invereted @ 1st clock cycle
 		            	sda_timer <= "111110011"; -- Reset timer so data is passed @ 1st clock cycle
-		            	sda_offset <= "0000000000110011"; -- [50 - 1 + 2] :: SDA Offset
+		            	sda_offset <= "0000000001100011"; -- [100-1] :: SDA Offset
 		            else
 		                config_timer <= config_timer + '1';
 		            end if;
