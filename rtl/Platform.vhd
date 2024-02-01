@@ -30,11 +30,6 @@ port
     KERNEL_MISO : out std_logic; -- PIN_A6   :: BBB P9_21 :: BROWN   :: SPI0_D0
     KERNEL_SCLK : in std_logic;  -- PIN_A8   :: BBB P9_22 :: BLACK   :: SPI0_SCLK
 
-    LOOP_SCX_SLCK : out std_logic; 	-- PIN_A14 :: BROWN
-    LOOP_SDX_MOSI : out std_logic; 	-- PIN_A15 :: RED
-    LOOP_CS : out std_logic; 		-- PIN_A16 :: ORANGE
-    LOOP_SA0_MISO : in std_logic; 	-- PIN_A17 :: YELLOW
-
     I2C_SDA : inout std_logic; -- PIN_A9   :: BBB P9_20 :: CPU.BLUE <> FPGA.BLUE <> GYRO.WHITE
     I2C_SCK : inout std_logic; -- PIN_A10  :: BBB P9_19 :: CPU.ORANGE <> FPGA.GREEN <> GYRO.PURPLE
  
@@ -122,18 +117,18 @@ signal debug_3 : std_logic := '0';
 ----------------------------------------------------------------------------------------------------------------
 -- COMPONENTS DECLARATION
 ----------------------------------------------------------------------------------------------------------------
---component SPI_Synchronizer
---port
---(
---    CLK_50MHz : in  std_logic;
---    IN_SCLK : in  std_logic;
---    IN_CS : in  std_logic;
---    IN_MOSI : in  std_logic;
---    OUT_SCLK : out std_logic;
---    OUT_CS : out std_logic;
---    OUT_MOSI : out std_logic
---);
---end component;
+component SPI_Synchronizer
+port
+(
+    CLK_50MHz : in  std_logic;
+    IN_SCLK : in  std_logic;
+    IN_CS : in  std_logic;
+    IN_MOSI : in  std_logic;
+    OUT_SCLK : out std_logic;
+    OUT_CS : out std_logic;
+    OUT_MOSI : out std_logic
+);
+end component;
 
 component Debounce
 port
@@ -150,15 +145,15 @@ port
 );
 end component;
 
---component SPI_Data
---Port 
---(
---    CLOCK : in  std_logic;
---    DATA : in  std_logic_vector(7 downto 0);
---    synced_sclk : in std_logic;
---    synced_miso : out std_logic
---);
---end component;
+component SPI_Data
+Port 
+(
+    CLOCK : in  std_logic;
+    DATA : in  std_logic_vector(7 downto 0);
+    synced_sclk : in std_logic;
+    synced_miso : out std_logic
+);
+end component;
 
 component Interrupt
 Port 
@@ -175,16 +170,16 @@ end component;
 ----------------------------------------------------------------------------------------------------------------
 begin
 
---SPI_Synchronizer_module: SPI_Synchronizer port map 
---(
---    CLK_50MHz => CLOCK_50MHz,
---    IN_SCLK => KERNEL_SCLK,
---    IN_CS => KERNEL_CS,
---    IN_MOSI => KERNEL_MOSI,
---    OUT_SCLK  => synced_sclk,
---    OUT_CS => synced_cs,
---    OUT_MOSI  => synced_mosi
---);
+SPI_Synchronizer_module: SPI_Synchronizer port map 
+(
+    CLK_50MHz => CLOCK_50MHz,
+    IN_SCLK => KERNEL_SCLK,
+    IN_CS => KERNEL_CS,
+    IN_MOSI => KERNEL_MOSI,
+    OUT_SCLK  => synced_sclk,
+    OUT_CS => synced_cs,
+    OUT_MOSI  => synced_mosi
+);
 
 Debounce_module: Debounce port map 
 (
@@ -199,22 +194,15 @@ Debounce_module: Debounce port map
 	button_out_4 => open
 );
 
---SPI_Data_module: SPI_Data port map 
---(
---	CLOCK => CLOCK_50MHz,
---	DATA => data_SPI,
---	synced_sclk => synced_sclk,
---	synced_miso => synced_miso
---);
+SPI_Data_module: SPI_Data port map 
+(
+	CLOCK => CLOCK_50MHz,
+	DATA => data_SPI,
+	synced_sclk => synced_sclk,
+	synced_miso => synced_miso
+);
 
---KERNEL_MISO <= synced_miso;
-
-LOOP_SCX_SLCK <= KERNEL_SCLK; 	-- BROWN
-LOOP_SDX_MOSI <= KERNEL_MOSI; 	-- RED
-LOOP_CS <= KERNEL_CS; 			-- ORANGE
-KERNEL_MISO <= LOOP_SA0_MISO; 	-- YELLOW
-
-
+KERNEL_MISO <= synced_miso;
 
 ----------------------------------------
 -- Interrupt pulse :: 0x2FAF07F/50 MHz
@@ -328,7 +316,7 @@ begin
 		            	----------------------------
 		            	sck_timer <= "11111001"; -- Reset timer so SCK is invereted @ 1st clock cycle
 		            	sda_timer <= "111110011"; -- Reset timer so data is passed @ 1st clock cycle
-		            	sda_offset <= "0000000000110011"; -- [10-1] :: SDA Offset
+		            	sda_offset <= "0000000000110011"; -- [50 - 1 + 2] :: SDA Offset
 		            else
 		                config_timer <= config_timer + '1';
 		            end if;
@@ -379,9 +367,9 @@ begin
 			                	status_sck <= "0111";
 			                end if;
 
-					        --if status_timer = "0011010010111011" then -- [13500-1] :: INIT SDA RETURN
-			                --	status_sck <= "1000";
-			                --end if;
+					        if status_timer = "0011010010111011" then -- [13500-1] :: INIT SDA RETURN
+			                	status_sck <= "1000";
+			                end if;
 
 					        if status_timer = "0011011010101111" then -- [14000-1] :: Return Clock 3
 			                	status_sck <= "1001";
@@ -425,9 +413,9 @@ begin
 			                	status_sda <= "1000";
 			                end if;
 
-					        --if status_timer = sda_offset + "0011010110110110" then -- [13750] :: INIT SDA RETURN
-			                --	status_sda <= "1001";
-			                --end if;
+					        if status_timer = sda_offset + "0011010110110110" then -- [13750] :: INIT SDA RETURN
+			                	status_sda <= "1001";
+			                end if;
 
 					        if status_timer = sda_offset + "0011011010110000" then -- [14000] :: RETURN BARIER 3
 			                	status_sda <= "1010";
@@ -461,7 +449,7 @@ begin
 			                or status_sck = "0111" -- BARIER 2
 			                or status_sck = "1010" -- BARIER 3
 			                then
-			                	I2C_SCK <= '0';
+			                	I2C_SCK <= 'Z';
 			                end if;
 
 			                if status_sck = "1000" -- INIT SDA
@@ -520,7 +508,7 @@ begin
 			                or status_sda = "1000" -- BARIER 2
 			                or status_sda = "1010" -- RETURN BARIER 3
 			                then -- BARIER :: 'Z'
-			                	read_sda <= I2C_SDA;
+			                	I2C_SDA <= 'Z';
 			                end if;
 ------------------------------------------------------
 -- PIPE[1] :: Increment Status Timer
@@ -579,7 +567,7 @@ begin
 				LED_3 <= isCONFIG;
 				LED_4 <= isDEVICE;
 				LED_5 <= isDONE;
-				LED_6 <= read_sda;
+				LED_6 <= '0';
 				LED_7 <= status_sda(0) or status_sda(1) or status_sda(2) or status_sda(3);
 				LED_8 <= status_sck(0) or status_sck(1) or status_sck(2) or status_sck(3);
 
