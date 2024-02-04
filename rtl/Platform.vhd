@@ -65,7 +65,7 @@ signal interrupt_signal : std_logic := '0';
 -- I2C & SPA Data
 constant data_SPI : std_logic_vector(7 downto 0) := "10001000"; -- 0x88
 constant address_I2C : std_logic_vector(6 downto 0) := "1001011"; -- 0x69 ---> ID :: GOOD == 1001011 :: BAD == 1001111
-constant register_I2C : std_logic_vector(7 downto 0) := "00000010"; -- 0x40 ---> REG
+constant register_I2C : std_logic_vector(7 downto 0) := "11110000"; -- 0x40 ---> REG
 signal index : integer range 0 to 15 := 0;
 
 -- SPI Synchronise
@@ -316,7 +316,7 @@ begin
 		            	----------------------------
 		            	sck_timer <= "11111001"; -- Reset timer so SCK is invereted @ 1st clock cycle
 		            	sda_timer <= "111110011"; -- Reset timer so data is passed @ 1st clock cycle
-		            	sda_offset <= "0000000001100011"; -- [100-1] :: SDA Offset
+		            	sda_offset <= "0000000000110011"; -- [100-1] :: SDA Offset
 		            else
 		                config_timer <= config_timer + '1';
 		            end if;
@@ -375,7 +375,7 @@ begin
 			                	status_sck <= "1001";
 			                end if;
 
-			 				if status_timer = "1111111111111111" then -- [24000-1] :: BARIER 3
+			 				if status_timer = "0101110110111111" then -- [24000-1] :: BARIER 3
 			                	status_sck <= "1010";
 			                end if;               
 ------------------------------------------------------
@@ -449,7 +449,7 @@ begin
 			                or status_sck = "0111" -- BARIER 2
 			                or status_sck = "1010" -- BARIER 3
 			                then
-			                	I2C_SCK <= 'Z';
+			                	I2C_SCK <= '0';
 			                end if;
 
 			                if status_sck = "1000" -- INIT SDA
