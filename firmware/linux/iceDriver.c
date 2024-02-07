@@ -536,7 +536,7 @@ static int __init fpga_driver_init(void)
      * High clock control signal to FPGA
      */
     spi_dev->chip_select = 0;
-    spi_dev->mode = SPI_MODE_0;
+    spi_dev->mode = SPI_MODE_1;
     spi_dev->bits_per_word = 8;
     spi_dev->max_speed_hz = 1000000;
 

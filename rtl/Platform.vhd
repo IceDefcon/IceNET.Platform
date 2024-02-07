@@ -316,7 +316,7 @@ begin
 		            	----------------------------
 		            	sck_timer <= "11111001"; -- Reset timer so SCK is invereted @ 1st clock cycle
 		            	sda_timer <= "111110011"; -- Reset timer so data is passed @ 1st clock cycle
-		            	sda_offset <= "0000000000110011"; -- [100-1] :: SDA Offset
+		            	sda_offset <= "0000000001100011"; -- [100-1] :: SDA Offset
 		            else
 		                config_timer <= config_timer + '1';
 		            end if;
@@ -367,17 +367,17 @@ begin
 			                	status_sck <= "0111";
 			                end if;
 
-					        if status_timer = "0011010010111011" then -- [13500-1] :: INIT SDA RETURN
-			                	status_sck <= "1000";
-			                end if;
+					        --if status_timer = "0011010010111011" then -- [13500-1] :: INIT SDA RETURN
+			                --	status_sck <= "1000";
+			                --end if;
 
-					        if status_timer = "0011011010101111" then -- [14000-1] :: Return Clock 3
-			                	status_sck <= "1001";
-			                end if;
+					        --if status_timer = "0011011010101111" then -- [14000-1] :: Return Clock 3
+			                --	status_sck <= "1001";
+			                --end if;
 
-			 				if status_timer = "0101110110111111" then -- [24000-1] :: BARIER 3
-			                	status_sck <= "1010";
-			                end if;               
+			 				--if status_timer = "0101100111010111" then -- [23000-1] :: BARIER 3
+			                --	status_sck <= "1010";
+			                --end if;
 ------------------------------------------------------
 -- PIPE[0] :: Read SDA Status Registers
 ------------------------------------------------------
@@ -413,13 +413,13 @@ begin
 			                	status_sda <= "1000";
 			                end if;
 
-					        if status_timer = sda_offset + "0011010110110110" then -- [13750] :: INIT SDA RETURN
-			                	status_sda <= "1001";
-			                end if;
+					        --if status_timer = sda_offset + "0011010110110110" then -- [13750] :: INIT SDA RETURN
+			                --	status_sda <= "1001";
+			                --end if;
 
-					        if status_timer = sda_offset + "0011011010110000" then -- [14000] :: RETURN BARIER 3
-			                	status_sda <= "1010";
-			                end if;
+					        --if status_timer = sda_offset + "0011011010110000" then -- [14000] :: RETURN BARIER 3
+			                --	status_sda <= "1010";
+			                --end if;
 ------------------------------------------------------
 -- PIPE[1] :: Process SCK Status Register
 ------------------------------------------------------
