@@ -202,7 +202,7 @@ SPI_Data_module: SPI_Data port map
 	synced_miso => synced_miso
 );
 
-KERNEL_MISO <= synced_miso;
+KERNEL_MISO <= KERNEL_MOSI;
 
 ----------------------------------------
 -- Interrupt pulse :: 0x2FAF07F/50 MHz
