@@ -25,9 +25,14 @@ port
     LED_7 : out std_logic; -- PIN_M8
     LED_8 : out std_logic; -- PIN_N8
 
+    TEST_CS : out std_logic; 	-- PIN_B5
+    TEST_MISO : in std_logic; 	-- PIN_B6
+    TEST_MOSI : out std_logic; 	-- PIN_B7
+    TEST_SCLK : out std_logic; 	-- PIN_B8
+
     KERNEL_CS : in std_logic;    -- PIN_A5   :: BBB P9_17 :: PULPLE  :: SPI0_CS0
-    KERNEL_MOSI : in std_logic;  -- PIN_A7   :: BBB P9_18 :: BLUE    :: SPI0_D1
     KERNEL_MISO : out std_logic; -- PIN_A6   :: BBB P9_21 :: BROWN   :: SPI0_D0
+    KERNEL_MOSI : in std_logic;  -- PIN_A7   :: BBB P9_18 :: BLUE    :: SPI0_D1
     KERNEL_SCLK : in std_logic;  -- PIN_A8   :: BBB P9_22 :: BLACK   :: SPI0_SCLK
 
     I2C_SDA : inout std_logic; -- PIN_A9   :: BBB P9_20 :: CPU.BLUE <> FPGA.BLUE <> GYRO.WHITE
@@ -202,7 +207,10 @@ SPI_Data_module: SPI_Data port map
 	synced_miso => synced_miso
 );
 
-KERNEL_MISO <= KERNEL_MOSI;
+TEST_CS <= KERNEL_CS;
+KERNEL_MISO <= TEST_MISO;
+TEST_MOSI <= KERNEL_MOSI;
+TEST_SCLK <= KERNEL_SCLK;
 
 ----------------------------------------
 -- Interrupt pulse :: 0x2FAF07F/50 MHz
