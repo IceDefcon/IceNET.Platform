@@ -109,11 +109,11 @@ static struct file_operations fops =
 
 static struct spi_device *spi_dev;
 
-static volatile uint8_t tx_kernel[] = {0xE3};
+static volatile uint8_t tx_kernel[] = {};
 static volatile uint8_t rx_kernel[1];
 
-static volatile uint8_t tx_fpga[] = {0x11, 0x11};
-static volatile uint8_t rx_fpga[2];
+static volatile uint8_t tx_fpga[] = {};
+static volatile uint8_t rx_fpga[1];
 
 //////////////////////////
 //                      //
@@ -260,8 +260,7 @@ static ssize_t dev_write(struct file *filep, const char *buffer, size_t len, lof
 
     if(strncmp(message, "a", 1) == 0)
     {
-        tx_fpga[0] = 0x30;
-        tx_fpga[1] = 0x03;
+        tx_fpga[0] = 0x81;
         queue_work(fpga_wq, &fpga_work);
     }
 
@@ -534,7 +533,7 @@ static int __init fpga_driver_init(void)
     spi_dev->bits_per_word = 8;
     spi_dev->max_speed_hz = 1000000;
 
-    ret = spi_setup(spi_dev);
+    ret = spi_setup("spi_dev");
     if (ret < 0) {
         printk(KERN_ERR "[FPGA][SPI] Failed to setup SPI device: %d\n", ret);
         spi_dev_put(spi_dev);
