@@ -260,7 +260,7 @@ static ssize_t dev_write(struct file *filep, const char *buffer, size_t len, lof
 
     if(strncmp(message, "a", 1) == 0)
     {
-        tx_fpga[0] = 0x81;
+        tx_fpga[0] = 0x0F;
         queue_work(fpga_wq, &fpga_work);
     }
 
