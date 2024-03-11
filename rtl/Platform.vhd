@@ -70,7 +70,7 @@ signal interrupt_signal : std_logic := '0';
 -- I2C & SPA Data
 constant data_SPI : std_logic_vector(7 downto 0) := "10001000"; -- 0x88
 constant address_I2C : std_logic_vector(6 downto 0) := "1001011"; -- 0x69 ---> ID :: GOOD == 1001011 :: BAD == 1001111
-constant register_I2C : std_logic_vector(7 downto 0) := "11110000"; -- 0x40 ---> REG
+constant register_I2C : std_logic_vector(7 downto 0) := "00000000"; -- 0x40 ---> REG
 signal index : integer range 0 to 15 := 0;
 
 -- SPI Synchronise
