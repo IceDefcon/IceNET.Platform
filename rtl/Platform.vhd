@@ -73,6 +73,9 @@ constant address_I2C : std_logic_vector(6 downto 0) := "1001011"; -- 0x69 ---> I
 constant register_I2C : std_logic_vector(7 downto 0) := "11110000"; -- 0x40 ---> REG
 signal index : integer range 0 to 15 := 0;
 
+-- I2C Return Data
+signal return_data : std_logic_vector(7 downto 0) := "00000000";
+
 -- SPI Synchronise
 signal synced_sclk : std_logic := '0';
 signal synced_cs : std_logic := '0';
@@ -207,10 +210,7 @@ SPI_Data_module: SPI_Data port map
 	synced_miso => synced_miso
 );
 
-TEST_CS <= KERNEL_CS;
-KERNEL_MISO <= TEST_MISO;
-TEST_MOSI <= KERNEL_MOSI;
-TEST_SCLK <= KERNEL_SCLK;
+KERNEL_MISO <= synced_miso;
 
 ----------------------------------------
 -- Interrupt pulse :: 0x2FAF07F/50 MHz
@@ -263,7 +263,8 @@ state_machine_process:
 process(CLOCK_50MHz, reset_button, kernel_interrupt, system_start, main_current, main_next, status_sck, status_sda,
 	system_timer, init_timer, config_timer, send_timer, done_timer, status_timer, sck_timer, sda_timer, sck_timer_toggle,
 	isIDLE, isINIT, isCONFIG, isDEVICE, isDONE,
-	read_sda, sda_offset)
+	read_sda, sda_offset,
+	return_data)
 begin
     if rising_edge(CLOCK_50MHz) then
 
@@ -554,26 +555,34 @@ begin
 			                	end if;
 			                end if;
 
-			                if status_sda = "1101" then --  Data 
-			                	--
-			                	--
-			                	-- TODO: Data from Slave to compute
-			                	--
-			                	--
+			                if status_sda = "1101" then -- Return Data 
+			                	if sda_timer = "111110011" then -- Half bit time
+			                		sda_timer <= (others => '0');
+			                		return_data(index) <= I2C_SDA; -- Return Data
+			                		index <= index + 1;
+			                	else
+			                		sda_timer <= sda_timer + '1';
+			                	end if;
 			                end if;
 
 			                if status_sda = "1111" then --  Stop bit 
+			                	FPGA_INT <= '1';
 			                	I2C_SDA <= '0';
 			                end if;
 
-			                if status_sda = "0000" -- Stop Bit
-			                or status_sda = "0100" -- ACK/NAK 1
+			                if status_sda = "0100" -- ACK/NAK 1
 			                or status_sda = "0101" -- BARIER 1
 			                or status_sda = "0111" -- ACK/NAK 2
 			                or status_sda = "1000" -- BARIER 2
 			                or status_sda = "1100" -- ACK/NAK 3
 			                or status_sda = "1110" -- ACK/NAK 4
 			                then -- BARIER :: 'Z'
+			                	I2C_SDA <= 'Z';
+			                end if;
+
+			                if status_sda = "0000" -- Stop Bit
+			                then -- BARIER :: 'Z'
+			                	FPGA_INT <= '0';
 			                	I2C_SDA <= 'Z';
 			                end if;
 ------------------------------------------------------
@@ -603,14 +612,12 @@ begin
 		                config_timer <= (others => '0');
 		            	send_timer <= (others => '0');
 		            	done_timer <= (others => '0');
+		            	-- Reset Status registers
 		            	status_sck <= "0000";
 		            	status_sda <= "0000";
+		            	-- Switch to IDLE
 			        	main_next <= IDLE;
-			        	-- Clear interrupt pin
-		            	FPGA_INT <= '0';
 		            else
-			        	-- Trigger interrupt
-		            	FPGA_INT <= '1';
 		                done_timer <= done_timer + '1';
 		            end if;
 		            
