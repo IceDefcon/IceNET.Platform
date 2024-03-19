@@ -494,7 +494,7 @@ begin
 			                if status_sda = "0001" then -- Start bit
 			                	if sda_timer = "111110011" then -- Half bit time
 			                		sda_timer <= (others => '0');
-			                		I2C_SDA <= '0'; -- 1st address
+			                		I2C_SDA <= '0';
 			                	else
 			                		sda_timer <= sda_timer + '1';
 			                	end if;
@@ -606,7 +606,11 @@ begin
 		            	status_sck <= "0000";
 		            	status_sda <= "0000";
 			        	main_next <= IDLE;
+			        	-- Clear interrupt pin
+		            	FPGA_INT <= '0';
 		            else
+			        	-- Trigger interrupt
+		            	FPGA_INT <= '1';
 		                done_timer <= done_timer + '1';
 		            end if;
 		            
@@ -647,7 +651,7 @@ end process;
 -- In order to adjust PID
 -- Controler for the gyroscope
 -----------------------------------------------
-FPGA_INT <= '0'; --interrupt_signal;
+--FPGA_INT <= '0'; --interrupt_signal;
 
 end rtl;
 

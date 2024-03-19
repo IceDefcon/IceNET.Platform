@@ -533,7 +533,7 @@ static int __init fpga_driver_init(void)
     spi_dev->bits_per_word = 8;
     spi_dev->max_speed_hz = 1000000;
 
-    ret = spi_setup("spi_dev");
+    ret = spi_setup(spi_dev);
     if (ret < 0) {
         printk(KERN_ERR "[FPGA][SPI] Failed to setup SPI device: %d\n", ret);
         spi_dev_put(spi_dev);
