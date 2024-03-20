@@ -4,11 +4,9 @@
  * IceNET Technology 2024
  * 
  */
-#include <linux/fs.h>
 #include <linux/gpio.h>
 #include <linux/init.h>
 #include <linux/delay.h>
-#include <linux/device.h>
 #include <linux/module.h>
 #include <linux/kernel.h>
 #include <linux/kthread.h>
@@ -17,6 +15,8 @@
 #include <linux/interrupt.h>
 #include <linux/workqueue.h> // For workqueue-related functions and macros
 #include <linux/slab.h>      // For memory allocation functions like kmalloc
+
+#include "charDevice.h"
 
 MODULE_VERSION("2.0");
 MODULE_LICENSE("GPL");
