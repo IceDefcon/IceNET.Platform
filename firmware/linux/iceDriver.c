@@ -109,10 +109,10 @@ static struct file_operations fops =
 
 static struct spi_device *spi_dev;
 
-static volatile uint8_t tx_kernel[] = {};
+static volatile uint8_t tx_kernel[] = {0x81};
 static volatile uint8_t rx_kernel[1];
 
-static volatile uint8_t tx_fpga[] = {};
+static volatile uint8_t tx_fpga[] = {0xC3};
 static volatile uint8_t rx_fpga[1];
 
 //////////////////////////
