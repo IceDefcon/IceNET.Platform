@@ -1,9 +1,9 @@
 obj-m += iceDriver.o
 
-mymodule-objs := ./src/iceDriver.o ./src/charDevice.o
+iceDriver-objs := src/charDevice.o
 
 all:
-	make -C $(KERNEL_PATH) M=$(PWD) modules
+	make -C /lib/modules/$(shell uname -r)/build M=$(PWD) modules -j
 
 clean:
-	make -C $(KERNEL_PATH) M=$(PWD) clean
+	make -C /lib/modules/$(shell uname -r)/build M=$(PWD) clean -j
