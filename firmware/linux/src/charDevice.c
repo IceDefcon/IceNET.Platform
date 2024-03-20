@@ -6,8 +6,12 @@
  */
 
 #include <linux/mutex.h>
+#include <linux/module.h> // Include module.h to use EXPORT_SYMBOL
+
 #include "charDevice.h"
 #include "workLoad.h"
+
+MODULE_LICENSE("GPL");
 
 //////////////////////
 //                  //
@@ -137,3 +141,9 @@ int dev_release(struct inode *inodep, struct file *filep)
     printk(KERN_INFO "[FPGA][ C ] Device successfully closed\n");
     return NULL;
 }
+
+// Export symbols
+EXPORT_SYMBOL(dev_open);
+EXPORT_SYMBOL(dev_read);
+EXPORT_SYMBOL(dev_write);
+EXPORT_SYMBOL(dev_release);
