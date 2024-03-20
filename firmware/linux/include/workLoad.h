@@ -19,10 +19,7 @@
 //                  //
 //                  //
 //////////////////////
-struct work_struct* get_fpga_work();
-struct work_struct* get_kernel_work();
-struct workqueue_struct* get_fpga_wq();
-struct workqueue_struct* get_kernel_wq();
+
 
 
 
