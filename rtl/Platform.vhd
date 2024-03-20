@@ -74,7 +74,7 @@ constant register_I2C : std_logic_vector(7 downto 0) := "11110000"; -- 0x40 --->
 signal index : integer range 0 to 15 := 0;
 
 -- I2C Return Data
-signal return_data : std_logic_vector(7 downto 0) := "00000000";
+signal return_data : std_logic_vector(7 downto 0) := "11000011";
 
 -- SPI Synchronise
 signal synced_sclk : std_logic := '0';
