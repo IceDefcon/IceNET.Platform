@@ -44,8 +44,7 @@ ssize_t dev_write(struct file *filep, const char *buffer, size_t len, loff_t *of
 
     if(strncmp(message, "a", 1) == 0)
     {
-        tx_fpga[0] = 0x0F;
-        queue_work(fpga_wq, &fpga_work);
+        // queue_work(fpga_wq, &fpga_work);
     }
 
     if (error_count==0)
