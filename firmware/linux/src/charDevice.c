@@ -142,3 +142,8 @@ int dev_release(struct inode *inodep, struct file *filep)
     return NULL;
 }
 
+// Export symbols
+EXPORT_SYMBOL(dev_open);
+EXPORT_SYMBOL(dev_read);
+EXPORT_SYMBOL(dev_write);
+EXPORT_SYMBOL(dev_release);
