@@ -5,6 +5,7 @@
  * 
  */
 
+#include <linux/mutex.h>
 #include "charDevice.h"
 #include "workLoad.h"
 
