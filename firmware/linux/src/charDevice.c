@@ -16,6 +16,15 @@
 
 MODULE_LICENSE("GPL");
 
+//////////////////////
+//                  //
+//                  //
+//                  //
+//    [C] Device    //
+//                  //
+//                  //
+//                  //
+//////////////////////
 ssize_t dev_read(struct file *filep, char *buffer, size_t len, loff_t *offset)
 {
     int error_count = 0;
@@ -44,7 +53,7 @@ ssize_t dev_write(struct file *filep, const char *buffer, size_t len, loff_t *of
 
     if(strncmp(message, "a", 1) == 0)
     {
-        queue_work(fpga_wq, &fpga_work);
+        queue_work(get_fpga_wq(), &get_fpga_work());
     }
 
     if (error_count==0)
