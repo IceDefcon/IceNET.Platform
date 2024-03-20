@@ -4,6 +4,9 @@ SRC_DIR := src
 # Kernel module name
 obj-m += $(SRC_DIR)/iceDriver.o
 
+# Additional object files
+obj-m += $(SRC_DIR)/charDevice.o
+
 # Include files directory
 INC_DIR := include
 
