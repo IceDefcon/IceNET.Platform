@@ -1,9 +1,10 @@
-obj-m += src/iceDriver.o
+# Source files directory
+SRC_DIR := src
 
-iceDriver-objs := src/charDevice.o
+# Kernel module name
+obj-m += $(SRC_DIR)/iceDriver.o
 
-KERNEL_DIR := /lib/modules/$(shell uname -r)/build
-PWD := $(shell pwd)
+iceDriver-objs := $(SRC_DIR)/charDevice.o
 
 # Include files directory
 INC_DIR := include
@@ -11,8 +12,15 @@ INC_DIR := include
 # Extra flags for the kernel module
 EXTRA_CFLAGS := -I$(PWD)/$(INC_DIR)
 
-default:
-	$(MAKE) -C $(KERNEL_DIR) M=$(PWD) modules
+# Kernel source directory
+KDIR := /lib/modules/$(shell uname -r)/build
 
+# Main rule to build the kernel module
+all:
+	$(MAKE) -C $(KDIR) M=$(PWD) modules
+
+# Clean rule
 clean:
-	$(MAKE) -C $(KERNEL_DIR) M=$(PWD) clean
+	$(MAKE) -C $(KDIR) M=$(PWD) clean
+
+.PHONY: all clean
