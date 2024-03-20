@@ -23,4 +23,6 @@ clean:
 
 .PHONY: all clean
 
+# Link charDevice.o with iceDriver.o
 $(SRC_DIR)/iceDriver.o: $(SRC_DIR)/charDevice.o
+	$(LD) -r -o $@ $^
