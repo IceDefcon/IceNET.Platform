@@ -7,8 +7,7 @@
 
 
 
-#include "charDevice.h"
-#include "workLoad.h"
+
 
 MODULE_LICENSE("GPL");
 

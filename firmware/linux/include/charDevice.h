@@ -13,6 +13,9 @@
 #include <linux/module.h> 	// Include module.h to use EXPORT_SYMBOL
 #include <linux/uaccess.h> 	// copy_to_user
 
+#include "charDevice.h"
+#include "workLoad.h"
+
 //////////////////////
 //                  //
 //                  //
