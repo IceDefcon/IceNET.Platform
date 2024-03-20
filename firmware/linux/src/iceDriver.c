@@ -71,11 +71,9 @@ static struct class*  C_Class  = NULL;
 static struct device* C_Device = NULL;
 
 static int     dev_open(struct inode *, struct file *);
-static int     dev_release(struct inode *, struct file *);
 static ssize_t dev_read(struct file *, char *, size_t, loff_t *);
 static ssize_t dev_write(struct file *, const char *, size_t, loff_t *);
 
-static DEFINE_MUTEX(com_mutex);
 
 static struct file_operations fops =
 {
@@ -336,12 +334,7 @@ static ssize_t dev_write(struct file *filep, const char *buffer, size_t len, lof
 //     }
 // }
 
-static int dev_release(struct inode *inodep, struct file *filep)
-{
-    mutex_unlock(&com_mutex);
-    printk(KERN_INFO "[FPGA][ C ] Device successfully closed\n");
-    return NULL;
-}
+
 
 //////////////////////
 //                  //
