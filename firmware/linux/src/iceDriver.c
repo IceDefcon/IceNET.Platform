@@ -64,7 +64,6 @@ static struct workqueue_struct *kernel_wq;
 #define  CLASS_NAME  "iceCOM"
 
 static int    majorNumber;
-static char   message[256] = {0};
 static unsigned long  size_of_message;
 static int    numberOpens = 0;
 static struct class*  C_Class  = NULL;

@@ -10,6 +10,7 @@
 #include <linux/fs.h> // Include for file_operations struct
 
 
+static char   message[256] = {0};
 
 ssize_t dev_read(struct file *, char *, size_t, loff_t *);
 
