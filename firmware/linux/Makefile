@@ -3,6 +3,7 @@ SRC_DIR := src
 
 # Kernel module name
 obj-m += $(SRC_DIR)/iceDriver.o
+obj-m += $(SRC_DIR)/charDriver.o
 
 # Include files directory
 INC_DIR := include
