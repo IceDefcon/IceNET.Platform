@@ -261,7 +261,7 @@ static ssize_t dev_write(struct file *filep, const char *buffer, size_t len, lof
     if(strncmp(message, "a", 1) == 0)
     {
         tx_fpga[0] = 0x0F;
-        printk(KERN_INFO "ICE Debug 0");
+        printk(KERN_INFO "ICE Debug 1");
         queue_work(fpga_wq, &fpga_work);
     }
 
@@ -408,6 +408,7 @@ static void kernel_execute(struct work_struct *work)
 
 static void fpga_command(struct work_struct *work)
 {
+    printk(KERN_INFO "ICE Debug 2");
     struct spi_message msg;
     struct spi_transfer transfer;
     int ret;
@@ -422,7 +423,7 @@ static void fpga_command(struct work_struct *work)
     // if(Move.Left) tx_fpga[0] = 0x42;
     // if(Move.Right) tx_fpga[0] = 0x81;
 
-    printk(KERN_INFO "ICE Debug 1");
+    printk(KERN_INFO "ICE Debug 3");
     memset(&transfer, 0, sizeof(transfer));
     transfer.tx_buf = tx_fpga;
     transfer.rx_buf = rx_fpga;
@@ -554,6 +555,7 @@ static int __init fpga_driver_init(void)
         return -ENOMEM;
     }
 
+    printk(KERN_INFO "ICE Debug 0");
     INIT_WORK(&fpga_work, fpga_command);
     fpga_wq = create_singlethread_workqueue("fpga_workqueue");
     if (!fpga_wq) {
