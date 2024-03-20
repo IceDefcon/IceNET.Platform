@@ -1,8 +1,8 @@
-# Kernel module name
-obj-m += iceDriver.o
-
 # Source files directory
 SRC_DIR := src
+
+# Kernel module name
+obj-m += $(SRC_DIR)/iceDriver.o
 
 # Include files directory
 INC_DIR := include
