@@ -18,6 +18,8 @@
 #include <linux/workqueue.h> // For workqueue-related functions and macros
 #include <linux/slab.h>      // For memory allocation functions like kmalloc
 
+#include "charDevice.h"
+
 MODULE_VERSION("2.0");
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Marek Ice");

@@ -1,6 +1,8 @@
 obj-m += iceDriver.o
 
-iceDriver-objs := src/iceDriver.o
+iceDriver-objs := src/iceDriver.o src/charDevice.o
+
+EXTRA_CFLAGS=-I$(PWD)/include
 
 all:
 	make -C /lib/modules/$(shell uname -r)/build M=$(PWD) modules -j
