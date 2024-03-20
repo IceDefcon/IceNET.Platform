@@ -5,8 +5,7 @@
  * 
  */
 
-#include <linux/mutex.h>
-#include <linux/module.h> // Include module.h to use EXPORT_SYMBOL
+
 
 #include "charDevice.h"
 #include "workLoad.h"

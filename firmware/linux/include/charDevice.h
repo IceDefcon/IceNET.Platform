@@ -9,7 +9,8 @@
 
 #include <linux/fs.h> 		//
 #include <linux/device.h> 	//
-#include <linux/mutex.h>  	//
+#include <linux/mutex.h>	//
+#include <linux/module.h> 	// Include module.h to use EXPORT_SYMBOL
 #include <linux/uaccess.h> 	// copy_to_user
 
 //////////////////////
