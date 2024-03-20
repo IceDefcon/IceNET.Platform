@@ -3,7 +3,8 @@ SRC_DIR := src
 
 # Kernel module name
 obj-m += $(SRC_DIR)/iceDriver.o
-# Add charDevice.c to be compiled
+
+# Additional object files
 obj-m += $(SRC_DIR)/charDevice.o
 
 # Include files directory
