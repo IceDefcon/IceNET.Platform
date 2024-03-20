@@ -24,21 +24,21 @@
 #define  DEVICE_NAME "iceCOM"
 #define  CLASS_NAME  "iceCOM"
 
-static int    majorNumber;
-static char   message[256] = {0};
-static unsigned long  size_of_message;
-static int    numberOpens = 0;
-static struct class*  C_Class  = NULL;
-static struct device* C_Device = NULL;
+int    majorNumber;
+char   message[256] = {0};
+unsigned long  size_of_message;
+int    numberOpens = 0;
+struct class*  C_Class  = NULL;
+struct device* C_Device = NULL;
 
 int     dev_open(struct inode *, struct file *);
 int     dev_release(struct inode *, struct file *);
 ssize_t dev_read(struct file *, char *, size_t, loff_t *);
 ssize_t dev_write(struct file *, const char *, size_t, loff_t *);
 
-static DEFINE_MUTEX(com_mutex);
+DEFINE_MUTEX(com_mutex);
 
-static struct file_operations fops =
+struct file_operations fops =
 {
    .open = dev_open,
    .read = dev_read,
