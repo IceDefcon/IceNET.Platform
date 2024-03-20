@@ -1,10 +1,10 @@
-obj-m += iceDriver.o
+obj-m += src/iceDriver.o
 
 # Source files
-iceDriver-objs := charDevice.o spiDevice.o
+iceDriver-objs := src/charDevice.o src/spiDevice.o
 
 all:
-    make -C /lib/modules/$(shell uname -r)/build M=$(PWD) modules -j
+	make -C /lib/modules/$(shell uname -r)/build M=$(PWD) modules -j
 
 clean:
-    make -C /lib/modules/$(shell uname -r)/build M=$(PWD) clean -j
+	make -C /lib/modules/$(shell uname -r)/build M=$(PWD) clean -j
