@@ -205,7 +205,7 @@ Debounce_module: Debounce port map
 SPI_Data_module: SPI_Data port map 
 (
 	CLOCK => CLOCK_50MHz,
-	DATA => data_SPI,
+	DATA => return_data,
 	synced_sclk => synced_sclk,
 	synced_miso => synced_miso
 );
@@ -558,7 +558,7 @@ begin
 			                if status_sda = "1101" then -- Return Data 
 			                	if sda_timer = "111110011" then -- Half bit time
 			                		sda_timer <= (others => '0');
-			                		return_data(index) <= I2C_SDA; -- Return Data
+			                		return_data(7 - index) <= I2C_SDA; -- Return Data
 			                		index <= index + 1;
 			                	else
 			                		sda_timer <= sda_timer + '1';
