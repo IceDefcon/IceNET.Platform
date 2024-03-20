@@ -4,7 +4,7 @@ iceDriver-objs := src/charDevice.o
 
 KERNEL_DIR := /lib/modules/$(shell uname -r)/build
 PWD := $(shell pwd)
-EXTRA_CFLAGS += -I/include
+EXTRA_CFLAGS += -Iinclude
 
 default:
 	$(MAKE) -C $(KERNEL_DIR) M=$(PWD) modules
