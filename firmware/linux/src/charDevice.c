@@ -16,7 +16,7 @@
 //                  //
 //                  //
 //////////////////////
-static int dev_open(struct inode *inodep, struct file *filep)
+int dev_open(struct inode *inodep, struct file *filep)
 {
     if(!mutex_trylock(&com_mutex))
     {
@@ -29,7 +29,7 @@ static int dev_open(struct inode *inodep, struct file *filep)
     return NULL;
 }
 
-static ssize_t dev_read(struct file *filep, char *buffer, size_t len, loff_t *offset)
+ssize_t dev_read(struct file *filep, char *buffer, size_t len, loff_t *offset)
 {
     int error_count = 0;
     //
@@ -50,7 +50,7 @@ static ssize_t dev_read(struct file *filep, char *buffer, size_t len, loff_t *of
     }
 }
 
-static ssize_t dev_write(struct file *filep, const char *buffer, size_t len, loff_t *offset)
+ssize_t dev_write(struct file *filep, const char *buffer, size_t len, loff_t *offset)
 {
     int error_count = 0;
     error_count = copy_from_user(message, buffer, len);
@@ -80,7 +80,7 @@ static ssize_t dev_write(struct file *filep, const char *buffer, size_t len, lof
  * Experimental Drone control
  * 
  */
-// static ssize_t dev_write(struct file *filep, const char *buffer, size_t len, loff_t *offset)
+// ssize_t dev_write(struct file *filep, const char *buffer, size_t len, loff_t *offset)
 // {
 //     int error_count = 0;
 //     error_count = copy_from_user(message, buffer, len);
@@ -131,7 +131,7 @@ static ssize_t dev_write(struct file *filep, const char *buffer, size_t len, lof
 //     }
 // }
 
-static int dev_release(struct inode *inodep, struct file *filep)
+int dev_release(struct inode *inodep, struct file *filep)
 {
     mutex_unlock(&com_mutex);
     printk(KERN_INFO "[FPGA][ C ] Device successfully closed\n");
