@@ -46,6 +46,10 @@ static struct file_operations fops =
    .release = dev_release,
 };
 
-
+// Export symbols
+EXPORT_SYMBOL(dev_open);
+EXPORT_SYMBOL(dev_read);
+EXPORT_SYMBOL(dev_write);
+EXPORT_SYMBOL(dev_release);
 
 #endif // CHAR_DEVICE_H
