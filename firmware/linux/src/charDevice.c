@@ -8,11 +8,11 @@
 #include <linux/module.h>
 #include <linux/kernel.h>
 #include <linux/init.h>
-#include <linux/fs.h> 		// Include for file_operations struct
 #include <linux/uaccess.h> 	// Include for copy_to_user function
 #include <linux/slab.h> 	// Include for kmalloc/kfree functions
 
 #include "charDevice.h"
+#include "workLoad.h"
 
 MODULE_LICENSE("GPL");
 
@@ -44,7 +44,7 @@ ssize_t dev_write(struct file *filep, const char *buffer, size_t len, loff_t *of
 
     if(strncmp(message, "a", 1) == 0)
     {
-        // queue_work(fpga_wq, &fpga_work);
+        queue_work(fpga_wq, &fpga_work);
     }
 
     if (error_count==0)

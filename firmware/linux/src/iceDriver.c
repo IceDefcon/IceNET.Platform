@@ -19,6 +19,7 @@
 #include <linux/slab.h>      // For memory allocation functions like kmalloc
 
 #include "charDevice.h"
+#include "workLoad.h"
 
 MODULE_VERSION("2.0");
 MODULE_LICENSE("GPL");
@@ -37,19 +38,6 @@ MODULE_DESCRIPTION("FPGA Comms Driver");
 
 // static struct Direction Move;
 
-//////////////////////
-//                  //
-//                  //
-//                  //
-//   [W] Workload   //
-//                  //
-//                  //
-//                  //
-//////////////////////
-static struct work_struct fpga_work;
-static struct work_struct kernel_work;
-static struct workqueue_struct *fpga_wq;
-static struct workqueue_struct *kernel_wq;
 
 //////////////////////
 //                  //
