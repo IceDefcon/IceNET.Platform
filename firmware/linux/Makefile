@@ -4,9 +4,6 @@ SRC_DIR := src
 # Kernel module name
 obj-m := $(SRC_DIR)/iceDriver.o
 
-# Additional object files
-obj-m += $(SRC_DIR)/charDevice.o
-
 # Include files directory
 INC_DIR := include
 
@@ -25,3 +22,5 @@ clean:
 	$(MAKE) -C $(KDIR) M=$(PWD) clean
 
 .PHONY: all clean
+
+$(SRC_DIR)/iceDriver.o: $(SRC_DIR)/charDevice.o
