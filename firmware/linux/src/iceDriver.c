@@ -4,19 +4,19 @@
  * IceNET Technology 2024
  * 
  */
+#include <linux/fs.h>
 #include <linux/gpio.h>
 #include <linux/init.h>
 #include <linux/delay.h>
+#include <linux/device.h>
 #include <linux/module.h>
 #include <linux/kernel.h>
 #include <linux/kthread.h>
 #include <linux/uaccess.h>
 #include <linux/spi/spi.h>
 #include <linux/interrupt.h>
+#include <linux/workqueue.h> // For workqueue-related functions and macros
 #include <linux/slab.h>      // For memory allocation functions like kmalloc
-
-#include "charDevice.h"
-#include "workLoad.h"
 
 MODULE_VERSION("2.0");
 MODULE_LICENSE("GPL");
@@ -35,9 +35,53 @@ MODULE_DESCRIPTION("FPGA Comms Driver");
 
 // static struct Direction Move;
 
+//////////////////////
+//                  //
+//                  //
+//                  //
+//   [W] Workload   //
+//                  //
+//                  //
+//                  //
+//////////////////////
+static struct work_struct fpga_work;
+static struct work_struct kernel_work;
+static struct workqueue_struct *fpga_wq;
+static struct workqueue_struct *kernel_wq;
 
+//////////////////////
+//                  //
+//                  //
+//                  //
+//    [C] Device    //
+//                  //
+//                  //
+//                  //
+//////////////////////
+#define  DEVICE_NAME "iceCOM"
+#define  CLASS_NAME  "iceCOM"
 
+static int    majorNumber;
+static char   message[256] = {0};
+static unsigned long  size_of_message;
+static int    numberOpens = 0;
+static struct class*  C_Class  = NULL;
+static struct device* C_Device = NULL;
 
+static int     dev_open(struct inode *, struct file *);
+static int     dev_release(struct inode *, struct file *);
+static ssize_t dev_read(struct file *, char *, size_t, loff_t *);
+static ssize_t dev_write(struct file *, const char *, size_t, loff_t *);
+
+static DEFINE_MUTEX(com_mutex);
+
+static struct file_operations fops =
+{
+   .open = dev_open,
+   .read = dev_read,
+   .write = dev_write,
+   .release = dev_release,
+};
 
 //////////////////////
 //                  //
@@ -166,7 +210,136 @@ int StateMachineThread(void *data)
     return 0;
 }
 
+//////////////////////
+//                  //
+//                  //
+//                  //
+//    [C] Device    //
+//                  //
+//                  //
+//                  //
+//////////////////////
+static int dev_open(struct inode *inodep, struct file *filep)
+{
+    if(!mutex_trylock(&com_mutex))
+    {
+        printk(KERN_ALERT "[FPGA][ C ] Device in use by another process");
+        return -EBUSY;
+    }
 
+    numberOpens++;
+    printk(KERN_INFO "[FPGA][ C ] Device has been opened %d time(s)\n", numberOpens);
+    return NULL;
+}
+
+static ssize_t dev_read(struct file *filep, char *buffer, size_t len, loff_t *offset)
+{
+    int error_count = 0;
+    //
+    // Copy to user space :: *to, *from, size :: returns 0 on success
+    //
+    error_count = copy_to_user(buffer, message, size_of_message);
+    memset(message, 0, sizeof(message));
+
+    if (error_count==0)
+    {
+        printk(KERN_INFO "[FPGA][ C ] Sent %d characters to the user\n", size_of_message);
+        return (size_of_message = 0);  // clear the position to the start and return NULL
+    }
+    else 
+    {
+        printk(KERN_INFO "[FPGA][ C ] Failed to send %d characters to the user\n", error_count);
+        return -EFAULT; // Failed -- return a bad address message (i.e. -14)
+    }
+}
+
+static ssize_t dev_write(struct file *filep, const char *buffer, size_t len, loff_t *offset)
+{
+    int error_count = 0;
+    error_count = copy_from_user(message, buffer, len);
+
+    if(strncmp(message, "a", 1) == 0)
+    {
+        tx_fpga[0] = 0x0F;
+        printk(KERN_INFO "ICE Debug 1");
+        queue_work(fpga_wq, &fpga_work);
+    }
+
+    if (error_count==0)
+    {
+        size_of_message = strlen(message);
+        printk(KERN_INFO "[FPGA][ C ] Received %d characters from the user\n", len);
+        return len;
+    } 
+    else 
+    {
+        printk(KERN_INFO "[FPGA][ C ] Failed to receive characters from the user\n");
+        return -EFAULT;
+    }
+}
+
+/*!
+ * 
+ * Experimental Drone control
+ * 
+ */
+// static ssize_t dev_write(struct file *filep, const char *buffer, size_t len, loff_t *offset)
+// {
+//     int error_count = 0;
+//     error_count = copy_from_user(message, buffer, len);
+
+//     memset(&Move, 0, sizeof(struct Direction));
+
+//     switch (message[0]) {
+//         case 'w':
+//             Move.Up = true;
+//             Move.Go = true;
+//             break;
+
+//         case 's':
+//             Move.Down = true;
+//             Move.Go = true;
+//             break;
+
+//         case 'a':
+//             Move.Left = true;
+//             Move.Go = true;
+//             break;
+
+//         case 'd':
+//             Move.Right = true;
+//             Move.Go = true;
+//             break;
+
+//         default:
+//             break;
+//     }
+
+//     if (Move.Go)
+//     {
+//         Move.Go = false;
+//         queue_work(fpga_wq, &fpga_work);
+//     }
+
+//     if (error_count==0)
+//     {
+//         size_of_message = strlen(message);
+//         printk(KERN_INFO "[FPGA][ C ] Received %d characters from the user\n", len);
+//         return len;
+//     } 
+//     else 
+//     {
+//         printk(KERN_INFO "[FPGA][ C ] Failed to receive characters from the user\n");
+//         return -EFAULT;
+//     }
+// }
+
+static int dev_release(struct inode *inodep, struct file *filep)
+{
+    mutex_unlock(&com_mutex);
+    printk(KERN_INFO "[FPGA][ C ] Device successfully closed\n");
+    return NULL;
+}
 
 //////////////////////
 //                  //
@@ -235,6 +408,7 @@ static void kernel_execute(struct work_struct *work)
 
 static void fpga_command(struct work_struct *work)
 {
+    printk(KERN_INFO "ICE Debug 2");
     struct spi_message msg;
     struct spi_transfer transfer;
     int ret;
@@ -249,6 +423,7 @@ static void fpga_command(struct work_struct *work)
     // if(Move.Left) tx_fpga[0] = 0x42;
     // if(Move.Right) tx_fpga[0] = 0x81;
 
+    printk(KERN_INFO "ICE Debug 3");
     memset(&transfer, 0, sizeof(transfer));
     transfer.tx_buf = tx_fpga;
     transfer.rx_buf = rx_fpga;
@@ -380,6 +555,7 @@ static int __init fpga_driver_init(void)
         return -ENOMEM;
     }
 
+    printk(KERN_INFO "ICE Debug 0");
     INIT_WORK(&fpga_work, fpga_command);
     fpga_wq = create_singlethread_workqueue("fpga_workqueue");
     if (!fpga_wq) {
