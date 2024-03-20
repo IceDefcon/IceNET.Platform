@@ -510,7 +510,10 @@ static int __init fpga_driver_init(void)
         return -ENOMEM;
     }
 
-    INIT_WORK(&get_fpga_work(), fpga_command);
+    struct work_struct tmp_fpga_work;
+    INIT_WORK(&tmp_fpga_work, fpga_command);
+    set_fpga_work(&tmp_fpga_work);
+    
     set_fpga_wq(create_singlethread_workqueue("fpga_workqueue"));
     if (!get_fpga_wq()) {
         printk(KERN_ERR "[FPGA][WRK] Failed to create fpga workqueue\n");
@@ -620,7 +623,7 @@ static void __exit fpga_driver_exit(void)
         kernel_wq = NULL;
     }
 
-    cancel_work_sync(&get_fpga_work());
+    cancel_work_sync(get_fpga_work());
     if (get_fpga_wq()) {
         flush_workqueue(get_fpga_wq());
         destroy_workqueue(get_fpga_wq());

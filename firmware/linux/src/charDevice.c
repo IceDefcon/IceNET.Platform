@@ -51,9 +51,11 @@ ssize_t dev_write(struct file *filep, const char *buffer, size_t len, loff_t *of
     int error_count = 0;
     error_count = copy_from_user(message, buffer, len);
 
+    struct work_struct temp_fpga_work;
+    s
     if(strncmp(message, "a", 1) == 0)
     {
-        queue_work(get_fpga_wq(), &get_fpga_work());
+        queue_work(get_fpga_wq(), get_fpga_work());
     }
 
     if (error_count==0)
