@@ -15,10 +15,10 @@ KDIR := /lib/modules/$(shell uname -r)/build
 
 # Main rule to build the kernel module
 all:
-    make -C $(KDIR) M=$(PWD) modules
+	make -C $(KDIR) M=$(PWD) modules
 
 # Clean rule
 clean:
-    make -C $(KDIR) M=$(PWD) clean
+	make -C $(KDIR) M=$(PWD) clean
 
 .PHONY: all clean
