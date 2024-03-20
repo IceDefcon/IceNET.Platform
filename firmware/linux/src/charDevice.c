@@ -6,6 +6,7 @@
  */
 
 #include "charDevice.h"
+#include "workLoad.h"
 
 //////////////////////
 //                  //

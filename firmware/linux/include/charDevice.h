@@ -7,9 +7,10 @@
 #ifndef CHAR_DEVICE_H
 #define CHAR_DEVICE_H
 
-#include <linux/fs.h>
-#include <linux/device.h>
-#include <linux/mutex.h>
+#include <linux/fs.h> 		//
+#include <linux/device.h> 	//
+#include <linux/mutex.h>  	//
+#include <linux/uaccess.h> 	// copy_to_user
 
 //////////////////////
 //                  //
