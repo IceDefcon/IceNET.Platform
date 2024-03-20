@@ -1,1 +1,0 @@
-savedcmd_/ice/code.lab/IceNET/IceNET.Platform/firmware/linux/src/iceDriver.mod := printf '%s\n'   src/iceDriver.o | awk '!x[$$0]++ { print("/ice/code.lab/IceNET/IceNET.Platform/firmware/linux/"$$0) }' > /ice/code.lab/IceNET/IceNET.Platform/firmware/linux/src/iceDriver.mod

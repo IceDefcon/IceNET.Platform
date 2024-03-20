@@ -1,4 +1,4 @@
 rmmod iceDriver
 git pull
 make
-insmod iceDriver.ko
+insmod src/iceDriver.ko
