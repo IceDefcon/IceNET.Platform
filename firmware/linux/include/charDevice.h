@@ -10,7 +10,7 @@
 #include <linux/fs.h> // Include for file_operations struct
 #include <linux/mutex.h> // Include for mutex functions
 
-DEFINE_MUTEX(com_mutex);
+extern DEFINE_MUTEX(com_mutex);
 
 int dev_release(struct inode *, struct file *);
 
