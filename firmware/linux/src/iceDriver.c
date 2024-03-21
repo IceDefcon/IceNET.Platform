@@ -18,9 +18,6 @@
 #include <linux/workqueue.h> // For workqueue-related functions and macros
 #include <linux/slab.h>      // For memory allocation functions like kmalloc
 
-#include "charDevice.h"
-#include "workLoad.h"
-
 MODULE_VERSION("2.0");
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Marek Ice");
@@ -38,7 +35,19 @@ MODULE_DESCRIPTION("FPGA Comms Driver");
 
 // static struct Direction Move;
 
-
+//////////////////////
+//                  //
+//                  //
+//                  //
+//   [W] Workload   //
+//                  //
+//                  //
+//                  //
+//////////////////////
+static struct work_struct fpga_work;
+static struct work_struct kernel_work;
+static struct workqueue_struct *fpga_wq;
+static struct workqueue_struct *kernel_wq;
 
 //////////////////////
 //                  //
@@ -53,12 +62,16 @@ MODULE_DESCRIPTION("FPGA Comms Driver");
 #define  CLASS_NAME  "iceCOM"
 
 static int    majorNumber;
+static char   message[256] = {0};
+static unsigned long  size_of_message;
 static int    numberOpens = 0;
 static struct class*  C_Class  = NULL;
 static struct device* C_Device = NULL;
 
 static int     dev_open(struct inode *, struct file *);
 static int     dev_release(struct inode *, struct file *);
+static ssize_t dev_read(struct file *, char *, size_t, loff_t *);
+static ssize_t dev_write(struct file *, const char *, size_t, loff_t *);
 
 static DEFINE_MUTEX(com_mutex);
 
@@ -219,9 +232,50 @@ static int dev_open(struct inode *inodep, struct file *filep)
     return NULL;
 }
 
+static ssize_t dev_read(struct file *filep, char *buffer, size_t len, loff_t *offset)
+{
+    int error_count = 0;
+    //
+    // Copy to user space :: *to, *from, size :: returns 0 on success
+    //
+    error_count = copy_to_user(buffer, message, size_of_message);
+    memset(message, 0, sizeof(message));
 
+    if (error_count==0)
+    {
+        printk(KERN_INFO "[FPGA][ C ] Sent %d characters to the user\n", size_of_message);
+        return (size_of_message = 0);  // clear the position to the start and return NULL
+    }
+    else 
+    {
+        printk(KERN_INFO "[FPGA][ C ] Failed to send %d characters to the user\n", error_count);
+        return -EFAULT; // Failed -- return a bad address message (i.e. -14)
+    }
+}
 
+static ssize_t dev_write(struct file *filep, const char *buffer, size_t len, loff_t *offset)
+{
+    int error_count = 0;
+    error_count = copy_from_user(message, buffer, len);
 
+    if(strncmp(message, "a", 1) == 0)
+    {
+        tx_fpga[0] = 0x0F;
+        queue_work(fpga_wq, &fpga_work);
+    }
+
+    if (error_count==0)
+    {
+        size_of_message = strlen(message);
+        printk(KERN_INFO "[FPGA][ C ] Received %d characters from the user\n", len);
+        return len;
+    } 
+    else 
+    {
+        printk(KERN_INFO "[FPGA][ C ] Failed to receive characters from the user\n");
+        return -EFAULT;
+    }
+}
 
 /*!
  * 
