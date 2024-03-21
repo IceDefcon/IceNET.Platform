@@ -18,8 +18,9 @@
 //                  //
 //////////////////////
 static struct work_struct ice_fpga_work;
-static struct work_struct ice_kernel_work;
 static struct workqueue_struct* ice_fpga_wq;
+
+static struct work_struct ice_kernel_work;
 static struct workqueue_struct* ice_kernel_wq;
 
 /* GET */
