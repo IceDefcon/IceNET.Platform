@@ -505,7 +505,7 @@ static int __init fpga_driver_init(void)
      */
     struct work_struct tmp_kernel_work;
     INIT_WORK(&tmp_kernel_work, kernel_execute);
-    set_kernel_work(&tmp_kernel_work)
+    set_kernel_work(&tmp_kernel_work);
     set_kernel_wq(create_singlethread_workqueue("kernel_workqueue"));
     if (!get_kernel_wq()) {
         printk(KERN_ERR "[FPGA][WRK] Failed to create kernel workqueue\n");
