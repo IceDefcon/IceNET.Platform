@@ -18,6 +18,9 @@
 #include <linux/workqueue.h> // For workqueue-related functions and macros
 #include <linux/slab.h>      // For memory allocation functions like kmalloc
 
+#include "charDevice.h"
+#include "workLoad.h"
+
 MODULE_VERSION("2.0");
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Marek Ice");
@@ -260,7 +263,6 @@ static ssize_t dev_write(struct file *filep, const char *buffer, size_t len, lof
 
     if(strncmp(message, "a", 1) == 0)
     {
-        tx_fpga[0] = 0x0F;
         queue_work(fpga_wq, &fpga_work);
     }
 

@@ -1,24 +1,24 @@
-// /*!
-//  * 
-//  * Author: Ice.Marek
-//  * IceNET Technology 2024
-//  * 
-//  */
+/*!
+ * 
+ * Author: Ice.Marek
+ * IceNET Technology 2024
+ * 
+ */
 
-// #ifndef CHAR_DEVICE_H
-// #define CHAR_DEVICE_H
+#ifndef CHAR_DEVICE_H
+#define CHAR_DEVICE_H
 
-// #include <linux/fs.h> // Include for file_operations struct
+#include <linux/fs.h> // Include for file_operations struct
 
-// //////////////////////
-// //                  //
-// //                  //
-// //                  //
-// //    [C] Device    //
-// //                  //
-// //                  //
-// //                  //
-// //////////////////////
+//////////////////////
+//                  //
+//                  //
+//                  //
+//    [C] Device    //
+//                  //
+//                  //
+//                  //
+//////////////////////
 // static char   message[256] = {0};
 // static unsigned long  size_of_message;
 
@@ -28,4 +28,4 @@
 
 
 
-// #endif // CHAR_DEVICE_H
+#endif // CHAR_DEVICE_H

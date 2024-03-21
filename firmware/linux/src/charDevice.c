@@ -1,30 +1,30 @@
-// /*!
-//  * 
-//  * Author: Ice.Marek
-//  * IceNET Technology 2024
-//  * 
-//  */
+/*!
+ * 
+ * Author: Ice.Marek
+ * IceNET Technology 2024
+ * 
+ */
 
-// #include <linux/module.h>
-// #include <linux/kernel.h>
-// #include <linux/init.h>
-// #include <linux/uaccess.h> 	// Include for copy_to_user function
-// #include <linux/slab.h> 	// Include for kmalloc/kfree functions
+#include <linux/module.h>
+#include <linux/kernel.h>
+#include <linux/init.h>
+#include <linux/uaccess.h> 	// Include for copy_to_user function
+#include <linux/slab.h> 	// Include for kmalloc/kfree functions
 
-// #include "charDevice.h"
-// #include "workLoad.h"
+#include "charDevice.h"
+#include "workLoad.h"
 
-// MODULE_LICENSE("GPL");
+MODULE_LICENSE("GPL");
 
-// //////////////////////
-// //                  //
-// //                  //
-// //                  //
-// //    [C] Device    //
-// //                  //
-// //                  //
-// //                  //
-// //////////////////////
+//////////////////////
+//                  //
+//                  //
+//                  //
+//    [C] Device    //
+//                  //
+//                  //
+//                  //
+//////////////////////
 // ssize_t dev_read(struct file *filep, char *buffer, size_t len, loff_t *offset)
 // {
 //     int error_count = 0;
@@ -46,10 +46,10 @@
 //     }
 // }
 
-// // static struct work_struct fpga_work;
-// // static struct work_struct kernel_work;
-// // static struct workqueue_struct *fpga_wq;
-// // static struct workqueue_struct *kernel_wq;
+// static struct work_struct fpga_work;
+// static struct work_struct kernel_work;
+// static struct workqueue_struct *fpga_wq;
+// static struct workqueue_struct *kernel_wq;
 
 // ssize_t dev_write(struct file *filep, const char *buffer, size_t len, loff_t *offset)
 // {
