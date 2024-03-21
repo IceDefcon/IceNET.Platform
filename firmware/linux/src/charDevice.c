@@ -46,6 +46,11 @@ ssize_t dev_read(struct file *filep, char *buffer, size_t len, loff_t *offset)
     }
 }
 
+// static struct work_struct fpga_work;
+// static struct work_struct kernel_work;
+// static struct workqueue_struct *fpga_wq;
+// static struct workqueue_struct *kernel_wq;
+
 ssize_t dev_write(struct file *filep, const char *buffer, size_t len, loff_t *offset)
 {
     int error_count = 0;
