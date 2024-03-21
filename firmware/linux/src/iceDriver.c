@@ -19,7 +19,6 @@
 #include <linux/slab.h>      // For memory allocation functions like kmalloc
 
 #include "charDevice.h"
-#include "workLoad.h"
 
 MODULE_VERSION("2.0");
 MODULE_LICENSE("GPL");
@@ -49,8 +48,8 @@ MODULE_DESCRIPTION("FPGA Comms Driver");
 //////////////////////
 static struct work_struct fpga_work;
 static struct work_struct kernel_work;
-// static struct workqueue_struct *fpga_wq;
-// static struct workqueue_struct *kernel_wq;
+static struct workqueue_struct *fpga_wq;
+static struct workqueue_struct *kernel_wq;
 
 //////////////////////
 //                  //
@@ -428,7 +427,7 @@ static irqreturn_t isr_kernel(int irq, void *data)
     printk(KERN_INFO "[FPGA][ISR] Kernel interrupt [%d] @ Pin [%d]\n", counter, GPIO_KERNEL_INTERRUPT);
     counter++;
 
-    queue_work(get_kernel_wq(), &kernel_work);
+    queue_work(kernel_wq, &kernel_work);
 
     return IRQ_HANDLED;
 }
@@ -504,15 +503,15 @@ static int __init fpga_driver_init(void)
      * Kernel and Fpga
      */
     INIT_WORK(&kernel_work, kernel_execute);
-    set_kernel_wq(create_singlethread_workqueue("kernel_workqueue"));
-    if (!get_kernel_wq()) {
+    kernel_wq = create_singlethread_workqueue("kernel_workqueue");
+    if (!kernel_wq) {
         printk(KERN_ERR "[FPGA][WRK] Failed to create kernel workqueue\n");
         return -ENOMEM;
     }
 
     INIT_WORK(&fpga_work, fpga_command);
-    set_fpga_wq(create_singlethread_workqueue("fpga_workqueue"));
-    if (!get_fpga_wq()) {
+    fpga_wq = create_singlethread_workqueue("fpga_workqueue");
+    if (!fpga_wq) {
         printk(KERN_ERR "[FPGA][WRK] Failed to create fpga workqueue\n");
         return -ENOMEM;
     }
@@ -614,17 +613,17 @@ static void __exit fpga_driver_exit(void)
     //                              //
     //////////////////////////////////
     cancel_work_sync(&kernel_work);
-    if (get_kernel_wq()) {
-        flush_workqueue(get_kernel_wq());
-        destroy_workqueue(get_kernel_wq());
-        set_kernel_wq(NULL);
+    if (kernel_wq) {
+        flush_workqueue(kernel_wq);
+        destroy_workqueue(kernel_wq);
+        kernel_wq = NULL;
     }
 
     cancel_work_sync(&fpga_work);
-    if (get_fpga_wq()) {
-        flush_workqueue(get_fpga_wq());
-        destroy_workqueue(get_fpga_wq());
-        set_fpga_wq(NULL);
+    if (fpga_wq) {
+        flush_workqueue(fpga_wq);
+        destroy_workqueue(fpga_wq);
+        fpga_wq = NULL;
     }
 
     spi_dev_put(spi_dev);
