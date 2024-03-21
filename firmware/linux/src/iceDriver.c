@@ -47,7 +47,7 @@ MODULE_DESCRIPTION("FPGA Comms Driver");
 //                  //
 //                  //
 //////////////////////
-static struct work_struct fpga_work;
+static struct work_struct* fpga_work;
 static struct workqueue_struct *fpga_wq;
 
 static struct work_struct kernel_work;
@@ -264,7 +264,7 @@ static ssize_t dev_write(struct file *filep, const char *buffer, size_t len, lof
 
     if(strncmp(message, "a", 1) == 0)
     {
-        queue_work(get_fpga_wq(), &fpga_work);
+        queue_work(get_fpga_wq(), fpga_work);
     }
 
     if (error_count==0)
@@ -555,7 +555,7 @@ static int __init fpga_driver_init(void)
         return -ENOMEM;
     }
 
-    INIT_WORK(&fpga_work, fpga_command);
+    INIT_WORK(fpga_work, fpga_command);
     set_fpga_wq(create_singlethread_workqueue("fpga_workqueue"));
     if (!get_fpga_wq()) {
         printk(KERN_ERR "[FPGA][WRK] Failed to create fpga workqueue\n");
@@ -665,7 +665,7 @@ static void __exit fpga_driver_exit(void)
         kernel_wq = NULL;
     }
 
-    cancel_work_sync(&fpga_work);
+    cancel_work_sync(fpga_work);
     if (get_fpga_wq()) {
         flush_workqueue(get_fpga_wq());
         destroy_workqueue(get_fpga_wq());
