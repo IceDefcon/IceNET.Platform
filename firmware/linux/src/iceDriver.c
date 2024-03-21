@@ -510,9 +510,9 @@ static int __init fpga_driver_init(void)
         return -ENOMEM;
     }
 
-    struct work_struct* temp_fpga_work;
-    INIT_WORK(temp_fpga_work, fpga_command);
-    set_fpga_work(temp_fpga_work);
+    struct work_struct temp_fpga_work;
+    INIT_WORK(&temp_fpga_work, fpga_command);
+    set_fpga_work(&temp_fpga_work);
 
     set_fpga_wq(create_singlethread_workqueue("fpga_workqueue"));
     if (!get_fpga_wq()) {
