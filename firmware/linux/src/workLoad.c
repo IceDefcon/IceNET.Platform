@@ -17,10 +17,10 @@
 //                  //
 //                  //
 //////////////////////
-static struct work_struct ice_fpga_work;
-static struct work_struct ice_kernel_work;
-static struct workqueue_struct* ice_fpga_wq;
-static struct workqueue_struct* ice_kernel_wq;
+struct work_struct ice_fpga_work;
+struct work_struct ice_kernel_work;
+struct workqueue_struct* ice_fpga_wq;
+struct workqueue_struct* ice_kernel_wq;
 
 /* GET */
 struct workqueue_struct* get_fpga_wq(void)
