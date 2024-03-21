@@ -47,8 +47,8 @@ MODULE_DESCRIPTION("FPGA Comms Driver");
 //                  //
 //                  //
 //////////////////////
-// static struct work_struct fpga_work;
-// static struct work_struct kernel_work;
+static struct work_struct fpga_work;
+static struct work_struct kernel_work;
 // static struct workqueue_struct *fpga_wq;
 // static struct workqueue_struct *kernel_wq;
 
@@ -428,7 +428,7 @@ static irqreturn_t isr_kernel(int irq, void *data)
     printk(KERN_INFO "[FPGA][ISR] Kernel interrupt [%d] @ Pin [%d]\n", counter, GPIO_KERNEL_INTERRUPT);
     counter++;
 
-    queue_work(get_kernel_wq(), get_kernel_work());
+    queue_work(get_kernel_wq(), &kernel_work);
 
     return IRQ_HANDLED;
 }
@@ -503,19 +503,14 @@ static int __init fpga_driver_init(void)
      * SPI operations
      * Kernel and Fpga
      */
-    struct work_struct tmp_kernel_work;
-    INIT_WORK(&tmp_kernel_work, kernel_execute);
-    set_kernel_work(&tmp_kernel_work);
+    INIT_WORK(&kernel_work, kernel_execute);
     set_kernel_wq(create_singlethread_workqueue("kernel_workqueue"));
     if (!get_kernel_wq()) {
         printk(KERN_ERR "[FPGA][WRK] Failed to create kernel workqueue\n");
         return -ENOMEM;
     }
 
-    struct work_struct tmp_fpga_work;
-    INIT_WORK(&tmp_fpga_work, fpga_command);
-    set_fpga_work(&tmp_fpga_work);
-
+    INIT_WORK(&fpga_work, fpga_command);
     set_fpga_wq(create_singlethread_workqueue("fpga_workqueue"));
     if (!get_fpga_wq()) {
         printk(KERN_ERR "[FPGA][WRK] Failed to create fpga workqueue\n");
@@ -618,14 +613,14 @@ static void __exit fpga_driver_exit(void)
     // SPI :: CONFIG                //
     //                              //
     //////////////////////////////////
-    cancel_work_sync(get_kernel_work());
+    cancel_work_sync(&kernel_work);
     if (get_kernel_wq()) {
         flush_workqueue(get_kernel_wq());
         destroy_workqueue(get_kernel_wq());
         set_kernel_wq(NULL);
     }
 
-    cancel_work_sync(get_fpga_work());
+    cancel_work_sync(&fpga_work);
     if (get_fpga_wq()) {
         flush_workqueue(get_fpga_wq());
         destroy_workqueue(get_fpga_wq());
