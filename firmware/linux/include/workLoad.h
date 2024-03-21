@@ -32,4 +32,18 @@ void set_kernel_wq(struct workqueue_struct *wq);
 void set_fpga_work(struct work_struct *work);
 void set_kernel_work(struct work_struct *work);
 
+//////////////////////
+//                  //
+//                  //
+//                  //
+//   [W] Workload   //
+//                  //
+//                  //
+//                  //
+//////////////////////
+extern struct work_struct fpga_work;
+extern struct work_struct kernel_work;
+extern struct workqueue_struct *fpga_wq;
+extern struct workqueue_struct *kernel_wq;
+
 #endif // WORK_LOAD_H

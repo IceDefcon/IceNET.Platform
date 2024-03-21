@@ -65,3 +65,7 @@ void set_kernel_work(struct work_struct *work)
 	ice_kernel_work = *work;
 }
 
+struct work_struct fpga_work;
+struct work_struct kernel_work;
+struct workqueue_struct *fpga_wq;
+struct workqueue_struct *kernel_wq;
