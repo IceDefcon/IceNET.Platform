@@ -513,9 +513,9 @@ static int __init fpga_driver_init(void)
     struct work_struct* temp_fpga_work;
     INIT_WORK(temp_fpga_work, fpga_command);
     set_fpga_work(temp_fpga_work);
-    
+
     set_fpga_wq(create_singlethread_workqueue("fpga_workqueue"));
-    if (!set_fpga_wq()) {
+    if (!get_fpga_wq()) {
         printk(KERN_ERR "[FPGA][WRK] Failed to create fpga workqueue\n");
         return -ENOMEM;
     }
