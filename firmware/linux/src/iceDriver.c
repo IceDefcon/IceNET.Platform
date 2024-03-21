@@ -19,6 +19,7 @@
 #include <linux/slab.h>      // For memory allocation functions like kmalloc
 
 #include "charDevice.h"
+#include "workLoad.h"
 
 MODULE_VERSION("2.0");
 MODULE_LICENSE("GPL");
