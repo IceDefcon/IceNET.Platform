@@ -23,7 +23,7 @@
 
 MODULE_VERSION("2.0");
 MODULE_LICENSE("GPL");
-MODULE_AUTHOR("Marek Ice");
+MODULE_AUTHOR("Ice Marek");
 MODULE_DESCRIPTION("FPGA Comms Driver");
 
 /* Direction commands */
@@ -263,7 +263,7 @@ static ssize_t dev_write(struct file *filep, const char *buffer, size_t len, lof
 
     if(strncmp(message, "a", 1) == 0)
     {
-        queue_work(fpga_wq, &fpga_work);
+        queue_work(fpga_wq, get_fpga_work());
     }
 
     if (error_count==0)
@@ -554,7 +554,10 @@ static int __init fpga_driver_init(void)
         return -ENOMEM;
     }
 
-    INIT_WORK(&fpga_work, fpga_command);
+    struct work_struct tmp_fpga_work;
+    INIT_WORK(&tmp_fpga_work, fpga_command);
+    set_fpga_work(&tmp_fpga_work);
+
     fpga_wq = create_singlethread_workqueue("fpga_workqueue");
     if (!fpga_wq) {
         printk(KERN_ERR "[FPGA][WRK] Failed to create fpga workqueue\n");
@@ -664,7 +667,7 @@ static void __exit fpga_driver_exit(void)
         kernel_wq = NULL;
     }
 
-    cancel_work_sync(&fpga_work);
+    cancel_work_sync(get_fpga_work());
     if (fpga_wq) {
         flush_workqueue(fpga_wq);
         destroy_workqueue(fpga_wq);
