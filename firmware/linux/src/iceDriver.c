@@ -394,7 +394,7 @@ static irqreturn_t isr_kernel(int irq, void *data)
     printk(KERN_INFO "[FPGA][ISR] Kernel interrupt [%d] @ Pin [%d]\n", counter, GPIO_KERNEL_INTERRUPT);
     counter++;
 
-    queue_work(kernel_wq, &kernel_work);
+    queue_work(get_kernel_wq(), get_kernel_work());
 
     return IRQ_HANDLED;
 }
@@ -469,9 +469,9 @@ static int __init fpga_driver_init(void)
      * SPI operations
      * Kernel and Fpga
      */
-    INIT_WORK(&kernel_work, kernel_execute);
-    kernel_wq = create_singlethread_workqueue("kernel_workqueue");
-    if (!kernel_wq) {
+    INIT_WORK(get_kernel_work(), kernel_execute);
+    set_kernel_wq(create_singlethread_workqueue("kernel_workqueue"));
+    if (!get_kernel_wq()) {
         printk(KERN_ERR "[FPGA][WRK] Failed to create kernel workqueue\n");
         return -ENOMEM;
     }
@@ -579,11 +579,11 @@ static void __exit fpga_driver_exit(void)
     // SPI :: CONFIG                //
     //                              //
     //////////////////////////////////
-    cancel_work_sync(&kernel_work);
-    if (kernel_wq) {
-        flush_workqueue(kernel_wq);
-        destroy_workqueue(kernel_wq);
-        kernel_wq = NULL;
+    cancel_work_sync(get_kernel_work());
+    if (get_kernel_wq()) {
+        flush_workqueue(get_kernel_wq());
+        destroy_workqueue(get_kernel_wq());
+        set_kernel_wq(NULL);
     }
 
     cancel_work_sync(get_fpga_work());

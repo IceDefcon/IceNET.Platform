@@ -7,7 +7,6 @@
 
 #include "workLoad.h"
 
-
 //////////////////////
 //                  //
 //                  //
@@ -29,37 +28,32 @@
     fpga_wq = wq;
 }
 
+
+
+/* FPGA WORK */
 /* BASE */ struct work_struct fpga_work;
 /* GET */ struct work_struct* get_fpga_work(void) 
 {
     return &fpga_work;
 }
-/* SET */ void set_fpga_work(struct work_struct *work) 
+
+
+
+/* KERNEL WORK QUEUE */
+/* BASE */ static struct workqueue_struct* kernel_wq;
+/* GET */ struct workqueue_struct* get_kernel_wq(void)
 {
-    fpga_work = *work;
+	return kernel_wq;
+}
+/* SET */ void set_kernel_wq(struct workqueue_struct *wq) 
+{
+	kernel_wq = wq;
 }
 
 
 
-// static struct work_struct ice_kernel_work;
-// static struct workqueue_struct* ice_kernel_wq;
-
-// struct workqueue_struct* get_kernel_wq(void)
-// {
-// 	return ice_kernel_wq;
-// }
-
-// struct work_struct* get_kernel_work(void)
-// {
-// 	return &ice_kernel_work;
-// }
-
-// void set_kernel_wq(struct workqueue_struct *wq) 
-// {
-// 	ice_kernel_wq = wq;
-// }
-
-// void set_kernel_work(struct work_struct *work) 
-// {
-// 	ice_kernel_work = *work;
-// }
+/* BASE */ static struct work_struct kernel_work;
+/* GET */ struct work_struct* get_kernel_work(void)
+{
+	return &kernel_work;
+}
