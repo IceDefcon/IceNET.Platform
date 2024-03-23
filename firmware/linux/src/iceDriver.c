@@ -512,7 +512,7 @@ static int __init fpga_driver_init(void)
         return -ENOMEM;
     }
 
-    INIT_WORK(&fpga_work, fpga_command);
+    INIT_WORK(get_fpga_work(), fpga_command);
     set_fpga_wq(create_singlethread_workqueue("fpga_workqueue"));
     if (!get_fpga_wq()) {
         printk(KERN_ERR "[FPGA][WRK] Failed to create fpga workqueue\n");
