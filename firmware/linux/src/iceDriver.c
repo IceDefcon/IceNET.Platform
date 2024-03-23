@@ -48,13 +48,25 @@ MODULE_DESCRIPTION("FPGA Comms Driver");
 //                  //
 //////////////////////
 
-/* BASE */ static struct workqueue_struct *fpga_wq;
-/* GET */ struct workqueue_struct* get_fpga_wq(void) return fpga_wq;
-/* SET */ void set_fpga_wq(struct workqueue_struct *wq) fpga_wq = wq;
+/* BASE */ struct workqueue_struct *fpga_wq;
+/* GET */ struct workqueue_struct* get_fpga_wq(void) 
+{
+    return fpga_wq;
+}
+/* SET */ void set_fpga_wq(struct workqueue_struct *wq) 
+{
+    fpga_wq = wq;
+}
 
-/* BASE */ static struct work_struct fpga_work;
-/* GET */ struct work_struct* get_fpga_work(void) return &fpga_work;
-/* SET */ void set_fpga_work(struct work_struct *work) fpga_work = *work;
+/* BASE */ struct work_struct fpga_work;
+/* GET */ struct work_struct* get_fpga_work(void) 
+{
+    return &fpga_work;
+}
+/* SET */ void set_fpga_work(struct work_struct *work) 
+{
+    fpga_work = *work;
+}
 
 
 
