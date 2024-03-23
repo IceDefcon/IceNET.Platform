@@ -58,14 +58,14 @@ MODULE_DESCRIPTION("FPGA Comms Driver");
     fpga_wq = wq;
 }
 
-/* BASE */ struct work_struct fpga_work;
+/* BASE */ struct work_struct *fpga_work;
 /* GET */ struct work_struct* get_fpga_work(void) 
 {
-    return &fpga_work;
+    return fpga_work;
 }
 /* SET */ void set_fpga_work(struct work_struct *work) 
 {
-    fpga_work = *work;
+    fpga_work = work;
 }
 
 
@@ -286,7 +286,7 @@ static ssize_t dev_write(struct file *filep, const char *buffer, size_t len, lof
 
     if(strncmp(message, "a", 1) == 0)
     {
-        queue_work(get_fpga_wq(), &fpga_work);
+        queue_work(get_fpga_wq(), fpga_work);
     }
 
     if (error_count==0)
@@ -301,62 +301,6 @@ static ssize_t dev_write(struct file *filep, const char *buffer, size_t len, lof
         return -EFAULT;
     }
 }
-
-/*!
- * 
- * Experimental Drone control
- * 
- */
-// static ssize_t dev_write(struct file *filep, const char *buffer, size_t len, loff_t *offset)
-// {
-//     int error_count = 0;
-//     error_count = copy_from_user(message, buffer, len);
-
-//     memset(&Move, 0, sizeof(struct Direction));
-
-//     switch (message[0]) {
-//         case 'w':
-//             Move.Up = true;
-//             Move.Go = true;
-//             break;
-
-//         case 's':
-//             Move.Down = true;
-//             Move.Go = true;
-//             break;
-
-//         case 'a':
-//             Move.Left = true;
-//             Move.Go = true;
-//             break;
-
-//         case 'd':
-//             Move.Right = true;
-//             Move.Go = true;
-//             break;
-
-//         default:
-//             break;
-//     }
-
-//     if (Move.Go)
-//     {
-//         Move.Go = false;
-//         queue_work(fpga_wq, &fpga_work);
-//     }
-
-//     if (error_count==0)
-//     {
-//         size_of_message = strlen(message);
-//         printk(KERN_INFO "[FPGA][ C ] Received %d characters from the user\n", len);
-//         return len;
-//     } 
-//     else 
-//     {
-//         printk(KERN_INFO "[FPGA][ C ] Failed to receive characters from the user\n");
-//         return -EFAULT;
-//     }
-// }
 
 static int dev_release(struct inode *inodep, struct file *filep)
 {
@@ -436,15 +380,6 @@ static void fpga_command(struct work_struct *work)
     struct spi_transfer transfer;
     int ret;
     int i;
-
-    /* Error Value */
-    // tx_fpga[0] = 0xFF;
-
-    /* Direction commands to the FPGA */
-    // if(Move.Up) tx_fpga[0] = 0x18;
-    // if(Move.Down) tx_fpga[0] = 0x24;
-    // if(Move.Left) tx_fpga[0] = 0x42;
-    // if(Move.Right) tx_fpga[0] = 0x81;
 
     memset(&transfer, 0, sizeof(transfer));
     transfer.tx_buf = tx_fpga;
@@ -577,7 +512,7 @@ static int __init fpga_driver_init(void)
         return -ENOMEM;
     }
 
-    INIT_WORK(&fpga_work, fpga_command);
+    INIT_WORK(fpga_work, fpga_command);
     set_fpga_wq(create_singlethread_workqueue("fpga_workqueue"));
     if (!get_fpga_wq()) {
         printk(KERN_ERR "[FPGA][WRK] Failed to create fpga workqueue\n");
@@ -687,7 +622,7 @@ static void __exit fpga_driver_exit(void)
         kernel_wq = NULL;
     }
 
-    cancel_work_sync(&fpga_work);
+    cancel_work_sync(fpga_work);
     if (get_fpga_wq()) {
         flush_workqueue(get_fpga_wq());
         destroy_workqueue(get_fpga_wq());
