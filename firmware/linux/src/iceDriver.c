@@ -26,18 +26,6 @@ MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Ice Marek");
 MODULE_DESCRIPTION("FPGA Comms Driver");
 
-/* Direction commands */
-// struct Direction 
-// {
-//     bool Left;
-//     bool Right;
-//     bool Up;
-//     bool Down;
-//     bool Go;
-// };
-
-// static struct Direction Move;
-
 //////////////////////
 //                  //
 //                  //
@@ -48,32 +36,8 @@ MODULE_DESCRIPTION("FPGA Comms Driver");
 //                  //
 //////////////////////
 
-/* BASE */ struct workqueue_struct *fpga_wq;
-/* GET */ struct workqueue_struct* get_fpga_wq(void) 
-{
-    return fpga_wq;
-}
-/* SET */ void set_fpga_wq(struct workqueue_struct *wq) 
-{
-    fpga_wq = wq;
-}
-
-/* BASE */ struct work_struct fpga_work;
-/* GET */ struct work_struct* get_fpga_work(void) 
-{
-    return &fpga_work;
-}
-/* SET */ void set_fpga_work(struct work_struct *work) 
-{
-    fpga_work = *work;
-}
-
-
-
 static struct work_struct kernel_work;
 static struct workqueue_struct *kernel_wq;
-
-
 
 //////////////////////
 //                  //
