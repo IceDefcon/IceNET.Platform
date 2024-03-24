@@ -25,21 +25,6 @@ MODULE_LICENSE("GPL");
 //                  //
 //                  //
 //////////////////////
-
-int dev_open(struct inode *inodep, struct file *filep)
-{
-    if(!mutex_trylock(&com_mutex))
-    {
-        printk(KERN_ALERT "[FPGA][ C ] Device in use by another process");
-        return -EBUSY;
-    }
-
-    numberOpens++;
-    printk(KERN_INFO "[FPGA][ C ] Device has been opened %d time(s)\n", numberOpens);
-    return NULL;
-}
-
-
 ssize_t dev_read(struct file *filep, char *buffer, size_t len, loff_t *offset)
 {
     int error_count = 0;
@@ -84,7 +69,10 @@ ssize_t dev_write(struct file *filep, const char *buffer, size_t len, loff_t *of
     }
 }
 
-int dev_release(struct inode *inodep, struct file *filep)
+
+
+
+static int dev_release(struct inode *inodep, struct file *filep)
 {
     mutex_unlock(&com_mutex);
     printk(KERN_INFO "[FPGA][ C ] Device successfully closed\n");

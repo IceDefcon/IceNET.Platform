@@ -187,7 +187,34 @@ int StateMachineThread(void *data)
     return 0;
 }
 
+//////////////////////
+//                  //
+//                  //
+//                  //
+//    [C] Device    //
+//                  //
+//                  //
+//                  //
+//////////////////////
+static int dev_open(struct inode *inodep, struct file *filep)
+{
+    if(!mutex_trylock(&com_mutex))
+    {
+        printk(KERN_ALERT "[FPGA][ C ] Device in use by another process");
+        return -EBUSY;
+    }
 
+    numberOpens++;
+    printk(KERN_INFO "[FPGA][ C ] Device has been opened %d time(s)\n", numberOpens);
+    return NULL;
+}
+
+static int dev_release(struct inode *inodep, struct file *filep)
+{
+    mutex_unlock(&com_mutex);
+    printk(KERN_INFO "[FPGA][ C ] Device successfully closed\n");
+    return NULL;
+}
 
 //////////////////////
 //                  //
