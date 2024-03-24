@@ -19,7 +19,7 @@
 
 /* FPGA WORK QUEUE */
 /* BASE */ static struct workqueue_struct *fpga_wq;
-/* GET */ static struct workqueue_struct* get_fpga_wq(void) 
+/* GET */ struct workqueue_struct* get_fpga_wq(void) 
 {
     return fpga_wq;
 }
