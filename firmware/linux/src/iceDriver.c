@@ -30,19 +30,6 @@ MODULE_DESCRIPTION("FPGA Comms Driver");
 //                  //
 //                  //
 //                  //
-//   [W] Workload   //
-//                  //
-//                  //
-//                  //
-//////////////////////
-
-static struct work_struct kernel_work;
-static struct workqueue_struct *kernel_wq;
-
-//////////////////////
-//                  //
-//                  //
-//                  //
 //    [C] Device    //
 //                  //
 //                  //
@@ -184,7 +171,7 @@ int StateMachineThread(void *data)
                 break;
 
             case USER:
-                printk(KERN_INFO "[FPGA][STM] USER State [%d]\n",counter);
+                printk(KERN_INFO "[FPGA][STM] IDLE State [%d]\n",counter);
                 STATE = IDLE;
                 break;
 
