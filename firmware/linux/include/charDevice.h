@@ -22,9 +22,10 @@
 static char   message[256] = {0};
 static unsigned long  size_of_message;
 
+int dev_open(struct inode *inodep, struct file *filep)
 ssize_t dev_read(struct file *, char *, size_t, loff_t *);
 ssize_t dev_write(struct file *, const char *, size_t, loff_t *);
-
+int dev_release(struct inode *inodep, struct file *filep)
 
 
 

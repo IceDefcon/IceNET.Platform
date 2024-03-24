@@ -25,6 +25,21 @@ MODULE_LICENSE("GPL");
 //                  //
 //                  //
 //////////////////////
+
+int dev_open(struct inode *inodep, struct file *filep)
+{
+    if(!mutex_trylock(&com_mutex))
+    {
+        printk(KERN_ALERT "[FPGA][ C ] Device in use by another process");
+        return -EBUSY;
+    }
+
+    numberOpens++;
+    printk(KERN_INFO "[FPGA][ C ] Device has been opened %d time(s)\n", numberOpens);
+    return NULL;
+}
+
+
 ssize_t dev_read(struct file *filep, char *buffer, size_t len, loff_t *offset)
 {
     int error_count = 0;
@@ -45,11 +60,6 @@ ssize_t dev_read(struct file *filep, char *buffer, size_t len, loff_t *offset)
         return -EFAULT; // Failed -- return a bad address message (i.e. -14)
     }
 }
-
-static struct work_struct fpga_work;
-static struct work_struct kernel_work;
-static struct workqueue_struct *fpga_wq;
-static struct workqueue_struct *kernel_wq;
 
 ssize_t dev_write(struct file *filep, const char *buffer, size_t len, loff_t *offset)
 {
@@ -72,4 +82,11 @@ ssize_t dev_write(struct file *filep, const char *buffer, size_t len, loff_t *of
         printk(KERN_INFO "[FPGA][ C ] Failed to receive characters from the user\n");
         return -EFAULT;
     }
+}
+
+int dev_release(struct inode *inodep, struct file *filep)
+{
+    mutex_unlock(&com_mutex);
+    printk(KERN_INFO "[FPGA][ C ] Device successfully closed\n");
+    return NULL;
 }
