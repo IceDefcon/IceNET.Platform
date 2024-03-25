@@ -13,7 +13,6 @@
 
 #include "charDevice.h"
 #include "workLoad.h"
-#include "mutex.h"
 
 MODULE_LICENSE("GPL");
 
@@ -29,15 +28,3 @@ MODULE_LICENSE("GPL");
 
 
 
-int dev_open(struct inode *inodep, struct file *filep)
-{
-    if(!mutex_trylock(&com_mutex))
-    {
-        printk(KERN_ALERT "[FPGA][ C ] Device in use by another process");
-        return -EBUSY;
-    }
-
-    numberOpens++;
-    printk(KERN_INFO "[FPGA][ C ] Device has been opened %d time(s)\n", numberOpens);
-    return NULL;
-}

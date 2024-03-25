@@ -20,7 +20,7 @@
 //                  //
 //////////////////////
 
-int dev_open(struct inode *inodep, struct file *filep);
+
 
 
 

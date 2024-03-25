@@ -10,7 +10,6 @@
 
 #include <linux/workqueue.h>
 
-static DEFINE_MUTEX(com_mutex);
 
 
 

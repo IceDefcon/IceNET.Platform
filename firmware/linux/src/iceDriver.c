@@ -63,6 +63,7 @@ static int     dev_release(struct inode *, struct file *);
 static ssize_t dev_read(struct file *, char *, size_t, loff_t *);
 static ssize_t dev_write(struct file *, const char *, size_t, loff_t *);
 
+static DEFINE_MUTEX(com_mutex);
 
 static struct file_operations fops =
 {
@@ -208,6 +209,18 @@ int StateMachineThread(void *data)
 //                  //
 //                  //
 //////////////////////
+static int dev_open(struct inode *inodep, struct file *filep)
+{
+    if(!mutex_trylock(&com_mutex))
+    {
+        printk(KERN_ALERT "[FPGA][ C ] Device in use by another process");
+        return -EBUSY;
+    }
+
+    numberOpens++;
+    printk(KERN_INFO "[FPGA][ C ] Device has been opened %d time(s)\n", numberOpens);
+    return NULL;
+}
 
 static ssize_t dev_read(struct file *filep, char *buffer, size_t len, loff_t *offset)
 {
