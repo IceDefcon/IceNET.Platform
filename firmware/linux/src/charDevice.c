@@ -13,6 +13,7 @@
 
 #include "charDevice.h"
 #include "workLoad.h"
+#include "mutex.h"
 
 MODULE_LICENSE("GPL");
 
