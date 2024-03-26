@@ -33,7 +33,12 @@ static int    numberOpens = 0;
 
 static DEFINE_MUTEX(com_mutex);
 
-struct file_operations fops =
+static int dev_open(struct inode *inodep, struct file *filep);
+static ssize_t dev_read(struct file *, char *, size_t, loff_t *);
+static ssize_t dev_write(struct file *, const char *, size_t, loff_t *);
+static int dev_release(struct inode *inodep, struct file *filep);
+
+static struct file_operations fops =
 {
    .open = dev_open,
    .read = dev_read,
@@ -41,17 +46,7 @@ struct file_operations fops =
    .release = dev_release,
 };
 
-struct file_operations *get_fops(void)
-{
-    return &fops;
-}
-
-struct mutex *get_com_mutex(void)
-{
-    return &com_mutex;
-}
-
-int dev_open(struct inode *inodep, struct file *filep)
+static int dev_open(struct inode *inodep, struct file *filep)
 {
     if(!mutex_trylock(get_com_mutex()))
     {
@@ -64,7 +59,7 @@ int dev_open(struct inode *inodep, struct file *filep)
     return NULL;
 }
 
-ssize_t dev_read(struct file *filep, char *buffer, size_t len, loff_t *offset)
+static ssize_t dev_read(struct file *filep, char *buffer, size_t len, loff_t *offset)
 {
     int error_count = 0;
     //
@@ -85,7 +80,7 @@ ssize_t dev_read(struct file *filep, char *buffer, size_t len, loff_t *offset)
     }
 }
 
-ssize_t dev_write(struct file *filep, const char *buffer, size_t len, loff_t *offset)
+static ssize_t dev_write(struct file *filep, const char *buffer, size_t len, loff_t *offset)
 {
     int error_count = 0;
     error_count = copy_from_user(message, buffer, len);
@@ -108,9 +103,20 @@ ssize_t dev_write(struct file *filep, const char *buffer, size_t len, loff_t *of
     }
 }
 
-int dev_release(struct inode *inodep, struct file *filep)
+static int dev_release(struct inode *inodep, struct file *filep)
 {
     mutex_unlock(get_com_mutex());
     printk(KERN_INFO "[FPGA][ C ] Device successfully closed\n");
     return NULL;
 }
+
+struct file_operations *get_fops(void)
+{
+    return &fops;
+}
+
+struct mutex *get_com_mutex(void)
+{
+    return &com_mutex;
+}
+
