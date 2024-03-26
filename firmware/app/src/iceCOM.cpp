@@ -38,24 +38,6 @@ void iceCOM::iceCOMThread()
 {
 	Debug::Info("iceCOM :: Enter iceCOMThread");
 
-    struct termios old_tio, new_tio;
-
-    /*!
-     * 
-     * Begin of experimental
-     * keyboard control
-     * 
-     */
-
-    // // Get the terminal settings
-    // tcgetattr(STDIN_FILENO, &old_tio);
-
-    // new_tio = old_tio;
-    // new_tio.c_lflag &= (~ICANON & ~ECHO); // Disable canonical mode and echoing
-
-    // // Set the new terminal settings
-    // tcsetattr(STDIN_FILENO, TCSANOW, &new_tio);
-
     while(!m_killThread) 
     {
         //////////////////
@@ -78,16 +60,6 @@ void iceCOM::iceCOMThread()
 			Debug::Error("iceCOM :: Cannot read from the console");
     	}
     }
-
-    // // Restore the original terminal settings
-    // tcsetattr(STDIN_FILENO, TCSANOW, &old_tio);
-
-    /*!
-     * 
-     * End of experimental
-     * control of keyboard
-     * 
-     */
 
 	Debug::Info("iceCOM :: Terminate iceCOMThread");
 }
@@ -130,44 +102,6 @@ int iceCOM::device_read()
 
 	return OK;
 }
-
-/*!
- * 
- * Experimental Drone control
- * 
- */
-// int iceCOM::device_write()
-// {
-//     char ch;
-
-// 	Debug::Write();
-
-//     while (1) {
-//         // Read a single character without Enter
-//         ch = getchar();
-        
-//         // Check if the pressed key is 'q'
-//         if (ch == 'q') 
-//         {
-//             m_killThread = true;
-//             break;
-//         }
-//         if (ch == 'w') break;
-//         if (ch == 's') break;
-//         if (ch == 'a') break;
-//         if (ch == 'd') break;
-//     }
-
-// 	char buffer[2] = {ch, '\r'};
-//     int ret = write(m_file_descriptor, buffer, 2);
-// 	if (ret == -1)
-// 	{
-// 	    Debug::Error("iceCOM :: Cannot write to kernel space");
-// 	    return ERROR;
-// 	}
-
-// 	return OK;
-// }
 
 int iceCOM::device_write()
 {

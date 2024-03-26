@@ -36,12 +36,12 @@ MODULE_DESCRIPTION("FPGA Comms Driver");
 //                  //
 //////////////////////
 
+#define  DEVICE_NAME "iceCOM"
+#define  CLASS_NAME  "iceCOM"
 
 static int    majorNumber;
 static struct class*  C_Class  = NULL;
 static struct device* C_Device = NULL;
-
-
 
 //////////////////////
 //                  //
