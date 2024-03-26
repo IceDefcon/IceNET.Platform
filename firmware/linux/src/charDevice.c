@@ -132,20 +132,20 @@ static int dev_release(struct inode *inodep, struct file *filep)
 // 	majorNumber = major;
 // }
 
-/* GET */ struct class *get_C_Class(void)
-{
-    return &C_Class;
-}
-/* SET */ void set_C_Class(struct class *class) 
-{
-	C_Class = class;
-}
+// /* GET */ struct class *get_C_Class(void)
+// {
+//     return &C_Class;
+// }
+// /* SET */ void set_C_Class(struct class *class) 
+// {
+// 	C_Class = class;
+// }
 
-/* GET */ struct device *get_C_Device(void)
-{
-    return &C_Device;
-}
-/* SET */ void gst_C_Device(struct device *device) 
-{
-	C_Device = device;
-}
+// /* GET */ struct device *get_C_Device(void)
+// {
+//     return &C_Device;
+// }
+// /* SET */ void gst_C_Device(struct device *device) 
+// {
+// 	C_Device = device;
+// }
