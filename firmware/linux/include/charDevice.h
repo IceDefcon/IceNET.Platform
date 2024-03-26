@@ -32,4 +32,7 @@
 /* SET */ void gst_C_Device(struct device *device);
 #endif
 
+int charDeviceInit(void);
+void charDeviceDestroy(void);
+
 #endif // CHAR_DEVICE_H

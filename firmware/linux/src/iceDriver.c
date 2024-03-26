@@ -20,30 +20,12 @@
 
 #include "charDevice.h"
 #include "workLoad.h"
+#include "spiFpga.h"
 
 MODULE_VERSION("2.0");
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Ice Marek");
 MODULE_DESCRIPTION("FPGA Comms Driver");
-
-//////////////////////
-//                  //
-//                  //
-//                  //
-//    [C] Device    //
-//                  //
-//                  //
-//                  //
-//////////////////////
-
-#define  DEVICE_NAME "iceCOM"
-#define  CLASS_NAME  "iceCOM"
-
-static int    majorNumber;
-static struct class*  C_Class  = NULL;
-static struct device* C_Device = NULL;
-
-
 
 //////////////////////
 //                  //
@@ -74,7 +56,7 @@ static struct spi_device *spi_dev;
 static volatile uint8_t tx_kernel[] = {0x81};
 static volatile uint8_t rx_kernel[1];
 
-static volatile uint8_t tx_fpga[] = {0xC3};
+static volatile uint8_t tx_fb mfpga[] = {0xC3};
 static volatile uint8_t rx_fpga[1];
 
 //////////////////////////
@@ -428,33 +410,8 @@ static int __init fpga_driver_init(void)
     // [C] Device :: CONFIG         //
     //                              //
     //////////////////////////////////
-    printk(KERN_INFO "[FPGA][ C ] Device Init\n");
 
-    majorNumber = register_chrdev(0, DEVICE_NAME, get_fops());
-    if (majorNumber<0)
-    {
-        printk(KERN_ALERT "[FPGA][ C ] Failed to register major number\n");
-        return majorNumber;
-    }
-
-    C_Class = class_create(THIS_MODULE, CLASS_NAME);
-    if (IS_ERR(C_Class))
-    {
-        unregister_chrdev(majorNumber, DEVICE_NAME);
-        printk(KERN_ALERT "[FPGA][ C ] Failed to register device class\n");
-        return PTR_ERR(C_Class);
-    }
-    
-    C_Device = device_create(C_Class, NULL, MKDEV(majorNumber, 0), NULL, DEVICE_NAME);
-    if (IS_ERR(C_Device))
-    {
-        class_destroy(C_Class);
-        unregister_chrdev(majorNumber, DEVICE_NAME);
-        printk(KERN_ALERT "[FPGA][ C ] Failed to create the device\n");
-        return PTR_ERR(C_Device);
-    }
-
-    mutex_init(get_com_mutex());
+    charDeviceInit(void);
 
     return NULL;
 }
@@ -512,12 +469,8 @@ static void __exit fpga_driver_exit(void)
     // [C] Device :: DESTROY        //
     //                              //
     //////////////////////////////////
-    device_destroy(C_Class, MKDEV(majorNumber, 0));
-    class_unregister(C_Class);
-    class_destroy(C_Class);
-    unregister_chrdev(majorNumber, DEVICE_NAME);
-    mutex_destroy(get_com_mutex());
-    printk(KERN_INFO "[FPGA][ C ] Device Exit\n");
+
+    charDeviceDestroy();
 
     //////////////////////////////////
     //                              //

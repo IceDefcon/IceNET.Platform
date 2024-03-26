@@ -27,16 +27,15 @@ MODULE_LICENSE("GPL");
 //                  //
 //////////////////////
 
-static char   message[256] = {0};
-static unsigned long  size_of_message;
-static int    numberOpens = 0;
+#define  DEVICE_NAME "iceCOM"
+#define  CLASS_NAME  "iceCOM"
 
-#if 0 /* Do I have to move them here ? */
-static int    majorNumber;
+static int majorNumber;
 static struct class*  C_Class  = NULL;
 static struct device* C_Device = NULL;
-#endif
-
+static char message[256] = {0};
+static unsigned long size_of_message;
+static int numberOpens = 0;
 static DEFINE_MUTEX(com_mutex);
 
 static int dev_open(struct inode *inodep, struct file *filep);
@@ -51,6 +50,47 @@ static struct file_operations fops =
    .write = dev_write,
    .release = dev_release,
 };
+
+int charDeviceInit(void)
+{
+    printk(KERN_INFO "[FPGA][ C ] Device Init\n");
+
+    majorNumber = register_chrdev(0, DEVICE_NAME, get_fops());
+    if (majorNumber<0)
+    {
+        printk(KERN_ALERT "[FPGA][ C ] Failed to register major number\n");
+        return majorNumber;
+    }
+
+    C_Class = class_create(THIS_MODULE, CLASS_NAME);
+    if (IS_ERR(C_Class))
+    {
+        unregister_chrdev(majorNumber, DEVICE_NAME);
+        printk(KERN_ALERT "[FPGA][ C ] Failed to register device class\n");
+        return PTR_ERR(C_Class);
+    }
+    
+    C_Device = device_create(C_Class, NULL, MKDEV(majorNumber, 0), NULL, DEVICE_NAME);
+    if (IS_ERR(C_Device))
+    {
+        class_destroy(C_Class);
+        unregister_chrdev(majorNumber, DEVICE_NAME);
+        printk(KERN_ALERT "[FPGA][ C ] Failed to create the device\n");
+        return PTR_ERR(C_Device);
+    }
+
+    mutex_init(get_com_mutex());
+}
+
+void charDeviceDestroy(void)
+{
+    device_destroy(C_Class, MKDEV(majorNumber, 0));
+    class_unregister(C_Class);
+    class_destroy(C_Class);
+    unregister_chrdev(majorNumber, DEVICE_NAME);
+    mutex_destroy(get_com_mutex());
+    printk(KERN_INFO "[FPGA][ C ] Device Exit\n");
+}
 
 static int dev_open(struct inode *inodep, struct file *filep)
 {
