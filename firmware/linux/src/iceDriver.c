@@ -42,13 +42,7 @@ static int    majorNumber;
 static struct class*  C_Class  = NULL;
 static struct device* C_Device = NULL;
 
-// static struct file_operations fops =
-// {
-//    .open = dev_open,
-//    .read = dev_read,
-//    .write = dev_write,
-//    .release = dev_release,
-// };
+
 
 //////////////////////
 //                  //

@@ -31,7 +31,15 @@ static char   message[256] = {0};
 static unsigned long  size_of_message;
 static int    numberOpens = 0;
 
-DEFINE_MUTEX(com_mutex);
+static DEFINE_MUTEX(com_mutex);
+
+static struct file_operations fops =
+{
+   .open = dev_open,
+   .read = dev_read,
+   .write = dev_write,
+   .release = dev_release,
+};
 
 struct mutex *get_com_mutex(void)
 {
