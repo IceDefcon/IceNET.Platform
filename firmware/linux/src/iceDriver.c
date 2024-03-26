@@ -37,6 +37,7 @@ MODULE_DESCRIPTION("FPGA Comms Driver");
 //////////////////////
 
 
+static int    majorNumber;
 static struct class*  C_Class  = NULL;
 static struct device* C_Device = NULL;
 
@@ -428,25 +429,25 @@ static int __init fpga_driver_init(void)
     printk(KERN_INFO "[FPGA][ C ] Device Init\n");
 
     set_majorNumber(register_chrdev(0, DEVICE_NAME, get_fops()));
-    if (get_majorNumber() < 0)
+    if (majorNumber<0)
     {
         printk(KERN_ALERT "[FPGA][ C ] Failed to register major number\n");
-        return get_majorNumber();
+        return majorNumber;
     }
 
     C_Class = class_create(THIS_MODULE, CLASS_NAME);
     if (IS_ERR(C_Class))
     {
-        unregister_chrdev(get_majorNumber(), DEVICE_NAME);
+        unregister_chrdev(majorNumber, DEVICE_NAME);
         printk(KERN_ALERT "[FPGA][ C ] Failed to register device class\n");
         return PTR_ERR(C_Class);
     }
     
-    C_Device = device_create(C_Class, NULL, MKDEV(get_majorNumber(), 0), NULL, DEVICE_NAME);
+    C_Device = device_create(C_Class, NULL, MKDEV(majorNumber, 0), NULL, DEVICE_NAME);
     if (IS_ERR(C_Device))
     {
         class_destroy(C_Class);
-        unregister_chrdev(get_majorNumber(), DEVICE_NAME);
+        unregister_chrdev(majorNumber, DEVICE_NAME);
         printk(KERN_ALERT "[FPGA][ C ] Failed to create the device\n");
         return PTR_ERR(C_Device);
     }
@@ -509,10 +510,10 @@ static void __exit fpga_driver_exit(void)
     // [C] Device :: DESTROY        //
     //                              //
     //////////////////////////////////
-    device_destroy(C_Class, MKDEV(get_majorNumber(), 0));
+    device_destroy(C_Class, MKDEV(majorNumber, 0));
     class_unregister(C_Class);
     class_destroy(C_Class);
-    unregister_chrdev(get_majorNumber(), DEVICE_NAME);
+    unregister_chrdev(majorNumber, DEVICE_NAME);
     mutex_destroy(get_com_mutex());
     printk(KERN_INFO "[FPGA][ C ] Device Exit\n");
 
