@@ -20,6 +20,7 @@
 
 #include "charDevice.h"
 #include "workLoad.h"
+#include "mutex.h"
 
 MODULE_VERSION("2.0");
 MODULE_LICENSE("GPL");
@@ -50,7 +51,7 @@ static int     dev_release(struct inode *, struct file *);
 // static ssize_t dev_read(struct file *, char *, size_t, loff_t *);
 // static ssize_t dev_write(struct file *, const char *, size_t, loff_t *);
 
-static DEFINE_MUTEX(com_mutex);
+// static DEFINE_MUTEX(com_mutex);
 
 static struct file_operations fops =
 {
@@ -198,7 +199,7 @@ int StateMachineThread(void *data)
 //////////////////////
 static int dev_open(struct inode *inodep, struct file *filep)
 {
-    if(!mutex_trylock(&com_mutex))
+    if(!mutex_trylock(get_com_mutex()))
     {
         printk(KERN_ALERT "[FPGA][ C ] Device in use by another process");
         return -EBUSY;
@@ -213,7 +214,7 @@ static int dev_open(struct inode *inodep, struct file *filep)
 
 static int dev_release(struct inode *inodep, struct file *filep)
 {
-    mutex_unlock(&com_mutex);
+    mutex_unlock(get_com_mutex());
     printk(KERN_INFO "[FPGA][ C ] Device successfully closed\n");
     return NULL;
 }
@@ -500,7 +501,7 @@ static int __init fpga_driver_init(void)
         return PTR_ERR(C_Device);
     }
 
-    mutex_init(&com_mutex);
+    mutex_init(get_com_mutex());
 
     return NULL;
 }
@@ -562,7 +563,7 @@ static void __exit fpga_driver_exit(void)
     class_unregister(C_Class);
     class_destroy(C_Class);
     unregister_chrdev(majorNumber, DEVICE_NAME);
-    mutex_destroy(&com_mutex);
+    mutex_destroy(get_com_mutex());
     printk(KERN_INFO "[FPGA][ C ] Device Exit\n");
 
     //////////////////////////////////

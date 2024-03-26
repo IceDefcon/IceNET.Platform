@@ -5,14 +5,15 @@
  * 
  */
 
-#ifndef MUTEXW_H
-#define MUTEXW_H
+#ifndef MUTEX_H
+#define MUTEX_H
 
 #include <linux/workqueue.h>
 
 
+struct mutex *get_com_mutex(void);
 
 
 
 
-#endif // MUTEXW_H
+#endif // MUTEX_H

@@ -23,13 +23,10 @@
 {
     return fpga_wq;
 }
-
 /* SET */ void set_fpga_wq(struct workqueue_struct *wq) 
 {
     fpga_wq = wq;
 }
-
-
 
 /* FPGA WORK */
 /* BASE */ struct work_struct fpga_work;
@@ -37,8 +34,6 @@
 {
     return &fpga_work;
 }
-
-
 
 /* KERNEL WORK QUEUE */
 /* BASE */ static struct workqueue_struct* kernel_wq;
@@ -51,8 +46,7 @@
 	kernel_wq = wq;
 }
 
-
-
+/* KERNEL WORK */
 /* BASE */ static struct work_struct kernel_work;
 /* GET */ struct work_struct* get_kernel_work(void)
 {
