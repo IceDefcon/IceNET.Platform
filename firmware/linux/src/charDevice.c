@@ -33,13 +33,18 @@ static int    numberOpens = 0;
 
 static DEFINE_MUTEX(com_mutex);
 
-static struct file_operations fops =
+struct file_operations fops =
 {
    .open = dev_open,
    .read = dev_read,
    .write = dev_write,
    .release = dev_release,
 };
+
+struct file_operations *get_fops(void)
+{
+    return &fops;
+}
 
 struct mutex *get_com_mutex(void)
 {

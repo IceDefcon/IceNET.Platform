@@ -21,6 +21,7 @@
 //////////////////////
 
 struct mutex *get_com_mutex(void);
+struct file_operations *get_fops(void);
 
 int dev_open(struct inode *inodep, struct file *filep);
 ssize_t dev_read(struct file *, char *, size_t, loff_t *);
