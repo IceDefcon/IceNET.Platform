@@ -29,12 +29,26 @@ MODULE_LICENSE("GPL");
 
 static char   message[256] = {0};
 static unsigned long  size_of_message;
+static int    numberOpens = 0;
 
 DEFINE_MUTEX(com_mutex);
 
 struct mutex *get_com_mutex(void)
 {
     return &com_mutex;
+}
+
+int dev_open(struct inode *inodep, struct file *filep)
+{
+    if(!mutex_trylock(get_com_mutex()))
+    {
+        printk(KERN_ALERT "[FPGA][ C ] Device in use by another process");
+        return -EBUSY;
+    }
+
+    numberOpens++;
+    printk(KERN_INFO "[FPGA][ C ] Device has been opened %d time(s)\n", numberOpens);
+    return NULL;
 }
 
 ssize_t dev_read(struct file *filep, char *buffer, size_t len, loff_t *offset)
@@ -79,4 +93,11 @@ ssize_t dev_write(struct file *filep, const char *buffer, size_t len, loff_t *of
         printk(KERN_INFO "[FPGA][ C ] Failed to receive characters from the user\n");
         return -EFAULT;
     }
+}
+
+int dev_release(struct inode *inodep, struct file *filep)
+{
+    mutex_unlock(get_com_mutex());
+    printk(KERN_INFO "[FPGA][ C ] Device successfully closed\n");
+    return NULL;
 }

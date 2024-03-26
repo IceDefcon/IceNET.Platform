@@ -22,8 +22,10 @@
 
 struct mutex *get_com_mutex(void);
 
+int dev_open(struct inode *inodep, struct file *filep);
 ssize_t dev_read(struct file *, char *, size_t, loff_t *);
 ssize_t dev_write(struct file *, const char *, size_t, loff_t *);
+int dev_release(struct inode *inodep, struct file *filep);
 
 
 

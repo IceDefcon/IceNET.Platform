@@ -39,18 +39,8 @@ MODULE_DESCRIPTION("FPGA Comms Driver");
 #define  CLASS_NAME  "iceCOM"
 
 static int    majorNumber;
-// static char   message[256] = {0};
-// static unsigned long  size_of_message;
-static int    numberOpens = 0;
 static struct class*  C_Class  = NULL;
 static struct device* C_Device = NULL;
-
-static int     dev_open(struct inode *, struct file *);
-static int     dev_release(struct inode *, struct file *);
-// static ssize_t dev_read(struct file *, char *, size_t, loff_t *);
-// static ssize_t dev_write(struct file *, const char *, size_t, loff_t *);
-
-// static DEFINE_MUTEX(com_mutex);
 
 static struct file_operations fops =
 {
@@ -185,37 +175,6 @@ int StateMachineThread(void *data)
     }
 
     return 0;
-}
-
-//////////////////////
-//                  //
-//                  //
-//                  //
-//    [C] Device    //
-//                  //
-//                  //
-//                  //
-//////////////////////
-static int dev_open(struct inode *inodep, struct file *filep)
-{
-    if(!mutex_trylock(get_com_mutex()))
-    {
-        printk(KERN_ALERT "[FPGA][ C ] Device in use by another process");
-        return -EBUSY;
-    }
-
-    numberOpens++;
-    printk(KERN_INFO "[FPGA][ C ] Device has been opened %d time(s)\n", numberOpens);
-    return NULL;
-}
-
-
-
-static int dev_release(struct inode *inodep, struct file *filep)
-{
-    mutex_unlock(get_com_mutex());
-    printk(KERN_INFO "[FPGA][ C ] Device successfully closed\n");
-    return NULL;
 }
 
 //////////////////////
