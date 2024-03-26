@@ -411,7 +411,7 @@ static int __init fpga_driver_init(void)
     //                              //
     //////////////////////////////////
 
-    charDeviceInit(void);
+    charDeviceInit();
 
     return NULL;
 }
