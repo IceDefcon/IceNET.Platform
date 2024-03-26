@@ -20,6 +20,8 @@
 //                  //
 //////////////////////
 
+struct mutex *get_com_mutex(void);
+
 ssize_t dev_read(struct file *, char *, size_t, loff_t *);
 ssize_t dev_write(struct file *, const char *, size_t, loff_t *);
 

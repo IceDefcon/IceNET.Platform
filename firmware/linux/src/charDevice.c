@@ -10,6 +10,7 @@
 #include <linux/init.h>
 #include <linux/uaccess.h> 	// Include for copy_to_user function
 #include <linux/slab.h> 	// Include for kmalloc/kfree functions
+#include <linux/mutex.h>
 
 #include "charDevice.h"
 #include "workLoad.h"
@@ -28,6 +29,13 @@ MODULE_LICENSE("GPL");
 
 static char   message[256] = {0};
 static unsigned long  size_of_message;
+
+DEFINE_MUTEX(com_mutex);
+
+struct mutex *get_com_mutex(void)
+{
+    return &com_mutex;
+}
 
 ssize_t dev_read(struct file *filep, char *buffer, size_t len, loff_t *offset)
 {

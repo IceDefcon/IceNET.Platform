@@ -20,7 +20,6 @@
 
 #include "charDevice.h"
 #include "workLoad.h"
-#include "mutex.h"
 
 MODULE_VERSION("2.0");
 MODULE_LICENSE("GPL");
