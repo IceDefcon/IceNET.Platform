@@ -43,6 +43,8 @@ static int    majorNumber;
 static struct class*  C_Class  = NULL;
 static struct device* C_Device = NULL;
 
+
+
 //////////////////////
 //                  //
 //                  //
@@ -443,13 +445,13 @@ static int __init fpga_driver_init(void)
         return PTR_ERR(C_Class);
     }
     
-    set_C_Device(device_create(C_Class, NULL, MKDEV(majorNumber, 0), NULL, DEVICE_NAME));
-    if (IS_ERR(get_C_Device()))
+    C_Device = device_create(C_Class, NULL, MKDEV(majorNumber, 0), NULL, DEVICE_NAME);
+    if (IS_ERR(C_Device))
     {
         class_destroy(C_Class);
         unregister_chrdev(majorNumber, DEVICE_NAME);
         printk(KERN_ALERT "[FPGA][ C ] Failed to create the device\n");
-        return PTR_ERR(get_C_Device());
+        return PTR_ERR(C_Device);
     }
 
     mutex_init(get_com_mutex());

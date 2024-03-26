@@ -30,9 +30,12 @@ MODULE_LICENSE("GPL");
 static char   message[256] = {0};
 static unsigned long  size_of_message;
 static int    numberOpens = 0;
-// static int    majorNumber;
-// static struct class*  C_Class  = NULL;
-// static struct device* C_Device = NULL;
+
+#if 0 /* Do I have to move them here ? */
+static int    majorNumber;
+static struct class*  C_Class  = NULL;
+static struct device* C_Device = NULL;
+#endif
 
 static DEFINE_MUTEX(com_mutex);
 
