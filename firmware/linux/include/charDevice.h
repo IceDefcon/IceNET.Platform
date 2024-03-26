@@ -20,6 +20,9 @@
 //                  //
 //////////////////////
 
+#define  DEVICE_NAME "iceCOM"
+#define  CLASS_NAME  "iceCOM"
+
 struct mutex *get_com_mutex(void);
 struct file_operations *get_fops(void);
 
