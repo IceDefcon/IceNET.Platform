@@ -8,8 +8,6 @@
 #ifndef CHAR_DEVICE_H
 #define CHAR_DEVICE_H
 
-#include <linux/fs.h> // Include for file_operations struct
-
 //////////////////////
 //                  //
 //                  //
@@ -20,10 +18,9 @@
 //                  //
 //////////////////////
 
+#if 0 /* Do I need them ??? */
 /* GET */ struct file_operations *get_fops(void);
 /* GET */ struct mutex *get_com_mutex(void);
-
-#if 0 /* Do I have to move them here ? */
 /* GET */ int *get_majorNumber(void);
 /* SET */ void set_majorNumber(int major);
 /* GET */ struct class *get_C_Class(void);

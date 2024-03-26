@@ -56,7 +56,7 @@ int charDeviceInit(void)
 {
     printk(KERN_INFO "[FPGA][ C ] Device Init\n");
 
-    majorNumber = register_chrdev(0, DEVICE_NAME, get_fops());
+    majorNumber = register_chrdev(0, DEVICE_NAME, &fops);
     if (majorNumber<0)
     {
         printk(KERN_ALERT "[FPGA][ C ] Failed to register major number\n");
@@ -80,7 +80,7 @@ int charDeviceInit(void)
         return PTR_ERR(C_Device);
     }
 
-    mutex_init(get_com_mutex());
+    mutex_init(&com_mutex);
 }
 
 void charDeviceDestroy(void)
@@ -89,13 +89,13 @@ void charDeviceDestroy(void)
     class_unregister(C_Class);
     class_destroy(C_Class);
     unregister_chrdev(majorNumber, DEVICE_NAME);
-    mutex_destroy(get_com_mutex());
+    mutex_destroy(&com_mutex);
     printk(KERN_INFO "[FPGA][ C ] Device Exit\n");
 }
 
 static int dev_open(struct inode *inodep, struct file *filep)
 {
-    if(!mutex_trylock(get_com_mutex()))
+    if(!mutex_trylock(&com_mutex))
     {
         printk(KERN_ALERT "[FPGA][ C ] Device in use by another process");
         return -EBUSY;
@@ -152,11 +152,12 @@ static ssize_t dev_write(struct file *filep, const char *buffer, size_t len, lof
 
 static int dev_release(struct inode *inodep, struct file *filep)
 {
-    mutex_unlock(get_com_mutex());
+    mutex_unlock(&com_mutex);
     printk(KERN_INFO "[FPGA][ C ] Device successfully closed\n");
     return NULL;
 }
 
+#if 0 /* Do I need them ??? */
 /* GET */ struct file_operations *get_fops(void)
 {
     return &fops;
@@ -167,7 +168,6 @@ static int dev_release(struct inode *inodep, struct file *filep)
     return &com_mutex;
 }
 
-#if 0 /* Do I have to move them here ? */
 /* GET */ int *get_majorNumber(void)
 {
     return &majorNumber;
