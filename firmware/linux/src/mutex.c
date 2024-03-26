@@ -5,6 +5,10 @@
  * 
  */
 
+#include <linux/mutex.h>
+
+#include "mutex.h"
+
 DEFINE_MUTEX(com_mutex);
 
 struct mutex *get_com_mutex(void)
