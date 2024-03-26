@@ -12,6 +12,7 @@
 #include <linux/slab.h> 	// Include for kmalloc/kfree functions
 #include <linux/mutex.h>    // Include for mutex opearations
 #include <linux/device.h>   // Include for class_create
+#include <linux/fs.h>       // Include for file_operations struct
 
 #include "charDevice.h"
 #include "workLoad.h"
