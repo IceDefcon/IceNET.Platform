@@ -428,7 +428,7 @@ static int __init fpga_driver_init(void)
     //////////////////////////////////
     printk(KERN_INFO "[FPGA][ C ] Device Init\n");
 
-    set_majorNumber(register_chrdev(0, DEVICE_NAME, get_fops()));
+    majorNumber = register_chrdev(0, DEVICE_NAME, get_fops());
     if (majorNumber<0)
     {
         printk(KERN_ALERT "[FPGA][ C ] Failed to register major number\n");
