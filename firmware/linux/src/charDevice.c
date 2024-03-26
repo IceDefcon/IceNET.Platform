@@ -30,6 +30,9 @@ MODULE_LICENSE("GPL");
 static char   message[256] = {0};
 static unsigned long  size_of_message;
 static int    numberOpens = 0;
+static int    majorNumber;
+// static struct class*  C_Class  = NULL;
+// static struct device* C_Device = NULL;
 
 static DEFINE_MUTEX(com_mutex);
 
@@ -110,13 +113,39 @@ static int dev_release(struct inode *inodep, struct file *filep)
     return NULL;
 }
 
-struct file_operations *get_fops(void)
+/* GET */ struct file_operations *get_fops(void)
 {
     return &fops;
 }
 
-struct mutex *get_com_mutex(void)
+/* GET */ struct mutex *get_com_mutex(void)
 {
     return &com_mutex;
 }
 
+/* GET */ int *get_majorNumber(void)
+{
+    return &majorNumber;
+}
+/* SET */ void set_majorNumber(int major) 
+{
+	majorNumber = major;
+}
+
+/* GET */ struct class *get_C_Class(void)
+{
+    return &C_Class;
+}
+/* SET */ void set_C_Class(struct class *class) 
+{
+	C_Class = class;
+}
+
+/* GET */ struct device *get_C_Device(void)
+{
+    return &C_Device;
+}
+/* SET */ void gst_C_Device(struct device *device) 
+{
+	C_Device = device;
+}
