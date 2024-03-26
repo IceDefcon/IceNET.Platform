@@ -10,7 +10,8 @@
 #include <linux/init.h>
 #include <linux/uaccess.h> 	// Include for copy_to_user function
 #include <linux/slab.h> 	// Include for kmalloc/kfree functions
-#include <linux/mutex.h>
+#include <linux/mutex.h>    // Include for mutex opearations
+#include <linux/device.h>   // Include for class_create
 
 #include "charDevice.h"
 #include "workLoad.h"
