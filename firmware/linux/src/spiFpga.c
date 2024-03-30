@@ -32,15 +32,3 @@
 //////////////////////////////////////////
 
 
-// static struct spi_device *spi_dev;
-
-// /* SPI DEVICE */
-// /* BASE */ struct spi_device *spi_dev;
-// /* GET */ struct spi_device* get_spi_dev(void)
-// {
-//     return spi_dev;
-// }
-// /* SET */ void set_spi_dev(struct spi_device *spi)
-// {
-//     spi_dev = spi;
-// }

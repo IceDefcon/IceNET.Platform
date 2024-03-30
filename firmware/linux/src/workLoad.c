@@ -17,17 +17,17 @@
 //                  //
 //////////////////////
 
-int kernelWorkInit(void)
-{
-    INIT_WORK(get_kernel_work(), kernel_execute);
-    set_kernel_wq(create_singlethread_workqueue("kernel_workqueue"));
-    if (!get_kernel_wq()) {
-        printk(KERN_ERR "[FPGA][WRK] Failed to create kernel workqueue\n");
-        return -ENOMEM;
-    }
+// int kernelWorkInit(void)
+// {
+//     INIT_WORK(get_kernel_work(), kernel_execute);
+//     set_kernel_wq(create_singlethread_workqueue("kernel_workqueue"));
+//     if (!get_kernel_wq()) {
+//         printk(KERN_ERR "[FPGA][WRK] Failed to create kernel workqueue\n");
+//         return -ENOMEM;
+//     }
 
-    return 0;
-}
+//     return 0;
+// }
     
 /* FPGA WORK QUEUE */
 /* BASE */ struct workqueue_struct *fpga_wq;

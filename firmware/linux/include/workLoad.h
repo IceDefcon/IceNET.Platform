@@ -20,7 +20,7 @@
 //                  //
 //////////////////////
 
-int kernelWorkInit(void);
+// int kernelWorkInit(void);
 
 /* GET */ struct workqueue_struct* get_fpga_wq(void);
 /* SET */ void set_fpga_wq(struct workqueue_struct *wq);
