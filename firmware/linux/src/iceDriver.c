@@ -350,13 +350,9 @@ static int __init fpga_driver_init(void)
      * SPI operations
      * Kernel and Fpga
      */
-    INIT_WORK(get_kernel_work(), kernel_execute);
-    set_kernel_wq(create_singlethread_workqueue("kernel_workqueue"));
-    if (!get_kernel_wq()) {
-        printk(KERN_ERR "[FPGA][WRK] Failed to create kernel workqueue\n");
-        return -ENOMEM;
-    }
 
+    kernelWorkInit();
+`
     INIT_WORK(get_fpga_work(), fpga_command);
     set_fpga_wq(create_singlethread_workqueue("fpga_workqueue"));
     if (!get_fpga_wq()) {
