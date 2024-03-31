@@ -50,14 +50,13 @@ static int __init fpga_driver_init(void)
 //         EXIT         //
 //                      //
 //////////////////////////
-
 static void __exit fpga_driver_exit(void)
 {
     /* Destroy everything */
-    spiKernelWorkDestroy();
-    spiFpgaWorkDestroy();
-    spiDestroy();
     gpioKernelIsrDestroy();
+    spiFpgaWorkDestroy();
+    spiKernelWorkDestroy();
+    spiDestroy();
     charDeviceDestroy();
     stateMachineDestroy();
 }
