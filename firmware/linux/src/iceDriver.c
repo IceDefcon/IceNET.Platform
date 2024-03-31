@@ -260,20 +260,9 @@ static void __exit fpga_driver_exit(void)
     // SPI :: CONFIG                //
     //                              //
     //////////////////////////////////
-    cancel_work_sync(get_kernel_work());
-    if (get_kernel_wq()) {
-        flush_workqueue(get_kernel_wq());
-        destroy_workqueue(get_kernel_wq());
-        set_kernel_wq(NULL);
-    }
 
-    cancel_work_sync(get_fpga_work());
-    if (get_fpga_wq()) {
-        flush_workqueue(get_fpga_wq());
-        destroy_workqueue(get_fpga_wq());
-        set_fpga_wq(NULL);
-    }
-
+    kernelWorkDestroy();
+    fpgaWorkDestroy();
     spiDestroy();
 
     //////////////////////////////////

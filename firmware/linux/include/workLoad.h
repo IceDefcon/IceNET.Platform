@@ -30,6 +30,7 @@
 
 int kernelWorkInit(void);
 int fpgaWorkInit(void);
-
+void kernelWorkDestroy(void);
+void fpgaWorkDestroy(void);
 
 #endif // WORK_LOAD_H

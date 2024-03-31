@@ -75,3 +75,26 @@ int fpgaWorkInit(void)
 	    return -ENOMEM;
 	}
 }
+
+void kernelWorkDestroy(void)
+{
+
+    cancel_work_sync(get_kernel_work());
+    if (get_kernel_wq()) {
+        flush_workqueue(get_kernel_wq());
+        destroy_workqueue(get_kernel_wq());
+        set_kernel_wq(NULL);
+    }
+}
+
+
+void fpgaWorkDestroy(void)
+{
+
+    cancel_work_sync(get_fpga_work());
+    if (get_fpga_wq()) {
+        flush_workqueue(get_fpga_wq());
+        destroy_workqueue(get_fpga_wq());
+        set_fpga_wq(NULL);
+    }
+}
