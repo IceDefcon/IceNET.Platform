@@ -29,28 +29,6 @@ MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Ice Marek");
 MODULE_DESCRIPTION("FPGA Comms Driver");
 
-///////////////////
-//               //
-//               //
-//               //
-// State Machine //
-//               //
-//               //
-//               //
-///////////////////
-
-enum StateMachine 
-{
-    IDLE    = 0,
-    SPI     = 1,
-    I2C     = 2,    
-    USER    = 3
-};
-
-enum StateMachine STATE;
-
-static struct task_struct *thread_handle;
-
 //////////////////////////////////////////////////////////////
 //                                                          //
 ////                                                      ////

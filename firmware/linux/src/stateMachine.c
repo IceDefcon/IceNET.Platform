@@ -21,6 +21,10 @@
 //               //
 ///////////////////
 
+enum StateMachine STATE;
+
+static struct task_struct *thread_handle;
+
 static int StateMachineThread(void *data)
 {
     int counter = 0;
