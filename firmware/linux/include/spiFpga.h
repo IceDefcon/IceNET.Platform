@@ -20,9 +20,9 @@
 //                  //
 //////////////////////
 
-void spi_kernel_execute(struct work_struct *work);
-void spi_fpga_command(struct work_struct *work);
-int spiInit(void);
-int spiDestroy(void);
+/* SPI */ int spiInit(void);
+/* KERNEL */ void spiKernelExecute(struct work_struct *work);
+/* FPGA */ void spiFpgaExecute(struct work_struct *work);
+/* SPI */ int spiDestroy(void);
 
 #endif // SPI_FPGA_H

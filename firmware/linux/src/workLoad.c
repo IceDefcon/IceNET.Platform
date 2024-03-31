@@ -18,37 +18,23 @@
 //                  //
 //////////////////////
 
-/* FPGA WORK QUEUE */
-/* BASE */ struct workqueue_struct *fpga_wq;
+/* BASE */ static struct workqueue_struct *fpga_wq;
+/* BASE */ static struct work_struct fpga_work;
+/* BASE */ static struct workqueue_struct* kernel_wq;
+/* BASE */ static struct work_struct kernel_work;
+
 /* GET */ struct workqueue_struct* get_fpga_wq(void) 
 {
     return fpga_wq;
 }
-/* SET */ void set_fpga_wq(struct workqueue_struct *wq) 
-{
-    fpga_wq = wq;
-}
-
-/* FPGA WORK */
-/* BASE */ struct work_struct fpga_work;
-/* GET */ struct work_struct* get_fpga_work(void) 
-{
-    return &fpga_work;
-}
-
-/* KERNEL WORK QUEUE */
-/* BASE */ static struct workqueue_struct* kernel_wq;
 /* GET */ struct workqueue_struct* get_kernel_wq(void)
 {
 	return kernel_wq;
 }
-/* SET */ void set_kernel_wq(struct workqueue_struct *wq) 
+/* GET */ struct work_struct* get_fpga_work(void) 
 {
-	kernel_wq = wq;
+    return &fpga_work;
 }
-
-/* KERNEL WORK */
-/* BASE */ static struct work_struct kernel_work;
 /* GET */ struct work_struct* get_kernel_work(void)
 {
 	return &kernel_work;
@@ -56,8 +42,8 @@
 
 int kernelWorkInit(void)
 {
-	INIT_WORK(get_kernel_work(), spi_kernel_execute);
-	set_kernel_wq(create_singlethread_workqueue("kernel_workqueue"));
+	INIT_WORK(get_kernel_work(), spiKernelExecute);
+	kernel_wq = create_singlethread_workqueue("kernel_workqueue");
 	if (!get_kernel_wq()) 
 	{
 	    printk(KERN_ERR "[FPGA][WRK] Failed to create kernel workqueue\n");
@@ -67,8 +53,8 @@ int kernelWorkInit(void)
 
 int fpgaWorkInit(void)
 {
-	INIT_WORK(get_fpga_work(), spi_fpga_command);
-	set_fpga_wq(create_singlethread_workqueue("fpga_workqueue"));
+	INIT_WORK(get_fpga_work(), spiFpgaExecute);
+	fpga_wq = create_singlethread_workqueue("fpga_workqueue");
 	if (!get_fpga_wq()) 
 	{
 	    printk(KERN_ERR "[FPGA][WRK] Failed to create fpga workqueue\n");
@@ -83,10 +69,9 @@ void kernelWorkDestroy(void)
     if (get_kernel_wq()) {
         flush_workqueue(get_kernel_wq());
         destroy_workqueue(get_kernel_wq());
-        set_kernel_wq(NULL);
+        kernel_wq = NULL;
     }
 }
-
 
 void fpgaWorkDestroy(void)
 {
@@ -95,6 +80,6 @@ void fpgaWorkDestroy(void)
     if (get_fpga_wq()) {
         flush_workqueue(get_fpga_wq());
         destroy_workqueue(get_fpga_wq());
-        set_fpga_wq(NULL);
+        fpga_wq = NULL;
     }
 }

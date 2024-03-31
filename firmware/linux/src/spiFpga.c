@@ -43,7 +43,43 @@ static volatile uint8_t rx_kernel[1];
 static volatile uint8_t tx_fpga[] = {0xC3};
 static volatile uint8_t rx_fpga[1];
 
-void spi_kernel_execute(struct work_struct *work)
+int spiInit(void)
+{
+
+    struct spi_master *spi_master0;
+    int ret;
+
+    spi_master0 = spi_busnum_to_master(0);
+    if (!spi_master0) {
+        printk(KERN_ERR "[FPGA][SPI] SPI master for SPI0 not found\n");
+        return -ENODEV;
+    }
+
+    // Prepare the SPI devices
+    spi_dev = spi_alloc_device(spi_master0);
+    if (!spi_dev) {
+        printk(KERN_ERR "[FPGA][SPI] Failed to allocate SPI device for SPI0\n");
+        return -ENOMEM;
+    }
+
+    /*! 
+     * The mode is set to 1 to pass the
+     * High clock control signal to FPGA
+     */
+    spi_dev->chip_select = 0;
+    spi_dev->mode = SPI_MODE_1;
+    spi_dev->bits_per_word = 8;
+    spi_dev->max_speed_hz = 1000000;
+
+    ret = spi_setup(spi_dev);
+    if (ret < 0) {
+        printk(KERN_ERR "[FPGA][SPI] Failed to setup SPI device: %d\n", ret);
+        spi_dev_put(spi_dev);
+        return ret;
+    }
+}
+
+void spiKernelExecute(struct work_struct *work)
 {
     struct spi_message msg;
     struct spi_transfer transfer;
@@ -81,7 +117,7 @@ void spi_kernel_execute(struct work_struct *work)
      */
 }
 
-void spi_fpga_command(struct work_struct *work)
+void spiFpgaExecute(struct work_struct *work)
 {
     struct spi_message msg;
     struct spi_transfer transfer;
@@ -118,42 +154,6 @@ void spi_fpga_command(struct work_struct *work)
      * 
      */
 
-}
-
-int spiInit(void)
-{
-
-    struct spi_master *spi_master0;
-    int ret;
-
-    spi_master0 = spi_busnum_to_master(0);
-    if (!spi_master0) {
-        printk(KERN_ERR "[FPGA][SPI] SPI master for SPI0 not found\n");
-        return -ENODEV;
-    }
-
-    // Prepare the SPI devices
-    spi_dev = spi_alloc_device(spi_master0);
-    if (!spi_dev) {
-        printk(KERN_ERR "[FPGA][SPI] Failed to allocate SPI device for SPI0\n");
-        return -ENOMEM;
-    }
-
-    /*! 
-     * The mode is set to 1 to pass the
-     * High clock control signal to FPGA
-     */
-    spi_dev->chip_select = 0;
-    spi_dev->mode = SPI_MODE_1;
-    spi_dev->bits_per_word = 8;
-    spi_dev->max_speed_hz = 1000000;
-
-    ret = spi_setup(spi_dev);
-    if (ret < 0) {
-        printk(KERN_ERR "[FPGA][SPI] Failed to setup SPI device: %d\n", ret);
-        spi_dev_put(spi_dev);
-        return ret;
-    }
 }
 
 int spiDestroy(void)

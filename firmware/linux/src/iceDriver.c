@@ -225,7 +225,7 @@ static int __init fpga_driver_init(void)
     {
         printk(KERN_ERR "[FPGA][IRQ] Failed to request IRQ number :: Pin [%d]\n", GPIO_KERNEL_INTERRUPT);
         gpio_free(GPIO_KERNEL_INTERRUPT);
-        // spi_dev_put(spi_dev); TODO :: Move this into interrupt config
+        // spiDestroy(); TODO :: Do I need you here?
         return result;
     }
     printk(KERN_INFO "[FPGA][IRQ] Initialized\n");
