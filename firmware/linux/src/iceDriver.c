@@ -27,13 +27,14 @@ MODULE_DESCRIPTION("FPGA Comms Driver");
 //////////////////////////
 static int __init fpga_driver_init(void)
 {
-    /* Initialise State Machine kthread config */
+    /* Initialise kthread State Machine */
     stateMachineInit();
     /* Initialise SPI */
     spiInit();
-    /* Initialise Kernel and Fpga SPI operations */
-    kernelWorkInit();
-    fpgaWorkInit();
+    /* Initialise Kernel SPI operations */
+    spiKernelWorkInit();
+    /* Initialise Fpga SPI operations */
+    spiFpgaWorkInit();
     /* Initialise gpio ISR */
     gpioKernelIsrInit();
     /* Initialise charDevice */
@@ -53,8 +54,8 @@ static int __init fpga_driver_init(void)
 static void __exit fpga_driver_exit(void)
 {
     /* Destroy everything */
-    kernelWorkDestroy();
-    fpgaWorkDestroy();
+    spiKernelWorkDestroy();
+    spiFpgaWorkDestroy();
     spiDestroy();
     gpioKernelIsrDestroy();
     charDeviceDestroy();
@@ -63,93 +64,3 @@ static void __exit fpga_driver_exit(void)
 
 module_init(fpga_driver_init);
 module_exit(fpga_driver_exit);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//////////////////////////////////////////////////////////
-//                                                      //
-//                                                      //
-// I2C :: Interface                                     //
-//                                                      //
-//                                                      //
-//////////////////////////////////////////////////////////
-//                                                      //
-// Protocol Selectio                                    //
-// For I2C ---> CS must be connected to Vdd             //
-//                                                      //
-// ID = 0x68 when SA0 = GND                             //
-// ID = 0x69 when SA0 = Vdd                             //
-//                                                      //
-//                                                      //
-//                                                      //
-//                                                      //
-//                                                      //
-//////////////////////////////////////////////////////////
- 
-//////////////////////////////////////////////////////////
-//                                                      //
-//                                                      //
-// CAN :: Interface                                     //
-//                                                      //
-//                                                      //
-//////////////////////////////////////////////////////////
-//                                                      //
-// config-pin P9_24 can                                 //
-// config-pin P9_26 can                                 //
-// config-pin P9_19 can                                 //
-// config-pin P9_20 can                                 //
-//                                                      //
-// sudo ip link set can0 up type can bitrate 500000     //
-// sudo ip link set can1 up type can bitrate 500000     //
-// candump can1                                         //
-// cansend can0 123#1122334455667788                    //
-//                                                      //
-// Yellow   :: Rx   :: P9_24                            //
-// Orange   :: Tx   :: P9_26                            //
-// Grey     :: GND  :: P9_2                             //
-// White    :: 3.3V :: P9_4                             //
-//                                                      //
-// Yellow   :: Rx   :: P9_19                            //
-// Green    :: Tx   :: P9_20                            //
-// Orange   :: GND  :: P9_1                             //
-// Red      :: 3.3V :: P9_3                             //
-//                                                      //
-//////////////////////////////////////////////////////////
-
-//////////////////////////////////////////////////////////
-//                                                      //
-//                                                      //
-// 4D-PAM5 :: Encoder                                   //
-//                                                      //
-//                                                      //
-//////////////////////////////////////////////////////////
-//                                                      //
-//                                                      //
-// 1Ghz ADC                                             //
-//                                                      //
-//                                                      //
-//                                                      //
-//                                                      //
-//                                                      //
-//                                                      //
-//////////////////////////////////////////////////////////

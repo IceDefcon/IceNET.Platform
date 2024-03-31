@@ -40,7 +40,7 @@
 	return &kernel_work;
 }
 
-int kernelWorkInit(void)
+int spiKernelWorkInit(void)
 {
 	INIT_WORK(get_kernel_work(), spiKernelExecute);
 	kernel_wq = create_singlethread_workqueue("kernel_workqueue");
@@ -51,7 +51,7 @@ int kernelWorkInit(void)
 	}
 }
 
-int fpgaWorkInit(void)
+int spiFpgaWorkInit(void)
 {
 	INIT_WORK(get_fpga_work(), spiFpgaExecute);
 	fpga_wq = create_singlethread_workqueue("fpga_workqueue");
@@ -62,7 +62,7 @@ int fpgaWorkInit(void)
 	}
 }
 
-void kernelWorkDestroy(void)
+void spiKernelWorkDestroy(void)
 {
     cancel_work_sync(get_kernel_work());
     if (kernel_wq) {
@@ -72,7 +72,7 @@ void kernelWorkDestroy(void)
     }
 }
 
-void fpgaWorkDestroy(void)
+void spiFpgaWorkDestroy(void)
 {
     cancel_work_sync(get_fpga_work());
     if (fpga_wq) {

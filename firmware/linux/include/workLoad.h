@@ -25,9 +25,9 @@
 /* GET */ struct workqueue_struct* get_kernel_wq(void);
 /* GET */ struct work_struct* get_kernel_work(void);
 
-/* INIT */ int kernelWorkInit(void);
-/* INIT */ int fpgaWorkInit(void);
-/* DESTROY */ void kernelWorkDestroy(void);
-/* DESTROY */ void fpgaWorkDestroy(void);
+/* INIT */ int spiKernelWorkInit(void);
+/* INIT */ int spiFpgaWorkInit(void);
+/* DESTROY */ void spiKernelWorkDestroy(void);
+/* DESTROY */ void spiFpgaWorkDestroy(void);
 
 #endif // WORK_LOAD_H
