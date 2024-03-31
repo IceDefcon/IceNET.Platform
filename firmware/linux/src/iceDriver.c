@@ -21,6 +21,7 @@
 #include "charDevice.h"
 #include "workLoad.h"
 #include "spiFpga.h"
+#include "gpioIsr.h"
 
 MODULE_VERSION("2.0");
 MODULE_LICENSE("GPL");

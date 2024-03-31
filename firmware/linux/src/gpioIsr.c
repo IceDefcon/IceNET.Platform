@@ -10,6 +10,8 @@
 #include <linux/gpio.h>
 #include <linux/interrupt.h>
 
+#include "gpioIsr.h"
+
 //////////////////////////
 //                      //
 //                      //
