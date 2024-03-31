@@ -4,19 +4,8 @@
  * IceNET Technology 2024
  * 
  */
-#include <linux/fs.h>
-#include <linux/gpio.h>
-#include <linux/init.h>
-#include <linux/delay.h>
-#include <linux/device.h>
-#include <linux/module.h>
-#include <linux/kernel.h>
-#include <linux/kthread.h>
-#include <linux/uaccess.h>
-
-#include <linux/interrupt.h>
-#include <linux/workqueue.h> // For workqueue-related functions and macros
-#include <linux/slab.h>      // For memory allocation functions like kmalloc
+#include <linux/init.h>        // For __init and __exit macros
+#include <linux/module.h>      // For module initialization and exit macros
 
 #include "stateMachine.h"
 #include "charDevice.h"
@@ -28,14 +17,6 @@ MODULE_VERSION("2.0");
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Ice Marek");
 MODULE_DESCRIPTION("FPGA Comms Driver");
-
-//////////////////////////////////////////////////////////////
-//                                                          //
-////                                                      ////
-//////  C   O   D   E   :::  S   E   C   T   I   O   N  //////
-////                                                      ////
-//                                                          //
-//////////////////////////////////////////////////////////////
 
 //////////////////////////
 //                      //
@@ -82,6 +63,28 @@ static void __exit fpga_driver_exit(void)
 
 module_init(fpga_driver_init);
 module_exit(fpga_driver_exit);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 //////////////////////////////////////////////////////////
 //                                                      //
