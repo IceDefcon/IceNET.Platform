@@ -29,6 +29,8 @@ static int __init fpga_driver_init(void)
 {
     /* Initialise kthread State Machine */
     stateMachineInit();
+    /* Initialise charDevice */
+    charDeviceInit();
     /* Initialise SPI */
     spiInit();
     /* Initialise Kernel SPI operations */
@@ -37,8 +39,6 @@ static int __init fpga_driver_init(void)
     spiFpgaWorkInit();
     /* Initialise gpio ISR */
     gpioKernelIsrInit();
-    /* Initialise charDevice */
-    charDeviceInit();
 
     return NULL;
 }
