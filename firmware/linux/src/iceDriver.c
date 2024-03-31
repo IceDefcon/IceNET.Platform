@@ -27,19 +27,6 @@ MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Ice Marek");
 MODULE_DESCRIPTION("FPGA Comms Driver");
 
-//////////////////////////
-//                      //
-//                      //
-//                      //
-//        [GPIO]        //
-//      Interrupts      //
-//                      //
-//                      //
-//                      //
-//////////////////////////
-
-#define GPIO_KERNEL_INTERRUPT 60    // P9_12
-
 ///////////////////
 //               //
 //               //
@@ -124,118 +111,29 @@ int StateMachineThread(void *data)
 
 //////////////////////////
 //                      //
-//                      //
-//                      //
-//        [GPIO]        //
-//      Interrupts      //
-//                      //
-//                      //
-//                      //
-//////////////////////////
-static irqreturn_t isr_kernel(int irq, void *data)
-{
-    static int counter = 0;
-
-    printk(KERN_INFO "[FPGA][ISR] Kernel interrupt [%d] @ Pin [%d]\n", counter, GPIO_KERNEL_INTERRUPT);
-    counter++;
-
-    queue_work(get_kernel_wq(), get_kernel_work());
-
-    return IRQ_HANDLED;
-}
-
-//////////////////////////
-//                      //
-//                      //
-//                      //
 //        [FPGA]        //
 //        DRIVER        //
 //         INIT         //
 //                      //
-//                      //
-//                      //
 //////////////////////////
 static int __init fpga_driver_init(void)
 {
-    
-    ////////////////////////////////////
-    //                                //
-    // STATE MACHINE :: THREAD CONFIG //
-    //                                //
-    ////////////////////////////////////
+    /* Initialise State Machine kthread config */
     thread_handle = kthread_create(StateMachineThread, NULL, "thread_handle");
-
     if (IS_ERR(thread_handle)) {
         printk(KERN_ERR "Failed to create kernel thread\n");
         return PTR_ERR(thread_handle);
     }
-
     wake_up_process(thread_handle);
 
-    //////////////////////////////////
-    //                              //
-    // SPI :: CONFIG                //
-    //                              //
-    //////////////////////////////////
-
+    /* Initialise SPI */
     spiInit();
-
-    /*!
-     * Work config for
-     * SPI operations
-     * Kernel and Fpga
-     */
-
+    /* Initialise Kernel and Fpga SPI operations */
     kernelWorkInit();
     fpgaWorkInit();
-
-    //////////////////////////////////
-    //                              //
-    // GPIO ISR :: CONFIG           //
-    //                              //
-    //////////////////////////////////
-    int irq_kernel;
-    int result;
-
-    //
-    // SPI Interrupt
-    //
-    result = gpio_request(GPIO_KERNEL_INTERRUPT, "   Request");
-    if (result < 0) 
-    {
-        printk(KERN_ERR "[FPGA][IRQ] Failed GPIO Request :: Pin [%d]\n", GPIO_KERNEL_INTERRUPT);
-        return result;
-    }
-    result = gpio_direction_input(GPIO_KERNEL_INTERRUPT);
-    if (result < 0) 
-    {
-        printk(KERN_ERR "[FPGA][IRQ] Failed to set GPIO direction :: Pin [%d]\n", GPIO_KERNEL_INTERRUPT);
-        gpio_free(GPIO_KERNEL_INTERRUPT);
-        return result;
-    }
-    irq_kernel = gpio_to_irq(GPIO_KERNEL_INTERRUPT);
-    if (irq_kernel < 0) 
-    {
-        printk(KERN_ERR "[FPGA][IRQ] Failed to get IRQ number :: Pin [%d]\n", GPIO_KERNEL_INTERRUPT);
-        gpio_free(GPIO_KERNEL_INTERRUPT);
-        return irq_kernel;
-    }
-    result = request_irq(irq_kernel, isr_kernel, IRQF_TRIGGER_RISING, "Request IRQ", NULL);
-    if (result < 0) 
-    {
-        printk(KERN_ERR "[FPGA][IRQ] Failed to request IRQ number :: Pin [%d]\n", GPIO_KERNEL_INTERRUPT);
-        gpio_free(GPIO_KERNEL_INTERRUPT);
-        // spiDestroy(); TODO :: Do I need you here?
-        return result;
-    }
-    printk(KERN_INFO "[FPGA][IRQ] Initialized\n");
-
-    //////////////////////////////////
-    //                              //
-    // [C] Device :: CONFIG         //
-    //                              //
-    //////////////////////////////////
-
+    /* Initialise gpio ISR */
+    gpioKernelIsrInit();
+    /* Initialise charDevice */
     charDeviceInit();
 
     return NULL;
@@ -243,53 +141,21 @@ static int __init fpga_driver_init(void)
 
 //////////////////////////
 //                      //
-//                      //
-//                      //
 //        [FPGA]        //
 //        DRIVER        //
 //         EXIT         //
-//                      //
-//                      //
 //                      //
 //////////////////////////
 
 static void __exit fpga_driver_exit(void)
 {
-    //////////////////////////////////
-    //                              //
-    // SPI :: CONFIG                //
-    //                              //
-    //////////////////////////////////
-
+    /* Destroy everything */
     kernelWorkDestroy();
     fpgaWorkDestroy();
     spiDestroy();
-
-    //////////////////////////////////
-    //                              //
-    // ISR :: DESTROY               //
-    //                              //
-    //////////////////////////////////
-    int irq_kernel;
-
-    irq_kernel = gpio_to_irq(GPIO_KERNEL_INTERRUPT);
-    free_irq(irq_kernel, NULL);
-    gpio_free(GPIO_KERNEL_INTERRUPT);
-     printk(KERN_INFO "[FPGA][IRQ] Exit\n");
-
-    //////////////////////////////////
-    //                              //
-    // [C] Device :: DESTROY        //
-    //                              //
-    //////////////////////////////////
-
+    gpioKernelIsrDestroy();
     charDeviceDestroy();
 
-    //////////////////////////////////
-    //                              //
-    // State Machine :: DESTROY     //
-    //                              //
-    //////////////////////////////////
     if (thread_handle) 
     {
         kthread_stop(thread_handle);
