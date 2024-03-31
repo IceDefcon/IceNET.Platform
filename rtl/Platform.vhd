@@ -74,7 +74,7 @@ constant register_I2C : std_logic_vector(7 downto 0) := "11110000"; -- 0x40 --->
 signal index : integer range 0 to 15 := 0;
 
 -- I2C Return Data
-signal return_data : std_logic_vector(7 downto 0) := "11000011";
+signal return_data : std_logic_vector(7 downto 0) := "11100111";
 
 -- SPI Synchronise
 signal synced_sclk : std_logic := '0';
@@ -617,6 +617,8 @@ begin
 		            	status_sda <= "0000";
 		            	-- Switch to IDLE
 			        	main_next <= IDLE;
+			        	-- Reset to default
+			        	return_data <= "11100111";
 		            else
 		                done_timer <= done_timer + '1';
 		            end if;
