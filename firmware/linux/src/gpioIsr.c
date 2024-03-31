@@ -11,6 +11,7 @@
 #include <linux/interrupt.h>
 
 #include "gpioIsr.h"
+#include "workLoad.h"
 
 //////////////////////////
 //                      //
