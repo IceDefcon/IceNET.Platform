@@ -21,5 +21,6 @@
 #define GPIO_KERNEL_INTERRUPT 60    // P9_12
 
 int gpioKernelIsrInit(void);
+void gpioKernelIsrDestroy(void);
 
 #endif // GPIO_ISR_H
