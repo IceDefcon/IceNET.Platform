@@ -13,7 +13,7 @@
 #include <linux/kernel.h>
 #include <linux/kthread.h>
 #include <linux/uaccess.h>
-#include <linux/spi/spi.h>
+
 #include <linux/interrupt.h>
 #include <linux/workqueue.h> // For workqueue-related functions and macros
 #include <linux/slab.h>      // For memory allocation functions like kmalloc
@@ -26,38 +26,6 @@ MODULE_VERSION("2.0");
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Ice Marek");
 MODULE_DESCRIPTION("FPGA Comms Driver");
-
-//////////////////////
-//                  //
-//                  //
-//                  //
-//   [SPI] Comms    //
-//                  //
-//                  //
-//                  //
-//////////////////////////////////////////
-//                                      //
-//                                      //
-// BBB P9_17 :: PULPLE   :: SPI0_CS0    //
-// BBB P9_18 :: BLUE     :: SPI0_D1     //
-// BBB P9_21 :: BROWN    :: SPI0_D0     //
-// BBB P9_22 :: BLACK    :: SPI0_SCLK   //
-//                                      //
-// BBB P9_28 :: YELOW    :: SPI1_CS0    //
-// BBB P9_30 :: GREEN    :: SPI1_D1     //
-// BBB P9_29 :: RED      :: SPI1_D0     //
-// BBB P9_31 :: ORANGE   :: SPI1_SCLK   //
-//                                      //
-//                                      //
-//////////////////////////////////////////
-
-static struct spi_device *spi_dev;
-
-static volatile uint8_t tx_kernel[] = {0x81};
-static volatile uint8_t rx_kernel[1];
-
-static volatile uint8_t tx_fpga[] = {0xC3};
-static volatile uint8_t rx_fpga[1];
 
 //////////////////////////
 //                      //
@@ -154,110 +122,6 @@ int StateMachineThread(void *data)
     return 0;
 }
 
-//////////////////////
-//                  //
-//                  //
-//                  //
-//   [SPI] Comms    //
-//                  //
-//                  //
-//                  //
-//////////////////////////////////////////////////
-//                                              //
-//                                              //
-// BBB P9_17 :: PULPLE   :: SPI0_CS0            //
-// BBB P9_18 :: BLUE     :: SPI0_D1             //
-// BBB P9_21 :: BROWN    :: SPI0_D0             //
-// BBB P9_22 :: BLACK    :: SPI0_SCLK           //
-//                                              //
-// BBB P9_28 :: YELOW    :: SPI1_CS0  :: NA     //
-// BBB P9_30 :: GREEN    :: SPI1_D1   :: NA     //
-// BBB P9_29 :: RED      :: SPI1_D0   :: NA     //
-// BBB P9_31 :: ORANGE   :: SPI1_SCLK :: NA     //
-//                                              //
-// BBB P9_17 :: YELLOW   :: SPI0_CS0  :: CS     //
-// BBB P9_18 :: ORNANGE  :: SPI0_D1   :: MOSI   //
-// BBB P9_21 :: GREEN    :: SPI0_D0   :: MISO   //
-// BBB P9_22 :: BLUE     :: SPI0_SCLK :: SCLK   //
-//                                              //
-//////////////////////////////////////////////////
-static void kernel_execute(struct work_struct *work)
-{
-    struct spi_message msg;
-    struct spi_transfer transfer;
-    int ret;
-    int i;
-
-    memset(&transfer, 0, sizeof(transfer));
-    transfer.tx_buf = tx_kernel;
-    transfer.rx_buf = rx_kernel;
-    transfer.len = sizeof(tx_kernel);
-
-    spi_message_init(&msg);
-    spi_message_add_tail(&transfer, &msg);
-
-    ret = spi_sync(spi_dev, &msg);
-    if (ret < 0) {
-        printk(KERN_ERR "[FPGA][SPI] SPI transfer for Kernel failed: %d\n", ret);
-        return;
-    }
-
-    printk(KERN_INFO "[FPGA][SPI] Command Data for Kernel Processing");
-    for (i = 0; i < sizeof(rx_kernel); ++i) {
-        printk(KERN_INFO "[FPGA][SPI] Byte %d: 0x%02x\n", i, rx_kernel[i]);
-    }
-
-    /*!
-     * 
-     * 
-     * 
-     * Here we should receive data from
-     * FPGA for kernel processing
-     * 
-     * 
-     * 
-     */
-}
-
-static void fpga_command(struct work_struct *work)
-{
-    struct spi_message msg;
-    struct spi_transfer transfer;
-    int ret;
-    int i;
-
-    memset(&transfer, 0, sizeof(transfer));
-    transfer.tx_buf = tx_fpga;
-    transfer.rx_buf = rx_fpga;
-    transfer.len = sizeof(tx_fpga);
-
-    spi_message_init(&msg);
-    spi_message_add_tail(&transfer, &msg);
-
-    ret = spi_sync(spi_dev, &msg);
-    if (ret < 0) {
-        printk(KERN_ERR "[FPGA][SPI] SPI transfer for FPGA failed: %d\n", ret);
-        return;
-    }
-
-    printk(KERN_INFO "[FPGA][SPI] Feedback Data for Kernel Processing");
-    for (i = 0; i < sizeof(rx_fpga); ++i) {
-        printk(KERN_INFO "[FPGA][SPI] Byte %d: 0x%02x\n", i, rx_fpga[i]);
-    }
-
-    /*!
-     * 
-     * 
-     * 
-     * Here we should receive movement
-     * feedback data for kernel processing
-     * 
-     * 
-     * 
-     */
-
-}
-
 //////////////////////////
 //                      //
 //                      //
@@ -313,37 +177,8 @@ static int __init fpga_driver_init(void)
     // SPI :: CONFIG                //
     //                              //
     //////////////////////////////////
-    struct spi_master *spi_master0;
-    int ret;
 
-    spi_master0 = spi_busnum_to_master(0);
-    if (!spi_master0) {
-        printk(KERN_ERR "[FPGA][SPI] SPI master for SPI0 not found\n");
-        return -ENODEV;
-    }
-
-    // Prepare the SPI devices
-    spi_dev = spi_alloc_device(spi_master0);
-    if (!spi_dev) {
-        printk(KERN_ERR "[FPGA][SPI] Failed to allocate SPI device for SPI0\n");
-        return -ENOMEM;
-    }
-
-    /*! 
-     * The mode is set to 1 to pass the
-     * High clock control signal to FPGA
-     */
-    spi_dev->chip_select = 0;
-    spi_dev->mode = SPI_MODE_1;
-    spi_dev->bits_per_word = 8;
-    spi_dev->max_speed_hz = 1000000;
-
-    ret = spi_setup(spi_dev);
-    if (ret < 0) {
-        printk(KERN_ERR "[FPGA][SPI] Failed to setup SPI device: %d\n", ret);
-        spi_dev_put(spi_dev);
-        return ret;
-    }
+    spiInit();
 
     /*!
      * Work config for
@@ -351,21 +186,8 @@ static int __init fpga_driver_init(void)
      * Kernel and Fpga
      */
 
-    // kernelWorkInit();
-
-    INIT_WORK(get_kernel_work(), kernel_execute);
-    set_kernel_wq(create_singlethread_workqueue("kernel_workqueue"));
-    if (!get_kernel_wq()) {
-        printk(KERN_ERR "[FPGA][WRK] Failed to create kernel workqueue\n");
-        return -ENOMEM;
-    }
-
-    INIT_WORK(get_fpga_work(), fpga_command);
-    set_fpga_wq(create_singlethread_workqueue("fpga_workqueue"));
-    if (!get_fpga_wq()) {
-        printk(KERN_ERR "[FPGA][WRK] Failed to create fpga workqueue\n");
-        return -ENOMEM;
-    }
+    kernelWorkInit();
+    fpgaWorkInit();
 
     //////////////////////////////////
     //                              //
@@ -403,7 +225,7 @@ static int __init fpga_driver_init(void)
     {
         printk(KERN_ERR "[FPGA][IRQ] Failed to request IRQ number :: Pin [%d]\n", GPIO_KERNEL_INTERRUPT);
         gpio_free(GPIO_KERNEL_INTERRUPT);
-        spi_dev_put(spi_dev);
+        // spi_dev_put(spi_dev); TODO :: Move this into interrupt config
         return result;
     }
     printk(KERN_INFO "[FPGA][IRQ] Initialized\n");
@@ -452,8 +274,7 @@ static void __exit fpga_driver_exit(void)
         set_fpga_wq(NULL);
     }
 
-    spi_dev_put(spi_dev);
-    printk(KERN_INFO "[FPGA][SPI] Exit\n");
+    spiDestroy();
 
     //////////////////////////////////
     //                              //
