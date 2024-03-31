@@ -18,6 +18,7 @@
 #include <linux/workqueue.h> // For workqueue-related functions and macros
 #include <linux/slab.h>      // For memory allocation functions like kmalloc
 
+#include "stateMachine.h"
 #include "charDevice.h"
 #include "workLoad.h"
 #include "spiFpga.h"
