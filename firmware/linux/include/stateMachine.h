@@ -20,13 +20,13 @@
 
 #define RETURN_OK 0
 
-enum StateMachine 
+typedef enum 
 {
     IDLE    = 0,
     SPI     = 1,
     I2C     = 2,    
     USER    = 3
-};
+} stateMachineType;
 
 void stateMachineInit(void);
 void stateMachineDestroy(void);

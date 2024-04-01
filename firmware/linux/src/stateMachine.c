@@ -38,7 +38,7 @@ static int StateMachineThread(void *data)
 {
     int counter = 0;
 
-    STATE = IDLE;
+    stateMachineType STATE = IDLE;
 
     while (!kthread_should_stop()) 
     {
