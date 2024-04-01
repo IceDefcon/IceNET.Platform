@@ -6,7 +6,7 @@
  */
 
 #include "workLoad.h"
-#include "spiFpga.h"
+#include "spiEngine.h"
 
 //////////////////////
 //                  //

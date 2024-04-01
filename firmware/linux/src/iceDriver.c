@@ -10,7 +10,7 @@
 #include "stateMachine.h"
 #include "charDevice.h"
 #include "workLoad.h"
-#include "spiFpga.h"
+#include "spiEngine.h"
 #include "gpioIsr.h"
 
 MODULE_VERSION("2.0");

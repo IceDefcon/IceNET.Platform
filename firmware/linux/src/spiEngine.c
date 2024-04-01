@@ -8,7 +8,7 @@
 #include <linux/module.h>
 #include <linux/kernel.h>
 
-#include "spiFpga.h"
+#include "spiEngine.h"
 
 //////////////////////
 //                  //

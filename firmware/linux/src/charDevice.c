@@ -53,23 +53,21 @@ static struct file_operations fops =
    .release = dev_release,
 };
 
-int charDeviceInit(void)
+void charDeviceInit(void)
 {
     printk(KERN_INFO "[FPGA][ C ] Device Init\n");
 
     majorNumber = register_chrdev(0, DEVICE_NAME, &fops);
     if (majorNumber<0)
     {
-        printk(KERN_ALERT "[FPGA][ C ] Failed to register major number\n");
-        return majorNumber;
+        printk(KERN_ALERT "[FPGA][ C ] Failed to register major number: %d\n", majorNumber);
     }
 
     C_Class = class_create(THIS_MODULE, CLASS_NAME);
     if (IS_ERR(C_Class))
     {
         unregister_chrdev(majorNumber, DEVICE_NAME);
-        printk(KERN_ALERT "[FPGA][ C ] Failed to register device class\n");
-        return PTR_ERR(C_Class);
+        printk(KERN_ALERT "[FPGA][ C ] Failed to register device class: %ld\n", PTR_ERR(C_Class));
     }
     
     C_Device = device_create(C_Class, NULL, MKDEV(majorNumber, 0), NULL, DEVICE_NAME);
@@ -77,8 +75,7 @@ int charDeviceInit(void)
     {
         class_destroy(C_Class);
         unregister_chrdev(majorNumber, DEVICE_NAME);
-        printk(KERN_ALERT "[FPGA][ C ] Failed to create the device\n");
-        return PTR_ERR(C_Device);
+        printk(KERN_ALERT "[FPGA][ C ] Failed to create the device: %ld\n", PTR_ERR(C_Device));
     }
 
     mutex_init(&com_mutex);
