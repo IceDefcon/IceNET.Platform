@@ -26,7 +26,7 @@ enum StateMachine STATE;
 static struct task_struct *thread_handle;
 
 /* TODO :: Waiting for RTL to be continued */
-static int StateMachineThread(void)
+static int StateMachineThread(void *data)
 {
     int counter = 0;
 
