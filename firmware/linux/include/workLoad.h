@@ -25,8 +25,8 @@
 /* GET */ struct workqueue_struct* get_kernel_wq(void);
 /* GET */ struct work_struct* get_kernel_work(void);
 
-/* INIT */ int spiKernelWorkInit(void);
-/* INIT */ int spiFpgaWorkInit(void);
+/* INIT */ void spiKernelWorkInit(void);
+/* INIT */ void spiFpgaWorkInit(void);
 /* DESTROY */ void spiKernelWorkDestroy(void);
 /* DESTROY */ void spiFpgaWorkDestroy(void);
 

@@ -19,8 +19,8 @@
 //////////////////////
 
 /* BASE */ static struct workqueue_struct *fpga_wq;
-/* BASE */ static struct workqueue_struct* kernel_wq;
 /* BASE */ static struct work_struct fpga_work;
+/* BASE */ static struct workqueue_struct* kernel_wq;
 /* BASE */ static struct work_struct kernel_work;
 
 /* GET */ struct workqueue_struct* get_fpga_wq(void) 
@@ -40,25 +40,23 @@
 	return &kernel_work;
 }
 
-int spiKernelWorkInit(void)
+void spiKernelWorkInit(void)
 {
 	INIT_WORK(get_kernel_work(), spiKernelExecute);
 	kernel_wq = create_singlethread_workqueue("kernel_workqueue");
 	if (!kernel_wq) 
 	{
-	    printk(KERN_ERR "[FPGA][WRK] Failed to create kernel workqueue\n");
-	    return -ENOMEM;
+	    printk(KERN_ERR "[FPGA][WRK] Failed to create kernel workqueue: -ENOMEM\n");
 	}
 }
 
-int spiFpgaWorkInit(void)
+void spiFpgaWorkInit(void)
 {
 	INIT_WORK(get_fpga_work(), spiFpgaExecute);
 	fpga_wq = create_singlethread_workqueue("fpga_workqueue");
 	if (!fpga_wq) 
 	{
-	    printk(KERN_ERR "[FPGA][WRK] Failed to create fpga workqueue\n");
-	    return -ENOMEM;
+	    printk(KERN_ERR "[FPGA][WRK] Failed to create fpga workqueue: -ENOMEM\n");
 	}
 }
 
