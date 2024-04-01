@@ -18,7 +18,7 @@
 //               //
 ///////////////////
 
-#define RETURN_OK 0
+#define SM_OK 0
 
 typedef enum 
 {

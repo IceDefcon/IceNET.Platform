@@ -70,7 +70,7 @@ static int StateMachineThread(void *data)
         counter++;
     }
 
-    return RETURN_OK;
+    return SM_OK;
 }
 
 void stateMachineInit(void)

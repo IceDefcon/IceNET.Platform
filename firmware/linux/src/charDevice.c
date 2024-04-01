@@ -101,7 +101,8 @@ static int dev_open(struct inode *inodep, struct file *filep)
 
     numberOpens++;
     printk(KERN_INFO "[FPGA][ C ] Device has been opened %d time(s)\n", numberOpens);
-    return NULL;
+
+    return CD_OK;
 }
 
 static ssize_t dev_read(struct file *filep, char *buffer, size_t len, loff_t *offset)
@@ -123,6 +124,8 @@ static ssize_t dev_read(struct file *filep, char *buffer, size_t len, loff_t *of
         printk(KERN_INFO "[FPGA][ C ] Failed to send %d characters to the user\n", error_count);
         return -EFAULT; // Failed -- return a bad address message (i.e. -14)
     }
+
+    return CD_OK;
 }
 
 static ssize_t dev_write(struct file *filep, const char *buffer, size_t len, loff_t *offset)
@@ -130,6 +133,15 @@ static ssize_t dev_write(struct file *filep, const char *buffer, size_t len, lof
     int error_count = 0;
     error_count = copy_from_user(message, buffer, len);
 
+    /**
+     * 
+     * TODO
+     * 
+     * 1. Need struct with parameters to update
+     * 2. State machine processing
+     * 3. Application interface
+     * 
+     **/
     if(strncmp(message, "a", 1) == 0)
     {
         queue_work(get_fpga_wq(), get_fpga_work());
@@ -146,50 +158,13 @@ static ssize_t dev_write(struct file *filep, const char *buffer, size_t len, lof
         printk(KERN_INFO "[FPGA][ C ] Failed to receive characters from the user\n");
         return -EFAULT;
     }
+    
+    return CD_OK;
 }
 
 static int dev_release(struct inode *inodep, struct file *filep)
 {
     mutex_unlock(&com_mutex);
     printk(KERN_INFO "[FPGA][ C ] Device successfully closed\n");
-    return NULL;
+    return CD_OK;
 }
-
-#if 0 /* Do I need them ??? */
-/* GET */ struct file_operations *get_fops(void)
-{
-    return &fops;
-}
-
-/* GET */ struct mutex *get_com_mutex(void)
-{
-    return &com_mutex;
-}
-
-/* GET */ int *get_majorNumber(void)
-{
-    return &majorNumber;
-}
-/* SET */ void set_majorNumber(int major) 
-{
-	majorNumber = major;
-}
-
-/* GET */ struct class *get_C_Class(void)
-{
-    return &C_Class;
-}
-/* SET */ void set_C_Class(struct class *class) 
-{
-	C_Class = class;
-}
-
-/* GET */ struct device *get_C_Device(void)
-{
-    return &C_Device;
-}
-/* SET */ void gst_C_Device(struct device *device) 
-{
-	C_Device = device;
-}
-#endif
