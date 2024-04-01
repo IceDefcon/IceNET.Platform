@@ -18,6 +18,8 @@
 //               //
 ///////////////////
 
+#define RETURN_OK 0
+
 enum StateMachine 
 {
     IDLE    = 0,
@@ -26,7 +28,7 @@ enum StateMachine
     USER    = 3
 };
 
-int stateMachineInit(void);
+void stateMachineInit(void);
 void stateMachineDestroy(void);
 
 #endif // STATE_MACHINE_H

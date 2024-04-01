@@ -7,7 +7,7 @@
 
 #include <linux/kernel.h>
 #include <linux/kthread.h>
-#include <linux/delay.h> // For msleep()
+#include <linux/delay.h> // For msleep
 
 #include "stateMachine.h"
 
@@ -25,7 +25,8 @@ enum StateMachine STATE;
 
 static struct task_struct *thread_handle;
 
-static int StateMachineThread(void *data)
+/* TODO :: Waiting for RTL to be continued */
+static int StateMachineThread(void)
 {
     int counter = 0;
 
@@ -36,7 +37,7 @@ static int StateMachineThread(void *data)
         switch(STATE)
         {
             case IDLE:
-                // printk(KERN_INFO "[FPGA][STM] Idle State [%d]\n",counter);
+                printk(KERN_INFO "[FPGA][STM] Idle State [%d]\n",counter);
                 break;
 
             case SPI:
@@ -56,22 +57,22 @@ static int StateMachineThread(void *data)
 
             default:
                 printk(KERN_INFO "[FPGA][STM] Unknown State [%d]\n",counter);
-                break;
+                return EINVAL;
         }
 
         msleep(1000);  // Delay for 1 second
         counter++;
     }
 
-    return 0;
+    return RETURN_OK;
 }
 
-int stateMachineInit(void)
+void stateMachineInit(void)
 {
-    thread_handle = kthread_create(StateMachineThread, NULL, "thread_handle");
-    if (IS_ERR(thread_handle)) {
-        printk(KERN_ERR "Failed to create kernel thread\n");
-        return PTR_ERR(thread_handle);
+    thread_handle = kthread_create(StateMachineThread, NULL, "SM thread handle");
+    if (IS_ERR(thread_handle)) 
+    {
+        printk(KERN_ERR "[FPGA][STM] Failed to create kernel thread. Error code: %ld\n", PTR_ERR(thread_handle));
     }
     wake_up_process(thread_handle);
 }
