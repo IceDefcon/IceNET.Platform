@@ -21,8 +21,6 @@
 //               //
 ///////////////////
 
-enum StateMachine STATE;
-
 static struct task_struct *thread_handle;
 
 /**
