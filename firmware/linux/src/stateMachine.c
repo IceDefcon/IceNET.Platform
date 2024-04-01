@@ -25,7 +25,15 @@ enum StateMachine STATE;
 
 static struct task_struct *thread_handle;
 
-/* TODO :: Waiting for RTL to be continued */
+/**
+ * 
+ * TODO :: Waiting for RTL to be continued
+ * 
+ * State machine is running but not configured
+ * 
+ * Require void pointer due to NULL at kthread init
+ * 
+ */
 static int StateMachineThread(void *data)
 {
     int counter = 0;
@@ -37,7 +45,7 @@ static int StateMachineThread(void *data)
         switch(STATE)
         {
             case IDLE:
-                printk(KERN_INFO "[FPGA][STM] Idle State [%d]\n",counter);
+                // printk(KERN_INFO "[FPGA][STM] Idle State [%d]\n",counter);
                 break;
 
             case SPI:
