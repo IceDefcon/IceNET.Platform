@@ -62,7 +62,6 @@ signal interrupt_length : std_logic_vector(3 downto 0) := "1111";
 signal interrupt_signal : std_logic := '0';
 
 -- I2C & SPA Data
-constant data_SPI : std_logic_vector(7 downto 0) := "10001000"; -- 0x88
 constant address_I2C : std_logic_vector(6 downto 0) := "1001011"; -- 0x69 ---> ID :: GOOD == 1001011 :: BAD == 1001111
 constant register_I2C : std_logic_vector(7 downto 0) := "11110000"; -- 0x40 ---> REG
 signal index : integer range 0 to 15 := 0;
@@ -70,11 +69,8 @@ signal index : integer range 0 to 15 := 0;
 -- I2C Return Data
 signal return_data : std_logic_vector(7 downto 0) := "11100111";
 
--- SPI Synchronise
-signal synced_sclk : std_logic := '0';
-signal synced_cs : std_logic := '0';
-signal synced_mosi : std_logic := '0';
-signal synced_miso : std_logic := '0';
+-- SPI Kernel Feedback Data
+signal SpiDataFeedback_MISO : std_logic := '0';
 
 -- Timers
 signal system_timer : std_logic_vector(26 downto 0) := (others => '0');
@@ -166,10 +162,10 @@ SpiDataFeedback_module: SpiDataFeedback port map
 	CLOCK => CLOCK_50MHz,
 	SCLK => KERNEL_SCLK,
 	DATA => return_data,
-	synced_miso => synced_miso
+	synced_miso => SpiDataFeedback_MISO
 );
 
-KERNEL_MISO <= synced_miso;
+KERNEL_MISO <= SpiDataFeedback_MISO;
 
 ------------------------------------------------------
 -- Interrupt pulse :: 0x2FAF07F/50 MHz
