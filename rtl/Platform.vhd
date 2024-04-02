@@ -195,17 +195,19 @@ SPI_Data_module: SPI_Data port map
 
 KERNEL_MISO <= synced_miso;
 
-----------------------------------------
+------------------------------------------------------
 -- Interrupt pulse :: 0x2FAF07F/50 MHz
 -- (49999999 + 1)/50000000 Hz = 1 sec
 --
--- This is adjsted by the divider
--- Currently divider = 2
--- Gives 250ms interrupt
+-- Divide 0 :: 50000000 >> 0 :: 50000000*20ns = 1000ms
+-- Divide 1 :: 50000000 >> 1 :: 25000000*20ns = 500ms
+-- Divide 2 :: 50000000 >> 2 :: 12500000*20ns = 250ms
+-- Divide 3 :: 50000000 >> 3 :: 6250000*20ns = 125ms
+-- Divide 4 :: 50000000 >> 4 :: 3125000*20ns = 62.5ms
 --
 -- Interrupt length :: 0xF
 -- 16 * 20ns = 320 ns
-----------------------------------------
+------------------------------------------------------
 Interrupt_module: InterruptPulse port map 
 (
 	CLOCK => CLOCK_50MHz,
@@ -522,7 +524,7 @@ begin
 			                end if;
 
 			                if status_sda = "1111" then --  Stop bit 
-			                	--FPGA_INT <= '1';
+			                	FPGA_INT <= '1';
 			                	I2C_SDA <= '0';
 			                end if;
 
@@ -538,7 +540,7 @@ begin
 
 			                if status_sda = "0000" -- Stop Bit
 			                then -- BARIER :: 'Z'
-			                	--FPGA_INT <= '0';
+			                	FPGA_INT <= '0';
 			                	I2C_SDA <= 'Z';
 			                end if;
 ------------------------------------------------------
@@ -616,7 +618,7 @@ end process;
 -- In order to adjust PID
 -- Controler for the gyroscope
 -----------------------------------------------
-FPGA_INT <= interrupt_signal;
+--FPGA_INT <= interrupt_signal;
 
 end rtl;
 
