@@ -108,19 +108,6 @@ signal status_sda : std_logic_vector(3 downto 0) := "0000";
 ----------------------------------------------------------------------------------------------------------------
 -- COMPONENTS DECLARATION
 ----------------------------------------------------------------------------------------------------------------
-component SPI_Synchronizer
-port
-(
-    CLK_50MHz : in  std_logic;
-    IN_SCLK : in  std_logic;
-    IN_CS : in  std_logic;
-    IN_MOSI : in  std_logic;
-    OUT_SCLK : out std_logic;
-    OUT_CS : out std_logic;
-    OUT_MOSI : out std_logic
-);
-end component;
-
 component Debounce
 port
 (
@@ -136,12 +123,12 @@ port
 );
 end component;
 
-component SPI_Data
+component SpiDataFeedback
 Port 
 (
     CLOCK : in  std_logic;
-    DATA : in  std_logic_vector(7 downto 0);
-    synced_sclk : in std_logic;
+    SCLK : in std_logic;
+    DATA : in std_logic_vector(7 downto 0);
     synced_miso : out std_logic
 );
 end component;
@@ -161,17 +148,6 @@ end component;
 ----------------------------------------------------------------------------------------------------------------
 begin
 
-SPI_Synchronizer_module: SPI_Synchronizer port map 
-(
-    CLK_50MHz => CLOCK_50MHz,
-    IN_SCLK => KERNEL_SCLK,
-    IN_CS => KERNEL_CS,
-    IN_MOSI => KERNEL_MOSI,
-    OUT_SCLK  => synced_sclk,
-    OUT_CS => synced_cs,
-    OUT_MOSI  => synced_mosi
-);
-
 Debounce_module: Debounce port map 
 (
 	clock => CLOCK_50MHz,
@@ -185,11 +161,11 @@ Debounce_module: Debounce port map
 	button_out_4 => open
 );
 
-SPI_Data_module: SPI_Data port map 
+SpiDataFeedback_module: SpiDataFeedback port map 
 (
 	CLOCK => CLOCK_50MHz,
+	SCLK => KERNEL_SCLK,
 	DATA => return_data,
-	synced_sclk => synced_sclk,
 	synced_miso => synced_miso
 );
 
