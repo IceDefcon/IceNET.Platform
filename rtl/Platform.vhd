@@ -49,16 +49,15 @@ architecture rtl of Platform is
 -- Signals
 ----------------------------------------------------------------------------------------------------------------
 
--- Reset
-signal reset_button : std_logic := '0';
 -- SM Init
 signal system_start : std_logic := '0';
--- Interrupt
+-- SM Reset
+signal reset_button : std_logic := '0';
 signal kernel_interrupt : std_logic := '0';
 
 -- Interrupt Pulse Generator
 signal interrupt_divider : integer := 2;
-signal interrupt_period : std_logic_vector(25 downto 0) := "10111110101111000001111111";
+signal interrupt_period : std_logic_vector(25 downto 0) := "10111110101111000001111111"; -- [50*10^6 - 1]
 signal interrupt_length : std_logic_vector(3 downto 0) := "1111";
 signal interrupt_signal : std_logic := '0';
 
@@ -90,18 +89,12 @@ signal sck_timer_toggle : std_logic := '0';
 
 -- parametric offset
 signal sda_offset : std_logic_vector(15 downto 0) := (others => '0');
-signal offset : std_logic_vector(15 downto 0) := (others => '0');
-signal read_sda : std_logic := '0';
 
 --i2c state machine
 type STATE is (IDLE, INIT, CONFIG, SEND, DONE, RECEIVE);
 signal state_current, state_next: STATE := IDLE;
 
--- Interrupt
-signal diode_check : std_logic := '0';
-signal diode_done : std_logic := '0';
-
--- LED Signals
+-- Status Indicators
 signal isIDLE : std_logic := '0';
 signal isINIT : std_logic := '0';
 signal isCONFIG : std_logic := '0';
@@ -111,11 +104,6 @@ signal isDONE : std_logic := '0';
 -- Status Register
 signal status_sck : std_logic_vector(3 downto 0) := "0000";
 signal status_sda : std_logic_vector(3 downto 0) := "0000";
-
--- Debug
-signal debug_1 : std_logic := '0';
-signal debug_2 : std_logic := '0';
-signal debug_3 : std_logic := '0';
 
 ----------------------------------------------------------------------------------------------------------------
 -- COMPONENTS DECLARATION
@@ -158,7 +146,7 @@ Port
 );
 end component;
 
-component Interrupt
+component InterruptPulse
 Port 
 (
     CLOCK : in  std_logic;
@@ -216,9 +204,9 @@ KERNEL_MISO <= synced_miso;
 -- Gives 250ms interrupt
 --
 -- Interrupt length :: 0xF
--- 16 * 2ns = 32 ns
+-- 16 * 20ns = 320 ns
 ----------------------------------------
-Interrupt_module: Interrupt port map 
+Interrupt_module: InterruptPulse port map 
 (
 	CLOCK => CLOCK_50MHz,
 	interrupt_period => std_logic_vector(unsigned(interrupt_period) srl interrupt_divider),
@@ -226,28 +214,13 @@ Interrupt_module: Interrupt port map
 	interrupt_signal => interrupt_signal
 );
 
-interrupt_process:
-process(CLOCK_50MHz, interrupt_signal, diode_check, diode_done)
-begin
-	if rising_edge(CLOCK_50MHz) then
-		if interrupt_signal = '1' then
-			if diode_done = '0' then
-				diode_check <= not diode_check;
-				diode_done 	<= '1';
-			end if;
-		else
-			diode_done <= '0';
-		end if;
-	end if;
-end process;
-
 ---------------------------------------------------------------------------------------
 -- i2c communication protocol
 ---------------------------------------------------------------------------------------
 state_machine_process:
 process(CLOCK_50MHz, reset_button, kernel_interrupt, system_start, state_current, 
 	system_timer, init_timer, config_timer, send_timer, done_timer, status_timer, 
-	sck_timer_toggle, read_sda, sda_offset)
+	sck_timer_toggle, sda_offset)
 begin
     if rising_edge(CLOCK_50MHz) then
 
@@ -549,7 +522,7 @@ begin
 			                end if;
 
 			                if status_sda = "1111" then --  Stop bit 
-			                	FPGA_INT <= '1';
+			                	--FPGA_INT <= '1';
 			                	I2C_SDA <= '0';
 			                end if;
 
@@ -565,7 +538,7 @@ begin
 
 			                if status_sda = "0000" -- Stop Bit
 			                then -- BARIER :: 'Z'
-			                	FPGA_INT <= '0';
+			                	--FPGA_INT <= '0';
 			                	I2C_SDA <= 'Z';
 			                end if;
 ------------------------------------------------------
@@ -643,7 +616,7 @@ end process;
 -- In order to adjust PID
 -- Controler for the gyroscope
 -----------------------------------------------
---FPGA_INT <= '0'; --interrupt_signal;
+FPGA_INT <= interrupt_signal;
 
 end rtl;
 

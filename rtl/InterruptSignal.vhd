@@ -2,16 +2,16 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-entity Interrupt is
+entity InterruptPulse is
     Port (
         CLOCK : in  std_logic;
         interrupt_period : in  std_logic_vector(25 downto 0);
         interrupt_length : in  std_logic_vector(3 downto 0);
         interrupt_signal : out std_logic
     );
-end entity Interrupt;
+end entity InterruptPulse;
 
-architecture rtl of Interrupt is
+architecture rtl of InterruptPulse is
     signal internal_interrupt_length : std_logic_vector(3 downto 0) := (others => '0');
     signal internal_interrupt_period : std_logic_vector(25 downto 0) := (others => '0');
     signal internal_interrupt_signal : std_logic := '0';
