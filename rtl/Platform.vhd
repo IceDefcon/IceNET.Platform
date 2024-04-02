@@ -25,11 +25,6 @@ port
     LED_7 : out std_logic; -- PIN_M8
     LED_8 : out std_logic; -- PIN_N8
 
-    TEST_CS : out std_logic; 	-- PIN_B5
-    TEST_MISO : in std_logic; 	-- PIN_B6
-    TEST_MOSI : out std_logic; 	-- PIN_B7
-    TEST_SCLK : out std_logic; 	-- PIN_B8
-
     KERNEL_CS : in std_logic;    -- PIN_A5   :: BBB P9_17 :: PULPLE  :: SPI0_CS0
     KERNEL_MISO : out std_logic; -- PIN_A6   :: BBB P9_21 :: BROWN   :: SPI0_D0
     KERNEL_MOSI : in std_logic;  -- PIN_A7   :: BBB P9_18 :: BLUE    :: SPI0_D1
