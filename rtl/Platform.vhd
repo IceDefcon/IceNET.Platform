@@ -99,8 +99,8 @@ signal offset : std_logic_vector(15 downto 0) := (others => '0');
 signal read_sda : std_logic := '0';
 
 --i2c state machine
-type MAIN is (IDLE, INIT, CONFIG, SEND, DONE, RECEIVE);
-signal main_current, main_next: MAIN := IDLE;
+type STATE is (IDLE, INIT, CONFIG, SEND, DONE, RECEIVE);
+signal state_current, state_next: STATE := IDLE;
 
 -- Interrupt
 signal diode_check : std_logic := '0';
@@ -249,22 +249,10 @@ end process;
 ---------------------------------------------------------------------------------------
 -- i2c communication protocol
 ---------------------------------------------------------------------------------------
--- Start.a0.a1.a2.a3.a4.a5.a6.Rd/Wr.Ack/Nak.d0.d1.d2.d3.d4.d5.d6.d7.Ack/Nak.Stop
---
--- Start == SDA >> High.to.Low before SCL High.to.Low
--- Write == '0'
--- Read  == '1'
--- Ack   == '0'
--- Nak   == '1'
--- Stop  == SDA >> Low.to.High after SCL Low.to.High
---
----------------------------------------------------------------------------------------
 state_machine_process:
-process(CLOCK_50MHz, reset_button, kernel_interrupt, system_start, main_current, main_next, status_sck, status_sda,
-	system_timer, init_timer, config_timer, send_timer, done_timer, status_timer, sck_timer, sda_timer, sck_timer_toggle,
-	isIDLE, isINIT, isCONFIG, isDEVICE, isDONE,
-	read_sda, sda_offset,
-	return_data)
+process(CLOCK_50MHz, reset_button, kernel_interrupt, system_start, state_current, 
+	system_timer, init_timer, config_timer, send_timer, done_timer, status_timer, 
+	sck_timer_toggle, read_sda, sda_offset)
 begin
     if rising_edge(CLOCK_50MHz) then
 
@@ -276,7 +264,7 @@ begin
 		if system_start = '0' then
 			if system_timer = "101111101011110000011111111" then
 				system_start <= '1';
-	            main_next <= IDLE;
+	            state_next <= IDLE;
 			else
 				system_timer <= system_timer + '1';
 			end if;
@@ -285,12 +273,12 @@ begin
 	        -- State Machine :: Reset
 	        ----------------------------------------
 	        if reset_button = '1' or kernel_interrupt <= '0' then
-	        	main_next <= INIT;
+	        	state_next <= INIT;
 	    	else
 		        ------------------------------------
 		        -- State Machine :: IDLE
 		        ------------------------------------
-		    	if main_current = IDLE then
+		    	if state_current = IDLE then
 					isIDLE <= '1';
 					isINIT <= '0';
 					isCONFIG <= '0';
@@ -302,9 +290,9 @@ begin
 		        ------------------------------------
 		        -- State Machine :: INIT
 		        ------------------------------------
-		        if main_current = INIT then
+		        if state_current = INIT then
 		            if init_timer = "1011111010111100000111111" then -- delay for the reset to stabilise
-		            	main_next <= CONFIG;
+		            	state_next <= CONFIG;
 		            else
 		                init_timer <= init_timer + '1';
 		            end if;
@@ -317,9 +305,9 @@ begin
 		        ------------------------------------
 		        -- State Machine :: CONFIG
 		        ------------------------------------
-		        if main_current = CONFIG then
+		        if state_current = CONFIG then
 		            if config_timer = "1011111010111100000111111" then
-		            	main_next <= SEND;
+		            	state_next <= SEND;
 		            	----------------------------
 		            	-- Body
 		            	----------------------------
@@ -339,9 +327,9 @@ begin
 		        ------------------------------------
 		        -- State Machine :: SEND
 		        ------------------------------------
-		        if main_current = SEND then
+		        if state_current = SEND then
 		        	if send_timer = "1011111010111100000111111" then
-			        	main_next <= DONE;
+			        	state_next <= DONE;
 					else
 		        		if status_timer = "1111111111111111" then -- Length :: 25k clock cycles :: -----===[ RESET ]===----
 				        else
@@ -602,7 +590,7 @@ begin
 		        ------------------------------------
 		        -- State Machine :: DONE
 		        ------------------------------------
-		        if main_current = DONE then
+		        if state_current = DONE then
 		            if done_timer = "1011111010111100000111111" then
 		            	-- Reset Timers
 		        		status_timer <= (others => '0');
@@ -616,7 +604,7 @@ begin
 		            	status_sck <= "0000";
 		            	status_sda <= "0000";
 		            	-- Switch to IDLE
-			        	main_next <= IDLE;
+			        	state_next <= IDLE;
 			        	-- Reset to default
 			        	return_data <= "11100111";
 		            else
@@ -632,7 +620,7 @@ begin
 		        ------------------------------------
 		        -- State Machine :: Update
 		        ------------------------------------
-		        main_current <= main_next;
+		        state_current <= state_next;
 
 				------------------------------------
 				-- State Machine :: Output
