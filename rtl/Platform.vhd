@@ -54,6 +54,9 @@ signal system_start : std_logic := '0';
 -- SM Reset
 signal reset_button : std_logic := '0';
 signal kernel_interrupt : std_logic := '0';
+--SM Parameters
+constant smStartDelay : std_logic_vector(26 downto 0):= "101111101011110000011111111";
+constant smStateDelay : std_logic_vector(24 downto 0):= "1011111010111100000111111";
 
 -- Interrupt Pulse Generator
 signal interrupt_divider : integer := 2;
@@ -72,12 +75,14 @@ signal return_data : std_logic_vector(7 downto 0) := "11100111";
 -- SPI Kernel Feedback Data
 signal SpiDataFeedback_MISO : std_logic := '0';
 
--- Timers
+-- Delay Timers
 signal system_timer : std_logic_vector(26 downto 0) := (others => '0');
 signal init_timer : std_logic_vector(24 downto 0) := (others => '0');
 signal config_timer : std_logic_vector(24 downto 0) := (others => '0');
 signal send_timer : std_logic_vector(24 downto 0) := (others => '0');	
 signal done_timer : std_logic_vector(24 downto 0) := (others => '0');
+
+-- Process Timers
 signal status_timer : std_logic_vector(15 downto 0) := (others => '0');
 signal sck_timer : std_logic_vector(7 downto 0) := (others => '0');
 signal sda_timer : std_logic_vector(8 downto 0) := (others => '0');
@@ -204,7 +209,7 @@ begin
         -- State Machine :: Start
         --------------------------------------------
 		if system_start = '0' then
-			if system_timer = "101111101011110000011111111" then
+			if system_timer = smStartDelay then
 				system_start <= '1';
 	            state_next <= IDLE;
 			else
@@ -233,7 +238,7 @@ begin
 		        -- State Machine :: INIT
 		        ------------------------------------
 		        if state_current = INIT then
-		            if init_timer = "1011111010111100000111111" then -- delay for the reset to stabilise
+		            if init_timer = smStateDelay then -- delay for the reset to stabilise
 		            	state_next <= CONFIG;
 		            else
 		                init_timer <= init_timer + '1';
@@ -248,7 +253,7 @@ begin
 		        -- State Machine :: CONFIG
 		        ------------------------------------
 		        if state_current = CONFIG then
-		            if config_timer = "1011111010111100000111111" then
+		            if config_timer = smStateDelay then
 		            	state_next <= SEND;
 		            	----------------------------
 		            	-- Body
@@ -270,7 +275,7 @@ begin
 		        -- State Machine :: SEND
 		        ------------------------------------
 		        if state_current = SEND then
-		        	if send_timer = "1011111010111100000111111" then
+		        	if send_timer = smStateDelay then
 			        	state_next <= DONE;
 					else
 		        		if status_timer = "1111111111111111" then -- Length :: 25k clock cycles :: -----===[ RESET ]===----
@@ -533,7 +538,7 @@ begin
 		        -- State Machine :: DONE
 		        ------------------------------------
 		        if state_current = DONE then
-		            if done_timer = "1011111010111100000111111" then
+		            if done_timer = smStateDelay then
 		            	-- Reset Timers
 		        		status_timer <= (others => '0');
 		            	sda_timer <= (others => '0');
