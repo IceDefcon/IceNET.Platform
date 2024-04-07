@@ -5,11 +5,22 @@ use IEEE.numeric_std.all;
 entity SpiStateMachine is
 port
 (    
-    clock : in std_logic;
-    reset : in std_logic;
+    CLOCK : in std_logic;
+    RESET : in std_logic;
 
-    input : in std_logic;
-    output : out std_logic
+    I2C_SCK : inout std_logic;
+    I2C_SDA : inout std_logic;
+
+    DATA : out std_logic;
+
+    LED_1 : out std_logic;
+    LED_2 : out std_logic;
+    LED_3 : out std_logic;
+    LED_4 : out std_logic;
+    LED_5 : out std_logic;
+    LED_6 : out std_logic;
+    LED_7 : out std_logic;
+    LED_8 : out std_logic
 );
 end SpiStateMachine;
 
@@ -28,7 +39,7 @@ constant smStateDelay : std_logic_vector(24 downto 0):= "10111110101111000001111
 signal status_sck : std_logic_vector(3 downto 0) := "0000";
 signal status_sda : std_logic_vector(3 downto 0) := "0000";
 -- I2C Return Data
-signal return_data : std_logic_vector(7 downto 0) := "11100111";
+--signal return_data : std_logic_vector(7 downto 0) := "11100111";
 -- I2C & SPA Data
 constant address_I2C : std_logic_vector(6 downto 0) := "1001011"; -- 0x69 ---> ID :: GOOD == 1001011 :: BAD == 1001111
 constant register_I2C : std_logic_vector(7 downto 0) := "11110000"; -- 0x40 ---> REG
@@ -69,11 +80,11 @@ signal isDONE : std_logic := '0';
 begin
 
 state_machine_process:
-process(CLOCK_50MHz, reset_button, kernel_interrupt, system_start, state_current, 
+process(CLOCK, RESET, kernel_interrupt, system_start, state_current, 
     system_timer, init_timer, config_timer, send_timer, done_timer, status_timer, 
     sck_timer_toggle, sda_offset)
 begin
-    if rising_edge(CLOCK_50MHz) then
+    if rising_edge(CLOCK) then
 
         kernel_interrupt <= KERNEL_INT;
 
@@ -91,7 +102,7 @@ begin
             ----------------------------------------
             -- State Machine :: Reset
             ----------------------------------------
-            if reset_button = '1' or kernel_interrupt <= '0' then
+            if RESET = '1' or kernel_interrupt <= '0' then
                 state_next <= INIT;
             else
                 ------------------------------------
@@ -365,7 +376,7 @@ begin
                             if status_sda = "1101" then -- Return Data 
                                 if sda_timer = "111110011" then -- Half bit time
                                     sda_timer <= (others => '0');
-                                    return_data(7 - index) <= I2C_SDA; -- Return Data
+                                    DATA(7 - index) <= I2C_SDA; -- Return Data
                                     index <= index + 1;
                                 else
                                     sda_timer <= sda_timer + '1';
@@ -425,7 +436,7 @@ begin
                         -- Switch to IDLE
                         state_next <= IDLE;
                         -- Reset to default
-                        return_data <= "11100111";
+                        DATA <= "11100111";
                     else
                         done_timer <= done_timer + '1';
                     end if;
@@ -448,14 +459,14 @@ begin
                 ------------------------------------
                 -- State Machine :: Status
                 ------------------------------------
-                SM_LED_1 <= isIDLE;
-                SM_LED_2 <= isINIT;
-                SM_LED_3 <= isCONFIG;
-                SM_LED_4 <= isDEVICE;
-                SM_LED_5 <= isDONE;
-                SM_LED_6 <= '0';
-                SM_LED_7 <= status_sda(0) or status_sda(1) or status_sda(2) or status_sda(3);
-                SM_LED_8 <= status_sck(0) or status_sck(1) or status_sck(2) or status_sck(3);
+                LED_1 <= isIDLE;
+                LED_2 <= isINIT;
+                LED_3 <= isCONFIG;
+                LED_4 <= isDEVICE;
+                LED_5 <= isDONE;
+                LED_6 <= '0';
+                LED_7 <= status_sda(0) or status_sda(1) or status_sda(2) or status_sda(3);
+                LED_8 <= status_sck(0) or status_sck(1) or status_sck(2) or status_sck(3);
 
             end if;
         end if;
