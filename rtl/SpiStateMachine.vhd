@@ -1,6 +1,7 @@
-library IEEE;
-use IEEE.std_logic_1164.all;
-use IEEE.numeric_std.all;
+library ieee;
+use ieee.numeric_std.all;
+use ieee.std_logic_1164.all;
+use ieee.std_logic_unsigned.all;
 
 entity SpiStateMachine is
 port
@@ -8,10 +9,13 @@ port
     CLOCK : in std_logic;
     RESET : in std_logic;
 
+    KERNEL_INT : in std_logic;
+    FPGA_INT : out std_logic;
+    
     I2C_SCK : inout std_logic;
     I2C_SDA : inout std_logic;
 
-    DATA : out std_logic;
+    DATA : out std_logic_vector(7 downto 0);
 
     LED_1 : out std_logic;
     LED_2 : out std_logic;
@@ -30,6 +34,8 @@ architecture rtl of SpiStateMachine is
 -- Signals
 ----------------------------------------------------------------------------------------------------------------
 
+-- SM interrupt
+signal kernel_interrupt : std_logic := '0';
 -- SM Init
 signal system_start : std_logic := '0';
 --SM Parameters
@@ -38,8 +44,6 @@ constant smStateDelay : std_logic_vector(24 downto 0):= "10111110101111000001111
 -- SM Status Register
 signal status_sck : std_logic_vector(3 downto 0) := "0000";
 signal status_sda : std_logic_vector(3 downto 0) := "0000";
--- I2C Return Data
---signal return_data : std_logic_vector(7 downto 0) := "11100111";
 -- I2C & SPA Data
 constant address_I2C : std_logic_vector(6 downto 0) := "1001011"; -- 0x69 ---> ID :: GOOD == 1001011 :: BAD == 1001111
 constant register_I2C : std_logic_vector(7 downto 0) := "11110000"; -- 0x40 ---> REG
