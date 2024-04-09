@@ -116,7 +116,7 @@ void interruptFromFpgaExecute(struct work_struct *work)
      */
 }
 
-void spiFpgaExecute(struct work_struct *work)
+void signalFromCharDevice(struct work_struct *work)
 {
     struct spi_message msg;
     struct spi_transfer transfer;
@@ -137,7 +137,7 @@ void spiFpgaExecute(struct work_struct *work)
         return;
     }
 
-    printk(KERN_INFO "[FPGA][SPI] Feedback Data for Kernel Processing");
+    printk(KERN_INFO "[FPGA][SPI] Data from FPGA ---==[ Char device Signal ]==---");
     for (i = 0; i < sizeof(rx_fpga); ++i) {
         printk(KERN_INFO "[FPGA][SPI] Byte %d: 0x%02x\n", i, rx_fpga[i]);
     }

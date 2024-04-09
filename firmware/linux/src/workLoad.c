@@ -52,7 +52,7 @@ void spiKernelWorkInit(void)
 
 void spiFpgaWorkInit(void)
 {
-	INIT_WORK(get_fpga_work(), spiFpgaExecute);
+	INIT_WORK(get_fpga_work(), signalFromCharDevice);
 	fpga_wq = create_singlethread_workqueue("fpga_workqueue");
 	if (!fpga_wq) 
 	{
