@@ -119,10 +119,6 @@ signal OUT_Y_H : std_logic_vector(7 downto 0):= (others => '0');
 signal OUT_Z_L : std_logic_vector(7 downto 0):= (others => '0');
 signal OUT_Z_H : std_logic_vector(7 downto 0):= (others => '0');
 
-
-
-
-
 ----------------------------------------------------------------------------------------------------------------
 -- COMPONENTS DECLARATION
 ----------------------------------------------------------------------------------------------------------------
@@ -161,7 +157,7 @@ Port
 );
 end component;
 
-component SpiStateMachine
+component I2cStateMachine
 port
 (    
     CLOCK : in std_logic;
@@ -235,7 +231,7 @@ Interrupt_module: InterruptPulse port map
 	interrupt_signal => interrupt_signal
 );
 
-SpiStateMachine_module: SpiStateMachine port map 
+I2cStateMachine_module: I2cStateMachine port map 
 (
 	CLOCK => CLOCK_50MHz,
 	RESET => reset_button,
