@@ -78,7 +78,7 @@ int spiInit(void)
     }
 }
 
-void spiKernelExecute(struct work_struct *work)
+void interruptFromFpgaExecute(struct work_struct *work)
 {
     struct spi_message msg;
     struct spi_transfer transfer;
@@ -99,7 +99,7 @@ void spiKernelExecute(struct work_struct *work)
         return;
     }
 
-    printk(KERN_INFO "[FPGA][SPI] Data from FPGA");
+    printk(KERN_INFO "[FPGA][SPI] Data from FPGA ---==[ FPGA Button Interrupt ]==---");
     for (i = 0; i < sizeof(rx_kernel); ++i) {
         printk(KERN_INFO "[FPGA][SPI] Byte %d: 0x%02x\n", i, rx_kernel[i]);
     }

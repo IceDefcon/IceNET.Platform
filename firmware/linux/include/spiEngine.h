@@ -21,7 +21,7 @@
 //////////////////////
 
 /* SPI */ int spiInit(void);
-/* KERNEL */ void spiKernelExecute(struct work_struct *work);
+/* KERNEL */ void interruptFromFpgaExecute(struct work_struct *work);
 /* FPGA */ void spiFpgaExecute(struct work_struct *work);
 /* SPI */ int spiDestroy(void);
 
