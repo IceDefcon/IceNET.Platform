@@ -95,11 +95,11 @@ void spiKernelExecute(struct work_struct *work)
 
     ret = spi_sync(spi_dev, &msg);
     if (ret < 0) {
-        printk(KERN_ERR "[FPGA][SPI] SPI transfer for Kernel failed: %d\n", ret);
+        printk(KERN_ERR "[FPGA][SPI] SPI transfer from Kernel to FPGA failed: %d\n", ret);
         return;
     }
 
-    printk(KERN_INFO "[FPGA][SPI] Command Data for Kernel Processing");
+    printk(KERN_INFO "[FPGA][SPI] Data from FPGA");
     for (i = 0; i < sizeof(rx_kernel); ++i) {
         printk(KERN_INFO "[FPGA][SPI] Byte %d: 0x%02x\n", i, rx_kernel[i]);
     }
