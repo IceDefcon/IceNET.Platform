@@ -42,7 +42,7 @@
 
 void spiKernelWorkInit(void)
 {
-	INIT_WORK(get_kernel_work(), interruptFromFpgaExecute);
+	INIT_WORK(get_kernel_work(), interruptFromFpga);
 	kernel_wq = create_singlethread_workqueue("kernel_workqueue");
 	if (!kernel_wq) 
 	{

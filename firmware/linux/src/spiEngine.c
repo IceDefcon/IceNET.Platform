@@ -78,7 +78,7 @@ int spiInit(void)
     }
 }
 
-void interruptFromFpgaExecute(struct work_struct *work)
+void interruptFromFpga(struct work_struct *work)
 {
     struct spi_message msg;
     struct spi_transfer transfer;
