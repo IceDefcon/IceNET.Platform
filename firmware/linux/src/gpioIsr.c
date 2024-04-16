@@ -35,6 +35,37 @@ static irqreturn_t gpioKernelIsr(int irq, void *data)
     return IRQ_HANDLED;
 }
 
+int gpioFpgaIsrInit(void)
+{
+    int result;
+
+    result = gpio_request(GPIO_FPGA_INTERRUPT, "   Response");
+    if (result < 0) {
+        printk(KERN_ERR "Failed GPIO Request :: Pin [%d]\n", GPIO_FPGA_INTERRUPT);
+        return result;
+    }
+
+    // Set GPIO pin as an output
+    result = gpio_direction_output(GPIO_PIN, 0); // Write low (0) to sink current to ground
+    if (result < 0) {
+        printk(KERN_ERR "Failed to set GPIO direction :: Pin [%d]\n", GPIO_PIN);
+        gpio_free(GPIO_PIN);
+        return result;
+    }
+}
+
+// Function to set GPIO pin to high (off)
+void set_gpio_high(void)
+{
+    gpio_set_value(GPIO_FPGA_INTERRUPT, 1); // Set GPIO pin to high
+}
+
+// Function to set GPIO pin to low (on)
+void set_gpio_low(void)
+{
+    gpio_set_value(GPIO_FPGA_INTERRUPT, 0); // Set GPIO pin to low
+}
+
 int gpioKernelIsrInit(void)
 {
 

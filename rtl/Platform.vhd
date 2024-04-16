@@ -72,7 +72,7 @@ constant register_I2C : std_logic_vector(7 downto 0) := "11110000"; -- 0x40 --->
 signal index : integer range 0 to 15 := 0;
 
 -- I2C Return Data
-signal return_data : std_logic_vector(7 downto 0) := "11100111";
+signal return_data : std_logic_vector(7 downto 0) := "00011000";
 
 -- SPI Kernel Feedback Data
 signal SpiDataFeedback_MISO : std_logic := '0';
@@ -163,6 +163,7 @@ port
     CLOCK : in std_logic;
     RESET : in std_logic;
 
+    CPU_INT : in std_logic;
     KERNEL_INT : in std_logic;
     FPGA_INT : out std_logic;
 
@@ -236,6 +237,7 @@ I2cStateMachine_module: I2cStateMachine port map
 	CLOCK => CLOCK_50MHz,
 	RESET => reset_button,
 
+    CPU_INT => '0',
     KERNEL_INT => KERNEL_INT,
     FPGA_INT => FPGA_INT,
 

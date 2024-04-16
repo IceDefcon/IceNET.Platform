@@ -147,6 +147,11 @@ static ssize_t dev_write(struct file *filep, const char *buffer, size_t len, lof
         queue_work(get_fpga_wq(), get_fpga_work());
     }
 
+    if(strncmp(message, "i", 1) == 0)
+    {
+
+    }
+
     if (error_count==0)
     {
         size_of_message = strlen(message);

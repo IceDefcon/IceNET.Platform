@@ -9,6 +9,7 @@ port
     CLOCK : in std_logic;
     RESET : in std_logic;
 
+    CPU_INT : in std_logic;
     KERNEL_INT : in std_logic;
     FPGA_INT : out std_logic;
     
