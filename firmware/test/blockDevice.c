@@ -13,13 +13,19 @@
 static struct gendisk *my_disk;
 static struct request_queue *queue;
 static u8 *device_memory;
+static atomic_t device_opened = ATOMIC_INIT(0); // Reference count
 
 static int block_device_open(struct block_device *bdev, fmode_t mode) {
+    if (atomic_inc_return(&device_opened) > 1) {
+        atomic_dec(&device_opened);
+        return -EBUSY; // Device is already open
+    }
     printk(KERN_INFO "Block device opened\n");
     return 0;
 }
 
 static void block_device_release(struct gendisk *disk, fmode_t mode) {
+    atomic_dec(&device_opened);
     printk(KERN_INFO "Block device released\n");
 }
 
