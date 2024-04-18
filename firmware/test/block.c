@@ -49,7 +49,7 @@ static int __init block_device_init(void) {
     memset(device_memory, 0, DEVICE_SIZE);
 
     // Initialize request queue
-    queue = blk_init_queue(block_device_queue, NULL);
+    queue = blk_init_allocated_queue(block_device_queue, NULL);
     if (!queue) {
         kfree(device_memory);
         printk(KERN_ERR "Failed to initialize queue\n");
