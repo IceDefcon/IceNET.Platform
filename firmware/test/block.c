@@ -22,25 +22,10 @@ static void block_device_release(struct gendisk *disk, fmode_t mode) {
     printk(KERN_INFO "Block device released\n");
 }
 
-static int block_device_read(struct block_device *bdev, sector_t sector,
-                             void *buffer, unsigned long size) {
-    unsigned long offset = sector * BLOCK_SIZE;
-    if (offset + size > DEVICE_SIZE) {
-        printk(KERN_ERR "Read beyond end of device\n");
-        return -EINVAL;
-    }
-    memcpy(buffer, device_memory + offset, size);
-    return 0;
-}
-
-static int block_device_write(struct block_device *bdev, sector_t sector,
-                              const void *buffer, unsigned long size) {
-    unsigned long offset = sector * BLOCK_SIZE;
-    if (offset + size > DEVICE_SIZE) {
-        printk(KERN_ERR "Write beyond end of device\n");
-        return -EINVAL;
-    }
-    memcpy(device_memory + offset, buffer, size);
+static int block_device_getgeo(struct block_device *bdev, struct hd_geometry *geo) {
+    geo->heads = 1;
+    geo->sectors = DEVICE_SIZE / (HEADS * BLOCK_SIZE);
+    geo->cylinders = DEVICE_SIZE / (HEADS * geo->sectors * BLOCK_SIZE);
     return 0;
 }
 
@@ -48,8 +33,7 @@ static struct block_device_operations bdo = {
     .owner = THIS_MODULE,
     .open = block_device_open,
     .release = block_device_release,
-    .read = block_device_read,
-    .write = block_device_write,
+    .getgeo = block_device_getgeo,
 };
 
 static int __init block_device_init(void) {
