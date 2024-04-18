@@ -8,7 +8,7 @@
 
 #define DEVICE_NAME "my_block_device"
 #define DEVICE_SIZE (1024 * 1024) // 1MB
-#define BLOCK_SIZE 512 // 512 bytes per block
+#define MY_BLOCK_SIZE 512 // 512 bytes per block
 
 static struct gendisk *my_disk;
 static struct request_queue *queue;
@@ -25,8 +25,8 @@ static void block_device_release(struct gendisk *disk, fmode_t mode) {
 
 static int block_device_getgeo(struct block_device *bdev, struct hd_geometry *geo) {
     geo->heads = 1;
-    geo->sectors = DEVICE_SIZE / (geo->heads * BLOCK_SIZE);
-    geo->cylinders = DEVICE_SIZE / (geo->heads * geo->sectors * BLOCK_SIZE);
+    geo->sectors = DEVICE_SIZE / (geo->heads * MY_BLOCK_SIZE);
+    geo->cylinders = DEVICE_SIZE / (geo->heads * geo->sectors * MY_BLOCK_SIZE);
     return 0;
 }
 
@@ -38,8 +38,6 @@ static struct block_device_operations bdo = {
 };
 
 static int __init block_device_init(void) {
-    int ret;
-
     // Allocate device memory
     device_memory = kmalloc(DEVICE_SIZE, GFP_KERNEL);
     if (!device_memory) {
@@ -49,7 +47,7 @@ static int __init block_device_init(void) {
     memset(device_memory, 0, DEVICE_SIZE);
 
     // Initialize request queue
-    queue = blk_init_allocated_queue(block_device_queue, NULL);
+    queue = blk_alloc_queue(GFP_KERNEL);
     if (!queue) {
         kfree(device_memory);
         printk(KERN_ERR "Failed to initialize queue\n");
@@ -79,7 +77,7 @@ static int __init block_device_init(void) {
     my_disk->fops = &bdo;
     my_disk->queue = queue;
     sprintf(my_disk->disk_name, DEVICE_NAME);
-    set_capacity(my_disk, DEVICE_SIZE / BLOCK_SIZE);
+    set_capacity(my_disk, DEVICE_SIZE / MY_BLOCK_SIZE);
 
     add_disk(my_disk);
 
