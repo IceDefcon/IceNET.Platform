@@ -1,4 +1,4 @@
-obj-m += block.o
+obj-m += my_block_device.o
 
 all:
 	make -C /lib/modules/$(shell uname -r)/build M=$(PWD) modules
