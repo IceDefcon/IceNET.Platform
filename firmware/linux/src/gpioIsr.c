@@ -46,10 +46,10 @@ int gpioFpgaIsrInit(void)
     }
 
     // Set GPIO pin as an output
-    result = gpio_direction_output(GPIO_PIN, 0); // Write low (0) to sink current to ground
+    result = gpio_direction_output(GPIO_FPGA_INTERRUPT, 0); // Write low (0) to sink current to ground
     if (result < 0) {
-        printk(KERN_ERR "Failed to set GPIO direction :: Pin [%d]\n", GPIO_PIN);
-        gpio_free(GPIO_PIN);
+        printk(KERN_ERR "Failed to set GPIO direction :: Pin [%d]\n", GPIO_FPGA_INTERRUPT);
+        gpio_free(GPIO_FPGA_INTERRUPT);
         return result;
     }
 }
