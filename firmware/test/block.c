@@ -6,7 +6,7 @@
 #include <linux/slab.h>
 #include <linux/hdreg.h>
 
-#define DEVICE_NAME "my_block_device"
+#define DEVICE_NAME "iceBlock"
 #define DEVICE_SIZE (1024 * 1024) // 1MB
 #define MY_BLOCK_SIZE 512 // 512 bytes per block
 
