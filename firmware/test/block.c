@@ -4,6 +4,7 @@
 #include <linux/blkdev.h>
 #include <linux/genhd.h>
 #include <linux/slab.h>
+#include <linux/hdreg.h>
 
 #define DEVICE_NAME "my_block_device"
 #define DEVICE_SIZE (1024 * 1024) // 1MB
@@ -24,8 +25,8 @@ static void block_device_release(struct gendisk *disk, fmode_t mode) {
 
 static int block_device_getgeo(struct block_device *bdev, struct hd_geometry *geo) {
     geo->heads = 1;
-    geo->sectors = DEVICE_SIZE / (HEADS * BLOCK_SIZE);
-    geo->cylinders = DEVICE_SIZE / (HEADS * geo->sectors * BLOCK_SIZE);
+    geo->sectors = DEVICE_SIZE / (geo->heads * BLOCK_SIZE);
+    geo->cylinders = DEVICE_SIZE / (geo->heads * geo->sectors * BLOCK_SIZE);
     return 0;
 }
 
