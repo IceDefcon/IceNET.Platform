@@ -1,6 +1,11 @@
 obj-m += iceDriver.o
 
-iceDriver-objs := src/iceDriver.o src/charDevice.o src/workLoad.o src/spiEngine.o src/gpioIsr.o src/stateMachine.o
+iceDriver-objs += src/charDevice.o
+iceDriver-objs += src/gpioCtrl.o
+iceDriver-objs := src/iceDriver.o
+iceDriver-objs += src/spiCtrl.o
+iceDriver-objs += src/spiWork.o
+iceDriver-objs += src/stateMachine.o
 
 EXTRA_CFLAGS=-I$(PWD)/include
 

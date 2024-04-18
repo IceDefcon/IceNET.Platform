@@ -15,7 +15,7 @@
 #include <linux/fs.h>       // Include for file_operations struct
 
 #include "charDevice.h"
-#include "workLoad.h"
+#include "spiWork.h"
 
 MODULE_LICENSE("GPL");
 

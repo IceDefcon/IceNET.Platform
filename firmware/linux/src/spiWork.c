@@ -5,8 +5,8 @@
  * 
  */
 
-#include "workLoad.h"
-#include "spiEngine.h"
+#include "spiWork.h"
+#include "spiCtrl.h"
 
 //////////////////////
 //                  //
@@ -40,7 +40,7 @@
 	return &kernel_work;
 }
 
-void spiKernelWorkInit(void)
+static void spiKernelWorkInit(void)
 {
 	INIT_WORK(get_kernel_work(), interruptFromFpga);
 	kernel_wq = create_singlethread_workqueue("kernel_workqueue");
@@ -50,7 +50,7 @@ void spiKernelWorkInit(void)
 	}
 }
 
-void spiFpgaWorkInit(void)
+static void spiFpgaWorkInit(void)
 {
 	INIT_WORK(get_fpga_work(), signalFromCharDevice);
 	fpga_wq = create_singlethread_workqueue("fpga_workqueue");
@@ -60,7 +60,7 @@ void spiFpgaWorkInit(void)
 	}
 }
 
-void spiKernelWorkDestroy(void)
+static void spiKernelWorkDestroy(void)
 {
     cancel_work_sync(get_kernel_work());
     if (kernel_wq) {
@@ -70,7 +70,7 @@ void spiKernelWorkDestroy(void)
     }
 }
 
-void spiFpgaWorkDestroy(void)
+static void spiFpgaWorkDestroy(void)
 {
     cancel_work_sync(get_fpga_work());
     if (fpga_wq) {
@@ -78,4 +78,16 @@ void spiFpgaWorkDestroy(void)
         destroy_workqueue(fpga_wq);
         fpga_wq = NULL;
     }
+}
+
+void spiWorkInit(void)
+{
+	spiKernelWorkInit();
+	spiFpgaWorkInit();
+}
+
+void spiWorkDestroy(void)
+{
+	spiKernelWorkDestroy();
+	spiFpgaWorkDestroy();
 }

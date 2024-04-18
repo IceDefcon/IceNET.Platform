@@ -10,8 +10,8 @@
 #include <linux/gpio.h>
 #include <linux/interrupt.h>
 
-#include "gpioIsr.h"
-#include "workLoad.h"
+#include "gpioCtrl.h"
+#include "spiWork.h"
 
 //////////////////////////
 //                      //
@@ -35,7 +35,7 @@ static irqreturn_t gpioKernelIsr(int irq, void *data)
     return IRQ_HANDLED;
 }
 
-int gpioFpgaIsrInit(void)
+static int gpioFpgaInit(void)
 {
     int result;
 
@@ -54,19 +54,7 @@ int gpioFpgaIsrInit(void)
     }
 }
 
-// Function to set GPIO pin to high (off)
-void set_gpio_high(void)
-{
-    gpio_set_value(GPIO_FPGA_INTERRUPT, 1); // Set GPIO pin to high
-}
-
-// Function to set GPIO pin to low (on)
-void set_gpio_low(void)
-{
-    gpio_set_value(GPIO_FPGA_INTERRUPT, 0); // Set GPIO pin to low
-}
-
-int gpioKernelIsrInit(void)
+static int gpioKernelIsrInit(void)
 {
 
     int irq_kernel;
@@ -105,12 +93,34 @@ int gpioKernelIsrInit(void)
     return 0;
 }
 
-void gpioKernelIsrDestroy(void)
+static void gpioKernelIsrDestroy(void)
 {
     int irq_kernel;
 
     irq_kernel = gpio_to_irq(GPIO_KERNEL_INTERRUPT);
     free_irq(irq_kernel, NULL);
     gpio_free(GPIO_KERNEL_INTERRUPT);
-     printk(KERN_INFO "[FPGA][IRQ] Exit\n");
+    printk(KERN_INFO "[FPGA][IRQ] Exit\n");
+}
+
+static void gpioFpgaExit(void)
+{
+    gpio_free(GPIO_FPGA_INTERRUPT);
+}
+
+void setGpio(unsigned int gpio, int value)
+{
+    gpio_set_value(gpio, value);
+}
+
+void gpioInit(void)
+{
+    (void)gpioFpgaInit();
+    (void)gpioKernelIsrInit();
+}
+
+void gpioDestroy(void)
+{
+    gpioKernelIsrDestroy();
+    gpioFpgaExit();
 }

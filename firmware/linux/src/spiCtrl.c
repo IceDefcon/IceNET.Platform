@@ -8,7 +8,7 @@
 #include <linux/module.h>
 #include <linux/kernel.h>
 
-#include "spiEngine.h"
+#include "spiCtrl.h"
 
 //////////////////////
 //                  //

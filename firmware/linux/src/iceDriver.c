@@ -9,9 +9,9 @@
 
 #include "stateMachine.h"
 #include "charDevice.h"
-#include "workLoad.h"
-#include "spiEngine.h"
-#include "gpioIsr.h"
+#include "spiWork.h"
+#include "spiCtrl.h"
+#include "gpioCtrl.h"
 
 MODULE_VERSION("2.0");
 MODULE_LICENSE("GPL");
@@ -33,12 +33,10 @@ static int __init fpga_driver_init(void)
     charDeviceInit();
     /* Initialise SPI */
     spiInit();
-    /* Initialise Kernel SPI operations */
-    spiKernelWorkInit();
-    /* Initialise Fpga SPI operations */
-    spiFpgaWorkInit();
+    /* Initialise SPI workload */
+    spiWorkInit();
     /* Initialise gpio ISR */
-    gpioKernelIsrInit();
+    gpioInit();
 
     return NULL;
 }
@@ -53,9 +51,8 @@ static int __init fpga_driver_init(void)
 static void __exit fpga_driver_exit(void)
 {
     /* Destroy everything */
-    gpioKernelIsrDestroy();
-    spiFpgaWorkDestroy();
-    spiKernelWorkDestroy();
+    gpioDestroy();
+    spiWorkDestroy();
     spiDestroy();
     charDeviceDestroy();
     stateMachineDestroy();
