@@ -40,8 +40,8 @@ signal kernel_interrupt : std_logic := '0';
 -- SM Init
 signal system_start : std_logic := '0';
 --SM Parameters
-constant smStartDelay : std_logic_vector(26 downto 0):= "101111101011110000011111111";
-constant smStateDelay : std_logic_vector(24 downto 0):= "1011111010111100000111111";
+constant smStartDelay : std_logic_vector(15 downto 0):= "1100001101001111"; -- 1000ns
+constant smStateDelay : std_logic_vector(15 downto 0):= "1100001101001111"; -- 1000ns
 -- SM Status Register
 signal status_sck : std_logic_vector(3 downto 0) := "0000";
 signal status_sda : std_logic_vector(3 downto 0) := "0000";
@@ -50,11 +50,11 @@ constant address_I2C : std_logic_vector(6 downto 0) := "1001011"; -- 0x69 ---> I
 constant register_I2C : std_logic_vector(7 downto 0) := "11110000"; -- 0x40 ---> REG
 signal index : integer range 0 to 15 := 0;
 -- Delay Timers
-signal system_timer : std_logic_vector(26 downto 0) := (others => '0');
-signal init_timer : std_logic_vector(24 downto 0) := (others => '0');
-signal config_timer : std_logic_vector(24 downto 0) := (others => '0');
-signal send_timer : std_logic_vector(24 downto 0) := (others => '0');   
-signal done_timer : std_logic_vector(24 downto 0) := (others => '0');
+signal system_timer : std_logic_vector(15 downto 0) := (others => '0');
+signal init_timer : std_logic_vector(15 downto 0) := (others => '0');
+signal config_timer : std_logic_vector(15 downto 0) := (others => '0');
+signal send_timer : std_logic_vector(15 downto 0) := (others => '0');
+signal done_timer : std_logic_vector(15 downto 0) := (others => '0');
 -- Process Timers
 signal status_timer : std_logic_vector(15 downto 0) := (others => '0');
 signal sck_timer : std_logic_vector(7 downto 0) := (others => '0');
@@ -107,7 +107,7 @@ begin
             ----------------------------------------
             -- State Machine :: Reset
             ----------------------------------------
-            if RESET = '1' or kernel_interrupt <= '0' then
+            if RESET = '1' then
                 state_next <= INIT;
             else
                 ------------------------------------
