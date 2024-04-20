@@ -21,10 +21,32 @@ static void my_release(struct gendisk *disk, fmode_t mode) {
     return;
 }
 
+static int my_getgeo(struct block_device *bdev, struct hd_geometry *geo) {
+    geo->heads = 1;
+    geo->sectors = DEVICE_SIZE / (geo->heads * KERNEL_SECTOR_SIZE);
+    geo->cylinders = DEVICE_SIZE / (geo->heads * geo->sectors * KERNEL_SECTOR_SIZE);
+    return 0;
+}
+
+static ssize_t my_read(struct block_device *bdev, sector_t sector, void *buffer, size_t size, loff_t *offset) {
+    size_t nbytes = size * KERNEL_SECTOR_SIZE;
+    memcpy(buffer, my_dev.data + (sector * KERNEL_SECTOR_SIZE), nbytes);
+    return nbytes;
+}
+
+static ssize_t my_write(struct block_device *bdev, sector_t sector, const void *buffer, size_t size, loff_t *offset) {
+    size_t nbytes = size * KERNEL_SECTOR_SIZE;
+    memcpy(my_dev.data + (sector * KERNEL_SECTOR_SIZE), buffer, nbytes);
+    return nbytes;
+}
+
 static struct block_device_operations my_ops = {
     .owner = THIS_MODULE,
     .open = my_open,
     .release = my_release,
+    .getgeo = my_getgeo,
+    .read = my_read,
+    .write = my_write,
 };
 
 static int __init my_block_device_init(void) {
