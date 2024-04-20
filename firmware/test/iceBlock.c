@@ -72,7 +72,22 @@ out:
     return -ENOMEM;
 }
 
-static void __exit my_block_device_exit(void) {
+static void my_put_disk(struct gendisk *disk)
+{
+    int original_major;
+
+    // Store the original major number
+    original_major = disk->major;
+
+    // Call the original put_disk function
+    put_disk(disk);
+
+    // Restore the original major number
+    disk->major = original_major;
+}
+
+static void __exit my_block_device_exit(void)
+{
     printk(KERN_INFO "Exiting my_block_device_exit\n");
 
     // Check if gendisk exists before deleting
@@ -96,7 +111,7 @@ static void __exit my_block_device_exit(void) {
     // Check if gendisk exists before putting
     if (my_dev.gd) {
         printk(KERN_INFO "Putting gendisk >> checking major number %d\n", my_dev.gd->major);
-        put_disk(my_dev.gd);
+        my_put_disk(my_dev.gd);  // Use the wrapper function here
         printk(KERN_INFO "Disk put >> checking major number %d\n", my_dev.gd->major);
     } else {
         printk(KERN_WARNING "Gendisk does not exist for putting\n");
@@ -118,6 +133,7 @@ static void __exit my_block_device_exit(void) {
     mutex_destroy(&com_mutex);
     printk(KERN_INFO "Block device exit completed\n");
 }
+
 
 
 module_init(my_block_device_init);
