@@ -119,19 +119,19 @@ static void __exit my_block_device_exit(void)
 
     printk(KERN_INFO "Unregistering block device with major number %d\n", my_dev.gd->major);
     unregister_blkdev(my_dev.gd->major, DEVICE_NAME);
-    printk(KERN_INFO "Block device unregistered\n");
+    printk(KERN_INFO "Block device unregistered >> checking major number %d\n", my_dev.gd->major);
 
     // Check if data exists before freeing
     if (my_dev.data) {
-        printk(KERN_INFO "Freeing data\n");
+        printk(KERN_INFO "Freeing data >> checking major number %d\n", my_dev.gd->major);
         vfree(my_dev.data);
-        printk(KERN_INFO "Data freed\n");
+        printk(KERN_INFO "Data freed >> checking major number %d\n", my_dev.gd->major);
     } else {
         printk(KERN_WARNING "Data does not exist\n");
     }
 
     mutex_destroy(&com_mutex);
-    printk(KERN_INFO "Block device exit completed\n");
+    printk(KERN_INFO "Block device exit completed >> checking major number %d\n", my_dev.gd->major);
 }
 
 
