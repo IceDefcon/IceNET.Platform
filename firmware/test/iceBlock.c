@@ -75,7 +75,7 @@ static void __exit my_block_device_exit(void) {
 
     // Check if gendisk exists before deleting
     if (my_dev.gd) {
-        printk(KERN_INFO "Deleting gendisk\n");
+        printk(KERN_INFO "Deleting gendisk with major number %d\n", my_dev.gd->major);
         del_gendisk(my_dev.gd);
         printk(KERN_INFO "Gendisk deleted\n");
     } else {
@@ -100,7 +100,7 @@ static void __exit my_block_device_exit(void) {
         printk(KERN_WARNING "Gendisk does not exist for putting\n");
     }
 
-    printk(KERN_INFO "Unregistering block device\n");
+    printk(KERN_INFO "Unregistering block device with major number %d\n", my_dev.gd->major);
     unregister_blkdev(my_dev.gd->major, DEVICE_NAME);
     printk(KERN_INFO "Block device unregistered\n");
 
@@ -116,6 +116,7 @@ static void __exit my_block_device_exit(void) {
     mutex_destroy(&com_mutex);
     printk(KERN_INFO "Block device exit completed\n");
 }
+
 
 module_init(my_block_device_init);
 module_exit(my_block_device_exit);
