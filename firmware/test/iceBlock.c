@@ -79,6 +79,12 @@ static void __exit my_block_device_exit(void) {
         printk(KERN_INFO "Gendisk deleted\n");
     }
 
+    // Check if queue exists before cleanup
+    if (my_dev.queue) {
+        blk_cleanup_queue(my_dev.queue);
+        printk(KERN_INFO "Queue cleaned up\n");
+    }
+
     // Check if gendisk exists before putting
     if (my_dev.gd) {
         put_disk(my_dev.gd);
@@ -89,12 +95,6 @@ static void __exit my_block_device_exit(void) {
     unregister_blkdev(my_dev.gd->major, DEVICE_NAME);
     printk(KERN_INFO "Block device unregistered\n");
 
-    // Check if queue exists before cleanup
-    if (my_dev.queue) {
-        blk_cleanup_queue(my_dev.queue);
-        printk(KERN_INFO "Queue cleaned up\n");
-    }
-
     // Check if data exists before freeing
     if (my_dev.data) {
         vfree(my_dev.data);
@@ -104,8 +104,6 @@ static void __exit my_block_device_exit(void) {
     mutex_destroy(&com_mutex);
     printk(KERN_INFO "Block device exit completed\n");
 }
-
-
 
 module_init(my_block_device_init);
 module_exit(my_block_device_exit);
