@@ -21,24 +21,10 @@ static void my_release(struct gendisk *disk, fmode_t mode) {
     return;
 }
 
-static ssize_t my_read(struct block_device *bdev, sector_t sector, void *buffer, size_t size, loff_t *offset) {
-    size_t nbytes = size * KERNEL_SECTOR_SIZE;
-    memcpy(buffer, my_dev.data + (sector * KERNEL_SECTOR_SIZE), nbytes);
-    return nbytes;
-}
-
-static ssize_t my_write(struct block_device *bdev, sector_t sector, const void *buffer, size_t size, loff_t *offset) {
-    size_t nbytes = size * KERNEL_SECTOR_SIZE;
-    memcpy(my_dev.data + (sector * KERNEL_SECTOR_SIZE), buffer, nbytes);
-    return nbytes;
-}
-
 static struct block_device_operations my_ops = {
     .owner = THIS_MODULE,
     .open = my_open,
     .release = my_release,
-    .read = my_read,      // Added read operation
-    .write = my_write,    // Added write operation
 };
 
 static int __init my_block_device_init(void) {
