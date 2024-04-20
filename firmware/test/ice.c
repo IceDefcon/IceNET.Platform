@@ -1,9 +1,11 @@
 #include <linux/module.h>
 #include <linux/kernel.h>
-#include <linux/init.h>
 #include <linux/fs.h>
-#include <linux/genhd.h>
 #include <linux/blkdev.h>
+#include <linux/genhd.h>
+#include <linux/slab.h>
+#include <linux/hdreg.h>
+#include <linux/stat.h> // Include this header for S_ISBLK macro
 
 #define KERNEL_SECTOR_SIZE 512
 #define DEVICE_SIZE 1024 * 1024
