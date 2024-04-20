@@ -72,20 +72,6 @@ out:
     return -ENOMEM;
 }
 
-static void my_put_disk(struct gendisk *disk)
-{
-    int original_major;
-
-    // Store the original major number
-    original_major = disk->major;
-
-    // Call the original put_disk function
-    put_disk(disk);
-
-    // Restore the original major number
-    disk->major = original_major;
-}
-
 static void __exit my_block_device_exit(void)
 {
     printk(KERN_INFO "Exiting my_block_device_exit\n");
@@ -108,7 +94,7 @@ static void __exit my_block_device_exit(void)
 
     if (my_dev.gd) {
         printk(KERN_INFO "Putting gendisk >> checking major number %d\n", my_dev.gd->major);
-        my_put_disk(my_dev.gd);
+        put_disk(my_dev.gd);
         printk(KERN_INFO "Disk put >> checking major number %d\n", my_dev.gd->major);
     } else {
         printk(KERN_WARNING "Gendisk does not exist for putting\n");
