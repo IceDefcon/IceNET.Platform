@@ -75,6 +75,7 @@ static void __exit my_block_device_exit(void) {
     put_disk(my_dev.gd);
     printk(KERN_INFO "Disk put\n");
 
+    printk(KERN_INFO "Unregistering block device\n");
     unregister_blkdev(my_dev.gd->major, DEVICE_NAME);
     printk(KERN_INFO "Block device unregistered\n");
 
@@ -84,8 +85,9 @@ static void __exit my_block_device_exit(void) {
     vfree(my_dev.data);
     printk(KERN_INFO "Data freed\n");
 
-    printk(KERN_INFO "Block device unregistered\n");
+    printk(KERN_INFO "Block device exit completed\n");
 }
+
 
 module_init(my_block_device_init);
 module_exit(my_block_device_exit);
