@@ -2,10 +2,13 @@
 #include <linux/kernel.h>
 #include <linux/fs.h>
 #include <linux/blkdev.h>
+#include <linux/mutex.h>    // Include for mutex opearations
 
 #define DEVICE_NAME "iceBLOCK"
 #define DEVICE_SIZE (1024 * 1024) // 1MB
 #define KERNEL_SECTOR_SIZE 512
+
+static DEFINE_MUTEX(com_mutex);
 
 static struct my_block_device {
     unsigned char *data;
@@ -56,6 +59,7 @@ static int __init my_block_device_init(void) {
     my_dev.gd->fops = &my_ops;
     add_disk(my_dev.gd);
 
+    mutex_init(&com_mutex);
     printk(KERN_INFO "Block device registered\n");
     return 0;
 
@@ -97,6 +101,7 @@ static void __exit my_block_device_exit(void) {
         printk(KERN_INFO "Data freed\n");
     }
 
+    mutex_destroy(&com_mutex);
     printk(KERN_INFO "Block device exit completed\n");
 }
 
