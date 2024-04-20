@@ -75,20 +75,29 @@ static void __exit my_block_device_exit(void) {
 
     // Check if gendisk exists before deleting
     if (my_dev.gd) {
+        printk(KERN_INFO "Deleting gendisk\n");
         del_gendisk(my_dev.gd);
         printk(KERN_INFO "Gendisk deleted\n");
+    } else {
+        printk(KERN_WARNING "Gendisk does not exist\n");
     }
 
     // Check if queue exists before cleanup
     if (my_dev.queue) {
+        printk(KERN_INFO "Cleaning up queue\n");
         blk_cleanup_queue(my_dev.queue);
         printk(KERN_INFO "Queue cleaned up\n");
+    } else {
+        printk(KERN_WARNING "Queue does not exist\n");
     }
 
     // Check if gendisk exists before putting
     if (my_dev.gd) {
+        printk(KERN_INFO "Putting gendisk\n");
         put_disk(my_dev.gd);
         printk(KERN_INFO "Disk put\n");
+    } else {
+        printk(KERN_WARNING "Gendisk does not exist for putting\n");
     }
 
     printk(KERN_INFO "Unregistering block device\n");
@@ -97,8 +106,11 @@ static void __exit my_block_device_exit(void) {
 
     // Check if data exists before freeing
     if (my_dev.data) {
+        printk(KERN_INFO "Freeing data\n");
         vfree(my_dev.data);
         printk(KERN_INFO "Data freed\n");
+    } else {
+        printk(KERN_WARNING "Data does not exist\n");
     }
 
     mutex_destroy(&com_mutex);
