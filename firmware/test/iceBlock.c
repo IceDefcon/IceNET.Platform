@@ -93,19 +93,19 @@ static void __exit my_block_device_exit(void)
     }
 
     if (my_dev.gd) {
-        printk(KERN_INFO "Putting gendisk >> checking major number %d\n", my_dev.gd->major);
-        put_disk(my_dev.gd);
-        printk(KERN_INFO "Disk put >> checking major number %d\n", my_dev.gd->major);
-    } else {
-        printk(KERN_WARNING "Gendisk does not exist for putting\n");
-    }
-
-    if (my_dev.gd) {
         printk(KERN_INFO "Unregistering block device with major number %d\n", my_dev.gd->major);
         unregister_blkdev(my_dev.gd->major, DEVICE_NAME);
         printk(KERN_INFO "Block device unregistered >> checking major number %d\n", my_dev.gd->major);
     } else {
         printk(KERN_WARNING "Gendisk does not exist for unregistering\n");
+    }
+
+    if (my_dev.gd) {
+        printk(KERN_INFO "Putting gendisk >> checking major number %d\n", my_dev.gd->major);
+        put_disk(my_dev.gd);
+        printk(KERN_INFO "Disk put >> checking major number %d\n", my_dev.gd->major);
+    } else {
+        printk(KERN_WARNING "Gendisk does not exist for putting\n");
     }
 
     if (my_dev.data) {
