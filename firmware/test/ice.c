@@ -3,7 +3,7 @@
 #include <linux/fs.h>
 #include <linux/blkdev.h>
 
-#define DEVICE_NAME "my_block_device"
+#define DEVICE_NAME "iceBLOCK"
 #define DEVICE_SIZE (1024 * 1024) // 1MB
 #define KERNEL_SECTOR_SIZE 512
 
