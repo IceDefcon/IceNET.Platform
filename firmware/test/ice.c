@@ -2,108 +2,82 @@
 #include <linux/kernel.h>
 #include <linux/fs.h>
 #include <linux/blkdev.h>
-#include <linux/genhd.h>
-#include <linux/slab.h>
-#include <linux/hdreg.h>
-#include <linux/stat.h>
 
-#define DEVICE_NAME "iceBlock"
+#define DEVICE_NAME "my_block_device"
 #define DEVICE_SIZE (1024 * 1024) // 1MB
-#define MY_BLOCK_SIZE 512 // 512 bytes per block
+#define KERNEL_SECTOR_SIZE 512
 
-static struct gendisk *my_disk;
-static struct request_queue *queue;
-static u8 *device_memory;
-static atomic_t device_opened = ATOMIC_INIT(0); // Reference count
+static struct my_block_device {
+    unsigned char *data;
+    struct request_queue *queue;
+    struct gendisk *gd;
+} my_dev;
 
-static int block_device_open(struct block_device *bdev, fmode_t mode) {
-    if (atomic_inc_return(&device_opened) > 1) {
-        atomic_dec(&device_opened);
-        return -EBUSY; // Device is already open
-    }
-    printk(KERN_INFO "Block device opened\n");
+static int my_open(struct block_device *bdev, fmode_t mode) {
     return 0;
 }
 
-static void block_device_release(struct gendisk *disk, fmode_t mode) {
-    atomic_dec(&device_opened);
-    printk(KERN_INFO "Block device released\n");
+static void my_release(struct gendisk *disk, fmode_t mode) {
+    return;
 }
 
-static int block_device_getgeo(struct block_device *bdev, struct hd_geometry *geo) {
-    geo->heads = 1;
-    geo->sectors = DEVICE_SIZE / (geo->heads * MY_BLOCK_SIZE);
-    geo->cylinders = DEVICE_SIZE / (geo->heads * geo->sectors * MY_BLOCK_SIZE);
-    return 0;
-}
-
-static struct block_device_operations bdo = {
+static struct block_device_operations my_ops = {
     .owner = THIS_MODULE,
-    .open = block_device_open,
-    .release = block_device_release,
-    .getgeo = block_device_getgeo,
+    .open = my_open,
+    .release = my_release,
 };
 
-static int __init block_device_init(void) {
-    // Allocate device memory
-    device_memory = kmalloc(DEVICE_SIZE, GFP_KERNEL);
-    if (!device_memory) {
-        printk(KERN_ERR "Failed to allocate device memory\n");
+static int __init my_block_device_init(void) {
+    my_dev.data = vmalloc(DEVICE_SIZE);
+    if (!my_dev.data)
         return -ENOMEM;
-    }
-    memset(device_memory, 0, DEVICE_SIZE);
 
-    // Initialize request queue
-    queue = blk_init_allocated_queue(GFP_KERNEL);
-    if (!queue) {
-        kfree(device_memory);
-        printk(KERN_ERR "Failed to initialize queue\n");
-        return -ENOMEM;
-    }
+    my_dev.queue = blk_alloc_queue(GFP_KERNEL);
+    if (!my_dev.queue)
+        goto out;
 
-    // Allocate gendisk structure
-    my_disk = alloc_disk(1);
-    if (!my_disk) {
-        blk_cleanup_queue(queue);
-        kfree(device_memory);
-        printk(KERN_ERR "Failed to allocate disk\n");
-        return -ENOMEM;
-    }
+    blk_queue_logical_block_size(my_dev.queue, KERNEL_SECTOR_SIZE);
 
-    // Set up gendisk structure
-    my_disk->major = register_blkdev(0, DEVICE_NAME);
-    if (my_disk->major < 0) {
-        del_gendisk(my_disk);
-        blk_cleanup_queue(queue);
-        kfree(device_memory);
+    my_dev.gd = alloc_disk(1);
+    if (!my_dev.gd)
+        goto out;
+
+    my_dev.gd->major = register_blkdev(0, DEVICE_NAME);
+    if (my_dev.gd->major < 0) {
         printk(KERN_ERR "Failed to register block device\n");
-        return -EINVAL;
+        goto out_unregister;
     }
 
-    my_disk->first_minor = 0;
-    my_disk->fops = &bdo;
-    my_disk->queue = queue;
-    sprintf(my_disk->disk_name, DEVICE_NAME);
-    set_capacity(my_disk, DEVICE_SIZE / MY_BLOCK_SIZE);
+    my_dev.gd->queue = my_dev.queue;
+    my_dev.gd->private_data = &my_dev;
+    strcpy(my_dev.gd->disk_name, DEVICE_NAME);
+    set_capacity(my_dev.gd, DEVICE_SIZE / KERNEL_SECTOR_SIZE);
 
-    add_disk(my_disk);
+    my_dev.gd->fops = &my_ops;
+    add_disk(my_dev.gd);
 
-    printk(KERN_INFO "Block device initialized\n");
+    printk(KERN_INFO "Block device registered\n");
     return 0;
+
+out_unregister:
+    unregister_blkdev(my_dev.gd->major, DEVICE_NAME);
+out:
+    vfree(my_dev.data);
+    return -ENOMEM;
 }
 
-static void __exit block_device_exit(void) {
-    del_gendisk(my_disk);
-    put_disk(my_disk);
-    unregister_blkdev(my_disk->major, DEVICE_NAME);
-    blk_cleanup_queue(queue);
-    kfree(device_memory);
-    printk(KERN_INFO "Block device exited\n");
+static void __exit my_block_device_exit(void) {
+    del_gendisk(my_dev.gd);
+    put_disk(my_dev.gd);
+    unregister_blkdev(my_dev.gd->major, DEVICE_NAME);
+    blk_cleanup_queue(my_dev.queue);
+    vfree(my_dev.data);
+    printk(KERN_INFO "Block device unregistered\n");
 }
 
-module_init(block_device_init);
-module_exit(block_device_exit);
+module_init(my_block_device_init);
+module_exit(my_block_device_exit);
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Your Name");
-MODULE_DESCRIPTION("Simple Block Device Driver");
+MODULE_DESCRIPTION("Simple block device module");
