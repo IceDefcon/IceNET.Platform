@@ -90,7 +90,6 @@ static void __exit my_block_device_exit(void)
 {
     printk(KERN_INFO "Exiting my_block_device_exit\n");
 
-    // Check if gendisk exists before deleting
     if (my_dev.gd) {
         printk(KERN_INFO "Deleting gendisk with major number %d\n", my_dev.gd->major);
         del_gendisk(my_dev.gd);
@@ -99,7 +98,6 @@ static void __exit my_block_device_exit(void)
         printk(KERN_WARNING "Gendisk does not exist\n");
     }
 
-    // Check if queue exists before cleanup
     if (my_dev.queue) {
         printk(KERN_INFO "Cleaning up queue >> checking major number %d\n", my_dev.gd->major);
         blk_cleanup_queue(my_dev.queue);
@@ -108,20 +106,22 @@ static void __exit my_block_device_exit(void)
         printk(KERN_WARNING "Queue does not exist\n");
     }
 
-    // Check if gendisk exists before putting
     if (my_dev.gd) {
         printk(KERN_INFO "Putting gendisk >> checking major number %d\n", my_dev.gd->major);
-        my_put_disk(my_dev.gd);  // Use the wrapper function here
+        my_put_disk(my_dev.gd);
         printk(KERN_INFO "Disk put >> checking major number %d\n", my_dev.gd->major);
     } else {
         printk(KERN_WARNING "Gendisk does not exist for putting\n");
     }
 
-    printk(KERN_INFO "Unregistering block device with major number %d\n", my_dev.gd->major);
-    unregister_blkdev(my_dev.gd->major, DEVICE_NAME);
-    printk(KERN_INFO "Block device unregistered >> checking major number %d\n", my_dev.gd->major);
+    if (my_dev.gd) {
+        printk(KERN_INFO "Unregistering block device with major number %d\n", my_dev.gd->major);
+        unregister_blkdev(my_dev.gd->major, DEVICE_NAME);
+        printk(KERN_INFO "Block device unregistered >> checking major number %d\n", my_dev.gd->major);
+    } else {
+        printk(KERN_WARNING "Gendisk does not exist for unregistering\n");
+    }
 
-    // Check if data exists before freeing
     if (my_dev.data) {
         printk(KERN_INFO "Freeing data >> checking major number %d\n", my_dev.gd->major);
         vfree(my_dev.data);
