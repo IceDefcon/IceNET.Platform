@@ -47,9 +47,11 @@ static int __init my_block_device_init(void) {
 
     my_dev.gd->major = register_blkdev(0, DEVICE_NAME);
     if (my_dev.gd->major < 0) {
-        printk(KERN_ERR "Failed to register block device\n");
+        printk(KERN_ERR "Failed to register block device with error: %d\n", my_dev.gd->major);
         goto out_unregister;
     }
+
+    printk(KERN_INFO "Registered block device with major number: %d\n", my_dev.gd->major);
 
     my_dev.gd->queue = my_dev.queue;
     my_dev.gd->private_data = &my_dev;
