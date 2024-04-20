@@ -5,55 +5,105 @@
 #include <linux/genhd.h>
 #include <linux/slab.h>
 #include <linux/hdreg.h>
-#include <linux/stat.h> // Include this header for S_ISBLK macro
+#include <linux/stat.h>
 
-#define KERNEL_SECTOR_SIZE 512
-#define DEVICE_SIZE 1024 * 1024
+#define DEVICE_NAME "iceBlock"
+#define DEVICE_SIZE (1024 * 1024) // 1MB
+#define MY_BLOCK_SIZE 512 // 512 bytes per block
 
-static struct block_device_operations iceBlock_ops = {
-    .owner = THIS_MODULE,
-};
+static struct gendisk *my_disk;
+static struct request_queue *queue;
+static u8 *device_memory;
+static atomic_t device_opened = ATOMIC_INIT(0); // Reference count
 
-static struct block_device *iceBlock_bdev;
-
-static int __init iceBlock_init(void)
-{
-    int ret;
-
-    // Allocate memory for the block device
-    iceBlock_bdev = blkdev_get_by_path("/dev/mmcblk0p1", FMODE_READ | FMODE_WRITE, NULL);
-
-    if (IS_ERR(iceBlock_bdev)) {
-        printk(KERN_ERR "Failed to get block device\n");
-        return PTR_ERR(iceBlock_bdev);
+static int block_device_open(struct block_device *bdev, fmode_t mode) {
+    if (atomic_inc_return(&device_opened) > 1) {
+        atomic_dec(&device_opened);
+        return -EBUSY; // Device is already open
     }
-
-    // Set up the block device
-    iceBlock_bdev->bd_inode->i_size = DEVICE_SIZE;
-    iceBlock_bdev->bd_inode->i_blkbits = 9; // block size = 512 bytes (2^9)
-    iceBlock_bdev->bd_inode->i_flags |= S_ISBLK;
-    iceBlock_bdev->bd_inode->i_op = &iceBlock_bdev->bd_blkdev_ops;
-
-    // Register the block device
-    ret = register_blkdev(0, "iceBlock");
-    if (ret < 0) {
-        printk(KERN_ERR "Failed to register block device: %d\n", ret);
-        return ret;
-    }
-
+    printk(KERN_INFO "Block device opened\n");
     return 0;
 }
 
-static void __exit iceBlock_exit(void)
-{
-    // Unregister the block device
-    unregister_blkdev(MAJOR(iceBlock_bdev->bd_dev), "iceBlock");
-    blkdev_put(iceBlock_bdev, FMODE_READ | FMODE_WRITE);
+static void block_device_release(struct gendisk *disk, fmode_t mode) {
+    atomic_dec(&device_opened);
+    printk(KERN_INFO "Block device released\n");
 }
 
-module_init(iceBlock_init);
-module_exit(iceBlock_exit);
+static int block_device_getgeo(struct block_device *bdev, struct hd_geometry *geo) {
+    geo->heads = 1;
+    geo->sectors = DEVICE_SIZE / (geo->heads * MY_BLOCK_SIZE);
+    geo->cylinders = DEVICE_SIZE / (geo->heads * geo->sectors * MY_BLOCK_SIZE);
+    return 0;
+}
+
+static struct block_device_operations bdo = {
+    .owner = THIS_MODULE,
+    .open = block_device_open,
+    .release = block_device_release,
+    .getgeo = block_device_getgeo,
+};
+
+static int __init block_device_init(void) {
+    // Allocate device memory
+    device_memory = kmalloc(DEVICE_SIZE, GFP_KERNEL);
+    if (!device_memory) {
+        printk(KERN_ERR "Failed to allocate device memory\n");
+        return -ENOMEM;
+    }
+    memset(device_memory, 0, DEVICE_SIZE);
+
+    // Initialize request queue
+    queue = blk_init_allocated_queue(GFP_KERNEL);
+    if (!queue) {
+        kfree(device_memory);
+        printk(KERN_ERR "Failed to initialize queue\n");
+        return -ENOMEM;
+    }
+
+    // Allocate gendisk structure
+    my_disk = alloc_disk(1);
+    if (!my_disk) {
+        blk_cleanup_queue(queue);
+        kfree(device_memory);
+        printk(KERN_ERR "Failed to allocate disk\n");
+        return -ENOMEM;
+    }
+
+    // Set up gendisk structure
+    my_disk->major = register_blkdev(0, DEVICE_NAME);
+    if (my_disk->major < 0) {
+        del_gendisk(my_disk);
+        blk_cleanup_queue(queue);
+        kfree(device_memory);
+        printk(KERN_ERR "Failed to register block device\n");
+        return -EINVAL;
+    }
+
+    my_disk->first_minor = 0;
+    my_disk->fops = &bdo;
+    my_disk->queue = queue;
+    sprintf(my_disk->disk_name, DEVICE_NAME);
+    set_capacity(my_disk, DEVICE_SIZE / MY_BLOCK_SIZE);
+
+    add_disk(my_disk);
+
+    printk(KERN_INFO "Block device initialized\n");
+    return 0;
+}
+
+static void __exit block_device_exit(void) {
+    del_gendisk(my_disk);
+    put_disk(my_disk);
+    unregister_blkdev(my_disk->major, DEVICE_NAME);
+    blk_cleanup_queue(queue);
+    kfree(device_memory);
+    printk(KERN_INFO "Block device exited\n");
+}
+
+module_init(block_device_init);
+module_exit(block_device_exit);
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Your Name");
-MODULE_DESCRIPTION("Simple virtual block device module named iceBlock");
+MODULE_DESCRIPTION("Simple Block Device Driver");
