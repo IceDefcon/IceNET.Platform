@@ -69,34 +69,24 @@ static int __init block_device_init(void) {
         return -ENOMEM;
     }
 
-    // Set up gendisk structure
-    my_disk->major = register_blkdev(0, DEVICE_NAME);
-    if (my_disk->major < 0) {
-        del_gendisk(my_disk);
-        blk_cleanup_queue(queue);
-        kfree(device_memory);
-        printk(KERN_ERR "Failed to register block device\n");
-        return -EINVAL;
-    }
-
-    my_disk->first_minor = 0;
-    my_disk->fops = &bdo;
-    my_disk->queue = queue;
-    sprintf(my_disk->disk_name, DEVICE_NAME);
-    set_capacity(my_disk, DEVICE_SIZE / MY_BLOCK_SIZE);
-
-    add_disk(my_disk);
-
-    printk(KERN_INFO "Block device initialized\n");
-    return 0;
+    // ... (rest of the code)
 }
 
 static void __exit block_device_exit(void) {
-    del_gendisk(my_disk);
-    put_disk(my_disk);
-    unregister_blkdev(my_disk->major, DEVICE_NAME);
-    blk_cleanup_queue(queue);
-    kfree(device_memory);
+    if (my_disk) {
+        del_gendisk(my_disk);
+        put_disk(my_disk);
+        unregister_blkdev(my_disk->major, DEVICE_NAME);
+    }
+    
+    if (queue) {
+        blk_cleanup_queue(queue);
+    }
+
+    if (device_memory) {
+        kfree(device_memory);
+    }
+
     printk(KERN_INFO "Block device exited\n");
 }
 
