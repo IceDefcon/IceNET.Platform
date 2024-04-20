@@ -67,11 +67,23 @@ out:
 }
 
 static void __exit my_block_device_exit(void) {
+    printk(KERN_INFO "Exiting my_block_device_exit\n");
+
     del_gendisk(my_dev.gd);
+    printk(KERN_INFO "Gendisk deleted\n");
+
     put_disk(my_dev.gd);
+    printk(KERN_INFO "Disk put\n");
+
     unregister_blkdev(my_dev.gd->major, DEVICE_NAME);
+    printk(KERN_INFO "Block device unregistered\n");
+
     blk_cleanup_queue(my_dev.queue);
+    printk(KERN_INFO "Queue cleaned up\n");
+
     vfree(my_dev.data);
+    printk(KERN_INFO "Data freed\n");
+
     printk(KERN_INFO "Block device unregistered\n");
 }
 
