@@ -108,7 +108,6 @@ static int __init block_device_init(void) {
 
     printk(KERN_INFO "[FPGA][ B ] Registered block device with major number: %d\n", iceBlock.gd->major);
 
-#if 0
     iceBlock.gd->queue = iceBlock.queue;
     iceBlock.gd->private_data = &iceBlock;
     strcpy(iceBlock.gd->disk_name, DEVICE_NAME);
@@ -116,8 +115,7 @@ static int __init block_device_init(void) {
 
     iceBlock.gd->fops = &my_ops;
     add_disk(iceBlock.gd);
-#endif
-    
+
     mutex_init(&com_mutex);
     printk(KERN_INFO "[FPGA][ B ] Block device registered\n");
     return 0;
