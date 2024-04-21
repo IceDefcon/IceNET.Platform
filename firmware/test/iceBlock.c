@@ -32,7 +32,7 @@ static int create_block_device(struct my_block_dev *dev)
 
     dev->gd->major = MY_BLOCK_MAJOR;
     dev->gd->first_minor = 0;
-    dev->gd->fops = &my_block_ops;
+    dev->gd->fops = &my_block_dev;
     dev->gd->queue = dev->queue;
     dev->gd->private_data = dev;
     snprintf (dev->gd->disk_name, 32, "myblock");
