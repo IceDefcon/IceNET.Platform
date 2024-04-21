@@ -127,9 +127,9 @@ static void __exit block_device_exit(void)
 
     if (iceBlock.queue) 
     {
-        printk(KERN_INFO "[FPGA][ B ] Cleaning up queue >> checking major number %d\n", iceBlock.gd->major);
+        printk(KERN_INFO "[FPGA][ B ] Cleaning up queue");
         blk_cleanup_queue(iceBlock.queue);
-        printk(KERN_INFO "[FPGA][ B ] Queue cleaned up >> checking major number %d\n", iceBlock.gd->major);
+        printk(KERN_INFO "[FPGA][ B ] Queue cleaned up");
     } 
     else 
     {
@@ -140,7 +140,7 @@ static void __exit block_device_exit(void)
     {
         printk(KERN_INFO "[FPGA][ B ] Unregistering block device with major number %d\n", iceBlock.gd->major);
         unregister_blkdev(iceBlock.gd->major, DEVICE_NAME);
-        printk(KERN_INFO "[FPGA][ B ] Block device unregistered >> checking major number %d\n", iceBlock.gd->major);
+        printk(KERN_INFO "[FPGA][ B ] Block device unregistered");
     } 
     else 
     {
@@ -151,7 +151,7 @@ static void __exit block_device_exit(void)
     {
         printk(KERN_INFO "[FPGA][ B ] Deleting gendisk with major number %d\n", iceBlock.gd->major);
         del_gendisk(iceBlock.gd);
-        printk(KERN_INFO "[FPGA][ B ] Gendisk deleted >> checking major number %d\n", iceBlock.gd->major);
+        printk(KERN_INFO "[FPGA][ B ] Gendisk deleted");
     } 
     else 
     {
@@ -160,9 +160,9 @@ static void __exit block_device_exit(void)
 
     if (iceBlock.gd) 
     {
-        printk(KERN_INFO "[FPGA][ B ] Putting gendisk >> checking major number %d\n", iceBlock.gd->major);
+        printk(KERN_INFO "[FPGA][ B ] Putting gendisk");
         put_disk(iceBlock.gd);
-        printk(KERN_INFO "[FPGA][ B ] Disk put >> checking major number %d\n", iceBlock.gd->major);
+        printk(KERN_INFO "[FPGA][ B ] Disk put");
     } 
     else 
     {
@@ -171,9 +171,9 @@ static void __exit block_device_exit(void)
 
     if (iceBlock.data) 
     {
-        printk(KERN_INFO "[FPGA][ B ] Freeing data >> checking major number %d\n", iceBlock.gd->major);
+        printk(KERN_INFO "[FPGA][ B ] Freeing data");
         vfree(iceBlock.data);
-        printk(KERN_INFO "[FPGA][ B ] Data freed >> checking major number %d\n", iceBlock.gd->major);
+        printk(KERN_INFO "[FPGA][ B ] Data freed");
     } 
     else 
     {
@@ -181,7 +181,7 @@ static void __exit block_device_exit(void)
     }
 
     mutex_destroy(&com_mutex);
-    printk(KERN_INFO "[FPGA][ B ] Block device exit completed >> checking major number %d\n", iceBlock.gd->major);
+    printk(KERN_INFO "[FPGA][ B ] Block device exit completed");
 }
 
 module_init(block_device_init);
