@@ -23,19 +23,19 @@ static int dev_open(struct block_device *bdev, fmode_t mode)
 {
     if(!mutex_trylock(&com_mutex))
     {
-        printk(KERN_ALERT "[FPGA][ B ] Device in use by another process");
+        printk(KERN_ALERT "[CTRL][ B ] Device in use by another process");
         return -EBUSY;
     }
 
     numberOpens++;
-    printk(KERN_INFO "[FPGA][ B ] Device has been opened %d time(s)\n", numberOpens);
+    printk(KERN_INFO "[CTRL][ B ] Device has been opened %d time(s)\n", numberOpens);
     return 0;
 }
 
 static void dev_release(struct gendisk *disk, fmode_t mode) 
 {
     mutex_unlock(&com_mutex);
-    printk(KERN_INFO "[FPGA][ B ] Device successfully closed\n");
+    printk(KERN_INFO "[CTRL][ B ] Device successfully closed\n");
     return;
 }
 
@@ -48,20 +48,19 @@ static struct block_device_operations my_ops =
 
 static int __init block_device_init(void) {
 
-    printk(KERN_INFO "[FPGA][ B ] -----===[ INIT ]===-----\n");
-    printk(KERN_INFO "[FPGA][ B ] Allocate 1MB of kernel memory to store block device\n");
+    printk(KERN_INFO "[INIT][ B ] Allocate 1MB of kernel memory to store block device\n");
     iceBlock.data = vmalloc(DEVICE_SIZE);
     if (!iceBlock.data)
     {
-        printk(KERN_INFO "[FPGA][ B ] Failed to allocate 1MB kernel memory!\n");
+        printk(KERN_INFO "[INIT][ B ] Failed to allocate 1MB kernel memory!\n");
         return -ENOMEM;
     }
 
-    printk(KERN_INFO "[FPGA][ B ] Allocate request queue for a block device\n");
+    printk(KERN_INFO "[INIT][ B ] Allocate request queue for a block device\n");
     iceBlock.queue = blk_alloc_queue(GFP_KERNEL);
     if (!iceBlock.queue)
     {
-        printk(KERN_INFO "[FPGA][ B ] Failed to request for queue for a block device!\n");
+        printk(KERN_INFO "[INIT][ B ] Failed to request for queue for a block device!\n");
         vfree(iceBlock.data);
         return -ENOMEM;
     }
@@ -74,7 +73,7 @@ static int __init block_device_init(void) {
      * Each block can be used indepenently for RD/WR operation
      * 
      */
-    printk(KERN_INFO "[FPGA][ B ] Sets the logical block size 512B for a single RD/WR request \n");
+    printk(KERN_INFO "[INIT][ B ] Sets the logical block size 512B for a single RD/WR request \n");
     blk_queue_logical_block_size(iceBlock.queue, KERNEL_SECTOR_SIZE);
 
     /**
@@ -89,25 +88,25 @@ static int __init block_device_init(void) {
      * Single block device without partitions
      * 
      */
-    printk(KERN_INFO "[FPGA][ B ] Allocate gendisk structure for a Single block device without partitions \n");
+    printk(KERN_INFO "[INIT][ B ] Allocate gendisk structure for a Single block device without partitions \n");
     iceBlock.gd = alloc_disk(DEVICE_MINORS);
     if (!iceBlock.gd)
     {
-        printk(KERN_INFO "[FPGA][ B ] Failed to allocating gen disk for a block device!\n");
+        printk(KERN_INFO "[INIT][ B ] Failed to allocating gen disk for a block device!\n");
         vfree(iceBlock.data);
         return -ENOMEM;
     }
 
-    printk(KERN_INFO "[FPGA][ B ] Register block device...\n");
+    printk(KERN_INFO "[INIT][ B ] Register block device...\n");
     iceBlock.gd->major = register_blkdev(0, DEVICE_NAME);
 
     if (iceBlock.gd->major < 0) 
     {
-        printk(KERN_INFO "[FPGA][ B ] Failed to register block device with error: %d\n", iceBlock.gd->major);
+        printk(KERN_INFO "[INIT][ B ] Failed to register block device with error: %d\n", iceBlock.gd->major);
         unregister_blkdev(iceBlock.gd->major, DEVICE_NAME);
     }
 
-    printk(KERN_INFO "[FPGA][ B ] Register block device with major number: %d\n", iceBlock.gd->major);
+    printk(KERN_INFO "[INIT][ B ] Register block device with major number: %d\n", iceBlock.gd->major);
 
     iceBlock.gd->queue = iceBlock.queue;
     iceBlock.gd->private_data = &iceBlock;
@@ -118,7 +117,7 @@ static int __init block_device_init(void) {
 #if 0
     add_disk(iceBlock.gd);
 #endif
-    printk(KERN_INFO "[FPGA][ B ] Block device registered SUCCESS\n");
+    printk(KERN_INFO "[INIT][ B ] Block device registered SUCCESS\n");
 
     mutex_init(&com_mutex);
 
@@ -127,7 +126,6 @@ static int __init block_device_init(void) {
 
 static void __exit block_device_exit(void)
 {
-    printk(KERN_INFO "[FPGA][ B ] -----===[ EXIT ]===-----\n");
 #if 0
     if (iceBlock.gd) 
     {
@@ -141,45 +139,45 @@ static void __exit block_device_exit(void)
 #endif
     if (iceBlock.queue) 
     {
-        printk(KERN_INFO "[FPGA][ B ] Cleaning up block device queue");
+        printk(KERN_INFO "[EXIT][ B ] Cleaning up block device queue");
         blk_cleanup_queue(iceBlock.queue);
     } 
     else 
     {
-        printk(KERN_WARNING "Queue does not exist\n");
+        printk(KERN_WARNING "[EXIT][ B ] Queue does not exist\n");
     }
 
     if (iceBlock.gd) 
     {
-        printk(KERN_INFO "[FPGA][ B ] Unregistering block device with major number %d\n", iceBlock.gd->major);
+        printk(KERN_INFO "[EXIT][ B ] Unregistering block device with major number %d\n", iceBlock.gd->major);
         unregister_blkdev(iceBlock.gd->major, DEVICE_NAME);
     } 
     else 
     {
-        printk(KERN_WARNING "[FPGA][ B ] Gendisk does not exist for unregistering\n");
+        printk(KERN_WARNING "[EXIT][ B ] Gendisk does not exist for unregistering\n");
     }
 #if 0
     if (iceBlock.gd) 
     {
-        printk(KERN_INFO "[FPGA][ B ] Decrements the reference count of a struct gendisk object");
+        printk(KERN_INFO "[EXIT][ B ] Decrements the reference count of a struct gendisk object");
         put_disk(iceBlock.gd);
     } 
     else 
     {
-        printk(KERN_WARNING "[FPGA][ B ] Gendisk does not exist for putting\n");
+        printk(KERN_WARNING "[EXIT][ B ] Gendisk does not exist for putting\n");
     }
 #endif
     if (iceBlock.data) 
     {
-        printk(KERN_INFO "[FPGA][ B ] DeAllocate 1MB of kernel memory");
+        printk(KERN_INFO "[EXIT][ B ] DeAllocate 1MB of kernel memory");
         vfree(iceBlock.data);
     } 
     else 
     {
-        printk(KERN_WARNING "[FPGA][ B ] Data does not exist\n");
+        printk(KERN_WARNING "[EXIT][ B ] Data does not exist\n");
     }
 
-    printk(KERN_INFO "[FPGA][ B ] Block device exit completed");
+    printk(KERN_INFO "[EXIT][ B ] Block device exit completed");
     mutex_destroy(&com_mutex);
 }
 
