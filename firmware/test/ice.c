@@ -5,61 +5,63 @@
 #include <linux/blkdev.h>
 #include <linux/init.h>
 #include <linux/types.h>
-#include <linux/errno.h>
-#include <linux/device.h>
 
 #define ICEBLOCK_MAJOR 240
 #define ICEBLOCK_MINOR 0
-#define ICEBLOCK_SIZE 1024 * 1024 // 1MB size
+#define ICEBLOCK_SIZE (1024 * 1024) // 1MB size
+
+static struct gendisk *iceblock_disk;
+static struct request_queue *iceblock_queue;
+
+static int iceblock_open(struct block_device *bdev, fmode_t mode)
+{
+    return 0;
+}
+
+static void iceblock_release(struct gendisk *gd, fmode_t mode)
+{
+    return;
+}
 
 static struct block_device_operations iceblock_ops = {
     .owner = THIS_MODULE,
-};
-
-static struct block_device iceblock_device = {
-    .bd_disk = {
-        .major = ICEBLOCK_MAJOR,
-        .first_minor = ICEBLOCK_MINOR,
-        .fops = &iceblock_ops,
-        .private_data = NULL,
-        .queue = NULL,
-    },
-    .bd_size = ICEBLOCK_SIZE,
-    .bd_block_size = 512,
-    .bd_disk = &iceblock_device.bd_disk,
-    .bd_invalidated = 1,
+    .open = iceblock_open,
+    .release = iceblock_release,
 };
 
 static int __init iceblock_init(void)
 {
-    int ret;
-
-    ret = register_blkdev(ICEBLOCK_MAJOR, "iceBlock");
-    if (ret < 0) {
-        printk(KERN_ERR "iceblock: Failed to register block device\n");
-        return ret;
+    iceblock_disk = alloc_disk(1);
+    if (!iceblock_disk) {
+        printk(KERN_ERR "iceblock: Failed to allocate gendisk structure\n");
+        return -ENOMEM;
     }
 
-    iceblock_device.bd_disk->major = ICEBLOCK_MAJOR;
-    iceblock_device.bd_disk->first_minor = ICEBLOCK_MINOR;
-    iceblock_device.bd_disk->fops = &iceblock_ops;
-
-    ret = add_disk(&iceblock_device);
-    if (!ret) {
-        printk(KERN_INFO "iceblock: Block device registered successfully\n");
-    } else {
-        printk(KERN_ERR "iceblock: Failed to add block device\n");
-        unregister_blkdev(ICEBLOCK_MAJOR, "iceBlock");
+    iceblock_queue = blk_init_queue(iceblock_queue, NULL);
+    if (!iceblock_queue) {
+        put_disk(iceblock_disk);
+        printk(KERN_ERR "iceblock: Failed to initialize request queue\n");
+        return -ENOMEM;
     }
 
-    return ret;
+    iceblock_disk->major = ICEBLOCK_MAJOR;
+    iceblock_disk->first_minor = ICEBLOCK_MINOR;
+    iceblock_disk->fops = &iceblock_ops;
+    iceblock_disk->queue = iceblock_queue;
+    sprintf(iceblock_disk->disk_name, "iceBlock");
+    set_capacity(iceblock_disk, ICEBLOCK_SIZE / 512);
+
+    add_disk(iceblock_disk);
+    printk(KERN_INFO "iceblock: Block device registered successfully\n");
+
+    return 0;
 }
 
 static void __exit iceblock_exit(void)
 {
-    del_gendisk(&iceblock_device);
-    put_disk(&iceblock_device);
-    unregister_blkdev(ICEBLOCK_MAJOR, "iceBlock");
+    del_gendisk(iceblock_disk);
+    put_disk(iceblock_disk);
+    blk_cleanup_queue(iceblock_queue);
     printk(KERN_INFO "iceblock: Unregistered block device\n");
 }
 
