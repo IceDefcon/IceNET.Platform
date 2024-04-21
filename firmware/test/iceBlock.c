@@ -56,7 +56,7 @@ static int __init block_device_init(void) {
         return -ENOMEM;
     }
 
-    printk(KERN_INFO "[FPGA][ B ] Allocates a request queue for a block device\n");
+    printk(KERN_INFO "[FPGA][ B ] Allocate request queue for a block device\n");
     iceBlock.queue = blk_alloc_queue(GFP_KERNEL);
     if (!iceBlock.queue)
     {
@@ -88,7 +88,7 @@ static int __init block_device_init(void) {
      * Single block device without partitions
      * 
      */
-    printk(KERN_INFO "[FPGA][ B ] Allocate a new gendisk structure for a Single block device without partitions \n");
+    printk(KERN_INFO "[FPGA][ B ] Allocate gendisk structure for a Single block device without partitions \n");
     iceBlock.gd = alloc_disk(DEVICE_MINORS);
     if (!iceBlock.gd)
     {
@@ -97,7 +97,7 @@ static int __init block_device_init(void) {
         return -ENOMEM;
     }
 
-    printk(KERN_INFO "[FPGA][ B ] Registering block device & assign MAJOR number for gen disk \n");
+    printk(KERN_INFO "[FPGA][ B ] Register block device...\n");
     iceBlock.gd->major = register_blkdev(0, DEVICE_NAME);
 
     if (iceBlock.gd->major < 0) 
@@ -106,7 +106,7 @@ static int __init block_device_init(void) {
         unregister_blkdev(iceBlock.gd->major, DEVICE_NAME);
     }
 
-    printk(KERN_INFO "[FPGA][ B ] Registered block device with major number: %d\n", iceBlock.gd->major);
+    printk(KERN_INFO "[FPGA][ B ] Register block device with major number: %d\n", iceBlock.gd->major);
 
     iceBlock.gd->queue = iceBlock.queue;
     iceBlock.gd->private_data = &iceBlock;
@@ -117,13 +117,24 @@ static int __init block_device_init(void) {
     add_disk(iceBlock.gd);
 
     mutex_init(&com_mutex);
-    printk(KERN_INFO "[FPGA][ B ] Block device registered\n");
+    printk(KERN_INFO "[FPGA][ B ] Block device registered SUCCESS\n");
     return 0;
 }
 
 static void __exit block_device_exit(void)
 {
     printk(KERN_INFO "[FPGA][ B ] Exiting block_device_exit\n");
+
+    if (iceBlock.gd) 
+    {
+        printk(KERN_INFO "[FPGA][ B ] Deleting gendisk with major number %d\n", iceBlock.gd->major);
+        del_gendisk(iceBlock.gd);
+        printk(KERN_INFO "[FPGA][ B ] Gendisk deleted");
+    } 
+    else 
+    {
+        printk(KERN_WARNING "Gendisk does not exist\n");
+    }
 
     if (iceBlock.queue) 
     {
@@ -145,17 +156,6 @@ static void __exit block_device_exit(void)
     else 
     {
         printk(KERN_WARNING "[FPGA][ B ] Gendisk does not exist for unregistering\n");
-    }
-
-    if (iceBlock.gd) 
-    {
-        printk(KERN_INFO "[FPGA][ B ] Deleting gendisk with major number %d\n", iceBlock.gd->major);
-        del_gendisk(iceBlock.gd);
-        printk(KERN_INFO "[FPGA][ B ] Gendisk deleted");
-    } 
-    else 
-    {
-        printk(KERN_WARNING "Gendisk does not exist\n");
     }
 
     if (iceBlock.gd) 
