@@ -180,8 +180,8 @@ static void __exit block_device_exit(void)
         printk(KERN_WARNING "[FPGA][ B ] Data does not exist\n");
     }
 
-    mutex_destroy(&com_mutex);
     printk(KERN_INFO "[FPGA][ B ] Block device exit completed");
+    mutex_destroy(&com_mutex);
 }
 
 module_init(block_device_init);
