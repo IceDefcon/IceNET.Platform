@@ -5,6 +5,11 @@
 #define ICE_BLOCK_MAJOR     240
 #define ICE_BLKDEV_NAME     "iceBlock"
 
+MODULE_VERSION("1.0");
+MODULE_LICENSE("GPL");
+MODULE_AUTHOR("Ice Marek");
+MODULE_DESCRIPTION("Block Device Object");
+
 static struct iceBlockDevice 
 {
     struct gendisk *gd;
@@ -43,3 +48,8 @@ static void iceBlock_exit(void)
     delete_block_device(&dev);
     unregister_blkdev(ICE_BLOCK_MAJOR, ICE_BLKDEV_NAME);
 }
+
+module_init(block_device_init);
+module_exit(block_device_exit);
+
+
