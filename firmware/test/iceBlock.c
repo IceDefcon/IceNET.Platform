@@ -114,10 +114,10 @@ static int __init block_device_init(void) {
     set_capacity(iceBlock.gd, DEVICE_SIZE / KERNEL_SECTOR_SIZE);
 
     iceBlock.gd->fops = &my_ops;
-#if 0
+#if 1
     add_disk(iceBlock.gd);
 #endif
-    
+
     mutex_init(&com_mutex);
     printk(KERN_INFO "[FPGA][ B ] Block device registered\n");
     return 0;
@@ -126,19 +126,6 @@ static int __init block_device_init(void) {
 static void __exit block_device_exit(void)
 {
     printk(KERN_INFO "[FPGA][ B ] Exiting block_device_exit\n");
-
-#if 0
-    if (iceBlock.gd) 
-    {
-        printk(KERN_INFO "[FPGA][ B ] Deleting gendisk with major number %d\n", iceBlock.gd->major);
-        del_gendisk(iceBlock.gd);
-        printk(KERN_INFO "[FPGA][ B ] Gendisk deleted >> checking major number %d\n", iceBlock.gd->major);
-    } 
-    else 
-    {
-        printk(KERN_WARNING "Gendisk does not exist\n");
-    }
-#endif
 
     if (iceBlock.queue) 
     {
@@ -162,7 +149,20 @@ static void __exit block_device_exit(void)
         printk(KERN_WARNING "[FPGA][ B ] Gendisk does not exist for unregistering\n");
     }
 
-#if 0
+#if 1
+    if (iceBlock.gd) 
+    {
+        printk(KERN_INFO "[FPGA][ B ] Deleting gendisk with major number %d\n", iceBlock.gd->major);
+        del_gendisk(iceBlock.gd);
+        printk(KERN_INFO "[FPGA][ B ] Gendisk deleted >> checking major number %d\n", iceBlock.gd->major);
+    } 
+    else 
+    {
+        printk(KERN_WARNING "Gendisk does not exist\n");
+    }
+#endif
+
+#if 1
     if (iceBlock.gd) 
     {
         printk(KERN_INFO "[FPGA][ B ] Putting gendisk >> checking major number %d\n", iceBlock.gd->major);
