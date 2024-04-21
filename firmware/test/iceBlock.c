@@ -10,21 +10,35 @@
 
 static DEFINE_MUTEX(com_mutex);
 
-static struct iceBlockDevice {
+static struct iceBlockDevice 
+{
     unsigned char *data;
     struct request_queue *queue;
     struct gendisk *gd;
 } iceBlock;
 
-static int dev_open(struct block_device *bdev, fmode_t mode) {
+static int dev_open(struct block_device *bdev, fmode_t mode) 
+{
+    if(!mutex_trylock(&com_mutex))
+    {
+        printk(KERN_ALERT "[FPGA][ B ] Device in use by another process");
+        return -EBUSY;
+    }
+
+    numberOpens++;
+    printk(KERN_INFO "[FPGA][ B ] Device has been opened %d time(s)\n", numberOpens);
     return 0;
 }
 
-static void dev_release(struct gendisk *disk, fmode_t mode) {
+static void dev_release(struct gendisk *disk, fmode_t mode) 
+{
+    mutex_unlock(&com_mutex);
+    printk(KERN_INFO "[FPGA][ B ] Device successfully closed\n");
     return;
 }
 
-static struct block_device_operations my_ops = {
+static struct block_device_operations my_ops = 
+{
     .owner = THIS_MODULE,
     .open = dev_open,
     .release = dev_release,
@@ -52,7 +66,8 @@ static int __init block_device_init(void) {
     }
 
     iceBlock.gd->major = register_blkdev(0, DEVICE_NAME);
-    if (iceBlock.gd->major < 0) {
+    if (iceBlock.gd->major < 0) 
+    {
         printk(KERN_ERR "Failed to register block device with error: %d\n", iceBlock.gd->major);
         unregister_blkdev(iceBlock.gd->major, DEVICE_NAME);
     }
@@ -76,43 +91,58 @@ static void __exit block_device_exit(void)
 {
     printk(KERN_INFO "Exiting block_device_exit\n");
 
-    if (iceBlock.gd) {
+    if (iceBlock.gd) 
+    {
         printk(KERN_INFO "Deleting gendisk with major number %d\n", iceBlock.gd->major);
         del_gendisk(iceBlock.gd);
         printk(KERN_INFO "Gendisk deleted >> checking major number %d\n", iceBlock.gd->major);
-    } else {
+    } 
+    else 
+    {
         printk(KERN_WARNING "Gendisk does not exist\n");
     }
 
-    if (iceBlock.queue) {
+    if (iceBlock.queue) 
+    {
         printk(KERN_INFO "Cleaning up queue >> checking major number %d\n", iceBlock.gd->major);
         blk_cleanup_queue(iceBlock.queue);
         printk(KERN_INFO "Queue cleaned up >> checking major number %d\n", iceBlock.gd->major);
-    } else {
+    } 
+    else 
+    {
         printk(KERN_WARNING "Queue does not exist\n");
     }
 
-    if (iceBlock.gd) {
+    if (iceBlock.gd) 
+    {
         printk(KERN_INFO "Unregistering block device with major number %d\n", iceBlock.gd->major);
         unregister_blkdev(iceBlock.gd->major, DEVICE_NAME);
         printk(KERN_INFO "Block device unregistered >> checking major number %d\n", iceBlock.gd->major);
-    } else {
+    } 
+    else 
+    {
         printk(KERN_WARNING "Gendisk does not exist for unregistering\n");
     }
 
-    if (iceBlock.gd) {
+    if (iceBlock.gd) 
+    {
         printk(KERN_INFO "Putting gendisk >> checking major number %d\n", iceBlock.gd->major);
         put_disk(iceBlock.gd);
         printk(KERN_INFO "Disk put >> checking major number %d\n", iceBlock.gd->major);
-    } else {
+    } 
+    else 
+    {
         printk(KERN_WARNING "Gendisk does not exist for putting\n");
     }
 
-    if (iceBlock.data) {
+    if (iceBlock.data) 
+    {
         printk(KERN_INFO "Freeing data >> checking major number %d\n", iceBlock.gd->major);
         vfree(iceBlock.data);
         printk(KERN_INFO "Data freed >> checking major number %d\n", iceBlock.gd->major);
-    } else {
+    } 
+    else 
+    {
         printk(KERN_WARNING "Data does not exist\n");
     }
 
