@@ -54,6 +54,8 @@ static int my_block_init(void)
     if (status < 0) 
     {
         printk(KERN_INFO "[FPGA][ B ] Unable to register mybdev block device\n");
+        /* in case if major number is taken */
+        unregister_blkdev(MY_BLOCK_MAJOR, MY_BLKDEV_NAME);
         return -EBUSY;
     }
 
