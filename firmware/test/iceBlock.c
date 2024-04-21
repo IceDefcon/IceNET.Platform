@@ -113,7 +113,7 @@ static int __init block_device_init(void) {
     strcpy(iceBlock.gd->disk_name, DEVICE_NAME);
     set_capacity(iceBlock.gd, DEVICE_SIZE / KERNEL_SECTOR_SIZE);
 
-    iceBlock.gd->fops = &my_ops;
+    // iceBlock.gd->fops = &my_ops;
     add_disk(iceBlock.gd);
 
     printk(KERN_INFO "[FPGA][ B ] Block device registered SUCCESS\n");
