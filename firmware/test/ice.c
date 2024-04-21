@@ -1,5 +1,7 @@
 #include <linux/fs.h>
+#include <linux/init.h>  // Include for module_init and module_exit
 #include <linux/genhd.h>
+#include <linux/module.h>  // Include the module header file
 
 #define ICE_BLOCK_MINORS    1
 #define ICE_BLOCK_MAJOR     240
