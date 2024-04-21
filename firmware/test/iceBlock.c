@@ -116,8 +116,10 @@ static int __init block_device_init(void) {
     iceBlock.gd->fops = &my_ops;
     add_disk(iceBlock.gd);
 
-    mutex_init(&com_mutex);
     printk(KERN_INFO "[FPGA][ B ] Block device registered SUCCESS\n");
+
+    mutex_init(&com_mutex);
+
     return 0;
 }
 
