@@ -19,14 +19,17 @@ static struct iceBlockDevice
 
 static int create_block_device(struct iceBlockDevice *dev)
 {
+    printk(KERN_INFO "[FPGA][ B ] Allocating disk\n");
     dev->gd = alloc_disk(ICE_BLOCK_MINORS);
     if (!dev->gd)
     {
-        printk(KERN_ERR "alloc_disk failed\n");
+        printk(KERN_ERR "[FPGA][ B ] Allocating disk failed\n");
         return -ENOMEM;
     }
     
+    printk(KERN_INFO "[FPGA][ B ] Adding disk\n");
     add_disk(dev->gd);
+
     return 0;
 }
 
@@ -41,18 +44,21 @@ static void delete_block_device(struct iceBlockDevice *dev)
 
 static int iceBlock_init(void)
 {
-    int status;
+    printk(KERN_INFO "[FPGA][ B ] Device Init\n");
 
+    int status;
     status = register_blkdev(ICE_BLOCK_MAJOR, ICE_BLKDEV_NAME);
+
     if (status < 0) 
     {
-        printk(KERN_ERR "unable to register iceBlock block device\n");
+        printk(KERN_ERR "[FPGA][ B ] Unable to register iceBlock device\n");
         return -EBUSY;
     }
 
     status = create_block_device(&dev);
     if (status)
     {
+        printk(KERN_INFO "[FPGA][ B ] Creating iceBlock device failed\n");
         unregister_blkdev(ICE_BLOCK_MAJOR, ICE_BLKDEV_NAME);
         return status;
     }
