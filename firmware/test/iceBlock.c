@@ -8,6 +8,7 @@
 #define DEVICE_SIZE (1024 * 1024) // 1MB
 #define KERNEL_SECTOR_SIZE 512
 
+static int numberOpens = 0;
 static DEFINE_MUTEX(com_mutex);
 
 static struct iceBlockDevice 
