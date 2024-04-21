@@ -1,23 +1,22 @@
 #include <linux/fs.h>
 #include <linux/genhd.h>
 
-#define ICE_BLOCK_MAJOR           240
-#define ICE_BLKDEV_NAME          "iceBlock"
-
-#define ICE_BLOCK_MINORS       1
+#define ICE_BLOCK_MINORS    1
+#define ICE_BLOCK_MAJOR     240
+#define ICE_BLKDEV_NAME     "iceBlock"
 
 static struct iceBlockDevice 
 {
     struct gendisk *gd;
 } dev;
 
-static int create_block_device(struct my_block_dev *dev)
+static int create_block_device(struct iceBlockDevice *dev)
 {
     dev->gd = alloc_disk(ICE_BLOCK_MINORS);
     add_disk(dev->gd);
 }
 
-static void delete_block_device(struct my_block_dev *dev)
+static void delete_block_device(struct iceBlockDevice *dev)
 {
     if (dev->gd)
     {
