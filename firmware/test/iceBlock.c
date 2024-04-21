@@ -12,17 +12,36 @@ MODULE_DESCRIPTION("Block Device Object");
 #define MY_BLKDEV_NAME          "mybdev"
 #define MY_BLOCK_MINORS       1
 
-static struct my_block_dev 
-{
-    struct gendisk *gd;
+#define NR_SECTORS                   1024
+#define KERNEL_SECTOR_SIZE           512
+
+static struct my_block_dev {
+    spinlock_t lock;                /* For mutual exclusion */
+    struct request_queue *queue;    /* The device request queue */
+    struct gendisk *gd;             /* The gendisk structure */
 } dev;
 
 static int create_block_device(struct my_block_dev *dev)
 {
-    printk(KERN_INFO "[FPGA][ B ] alloc_disk\n");
+    ...
+    /* Initialize the gendisk structure */
     dev->gd = alloc_disk(MY_BLOCK_MINORS);
-    // printk(KERN_INFO "[FPGA][ B ] add_disk\n");
-    // add_disk(dev->gd);
+    if (!dev->gd) {
+        printk (KERN_NOTICE "alloc_disk failure\n");
+        return -ENOMEM;
+    }
+
+    dev->gd->major = MY_BLOCK_MAJOR;
+    dev->gd->first_minor = 0;
+    dev->gd->fops = &my_block_ops;
+    dev->gd->queue = dev->queue;
+    dev->gd->private_data = dev;
+    snprintf (dev->gd->disk_name, 32, "myblock");
+    set_capacity(dev->gd, NR_SECTORS);
+
+    add_disk(dev->gd);
+
+    return 0;
 }
 
 static int my_block_init(void)
@@ -38,14 +57,18 @@ static int my_block_init(void)
         return -EBUSY;
     }
 
-    create_block_device(&dev);
+    status = create_block_device(&dev);
+    if (status < 0)
+    {
+        return status;
+    }
 }
 
 static void delete_block_device(struct my_block_dev *dev)
 {
     if (dev->gd)
     {
-        // del_gendisk(dev->gd);
+        del_gendisk(dev->gd);
     }
 }
 
