@@ -1,85 +1,192 @@
+#include <linux/module.h>
+#include <linux/kernel.h>
 #include <linux/fs.h>
-#include <linux/init.h>  // Include for module_init and module_exit
-#include <linux/genhd.h>
-#include <linux/module.h>  // Include the module header file
+#include <linux/blkdev.h>
+#include <linux/mutex.h>    // Include for mutex opearations
 
-MODULE_VERSION("1.0");
-MODULE_LICENSE("GPL");
-MODULE_AUTHOR("Ice Marek");
-MODULE_DESCRIPTION("Block Device Object");
+#define DEVICE_NAME "iceBLOCK"
+#define DEVICE_SIZE (1024 * 1024) // 1MB
+#define KERNEL_SECTOR_SIZE 512
+#define DEVICE_MINORS 1
 
-#define MY_BLOCK_MAJOR           240
-#define MY_BLKDEV_NAME          "mybdev"
-#define MY_BLOCK_MINORS       1
+static int numberOpens = 0;
+static DEFINE_MUTEX(com_mutex);
 
-#define NR_SECTORS                   1024
-#define KERNEL_SECTOR_SIZE           512
-
-static struct my_block_ops {
-    spinlock_t lock;                /* For mutual exclusion */
-    struct request_queue *queue;    /* The device request queue */
-    struct gendisk *gd;             /* The gendisk structure */
-} dev;
-
-static int create_block_device(struct my_block_ops *dev)
+static struct iceBlockDevice 
 {
-    /* Initialize the gendisk structure */
-    dev->gd = alloc_disk(MY_BLOCK_MINORS);
-    if (!dev->gd) {
-        printk (KERN_NOTICE "alloc_disk failure\n");
-        return -ENOMEM;
-    }
+    unsigned char *data;
+    struct request_queue *queue;
+    struct gendisk *gd;
+} iceBlock;
 
-    dev->gd->major = MY_BLOCK_MAJOR;
-    dev->gd->first_minor = 0;
-    dev->gd->fops = &my_block_ops;
-    dev->gd->queue = dev->queue;
-    dev->gd->private_data = dev;
-    snprintf (dev->gd->disk_name, 32, "myblock");
-    set_capacity(dev->gd, NR_SECTORS);
-
-    add_disk(dev->gd);
-
-    return 0;
-}
-
-static int my_block_init(void)
+static int dev_open(struct block_device *bdev, fmode_t mode) 
 {
-    printk(KERN_INFO "[FPGA][ B ] Device Init\n");
-
-    int status;
-
-    status = register_blkdev(MY_BLOCK_MAJOR, MY_BLKDEV_NAME);
-    if (status < 0) 
+    if(!mutex_trylock(&com_mutex))
     {
-        printk(KERN_INFO "[FPGA][ B ] Unable to register mybdev block device\n");
-        /* in case if major number is taken */
-        unregister_blkdev(MY_BLOCK_MAJOR, MY_BLKDEV_NAME);
+        printk(KERN_ALERT "[FPGA][ B ] Device in use by another process");
         return -EBUSY;
     }
 
-    status = create_block_device(&dev);
-    if (status < 0)
-    {
-        return status;
-    }
+    numberOpens++;
+    printk(KERN_INFO "[FPGA][ B ] Device has been opened %d time(s)\n", numberOpens);
+    return 0;
 }
 
-static void delete_block_device(struct my_block_dev *dev)
+static void dev_release(struct gendisk *disk, fmode_t mode) 
 {
-    if (dev->gd)
-    {
-        del_gendisk(dev->gd);
-    }
+    mutex_unlock(&com_mutex);
+    printk(KERN_INFO "[FPGA][ B ] Device successfully closed\n");
+    return;
 }
 
-static void my_block_exit(void)
+static struct block_device_operations my_ops = 
 {
-    delete_block_device(&dev);
-    printk(KERN_INFO "[FPGA][ B ] Unregister mybdev\n");
-    unregister_blkdev(MY_BLOCK_MAJOR, MY_BLKDEV_NAME);
-    printk(KERN_INFO "[FPGA][ B ] Device Exit Successfuly\n");
+    .owner = THIS_MODULE,
+    .open = dev_open,
+    .release = dev_release,
+};
+
+static int __init block_device_init(void) {
+
+    printk(KERN_INFO "[FPGA][ B ] Allocate 1MB of kernel memory to store block device\n");
+    iceBlock.data = vmalloc(DEVICE_SIZE);
+    if (!iceBlock.data)
+    {
+        printk(KERN_INFO "[FPGA][ B ] Failed to allocate 1MB kernel memory!\n");
+        return -ENOMEM;
+    }
+
+    printk(KERN_INFO "[FPGA][ B ] Allocates a request queue for a block device\n");
+    iceBlock.queue = blk_alloc_queue(GFP_KERNEL);
+    if (!iceBlock.queue)
+    {
+        printk(KERN_INFO "[FPGA][ B ] Failed to request for queue for a block device!\n");
+        vfree(iceBlock.data);
+        return -ENOMEM;
+    }
+
+    /**
+     * 
+     * Sets the logical block size for the block device's request 
+     * 
+     * Such that now we have 1MB / 512B = 2048 blocks
+     * Each block can be used indepenently for RD/WR operation
+     * 
+     */
+    printk(KERN_INFO "[FPGA][ B ] Sets the logical block size 512B for a single RD/WR request \n");
+    blk_queue_logical_block_size(iceBlock.queue, KERNEL_SECTOR_SIZE);
+
+    /**
+     * 
+     * Allocate a new gendisk structure for a block device
+     * 
+     * Contains information about the device, 
+     * such as its major and minor numbers, 
+     * request queue, and operations
+     * 
+     * DEVICE_MINORS == 1
+     * Single block device without partitions
+     * 
+     */
+    printk(KERN_INFO "[FPGA][ B ] Allocate a new gendisk structure for a Single block device without partitions \n");
+    iceBlock.gd = alloc_disk(DEVICE_MINORS);
+    if (!iceBlock.gd)
+    {
+        printk(KERN_INFO "[FPGA][ B ] Failed to allocating gen disk for a block device!\n");
+        vfree(iceBlock.data);
+        return -ENOMEM;
+    }
+
+    printk(KERN_INFO "[FPGA][ B ] Registering block device & assign MAJOR number for gen disk \n");
+    iceBlock.gd->major = register_blkdev(0, DEVICE_NAME);
+
+    if (iceBlock.gd->major < 0) 
+    {
+        printk(KERN_INFO "[FPGA][ B ] Failed to register block device with error: %d\n", iceBlock.gd->major);
+        unregister_blkdev(iceBlock.gd->major, DEVICE_NAME);
+    }
+
+    printk(KERN_INFO "[FPGA][ B ] Registered block device with major number: %d\n", iceBlock.gd->major);
+
+    iceBlock.gd->queue = iceBlock.queue;
+    iceBlock.gd->private_data = &iceBlock;
+    strcpy(iceBlock.gd->disk_name, DEVICE_NAME);
+    set_capacity(iceBlock.gd, DEVICE_SIZE / KERNEL_SECTOR_SIZE);
+
+    iceBlock.gd->fops = &my_ops;
+    add_disk(iceBlock.gd);
+
+    mutex_init(&com_mutex);
+    printk(KERN_INFO "[FPGA][ B ] Block device registered\n");
+    return 0;
 }
 
-module_init(my_block_init);
-module_exit(my_block_exit);
+static void __exit block_device_exit(void)
+{
+    printk(KERN_INFO "[FPGA][ B ] Exiting block_device_exit\n");
+
+    if (iceBlock.gd) 
+    {
+        printk(KERN_INFO "[FPGA][ B ] Deleting gendisk with major number %d\n", iceBlock.gd->major);
+        del_gendisk(iceBlock.gd);
+        printk(KERN_INFO "[FPGA][ B ] Gendisk deleted >> checking major number %d\n", iceBlock.gd->major);
+    } 
+    else 
+    {
+        printk(KERN_WARNING "Gendisk does not exist\n");
+    }
+
+    if (iceBlock.queue) 
+    {
+        printk(KERN_INFO "[FPGA][ B ] Cleaning up queue >> checking major number %d\n", iceBlock.gd->major);
+        blk_cleanup_queue(iceBlock.queue);
+        printk(KERN_INFO "[FPGA][ B ] Queue cleaned up >> checking major number %d\n", iceBlock.gd->major);
+    } 
+    else 
+    {
+        printk(KERN_WARNING "Queue does not exist\n");
+    }
+
+    if (iceBlock.gd) 
+    {
+        printk(KERN_INFO "[FPGA][ B ] Unregistering block device with major number %d\n", iceBlock.gd->major);
+        unregister_blkdev(iceBlock.gd->major, DEVICE_NAME);
+        printk(KERN_INFO "[FPGA][ B ] Block device unregistered >> checking major number %d\n", iceBlock.gd->major);
+    } 
+    else 
+    {
+        printk(KERN_WARNING "[FPGA][ B ] Gendisk does not exist for unregistering\n");
+    }
+
+    if (iceBlock.gd) 
+    {
+        printk(KERN_INFO "[FPGA][ B ] Putting gendisk >> checking major number %d\n", iceBlock.gd->major);
+        put_disk(iceBlock.gd);
+        printk(KERN_INFO "[FPGA][ B ] Disk put >> checking major number %d\n", iceBlock.gd->major);
+    } 
+    else 
+    {
+        printk(KERN_WARNING "[FPGA][ B ] Gendisk does not exist for putting\n");
+    }
+
+    if (iceBlock.data) 
+    {
+        printk(KERN_INFO "[FPGA][ B ] Freeing data >> checking major number %d\n", iceBlock.gd->major);
+        vfree(iceBlock.data);
+        printk(KERN_INFO "[FPGA][ B ] Data freed >> checking major number %d\n", iceBlock.gd->major);
+    } 
+    else 
+    {
+        printk(KERN_WARNING "[FPGA][ B ] Data does not exist\n");
+    }
+
+    mutex_destroy(&com_mutex);
+    printk(KERN_INFO "[FPGA][ B ] Block device exit completed >> checking major number %d\n", iceBlock.gd->major);
+}
+
+module_init(block_device_init);
+module_exit(block_device_exit);
+
+MODULE_LICENSE("GPL");
+MODULE_AUTHOR("Your Name");
+MODULE_DESCRIPTION("Simple block device module");
