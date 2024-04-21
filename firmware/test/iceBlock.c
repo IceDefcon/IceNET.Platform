@@ -19,27 +19,42 @@ static struct my_block_dev
 
 static int create_block_device(struct my_block_dev *dev)
 {
+    printk(KERN_INFO "[FPGA][ B ] alloc_disk\n");
     dev->gd = alloc_disk(MY_BLOCK_MINORS);
-    add_disk(dev->gd);
+    // printk(KERN_INFO "[FPGA][ B ] add_disk\n");
+    // add_disk(dev->gd);
 }
 
 static int my_block_init(void)
 {
+    printk(KERN_INFO "[FPGA][ B ] Device Init\n");
+
     int status;
 
     status = register_blkdev(MY_BLOCK_MAJOR, MY_BLKDEV_NAME);
     if (status < 0) 
     {
-        printk(KERN_ERR "unable to register mybdev block device\n");
+        printk(KERN_INFO "[FPGA][ B ] Unable to register mybdev block device\n");
         return -EBUSY;
     }
 
     create_block_device(&dev);
 }
 
+static void delete_block_device(struct my_block_dev *dev)
+{
+    if (dev->gd)
+    {
+        // del_gendisk(dev->gd);
+    }
+}
+
 static void my_block_exit(void)
 {
+    delete_block_device();
+    printk(KERN_INFO "[FPGA][ B ] Unregister mybdev\n");
     unregister_blkdev(MY_BLOCK_MAJOR, MY_BLKDEV_NAME);
+    printk(KERN_INFO "[FPGA][ B ] Device Exit Successfuly\n");
 }
 
 module_init(my_block_init);
