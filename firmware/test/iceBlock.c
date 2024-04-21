@@ -23,7 +23,6 @@ static struct my_block_dev {
 
 static int create_block_device(struct my_block_dev *dev)
 {
-    ...
     /* Initialize the gendisk structure */
     dev->gd = alloc_disk(MY_BLOCK_MINORS);
     if (!dev->gd) {
