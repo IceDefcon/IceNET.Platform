@@ -46,8 +46,33 @@ static struct block_device_operations my_ops =
     .release = dev_release,
 };
 
-static int __init block_device_init(void) {
+static int register_block_device(void)
+{
+    printk(KERN_INFO "[FPGA][ B ] Registering block device & assign MAJOR number for gen disk \n");
+    iceBlock.gd->major = register_blkdev(0, DEVICE_NAME);
 
+    if (iceBlock.gd->major < 0) 
+    {
+        printk(KERN_INFO "[FPGA][ B ] Failed to register block device with error: %d\n", iceBlock.gd->major);
+        return -1;
+    }
+
+    printk(KERN_INFO "[FPGA][ B ] Registered block device with major number: %d\n", iceBlock.gd->major);
+
+    iceBlock.gd->queue = iceBlock.queue;
+    iceBlock.gd->private_data = &iceBlock;
+    strcpy(iceBlock.gd->disk_name, DEVICE_NAME);
+    set_capacity(iceBlock.gd, DEVICE_SIZE / KERNEL_SECTOR_SIZE);
+
+    iceBlock.gd->fops = &my_ops;
+    add_disk(iceBlock.gd);
+
+    printk(KERN_INFO "[FPGA][ B ] Block device registered\n");
+    return 0;
+}
+
+static int __init block_device_init(void) 
+{
     printk(KERN_INFO "[FPGA][ B ] Allocate 1MB of kernel memory to store block device\n");
     iceBlock.data = vmalloc(DEVICE_SIZE);
     if (!iceBlock.data)
@@ -70,7 +95,7 @@ static int __init block_device_init(void) {
      * Sets the logical block size for the block device's request 
      * 
      * Such that now we have 1MB / 512B = 2048 blocks
-     * Each block can be used indepenently for RD/WR operation
+     * Each block can be used independently for RD/WR operation
      * 
      */
     printk(KERN_INFO "[FPGA][ B ] Sets the logical block size 512B for a single RD/WR request \n");
@@ -97,27 +122,14 @@ static int __init block_device_init(void) {
         return -ENOMEM;
     }
 
-    printk(KERN_INFO "[FPGA][ B ] Registering block device & assign MAJOR number for gen disk \n");
-    iceBlock.gd->major = register_blkdev(0, DEVICE_NAME);
-
-    if (iceBlock.gd->major < 0) 
+    // Register the block device when needed
+    if (register_block_device() < 0)
     {
-        printk(KERN_INFO "[FPGA][ B ] Failed to register block device with error: %d\n", iceBlock.gd->major);
-        unregister_blkdev(iceBlock.gd->major, DEVICE_NAME);
+        vfree(iceBlock.data);
+        return -EINVAL;
     }
 
-    printk(KERN_INFO "[FPGA][ B ] Registered block device with major number: %d\n", iceBlock.gd->major);
-
-    iceBlock.gd->queue = iceBlock.queue;
-    iceBlock.gd->private_data = &iceBlock;
-    strcpy(iceBlock.gd->disk_name, DEVICE_NAME);
-    set_capacity(iceBlock.gd, DEVICE_SIZE / KERNEL_SECTOR_SIZE);
-
-    iceBlock.gd->fops = &my_ops;
-    add_disk(iceBlock.gd);
-
     mutex_init(&com_mutex);
-    printk(KERN_INFO "[FPGA][ B ] Block device registered\n");
     return 0;
 }
 
