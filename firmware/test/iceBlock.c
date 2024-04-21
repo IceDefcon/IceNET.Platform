@@ -129,7 +129,6 @@ static void __exit block_device_exit(void)
     {
         printk(KERN_INFO "[FPGA][ B ] Deleting gendisk with major number %d\n", iceBlock.gd->major);
         del_gendisk(iceBlock.gd);
-        printk(KERN_INFO "[FPGA][ B ] Gendisk deleted");
     } 
     else 
     {
@@ -138,9 +137,8 @@ static void __exit block_device_exit(void)
 
     if (iceBlock.queue) 
     {
-        printk(KERN_INFO "[FPGA][ B ] Cleaning up queue");
+        printk(KERN_INFO "[FPGA][ B ] Cleaning up block device queue");
         blk_cleanup_queue(iceBlock.queue);
-        printk(KERN_INFO "[FPGA][ B ] Queue cleaned up");
     } 
     else 
     {
@@ -151,7 +149,6 @@ static void __exit block_device_exit(void)
     {
         printk(KERN_INFO "[FPGA][ B ] Unregistering block device with major number %d\n", iceBlock.gd->major);
         unregister_blkdev(iceBlock.gd->major, DEVICE_NAME);
-        printk(KERN_INFO "[FPGA][ B ] Block device unregistered");
     } 
     else 
     {
@@ -160,9 +157,8 @@ static void __exit block_device_exit(void)
 
     if (iceBlock.gd) 
     {
-        printk(KERN_INFO "[FPGA][ B ] Putting gendisk");
+        printk(KERN_INFO "[FPGA][ B ] Decrements the reference count of a struct gendisk object");
         put_disk(iceBlock.gd);
-        printk(KERN_INFO "[FPGA][ B ] Disk put");
     } 
     else 
     {
@@ -171,9 +167,8 @@ static void __exit block_device_exit(void)
 
     if (iceBlock.data) 
     {
-        printk(KERN_INFO "[FPGA][ B ] Freeing data");
+        printk(KERN_INFO "[FPGA][ B ] DeAllocate 1MB of kernel memory");
         vfree(iceBlock.data);
-        printk(KERN_INFO "[FPGA][ B ] Data freed");
     } 
     else 
     {
