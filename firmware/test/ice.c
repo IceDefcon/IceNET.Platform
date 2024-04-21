@@ -66,5 +66,5 @@ static void iceBlock_exit(void)
     unregister_blkdev(ICE_BLOCK_MAJOR, ICE_BLKDEV_NAME);
 }
 
-module_init(block_device_init);
-module_exit(block_device_exit);
+module_init(iceBlock_init);
+module_exit(iceBlock_exit);
