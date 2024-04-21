@@ -18,7 +18,14 @@ static struct iceBlockDevice
 static int create_block_device(struct iceBlockDevice *dev)
 {
     dev->gd = alloc_disk(ICE_BLOCK_MINORS);
+    if (!dev->gd)
+    {
+        printk(KERN_ERR "alloc_disk failed\n");
+        return -ENOMEM;
+    }
+    
     add_disk(dev->gd);
+    return 0;
 }
 
 static void delete_block_device(struct iceBlockDevice *dev)
@@ -26,6 +33,7 @@ static void delete_block_device(struct iceBlockDevice *dev)
     if (dev->gd)
     {
         del_gendisk(dev->gd);
+        put_disk(dev->gd);
     }
 }
 
@@ -40,7 +48,14 @@ static int iceBlock_init(void)
         return -EBUSY;
     }
 
-    create_block_device(&dev);
+    status = create_block_device(&dev);
+    if (status)
+    {
+        unregister_blkdev(ICE_BLOCK_MAJOR, ICE_BLKDEV_NAME);
+        return status;
+    }
+
+    return 0;
 }
 
 static void iceBlock_exit(void)
@@ -51,5 +66,3 @@ static void iceBlock_exit(void)
 
 module_init(block_device_init);
 module_exit(block_device_exit);
-
-
