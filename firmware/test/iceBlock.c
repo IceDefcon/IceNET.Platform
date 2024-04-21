@@ -15,13 +15,13 @@ MODULE_DESCRIPTION("Block Device Object");
 #define NR_SECTORS                   1024
 #define KERNEL_SECTOR_SIZE           512
 
-static struct my_block_dev {
+static struct my_block_ops {
     spinlock_t lock;                /* For mutual exclusion */
     struct request_queue *queue;    /* The device request queue */
     struct gendisk *gd;             /* The gendisk structure */
 } dev;
 
-static int create_block_device(struct my_block_dev *dev)
+static int create_block_device(struct my_block_ops *dev)
 {
     /* Initialize the gendisk structure */
     dev->gd = alloc_disk(MY_BLOCK_MINORS);
@@ -32,7 +32,7 @@ static int create_block_device(struct my_block_dev *dev)
 
     dev->gd->major = MY_BLOCK_MAJOR;
     dev->gd->first_minor = 0;
-    dev->gd->fops = &my_block_dev;
+    dev->gd->fops = &my_block_ops;
     dev->gd->queue = dev->queue;
     dev->gd->private_data = dev;
     snprintf (dev->gd->disk_name, 32, "myblock");
