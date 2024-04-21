@@ -48,7 +48,7 @@ static struct block_device_operations my_ops =
 
 static int __init block_device_init(void) {
 
-    printk(KERN_INFO "[FPGA][ B ] Allocate 1MB of kernel memory to store block device\n");
+    printk(KERN_INFO "[FPGA][ B ] Allocate 1MB of kernel memory to store block device >> checking major number %d\n", iceBlock.gd->major);
     iceBlock.data = vmalloc(DEVICE_SIZE);
     if (!iceBlock.data)
     {
@@ -56,7 +56,7 @@ static int __init block_device_init(void) {
         return -ENOMEM;
     }
 
-    printk(KERN_INFO "[FPGA][ B ] Allocates a request queue for a block device\n");
+    printk(KERN_INFO "[FPGA][ B ] Allocates a request queue for a block device >> checking major number %d\n", iceBlock.gd->major);
     iceBlock.queue = blk_alloc_queue(GFP_KERNEL);
     if (!iceBlock.queue)
     {
@@ -73,7 +73,7 @@ static int __init block_device_init(void) {
      * Each block can be used indepenently for RD/WR operation
      * 
      */
-    printk(KERN_INFO "[FPGA][ B ] Sets the logical block size 512B for a single RD/WR request \n");
+    printk(KERN_INFO "[FPGA][ B ] Sets the logical block size 512B for a single RD/WR request  >> checking major number %d\n", iceBlock.gd->major);
     blk_queue_logical_block_size(iceBlock.queue, KERNEL_SECTOR_SIZE);
 
     /**
@@ -88,7 +88,7 @@ static int __init block_device_init(void) {
      * Single block device without partitions
      * 
      */
-    printk(KERN_INFO "[FPGA][ B ] Allocate a new gendisk structure for a Single block device without partitions \n");
+    printk(KERN_INFO "[FPGA][ B ] Allocate a new gendisk structure for a Single block device without partitions  >> checking major number %d\n", iceBlock.gd->major);
     iceBlock.gd = alloc_disk(DEVICE_MINORS);
     if (!iceBlock.gd)
     {
@@ -97,7 +97,7 @@ static int __init block_device_init(void) {
         return -ENOMEM;
     }
 
-    printk(KERN_INFO "[FPGA][ B ] Registering block device & assign MAJOR number for gen disk \n");
+    printk(KERN_INFO "[FPGA][ B ] Registering block device & assign MAJOR number for gen disk  >> checking major number %d\n", iceBlock.gd->major);
     iceBlock.gd->major = register_blkdev(0, DEVICE_NAME);
 
     if (iceBlock.gd->major < 0) 
