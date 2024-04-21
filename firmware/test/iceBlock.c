@@ -37,18 +37,24 @@ static int __init block_device_init(void) {
 
     iceBlock.queue = blk_alloc_queue(GFP_KERNEL);
     if (!iceBlock.queue)
-        goto out;
+    {
+        vfree(iceBlock.data);
+        return -ENOMEM;
+    }
 
     blk_queue_logical_block_size(iceBlock.queue, KERNEL_SECTOR_SIZE);
 
     iceBlock.gd = alloc_disk(1);
     if (!iceBlock.gd)
-        goto out;
+    {
+        vfree(iceBlock.data);
+        return -ENOMEM;
+    }
 
     iceBlock.gd->major = register_blkdev(0, DEVICE_NAME);
     if (iceBlock.gd->major < 0) {
         printk(KERN_ERR "Failed to register block device with error: %d\n", iceBlock.gd->major);
-        goto out_unregister;
+        unregister_blkdev(iceBlock.gd->major, DEVICE_NAME);
     }
 
     printk(KERN_INFO "Registered block device with major number: %d\n", iceBlock.gd->major);
@@ -64,12 +70,6 @@ static int __init block_device_init(void) {
     mutex_init(&com_mutex);
     printk(KERN_INFO "Block device registered\n");
     return 0;
-
-out_unregister:
-    unregister_blkdev(iceBlock.gd->major, DEVICE_NAME);
-out:
-    vfree(iceBlock.data);
-    return -ENOMEM;
 }
 
 static void __exit block_device_exit(void)
