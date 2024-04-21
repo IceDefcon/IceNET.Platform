@@ -51,7 +51,7 @@ static void delete_block_device(struct my_block_dev *dev)
 
 static void my_block_exit(void)
 {
-    delete_block_device();
+    delete_block_device(&dev);
     printk(KERN_INFO "[FPGA][ B ] Unregister mybdev\n");
     unregister_blkdev(MY_BLOCK_MAJOR, MY_BLKDEV_NAME);
     printk(KERN_INFO "[FPGA][ B ] Device Exit Successfuly\n");
