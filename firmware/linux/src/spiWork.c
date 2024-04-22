@@ -42,7 +42,7 @@
 
 static void interruptFromFpga_WorkInit(void)
 {
-	INIT_WORK(get_kernel_work(), interruptFromFpga);
+	INIT_WORK(get_interruptFromFpga_work(), interruptFromFpga);
 	interruptFromFpga_wq = create_singlethread_workqueue("kernel_workqueue");
 	if (!interruptFromFpga_wq) 
 	{
@@ -62,7 +62,7 @@ static void signalFromCharDevice_WorkInit(void)
 
 static void interruptFromFpga_WorkDestroy(void)
 {
-    cancel_work_sync(get_kernel_work());
+    cancel_work_sync(get_interruptFromFpga_work());
     if (interruptFromFpga_wq) {
         flush_workqueue(interruptFromFpga_wq);
         destroy_workqueue(interruptFromFpga_wq);
