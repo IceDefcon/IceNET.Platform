@@ -149,7 +149,7 @@ static ssize_t dev_write(struct file *filep, const char *buffer, size_t len, lof
 
     if(strncmp(message, "i", 1) == 0)
     {
-
+        queue_work(get_testFromCharDevice_wq(), get_testFromCharDevice_work());
     }
 
     if (error_count==0)

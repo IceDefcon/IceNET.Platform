@@ -167,7 +167,7 @@ void signalFromCharDevice(struct work_struct *work)
         return;
     }
 
-    printk(KERN_INFO "[CTRL][SPI] Data from FPGA ---==[ Char device Signal ]==---");
+    printk(KERN_INFO "[CTRL][SPI] Data from FPGA ---==[ Constant from FPGA Reqister ]==---");
     for (i = 0; i < sizeof(spi_rx_at_signalFromCharDevice); ++i) {
         printk(KERN_INFO "[CTRL][SPI] Byte %d: 0x%02x\n", i, spi_rx_at_signalFromCharDevice[i]);
     }
@@ -206,7 +206,7 @@ void testFromCharDevice(struct work_struct *work)
         return;
     }
 
-    printk(KERN_INFO "[TEST][SPI] Data from FPGA ---==[ Char device Test Signal ]==---");
+    printk(KERN_INFO "[TEST][SPI] Data from FPGA ---==[ Read from I2C Gyroscope driven in FPGA ]==---");
     for (i = 0; i < sizeof(spi_rx_at_signalFromCharDevice); ++i) {
         printk(KERN_INFO "[TEST][SPI] Byte %d: 0x%02x\n", i, spi_rx_at_signalFromCharDevice[i]);
     }
