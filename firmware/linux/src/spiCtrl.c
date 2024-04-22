@@ -36,6 +36,7 @@
 
 
 static struct spi_device *spi_dev_main;
+static struct spi_device *spi_dev_second;
 
 static volatile uint8_t tx_kernel[] = {0x81};
 static volatile uint8_t rx_kernel[1];
@@ -46,6 +47,7 @@ int spiInit(void)
 {
 
     struct spi_master *spi_master0;
+    struct spi_master *spi_master1;
     int ret;
 
     spi_master0 = spi_busnum_to_master(0);
@@ -53,11 +55,20 @@ int spiInit(void)
         printk(KERN_ERR "[FPGA][SPI] SPI master for SPI0 not found\n");
         return -ENODEV;
     }
+    spi_master1 = spi_busnum_to_master(1);
+    if (!spi_master1) {
+        printk(KERN_ERR "[FPGA][SPI] SPI master for SPI1 not found\n");
+        return -ENODEV;
+    }
 
-    // Prepare the SPI devices
     spi_dev_main = spi_alloc_device(spi_master0);
     if (!spi_dev_main) {
         printk(KERN_ERR "[FPGA][SPI] Failed to allocate SPI device for SPI0\n");
+        return -ENOMEM;
+    }
+    spi_dev_second = spi_alloc_device(spi_master1);
+    if (!spi_dev_second) {
+        printk(KERN_ERR "[FPGA][SPI] Failed to allocate SPI device for SPI1\n");
         return -ENOMEM;
     }
 
@@ -76,6 +87,23 @@ int spiInit(void)
         spi_dev_put(spi_dev_main);
         return ret;
     }
+
+    /*! 
+     * The mode is set to 1 to pass the
+     * High clock control signal to FPGA
+     */
+    spi_dev_second->chip_select = 0;
+    spi_dev_second->mode = SPI_MODE_1;
+    spi_dev_second->bits_per_word = 8;
+    spi_dev_second->max_speed_hz = 1000000;
+
+    ret = spi_setup(spi_dev_second);
+    if (ret < 0) {
+        printk(KERN_ERR "[FPGA][SPI] Failed to setup SPI device: %d\n", ret);
+        spi_dev_put(spi_dev_second);
+        return ret;
+    }
+
 }
 
 void interruptFromFpga(struct work_struct *work)
