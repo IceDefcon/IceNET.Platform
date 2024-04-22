@@ -20,10 +20,11 @@
 //                  //
 //////////////////////
 
-/* GET */ struct workqueue_struct* get_fpga_wq(void);
-/* GET */ struct work_struct* get_fpga_work(void);
-/* GET */ struct workqueue_struct* get_kernel_wq(void);
-/* GET */ struct work_struct* get_kernel_work(void);
+/* GET */ struct workqueue_struct* get_signalFromCharDevice_wq(void);
+/* GET */ struct work_struct* get_signalFromCharDevice_work(void);
+
+/* GET */ struct workqueue_struct* get_interruptFromFpga_wq(void);
+/* GET */ struct work_struct* get_interruptFromFpga_work(void);
 
 /* INIT */ void spiWorkInit(void);
 /* DESTROY */ void spiWorkDestroy(void);

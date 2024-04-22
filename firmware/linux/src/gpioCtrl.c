@@ -30,7 +30,7 @@ static irqreturn_t gpioKernelIsr(int irq, void *data)
     printk(KERN_INFO "[FPGA][ISR] Kernel interrupt [%d] @ Pin [%d]\n", counter, GPIO_KERNEL_INTERRUPT);
     counter++;
 
-    queue_work(get_kernel_wq(), get_kernel_work());
+    queue_work(get_interruptFromFpga_wq(), get_interruptFromFpga_work());
 
     return IRQ_HANDLED;
 }
