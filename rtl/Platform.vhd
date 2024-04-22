@@ -17,26 +17,26 @@ port
 	-- FPGA Reference Clock
     CLOCK_50MHz : in std_logic; -- PIN_T2
     -- BBB SPI0
-    MAIN_CS : in std_logic;    -- PIN_A5   :: BBB P9_17 :: PULPLE  :: SPI0_CS0
-    MAIN_MISO : out std_logic; -- PIN_A6   :: BBB P9_21 :: BROWN   :: SPI0_D0
-    MAIN_MOSI : in std_logic;  -- PIN_A7   :: BBB P9_18 :: BLUE    :: SPI0_D1
-    MAIN_SCLK : in std_logic;  -- PIN_A8   :: BBB P9_22 :: BLACK   :: SPI0_SCLK
+    MAIN_CS : in std_logic;    -- PIN_A5   :: BBB P9_17 :: PULPLE :: SPI0_CS0
+    MAIN_MISO : out std_logic; -- PIN_A6   :: BBB P9_21 :: BROWN  :: SPI0_D0
+    MAIN_MOSI : in std_logic;  -- PIN_A7   :: BBB P9_18 :: BLUE   :: SPI0_D1
+    MAIN_SCLK : in std_logic;  -- PIN_A8   :: BBB P9_22 :: BLACK  :: SPI0_SCLK
     -- BBB SPI1
-    SECOND_CS : in std_logic;    -- PIN_B5   :: BBB P9_28 :: ORANGE :: SPI1_CS0
-    SECOND_MISO : out std_logic; -- PIN_B6   :: BBB P9_29 :: BLUE   :: SPI1_D0
-    SECOND_MOSI : in std_logic;  -- PIN_B7   :: BBB P9_30 :: YELOW 	:: SPI1_D1
-    SECOND_SCLK : in std_logic;  -- PIN_B8   :: BBB P9_31 :: GREEN 	:: SPI1_SCLK
+    SECOND_CS : in std_logic;    -- PIN_B5 :: BBB P9_28 :: ORANGE :: SPI1_CS0
+    SECOND_MISO : out std_logic; -- PIN_B6 :: BBB P9_29 :: BLUE   :: SPI1_D0
+    SECOND_MOSI : in std_logic;  -- PIN_B7 :: BBB P9_30 :: YELOW  :: SPI1_D1
+    SECOND_SCLK : in std_logic;  -- PIN_B8 :: BBB P9_31 :: GREEN  :: SPI1_SCLK
     -- Bypass
     BYPASS_CS : out std_logic;  -- PIN_A15 :: YELLOW :: CS
-    BYPASS_MISO : in std_logic; -- PIN_A16 :: ORANGE :: D0
-    BYPASS_MOSI : out std_logic;  -- PIN_A17 :: RED   :: D1
-    BYPASS_SCLK : out std_logic;  -- PIN_A18 :: BROWN :: SCLK
+    BYPASS_MISO : in std_logic; -- PIN_A16 :: ORANGE :: SA0
+    BYPASS_MOSI : out std_logic;  -- PIN_A17 :: RED    :: SDX
+    BYPASS_SCLK : out std_logic;  -- PIN_A18 :: BROWN  :: SCX
     -- I2C Gyroscope
-    I2C_SDA : inout std_logic; -- PIN_A9   :: BBB P9_20 :: CPU.BLUE <> FPGA.BLUE <> GYRO.WHITE
-    I2C_SCK : inout std_logic; -- PIN_A10  :: BBB P9_19 :: CPU.ORANGE <> FPGA.GREEN <> GYRO.PURPLE
+    I2C_SDA : inout std_logic; -- PIN_A9  :: BBB P9_20 :: CPU.BLUE <> FPGA.BLUE <> GYRO.WHITE
+    I2C_SCK : inout std_logic; -- PIN_A10 :: BBB P9_19 :: CPU.ORANGE <> FPGA.GREEN <> GYRO.PURPLE
 	-- Interrupts 
-    FPGA_INT : out std_logic;  -- PIN_A3   :: BBB P9_12 :: BLACK
-    KERNEL_INT : in std_logic; -- PIN_A4   :: BBB P9_14 :: WHITE
+    FPGA_INT : out std_logic;  -- PIN_A3 :: BBB P9_12 :: BLACK
+    KERNEL_INT : in std_logic; -- PIN_A4 :: BBB P9_14 :: WHITE
     -- Debug LED's
     LED_1 : out std_logic; -- PIN_U7
     LED_2 : out std_logic; -- PIN_U8
@@ -222,16 +222,22 @@ mainSpiDataFeedback_module: SpiDataFeedback port map
 	synced_miso => mainSpiDataFeedback_MISO
 );
 
-secondSpiDataFeedback_module: SpiDataFeedback port map 
-(
-	CLOCK => CLOCK_50MHz,
-	SCLK => SECOND_SCLK,
-	DATA => second_data,
-	synced_miso => secondSpiDataFeedback_MISO
-);
-
 MAIN_MISO <= mainSpiDataFeedback_MISO;
-SECOND_MISO <= secondSpiDataFeedback_MISO;
+
+--secondSpiDataFeedback_module: SpiDataFeedback port map 
+--(
+--	CLOCK => CLOCK_50MHz,
+--	SCLK => SECOND_SCLK,
+--	DATA => second_data,
+--	synced_miso => secondSpiDataFeedback_MISO
+--);
+
+--SECOND_MISO <= secondSpiDataFeedback_MISO;
+
+BYPASS_CS <= SECOND_CS;
+SECOND_MISO <= BYPASS_MISO;
+BYPASS_MOSI <= SECOND_MOSI;
+BYPASS_SCLK <= SECOND_SCLK;
 
 ------------------------------------------------------
 -- Interrupt pulse :: 0x2FAF07F/50 MHz
