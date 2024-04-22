@@ -82,7 +82,7 @@ static void signalFromCharDevice_WorkDestroy(void)
 
 void spiWorkInit(void)
 {
-	interruptFromFpga_WorkInit()
+	interruptFromFpga_WorkInit();
 	signalFromCharDevice_WorkInit();
 }
 
