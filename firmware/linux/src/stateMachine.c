@@ -47,22 +47,22 @@ static int StateMachineThread(void *data)
                 break;
 
             case SPI:
-                printk(KERN_INFO "[FPGA][STM] SPI State [%d]\n",counter);
+                printk(KERN_INFO "[CTRL][STM] SPI State [%d]\n",counter);
                 STATE = IDLE;
                 break;
 
             case I2C:
-                printk(KERN_INFO "[FPGA][STM] I2C State [%d]\n",counter);
+                printk(KERN_INFO "[CTRL][STM] I2C State [%d]\n",counter);
                 STATE = IDLE;
                 break;
 
             case USER:
-                printk(KERN_INFO "[FPGA][STM] USER State [%d]\n",counter);
+                printk(KERN_INFO "[CTRL][STM] USER State [%d]\n",counter);
                 STATE = IDLE;
                 break;
 
             default:
-                printk(KERN_INFO "[FPGA][STM] Unknown State [%d]\n",counter);
+                printk(KERN_INFO "[CTRL][STM] Unknown State [%d]\n",counter);
                 return EINVAL;
         }
 
@@ -78,7 +78,7 @@ void stateMachineInit(void)
     thread_handle = kthread_create(StateMachineThread, NULL, "SM thread handle");
     if (IS_ERR(thread_handle)) 
     {
-        printk(KERN_ERR "[FPGA][STM] Failed to create kernel thread. Error code: %ld\n", PTR_ERR(thread_handle));
+        printk(KERN_ERR "[INIT][STM] Failed to create kernel thread. Error code: %ld\n", PTR_ERR(thread_handle));
     }
     wake_up_process(thread_handle);
 }
@@ -90,5 +90,5 @@ void stateMachineDestroy(void)
         kthread_stop(thread_handle);
         thread_handle = NULL;
     }
-    printk(KERN_INFO "[FPGA][STM] State Machine Exit\n");
+    printk(KERN_INFO "[EXIT][STM] State Machine Destroy\n");
 }

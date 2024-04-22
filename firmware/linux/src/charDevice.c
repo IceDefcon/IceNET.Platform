@@ -55,19 +55,19 @@ static struct file_operations fops =
 
 void charDeviceInit(void)
 {
-    printk(KERN_INFO "[FPGA][ C ] Device Init\n");
+    printk(KERN_INFO "[INIT][ C ] Device Init\n");
 
     majorNumber = register_chrdev(0, DEVICE_NAME, &fops);
     if (majorNumber<0)
     {
-        printk(KERN_ALERT "[FPGA][ C ] Failed to register major number: %d\n", majorNumber);
+        printk(KERN_ALERT "[INIT][ C ] Failed to register major number: %d\n", majorNumber);
     }
 
     C_Class = class_create(THIS_MODULE, CLASS_NAME);
     if (IS_ERR(C_Class))
     {
         unregister_chrdev(majorNumber, DEVICE_NAME);
-        printk(KERN_ALERT "[FPGA][ C ] Failed to register device class: %ld\n", PTR_ERR(C_Class));
+        printk(KERN_ALERT "[INIT][ C ] Failed to register device class: %ld\n", PTR_ERR(C_Class));
     }
     
     C_Device = device_create(C_Class, NULL, MKDEV(majorNumber, 0), NULL, DEVICE_NAME);
@@ -75,7 +75,7 @@ void charDeviceInit(void)
     {
         class_destroy(C_Class);
         unregister_chrdev(majorNumber, DEVICE_NAME);
-        printk(KERN_ALERT "[FPGA][ C ] Failed to create the device: %ld\n", PTR_ERR(C_Device));
+        printk(KERN_ALERT "[INIT][ C ] Failed to create the device: %ld\n", PTR_ERR(C_Device));
     }
 
     mutex_init(&com_mutex);
@@ -88,19 +88,19 @@ void charDeviceDestroy(void)
     class_destroy(C_Class);
     unregister_chrdev(majorNumber, DEVICE_NAME);
     mutex_destroy(&com_mutex);
-    printk(KERN_INFO "[FPGA][ C ] Device Exit\n");
+    printk(KERN_INFO "[EXIT][ C ] Device Exit\n");
 }
 
 static int dev_open(struct inode *inodep, struct file *filep)
 {
     if(!mutex_trylock(&com_mutex))
     {
-        printk(KERN_ALERT "[FPGA][ C ] Device in use by another process");
+        printk(KERN_ALERT "[CTRL][ C ] Device in use by another process");
         return -EBUSY;
     }
 
     numberOpens++;
-    printk(KERN_INFO "[FPGA][ C ] Device has been opened %d time(s)\n", numberOpens);
+    printk(KERN_INFO "[CTRL][ C ] Device has been opened %d time(s)\n", numberOpens);
 
     return CD_OK;
 }
@@ -116,12 +116,12 @@ static ssize_t dev_read(struct file *filep, char *buffer, size_t len, loff_t *of
 
     if (error_count==0)
     {
-        printk(KERN_INFO "[FPGA][ C ] Sent %d characters to the user\n", size_of_message);
+        printk(KERN_INFO "[CTRL][ C ] Sent %d characters to the user\n", size_of_message);
         return (size_of_message = 0);  // clear the position to the start and return NULL
     }
     else 
     {
-        printk(KERN_INFO "[FPGA][ C ] Failed to send %d characters to the user\n", error_count);
+        printk(KERN_INFO "[CTRL][ C ] Failed to send %d characters to the user\n", error_count);
         return -EFAULT; // Failed -- return a bad address message (i.e. -14)
     }
 
@@ -155,12 +155,12 @@ static ssize_t dev_write(struct file *filep, const char *buffer, size_t len, lof
     if (error_count==0)
     {
         size_of_message = strlen(message);
-        printk(KERN_INFO "[FPGA][ C ] Received %d characters from the user\n", len);
+        printk(KERN_INFO "[CTRL][ C ] Received %d characters from the user\n", len);
         return len;
     } 
     else 
     {
-        printk(KERN_INFO "[FPGA][ C ] Failed to receive characters from the user\n");
+        printk(KERN_INFO "[CTRL][ C ] Failed to receive characters from the user\n");
         return -EFAULT;
     }
     
@@ -170,6 +170,6 @@ static ssize_t dev_write(struct file *filep, const char *buffer, size_t len, lof
 static int dev_release(struct inode *inodep, struct file *filep)
 {
     mutex_unlock(&com_mutex);
-    printk(KERN_INFO "[FPGA][ C ] Device successfully closed\n");
+    printk(KERN_INFO "[CTRL][ C ] Device successfully closed\n");
     return CD_OK;
 }
