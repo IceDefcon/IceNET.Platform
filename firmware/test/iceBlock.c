@@ -39,44 +39,6 @@ static void dev_release(struct gendisk *disk, fmode_t mode)
     return;
 }
 
-static ssize_t dev_read(struct block_device *bdev, char __user *buffer, size_t size, loff_t *offset)
-{
-    struct iceBlockDevice *dev = bdev->bd_disk->private_data;
-    size_t maxSize = DEVICE_SIZE - *offset;
-
-    if (*offset >= DEVICE_SIZE)
-        return 0; // EOF
-
-    if (size > maxSize)
-        size = maxSize;
-
-    if (copy_to_user(buffer, dev->data + *offset, size))
-        return -EFAULT; // Error copying data to user space
-
-    *offset += size;
-
-    return size;
-}
-
-static ssize_t dev_write(struct block_device *bdev, const char __user *buffer, size_t size, loff_t *offset)
-{
-    struct iceBlockDevice *dev = bdev->bd_disk->private_data;
-    size_t maxSize = DEVICE_SIZE - *offset;
-
-    if (*offset >= DEVICE_SIZE)
-        return 0; // EOF
-
-    if (size > maxSize)
-        size = maxSize;
-
-    if (copy_from_user(dev->data + *offset, buffer, size))
-        return -EFAULT; // Error copying data from user space
-
-    *offset += size;
-
-    return size;
-}
-
 static int dev_ioctl(struct block_device *bdev, fmode_t mode, unsigned int cmd, unsigned long arg)
 {
     switch (cmd) {
@@ -100,7 +62,7 @@ static struct block_device_operations my_ops =
     .owner = THIS_MODULE,
     .open = dev_open,
     .release = dev_release,
-    .ioctl = NULL,  // You can set this to NULL if you're not implementing ioctl
+    .ioctl = dev_ioctl,
     .compat_ioctl = NULL,  // You can set this to NULL if you're not implementing compat_ioctl
 };
 
