@@ -77,15 +77,31 @@ static ssize_t dev_write(struct block_device *bdev, const char __user *buffer, s
     return size;
 }
 
+static int dev_ioctl(struct block_device *bdev, fmode_t mode, unsigned int cmd, unsigned long arg)
+{
+    switch (cmd) {
+        case BLKGETSIZE:
+            return put_user(DEVICE_SIZE, (int __user *)arg);
+        case BLKSECDISCARD:
+            // Handle discard operation
+            break;
+        case BLKFLSBUF:
+            // Handle flush buffer operation
+            break;
+        // Add more cases as needed
+        default:
+            return -ENOTTY; // Not supported
+    }
+    return 0;
+}
+
 static struct block_device_operations my_ops = 
 {
     .owner = THIS_MODULE,
     .open = dev_open,
     .release = dev_release,
     .ioctl = NULL,  // You can set this to NULL if you're not implementing ioctl
-    .compat_ioctl = NULL,  // You can set this to NULL if you're not implementing ioctl
-    .read = dev_read,  // Implement read function
-    .write = dev_write,  // Implement write function
+    .compat_ioctl = NULL,  // You can set this to NULL if you're not implementing compat_ioctl
 };
 
 
