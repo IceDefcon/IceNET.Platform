@@ -136,7 +136,7 @@ void interruptFromFpga(struct work_struct *work)
         printk(KERN_INFO "[CTRL][SPI] Byte %d: 0x%02x\n", i, spi_rx_at_interruptFromFpga[i]);
     }
 
-    spi_rx_at_interruptFromFpga[0] = {0x00};
+    spi_rx_at_interruptFromFpga[0] = 0x00;
 
     /*!
      * 
@@ -176,7 +176,7 @@ void signalFromCharDevice(struct work_struct *work)
         printk(KERN_INFO "[CTRL][SPI] Byte %d: 0x%02x\n", i, spi_rx_at_signalFromCharDevice[i]);
     }
 
-    spi_rx_at_signalFromCharDevice[0] = {0x00};
+    spi_rx_at_signalFromCharDevice[0] = 0x00;
 
     /*!
      * 
@@ -217,7 +217,7 @@ void testFromCharDevice(struct work_struct *work)
         printk(KERN_INFO "[TEST][SPI] Byte %d: 0x%02x\n", i, spi_rx_at_testFromCharDevice[i]);
     }
 
-    spi_rx_at_testFromCharDevice[0] = {0x00};
+    spi_rx_at_testFromCharDevice[0] = 0x00;
 
     /*!
      * 
