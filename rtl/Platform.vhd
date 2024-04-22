@@ -221,7 +221,7 @@ secondSpiDataFeedback_module: SpiDataFeedback port map
 (
 	CLOCK => CLOCK_50MHz,
 	SCLK => SECOND_SCLK,
-	DATA => return_data,
+	DATA => second_data,
 	synced_miso => secondSpiDataFeedback_MISO
 );
 
