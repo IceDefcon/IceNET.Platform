@@ -46,7 +46,7 @@ static void interruptFromFpga_WorkInit(void)
 	interruptFromFpga_wq = create_singlethread_workqueue("kernel_workqueue");
 	if (!interruptFromFpga_wq) 
 	{
-	    printk(KERN_ERR "[FPGA][WRK] Failed to create kernel workqueue: -ENOMEM\n");
+	    printk(KERN_ERR "[INIT][WRK] Failed to create kernel workqueue: -ENOMEM\n");
 	}
 }
 
@@ -56,7 +56,7 @@ static void signalFromCharDevice_WorkInit(void)
 	signalFromCharDevice_wq = create_singlethread_workqueue("fpga_workqueue");
 	if (!signalFromCharDevice_wq) 
 	{
-	    printk(KERN_ERR "[FPGA][WRK] Failed to create fpga workqueue: -ENOMEM\n");
+	    printk(KERN_ERR "[INIT][WRK] Failed to create fpga workqueue: -ENOMEM\n");
 	}
 }
 

@@ -38,10 +38,12 @@
 static struct spi_device *spi_dev_main;
 static struct spi_device *spi_dev_second;
 
-static volatile uint8_t tx_kernel[] = {0x81};
-static volatile uint8_t rx_kernel[1];
-static volatile uint8_t tx_fpga[] = {0xC3};
-static volatile uint8_t rx_fpga[1];
+static volatile uint8_t spi_tx_at_interruptFromFpga[] = {0x81};
+static volatile uint8_t spi_rx_at_interruptFromFpga[1];
+static volatile uint8_t spi_tx_at_signalFromCharDevice[] = {0xC3};
+static volatile uint8_t spi_rx_at_signalFromCharDevice[1];
+static volatile uint8_t spi_tx_at_testFromCharDevice[] = {0x24};
+static volatile uint8_t spi_rx_at_testFromCharDevice[1];
 
 int spiInit(void)
 {
@@ -52,23 +54,23 @@ int spiInit(void)
 
     spi_master0 = spi_busnum_to_master(0);
     if (!spi_master0) {
-        printk(KERN_ERR "[FPGA][SPI] SPI master for SPI0 not found\n");
+        printk(KERN_ERR "[INIT][SPI] SPI master for SPI0 not found\n");
         return -ENODEV;
     }
     spi_master1 = spi_busnum_to_master(1);
     if (!spi_master1) {
-        printk(KERN_ERR "[FPGA][SPI] SPI master for SPI1 not found\n");
+        printk(KERN_ERR "[INIT][SPI] SPI master for SPI1 not found\n");
         return -ENODEV;
     }
 
     spi_dev_main = spi_alloc_device(spi_master0);
     if (!spi_dev_main) {
-        printk(KERN_ERR "[FPGA][SPI] Failed to allocate SPI device for SPI0\n");
+        printk(KERN_ERR "[INIT][SPI] Failed to allocate SPI device for SPI0\n");
         return -ENOMEM;
     }
     spi_dev_second = spi_alloc_device(spi_master1);
     if (!spi_dev_second) {
-        printk(KERN_ERR "[FPGA][SPI] Failed to allocate SPI device for SPI1\n");
+        printk(KERN_ERR "[INIT][SPI] Failed to allocate SPI device for SPI1\n");
         return -ENOMEM;
     }
 
@@ -83,7 +85,7 @@ int spiInit(void)
 
     ret = spi_setup(spi_dev_main);
     if (ret < 0) {
-        printk(KERN_ERR "[FPGA][SPI] Failed to setup SPI device: %d\n", ret);
+        printk(KERN_ERR "[INIT][SPI] Failed to setup SPI device: %d\n", ret);
         spi_dev_put(spi_dev_main);
         return ret;
     }
@@ -99,7 +101,7 @@ int spiInit(void)
 
     ret = spi_setup(spi_dev_second);
     if (ret < 0) {
-        printk(KERN_ERR "[FPGA][SPI] Failed to setup SPI device: %d\n", ret);
+        printk(KERN_ERR "[INIT][SPI] Failed to setup SPI device: %d\n", ret);
         spi_dev_put(spi_dev_second);
         return ret;
     }
@@ -114,22 +116,22 @@ void interruptFromFpga(struct work_struct *work)
     int i;
 
     memset(&transfer, 0, sizeof(transfer));
-    transfer.tx_buf = tx_kernel;
-    transfer.rx_buf = rx_kernel;
-    transfer.len = sizeof(tx_kernel);
+    transfer.tx_buf = spi_tx_at_interruptFromFpga;
+    transfer.rx_buf = spi_rx_at_interruptFromFpga;
+    transfer.len = sizeof(spi_tx_at_interruptFromFpga);
 
     spi_message_init(&msg);
     spi_message_add_tail(&transfer, &msg);
 
     ret = spi_sync(spi_dev_main, &msg);
     if (ret < 0) {
-        printk(KERN_ERR "[FPGA][SPI] SPI transfer from Kernel to FPGA failed: %d\n", ret);
+        printk(KERN_ERR "[CTRL][SPI] SPI transfer at interrupt From Fpga failed: %d\n", ret);
         return;
     }
 
-    printk(KERN_INFO "[FPGA][SPI] Data from FPGA ---==[ FPGA Button Interrupt ]==---");
-    for (i = 0; i < sizeof(rx_kernel); ++i) {
-        printk(KERN_INFO "[FPGA][SPI] Byte %d: 0x%02x\n", i, rx_kernel[i]);
+    printk(KERN_INFO "[CTRL][SPI] Data from FPGA ---==[ FPGA Button Interrupt ]==---");
+    for (i = 0; i < sizeof(spi_rx_at_interruptFromFpga); ++i) {
+        printk(KERN_INFO "[CTRL][SPI] Byte %d: 0x%02x\n", i, spi_rx_at_interruptFromFpga[i]);
     }
 
     /*!
@@ -152,22 +154,61 @@ void signalFromCharDevice(struct work_struct *work)
     int i;
 
     memset(&transfer, 0, sizeof(transfer));
-    transfer.tx_buf = tx_fpga;
-    transfer.rx_buf = rx_fpga;
-    transfer.len = sizeof(tx_fpga);
+    transfer.tx_buf = spi_tx_at_signalFromCharDevice;
+    transfer.rx_buf = spi_rx_at_signalFromCharDevice;
+    transfer.len = sizeof(spi_tx_at_signalFromCharDevice);
 
     spi_message_init(&msg);
     spi_message_add_tail(&transfer, &msg);
 
     ret = spi_sync(spi_dev_main, &msg);
     if (ret < 0) {
-        printk(KERN_ERR "[FPGA][SPI] SPI transfer for FPGA failed: %d\n", ret);
+        printk(KERN_ERR "[CTRL][SPI] SPI transfer at signal From Char Device failed: %d\n", ret);
         return;
     }
 
-    printk(KERN_INFO "[FPGA][SPI] Data from FPGA ---==[ Char device Signal ]==---");
-    for (i = 0; i < sizeof(rx_fpga); ++i) {
-        printk(KERN_INFO "[FPGA][SPI] Byte %d: 0x%02x\n", i, rx_fpga[i]);
+    printk(KERN_INFO "[CTRL][SPI] Data from FPGA ---==[ Char device Signal ]==---");
+    for (i = 0; i < sizeof(spi_rx_at_signalFromCharDevice); ++i) {
+        printk(KERN_INFO "[CTRL][SPI] Byte %d: 0x%02x\n", i, spi_rx_at_signalFromCharDevice[i]);
+    }
+
+    /*!
+     * 
+     * 
+     * 
+     * Here we should receive feedback 
+     * data for kernel processing
+     * 
+     * 
+     * 
+     */
+
+}
+
+void testFromCharDevice(struct work_struct *work)
+{
+    struct spi_message msg;
+    struct spi_transfer transfer;
+    int ret;
+    int i;
+
+    memset(&transfer, 0, sizeof(transfer));
+    transfer.tx_buf = spi_tx_at_testFromCharDevice;
+    transfer.rx_buf = spi_rx_at_testFromCharDevice;
+    transfer.len = sizeof(spi_tx_at_testFromCharDevice);
+
+    spi_message_init(&msg);
+    spi_message_add_tail(&transfer, &msg);
+
+    ret = spi_sync(spi_dev_second, &msg);
+    if (ret < 0) {
+        printk(KERN_ERR "[TEST][SPI] SPI transfer for FPGA failed: %d\n", ret);
+        return;
+    }
+
+    printk(KERN_INFO "[TEST][SPI] Data from FPGA ---==[ Char device Test Signal ]==---");
+    for (i = 0; i < sizeof(spi_rx_at_signalFromCharDevice); ++i) {
+        printk(KERN_INFO "[TEST][SPI] Byte %d: 0x%02x\n", i, spi_rx_at_signalFromCharDevice[i]);
     }
 
     /*!
@@ -186,5 +227,5 @@ void signalFromCharDevice(struct work_struct *work)
 int spiDestroy(void)
 {
 	spi_dev_put(spi_dev_main);
-    printk(KERN_INFO "[FPGA][SPI] Exit\n");
+    printk(KERN_INFO "[EXIT][SPI] Destroy\n");
 }
