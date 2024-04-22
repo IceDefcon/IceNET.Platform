@@ -23,11 +23,11 @@
 /* WORK */ static struct work_struct signalFromCharDevice_work;
 /* WORK */ static struct work_struct interruptFromFpga_work;
 
-/* GET WORK */ struct workqueue_struct* get_xFromCharDevice_wq(void) 
+/* GET WORK */ struct workqueue_struct* get_signalFromCharDevice_wq(void) 
 {
     return signalFromCharDevice_wq;
 }
-/* GET WORK */ struct work_struct* get_xFromCharDevice_work(void) 
+/* GET WORK */ struct work_struct* get_signalFromCharDevice_work(void) 
 {
     return &signalFromCharDevice_work;
 }
@@ -50,7 +50,7 @@ static void interruptFromFpga_WorkInit(void)
 	}
 }
 
-static void xFromCharDevice_WorkInit(void)
+static void signalFromCharDevice_WorkInit(void)
 {
 	INIT_WORK(get_signalFromCharDevice_work(), signalFromCharDevice);
 	signalFromCharDevice_wq = create_singlethread_workqueue("fpga_workqueue");
@@ -70,7 +70,7 @@ static void interruptFromFpga_WorkDestroy(void)
     }
 }
 
-static void xFromCharDevice_WorkDestroy(void)
+static void signalFromCharDevice_WorkDestroy(void)
 {
     cancel_work_sync(get_signalFromCharDevice_work());
     if (signalFromCharDevice_wq) {
@@ -83,11 +83,11 @@ static void xFromCharDevice_WorkDestroy(void)
 void spiWorkInit(void)
 {
 	interruptFromFpga_WorkInit();
-	xFromCharDevice_WorkInit();
+	signalFromCharDevice_WorkInit();
 }
 
 void spiWorkDestroy(void)
 {
 	interruptFromFpga_WorkDestroy();
-	xFromCharDevice_WorkDestroy();
+	signalFromCharDevice_WorkDestroy();
 }
