@@ -14,8 +14,25 @@ use ieee.std_logic_unsigned.all;
 entity Platform is
 port
 (
+	-- FPGA Reference Clock
     CLOCK_50MHz : in std_logic; -- PIN_T2
-
+    -- BBB SPI0
+    MAIN_CS : in std_logic;    -- PIN_A5   :: BBB P9_17 :: PULPLE  :: SPI0_CS0
+    MAIN_MISO : out std_logic; -- PIN_A6   :: BBB P9_21 :: BROWN   :: SPI0_D0
+    MAIN_MOSI : in std_logic;  -- PIN_A7   :: BBB P9_18 :: BLUE    :: SPI0_D1
+    MAIN_SCLK : in std_logic;  -- PIN_A8   :: BBB P9_22 :: BLACK   :: SPI0_SCLK
+    -- BBB SPI1
+    SECOND_CS : in std_logic;    -- PIN_B5   :: BBB P9_28 :: ORANGE :: SPI1_CS0
+    SECOND_MISO : out std_logic; -- PIN_B6   :: BBB P9_29 :: BLUE   :: SPI1_D0
+    SECOND_MOSI : in std_logic;  -- PIN_B7   :: BBB P9_30 :: YELOW 	:: SPI1_D1
+    SECOND_SCLK : in std_logic;  -- PIN_B8   :: BBB P9_31 :: GREEN 	:: SPI1_SCLK
+    -- I2C Gyroscope
+    I2C_SDA : inout std_logic; -- PIN_A9   :: BBB P9_20 :: CPU.BLUE <> FPGA.BLUE <> GYRO.WHITE
+    I2C_SCK : inout std_logic; -- PIN_A10  :: BBB P9_19 :: CPU.ORANGE <> FPGA.GREEN <> GYRO.PURPLE
+	-- Interrupts 
+    FPGA_INT : out std_logic;  -- PIN_A3   :: BBB P9_12 :: BLACK
+    KERNEL_INT : in std_logic; -- PIN_A4   :: BBB P9_14 :: WHITE
+    -- Debug LED's
     LED_1 : out std_logic; -- PIN_U7
     LED_2 : out std_logic; -- PIN_U8
     LED_3 : out std_logic; -- PIN_R7
@@ -24,23 +41,7 @@ port
     LED_6 : out std_logic; -- PIN_P8
     LED_7 : out std_logic; -- PIN_M8
     LED_8 : out std_logic; -- PIN_N8
-
-    KERNEL_CS : in std_logic;    -- PIN_A5   :: BBB P9_17 :: PULPLE  :: SPI0_CS0
-    KERNEL_MISO : out std_logic; -- PIN_A6   :: BBB P9_21 :: BROWN   :: SPI0_D0
-    KERNEL_MOSI : in std_logic;  -- PIN_A7   :: BBB P9_18 :: BLUE    :: SPI0_D1
-    KERNEL_SCLK : in std_logic;  -- PIN_A8   :: BBB P9_22 :: BLACK   :: SPI0_SCLK
-
-    K_CS : in std_logic;    -- PIN_B5   :: BBB P9_28 :: ORANGE :: SPI1_CS0
-    K_MISO : out std_logic; -- PIN_B6   :: BBB P9_29 :: BLUE   :: SPI1_D0
-    K_MOSI : in std_logic;  -- PIN_B7   :: BBB P9_30 :: YELOW 	:: SPI1_D1
-    K_SCLK : in std_logic;  -- PIN_B8   :: BBB P9_31 :: GREEN 	:: SPI1_SCLK
-
-    I2C_SDA : inout std_logic; -- PIN_A9   :: BBB P9_20 :: CPU.BLUE <> FPGA.BLUE <> GYRO.WHITE
-    I2C_SCK : inout std_logic; -- PIN_A10  :: BBB P9_19 :: CPU.ORANGE <> FPGA.GREEN <> GYRO.PURPLE
- 
-    FPGA_INT : out std_logic;  -- PIN_A3   :: BBB P9_12 :: BLACK
-    KERNEL_INT : in std_logic; -- PIN_A4   :: BBB P9_14 :: WHITE
-
+    -- Debug Buttons
     BUTTON_1 : in std_logic; -- PIN_H20  :: Reset
     BUTTON_2 : in std_logic; -- PIN_K19  :: Doesnt Work :: Incorrect Schematic or Broken Button
     BUTTON_3 : in std_logic; -- PIN_J18
@@ -80,7 +81,8 @@ signal index : integer range 0 to 15 := 0;
 signal return_data : std_logic_vector(7 downto 0) := "00011000";
 
 -- SPI Kernel Feedback Data
-signal SpiDataFeedback_MISO : std_logic := '0';
+signal mainSpiDataFeedback_MISO : std_logic := '0';
+signal secondSpiDataFeedback_MISO : std_logic := '0';
 
 -- Delay Timers
 signal system_timer : std_logic_vector(26 downto 0) := (others => '0');
@@ -206,15 +208,24 @@ Debounce_module: Debounce port map
 	button_out_4 => open
 );
 
-SpiDataFeedback_module: SpiDataFeedback port map 
+mainSpiDataFeedback_module: SpiDataFeedback port map 
 (
 	CLOCK => CLOCK_50MHz,
-	SCLK => KERNEL_SCLK,
+	SCLK => MAIN_SCLK,
 	DATA => return_data,
-	synced_miso => SpiDataFeedback_MISO
+	synced_miso => mainSpiDataFeedback_MISO
 );
 
-KERNEL_MISO <= SpiDataFeedback_MISO;
+secondSpiDataFeedback_module: SpiDataFeedback port map 
+(
+	CLOCK => CLOCK_50MHz,
+	SCLK => SECOND_SCLK,
+	DATA => return_data,
+	synced_miso => secondSpiDataFeedback_MISO
+);
+
+MAIN_MISO <= mainSpiDataFeedback_MISO;
+SECOND_MISO <= secondSpiDataFeedback_MISO;
 
 ------------------------------------------------------
 -- Interrupt pulse :: 0x2FAF07F/50 MHz

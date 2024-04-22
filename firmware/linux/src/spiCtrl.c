@@ -57,17 +57,19 @@ int spiInit(void)
         printk(KERN_ERR "[INIT][SPI] SPI master for SPI0 not found\n");
         return -ENODEV;
     }
-    spi_master1 = spi_busnum_to_master(1);
-    if (!spi_master1) {
-        printk(KERN_ERR "[INIT][SPI] SPI master for SPI1 not found\n");
-        return -ENODEV;
-    }
 
     spi_dev_main = spi_alloc_device(spi_master0);
     if (!spi_dev_main) {
         printk(KERN_ERR "[INIT][SPI] Failed to allocate SPI device for SPI0\n");
         return -ENOMEM;
     }
+
+    spi_master1 = spi_busnum_to_master(1);
+    if (!spi_master1) {
+        printk(KERN_ERR "[INIT][SPI] SPI master for SPI1 not found\n");
+        return -ENODEV;
+    }
+    
     spi_dev_second = spi_alloc_device(spi_master1);
     if (!spi_dev_second) {
         printk(KERN_ERR "[INIT][SPI] Failed to allocate SPI device for SPI1\n");
@@ -129,7 +131,7 @@ void interruptFromFpga(struct work_struct *work)
         return;
     }
 
-    printk(KERN_INFO "[CTRL][SPI] Data from FPGA ---==[ FPGA Button Interrupt ]==---");
+    printk(KERN_INFO "[CTRL][SPI] Data from FPGA ---==[ FPGA Button :: Read from I2C Gyroscope driven in FPGA ]==---");
     for (i = 0; i < sizeof(spi_rx_at_interruptFromFpga); ++i) {
         printk(KERN_INFO "[CTRL][SPI] Byte %d: 0x%02x\n", i, spi_rx_at_interruptFromFpga[i]);
     }
@@ -206,7 +208,7 @@ void testFromCharDevice(struct work_struct *work)
         return;
     }
 
-    printk(KERN_INFO "[TEST][SPI] Data from FPGA ---==[ Read from I2C Gyroscope driven in FPGA ]==---");
+    printk(KERN_INFO "[TEST][SPI] Data from FPGA ---==[ Testing SPI1 Trnsfer ]==---");
     for (i = 0; i < sizeof(spi_rx_at_signalFromCharDevice); ++i) {
         printk(KERN_INFO "[TEST][SPI] Byte %d: 0x%02x\n", i, spi_rx_at_signalFromCharDevice[i]);
     }
