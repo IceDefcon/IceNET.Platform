@@ -79,6 +79,7 @@ signal index : integer range 0 to 15 := 0;
 
 -- I2C Return Data
 signal return_data : std_logic_vector(7 downto 0) := "00011000";
+signal second_data : std_logic_vector(7 downto 0) := "00011110";
 
 -- SPI Kernel Feedback Data
 signal mainSpiDataFeedback_MISO : std_logic := '0';
@@ -216,17 +217,16 @@ mainSpiDataFeedback_module: SpiDataFeedback port map
 	synced_miso => mainSpiDataFeedback_MISO
 );
 
---secondSpiDataFeedback_module: SpiDataFeedback port map 
---(
---	CLOCK => CLOCK_50MHz,
---	SCLK => SECOND_SCLK,
---	DATA => return_data,
---	synced_miso => secondSpiDataFeedback_MISO
---);
+secondSpiDataFeedback_module: SpiDataFeedback port map 
+(
+	CLOCK => CLOCK_50MHz,
+	SCLK => SECOND_SCLK,
+	DATA => return_data,
+	synced_miso => secondSpiDataFeedback_MISO
+);
 
 MAIN_MISO <= mainSpiDataFeedback_MISO;
---SECOND_MISO <= secondSpiDataFeedback_MISO;
-SECOND_MISO <= SECOND_MOSI;
+SECOND_MISO <= secondSpiDataFeedback_MISO;
 
 ------------------------------------------------------
 -- Interrupt pulse :: 0x2FAF07F/50 MHz
