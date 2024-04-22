@@ -216,16 +216,17 @@ mainSpiDataFeedback_module: SpiDataFeedback port map
 	synced_miso => mainSpiDataFeedback_MISO
 );
 
-secondSpiDataFeedback_module: SpiDataFeedback port map 
-(
-	CLOCK => CLOCK_50MHz,
-	SCLK => SECOND_SCLK,
-	DATA => return_data,
-	synced_miso => secondSpiDataFeedback_MISO
-);
+--secondSpiDataFeedback_module: SpiDataFeedback port map 
+--(
+--	CLOCK => CLOCK_50MHz,
+--	SCLK => SECOND_SCLK,
+--	DATA => return_data,
+--	synced_miso => secondSpiDataFeedback_MISO
+--);
 
 MAIN_MISO <= mainSpiDataFeedback_MISO;
-SECOND_MISO <= secondSpiDataFeedback_MISO;
+--SECOND_MISO <= secondSpiDataFeedback_MISO;
+SECOND_MISO <= SECOND_MOSI;
 
 ------------------------------------------------------
 -- Interrupt pulse :: 0x2FAF07F/50 MHz

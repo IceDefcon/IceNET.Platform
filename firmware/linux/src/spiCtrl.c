@@ -69,7 +69,7 @@ int spiInit(void)
         printk(KERN_ERR "[INIT][SPI] SPI master for SPI1 not found\n");
         return -ENODEV;
     }
-    
+
     spi_dev_second = spi_alloc_device(spi_master1);
     if (!spi_dev_second) {
         printk(KERN_ERR "[INIT][SPI] Failed to allocate SPI device for SPI1\n");
@@ -209,8 +209,8 @@ void testFromCharDevice(struct work_struct *work)
     }
 
     printk(KERN_INFO "[TEST][SPI] Data from FPGA ---==[ Testing SPI1 Trnsfer ]==---");
-    for (i = 0; i < sizeof(spi_rx_at_signalFromCharDevice); ++i) {
-        printk(KERN_INFO "[TEST][SPI] Byte %d: 0x%02x\n", i, spi_rx_at_signalFromCharDevice[i]);
+    for (i = 0; i < sizeof(spi_rx_at_testFromCharDevice); ++i) {
+        printk(KERN_INFO "[TEST][SPI] Byte %d: 0x%02x\n", i, spi_rx_at_testFromCharDevice[i]);
     }
 
     /*!
