@@ -42,8 +42,8 @@ static void dev_release(struct gendisk *disk, fmode_t mode)
 static struct block_device_operations my_ops = 
 {
     .owner = THIS_MODULE,
-    .open = dev_open,
-    .release = dev_release,
+    // .open = dev_open,
+    // .release = dev_release,
 };
 
 static int __init block_device_init(void) {
@@ -114,11 +114,9 @@ static int __init block_device_init(void) {
     set_capacity(iceBlock.gd, DEVICE_SIZE / KERNEL_SECTOR_SIZE);
 
     iceBlock.gd->fops = &my_ops;
-#if 0
     add_disk(iceBlock.gd);
-#endif
-    printk(KERN_INFO "[INIT][ B ] Block device registered SUCCESS\n");
 
+    printk(KERN_INFO "[INIT][ B ] Block device registered SUCCESS\n");
     mutex_init(&com_mutex);
 
     return 0;
@@ -126,7 +124,6 @@ static int __init block_device_init(void) {
 
 static void __exit block_device_exit(void)
 {
-#if 0
     if (iceBlock.gd) 
     {
         printk(KERN_INFO "[FPGA][ B ] Deleting gendisk with major number %d\n", iceBlock.gd->major);
@@ -136,7 +133,7 @@ static void __exit block_device_exit(void)
     {
         printk(KERN_WARNING "Gendisk does not exist\n");
     }
-#endif
+
     if (iceBlock.queue) 
     {
         printk(KERN_INFO "[EXIT][ B ] Cleaning up block device queue");
@@ -156,7 +153,7 @@ static void __exit block_device_exit(void)
     {
         printk(KERN_WARNING "[EXIT][ B ] Gendisk does not exist for unregistering\n");
     }
-#if 0
+
     if (iceBlock.gd) 
     {
         printk(KERN_INFO "[EXIT][ B ] Decrements the reference count of a struct gendisk object");
@@ -166,7 +163,7 @@ static void __exit block_device_exit(void)
     {
         printk(KERN_WARNING "[EXIT][ B ] Gendisk does not exist for putting\n");
     }
-#endif
+
     if (iceBlock.data) 
     {
         printk(KERN_INFO "[EXIT][ B ] DeAllocate 1MB of kernel memory");
