@@ -42,7 +42,7 @@ static volatile uint8_t spi_tx_at_interruptFromFpga[] = {0x81};
 static volatile uint8_t spi_rx_at_interruptFromFpga[1];
 static volatile uint8_t spi_tx_at_signalFromCharDevice[] = {0xC3};
 static volatile uint8_t spi_rx_at_signalFromCharDevice[1];
-static volatile uint8_t spi_tx_at_testFromCharDevice[] = {0x24};
+static volatile uint8_t spi_tx_at_testFromCharDevice[] = {0x00}; /* ID Register of the BMI160 chip */
 static volatile uint8_t spi_rx_at_testFromCharDevice[1];
 
 int spiInit(void)
