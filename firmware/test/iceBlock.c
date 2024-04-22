@@ -80,6 +80,8 @@ static ssize_t dev_write(struct block_device *bdev, const char __user *buffer, s
 static struct block_device_operations my_ops = 
 {
     .owner = THIS_MODULE,
+    .compat_ioctl = NULL,
+    .ioctl = NULL,
     .read = dev_read,
     .write = dev_write,
 };
