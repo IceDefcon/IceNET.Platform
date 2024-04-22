@@ -144,10 +144,10 @@ static ssize_t dev_write(struct file *filep, const char *buffer, size_t len, lof
      **/
     if(strncmp(message, "a", 1) == 0)
     {
-        queue_work(get_signalFromCharDevice_wq(), get_signalFromCharDevice_work());
+        queue_work(get_xFromCharDevice_wq(), get_xFromCharDevice_work());
     }
 
-    if(strncmp(message, "i", 1) == 0)
+    if(strncmp(message, "z", 1) == 0)
     {
 
     }

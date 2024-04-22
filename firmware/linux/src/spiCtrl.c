@@ -35,7 +35,7 @@
 //////////////////////////////////////////
 
 
-static struct spi_device *spi_dev;
+static struct spi_device *spi_dev_main;
 
 static volatile uint8_t tx_kernel[] = {0x81};
 static volatile uint8_t rx_kernel[1];
@@ -55,8 +55,8 @@ int spiInit(void)
     }
 
     // Prepare the SPI devices
-    spi_dev = spi_alloc_device(spi_master0);
-    if (!spi_dev) {
+    spi_dev_main = spi_alloc_device(spi_master0);
+    if (!spi_dev_main) {
         printk(KERN_ERR "[FPGA][SPI] Failed to allocate SPI device for SPI0\n");
         return -ENOMEM;
     }
@@ -65,15 +65,15 @@ int spiInit(void)
      * The mode is set to 1 to pass the
      * High clock control signal to FPGA
      */
-    spi_dev->chip_select = 0;
-    spi_dev->mode = SPI_MODE_1;
-    spi_dev->bits_per_word = 8;
-    spi_dev->max_speed_hz = 1000000;
+    spi_dev_main->chip_select = 0;
+    spi_dev_main->mode = SPI_MODE_1;
+    spi_dev_main->bits_per_word = 8;
+    spi_dev_main->max_speed_hz = 1000000;
 
-    ret = spi_setup(spi_dev);
+    ret = spi_setup(spi_dev_main);
     if (ret < 0) {
         printk(KERN_ERR "[FPGA][SPI] Failed to setup SPI device: %d\n", ret);
-        spi_dev_put(spi_dev);
+        spi_dev_put(spi_dev_main);
         return ret;
     }
 }
@@ -93,7 +93,7 @@ void interruptFromFpga(struct work_struct *work)
     spi_message_init(&msg);
     spi_message_add_tail(&transfer, &msg);
 
-    ret = spi_sync(spi_dev, &msg);
+    ret = spi_sync(spi_dev_main, &msg);
     if (ret < 0) {
         printk(KERN_ERR "[FPGA][SPI] SPI transfer from Kernel to FPGA failed: %d\n", ret);
         return;
@@ -131,7 +131,7 @@ void signalFromCharDevice(struct work_struct *work)
     spi_message_init(&msg);
     spi_message_add_tail(&transfer, &msg);
 
-    ret = spi_sync(spi_dev, &msg);
+    ret = spi_sync(spi_dev_main, &msg);
     if (ret < 0) {
         printk(KERN_ERR "[FPGA][SPI] SPI transfer for FPGA failed: %d\n", ret);
         return;
@@ -146,8 +146,8 @@ void signalFromCharDevice(struct work_struct *work)
      * 
      * 
      * 
-     * Here we should receive movement
-     * feedback data for kernel processing
+     * Here we should receive feedback 
+     * data for kernel processing
      * 
      * 
      * 
@@ -157,6 +157,6 @@ void signalFromCharDevice(struct work_struct *work)
 
 int spiDestroy(void)
 {
-	spi_dev_put(spi_dev);
+	spi_dev_put(spi_dev_main);
     printk(KERN_INFO "[FPGA][SPI] Exit\n");
 }
