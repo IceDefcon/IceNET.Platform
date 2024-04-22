@@ -11,7 +11,7 @@
 #include "charDevice.h"
 #include "spiWork.h"
 #include "spiCtrl.h"
-#include "gpioCtrl.h"
+#include "isrCtrl.h"
 
 MODULE_VERSION("2.0");
 MODULE_LICENSE("GPL");
@@ -40,7 +40,7 @@ static int __init fpga_driver_init(void)
     /* Initialise SPI workload */
     spiWorkInit();
     /* Initialise gpio ISR */
-    gpioInit();
+    isrGpioInit();
 
     return NULL;
 }
@@ -55,7 +55,7 @@ static int __init fpga_driver_init(void)
 static void __exit fpga_driver_exit(void)
 {
     /* Destroy everything */
-    gpioDestroy();
+    isrGpioDestroy();
     spiWorkDestroy();
     spiDestroy();
     charDeviceDestroy();

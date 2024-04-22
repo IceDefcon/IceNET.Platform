@@ -10,7 +10,7 @@
 #include <linux/gpio.h>
 #include <linux/interrupt.h>
 
-#include "gpioCtrl.h"
+#include "isrCtrl.h"
 #include "spiWork.h"
 
 //////////////////////////
@@ -23,11 +23,11 @@
 //                      //
 //////////////////////////
 
-static irqreturn_t gpioKernelIsr(int irq, void *data)
+static irqreturn_t isrInterruptFromFpga(int irq, void *data)
 {
     static int counter = 0;
 
-    printk(KERN_INFO "[CTRL][ISR] Kernel interrupt [%d] @ Pin [%d]\n", counter, GPIO_KERNEL_INTERRUPT);
+    printk(KERN_INFO "[CTRL][ISR] Interrupt from FPGA [%d] @ Pin [%d]\n", counter, GPIO_KERNEL_INTERRUPT);
     counter++;
 
     queue_work(get_interruptFromFpga_wq(), get_interruptFromFpga_work());
@@ -35,7 +35,7 @@ static irqreturn_t gpioKernelIsr(int irq, void *data)
     return IRQ_HANDLED;
 }
 
-static int gpioFpgaInit(void)
+static int isrInterruptFromKernelInit(void)
 {
     int result;
 
@@ -54,7 +54,7 @@ static int gpioFpgaInit(void)
     }
 }
 
-static int gpioKernelIsrInit(void)
+static int isrInterruptFromFpgaInit(void)
 {
 
     int irq_kernel;
@@ -80,7 +80,7 @@ static int gpioKernelIsrInit(void)
         gpio_free(GPIO_KERNEL_INTERRUPT);
         return irq_kernel;
     }
-    result = request_irq(irq_kernel, gpioKernelIsr, IRQF_TRIGGER_RISING, "Request IRQ", NULL);
+    result = request_irq(irq_kernel, isrInterruptFromFpga, IRQF_TRIGGER_RISING, "Request IRQ", NULL);
     if (result < 0) 
     {
         printk(KERN_ERR "[INIT][ISR] Failed to request IRQ number :: Pin [%d]\n", GPIO_KERNEL_INTERRUPT);
@@ -93,7 +93,7 @@ static int gpioKernelIsrInit(void)
     return 0;
 }
 
-static void gpioKernelIsrDestroy(void)
+static void isrInterruptFromFpgaDestroy(void)
 {
     int irq_kernel;
 
@@ -103,24 +103,24 @@ static void gpioKernelIsrDestroy(void)
     printk(KERN_INFO "[EXIT][ISR] Exit\n");
 }
 
-static void gpioFpgaExit(void)
+static void isrInterruptFromKernelDestroy(void)
 {
     gpio_free(GPIO_FPGA_INTERRUPT);
 }
 
-void setGpio(unsigned int gpio, int value)
+void isrSetGpio(unsigned int gpio, int value)
 {
     gpio_set_value(gpio, value);
 }
 
-void gpioInit(void)
+void isrGpioInit(void)
 {
-    (void)gpioFpgaInit();
-    (void)gpioKernelIsrInit();
+    (void)isrInterruptFromKernelInit();
+    (void)isrInterruptFromFpgaInit();
 }
 
-void gpioDestroy(void)
+void isrGpioDestroy(void)
 {
-    gpioKernelIsrDestroy();
-    gpioFpgaExit();
+    isrInterruptFromFpgaDestroy();
+    isrInterruptFromKernelDestroy();
 }
