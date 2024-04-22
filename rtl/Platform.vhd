@@ -30,6 +30,11 @@ port
     KERNEL_MOSI : in std_logic;  -- PIN_A7   :: BBB P9_18 :: BLUE    :: SPI0_D1
     KERNEL_SCLK : in std_logic;  -- PIN_A8   :: BBB P9_22 :: BLACK   :: SPI0_SCLK
 
+    K_CS : in std_logic;    -- PIN_B5   :: BBB P9_28 :: ORANGE :: SPI1_CS0
+    K_MISO : out std_logic; -- PIN_B6   :: BBB P9_29 :: BLUE   :: SPI1_D0
+    K_MOSI : in std_logic;  -- PIN_B7   :: BBB P9_30 :: YELOW 	:: SPI1_D1
+    K_SCLK : in std_logic;  -- PIN_B8   :: BBB P9_31 :: GREEN 	:: SPI1_SCLK
+
     I2C_SDA : inout std_logic; -- PIN_A9   :: BBB P9_20 :: CPU.BLUE <> FPGA.BLUE <> GYRO.WHITE
     I2C_SCK : inout std_logic; -- PIN_A10  :: BBB P9_19 :: CPU.ORANGE <> FPGA.GREEN <> GYRO.PURPLE
  

@@ -39,23 +39,46 @@ static void dev_release(struct gendisk *disk, fmode_t mode)
     return;
 }
 
-static int dev_ioctl(struct block_device *bdev, fmode_t mode, unsigned int cmd, unsigned long arg)
+static long dev_ioctl(struct block_device *bdev, fmode_t mode, unsigned int cmd, unsigned long arg)
 {
+    struct iceBlockDevice *dev = bdev->bd_disk->private_data;
+    size_t offset;
+    char *data;
+
     switch (cmd) {
-        case BLKGETSIZE:
-            return put_user(DEVICE_SIZE, (int __user *)arg);
-        case BLKSECDISCARD:
-            // Handle discard operation
+        case ICEBLOCK_IOCTL_READ:
+            if (copy_from_user(&offset, (size_t __user *)arg, sizeof(size_t)))
+                return -EFAULT;
+
+            if (offset >= DEVICE_SIZE)
+                return -EINVAL;
+
+            data = dev->data + offset;
+            if (copy_to_user((void __user *)arg, data, KERNEL_SECTOR_SIZE))
+                return -EFAULT;
+
             break;
-        case BLKFLSBUF:
-            // Handle flush buffer operation
+
+        case ICEBLOCK_IOCTL_WRITE:
+            if (copy_from_user(&offset, (size_t __user *)arg, sizeof(size_t)))
+                return -EFAULT;
+
+            if (offset >= DEVICE_SIZE)
+                return -EINVAL;
+
+            data = dev->data + offset;
+            if (copy_from_user(data, (void __user *)(arg + sizeof(size_t)), KERNEL_SECTOR_SIZE))
+                return -EFAULT;
+
             break;
-        // Add more cases as needed
+
         default:
             return -ENOTTY; // Not supported
     }
+
     return 0;
 }
+
 
 static struct block_device_operations my_ops = 
 {

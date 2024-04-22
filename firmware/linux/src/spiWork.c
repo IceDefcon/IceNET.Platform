@@ -40,7 +40,7 @@
 	return &kernel_work;
 }
 
-static void spiKernelWorkInit(void)
+static void interruptFromFpga_WorkInit(void)
 {
 	INIT_WORK(get_kernel_work(), interruptFromFpga);
 	kernel_wq = create_singlethread_workqueue("kernel_workqueue");
@@ -50,7 +50,7 @@ static void spiKernelWorkInit(void)
 	}
 }
 
-static void spiFpgaWorkInit(void)
+static void signalFromCharDevice_WorkInit(void)
 {
 	INIT_WORK(get_fpga_work(), signalFromCharDevice);
 	fpga_wq = create_singlethread_workqueue("fpga_workqueue");
@@ -60,7 +60,7 @@ static void spiFpgaWorkInit(void)
 	}
 }
 
-static void spiKernelWorkDestroy(void)
+static void interruptFromFpga_WorkDestroy(void)
 {
     cancel_work_sync(get_kernel_work());
     if (kernel_wq) {
@@ -70,7 +70,7 @@ static void spiKernelWorkDestroy(void)
     }
 }
 
-static void spiFpgaWorkDestroy(void)
+static void signalFromCharDevice_WorkDestroy(void)
 {
     cancel_work_sync(get_fpga_work());
     if (fpga_wq) {
@@ -82,12 +82,12 @@ static void spiFpgaWorkDestroy(void)
 
 void spiWorkInit(void)
 {
-	spiKernelWorkInit();
-	spiFpgaWorkInit();
+	interruptFromFpga_WorkInit()
+	signalFromCharDevice_WorkInit();
 }
 
 void spiWorkDestroy(void)
 {
-	spiKernelWorkDestroy();
-	spiFpgaWorkDestroy();
+	interruptFromFpga_WorkDestroy();
+	signalFromCharDevice_WorkDestroy();
 }
