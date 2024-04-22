@@ -39,11 +39,49 @@ static void dev_release(struct gendisk *disk, fmode_t mode)
     return;
 }
 
+static ssize_t dev_read(struct block_device *bdev, char __user *buffer, size_t size, loff_t *offset)
+{
+    struct iceBlockDevice *dev = bdev->bd_disk->private_data;
+    size_t maxSize = DEVICE_SIZE - *offset;
+
+    if (*offset >= DEVICE_SIZE)
+        return 0; // EOF
+
+    if (size > maxSize)
+        size = maxSize;
+
+    if (copy_to_user(buffer, dev->data + *offset, size))
+        return -EFAULT; // Error copying data to user space
+
+    *offset += size;
+
+    return size;
+}
+
+static ssize_t dev_write(struct block_device *bdev, const char __user *buffer, size_t size, loff_t *offset)
+{
+    struct iceBlockDevice *dev = bdev->bd_disk->private_data;
+    size_t maxSize = DEVICE_SIZE - *offset;
+
+    if (*offset >= DEVICE_SIZE)
+        return 0; // EOF
+
+    if (size > maxSize)
+        size = maxSize;
+
+    if (copy_from_user(dev->data + *offset, buffer, size))
+        return -EFAULT; // Error copying data from user space
+
+    *offset += size;
+
+    return size;
+}
+
 static struct block_device_operations my_ops = 
 {
     .owner = THIS_MODULE,
-    // .open = dev_open,
-    // .release = dev_release,
+    .read = dev_read,
+    .write = dev_write,
 };
 
 static int __init block_device_init(void) {
@@ -97,7 +135,6 @@ static int __init block_device_init(void) {
         return -ENOMEM;
     }
 
-    printk(KERN_INFO "[INIT][ B ] Register block device...\n");
     iceBlock.gd->major = register_blkdev(0, DEVICE_NAME);
 
     if (iceBlock.gd->major < 0) 
@@ -105,12 +142,17 @@ static int __init block_device_init(void) {
         printk(KERN_INFO "[INIT][ B ] Failed to register block device with error: %d\n", iceBlock.gd->major);
         unregister_blkdev(iceBlock.gd->major, DEVICE_NAME);
     }
+    else
+    {
+        printk(KERN_INFO "[INIT][ B ] Register block device with major number: %d\n", iceBlock.gd->major);
+    }
 
-    printk(KERN_INFO "[INIT][ B ] Register block device with major number: %d\n", iceBlock.gd->major);
 
     iceBlock.gd->queue = iceBlock.queue;
     iceBlock.gd->private_data = &iceBlock;
     strcpy(iceBlock.gd->disk_name, DEVICE_NAME);
+
+    /* Capacity :: 1MB / 512B = 2048 */
     set_capacity(iceBlock.gd, DEVICE_SIZE / KERNEL_SECTOR_SIZE);
 
     iceBlock.gd->fops = &my_ops;
@@ -126,12 +168,12 @@ static void __exit block_device_exit(void)
 {
     if (iceBlock.gd) 
     {
-        printk(KERN_INFO "[FPGA][ B ] Deleting gendisk with major number %d\n", iceBlock.gd->major);
+        printk(KERN_INFO "[EXIT][ B ] Deleting gendisk with major number %d\n", iceBlock.gd->major);
         del_gendisk(iceBlock.gd);
     } 
     else 
     {
-        printk(KERN_WARNING "Gendisk does not exist\n");
+        printk(KERN_WARNING "[EXIT][ B ] Gendisk does not exist\n");
     }
 
     if (iceBlock.queue) 
