@@ -80,11 +80,12 @@ static ssize_t dev_write(struct block_device *bdev, const char __user *buffer, s
 static struct block_device_operations my_ops = 
 {
     .owner = THIS_MODULE,
-    .compat_ioctl = NULL,
-    .ioctl = NULL,
-    .read = dev_read,
-    .write = dev_write,
+    .open = dev_open,
+    .release = dev_release,
+    .read = (void *)dev_read,  // Typecast to match the expected type
+    .write = (void *)dev_write,  // Typecast to match the expected type
 };
+
 
 static int __init block_device_init(void) {
 
