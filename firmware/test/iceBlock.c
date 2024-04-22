@@ -82,8 +82,10 @@ static struct block_device_operations my_ops =
     .owner = THIS_MODULE,
     .open = dev_open,
     .release = dev_release,
-    .read = (void *)dev_read,  // Typecast to match the expected type
-    .write = (void *)dev_write,  // Typecast to match the expected type
+    .ioctl = NULL,  // You can set this to NULL if you're not implementing ioctl
+    .compat_ioctl = NULL,  // You can set this to NULL if you're not implementing ioctl
+    .read = dev_read,  // Implement read function
+    .write = dev_write,  // Implement write function
 };
 
 
