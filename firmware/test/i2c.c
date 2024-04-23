@@ -55,8 +55,8 @@ static int __init i2c_module_init(void)
     // Process the received data
 
     // Example: Write data to a register
-    char write_buffer[1] = {0x00};
-    ret = i2c_smbus_write_i2c_block_data(i2c_client, 0x6B, sizeof(write_buffer), write_buffer);
+    char write_buffer[1] = {0x01};
+    ret = i2c_smbus_write_i2c_block_data(i2c_client, 0x70, sizeof(write_buffer), write_buffer);
     if (ret < 0) {
         printk(KERN_ERR "Failed to write data to I2C device\n");
         i2c_unregister_device(i2c_client);
