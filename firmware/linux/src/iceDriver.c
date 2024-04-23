@@ -27,7 +27,9 @@ MODULE_DESCRIPTION("FPGA Comms Driver");
 //////////////////////////
 static int __init fpga_driver_init(void)
 {
-    printk(KERN_INFO "[INITIALIZE] IceNET CPU & FPGA Platform\n");
+    printk(KERN_INFO "[           ] --------------------------\n");
+    printk(KERN_INFO "[           ] IceNET CPU & FPGA Platform\n");
+    printk(KERN_INFO "[           ] --------------------------\n");
 
     /* Initialise kthread State Machine */
     stateMachineInit();
@@ -59,6 +61,9 @@ static void __exit fpga_driver_exit(void)
     spiDestroy();
     charDeviceDestroy();
     stateMachineDestroy();
+    printk(KERN_INFO "[           ] \n");
+    printk(KERN_INFO "[           ] \n");
+    printk(KERN_INFO "[           ] \n");
 }
 
 module_init(fpga_driver_init);
