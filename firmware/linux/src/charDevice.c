@@ -88,7 +88,7 @@ void charDeviceInit(void)
         printk(KERN_ALERT "[CONFIG][ C ] Create the device: %ld\n", PTR_ERR(C_Device));
     }
 
-    printk(KERN_ALERT "[CONFIG][ C ] Lock on Char Device Device Mutex: %ld\n", PTR_ERR(com_mutex));
+    printk(KERN_ALERT "[CONFIG][ C ] Lock on Char Device Device Mutex: %ld\n", PTR_ERR(&com_mutex));
     mutex_init(&com_mutex);
 }
 
