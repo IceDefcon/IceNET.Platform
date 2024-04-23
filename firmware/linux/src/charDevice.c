@@ -60,7 +60,7 @@ void charDeviceInit(void)
     }
     else
     {
-        printk(KERN_ALERT "[INIT][ C ] Register major number: %d\n", majorNumber);
+        printk(KERN_ALERT "[INIT][ C ] Register major number for char Device: %d\n", majorNumber);
     }
 
     C_Class = class_create(THIS_MODULE, CLASS_NAME);
@@ -83,7 +83,7 @@ void charDeviceInit(void)
     }
     else
     {
-        printk(KERN_ALERT "[INIT][ C ] Create the device: %ld\n", PTR_ERR(C_Device));
+        printk(KERN_ALERT "[INIT][ C ] Create char Device: %ld\n");
     }
 
     printk(KERN_ALERT "[INIT][ C ] Lock on Char Device Device Mutex\n");

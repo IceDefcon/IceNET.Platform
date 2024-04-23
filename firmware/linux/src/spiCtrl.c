@@ -161,11 +161,8 @@ void interruptFromFpga(struct work_struct *work)
         printk(KERN_INFO "[CTRL][SPI] Signaled by [C] Device over SPI.0");
     }
 
-    for (i = 0; i < sizeof(spi_tx_at_interruptFromFpga); ++i) {
-        printk(KERN_INFO "[CTRL][SPI] Write to FPGA  %d: 0x%02x\n", i, spi_tx_at_interruptFromFpga[i]);
-    }
-    for (i = 0; i < sizeof(spi_rx_at_interruptFromFpga); ++i) {
-        printk(KERN_INFO "[CTRL][SPI] Read from FPGA %d: 0x%02x\n", i, spi_rx_at_interruptFromFpga[i]);
+    for (i = 0; i < sizeof(spi_tx_at_secondFromCharDevice); ++i) {
+        printk(KERN_INFO "[CTRL][SPI] FPGA Transfer Byte[%d]: TX[0x%02x] RX[0x%02x]\n", i, spi_tx_at_interruptFromFpga[i], spi_rx_at_interruptFromFpga[i]);
     }
 
     spi_rx_at_interruptFromFpga[0] = 0x00;
@@ -207,11 +204,8 @@ void mainFromCharDevice(struct work_struct *work)
         printk(KERN_INFO "[CTRL][SPI] Signaled by [C] Device over SPI.0");
     }
 
-    for (i = 0; i < sizeof(spi_tx_at_mainFromCharDevice); ++i) {
-        printk(KERN_INFO "[CTRL][SPI] Write to FPGA  %d: 0x%02x\n", i, spi_tx_at_mainFromCharDevice[i]);
-    }
-    for (i = 0; i < sizeof(spi_rx_at_mainFromCharDevice); ++i) {
-        printk(KERN_INFO "[CTRL][SPI] Read from FPGA %d: 0x%02x\n", i, spi_rx_at_mainFromCharDevice[i]);
+    for (i = 0; i < sizeof(spi_tx_at_secondFromCharDevice); ++i) {
+        printk(KERN_INFO "[CTRL][SPI] FPGA Transfer Byte[%d]: TX[0x%02x] RX[0x%02x]\n", i, spi_tx_at_mainFromCharDevice[i], spi_rx_at_mainFromCharDevice[i]);
     }
 
     spi_rx_at_mainFromCharDevice[0] = 0x00;
@@ -251,10 +245,7 @@ void secondFromCharDevice(struct work_struct *work)
     }
 
     for (i = 0; i < sizeof(spi_tx_at_secondFromCharDevice); ++i) {
-        printk(KERN_INFO "[CTRL][SPI] Write to FPGA  %d: 0x%02x\n", i, spi_tx_at_secondFromCharDevice[i]);
-    }
-    for (i = 0; i < sizeof(spi_rx_at_secondFromCharDevice); ++i) {
-        printk(KERN_INFO "[CTRL][SPI] Read from FPGA %d: 0x%02x\n", i, spi_rx_at_secondFromCharDevice[i]);
+        printk(KERN_INFO "[CTRL][SPI] FPGA Transfer Byte[%d]: TX[0x%02x] RX[0x%02x]\n", i, spi_tx_at_secondFromCharDevice[i], spi_rx_at_secondFromCharDevice[i]);
     }
 
     spi_rx_at_secondFromCharDevice[0] = 0x00;
