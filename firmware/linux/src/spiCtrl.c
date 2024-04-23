@@ -54,31 +54,49 @@ int spiInit(void)
 
     spi_master0 = spi_busnum_to_master(0);
     if (!spi_master0) {
-        printk(KERN_ERR "[INIT][SPI] SPI master for SPI0 not found\n");
+        printk(KERN_ERR "[CONFIG][SPI] SPI Master at BUS 0 not found!\n");
         return -ENODEV;
     }
-
-    spi_dev_main = spi_alloc_device(spi_master0);
-    if (!spi_dev_main) {
-        printk(KERN_ERR "[INIT][SPI] Failed to allocate SPI device for SPI0\n");
-        return -ENOMEM;
+    else
+    {
+        printk(KERN_ERR "[CONFIG][SPI] SPI Master at BUS 0 Registered\n");
     }
 
     spi_master1 = spi_busnum_to_master(1);
     if (!spi_master1) {
-        printk(KERN_ERR "[INIT][SPI] SPI master for SPI1 not found\n");
+        printk(KERN_ERR "[CONFIG][SPI] SPI Master at BUS 1 not found!\n");
         return -ENODEV;
+    }
+    else
+    {
+        printk(KERN_ERR "[CONFIG][SPI] SPI Master at BUS 1 Registered\n");
+    }
+
+    spi_dev_main = spi_alloc_device(spi_master0);
+    if (!spi_dev_main) {
+        printk(KERN_ERR "[CONFIG][SPI] SPI0 Failed to Allocate!\n");
+        return -ENOMEM;
+    }
+    else
+    {
+        printk(KERN_ERR "[CONFIG][SPI] SPI0 Allocated\n");
     }
 
     spi_dev_second = spi_alloc_device(spi_master1);
     if (!spi_dev_second) {
-        printk(KERN_ERR "[INIT][SPI] Failed to allocate SPI device for SPI1\n");
+        printk(KERN_ERR "[CONFIG][SPI] SPI1 Failed to Allocate!\n");
         return -ENOMEM;
+    }
+    else
+    {
+        printk(KERN_ERR "[CONFIG][SPI] SPI1 Allocated\n");
     }
 
     /*! 
      * The mode is set to 1 to pass the
      * High clock control signal to FPGA
+     * 
+     * Only reqired when talking to FPGA
      */
     spi_dev_main->chip_select = 0;
     spi_dev_main->mode = SPI_MODE_1;
@@ -87,15 +105,15 @@ int spiInit(void)
 
     ret = spi_setup(spi_dev_main);
     if (ret < 0) {
-        printk(KERN_ERR "[INIT][SPI] Failed to setup SPI device: %d\n", ret);
+        printk(KERN_ERR "[CONFIG][SPI] SPI0 device Failed to setup! ret[%d]\n", ret);
         spi_dev_put(spi_dev_main);
         return ret;
     }
+    else
+    {
+        printk(KERN_ERR "[CONFIG][SPI] SPI0 device setup\n");
+    }
 
-    /*! 
-     * The mode is set to 1 to pass the
-     * High clock control signal to FPGA
-     */
     spi_dev_second->chip_select = 0;
     spi_dev_second->mode = SPI_MODE_1; /* For Kernel <=> FPGA Communication */
     spi_dev_second->bits_per_word = 8;
@@ -103,9 +121,13 @@ int spiInit(void)
 
     ret = spi_setup(spi_dev_second);
     if (ret < 0) {
-        printk(KERN_ERR "[INIT][SPI] Failed to setup SPI device: %d\n", ret);
+        printk(KERN_ERR "[CONFIG][SPI] SPI1 device Failed to setup! ret[%d]\n", ret);
         spi_dev_put(spi_dev_second);
         return ret;
+    }
+    else
+    {
+        printk(KERN_ERR "[CONFIG][SPI] SPI1 device setup\n");
     }
 
 }
