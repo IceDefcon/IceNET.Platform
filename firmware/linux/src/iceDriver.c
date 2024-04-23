@@ -42,7 +42,8 @@ static int __init fpga_driver_init(void)
     /* Initialise gpio ISR */
     isrGpioInit();
 
-    printk(KERN_INFO "[CONFIG][   ] COMPETE\n");
+    printk(KERN_INFO "[CONFIG][   ]\n");
+    printk(KERN_INFO "[CONFIG][   ]\n");
     return NULL;
 }
 
@@ -61,7 +62,8 @@ static void __exit fpga_driver_exit(void)
     spiDestroy();
     charDeviceDestroy();
     stateMachineDestroy();
-    printk(KERN_INFO "[DESTROY][   ] COMPETE\n");
+    printk(KERN_INFO "[CONFIG][   ]\n");
+    printk(KERN_INFO "[CONFIG][   ]\n");
 }
 
 module_init(fpga_driver_init);
