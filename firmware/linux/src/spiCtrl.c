@@ -256,6 +256,7 @@ void testFromCharDevice(struct work_struct *work)
 
 int spiDestroy(void)
 {
-	spi_dev_put(spi_dev_main);
-    printk(KERN_INFO "[EXIT][SPI] Destroy\n");
+    spi_dev_put(spi_dev_main);
+	spi_dev_put(spi_dev_second);
+    printk(KERN_INFO "[DESTROY][SPI] Destroy SPI Devices\n");
 }

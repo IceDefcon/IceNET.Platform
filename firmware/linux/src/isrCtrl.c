@@ -27,7 +27,7 @@ static irqreturn_t isrInterruptFromFpga(int irq, void *data)
 {
     static int counter = 0;
 
-    printk(KERN_INFO "[CTRL][ISR] Interrupt from FPGA [%d] @ Pin [%d]\n", counter, GPIO_KERNEL_INTERRUPT);
+    printk(KERN_INFO "[CTRL][ISR] Interrupt from FPGA [%d] at Pin [%d]\n", counter, GPIO_KERNEL_INTERRUPT);
     counter++;
 
     queue_work(get_interruptFromFpga_wq(), get_interruptFromFpga_work());
@@ -41,16 +41,24 @@ static int isrInterruptFromKernelInit(void)
 
     result = gpio_request(GPIO_FPGA_INTERRUPT, "   Response");
     if (result < 0) {
-        printk(KERN_ERR "[INIT][GIO] Failed GPIO Request :: Pin [%d]\n", GPIO_FPGA_INTERRUPT);
+        printk(KERN_ERR "[CONFIG][GIO] Failed GPIO Request :: Pin [%d]\n", GPIO_FPGA_INTERRUPT);
         return result;
+    }
+    else
+    {
+        printk(KERN_ERR "[CONFIG][ISR] Setup GPIO Request for Pin [%d]\n", GPIO_FPGA_INTERRUPT);
     }
 
     // Set GPIO pin as an output
     result = gpio_direction_output(GPIO_FPGA_INTERRUPT, 0); // Write low (0) to sink current to ground
     if (result < 0) {
-        printk(KERN_ERR "[INIT][GIO] Failed to set GPIO direction :: Pin [%d]\n", GPIO_FPGA_INTERRUPT);
+        printk(KERN_ERR "[CONFIG][GIO] Failed to set GPIO direction :: Pin [%d]\n", GPIO_FPGA_INTERRUPT);
         gpio_free(GPIO_FPGA_INTERRUPT);
         return result;
+    }
+    else
+    {
+        printk(KERN_ERR "[CONFIG][ISR] Setup GPIO Pin [%d] as output\n", GPIO_FPGA_INTERRUPT);
     }
 }
 
@@ -63,32 +71,51 @@ static int isrInterruptFromFpgaInit(void)
     result = gpio_request(GPIO_KERNEL_INTERRUPT, "   Request");
     if (result < 0) 
     {
-        printk(KERN_ERR "[INIT][ISR] Failed GPIO Request :: Pin [%d]\n", GPIO_KERNEL_INTERRUPT);
+        printk(KERN_ERR "[CONFIG][ISR] Failed GPIO Request :: Pin [%d]\n", GPIO_KERNEL_INTERRUPT);
         return result;
     }
+    else
+    {
+        printk(KERN_ERR "[CONFIG][ISR] Setup GPIO Request for Pin [%d]\n", GPIO_KERNEL_INTERRUPT);
+    }
+
     result = gpio_direction_input(GPIO_KERNEL_INTERRUPT);
     if (result < 0) 
     {
-        printk(KERN_ERR "[INIT][ISR] Failed to set GPIO direction :: Pin [%d]\n", GPIO_KERNEL_INTERRUPT);
+        printk(KERN_ERR "[CONFIG][ISR] Failed to set GPIO direction :: Pin [%d]\n", GPIO_KERNEL_INTERRUPT);
         gpio_free(GPIO_KERNEL_INTERRUPT);
         return result;
     }
+    else
+    {
+        printk(KERN_ERR "[CONFIG][ISR] Setup GPIO Pin [%d] as input\n", GPIO_KERNEL_INTERRUPT);
+    }
+
+
     irq_kernel = gpio_to_irq(GPIO_KERNEL_INTERRUPT);
     if (irq_kernel < 0) 
     {
-        printk(KERN_ERR "[INIT][ISR] Failed to get IRQ number :: Pin [%d]\n", GPIO_KERNEL_INTERRUPT);
+        printk(KERN_ERR "[CONFIG][ISR] Failed to get IRQ number :: Pin [%d]\n", GPIO_KERNEL_INTERRUPT);
         gpio_free(GPIO_KERNEL_INTERRUPT);
         return irq_kernel;
     }
+    else
+    {
+        printk(KERN_ERR "[CONFIG][ISR] Setup GPIO Pin [%d] as interrupt\n", GPIO_KERNEL_INTERRUPT);
+    }
+
     result = request_irq(irq_kernel, isrInterruptFromFpga, IRQF_TRIGGER_RISING, "Request IRQ", NULL);
     if (result < 0) 
     {
-        printk(KERN_ERR "[INIT][ISR] Failed to request IRQ number :: Pin [%d]\n", GPIO_KERNEL_INTERRUPT);
+        printk(KERN_ERR "[CONFIG][ISR] Failed to request IRQ number :: Pin [%d]\n", GPIO_KERNEL_INTERRUPT);
         gpio_free(GPIO_KERNEL_INTERRUPT);
         // spiDestroy(); TODO :: Do I need you here?
         return result;
     }
-    printk(KERN_INFO "[INIT][ISR] Initialized\n");
+    else
+    {
+        printk(KERN_ERR "[CONFIG][ISR] Register isrInterruptFromFpga callback at Pin [%d] IRQ\n", GPIO_KERNEL_INTERRUPT);
+    }
 
     return 0;
 }
@@ -100,7 +127,7 @@ static void isrInterruptFromFpgaDestroy(void)
     irq_kernel = gpio_to_irq(GPIO_KERNEL_INTERRUPT);
     free_irq(irq_kernel, NULL);
     gpio_free(GPIO_KERNEL_INTERRUPT);
-    printk(KERN_INFO "[EXIT][ISR] Exit\n");
+    printk(KERN_INFO "[DESTROY][ISR] Destroy IRQ for GPIO Pin[%d]\n", GPIO_KERNEL_INTERRUPT);
 }
 
 static void isrInterruptFromKernelDestroy(void)

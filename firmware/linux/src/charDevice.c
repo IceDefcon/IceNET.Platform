@@ -73,7 +73,7 @@ void charDeviceInit(void)
     }
     else
     {
-        printk(KERN_ALERT "[CONFIG][ C ] Register device class: %ld\n", PTR_ERR(C_Class));
+        printk(KERN_ALERT "[CONFIG][ C ] Register device class\n");
     }
     
     C_Device = device_create(C_Class, NULL, MKDEV(majorNumber, 0), NULL, DEVICE_NAME);
@@ -81,14 +81,14 @@ void charDeviceInit(void)
     {
         class_destroy(C_Class);
         unregister_chrdev(majorNumber, DEVICE_NAME);
-        printk(KERN_ALERT "[CONFIG][ C ] Failed to create the device: %ld\n", PTR_ERR(C_Device));
+        printk(KERN_ALERT "[CONFIG][ C ] Failed to create the device\n");
     }
     else
     {
         printk(KERN_ALERT "[CONFIG][ C ] Create the device: %ld\n", PTR_ERR(C_Device));
     }
 
-    printk(KERN_ALERT "[CONFIG][ C ] Lock on Char Device Device Mutex: %ld\n", PTR_ERR(&com_mutex));
+    printk(KERN_ALERT "[CONFIG][ C ] Lock on Char Device Device Mutex\n");
     mutex_init(&com_mutex);
 }
 
@@ -99,7 +99,7 @@ void charDeviceDestroy(void)
     class_destroy(C_Class);
     unregister_chrdev(majorNumber, DEVICE_NAME);
     mutex_destroy(&com_mutex);
-    printk(KERN_INFO "[EXIT][ C ] Device Exit\n");
+    printk(KERN_INFO "[DESTROY][ C ] Destroy char device\n");
 }
 
 static int dev_open(struct inode *inodep, struct file *filep)
