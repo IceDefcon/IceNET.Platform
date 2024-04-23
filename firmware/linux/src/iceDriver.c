@@ -28,7 +28,7 @@ MODULE_DESCRIPTION("FPGA Comms Driver");
 static int __init fpga_driver_init(void)
 {
     printk(KERN_INFO "[           ] --------------------------\n");
-    printk(KERN_INFO "[ S T A R T ] IceNET CPU & FPGA Platform\n");
+    printk(KERN_INFO "[   BEGIN   ] IceNET CPU & FPGA Platform\n");
     printk(KERN_INFO "[           ] --------------------------\n");
 
     /* Initialise kthread State Machine */
@@ -41,8 +41,8 @@ static int __init fpga_driver_init(void)
     spiWorkInit();
     /* Initialise gpio ISR */
     isrGpioInit();
+    printk(KERN_INFO "[   READY   ] Module load into kernel\n");
 
-    printk(KERN_INFO "[  D O N E  ]\n");
     return NULL;
 }
 
@@ -61,7 +61,7 @@ static void __exit fpga_driver_exit(void)
     spiDestroy();
     charDeviceDestroy();
     stateMachineDestroy();
-    printk(KERN_INFO "[ TERMINATE ]\n");
+    printk(KERN_INFO "[ TERMINATE ] Unload the module from kernel\n");
 }
 
 module_init(fpga_driver_init);
