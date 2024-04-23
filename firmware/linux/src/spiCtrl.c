@@ -97,7 +97,7 @@ int spiInit(void)
      * High clock control signal to FPGA
      */
     spi_dev_second->chip_select = 0;
-    spi_dev_second->mode = SPI_MODE_0;
+    spi_dev_second->mode = SPI_MODE_1; /* For Kernel <=> FPGA Communication */
     spi_dev_second->bits_per_word = 8;
     spi_dev_second->max_speed_hz = 1000000;
 

@@ -50,7 +50,7 @@ constant address_I2C : std_logic_vector(6 downto 0) := "1001011"; -- 0x69 ---> I
 -- 0x0F ---> WHO_AM_I 11110000 in L3G4200 :: 0x00 BMI160 CHIPID 00000000
 -- 0x68 ---> IF_CONF 1000 0110
 -- 0x70 ---> NV_CONF 0000 0111
-constant register_I2C : std_logic_vector(7 downto 0) := "11110000"; 
+constant register_I2C : std_logic_vector(7 downto 0) := "00000000"; -- 0x0F L3G4200D 11110000 & 0x00 BMI160 00000000
 signal index : integer range 0 to 15 := 0;
 -- Delay Timers
 signal system_timer : std_logic_vector(15 downto 0) := (others => '0');
