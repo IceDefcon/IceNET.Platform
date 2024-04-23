@@ -77,11 +77,6 @@ signal interrupt_period : std_logic_vector(25 downto 0) := "10111110101111000001
 signal interrupt_length : std_logic_vector(3 downto 0) := "1111";
 signal interrupt_signal : std_logic := '0';
 
--- I2C & SPA Data
-constant address_I2C : std_logic_vector(6 downto 0) := "1001011"; -- 0x69 ---> ID :: GOOD == 1001011 :: BAD == 1001111
-constant register_I2C : std_logic_vector(7 downto 0) := "11110000"; -- 0x40 ---> REG
-signal index : integer range 0 to 15 := 0;
-
 -- I2C Return Data
 signal return_data : std_logic_vector(7 downto 0) := "00011000";
 signal second_data : std_logic_vector(7 downto 0) := "00011110";
