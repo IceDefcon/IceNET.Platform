@@ -3,7 +3,7 @@
 #include <linux/kernel.h>
 #include <linux/module.h>
 
-#define I2C_DEVICE_ADDRESS 0x68 // The address of the device 
+#define I2C_DEVICE_ADDRESS 0x69 // The address of the device 
 #define I2C_BUS_NUMBER 2        // The I2C bus for P9_19 and P9_20
 
 static struct i2c_client *i2c_client;
