@@ -26,10 +26,10 @@
 // BBB P9_21 :: BROWN    :: SPI0_D0     //
 // BBB P9_22 :: BLACK    :: SPI0_SCLK   //
 //                                      //
-// BBB P9_28 :: ORANGE   :: SPI1_CS0    //
-// BBB P9_30 :: YELOW    :: SPI1_D1     //
-// BBB P9_29 :: BLUE     :: SPI1_D0     //
-// BBB P9_31 :: GREEN    :: SPI1_SCLK   //
+// BBB P9_28 :: ORANGE   :: SPI1_CS0  :: GREEN  //
+// BBB P9_30 :: YELOW    :: SPI1_D1   :: BLUE   //
+// BBB P9_29 :: BLUE     :: SPI1_D0   :: PURPLE //
+// BBB P9_31 :: GREEN    :: SPI1_SCLK :: GREY   //
 //                                      //
 //                                      //
 //////////////////////////////////////////
@@ -97,7 +97,7 @@ int spiInit(void)
      * High clock control signal to FPGA
      */
     spi_dev_second->chip_select = 0;
-    spi_dev_second->mode = SPI_MODE_1;
+    spi_dev_second->mode = SPI_MODE_0;
     spi_dev_second->bits_per_word = 8;
     spi_dev_second->max_speed_hz = 1000000;
 
