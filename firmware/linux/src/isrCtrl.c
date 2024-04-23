@@ -17,7 +17,7 @@
 //                      //
 //                      //
 //                      //
-//    [GPIO :: ISR]     //
+//      [ISR] Work      //
 //                      //
 //                      //
 //                      //
@@ -41,7 +41,7 @@ static int isrInterruptFromKernelInit(void)
 
     result = gpio_request(GPIO_FPGA_INTERRUPT, "   Response");
     if (result < 0) {
-        printk(KERN_ERR "[CONFIG][GIO] Failed GPIO Request :: Pin [%d]\n", GPIO_FPGA_INTERRUPT);
+        printk(KERN_ERR "[CONFIG][ISR] Failed GPIO Request :: Pin [%d]\n", GPIO_FPGA_INTERRUPT);
         return result;
     }
     else
@@ -52,7 +52,7 @@ static int isrInterruptFromKernelInit(void)
     // Set GPIO pin as an output
     result = gpio_direction_output(GPIO_FPGA_INTERRUPT, 0); // Write low (0) to sink current to ground
     if (result < 0) {
-        printk(KERN_ERR "[CONFIG][GIO] Failed to set GPIO direction :: Pin [%d]\n", GPIO_FPGA_INTERRUPT);
+        printk(KERN_ERR "[CONFIG][ISR] Failed to set GPIO direction :: Pin [%d]\n", GPIO_FPGA_INTERRUPT);
         gpio_free(GPIO_FPGA_INTERRUPT);
         return result;
     }

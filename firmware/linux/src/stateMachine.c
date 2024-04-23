@@ -11,15 +11,15 @@
 
 #include "stateMachine.h"
 
-///////////////////
-//               //
-//               //
-//               //
-// State Machine //
-//               //
-//               //
-//               //
-///////////////////
+/////////////////////////
+//                     //
+//                     //
+//                     //
+// [STM] State Machine //
+//                     //
+//                     //
+//                     //
+/////////////////////////
 
 static struct task_struct *thread_handle;
 
@@ -29,7 +29,8 @@ static struct task_struct *thread_handle;
  * 
  * State machine is running but not configured
  * 
- * Require void pointer due to NULL at kthread init
+ * Require void pointer due to 
+ * kthread init NULL Parameter
  * 
  */
 static int StateMachineThread(void *data)

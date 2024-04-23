@@ -10,29 +10,33 @@
 
 #include "spiCtrl.h"
 
-//////////////////////
-//                  //
-//                  //
-//                  //
-//   [SPI] Comms    //
-//                  //
-//                  //
-//                  //
-//////////////////////////////////////////
-//                                      //
-//                                      //
-// BBB P9_17 :: PULPLE   :: SPI0_CS0    //
-// BBB P9_18 :: BLUE     :: SPI0_D1     //
-// BBB P9_21 :: BROWN    :: SPI0_D0     //
-// BBB P9_22 :: BLACK    :: SPI0_SCLK   //
-//                                      //
-// BBB P9_28 :: ORANGE   :: SPI1_CS0  :: GREEN  //
-// BBB P9_30 :: YELOW    :: SPI1_D1   :: BLUE   //
-// BBB P9_29 :: BLUE     :: SPI1_D0   :: PURPLE //
-// BBB P9_31 :: GREEN    :: SPI1_SCLK :: GREY   //
-//                                      //
-//                                      //
-//////////////////////////////////////////
+////////////////////////
+//                    //
+//                    //
+//                    //
+//   [SPI] COntrol    //
+//                    //
+//                    //
+//                    //
+////////////////////////
+
+/*!
+ * 
+ * SPI0
+ * ============================================
+ * BBB P9_17 :: PULPLE   :: SPI0_CS0
+ * BBB P9_18 :: BLUE     :: SPI0_D1
+ * BBB P9_21 :: BROWN    :: SPI0_D0
+ * BBB P9_22 :: BLACK    :: SPI0_SCLK
+ * 
+ * SPI1
+ * ============================================
+ * BBB P9_28 :: ORANGE   :: SPI1_CS0  :: GREEN
+ * BBB P9_30 :: YELOW    :: SPI1_D1   :: BLUE
+ * BBB P9_29 :: BLUE     :: SPI1_D0   :: PURPLE
+ * BBB P9_31 :: GREEN    :: SPI1_SCLK :: GREY
+ * 
+ */
 
 
 static struct spi_device *spi_dev_main;
@@ -158,6 +162,13 @@ void interruptFromFpga(struct work_struct *work)
         printk(KERN_INFO "[CTRL][SPI] Byte %d: 0x%02x\n", i, spi_rx_at_interruptFromFpga[i]);
     }
 
+    for (i = 0; i < sizeof(spi_tx_at_interruptFromFpga); ++i) {
+        printk(KERN_INFO "[CTRL][SPI] Write to FPGA %d: 0x%02x\n ---==[ GPIO Interrupt ]==---", i, spi_tx_at_interruptFromFpga[i]);
+    }
+    for (i = 0; i < sizeof(spi_rx_at_interruptFromFpga); ++i) {
+        printk(KERN_INFO "[CTRL][SPI] Read from FPGA %d: 0x%02x\n ---==[ GPIO Interrupt ]==---", i, spi_rx_at_interruptFromFpga[i]);
+    }
+
     spi_rx_at_interruptFromFpga[0] = 0x00;
 
     /*!
@@ -193,21 +204,19 @@ void signalFromCharDevice(struct work_struct *work)
         return;
     }
 
-    printk(KERN_INFO "[CTRL][SPI] Data from FPGA ---==[ SPI0 :: Constant from FPGA Reqister ]==---");
+    for (i = 0; i < sizeof(spi_tx_at_signalFromCharDevice); ++i) {
+        printk(KERN_INFO "[CTRL][SPI] Write to FPGA %d: 0x%02x\n ---==[ C Device Signal SPI.0 ]==---", i, spi_tx_at_signalFromCharDevice[i]);
+    }
     for (i = 0; i < sizeof(spi_rx_at_signalFromCharDevice); ++i) {
-        printk(KERN_INFO "[CTRL][SPI] Byte %d: 0x%02x\n", i, spi_rx_at_signalFromCharDevice[i]);
+        printk(KERN_INFO "[CTRL][SPI] Read from FPGA %d: 0x%02x\n ---==[ C Device Signal SPI.0 ]==---", i, spi_rx_at_signalFromCharDevice[i]);
     }
 
     spi_rx_at_signalFromCharDevice[0] = 0x00;
 
     /*!
      * 
-     * 
-     * 
-     * Here we should receive feedback 
-     * data for kernel processing
-     * 
-     * 
+     * Here we should process 
+     * feedback from FPGA
      * 
      */
 
@@ -239,16 +248,19 @@ void testFromCharDevice(struct work_struct *work)
         printk(KERN_INFO "[TEST][SPI] Byte %d: 0x%02x\n", i, spi_rx_at_testFromCharDevice[i]);
     }
 
+    for (i = 0; i < sizeof(spi_tx_at_testFromCharDevice); ++i) {
+        printk(KERN_INFO "[CTRL][SPI] Write to FPGA %d: 0x%02x\n ---==[ C Device Signal SPI.1 ]==---", i, spi_tx_at_testFromCharDevice[i]);
+    }
+    for (i = 0; i < sizeof(spi_rx_at_testFromCharDevice); ++i) {
+        printk(KERN_INFO "[CTRL][SPI] Read from FPGA %d: 0x%02x\n ---==[ C Device Signal SPI.1 ]==---", i, spi_rx_at_testFromCharDevice[i]);
+    }
+
     spi_rx_at_testFromCharDevice[0] = 0x00;
 
     /*!
      * 
-     * 
-     * 
-     * Here we should receive feedback 
-     * data for kernel processing
-     * 
-     * 
+     * Here we should process 
+     * feedback from FPGA
      * 
      */
 

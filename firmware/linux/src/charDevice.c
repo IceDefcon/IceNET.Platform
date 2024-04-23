@@ -17,13 +17,11 @@
 #include "charDevice.h"
 #include "spiWork.h"
 
-MODULE_LICENSE("GPL");
-
 //////////////////////
 //                  //
 //                  //
 //                  //
-//    [C] Device    //
+//   [ C ] Device   //
 //                  //
 //                  //
 //                  //

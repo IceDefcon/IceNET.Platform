@@ -4,6 +4,16 @@
 #include <linux/blkdev.h>
 #include <linux/mutex.h>    // Include for mutex opearations
 
+//////////////////////
+//                  //
+//                  //
+//                  //
+//   [ B ] Device   //
+//                  //
+//                  //
+//                  //
+//////////////////////
+
 #define DEVICE_NAME "iceBLOCK"
 #define DEVICE_SIZE (1024 * 1024) // 1MB
 #define KERNEL_SECTOR_SIZE 512
@@ -230,5 +240,5 @@ module_init(block_device_init);
 module_exit(block_device_exit);
 
 MODULE_LICENSE("GPL");
-MODULE_AUTHOR("Your Name");
-MODULE_DESCRIPTION("Simple block device module");
+MODULE_AUTHOR("Ice Marek");
+MODULE_DESCRIPTION("Block Device");
