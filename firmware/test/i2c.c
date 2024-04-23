@@ -40,7 +40,7 @@ static int __init i2c_module_init(void)
     // 
     // int ret = i2c_smbus_read_i2c_block_data(i2c_client, 0x00, sizeof(read_buffer), read_buffer);
     /* L3G42000 */
-    int ret = i2c_smbus_read_i2c_block_data(i2c_client, 0x70, sizeof(read_buffer), read_buffer);
+    int ret = i2c_smbus_read_i2c_block_data(i2c_client, 0x00, sizeof(read_buffer), read_buffer);
     if (ret < 0) {
         printk(KERN_ERR "Failed to read data from I2C device\n");
         i2c_unregister_device(i2c_client);
@@ -56,13 +56,13 @@ static int __init i2c_module_init(void)
     // Process the received data
 
     // Example: Write data to a register
-    char write_buffer[1] = {0x01};
-    ret = i2c_smbus_write_i2c_block_data(i2c_client, 0x70, sizeof(write_buffer), write_buffer);
-    if (ret < 0) {
-        printk(KERN_ERR "Failed to write data to I2C device\n");
-        i2c_unregister_device(i2c_client);
-        return ret;
-    }
+    // char write_buffer[1] = {0x01};
+    // ret = i2c_smbus_write_i2c_block_data(i2c_client, 0x70, sizeof(write_buffer), write_buffer);
+    // if (ret < 0) {
+    //     printk(KERN_ERR "Failed to write data to I2C device\n");
+    //     i2c_unregister_device(i2c_client);
+    //     return ret;
+    // }
 
     return 0;
 }
