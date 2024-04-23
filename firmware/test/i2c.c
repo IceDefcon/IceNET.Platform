@@ -40,7 +40,7 @@ static int __init i2c_module_init(void)
     // 
     // int ret = i2c_smbus_read_i2c_block_data(i2c_client, 0x00, sizeof(read_buffer), read_buffer);
     /* L3G42000 */
-    int ret = i2c_smbus_read_i2c_block_data(i2c_client, 0x70, sizeof(read_buffer), read_buffer);
+    int ret = i2c_smbus_read_i2c_block_data(i2c_client, 0x0F, sizeof(read_buffer), read_buffer);
     if (ret < 0) {
         printk(KERN_ERR "Failed to read data from I2C device\n");
         i2c_unregister_device(i2c_client);
