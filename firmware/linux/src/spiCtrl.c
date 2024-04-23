@@ -158,7 +158,7 @@ void interruptFromFpga(struct work_struct *work)
     }
     else
     {
-        printk(KERN_INFO "[CTRL][SPI] Signaled by [C] Device over SPI.0");
+        printk(KERN_INFO "[CTRL][SPI] Signaled by GPIO Interrupt over SPI.0");
     }
 
     for (i = 0; i < sizeof(spi_tx_at_secondFromCharDevice); ++i) {
@@ -236,12 +236,12 @@ void secondFromCharDevice(struct work_struct *work)
 
     ret = spi_sync(spi_dev_second, &msg);
     if (ret < 0) {
-        printk(KERN_ERR "[TEST][SPI] SPI transfer for FPGA failed: %d\n", ret);
+        printk(KERN_ERR "[CTRL][SPI] SPI transfer for FPGA failed: %d\n", ret);
         return;
     }
     else
     {
-        printk(KERN_INFO "[TEST][SPI] Signaled by [C] Device over SPI.1");
+        printk(KERN_INFO "[CTRL][SPI] Signaled by [C] Device over SPI.1");
     }
 
     for (i = 0; i < sizeof(spi_tx_at_secondFromCharDevice); ++i) {

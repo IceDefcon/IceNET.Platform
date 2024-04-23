@@ -27,7 +27,7 @@ static irqreturn_t interruptFromFpga(int irq, void *data)
 {
     static int counter = 0;
 
-    printk(KERN_INFO "[CTRL][ISR] Interrupt from FPGA [%d] at Pin [%d]\n", counter, GPIO_KERNEL_INTERRUPT);
+    printk(KERN_INFO "[CTRL][ISR] Interrupt No[%d] received from FPGA @ Pin [%d]\n", counter, GPIO_KERNEL_INTERRUPT);
     counter++;
 
     queue_work(get_interruptFromFpga_wq(), get_interruptFromFpga_work());

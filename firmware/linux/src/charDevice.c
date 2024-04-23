@@ -125,12 +125,12 @@ static ssize_t dev_read(struct file *filep, char *buffer, size_t len, loff_t *of
 
     if (error_count==0)
     {
-        printk(KERN_INFO "[CTRL][ C ] Sent %d characters to the user\n", size_of_message);
+        printk(KERN_INFO "[CTRL][ C ] Sent %d characters to user-space\n", size_of_message);
         return (size_of_message = 0);  // clear the position to the start and return NULL
     }
     else 
     {
-        printk(KERN_INFO "[CTRL][ C ] Failed to send %d characters to the user\n", error_count);
+        printk(KERN_INFO "[CTRL][ C ] Failed to send %d characters to user-space\n", error_count);
         return -EFAULT; // Failed -- return a bad address message (i.e. -14)
     }
 
@@ -164,12 +164,12 @@ static ssize_t dev_write(struct file *filep, const char *buffer, size_t len, lof
     if (error_count==0)
     {
         size_of_message = strlen(message);
-        printk(KERN_INFO "[CTRL][ C ] Received %d characters from the user\n", len);
+        printk(KERN_INFO "[CTRL][ C ] Received %d characters from user-space\n", len);
         return len;
     } 
     else 
     {
-        printk(KERN_INFO "[CTRL][ C ] Failed to receive characters from the user\n");
+        printk(KERN_INFO "[CTRL][ C ] Failed to receive characters from user-space\n");
         return -EFAULT;
     }
     
