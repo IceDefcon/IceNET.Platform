@@ -79,11 +79,11 @@ void stateMachineInit(void)
     thread_handle = kthread_create(StateMachineThread, NULL, "SM thread handle");
     if (IS_ERR(thread_handle)) 
     {
-        printk(KERN_ERR "[CONFIG][STM] Failed to create kernel thread. Error code: %ld\n", PTR_ERR(thread_handle));
+        printk(KERN_ERR "[INIT][STM] Failed to create kernel thread. Error code: %ld\n", PTR_ERR(thread_handle));
     }
     else
     {
-        printk(KERN_ERR "[CONFIG][STM] Created kthread for StateMachineThread");
+        printk(KERN_ERR "[INIT][STM] Created kthread for StateMachineThread");
     }
     wake_up_process(thread_handle);
 }

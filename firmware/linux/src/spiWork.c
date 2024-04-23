@@ -56,11 +56,11 @@ static void interruptFromFpga_WorkInit(void)
 	interruptFromFpga_wq = create_singlethread_workqueue("interruptFromFpga_workqueue");
 	if (!interruptFromFpga_wq) 
 	{
-	    printk(KERN_ERR "[CONFIG][WRK] Failed to initialise single thread workqueue for interruptFromFpga: -ENOMEM\n");
+	    printk(KERN_ERR "[INIT][WRK] Failed to initialise single thread workqueue for interruptFromFpga: -ENOMEM\n");
 	}
 	else
 	{
-	    printk(KERN_ERR "[CONFIG][WRK] Create single thread workqueue for interruptFromFpga\n");
+	    printk(KERN_ERR "[INIT][WRK] Create single thread workqueue for interruptFromFpga\n");
 	}
 }
 
@@ -70,11 +70,11 @@ static void signalFromCharDevice_WorkInit(void)
 	signalFromCharDevice_wq = create_singlethread_workqueue("signalFromCharDevice_workqueue");
 	if (!signalFromCharDevice_wq) 
 	{
-	    printk(KERN_ERR "[CONFIG][WRK] Failed to initialise single thread workqueue for signalFromCharDevice: -ENOMEM\n");
+	    printk(KERN_ERR "[INIT][WRK] Failed to initialise single thread workqueue for signalFromCharDevice: -ENOMEM\n");
 	}
 	else
 	{
-		printk(KERN_ERR "[CONFIG][WRK] Create single thread workqueue for signalFromCharDevice\n");
+		printk(KERN_ERR "[INIT][WRK] Create single thread workqueue for signalFromCharDevice\n");
 	}
 }
 
@@ -84,11 +84,11 @@ static void testFromCharDevice_WorkInit(void)
 	testFromCharDevice_wq = create_singlethread_workqueue("testFromCharDevice_workqueue");
 	if (!testFromCharDevice_wq) 
 	{
-	    printk(KERN_ERR "[CONFIG][WRK] Failed to initialise single thread workqueue for testFromCharDevice: -ENOMEM\n");
+	    printk(KERN_ERR "[INIT][WRK] Failed to initialise single thread workqueue for testFromCharDevice: -ENOMEM\n");
 	}
 	else
 	{
-		printk(KERN_ERR "[CONFIG][WRK] Create single thread workqueue for testFromCharDevice\n");
+		printk(KERN_ERR "[INIT][WRK] Create single thread workqueue for testFromCharDevice\n");
 	}
 }
 

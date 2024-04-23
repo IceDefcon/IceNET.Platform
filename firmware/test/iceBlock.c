@@ -102,19 +102,19 @@ static struct block_device_operations my_ops =
 
 static int __init block_device_init(void) {
 
-    printk(KERN_INFO "[CONFIG][ B ] Allocate 1MB of kernel memory to store block device\n");
+    printk(KERN_INFO "[INIT][ B ] Allocate 1MB of kernel memory to store block device\n");
     iceBlock.data = vmalloc(DEVICE_SIZE);
     if (!iceBlock.data)
     {
-        printk(KERN_INFO "[CONFIG][ B ] Failed to allocate 1MB kernel memory!\n");
+        printk(KERN_INFO "[INIT][ B ] Failed to allocate 1MB kernel memory!\n");
         return -ENOMEM;
     }
 
-    printk(KERN_INFO "[CONFIG][ B ] Allocate request queue for a block device\n");
+    printk(KERN_INFO "[INIT][ B ] Allocate request queue for a block device\n");
     iceBlock.queue = blk_alloc_queue(GFP_KERNEL);
     if (!iceBlock.queue)
     {
-        printk(KERN_INFO "[CONFIG][ B ] Failed to request for queue for a block device!\n");
+        printk(KERN_INFO "[INIT][ B ] Failed to request for queue for a block device!\n");
         vfree(iceBlock.data);
         return -ENOMEM;
     }
@@ -127,7 +127,7 @@ static int __init block_device_init(void) {
      * Each block can be used indepenently for RD/WR operation
      * 
      */
-    printk(KERN_INFO "[CONFIG][ B ] Sets the logical block size 512B for a single RD/WR request \n");
+    printk(KERN_INFO "[INIT][ B ] Sets the logical block size 512B for a single RD/WR request \n");
     blk_queue_logical_block_size(iceBlock.queue, KERNEL_SECTOR_SIZE);
 
     /**
@@ -142,11 +142,11 @@ static int __init block_device_init(void) {
      * Single block device without partitions
      * 
      */
-    printk(KERN_INFO "[CONFIG][ B ] Allocate gendisk structure for a Single block device without partitions \n");
+    printk(KERN_INFO "[INIT][ B ] Allocate gendisk structure for a Single block device without partitions \n");
     iceBlock.gd = alloc_disk(DEVICE_MINORS);
     if (!iceBlock.gd)
     {
-        printk(KERN_INFO "[CONFIG][ B ] Failed to allocating gen disk for a block device!\n");
+        printk(KERN_INFO "[INIT][ B ] Failed to allocating gen disk for a block device!\n");
         vfree(iceBlock.data);
         return -ENOMEM;
     }
@@ -155,12 +155,12 @@ static int __init block_device_init(void) {
 
     if (iceBlock.gd->major < 0) 
     {
-        printk(KERN_INFO "[CONFIG][ B ] Failed to register block device with error: %d\n", iceBlock.gd->major);
+        printk(KERN_INFO "[INIT][ B ] Failed to register block device with error: %d\n", iceBlock.gd->major);
         unregister_blkdev(iceBlock.gd->major, DEVICE_NAME);
     }
     else
     {
-        printk(KERN_INFO "[CONFIG][ B ] Register block device with major number: %d\n", iceBlock.gd->major);
+        printk(KERN_INFO "[INIT][ B ] Register block device with major number: %d\n", iceBlock.gd->major);
     }
 
 
@@ -174,7 +174,7 @@ static int __init block_device_init(void) {
     iceBlock.gd->fops = &my_ops;
     add_disk(iceBlock.gd);
 
-    printk(KERN_INFO "[CONFIG][ B ] Block device registered SUCCESS\n");
+    printk(KERN_INFO "[INIT][ B ] Block device registered SUCCESS\n");
     mutex_init(&com_mutex);
 
     return 0;
