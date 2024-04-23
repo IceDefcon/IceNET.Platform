@@ -153,12 +153,12 @@ static ssize_t dev_write(struct file *filep, const char *buffer, size_t len, lof
      **/
     if(strncmp(message, "a", 1) == 0)
     {
-        queue_work(get_signalFromCharDevice_wq(), get_signalFromCharDevice_work());
+        queue_work(get_mainFromCharDevice_wq(), get_mainFromCharDevice_work());
     }
 
     if(strncmp(message, "i", 1) == 0)
     {
-        queue_work(get_testFromCharDevice_wq(), get_testFromCharDevice_work());
+        queue_work(get_secondFromCharDevice_wq(), get_secondFromCharDevice_work());
     }
 
     if (error_count==0)

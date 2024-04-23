@@ -44,20 +44,20 @@ static struct spi_device *spi_dev_second;
 
 static volatile uint8_t spi_tx_at_interruptFromFpga[] = {0x81};
 static volatile uint8_t spi_rx_at_interruptFromFpga[1];
-static volatile uint8_t spi_tx_at_signalFromCharDevice[] = {0xC3};
-static volatile uint8_t spi_rx_at_signalFromCharDevice[1];
-static volatile uint8_t spi_tx_at_testFromCharDevice[] = {0x00}; /* ID Register of the BMI160 chip */
-static volatile uint8_t spi_rx_at_testFromCharDevice[1];
+static volatile uint8_t spi_tx_at_mainFromCharDevice[] = {0xC3};
+static volatile uint8_t spi_rx_at_mainFromCharDevice[1];
+static volatile uint8_t spi_tx_at_secondFromCharDevice[] = {0x00}; /* ID Register of the BMI160 chip */
+static volatile uint8_t spi_rx_at_secondFromCharDevice[1];
 
 int spiInit(void)
 {
 
-    struct spi_master *spi_master0;
-    struct spi_master *spi_master1;
+    struct spi_master *spi_master_main;
+    struct spi_master *spi_master_second;
     int ret;
 
-    spi_master0 = spi_busnum_to_master(0);
-    if (!spi_master0) {
+    spi_master_main = spi_busnum_to_master(0);
+    if (!spi_master_main) {
         printk(KERN_ERR "[INIT][SPI] SPI Master at BUS 0 not found!\n");
         return -ENODEV;
     }
@@ -66,8 +66,8 @@ int spiInit(void)
         printk(KERN_ERR "[INIT][SPI] SPI Master at BUS 0 Registered\n");
     }
 
-    spi_master1 = spi_busnum_to_master(1);
-    if (!spi_master1) {
+    spi_master_second = spi_busnum_to_master(1);
+    if (!spi_master_second) {
         printk(KERN_ERR "[INIT][SPI] SPI Master at BUS 1 not found!\n");
         return -ENODEV;
     }
@@ -76,7 +76,7 @@ int spiInit(void)
         printk(KERN_ERR "[INIT][SPI] SPI Master at BUS 1 Registered\n");
     }
 
-    spi_dev_main = spi_alloc_device(spi_master0);
+    spi_dev_main = spi_alloc_device(spi_master_main);
     if (!spi_dev_main) {
         printk(KERN_ERR "[INIT][SPI] SPI0 Failed to Allocate!\n");
         return -ENOMEM;
@@ -86,7 +86,7 @@ int spiInit(void)
         printk(KERN_ERR "[INIT][SPI] SPI0 Allocated\n");
     }
 
-    spi_dev_second = spi_alloc_device(spi_master1);
+    spi_dev_second = spi_alloc_device(spi_master_second);
     if (!spi_dev_second) {
         printk(KERN_ERR "[INIT][SPI] SPI1 Failed to Allocate!\n");
         return -ENOMEM;
@@ -156,17 +156,16 @@ void interruptFromFpga(struct work_struct *work)
         printk(KERN_ERR "[CTRL][SPI] SPI transfer at interrupt From Fpga failed: %d\n", ret);
         return;
     }
-
-    printk(KERN_INFO "[CTRL][SPI] Data from FPGA ---==[ FPGA Button :: Read from I2C Gyroscope driven in FPGA ]==---");
-    for (i = 0; i < sizeof(spi_rx_at_interruptFromFpga); ++i) {
-        printk(KERN_INFO "[CTRL][SPI] Byte %d: 0x%02x\n", i, spi_rx_at_interruptFromFpga[i]);
+    else
+    {
+        printk(KERN_INFO "[CTRL][SPI] Signaled by [C] Device over SPI.0");
     }
 
     for (i = 0; i < sizeof(spi_tx_at_interruptFromFpga); ++i) {
-        printk(KERN_INFO "[CTRL][SPI][IRQ][SPI.0][TX] Write to FPGA %d: 0x%02x\n", i, spi_tx_at_interruptFromFpga[i]);
+        printk(KERN_INFO "[CTRL][SPI] Write to FPGA  %d: 0x%02x\n", i, spi_tx_at_interruptFromFpga[i]);
     }
     for (i = 0; i < sizeof(spi_rx_at_interruptFromFpga); ++i) {
-        printk(KERN_INFO "[CTRL][SPI][IRQ][SPI.0][RX] Read from FPGA %d: 0x%02x\n", i, spi_rx_at_interruptFromFpga[i]);
+        printk(KERN_INFO "[CTRL][SPI] Read from FPGA %d: 0x%02x\n", i, spi_rx_at_interruptFromFpga[i]);
     }
 
     spi_rx_at_interruptFromFpga[0] = 0x00;
@@ -183,7 +182,7 @@ void interruptFromFpga(struct work_struct *work)
      */
 }
 
-void signalFromCharDevice(struct work_struct *work)
+void mainFromCharDevice(struct work_struct *work)
 {
     struct spi_message msg;
     struct spi_transfer transfer;
@@ -191,9 +190,9 @@ void signalFromCharDevice(struct work_struct *work)
     int i;
 
     memset(&transfer, 0, sizeof(transfer));
-    transfer.tx_buf = spi_tx_at_signalFromCharDevice;
-    transfer.rx_buf = spi_rx_at_signalFromCharDevice;
-    transfer.len = sizeof(spi_tx_at_signalFromCharDevice);
+    transfer.tx_buf = spi_tx_at_mainFromCharDevice;
+    transfer.rx_buf = spi_rx_at_mainFromCharDevice;
+    transfer.len = sizeof(spi_tx_at_mainFromCharDevice);
 
     spi_message_init(&msg);
     spi_message_add_tail(&transfer, &msg);
@@ -203,15 +202,19 @@ void signalFromCharDevice(struct work_struct *work)
         printk(KERN_ERR "[CTRL][SPI] SPI transfer at signal From Char Device failed: %d\n", ret);
         return;
     }
-
-    for (i = 0; i < sizeof(spi_tx_at_signalFromCharDevice); ++i) {
-        printk(KERN_INFO "[CTRL][SPI][C][SPI.0][TX] Write to FPGA %d: 0x%02x\n", i, spi_tx_at_signalFromCharDevice[i]);
-    }
-    for (i = 0; i < sizeof(spi_rx_at_signalFromCharDevice); ++i) {
-        printk(KERN_INFO "[CTRL][SPI][C][SPI.0][RX] Read from FPGA %d: 0x%02x\n", i, spi_rx_at_signalFromCharDevice[i]);
+    else
+    {
+        printk(KERN_INFO "[CTRL][SPI] Signaled by [C] Device over SPI.0");
     }
 
-    spi_rx_at_signalFromCharDevice[0] = 0x00;
+    for (i = 0; i < sizeof(spi_tx_at_mainFromCharDevice); ++i) {
+        printk(KERN_INFO "[CTRL][SPI] Write to FPGA  %d: 0x%02x\n", i, spi_tx_at_mainFromCharDevice[i]);
+    }
+    for (i = 0; i < sizeof(spi_rx_at_mainFromCharDevice); ++i) {
+        printk(KERN_INFO "[CTRL][SPI] Read from FPGA %d: 0x%02x\n", i, spi_rx_at_mainFromCharDevice[i]);
+    }
+
+    spi_rx_at_mainFromCharDevice[0] = 0x00;
 
     /*!
      * 
@@ -222,7 +225,7 @@ void signalFromCharDevice(struct work_struct *work)
 
 }
 
-void testFromCharDevice(struct work_struct *work)
+void secondFromCharDevice(struct work_struct *work)
 {
     struct spi_message msg;
     struct spi_transfer transfer;
@@ -230,9 +233,9 @@ void testFromCharDevice(struct work_struct *work)
     int i;
 
     memset(&transfer, 0, sizeof(transfer));
-    transfer.tx_buf = spi_tx_at_testFromCharDevice;
-    transfer.rx_buf = spi_rx_at_testFromCharDevice;
-    transfer.len = sizeof(spi_tx_at_testFromCharDevice);
+    transfer.tx_buf = spi_tx_at_secondFromCharDevice;
+    transfer.rx_buf = spi_rx_at_secondFromCharDevice;
+    transfer.len = sizeof(spi_tx_at_secondFromCharDevice);
 
     spi_message_init(&msg);
     spi_message_add_tail(&transfer, &msg);
@@ -242,20 +245,19 @@ void testFromCharDevice(struct work_struct *work)
         printk(KERN_ERR "[TEST][SPI] SPI transfer for FPGA failed: %d\n", ret);
         return;
     }
-
-    printk(KERN_INFO "[TEST][SPI] Data from FPGA ---==[ SPI1 :: Constant from FPGA Reqister ]==---");
-    for (i = 0; i < sizeof(spi_rx_at_testFromCharDevice); ++i) {
-        printk(KERN_INFO "[TEST][SPI] Byte %d: 0x%02x\n", i, spi_rx_at_testFromCharDevice[i]);
+    else
+    {
+        printk(KERN_INFO "[TEST][SPI] Signaled by [C] Device over SPI.1");
     }
 
-    for (i = 0; i < sizeof(spi_tx_at_testFromCharDevice); ++i) {
-        printk(KERN_INFO "[CTRL][SPI][C][SPI.1][TX] Write to FPGA %d: 0x%02x\n", i, spi_tx_at_testFromCharDevice[i]);
+    for (i = 0; i < sizeof(spi_tx_at_secondFromCharDevice); ++i) {
+        printk(KERN_INFO "[CTRL][SPI] Write to FPGA  %d: 0x%02x\n", i, spi_tx_at_secondFromCharDevice[i]);
     }
-    for (i = 0; i < sizeof(spi_rx_at_testFromCharDevice); ++i) {
-        printk(KERN_INFO "[CTRL][SPI][C][SPI.1][RX] Read from FPGA %d: 0x%02x\n", i, spi_rx_at_testFromCharDevice[i]);
+    for (i = 0; i < sizeof(spi_rx_at_secondFromCharDevice); ++i) {
+        printk(KERN_INFO "[CTRL][SPI] Read from FPGA %d: 0x%02x\n", i, spi_rx_at_secondFromCharDevice[i]);
     }
 
-    spi_rx_at_testFromCharDevice[0] = 0x00;
+    spi_rx_at_secondFromCharDevice[0] = 0x00;
 
     /*!
      * 

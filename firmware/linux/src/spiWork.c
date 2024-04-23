@@ -18,32 +18,32 @@
 //                  //
 //////////////////////
 
-/* WORK QUEUE */ static struct workqueue_struct *testFromCharDevice_wq;
-/* WORK QUEUE */ static struct workqueue_struct *signalFromCharDevice_wq;
+/* WORK QUEUE */ static struct workqueue_struct *secondFromCharDevice_wq;
+/* WORK QUEUE */ static struct workqueue_struct *mainFromCharDevice_wq;
 /* WORK QUEUE */ static struct workqueue_struct* interruptFromFpga_wq;
-/* WORK */ static struct work_struct testFromCharDevice_work;
-/* WORK */ static struct work_struct signalFromCharDevice_work;
+/* WORK */ static struct work_struct secondFromCharDevice_work;
+/* WORK */ static struct work_struct mainFromCharDevice_work;
 /* WORK */ static struct work_struct interruptFromFpga_work;
 
-/* GET WORK QUEUE*/ struct workqueue_struct* get_testFromCharDevice_wq(void) 
+/* GET WORK QUEUE*/ struct workqueue_struct* get_secondFromCharDevice_wq(void) 
 {
-    return testFromCharDevice_wq;
+    return secondFromCharDevice_wq;
 }
-/* GET WORK QUEUE*/ struct workqueue_struct* get_signalFromCharDevice_wq(void) 
+/* GET WORK QUEUE*/ struct workqueue_struct* get_mainFromCharDevice_wq(void) 
 {
-    return signalFromCharDevice_wq;
+    return mainFromCharDevice_wq;
 }
 /* GET WORK QUEUE */ struct workqueue_struct* get_interruptFromFpga_wq(void)
 {
 	return interruptFromFpga_wq;
 }
-/* GET WORK */ struct work_struct* get_testFromCharDevice_work(void) 
+/* GET WORK */ struct work_struct* get_secondFromCharDevice_work(void) 
 {
-    return &testFromCharDevice_work;
+    return &secondFromCharDevice_work;
 }
-/* GET WORK */ struct work_struct* get_signalFromCharDevice_work(void) 
+/* GET WORK */ struct work_struct* get_mainFromCharDevice_work(void) 
 {
-    return &signalFromCharDevice_work;
+    return &mainFromCharDevice_work;
 }
 /* GET WORK */ struct work_struct* get_interruptFromFpga_work(void)
 {
@@ -64,31 +64,31 @@ static void interruptFromFpga_WorkInit(void)
 	}
 }
 
-static void signalFromCharDevice_WorkInit(void)
+static void mainFromCharDevice_WorkInit(void)
 {
-	INIT_WORK(get_signalFromCharDevice_work(), signalFromCharDevice);
-	signalFromCharDevice_wq = create_singlethread_workqueue("signalFromCharDevice_workqueue");
-	if (!signalFromCharDevice_wq) 
+	INIT_WORK(get_mainFromCharDevice_work(), mainFromCharDevice);
+	mainFromCharDevice_wq = create_singlethread_workqueue("mainFromCharDevice_workqueue");
+	if (!mainFromCharDevice_wq) 
 	{
-	    printk(KERN_ERR "[INIT][WRK] Failed to initialise single thread workqueue for signalFromCharDevice: -ENOMEM\n");
+	    printk(KERN_ERR "[INIT][WRK] Failed to initialise single thread workqueue for mainFromCharDevice: -ENOMEM\n");
 	}
 	else
 	{
-		printk(KERN_ERR "[INIT][WRK] Create single thread workqueue for signalFromCharDevice\n");
+		printk(KERN_ERR "[INIT][WRK] Create single thread workqueue for mainFromCharDevice\n");
 	}
 }
 
-static void testFromCharDevice_WorkInit(void)
+static void secondFromCharDevice_WorkInit(void)
 {
-	INIT_WORK(get_testFromCharDevice_work(), testFromCharDevice);
-	testFromCharDevice_wq = create_singlethread_workqueue("testFromCharDevice_workqueue");
-	if (!testFromCharDevice_wq) 
+	INIT_WORK(get_secondFromCharDevice_work(), secondFromCharDevice);
+	secondFromCharDevice_wq = create_singlethread_workqueue("secondFromCharDevice_workqueue");
+	if (!secondFromCharDevice_wq) 
 	{
-	    printk(KERN_ERR "[INIT][WRK] Failed to initialise single thread workqueue for testFromCharDevice: -ENOMEM\n");
+	    printk(KERN_ERR "[INIT][WRK] Failed to initialise single thread workqueue for secondFromCharDevice: -ENOMEM\n");
 	}
 	else
 	{
-		printk(KERN_ERR "[INIT][WRK] Create single thread workqueue for testFromCharDevice\n");
+		printk(KERN_ERR "[INIT][WRK] Create single thread workqueue for secondFromCharDevice\n");
 	}
 }
 
@@ -102,37 +102,37 @@ static void interruptFromFpga_WorkDestroy(void)
     }
 }
 
-static void signalFromCharDevice_WorkDestroy(void)
+static void mainFromCharDevice_WorkDestroy(void)
 {
-    cancel_work_sync(get_signalFromCharDevice_work());
-    if (signalFromCharDevice_wq) {
-        flush_workqueue(signalFromCharDevice_wq);
-        destroy_workqueue(signalFromCharDevice_wq);
-        signalFromCharDevice_wq = NULL;
+    cancel_work_sync(get_mainFromCharDevice_work());
+    if (mainFromCharDevice_wq) {
+        flush_workqueue(mainFromCharDevice_wq);
+        destroy_workqueue(mainFromCharDevice_wq);
+        mainFromCharDevice_wq = NULL;
     }
 }
 
-static void testFromCharDevice_WorkDestroy(void)
+static void secondFromCharDevice_WorkDestroy(void)
 {
-    cancel_work_sync(get_testFromCharDevice_work());
-    if (testFromCharDevice_wq) {
-        flush_workqueue(testFromCharDevice_wq);
-        destroy_workqueue(testFromCharDevice_wq);
-        testFromCharDevice_wq = NULL;
+    cancel_work_sync(get_secondFromCharDevice_work());
+    if (secondFromCharDevice_wq) {
+        flush_workqueue(secondFromCharDevice_wq);
+        destroy_workqueue(secondFromCharDevice_wq);
+        secondFromCharDevice_wq = NULL;
     }
 }
 
 void spiWorkInit(void)
 {
 	interruptFromFpga_WorkInit();
-	signalFromCharDevice_WorkInit();
-	testFromCharDevice_WorkInit();
+	mainFromCharDevice_WorkInit();
+	secondFromCharDevice_WorkInit();
 }
 
 void spiWorkDestroy(void)
 {
 	interruptFromFpga_WorkDestroy();
-	signalFromCharDevice_WorkDestroy();
-	testFromCharDevice_WorkDestroy();
+	mainFromCharDevice_WorkDestroy();
+	secondFromCharDevice_WorkDestroy();
 	printk(KERN_ERR "[DESTROY][WRK] Destroy kernel workflow\n");
 }
