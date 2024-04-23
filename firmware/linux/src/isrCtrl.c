@@ -127,7 +127,6 @@ static void isrInterruptFromFpgaDestroy(void)
     irq_kernel = gpio_to_irq(GPIO_KERNEL_INTERRUPT);
     free_irq(irq_kernel, NULL);
     gpio_free(GPIO_KERNEL_INTERRUPT);
-    printk(KERN_INFO "[DESTROY][ISR] Destroy IRQ for GPIO Pin[%d]\n", GPIO_KERNEL_INTERRUPT);
 }
 
 static void isrInterruptFromKernelDestroy(void)
@@ -150,4 +149,5 @@ void isrGpioDestroy(void)
 {
     isrInterruptFromFpgaDestroy();
     isrInterruptFromKernelDestroy();
+    printk(KERN_INFO "[DESTROY][ISR] Destroy IRQ for GPIO Pins\n");
 }
