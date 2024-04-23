@@ -46,7 +46,7 @@ static int isrInterruptFromKernelInit(void)
     }
     else
     {
-        printk(KERN_ERR "[CONFIG][ISR] Setup GPIO Request for Pin [%d]\n", GPIO_FPGA_INTERRUPT);
+        printk(KERN_ERR "[CONFIG][ISR] Setup GPIO Pin [%d] Request\n", GPIO_FPGA_INTERRUPT);
     }
 
     // Set GPIO pin as an output
@@ -76,7 +76,7 @@ static int isrInterruptFromFpgaInit(void)
     }
     else
     {
-        printk(KERN_ERR "[CONFIG][ISR] Setup GPIO Request for Pin [%d]\n", GPIO_KERNEL_INTERRUPT);
+        printk(KERN_ERR "[CONFIG][ISR] Setup GPIO Pin [%d] Request\n", GPIO_KERNEL_INTERRUPT);
     }
 
     result = gpio_direction_input(GPIO_KERNEL_INTERRUPT);
