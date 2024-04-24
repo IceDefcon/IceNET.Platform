@@ -41,6 +41,7 @@ static int __init fpga_driver_init(void)
     spiWorkInit();
     /* Initialise gpio ISR */
     isrGpioInit();
+
     printk(KERN_INFO "[  READY  ] Driver loaded successfuly\n");
 
     return NULL;
@@ -61,6 +62,7 @@ static void __exit fpga_driver_exit(void)
     spiDestroy();
     charDeviceDestroy();
     stateMachineDestroy();
+
     printk(KERN_INFO "[TERMINATE] Driver terminated successfully\n");
 }
 
