@@ -83,7 +83,7 @@ void charDeviceInit(void)
     }
     else
     {
-        printk(KERN_ALERT "[INIT][ C ] Create char Device: %ld\n");
+        printk(KERN_ALERT "[INIT][ C ] Create char Device\n");
     }
 
     printk(KERN_ALERT "[INIT][ C ] Lock on Char Device Device Mutex\n");
