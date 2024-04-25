@@ -58,8 +58,8 @@ void Debug::Todo(const char * message)
 
 void Debug::Read(const char * message)
 {
-	Info("[ RX ] ");
-	std::cout << message;
+	// Do I need feedback from kernel ?
+	// Info("[ RX ] ");
 }
 
 void Debug::Write(void)
