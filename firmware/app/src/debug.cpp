@@ -33,10 +33,13 @@ void Debug::Warning(const char * message)
 		std::cout << "[WARN] " << message << std::endl;
 }
 
-void Debug::Info(const char * message)
+void Debug::Info(const char * message, bool endLine = true)
 {
 	if(m_LogLevel >= LevelInfo)
-		std::cout << "[INFO] " << message << std::endl;
+	{
+		std::cout << "[INFO] " << message
+		if(true == endLine ) std:cout << std::endl;
+	}
 }
 
 void Debug::Todo(const char * message)
@@ -52,5 +55,5 @@ void Debug::Read(const char * message)
 
 void Debug::Write(void)
 {
-	Info("[ TX ]");
+	Info("[ TX ]",false);
 }
