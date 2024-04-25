@@ -47,10 +47,10 @@ void Debug::Todo(const char * message)
 
 void Debug::Read(const char * message)
 {
-	Debug::Info("[ RX ]");
+	Info("[ RX ]");
 }
 
 void Debug::Write(void)
 {
-	Debug::Info("[ TX ]");
+	Info("[ TX ]");
 }
