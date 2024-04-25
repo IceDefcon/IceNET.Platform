@@ -54,10 +54,12 @@ void iceCOM::iceCOMThread()
     	{
 			Debug::Error("[iceCOM] Cannot write into the console");
     	}
-
-    	if(OK != device_read())
+    	else
     	{
-			Debug::Error("[iceCOM] Cannot read from the console");
+	    	if(OK != device_read())
+	    	{
+				Debug::Error("[iceCOM] Cannot read from the console");
+	    	}
     	}
     }
 

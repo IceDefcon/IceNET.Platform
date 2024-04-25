@@ -58,10 +58,10 @@ void Debug::Todo(const char * message)
 
 void Debug::Read(const char * message)
 {
-	Info("[ RX ]");
+	Info("[ RX ] ");
 }
 
 void Debug::Write(void)
 {
-	Info("[ TX ]",false);
+	Info("[ TX ] ",false);
 }
