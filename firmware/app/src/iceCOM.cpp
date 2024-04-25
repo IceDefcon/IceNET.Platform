@@ -124,7 +124,7 @@ int iceCOM::device_write()
 	}
 	else if (std::strcmp(console_TX, "mag") == 0) /* Magnetometer */
 	{
-	    for (i = 0; i < 6; i++) 
+	    for (i = 0; i < 8; i++) 
 	    {
 	        console_TX[i] = 0x04 + i;
 	    }
