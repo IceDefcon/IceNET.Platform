@@ -193,7 +193,7 @@ static ssize_t dev_write(struct file *filep, const char __user *buffer, size_t l
     // Print each character of the data array
     for (i = 0; i < read_data.length; i++) 
     {
-        printk(KERN_INFO "[CTRL][ C ] Received Byte[%d]: %c\n", i, read_data.data[i]);
+        printk(KERN_INFO "[CTRL][ C ] Received Byte[%zu]: 0x%02x\n", i, (unsigned char)read_data.data[i]);
     }
 
     return CD_OK;
