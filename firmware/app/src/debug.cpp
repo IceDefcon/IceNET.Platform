@@ -58,8 +58,7 @@ void Debug::Todo(const char * message)
 
 void Debug::Read(const char * message)
 {
-	// Do I need feedback from kernel ?
-	// Info("[ RX ] ");
+	Info("[ RX ] Command Transfered Successfully");
 }
 
 void Debug::Write(void)
