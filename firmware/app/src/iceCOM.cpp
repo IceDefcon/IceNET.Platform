@@ -125,13 +125,14 @@ int iceCOM::device_write()
 		console_TX[3] = 0x07;
 		console_TX[4] = 0x08;
 		console_TX[5] = 0x09;
+		ret = write(m_file_descriptor, console_TX, sizeof(console_TX)/sizeof(console_TX[0])); // Send the string to the LKM
 	}
 	else
 	{
 		Debug::Error("iceCOM :: Command not found");
+		ret = -1;
 	}
 
-	ret = write(m_file_descriptor, console_TX, sizeof(console_TX)/sizeof(console_TX[0])); // Send the string to the LKM
 	if (ret == -1)
 	{
 	    Debug::Error("iceCOM :: Cannot write to kernel space");
