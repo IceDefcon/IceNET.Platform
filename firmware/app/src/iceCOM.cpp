@@ -107,12 +107,7 @@ int iceCOM::device_write()
 {
 	int i;
 	int ret;
-	char console_TX[BUFFER_LENGTH];
-
-	for (size_t i = 0; i < BUFFER_LENGTH; ++i)
-	{
-		console_TX[i] = 0;
-	}
+	char console_TX[6];
 
 	Debug::Write();
 	/* Get console characters */
@@ -124,38 +119,19 @@ int iceCOM::device_write()
 	}
 	else if (std::strcmp(console_TX, "mag") == 0) /* Magnetometer */
 	{
-	    for (i = 0; i < 8; i++) 
-	    {
-	        console_TX[i] = 0x04 + i;
-	    }
-	}
-	else if (std::strcmp(console_TX, "hal") == 0) /* Hall resistance */
-	{
-	    for (i = 0; i < 2; i++) 
-	    {
-	        console_TX[i] = 0x0A + i;
-	    }
-	}
-	else if (std::strcmp(console_TX, "gyr") == 0) /* Magnetometer */
-	{
-	    for (i = 0; i < 6; i++) 
-	    {
-	        console_TX[i] = 0x0C + i;
-	    }
-	}
-	else if (std::strcmp(console_TX, "acc") == 0) /* Magnetometer */
-	{
-	    for (i = 0; i < 6; i++) 
-	    {
-	        console_TX[i] = 0x12 + i;
-	    }
+		console_TX[0] = 0x04;
+		console_TX[1] = 0x05;
+		console_TX[2] = 0x06;
+		console_TX[3] = 0x07;
+		console_TX[4] = 0x08;
+		console_TX[5] = 0x09;
 	}
 	else
 	{
 		Debug::Error("iceCOM :: Command not found");
 	}
 
-	ret = write(m_file_descriptor, console_TX, strlen(console_TX)); // Send the string to the LKM
+	ret = write(m_file_descriptor, console_TX, sizeof(console_TX)/sizeof(console_TX[0])); // Send the string to the LKM
 	if (ret == -1)
 	{
 	    Debug::Error("iceCOM :: Cannot write to kernel space");
