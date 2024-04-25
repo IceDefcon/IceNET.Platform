@@ -114,6 +114,7 @@ int iceCOM::device_write()
 	}
 
 	Debug::Write();
+	/* Get console characters */
 	std::cin.getline(console_TX, BUFFER_LENGTH);
 
 	if (std::strcmp(console_TX, "exit") == 0) 

@@ -151,6 +151,12 @@ static ssize_t dev_write(struct file *filep, const char *buffer, size_t len, lof
      * 3. Application interface
      * 
      **/
+
+    for (int i = 0; i < len; ++i)
+    {
+        printk(KERN_INFO "[CTRL][ C ] Received %d \n", buffer[i]);
+    }
+
     if(strncmp(message, "a", 1) == 0)
     {
         queue_work(get_mainFromCharDevice_wq(), get_mainFromCharDevice_work());
