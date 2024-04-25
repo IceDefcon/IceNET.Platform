@@ -166,6 +166,19 @@ static ssize_t dev_write(struct file *filep, const char __user *buffer, size_t l
 
     printk(KERN_INFO "[CTRL][ C ] Kernel Data: %s \n", (char *)kernel_data.data);
 
+    int kernel_int;
+    int *int_ptr = (int *)kernel_data.data;
+
+    if (kernel_data.length >= sizeof(int)) 
+    {
+        kernel_int = *int_ptr;
+        printk(KERN_INFO "[CTRL][ C ] Kernel Data as Integer: %d\n", kernel_int);
+    } 
+    else 
+    {
+        printk(KERN_ERR "[CTRL][ C ] Not enough data to interpret as an integer.\n");
+    }
+
     return CD_OK;
 }
 
