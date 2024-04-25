@@ -137,10 +137,37 @@ static ssize_t dev_read(struct file *filep, char *buffer, size_t len, loff_t *of
     return CD_OK;
 }
 
-static ssize_t dev_write(struct file *filep, const char *buffer, size_t len, loff_t *offset)
+static struct {
+    void *data;
+    size_t length;
+} kernel_data;
+
+static ssize_t dev_write(struct file *filep, const char __user *buffer, size_t len, loff_t *offset)
 {
+    void *kernel_data_ptr;
     int error_count = 0;
-    error_count = copy_from_user(message, buffer, len);
+
+    // Allocate memory in the kernel space
+    kernel_data_ptr = kmalloc(len, GFP_KERNEL);
+    if (!kernel_data_ptr) {
+        return -ENOMEM; // Memory allocation failed
+    }
+
+    // Copy data from user space to kernel space
+    error_count = copy_from_user(kernel_data_ptr, buffer, len);
+    if (error_count != 0) {
+        kfree(kernel_data_ptr); // Free allocated memory
+        return -EFAULT; // Copy failed
+    }
+
+    // Update kernel_data struct with the copied data and its length
+    kernel_data.data = kernel_data_ptr;
+    kernel_data.length = len;
+
+    printk(KERN_INFO "[CTRL][ C ] Kernel Data: %s \n", (char *)kernel_data.data);
+
+    return CD_OK;
+}
 
     /**
      * 
@@ -151,37 +178,30 @@ static ssize_t dev_write(struct file *filep, const char *buffer, size_t len, lof
      * 3. Application interface
      * 
      **/
+    // if(strncmp(message, "a", 1) == 0)
+    // {
+    //     queue_work(get_mainFromCharDevice_wq(), get_mainFromCharDevice_work());
+    // }
 
-    int i;
-    for (i = 0; i < len; ++i)
-    {
-        printk(KERN_INFO "[CTRL][ C ] Received %d \n", buffer[i]);
-    }
+    // if(strncmp(message, "i", 1) == 0)
+    // {
+    //     queue_work(get_secondFromCharDevice_wq(), get_secondFromCharDevice_work());
+    // }
 
-    if(strncmp(message, "a", 1) == 0)
-    {
-        queue_work(get_mainFromCharDevice_wq(), get_mainFromCharDevice_work());
-    }
-
-    if(strncmp(message, "i", 1) == 0)
-    {
-        queue_work(get_secondFromCharDevice_wq(), get_secondFromCharDevice_work());
-    }
-
-    if (error_count==0)
-    {
-        size_of_message = strlen(message);
-        printk(KERN_INFO "[CTRL][ C ] Received %d characters from user-space\n", len);
-        return len;
-    } 
-    else 
-    {
-        printk(KERN_INFO "[CTRL][ C ] Failed to receive characters from user-space\n");
-        return -EFAULT;
-    }
+    // if (error_count==0)
+    // {
+    //     size_of_message = strlen(message);
+    //     printk(KERN_INFO "[CTRL][ C ] Received %d characters from user-space\n", len);
+    //     return len;
+    // } 
+    // else 
+    // {
+    //     printk(KERN_INFO "[CTRL][ C ] Failed to receive characters from user-space\n");
+    //     return -EFAULT;
+    // }
     
-    return CD_OK;
-}
+//     return CD_OK;
+// }
 
 static int dev_release(struct inode *inodep, struct file *filep)
 {
