@@ -45,8 +45,8 @@ void Debug::Info(const char * message, bool endLine)
 {
 	if(m_LogLevel >= LevelInfo)
 	{
-		std::cout << "[INFO] " << message
-		if(true == endLine ) std::cout << std::endl;
+		std::cout << "[INFO] " << message;
+		if(true == endLine) std::cout << std::endl;
 	}
 }
 
