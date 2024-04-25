@@ -8,12 +8,12 @@
 
 Debug::Debug() : m_LogLevel (LevelTodo) 
 {
-	Debug::Info("Debug  :: Initialise Debug Console");
+	Debug::Info("[Debug] Initialise Debug Console");
 }
 
 Debug::~Debug()
 {
-	Debug::Info("Debug  :: Terminate Debug Console");
+	Debug::Info("[Debug] Terminate Debug Console");
 }
 
 void Debug::SetLevel(LogLevel level)
@@ -47,10 +47,10 @@ void Debug::Todo(const char * message)
 
 void Debug::Read(const char * message)
 {
-	std::cout << "[ RX ] " << message << std::endl;
+	Debug::Info("[ RX ]");
 }
 
 void Debug::Write(void)
 {
-	std::cout << "[ TX ] ";
+	Debug::Info("[ TX ]");
 }

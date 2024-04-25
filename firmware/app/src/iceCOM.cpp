@@ -16,12 +16,12 @@ iceCOM::iceCOM():
 m_file_descriptor(0), 
 m_killThread(false)
 {
-	Debug::Info("iceCOM :: Initialise iceCOM Module");
+	Debug::Info("[iceCOM] Initialise iceCOM Module");
 }
 
 iceCOM::~iceCOM() 
 {
-	Debug::Info("iceCOM :: Destroying iceCOM Module");
+	Debug::Info("[iceCOM] Destroying iceCOM Module");
     if (m_iceThread.joinable()) 
     {
     	m_iceThread.join();
@@ -30,13 +30,13 @@ iceCOM::~iceCOM()
 
 void iceCOM::initThread()
 {
-	Debug::Info("iceCOM :: Init the iceCOMThread");
+	Debug::Info("[iceCOM] Init the iceCOMThread");
 	m_iceThread = std::thread(&iceCOM::iceCOMThread, this);
 }
 
 void iceCOM::iceCOMThread()
 {
-	Debug::Info("iceCOM :: Enter iceCOMThread");
+	Debug::Info("[iceCOM] Enter iceCOMThread");
 
     while(!m_killThread) 
     {
@@ -52,16 +52,16 @@ void iceCOM::iceCOMThread()
 
     	if(OK != device_write())
     	{
-			Debug::Error("iceCOM :: Cannot write into the console");
+			Debug::Error("[iceCOM] Cannot write into the console");
     	}
 
     	if(OK != device_read())
     	{
-			Debug::Error("iceCOM :: Cannot read from the console");
+			Debug::Error("[iceCOM] Cannot read from the console");
     	}
     }
 
-	Debug::Info("iceCOM :: Terminate iceCOMThread");
+	Debug::Info("[iceCOM] Terminate iceCOMThread");
 }
 
 int iceCOM::device_open(const char* device)
@@ -70,13 +70,13 @@ int iceCOM::device_open(const char* device)
 
 	if (m_file_descriptor < 0)
 	{
-		Debug::Error("iceCOM :: Failed to open Device");
+		Debug::Error("[iceCOM] Failed to open Device");
 		m_killThread = true;
 		return ERROR;
 	}
 	else
 	{
-		Debug::Info("iceCOM :: Device opened successfuly");
+		Debug::Info("[iceCOM] Device opened successfuly");
 		initThread();
 	}
 
@@ -91,13 +91,14 @@ int iceCOM::device_read()
 	ret = read(m_file_descriptor, console_RX, BUFFER_LENGTH);
 	if (ret == -1)
 	{
-	    Debug::Error("iceCOM :: Cannot read from kernel space");
+	    Debug::Error("[iceCOM] Cannot read from kernel space");
 	    return ERROR;
 	}
+	else
+	{
+		Debug::Read(console_RX);
+	}
 
-	Debug::Read(console_RX);
-
-	// clear the buffer
 	memset (console_RX, 0, BUFFER_LENGTH);
 
 	return OK;
@@ -105,8 +106,7 @@ int iceCOM::device_read()
 
 int iceCOM::device_write()
 {
-	int i;
-	int ret;
+	int ret = -1;
 	char console_TX[6];
 
 	Debug::Write();
@@ -129,13 +129,13 @@ int iceCOM::device_write()
 	}
 	else
 	{
-		Debug::Error("iceCOM :: Command not found");
+		Debug::Error("[iceCOM] Command not found");
 		ret = -1;
 	}
 
 	if (ret == -1)
 	{
-	    Debug::Error("iceCOM :: Cannot write to kernel space");
+	    Debug::Error("[iceCOM] Cannot write to kernel space");
 	    return ERROR;
 	}
 
