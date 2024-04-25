@@ -137,46 +137,47 @@ static ssize_t dev_read(struct file *filep, char *buffer, size_t len, loff_t *of
     return CD_OK;
 }
 
-static struct {
-    void *data;
+static struct 
+{
+    char *data;
     size_t length;
-} kernel_data;
+} read_data;
 
 static ssize_t dev_write(struct file *filep, const char __user *buffer, size_t len, loff_t *offset)
 {
-    void *kernel_data_ptr;
+    char *data;
     int error_count = 0;
+    size_t i;
 
-    // Allocate memory in the kernel space
-    kernel_data_ptr = kmalloc(len, GFP_KERNEL);
-    if (!kernel_data_ptr) {
-        return -ENOMEM; // Memory allocation failed
+    /* Allocate memory for the char array to store each character */
+    data = kmalloc(len + 1, GFP_KERNEL);
+    if (!data) 
+    {
+        /* Memory allocation failed */
+        return -ENOMEM;
     }
 
-    // Copy data from user space to kernel space
-    error_count = copy_from_user(kernel_data_ptr, buffer, len);
-    if (error_count != 0) {
-        kfree(kernel_data_ptr); // Free allocated memory
-        return -EFAULT; // Copy failed
+    /* Copy data from user space to kernel space */
+    error_count = copy_from_user(data, buffer, len);
+    if (error_count != 0) 
+    {
+        /* Free allocated memory */
+        kfree(data);
+        /* Copy failed */
+        return -EFAULT;
     }
 
-    // Update kernel_data struct with the copied data and its length
-    kernel_data.data = kernel_data_ptr;
-    kernel_data.length = len;
+    /* Null-terminate the char array */
+    data[len] = '\0';
 
-    printk(KERN_INFO "[CTRL][ C ] Kernel Data: %s \n", (char *)kernel_data.data);
+    /* Update read_data */
+    read_data.data = data;
+    read_data.length = len;
 
-    int kernel_int;
-    int *int_ptr = (int *)kernel_data.data;
-
-    if (kernel_data.length >= sizeof(int)) 
+    // Print each character of the data array
+    for (i = 0; i < read_data.length; i++) 
     {
-        kernel_int = *int_ptr;
-        printk(KERN_INFO "[CTRL][ C ] Kernel Data as Integer: %d\n", kernel_int);
-    } 
-    else 
-    {
-        printk(KERN_ERR "[CTRL][ C ] Not enough data to interpret as an integer.\n");
+        printk(KERN_INFO "[CTRL][ C ] Received Byte[%d]: %c\n", i, read_data.data[i]);
     }
 
     return CD_OK;
