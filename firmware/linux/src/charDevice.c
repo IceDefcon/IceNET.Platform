@@ -117,21 +117,24 @@ static int dev_open(struct inode *inodep, struct file *filep)
 static ssize_t dev_read(struct file *filep, char *buffer, size_t len, loff_t *offset)
 {
     int error_count = 0;
-    //
-    // Copy to user space :: *to, *from, size :: returns 0 on success
-    //
-    error_count = copy_to_user(buffer, message, size_of_message);
-    memset(message, 0, sizeof(message));
 
-    if (error_count==0)
+    /* Copy to user space :: *to, *from, size :: returns 0 on success */
+    error_count = copy_to_user(buffer, read_data.data, read_data.length);
+
+    read_data.data = 0;
+    read_data.length = 0;
+
+    if (0 == error_count)
     {
-        printk(KERN_INFO "[CTRL][ C ] Sent %d characters to user-space\n", size_of_message);
-        return (size_of_message = 0);  // clear the position to the start and return NULL
+        printk(KERN_INFO "[CTRL][ C ] Sent %d characters to user-space\n", read_data.length);
+        /* Clear the position to the start and return NULL */
+        return (read_data.length = 0);
     }
     else 
     {
         printk(KERN_INFO "[CTRL][ C ] Failed to send %d characters to user-space\n", error_count);
-        return -EFAULT; // Failed -- return a bad address message (i.e. -14)
+        /* Failed -- return a bad address message (i.e. -14) */
+        return -EFAULT;
     }
 
     return CD_OK;
