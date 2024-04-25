@@ -63,7 +63,7 @@ static void __exit fpga_driver_exit(void)
     charDeviceDestroy();
     stateMachineDestroy();
 
-    printk(KERN_INFO "[TERMINATE] Driver terminated successfully\n");
+    printk(KERN_INFO "[ TERMINATOR ] Driver terminated successfully\n");
 }
 
 module_init(fpga_driver_init);
