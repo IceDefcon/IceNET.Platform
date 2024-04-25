@@ -51,6 +51,18 @@ static struct file_operations fops =
    .release = dev_release,
 };
 
+static struct 
+{
+    char *data;
+    size_t length;
+} read_data;
+
+static struct 
+{
+    char *data;
+    size_t length;
+} write_data;
+
 void charDeviceInit(void)
 {
     majorNumber = register_chrdev(0, DEVICE_NAME, &fops);
@@ -118,17 +130,18 @@ static ssize_t dev_read(struct file *filep, char *buffer, size_t len, loff_t *of
 {
     int error_count = 0;
 
-    /* Copy to user space :: *to, *from, size :: returns 0 on success */
-    error_count = copy_to_user(buffer, read_data.data, read_data.length);
+    /* TODO :: Until Write data is ready */
+    write_data.data = read_data.data;
+    write_data.length = read_data.length;
 
-    read_data.data = 0;
-    read_data.length = 0;
+    /* Copy to user space :: *to, *from, size :: returns 0 on success */
+    error_count = copy_to_user(buffer, write_data.data, write_data.length);
 
     if (0 == error_count)
     {
-        printk(KERN_INFO "[CTRL][ C ] Sent %d characters to user-space\n", read_data.length);
+        printk(KERN_INFO "[CTRL][ C ] Sent %d characters to user-space\n", write_data.length);
         /* Clear the position to the start and return NULL */
-        return (read_data.length = 0);
+        return (write_data.length = 0);
     }
     else 
     {
@@ -137,14 +150,14 @@ static ssize_t dev_read(struct file *filep, char *buffer, size_t len, loff_t *of
         return -EFAULT;
     }
 
+    /* TODO :: Until Write data is ready */
+    read_data.data = 0;
+    read_data.length = 0;
+    write_data.data = 0;
+    write_data.length = 0;
+
     return CD_OK;
 }
-
-static struct 
-{
-    char *data;
-    size_t length;
-} read_data;
 
 static ssize_t dev_write(struct file *filep, const char __user *buffer, size_t len, loff_t *offset)
 {
