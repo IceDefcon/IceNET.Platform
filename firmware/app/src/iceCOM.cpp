@@ -105,6 +105,7 @@ int iceCOM::device_read()
 
 int iceCOM::device_write()
 {
+	int i;
 	int ret;
 	char console_TX[BUFFER_LENGTH];
 
@@ -121,30 +122,32 @@ int iceCOM::device_write()
 	{
     	m_killThread = true;
 	}
-	else if (std::strcmp(your_string_variable, "mag") == 0) /* Magnetometer */
+	else if (std::strcmp(console_TX, "mag") == 0) /* Magnetometer */
 	{
-	    for (int i = 0; i < 6; i++) 
+	    for (i = 0; i < 6; i++) 
 	    {
 	        console_TX[i] = 0x04 + i;
 	    }
 	}
-	else if (std::strcmp(your_string_variable, "hal") == 0) /* Hall resistance */
+	else if (std::strcmp(console_TX, "hal") == 0) /* Hall resistance */
 	{
-		console_TX[6] = 0x0A;
-		console_TX[7] = 0x0B;
-	}
-	else if (std::strcmp(your_string_variable, "gyr") == 0) /* Magnetometer */
-	{
-	    for (int i = 8; i < 14; i++) 
+	    for (i = 0; i < 2; i++) 
 	    {
-	        console_TX[i] = 0x0C + i - 8;
+	        console_TX[i] = 0x0A + i;
 	    }
 	}
-	else if (std::strcmp(your_string_variable, "acc") == 0) /* Magnetometer */
+	else if (std::strcmp(console_TX, "gyr") == 0) /* Magnetometer */
 	{
-	    for (int i = 14; i < 20; i++) 
+	    for (i = 0; i < 6; i++) 
 	    {
-	        console_TX[i] = 0x12 + i - 14;
+	        console_TX[i] = 0x0C + i;
+	    }
+	}
+	else if (std::strcmp(console_TX, "acc") == 0) /* Magnetometer */
+	{
+	    for (i = 0; i < 6; i++) 
+	    {
+	        console_TX[i] = 0x12 + i;
 	    }
 	}
 	else
