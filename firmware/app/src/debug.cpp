@@ -33,12 +33,20 @@ void Debug::Warning(const char * message)
 		std::cout << "[WARN] " << message << std::endl;
 }
 
-void Debug::Info(const char * message, bool endLine = true)
+void Debug::Info(const char* message)
+{
+    if (m_LogLevel >= LevelInfo)
+    {
+        std::cout << "[INFO] " << message << std::endl;
+    }
+}
+
+void Debug::Info(const char * message, bool endLine)
 {
 	if(m_LogLevel >= LevelInfo)
 	{
 		std::cout << "[INFO] " << message
-		if(true == endLine ) std:cout << std::endl;
+		if(true == endLine ) std::cout << std::endl;
 	}
 }
 
