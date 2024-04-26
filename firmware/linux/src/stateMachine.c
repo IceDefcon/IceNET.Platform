@@ -36,10 +36,7 @@ static struct stateMachineStaus
 
 /* SET STATE */ void set_stateMachineState(stateMachineType newState)
 {
-    if (status != NULL) 
-    {
-        stateMachineStaus->state = newState;
-    }
+    stateMachineStaus->state = newState;
 }
 
 /**
