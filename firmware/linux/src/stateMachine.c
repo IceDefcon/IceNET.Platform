@@ -84,7 +84,7 @@ static int StateMachineThread(void *data)
 
 void stateMachineInit(void)
 {
-    set_stateMachineState(IDLE);
+    set_stateMachine(IDLE);
 
     thread_handle = kthread_create(StateMachineThread, NULL, "SM thread handle");
     
