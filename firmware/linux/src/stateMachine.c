@@ -36,7 +36,7 @@ static struct stateMachineStaus
 
 /* SET STATE */ void set_stateMachineState(stateMachineType newState)
 {
-    stateMachineStaus->state = newState;
+    stateMachineStaus.state = newState;
 }
 
 /**
@@ -62,7 +62,7 @@ static int StateMachineThread(void *data)
             transfer->ready = false;
         } 
 
-        switch(get_stateMachineStaus().state)
+        switch(get_stateMachineStaus()->state)
         {
             case IDLE:
                 // Handle IDLE state logic
