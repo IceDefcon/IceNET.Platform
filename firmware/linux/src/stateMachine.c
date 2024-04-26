@@ -70,17 +70,14 @@ static int StateMachineThread(void *data)
 
             case SPI:
                 printk(KERN_INFO "[CTRL][STM] SPI State [%d]\n", counter);
-                STATE = IDLE;  // Transition to IDLE state
                 break;
 
             case I2C:
                 printk(KERN_INFO "[CTRL][STM] I2C State [%d]\n", counter);
-                STATE = IDLE;  // Transition to IDLE state
                 break;
 
             case USER:
                 printk(KERN_INFO "[CTRL][STM] USER State [%d]\n", counter);
-                STATE = IDLE;  // Transition to IDLE state
                 break;
 
             default:
