@@ -39,7 +39,7 @@ static struct transfer_data
     bool ready;
 } read_data;
 
-/* GET TRANSFER DATA */ struct transfer_data* get_transfer_data(void) 
+/* GET TRANSFER DATA */ struct transfer_data* get_transfer_data(void);
 
 void charDeviceInit(void);
 void charDeviceDestroy(void);
