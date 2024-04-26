@@ -92,7 +92,7 @@ static int StateMachineThread(void *data)
     return SM_OK;
 }
 
-void stateMachineInit(stateMachineType initial_state)
+void stateMachineInit(void)
 {
     set_stateMachineState(IDLE);
 
