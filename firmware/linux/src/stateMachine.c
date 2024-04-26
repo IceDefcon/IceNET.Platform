@@ -60,7 +60,7 @@ static int StateMachineThread(void *data)
                 {
                     printk(KERN_INFO "[CTRL][STM] SPI Data Ready\n");
                     transfer->ready = false;
-                    nextState = IDLE
+                    nextState = IDLE;
                 }
                 break;
 
