@@ -51,17 +51,19 @@ static struct file_operations fops =
    .release = dev_release,
 };
 
-static struct 
+static void init_transfer_data(void)
 {
-    char *data;
-    size_t length;
-} read_data;
+    read_data.data = NULL;
+    read_data.length = 0;
+    read_data.ready = false;
 
-static struct 
+    printk(KERN_ALERT "[INIT][ C ] Initialize transfer data\n");
+}
+
+/* GET TRANSFER DATA */ struct transfer_data* get_transfer_data(void) 
 {
-    char *data;
-    size_t length;
-} write_data;
+    return &read_data;
+}
 
 void charDeviceInit(void)
 {
@@ -98,6 +100,8 @@ void charDeviceInit(void)
         printk(KERN_ALERT "[INIT][ C ] Create char Device\n");
     }
 
+    init_transfer_data();
+
     printk(KERN_ALERT "[INIT][ C ] Lock on Char Device Device Mutex\n");
     mutex_init(&com_mutex);
 }
@@ -130,9 +134,9 @@ static ssize_t dev_read(struct file *filep, char *buffer, size_t len, loff_t *of
 {
     int error_count = 0;
 
-    /* TODO :: Until Write data is ready */
-    write_data.data = read_data.data;
-    write_data.length = read_data.length;
+    /* TODO :: No feedback so far */
+    write_data.data = 0;
+    write_data.length = 0;
 
     /* Copy to user space :: *to, *from, size :: returns 0 on success */
     error_count = copy_to_user(buffer, write_data.data, write_data.length);
@@ -149,12 +153,6 @@ static ssize_t dev_read(struct file *filep, char *buffer, size_t len, loff_t *of
         /* Failed -- return a bad address message (i.e. -14) */
         return -EFAULT;
     }
-
-    /* TODO :: Until Write data is ready */
-    read_data.data = 0;
-    read_data.length = 0;
-    write_data.data = 0;
-    write_data.length = 0;
 
     return CD_OK;
 }
@@ -189,6 +187,7 @@ static ssize_t dev_write(struct file *filep, const char __user *buffer, size_t l
     /* Update read_data */
     read_data.data = data;
     read_data.length = len;
+    read_data.ready = true;
 
     // Print each character of the data array
     for (i = 0; i < read_data.length; i++) 

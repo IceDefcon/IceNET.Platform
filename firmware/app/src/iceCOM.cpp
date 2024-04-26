@@ -40,15 +40,15 @@ void iceCOM::iceCOMThread()
 
     while(!m_killThread) 
     {
-        //////////////////
-        // 				//
-        // 				//
-        // 				//
-        // Thread  Work //
-        // 				//
-        // 				//
-        // 				//
-        //////////////////
+    	/*!
+    	 * 
+    	 * ----===[ TODO ]===----
+    	 * 
+    	 * In addition we can print some feedback
+    	 * information on the [ RX ] console 
+    	 * when SPI transfers are executed
+    	 * 
+    	 */
 
     	if(OK != device_write())
     	{
@@ -56,6 +56,12 @@ void iceCOM::iceCOMThread()
     	}
     	else
     	{
+    		/**
+    		 * 
+    		 * At the moment Feedback only print info 
+    		 * about successfully transfered command 
+    		 * 
+    		 */
 	    	if(OK != device_read())
 	    	{
 				Debug::Error("[iceCOM] Cannot read from the console");

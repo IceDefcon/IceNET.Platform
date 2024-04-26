@@ -10,6 +10,7 @@
 #include <linux/delay.h> // For msleep
 
 #include "stateMachine.h"
+#include "charDevice.h"
 
 /////////////////////////
 //                     //
@@ -36,34 +37,40 @@ static struct task_struct *thread_handle;
 static int StateMachineThread(void *data)
 {
     int counter = 0;
-
     stateMachineType STATE = IDLE;
+    struct transfer_data* transfer = get_transfer_data();
 
     while (!kthread_should_stop()) 
     {
+        if (true == transfer->ready)
+        {
+            printk(KERN_INFO "[CTRL][STM] SPI Data Ready\n");
+            transfer->ready = false;
+        } 
+
         switch(STATE)
         {
             case IDLE:
-                // printk(KERN_INFO "[FPGA][STM] Idle State [%d]\n",counter);
+                // Handle IDLE state logic
                 break;
 
             case SPI:
-                printk(KERN_INFO "[CTRL][STM] SPI State [%d]\n",counter);
-                STATE = IDLE;
+                printk(KERN_INFO "[CTRL][STM] SPI State [%d]\n", counter);
+                STATE = IDLE;  // Transition to IDLE state
                 break;
 
             case I2C:
-                printk(KERN_INFO "[CTRL][STM] I2C State [%d]\n",counter);
-                STATE = IDLE;
+                printk(KERN_INFO "[CTRL][STM] I2C State [%d]\n", counter);
+                STATE = IDLE;  // Transition to IDLE state
                 break;
 
             case USER:
-                printk(KERN_INFO "[CTRL][STM] USER State [%d]\n",counter);
-                STATE = IDLE;
+                printk(KERN_INFO "[CTRL][STM] USER State [%d]\n", counter);
+                STATE = IDLE;  // Transition to IDLE state
                 break;
 
             default:
-                printk(KERN_INFO "[CTRL][STM] Unknown State [%d]\n",counter);
+                printk(KERN_INFO "[CTRL][STM] Unknown State [%d]\n", counter);
                 return EINVAL;
         }
 
