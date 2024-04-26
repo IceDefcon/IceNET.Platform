@@ -23,12 +23,12 @@
 /////////////////////////
 
 
-/* GET STATE */ struct stateMachine* get_stateMachine(void)
+/* GET STATE */ struct stateMachine* getStateMachine(void)
 {
     return &stateStaus;
 }
 
-/* SET STATE */ void set_stateMachine(stateType newState)
+/* SET STATE */ void setStateMachine(stateType newState)
 {
     stateStaus.state = newState;
 }
@@ -43,11 +43,12 @@
 static int StateMachineThread(void *data)
 {
     int counter = 0;
+    static stateType nextState = IDLE;
     struct transfer_data* transfer = get_transfer_data();
 
     while (!kthread_should_stop()) 
     {
-        switch(get_stateMachine()->state)
+        switch(getStateMachine()->state)
         {
             case IDLE:
                 printk(KERN_INFO "[CTRL][STM] IDLE mode [%d]\n", counter);
@@ -59,6 +60,7 @@ static int StateMachineThread(void *data)
                 {
                     printk(KERN_INFO "[CTRL][STM] SPI Data Ready\n");
                     transfer->ready = false;
+                    nextState = IDLE
                 }
                 break;
 
@@ -66,8 +68,8 @@ static int StateMachineThread(void *data)
                 printk(KERN_INFO "[CTRL][STM] I2C mode [%d]\n", counter);
                 break;
 
-            case USER:
-                printk(KERN_INFO "[CTRL][STM] USER mode [%d]\n", counter);
+            case DMA:
+                printk(KERN_INFO "[CTRL][STM] DMA mode [%d]\n", counter);
                 break;
 
             default:
@@ -77,6 +79,8 @@ static int StateMachineThread(void *data)
 
         msleep(1000);  // Delay for 1 second
         counter++;
+
+        setStateMachine(nextState);
     }
 
     return SM_OK;
@@ -84,7 +88,7 @@ static int StateMachineThread(void *data)
 
 void stateMachineInit(void)
 {
-    set_stateMachine(IDLE);
+    setStateMachine(IDLE);
 
     thread_handle = kthread_create(StateMachineThread, NULL, "SM thread handle");
     

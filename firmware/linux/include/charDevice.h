@@ -23,16 +23,14 @@
 
 #define CD_OK 0
 
-/* Feedback data to user-space */
-static struct 
+static struct /* Feedback data to user-space */
 {
     char *data;
     size_t length;
     bool ready
 } write_data;
 
-/* Transfer data from user-space */
-static struct transfer_data
+static struct transfer_data /* Transfer data from user-space */
 {
     char *data;
     size_t length;
