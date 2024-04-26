@@ -62,7 +62,7 @@ static int StateMachineThread(void *data)
             transfer->ready = false;
         } 
 
-        switch(get_stateMachineStaus()->state)
+        switch(get_stateMachineStaus().state)
         {
             case IDLE:
                 // Handle IDLE state logic
