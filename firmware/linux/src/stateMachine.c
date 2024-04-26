@@ -47,7 +47,7 @@ static int StateMachineThread(void *data)
 
     while (!kthread_should_stop()) 
     {
-        switch(get_stateMachineStaus()->state)
+        switch(get_stateMachine()->state)
         {
             case IDLE:
                 printk(KERN_INFO "[CTRL][STM] IDLE mode [%d]\n", counter);
