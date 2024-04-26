@@ -23,12 +23,12 @@
 /////////////////////////
 
 
-/* GET STATE */ struct stateMachine* get_stateStaus(void)
+/* GET STATE */ struct stateMachine* get_stateMachine(void)
 {
     return &stateStaus;
 }
 
-/* SET STATE */ void set_stateMachineState(stateType newState)
+/* SET STATE */ void set_stateMachine(stateType newState)
 {
     stateStaus.state = newState;
 }

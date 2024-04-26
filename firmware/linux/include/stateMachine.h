@@ -36,7 +36,7 @@ static struct stateMachine
 } stateStaus;
 
 /* GET STATE */ struct stateMachine* get_stateMachine(void);
-/* SET STATE */ void set_stateMachineState(stateType newState);
+/* SET STATE */ void set_stateMachine(stateType newState);
 
 
 void stateMachineInit(void);
