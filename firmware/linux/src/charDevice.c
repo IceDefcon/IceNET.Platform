@@ -196,7 +196,7 @@ static ssize_t dev_write(struct file *filep, const char __user *buffer, size_t l
         printk(KERN_INFO "[CTRL][ C ] Received Byte[%zu]: 0x%02x\n", i, (unsigned char)read_data.data[i]);
     }
 
-    set_stateMachine(SPI);
+    setStateMachine(SPI);
 
     return CD_OK;
 }
