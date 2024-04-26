@@ -24,6 +24,24 @@
 
 static struct task_struct *thread_handle;
 
+static struct stateMachineStaus
+{
+    stateMachineType state;
+} stateMachineStaus;
+
+/* GET STATE */ struct stateMachineStaus* get_stateMachineStaus(void)
+{
+    return &stateMachineStaus;
+}
+
+/* SET STATE */ void set_stateMachineState(stateMachineType newState)
+{
+    if (status != NULL) 
+    {
+        stateMachineStaus->state = newState;
+    }
+}
+
 /**
  * 
  * TODO :: Waiting for RTL to be continued
@@ -37,7 +55,6 @@ static struct task_struct *thread_handle;
 static int StateMachineThread(void *data)
 {
     int counter = 0;
-    stateMachineType STATE = IDLE;
     struct transfer_data* transfer = get_transfer_data();
 
     while (!kthread_should_stop()) 
@@ -48,7 +65,7 @@ static int StateMachineThread(void *data)
             transfer->ready = false;
         } 
 
-        switch(STATE)
+        switch(get_stateMachineStaus()->state)
         {
             case IDLE:
                 // Handle IDLE state logic
@@ -81,9 +98,12 @@ static int StateMachineThread(void *data)
     return SM_OK;
 }
 
-void stateMachineInit(void)
+void stateMachineInit(stateMachineType initial_state)
 {
+    set_stateMachineState(IDLE);
+
     thread_handle = kthread_create(StateMachineThread, NULL, "SM thread handle");
+    
     if (IS_ERR(thread_handle)) 
     {
         printk(KERN_ERR "[INIT][STM] Failed to create kernel thread. Error code: %ld\n", PTR_ERR(thread_handle));

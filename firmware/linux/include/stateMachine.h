@@ -28,6 +28,10 @@ typedef enum
     USER    = 3
 } stateMachineType;
 
+/* GET STATE */ struct stateMachineStaus* get_stateMachineStaus(void);
+/* SET STATE */ void set_stateMachineState(stateMachineType newState);
+
+
 void stateMachineInit(void);
 void stateMachineDestroy(void);
 

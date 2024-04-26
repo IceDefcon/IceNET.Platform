@@ -119,13 +119,13 @@ signal isCONFIG : std_logic := '0';
 signal isDEVICE : std_logic := '0';
 signal isDONE : std_logic := '0';
 
--- L3G4200D Gyroscope registers
-signal OUT_X_L : std_logic_vector(7 downto 0):= (others => '0');
-signal OUT_X_H : std_logic_vector(7 downto 0):= (others => '0');
-signal OUT_Y_L : std_logic_vector(7 downto 0):= (others => '0');
-signal OUT_Y_H : std_logic_vector(7 downto 0):= (others => '0');
-signal OUT_Z_L : std_logic_vector(7 downto 0):= (others => '0');
-signal OUT_Z_H : std_logic_vector(7 downto 0):= (others => '0');
+-- BMI160 Gyroscope registers
+signal mag_z_15_8 : std_logic_vector(7 downto 0):= (others => '0');
+signal mag_z_7_0 : std_logic_vector(7 downto 0):= (others => '0');
+signal mag_y_15_8 : std_logic_vector(7 downto 0):= (others => '0');
+signal mag_y_7_0 : std_logic_vector(7 downto 0):= (others => '0');
+signal mag_x_15_8 : std_logic_vector(7 downto 0):= (others => '0');
+signal mag_x_7_0 : std_logic_vector(7 downto 0):= (others => '0');
 
 ----------------------------------------------------------------------------------------------------------------
 -- COMPONENTS DECLARATION
