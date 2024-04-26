@@ -45,9 +45,6 @@ static struct stateMachineStaus
  * 
  * State machine is running but not configured
  * 
- * Require void pointer due to 
- * kthread init NULL Parameter
- * 
  */
 static int StateMachineThread(void *data)
 {
@@ -56,32 +53,32 @@ static int StateMachineThread(void *data)
 
     while (!kthread_should_stop()) 
     {
-        if (true == transfer->ready)
-        {
-            printk(KERN_INFO "[CTRL][STM] SPI Data Ready\n");
-            transfer->ready = false;
-        } 
-
         switch(get_stateMachineStaus()->state)
         {
             case IDLE:
-                // Handle IDLE state logic
+                printk(KERN_INFO "[CTRL][STM] SPI mode [%d]\n", counter);
                 break;
 
             case SPI:
-                printk(KERN_INFO "[CTRL][STM] SPI State [%d]\n", counter);
+
+                printk(KERN_INFO "[CTRL][STM] SPI mode [%d]\n", counter);
+                if (true == transfer->ready)
+                {
+                    printk(KERN_INFO "[CTRL][STM] SPI Data Ready\n");
+                    transfer->ready = false;
+                }
                 break;
 
             case I2C:
-                printk(KERN_INFO "[CTRL][STM] I2C State [%d]\n", counter);
+                printk(KERN_INFO "[CTRL][STM] I2C mode [%d]\n", counter);
                 break;
 
             case USER:
-                printk(KERN_INFO "[CTRL][STM] USER State [%d]\n", counter);
+                printk(KERN_INFO "[CTRL][STM] USER mode [%d]\n", counter);
                 break;
 
             default:
-                printk(KERN_INFO "[CTRL][STM] Unknown State [%d]\n", counter);
+                printk(KERN_INFO "[CTRL][STM] Unknown mode [%d]\n", counter);
                 return EINVAL;
         }
 
