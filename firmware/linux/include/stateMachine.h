@@ -20,16 +20,23 @@
 
 #define SM_OK 0
 
+static struct task_struct *thread_handle;
+
 typedef enum 
 {
     IDLE    = 0,
     SPI     = 1,
     I2C     = 2,    
     USER    = 3
-} stateMachineType;
+} stateType;
 
-/* GET STATE */ struct stateMachineStaus* get_stateMachineStaus(void);
-/* SET STATE */ void set_stateMachineState(stateMachineType newState);
+static struct stateMachine 
+{ 
+    stateType state;
+} stateStaus;
+
+/* GET STATE */ struct stateMachine* get_stateMachine(void);
+/* SET STATE */ void set_stateMachineState(stateType newState);
 
 
 void stateMachineInit(void);

@@ -22,21 +22,15 @@
 //                     //
 /////////////////////////
 
-static struct task_struct *thread_handle;
 
-static struct stateMachineStaus
+/* GET STATE */ struct stateMachine* get_stateStaus(void)
 {
-    stateMachineType state;
-} stateMachineStaus;
-
-/* GET STATE */ struct stateMachineStaus* get_stateMachineStaus(void)
-{
-    return &stateMachineStaus;
+    return &stateStaus;
 }
 
-/* SET STATE */ void set_stateMachineState(stateMachineType newState)
+/* SET STATE */ void set_stateMachineState(stateType newState)
 {
-    stateMachineStaus.state = newState;
+    stateStaus.state = newState;
 }
 
 /**
@@ -56,11 +50,10 @@ static int StateMachineThread(void *data)
         switch(get_stateMachineStaus()->state)
         {
             case IDLE:
-                printk(KERN_INFO "[CTRL][STM] SPI mode [%d]\n", counter);
+                printk(KERN_INFO "[CTRL][STM] IDLE mode [%d]\n", counter);
                 break;
 
             case SPI:
-
                 printk(KERN_INFO "[CTRL][STM] SPI mode [%d]\n", counter);
                 if (true == transfer->ready)
                 {
