@@ -11,6 +11,7 @@
 
 #include "stateMachine.h"
 #include "charDevice.h"
+#include "spiWork.h"
 
 /////////////////////////
 //                     //
@@ -59,6 +60,7 @@ static int StateMachineThread(void *data)
                 {
                     printk(KERN_INFO "[CTRL][STM] SPI Data Ready\n");
                     transfer->ready = false;
+                    queue_work(get_mainFromCharDevice_wq(), get_mainFromCharDevice_work());
                     setStateMachine(IDLE);
                 }
                 break;
