@@ -126,12 +126,12 @@ int iceCOM::device_write()
     	m_killThread = true;
     	/**
     	 * 
-    	 * TODO
+    	 *  TODO
     	 * 
     	 * Consider where to close char deveice
     	 * 
     	 */
-    	iceCOM::device_close();
+    	// iceCOM::device_close();
 	}
 	else if (std::strcmp(console_TX, "mag") == 0) /* Magnetometer */
 	{
