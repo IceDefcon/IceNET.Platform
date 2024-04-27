@@ -51,7 +51,7 @@ static int StateMachineThread(void *data)
         switch(getStateMachine()->state)
         {
             case IDLE:
-                printk(KERN_INFO "[CTRL][STM] IDLE mode [%d]\n", counter);
+                // printk(KERN_INFO "[CTRL][STM] IDLE mode [%d]\n", counter);
                 break;
 
             case SPI:
