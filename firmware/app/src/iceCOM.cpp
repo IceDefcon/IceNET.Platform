@@ -130,8 +130,9 @@ int iceCOM::device_write()
     	 * 
     	 * Consider where to close char deveice
     	 * 
+    	 * iceCOM::device_close();
+    	 * 
     	 */
-    	// iceCOM::device_close();
 	}
 	else if (std::strcmp(console_TX, "mag") == 0) /* Magnetometer */
 	{
