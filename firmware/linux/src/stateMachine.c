@@ -80,7 +80,10 @@ static int StateMachineThread(void *data)
         msleep(1000);  // Delay for 1 second
         counter++;
 
-        setStateMachine(nextState);
+        if(getStateMachine()->state != nextState)
+        {
+            setStateMachine(nextState);
+        }
     }
 
     return SM_OK;
