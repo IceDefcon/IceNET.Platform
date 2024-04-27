@@ -187,6 +187,23 @@ void mainFromCharDevice(struct work_struct *work)
     int ret;
     int i;
 
+    /*!
+     * 
+     * 
+     * HERE I need data that
+     * been transfered from user-space
+     * 
+     * 
+     * ????????????????
+     * ????????????????
+     * ????????????????
+     * 
+     * Please continue
+     * 
+     */
+
+    fail_line
+
     memset(&transfer, 0, sizeof(transfer));
     transfer.tx_buf = spi_tx_at_mainFromCharDevice;
     transfer.rx_buf = spi_rx_at_mainFromCharDevice;
