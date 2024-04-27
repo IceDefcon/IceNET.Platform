@@ -60,7 +60,7 @@ static int StateMachineThread(void *data)
                 {
                     printk(KERN_INFO "[CTRL][STM] SPI Data Ready\n");
                     transfer->ready = false;
-                    // nextState = IDLE;
+                    nextState = IDLE;
                 }
                 break;
 
@@ -80,7 +80,7 @@ static int StateMachineThread(void *data)
         msleep(1000);  // Delay for 1 second
         counter++;
 
-        // setStateMachine(nextState);
+        setStateMachine(nextState);
     }
 
     return SM_OK;
