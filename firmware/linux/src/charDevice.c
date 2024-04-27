@@ -42,15 +42,14 @@ static DEFINE_MUTEX(com_mutex);
 static int dev_open(struct inode *inodep, struct file *filep);
 static ssize_t dev_read(struct file *, char *, size_t, loff_t *);
 static ssize_t dev_write(struct file *, const char *, size_t, loff_t *);
-static int dev_close(struct inode *inodep, struct file *filep);
+static int dev_release(struct inode *inodep, struct file *filep);
 
 static struct file_operations fops =
 {
    .open = dev_open,
    .read = dev_read,
    .write = dev_write,
-   // Do I need close
-   .close = dev_close,
+   .release = dev_release,
 };
 
 static void init_transfer_data(void)
@@ -236,7 +235,7 @@ static ssize_t dev_write(struct file *filep, const char __user *buffer, size_t l
 //     return CD_OK;
 // }
 
-static int dev_close(struct inode *inodep, struct file *filep)
+static int dev_release(struct inode *inodep, struct file *filep)
 {
     mutex_unlock(&com_mutex);
     printk(KERN_INFO "[CTRL][ C ] Device successfully closed\n");
