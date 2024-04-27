@@ -43,7 +43,6 @@
 static int StateMachineThread(void *data)
 {
     int counter = 0;
-    static stateType nextState = IDLE;
     struct transfer_data* transfer = get_transfer_data();
 
     while (!kthread_should_stop()) 
@@ -60,7 +59,7 @@ static int StateMachineThread(void *data)
                 {
                     printk(KERN_INFO "[CTRL][STM] SPI Data Ready\n");
                     transfer->ready = false;
-                    nextState = IDLE;
+                    setStateMachine(IDLE);
                 }
                 break;
 
@@ -79,11 +78,6 @@ static int StateMachineThread(void *data)
 
         msleep(1000);  // Delay for 1 second
         counter++;
-
-        if(getStateMachine()->state != nextState)
-        {
-            setStateMachine(nextState);
-        }
     }
 
     return SM_OK;
