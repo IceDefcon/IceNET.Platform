@@ -202,7 +202,6 @@ void mainFromCharDevice(struct work_struct *work)
      * 
      */
 
-    fail_line
 
     memset(&transfer, 0, sizeof(transfer));
     transfer.tx_buf = spi_tx_at_mainFromCharDevice;

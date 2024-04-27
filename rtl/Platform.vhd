@@ -31,7 +31,7 @@ port
     BYPASS_MISO : in std_logic; -- PIN_A16 :: ORANGE :: SA0
     BYPASS_MOSI : out std_logic;  -- PIN_A17 :: RED    :: SDX
     BYPASS_SCLK : out std_logic;  -- PIN_A18 :: BROWN  :: SCX
-    -- I2C Gyroscope
+    -- I2C BMI160
     I2C_SDA : inout std_logic; -- PIN_A9  :: BBB P9_20 :: CPU.BLUE <> FPGA.BLUE <> GYRO.WHITE
     I2C_SCK : inout std_logic; -- PIN_A10 :: BBB P9_19 :: CPU.ORANGE <> FPGA.GREEN <> GYRO.PURPLE
 	-- Interrupts 
