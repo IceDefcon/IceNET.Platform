@@ -134,7 +134,7 @@ int iceCOM::device_write()
     	 * 
     	 */
 	}
-	else if (std::strcmp(console_TX, "mag") == 0)
+	else if (std::strcmp(console_TX, "id") == 0)
 	{
 		console_TX[0] = 0x00;
 		ret = write(m_file_descriptor, console_TX, 1); /* id */
