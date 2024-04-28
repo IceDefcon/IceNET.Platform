@@ -182,16 +182,6 @@ static ssize_t dev_write(struct file *filep, const char __user *buffer, size_t l
         return -EFAULT;
     }
 
-    if(strncmp(data[0], "a", 1) == 0)
-    {
-        queue_work(get_mainFromCharDevice_wq(), get_mainFromCharDevice_work());
-    }
-
-    if(strncmp(data[0], "i", 1) == 0)
-    {
-        queue_work(get_secondFromCharDevice_wq(), get_secondFromCharDevice_work());
-    }
-
     /* Null-terminate the char array */
     data[len] = '\0';
 
@@ -210,40 +200,6 @@ static ssize_t dev_write(struct file *filep, const char __user *buffer, size_t l
 
     return CD_OK;
 }
-
-    /**
-     * 
-     * TODO
-     * 
-     * 1. Need struct with parameters to update
-     * 2. State machine processing
-     * 3. Application interface
-     * 
-     **/
-    // if(strncmp(data[0], "a", 1) == 0)
-    // {
-    //     queue_work(get_mainFromCharDevice_wq(), get_mainFromCharDevice_work());
-    // }
-
-    // if(strncmp(data[0], "i", 1) == 0)
-    // {
-    //     queue_work(get_secondFromCharDevice_wq(), get_secondFromCharDevice_work());
-    // }
-
-    // if (error_count==0)
-    // {
-    //     size_of_message = strlen(message);
-    //     printk(KERN_INFO "[CTRL][ C ] Received %d characters from user-space\n", len);
-    //     return len;
-    // } 
-    // else 
-    // {
-    //     printk(KERN_INFO "[CTRL][ C ] Failed to receive characters from user-space\n");
-    //     return -EFAULT;
-    // }
-    
-//     return CD_OK;
-// }
 
 static int dev_release(struct inode *inodep, struct file *filep)
 {
