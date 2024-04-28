@@ -17,15 +17,15 @@ port
 	-- FPGA Reference Clock
     CLOCK_50MHz : in std_logic; -- PIN_T2
     -- BBB SPI0
-    MAIN_CS : in std_logic;    -- PIN_A5   :: BBB P9_17 :: PULPLE :: SPI0_CS0
-    MAIN_MISO : out std_logic; -- PIN_A6   :: BBB P9_21 :: BROWN  :: SPI0_D0
-    MAIN_MOSI : in std_logic;  -- PIN_A7   :: BBB P9_18 :: BLUE   :: SPI0_D1
-    MAIN_SCLK : in std_logic;  -- PIN_A8   :: BBB P9_22 :: BLACK  :: SPI0_SCLK
+    PRIMARY_CS : in std_logic;    -- PIN_A5   :: BBB P9_17 :: PULPLE :: SPI0_CS0
+    PRIMARY_MISO : out std_logic; -- PIN_A6   :: BBB P9_21 :: BROWN  :: SPI0_D0
+    PRIMARY_MOSI : in std_logic;  -- PIN_A7   :: BBB P9_18 :: BLUE   :: SPI0_D1
+    PRIMARY_SCLK : in std_logic;  -- PIN_A8   :: BBB P9_22 :: BLACK  :: SPI0_SCLK
     -- BBB SPI1
-    SECOND_CS : in std_logic;    -- PIN_B5 :: BBB P9_28 :: ORANGE :: SPI1_CS0
-    SECOND_MISO : out std_logic; -- PIN_B6 :: BBB P9_29 :: BLUE   :: SPI1_D0
-    SECOND_MOSI : in std_logic;  -- PIN_B7 :: BBB P9_30 :: YELOW  :: SPI1_D1
-    SECOND_SCLK : in std_logic;  -- PIN_B8 :: BBB P9_31 :: GREEN  :: SPI1_SCLK
+    SECONDARY_CS : in std_logic;    -- PIN_B5 :: BBB P9_28 :: ORANGE :: SPI1_CS0
+    SECONDARY_MISO : out std_logic; -- PIN_B6 :: BBB P9_29 :: BLUE   :: SPI1_D0
+    SECONDARY_MOSI : in std_logic;  -- PIN_B7 :: BBB P9_30 :: YELOW  :: SPI1_D1
+    SECONDARY_SCLK : in std_logic;  -- PIN_B8 :: BBB P9_31 :: GREEN  :: SPI1_SCLK
     -- Bypass
     BYPASS_CS : out std_logic;  -- PIN_A15 :: YELLOW :: CS
     BYPASS_MISO : in std_logic; -- PIN_A16 :: ORANGE :: SA0
@@ -60,65 +60,21 @@ architecture rtl of Platform is
 -- Signals
 ----------------------------------------------------------------------------------------------------------------
 
--- SM Init
-signal system_start : std_logic := '0';
 -- SM Reset
 signal reset_button : std_logic := '0';
---SM Parameters
-constant smStartDelay : std_logic_vector(26 downto 0):= "101111101011110000011111111";
-constant smStateDelay : std_logic_vector(24 downto 0):= "1011111010111100000111111";
--- SM Status Register
-signal status_sck : std_logic_vector(3 downto 0) := "0000";
-signal status_sda : std_logic_vector(3 downto 0) := "0000";
-
 -- Interrupt Pulse Generator
 signal interrupt_divider : integer := 2;
 signal interrupt_period : std_logic_vector(25 downto 0) := "10111110101111000001111111"; -- [50*10^6 - 1]
 signal interrupt_length : std_logic_vector(3 downto 0) := "1111";
 signal interrupt_signal : std_logic := '0';
-
--- I2C Return Data
-signal return_data : std_logic_vector(7 downto 0) := "00011000"; -- 0x81
-signal second_data : std_logic_vector(7 downto 0) := "00011110"; -- 0xE1
-
--- SPI Kernel Feedback Data
-signal mainSpiDataFeedback_MISO : std_logic := '0';
-signal secondSpiDataFeedback_MISO : std_logic := '0';
-
--- Delay Timers
-signal system_timer : std_logic_vector(26 downto 0) := (others => '0');
-signal init_timer : std_logic_vector(24 downto 0) := (others => '0');
-signal config_timer : std_logic_vector(24 downto 0) := (others => '0');
-signal send_timer : std_logic_vector(24 downto 0) := (others => '0');	
-signal done_timer : std_logic_vector(24 downto 0) := (others => '0');
-
--- Process Timers
-signal status_timer : std_logic_vector(15 downto 0) := (others => '0');
-signal sck_timer : std_logic_vector(7 downto 0) := (others => '0');
-signal sda_timer : std_logic_vector(8 downto 0) := (others => '0');
-signal sck_timer_toggle : std_logic := '0';
-
--- Parametric offset
-signal sda_offset : std_logic_vector(15 downto 0) := (others => '0');
-
---I2c state machine
-type STATE is 
-(
-	IDLE,
-	INIT,
-	CONFIG,
-	SEND,
-	DONE
-);
-signal state_current, state_next: STATE := IDLE;
-
--- Status Indicators
-signal isIDLE : std_logic := '0';
-signal isINIT : std_logic := '0';
-signal isCONFIG : std_logic := '0';
-signal isDEVICE : std_logic := '0';
-signal isDONE : std_logic := '0';
-
+-- Spi.0 Primary
+signal primary_ready_MISO : std_logic := '0';
+signal primary_parallel_MISO : std_logic_vector(7 downto 0) := "00011000"; -- 0x81
+signal primary_parallel_MOSI : std_logic_vector(7 downto 0) := "00011000"; -- 0x81
+-- Spi.1 Secondary
+signal secondary_ready_MISO : std_logic := '0';
+signal secondary_parallel_MISO : std_logic_vector(7 downto 0) := "00011110"; -- 0xE1
+signal secondary_parallel_MOSI : std_logic_vector(7 downto 0) := "00011110"; -- 0xE1
 -- BMI160 Gyroscope registers
 signal mag_z_15_8 : std_logic_vector(7 downto 0):= (others => '0');
 signal mag_z_7_0 : std_logic_vector(7 downto 0):= (others => '0');
@@ -145,13 +101,17 @@ port
 );
 end component;
 
-component SpiDataFeedback
+component SpiProcessing
 Port 
 (
     CLOCK : in  std_logic;
     SCLK : in std_logic;
-    DATA : in std_logic_vector(7 downto 0);
-    synced_miso : out std_logic
+
+    SERIAL_MOSI : in std_logic;
+    PARALLEL_MOSI : out std_logic_vector(7 downto 0);
+
+    PARALLEL_MISO : in std_logic_vector(7 downto 0);
+    SERIAL_MISO : out std_logic
 );
 end component;
 
@@ -177,6 +137,9 @@ port
 
     I2C_SCK : inout std_logic;
     I2C_SDA : inout std_logic;
+
+    ADDRESS_I2C : in std_logic_vector(6 downto 0);
+    REGISTER_I2C : in std_logic_vector(7 downto 0);
 
     DATA : out std_logic_vector(7 downto 0);
 
@@ -209,30 +172,29 @@ Debounce_module: Debounce port map
 	button_out_4 => open
 );
 
-mainSpiDataFeedback_module: SpiDataFeedback port map 
+mainSpiProcessing_module: SpiProcessing port map 
 (
 	CLOCK => CLOCK_50MHz,
-	SCLK => MAIN_SCLK,
-	DATA => return_data,
-	synced_miso => mainSpiDataFeedback_MISO
+	SCLK => PRIMARY_SCLK,
+
+	SERIAL_MOSI => PRIMARY_MOSI,
+	PARALLEL_MOSI => primary_parallel_MOSI,
+
+	PARALLEL_MISO => primary_parallel_MISO,
+	SERIAL_MISO => PRIMARY_MISO
 );
 
-MAIN_MISO <= mainSpiDataFeedback_MISO;
-
-secondSpiDataFeedback_module: SpiDataFeedback port map 
+secondSpiProcessing_module: SpiProcessing port map 
 (
 	CLOCK => CLOCK_50MHz,
-	SCLK => SECOND_SCLK,
-	DATA => second_data,
-	synced_miso => secondSpiDataFeedback_MISO
+	SCLK => SECONDARY_SCLK,
+
+	SERIAL_MOSI => SECONDARY_MOSI,
+	PARALLEL_MOSI => secondary_parallel_MOSI,
+
+	PARALLEL_MISO => secondary_parallel_MISO,
+	SERIAL_MISO => SECONDARY_MISO
 );
-
-SECOND_MISO <= secondSpiDataFeedback_MISO;
-
---BYPASS_CS <= SECOND_CS;
---SECOND_MISO <= BYPASS_MISO;
---BYPASS_MOSI <= SECOND_MOSI;
---BYPASS_SCLK <= SECOND_SCLK;
 
 ------------------------------------------------------
 -- Interrupt pulse :: 0x2FAF07F/50 MHz
@@ -267,7 +229,10 @@ I2cStateMachine_module: I2cStateMachine port map
 	I2C_SCK => I2C_SCK,
 	I2C_SDA => I2C_SDA,
 
-	DATA => return_data,
+	ADDRESS_I2C => "1001011", -- 0x69 ---> ID :: 1001011
+	REGISTER_I2C => "00000000", -- 0x0F L3G4200D 11110000 & 0x00 BMI160 00000000
+
+	DATA => primary_parallel_MISO,
 
 	LED_1 => LED_1,
 	LED_2 => LED_2,

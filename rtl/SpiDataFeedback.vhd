@@ -3,16 +3,20 @@ use ieee.numeric_std.all;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.all;
 
-entity SpiDataFeedback is
+entity SpiProcessing is
 Port (
     CLOCK : in std_logic;
     SCLK : in std_logic;
-    DATA : in std_logic_vector(7 downto 0);
-    synced_miso : out std_logic
-);
-end entity SpiDataFeedback;
 
-architecture rtl of SpiDataFeedback is
+    SERIAL_MOSI : in std_logic;
+    PARALLEL_MOSI : out std_logic_vector(7 downto 0);
+
+    PARALLEL_MISO : in std_logic_vector(7 downto 0);
+    SERIAL_MISO : out std_logic
+);
+end entity SpiProcessing;
+
+architecture rtl of SpiProcessing is
 
 signal run : std_logic := '0';
 signal count : std_logic_vector(4 downto 0) := (others => '0');
@@ -36,12 +40,12 @@ begin
             if SCLK = '1' then
                 run <= '1';
                 count <= count + '1';
-                synced_miso <= DATA(7 - index); -- Assuming synchronous data
+                SERIAL_MISO <= PARALLEL_MISO(7 - index);
             elsif SCLK = '0' then
                 if count > 0 then
                     count <= count - '1';
                 end if;
-                synced_miso <= DATA(7 - index); -- Assuming synchronous data
+                SERIAL_MISO <= PARALLEL_MISO(7 - index);
                 if count_bit = "0111" then
                     run <= '0';
                     count_bit <= "0000";

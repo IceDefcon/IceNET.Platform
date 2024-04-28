@@ -16,6 +16,9 @@ port
     I2C_SCK : inout std_logic;
     I2C_SDA : inout std_logic;
 
+    ADDRESS_I2C : in std_logic_vector(6 downto 0);
+    REGISTER_I2C : in std_logic_vector(7 downto 0);
+
     DATA : out std_logic_vector(7 downto 0);
 
     LED_1 : out std_logic;
@@ -46,11 +49,11 @@ constant smStateDelay : std_logic_vector(15 downto 0):= "1100001101001111"; -- 1
 signal status_sck : std_logic_vector(3 downto 0) := "0000";
 signal status_sda : std_logic_vector(3 downto 0) := "0000";
 -- I2C & SPA Data
-constant address_I2C : std_logic_vector(6 downto 0) := "1001011"; -- 0x69 ---> ID :: 1001011
+--constant ADDRESS_I2C : std_logic_vector(6 downto 0) := "1001011"; -- 0x69 ---> ID :: 1001011
 -- 0x0F ---> WHO_AM_I 11110000 in L3G4200 :: 0x00 BMI160 CHIPID 00000000
 -- 0x68 ---> IF_CONF 1000 0110
 -- 0x70 ---> NV_CONF 0000 0111
-constant register_I2C : std_logic_vector(7 downto 0) := "00000000"; -- 0x0F L3G4200D 11110000 & 0x00 BMI160 00000000
+--constant REGISTER_I2C : std_logic_vector(7 downto 0) := "00000000"; -- 0x0F L3G4200D 11110000 & 0x00 BMI160 00000000
 signal index : integer range 0 to 15 := 0;
 -- Delay Timers
 signal system_timer : std_logic_vector(15 downto 0) := (others => '0');
@@ -74,6 +77,7 @@ type STATE is
     SEND,
     DONE
 );
+--State machine indicators
 signal state_current, state_next: STATE := IDLE;
 -- Status Indicators
 signal isIDLE : std_logic := '0';
@@ -332,7 +336,7 @@ begin
                             if status_sda = "0010" then -- Data 
                                 if sda_timer = "111110011" then -- Half bit time
                                     sda_timer <= (others => '0');
-                                    I2C_SDA <= address_I2C(index); -- Address Data 1
+                                    I2C_SDA <= ADDRESS_I2C(index); -- Address Data 1
                                     index <= index + 1;
                                 else
                                     sda_timer <= sda_timer + '1';
@@ -352,7 +356,7 @@ begin
                             if status_sda = "0110" then -- Data 
                                 if sda_timer = "111110011" then -- Half bit time
                                     sda_timer <= (others => '0');
-                                    I2C_SDA <= register_I2C(index);
+                                    I2C_SDA <= REGISTER_I2C(index);
                                     index <= index + 1;
                                 else
                                     sda_timer <= sda_timer + '1';
@@ -366,7 +370,7 @@ begin
                             if status_sda = "1010" then -- Data
                                 if sda_timer = "111110011" then -- Half bit time
                                     sda_timer <= (others => '0');
-                                    I2C_SDA <= address_I2C(index); -- Address Data 2
+                                    I2C_SDA <= ADDRESS_I2C(index); -- Address Data 2
                                     index <= index + 1;
                                 else
                                     sda_timer <= sda_timer + '1';
