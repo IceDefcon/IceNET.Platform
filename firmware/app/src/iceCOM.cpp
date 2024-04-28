@@ -8,7 +8,8 @@
 #include <fcntl.h> 			// Open device
 #include <string.h> 		// strlem
 #include <unistd.h> 		// read/write to the file
-#include <cstring> 			// strcmp
+#include <vector>  			// For vector operations
+#include <cstring> 			// For std::strcmp if used
 #include <termios.h> 		// terminal settings
 #include "iceCOM.h"
 
