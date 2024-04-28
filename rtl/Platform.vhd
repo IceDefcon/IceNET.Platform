@@ -75,6 +75,8 @@ signal primary_parallel_MOSI : std_logic_vector(7 downto 0) := "00011000"; -- 0x
 signal secondary_ready_MISO : std_logic := '0';
 signal secondary_parallel_MISO : std_logic_vector(7 downto 0) := "00011110"; -- 0xE1
 signal secondary_parallel_MOSI : std_logic_vector(7 downto 0) := "00011110"; -- 0xE1
+-- Spi Ready
+signal spi_ready_interrut : std_logic := '0';
 -- BMI160 Gyroscope registers
 signal mag_z_15_8 : std_logic_vector(7 downto 0):= (others => '0');
 signal mag_z_7_0 : std_logic_vector(7 downto 0):= (others => '0');
@@ -109,6 +111,8 @@ Port
     CS : in std_logic;
     SCLK : in std_logic;
 
+    SPI_INT : out std_logic;
+
     SERIAL_MOSI : in std_logic;
     PARALLEL_MOSI : out std_logic_vector(7 downto 0);
 
@@ -133,7 +137,7 @@ port
     CLOCK : in std_logic;
     RESET : in std_logic;
 
-    CPU_INT : in std_logic;
+    SPI_INT : in std_logic;
     KERNEL_INT : in std_logic;
     FPGA_INT : out std_logic;
 
@@ -181,6 +185,8 @@ mainSpiProcessing_module: SpiProcessing port map
 	CS => PRIMARY_CS,
 	SCLK => PRIMARY_SCLK,
 
+	SPI_INT => spi_ready_interrut, -- Ready signal
+
 	SERIAL_MOSI => PRIMARY_MOSI,
 	PARALLEL_MOSI => primary_parallel_MOSI,
 
@@ -188,19 +194,21 @@ mainSpiProcessing_module: SpiProcessing port map
 	SERIAL_MISO => PRIMARY_MISO
 );
 
-secondSpiProcessing_module: SpiProcessing port map 
-(
-	CLOCK => CLOCK_50MHz,
+--secondSpiProcessing_module: SpiProcessing port map 
+--(
+--	CLOCK => CLOCK_50MHz,
 
-	CS => SECONDARY_CS,
-	SCLK => SECONDARY_SCLK,
+--	CS => SECONDARY_CS,
+--	SCLK => SECONDARY_SCLK,
 
-	SERIAL_MOSI => SECONDARY_MOSI,
-	PARALLEL_MOSI => secondary_parallel_MOSI,
+--	SPI_INT => spi_ready_interrut, -- Ready signal
 
-	PARALLEL_MISO => secondary_parallel_MISO,
-	SERIAL_MISO => SECONDARY_MISO
-);
+--	SERIAL_MOSI => SECONDARY_MOSI,
+--	PARALLEL_MOSI => secondary_parallel_MOSI,
+
+--	PARALLEL_MISO => secondary_parallel_MISO,
+--	SERIAL_MISO => SECONDARY_MISO
+--);
 
 ------------------------------------------------------
 -- Interrupt pulse :: 0x2FAF07F/50 MHz
@@ -228,7 +236,7 @@ I2cStateMachine_module: I2cStateMachine port map
 	CLOCK => CLOCK_50MHz,
 	RESET => reset_button,
 
-    CPU_INT => '0',
+    SPI_INT => spi_ready_interrut,
     KERNEL_INT => KERNEL_INT,
     FPGA_INT => FPGA_INT,
 
