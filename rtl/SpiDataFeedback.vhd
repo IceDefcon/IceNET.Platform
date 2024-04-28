@@ -6,6 +6,8 @@ use ieee.std_logic_unsigned.all;
 entity SpiProcessing is
 Port (
     CLOCK : in std_logic;
+    
+    CS : in std_logic;
     SCLK : in std_logic;
 
     SERIAL_MOSI : in std_logic;
@@ -37,18 +39,20 @@ begin
 
             index <= to_integer(unsigned(count_bit));
 
-            if SCLK = '1' then
-                run <= '1';
-                count <= count + '1';
-                SERIAL_MISO <= PARALLEL_MISO(7 - index);
-            elsif SCLK = '0' then
-                if count > 0 then
-                    count <= count - '1';
-                end if;
-                SERIAL_MISO <= PARALLEL_MISO(7 - index);
-                if count_bit = "0111" then
-                    run <= '0';
-                    count_bit <= "0000";
+            if CS = '0' then
+                if SCLK = '1' then
+                    run <= '1';
+                    count <= count + '1';
+                    SERIAL_MISO <= PARALLEL_MISO(7 - index);
+                elsif SCLK = '0' then
+                    if count > 0 then
+                        count <= count - '1';
+                    end if;
+                    SERIAL_MISO <= PARALLEL_MISO(7 - index);
+                    if count_bit = "0111" then
+                        run <= '0';
+                        count_bit <= "0000";
+                    end if;
                 end if;
             end if;
         end if;    

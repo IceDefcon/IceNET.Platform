@@ -159,10 +159,9 @@ void interruptFromFpga(struct work_struct *work)
     }
     else
     {
-        printk(KERN_INFO "[CTRL][SPI] Signaled by GPIO Interrupt over SPI.0");
+        printk(KERN_INFO "[CTRL][SPI] FPGA Transfer :: Signaled by GPIO Interrupt over SPI.0");
     }
 
-    printk(KERN_INFO "[CTRL][SPI] FPGA Transfer\n");
     for (i = 0; i < sizeof(spi_tx_at_secondFromCharDevice); ++i) {
         printk(KERN_INFO "[CTRL][SPI] Byte[%d]: Kernel.TX[0x%02x] Fpga.RX[0x%02x]\n", i, spi_tx_at_interruptFromFpga[i], spi_rx_at_interruptFromFpga[i]);
     }
@@ -206,10 +205,9 @@ void mainFromCharDevice(struct work_struct *work)
     }
     else
     {
-        printk(KERN_INFO "[CTRL][SPI] Signaled by [C] Device over SPI.0");
+        printk(KERN_INFO "[CTRL][SPI] FPGA Transfer :: Signaled by [C] Device over SPI.0");
     }
 
-    printk(KERN_INFO "[CTRL][SPI] FPGA Transfer\n");
     for (i = 0; i < fpgaData->length; ++i) 
     {
         printk(KERN_INFO "[CTRL][SPI] Byte[%d]: Kernel.TX[0x%02x] Fpga.RX[0x%02x]\n", i, fpgaData->data[i], spi_rx_at_mainFromCharDevice[i]);
@@ -255,10 +253,9 @@ void secondFromCharDevice(struct work_struct *work)
     }
     else
     {
-        printk(KERN_INFO "[CTRL][SPI] Signaled by [C] Device over SPI.1");
+        printk(KERN_INFO "[CTRL][SPI] FPGA Transfer :: Signaled by [C] Device over SPI.1");
     }
 
-    printk(KERN_INFO "[CTRL][SPI] FPGA Transfer\n");
     for (i = 0; i < sizeof(spi_tx_at_secondFromCharDevice); ++i) {
         printk(KERN_INFO "[CTRL][SPI] Byte[%d]: Kernel.TX[0x%02x] Fpga.RX[0x%02x]\n", i, spi_tx_at_secondFromCharDevice[i], spi_rx_at_secondFromCharDevice[i]);
     }

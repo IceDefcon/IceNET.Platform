@@ -105,6 +105,8 @@ component SpiProcessing
 Port 
 (
     CLOCK : in  std_logic;
+
+    CS : in std_logic;
     SCLK : in std_logic;
 
     SERIAL_MOSI : in std_logic;
@@ -175,6 +177,8 @@ Debounce_module: Debounce port map
 mainSpiProcessing_module: SpiProcessing port map 
 (
 	CLOCK => CLOCK_50MHz,
+
+	CS => PRIMARY_CS,
 	SCLK => PRIMARY_SCLK,
 
 	SERIAL_MOSI => PRIMARY_MOSI,
@@ -187,6 +191,8 @@ mainSpiProcessing_module: SpiProcessing port map
 secondSpiProcessing_module: SpiProcessing port map 
 (
 	CLOCK => CLOCK_50MHz,
+
+	CS => SECONDARY_CS,
 	SCLK => SECONDARY_SCLK,
 
 	SERIAL_MOSI => SECONDARY_MOSI,
