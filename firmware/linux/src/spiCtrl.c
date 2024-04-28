@@ -204,7 +204,7 @@ void mainFromCharDevice(struct work_struct *work)
 
     struct transfer_data* fpgaData = get_transfer_data();
 
-    printk(KERN_INFO "[CTRL][SPI] Testing received Data: data[%x] len[%d]",fpgaData->data[0], fpgaData->len);
+    printk(KERN_INFO "[CTRL][SPI] Testing received Data: data[%x] len[%zu]", fpgaData->data[0], fpgaData->length);
 
     memset(&transfer, 0, sizeof(transfer));
     transfer.tx_buf = spi_tx_at_mainFromCharDevice;
