@@ -188,24 +188,14 @@ void mainFromCharDevice(struct work_struct *work)
     int ret;
     int i;
 
-    /*!
-     * 
-     * 
-     * HERE I need data that
-     * been transfered from user-space
-     * 
-     * 
-     * ????????????????
-     * ????????????????
-     * ????????????????
-     * 
-     * Please continue
-     * 
-     */
-
     struct transfer_data* fpgaData = get_transfer_data();
 
     printk(KERN_INFO "[CTRL][SPI] Testing received Data: data[%x] len[%zu]", fpgaData->data[0], fpgaData->length);
+    printk(KERN_INFO "[CTRL][SPI] Testing received Data: data[%x] len[%zu]", fpgaData->data[1], fpgaData->length);
+    printk(KERN_INFO "[CTRL][SPI] Testing received Data: data[%x] len[%zu]", fpgaData->data[2], fpgaData->length);
+    printk(KERN_INFO "[CTRL][SPI] Testing received Data: data[%x] len[%zu]", fpgaData->data[3], fpgaData->length);
+    printk(KERN_INFO "[CTRL][SPI] Testing received Data: data[%x] len[%zu]", fpgaData->data[4], fpgaData->length);
+    printk(KERN_INFO "[CTRL][SPI] Testing received Data: data[%x] len[%zu]", fpgaData->data[5], fpgaData->length);
 
     memset(&transfer, 0, sizeof(transfer));
     transfer.tx_buf = spi_tx_at_mainFromCharDevice;
