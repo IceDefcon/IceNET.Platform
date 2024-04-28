@@ -202,6 +202,9 @@ void mainFromCharDevice(struct work_struct *work)
      * 
      */
 
+    struct transfer_data* transfer = get_transfer_data();
+
+    printk(KERN_INFO "[CTRL][SPI] Testing received Data: data[%x] len[%d]",transfer->data[0], transfer->len);
 
     memset(&transfer, 0, sizeof(transfer));
     transfer.tx_buf = spi_tx_at_mainFromCharDevice;
