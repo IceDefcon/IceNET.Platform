@@ -9,6 +9,7 @@
 #include <linux/kernel.h>
 
 #include "spiCtrl.h"
+#include "charDevice.h"
 
 ////////////////////////
 //                    //
