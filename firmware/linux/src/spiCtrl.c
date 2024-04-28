@@ -46,7 +46,7 @@ static struct spi_device *spi_dev_second;
 static volatile uint8_t spi_tx_at_interruptFromFpga[] = {0x81};
 static volatile uint8_t spi_rx_at_interruptFromFpga[1];
 static volatile uint8_t spi_tx_at_mainFromCharDevice[] = {0xC3};
-static volatile uint8_t spi_rx_at_mainFromCharDevice[6];
+static volatile uint8_t spi_rx_at_mainFromCharDevice[8];
 static volatile uint8_t spi_tx_at_secondFromCharDevice[] = {0x00}; /* ID Register of the BMI160 chip */
 static volatile uint8_t spi_rx_at_secondFromCharDevice[1];
 
@@ -199,7 +199,8 @@ void mainFromCharDevice(struct work_struct *work)
     spi_message_add_tail(&transfer, &msg);
 
     ret = spi_sync(spi_dev_main, &msg);
-    if (ret < 0) {
+    if (ret < 0) 
+    {
         printk(KERN_ERR "[CTRL][SPI] SPI transfer at signal From Char Device failed: %d\n", ret);
         return;
     }
@@ -209,12 +210,19 @@ void mainFromCharDevice(struct work_struct *work)
     }
 
     printk(KERN_INFO "[CTRL][SPI] FPGA Transfer\n");
-    for (i = 0; i < sizeof(spi_rx_at_mainFromCharDevice); ++i) 
+    for (i = 0; i < fpgaData->length; ++i) 
     {
         printk(KERN_INFO "[CTRL][SPI] Byte[%d]: TX[0x%02x] RX[0x%02x]\n", i, fpgaData->data[i], spi_rx_at_mainFromCharDevice[i]);
     }
 
     spi_rx_at_mainFromCharDevice[0] = 0x00;
+    spi_rx_at_mainFromCharDevice[1] = 0x00;
+    spi_rx_at_mainFromCharDevice[2] = 0x00;
+    spi_rx_at_mainFromCharDevice[3] = 0x00;
+    spi_rx_at_mainFromCharDevice[4] = 0x00;
+    spi_rx_at_mainFromCharDevice[5] = 0x00;
+    spi_rx_at_mainFromCharDevice[6] = 0x00;
+    spi_rx_at_mainFromCharDevice[7] = 0x00;
 
     /*!
      * 
