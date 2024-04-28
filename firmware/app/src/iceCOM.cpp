@@ -115,7 +115,9 @@ int iceCOM::device_read()
 int iceCOM::device_write()
 {
 	int ret = -1;
-	char console_TX[6];
+
+	/* Vector will be destroyed when function come to an end */
+	std::vector<char> console_TX;
 
 	Debug::Write();
 	/* Get console characters */
@@ -123,26 +125,22 @@ int iceCOM::device_write()
 
 	if (std::strcmp(console_TX, "exit") == 0) 
 	{
+		/* Close connection with the iceCOM char device */
+    	iceCOM::device_close();
+    	/* Kill the iceCOMThread */
     	m_killThread = true;
-    	/**
-    	 * 
-    	 *  TODO
-    	 * 
-    	 * Consider where to close char deveice
-    	 * 
-    	 * iceCOM::device_close();
-    	 * 
-    	 */
 	}
-	else if (std::strcmp(console_TX, "mag") == 0) /* Magnetometer */
+	else if (std::strcmp(console_TX, "id") == 0)
 	{
-		console_TX[0] = 0x04;
-		console_TX[1] = 0x05;
-		console_TX[2] = 0x06;
-		console_TX[3] = 0x07;
-		console_TX[4] = 0x08;
-		console_TX[5] = 0x09;
-		ret = write(m_file_descriptor, console_TX, sizeof(console_TX)/sizeof(console_TX[0])); // Send the string to the LKM
+		/* Device ID Register */
+		console_TX[0] = 0x00;
+		ret = write(m_file_descriptor, console_TX.data(), console_TX.size());
+	}
+	else if (std::strcmp(console_TX, "mag") == 0)
+	{
+		/* Magnetometer Registers */
+		console_TX = {0x04, 0x05, 0x06, 0x07, 0x08, 0x09}; 
+		ret = write(m_file_descriptor, console_TX.data(), console_TX.size());
 	}
 	else
 	{
