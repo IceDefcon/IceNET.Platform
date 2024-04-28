@@ -25,7 +25,7 @@ int main(void)
 	CoreDevice = iceCOMDevice;
 	CoreDevice->device_open(ICE);
 
-	/** 
+	/**
 	 * 
 	 * 1. Terminate Program
 	 * 2. Clean Memory 

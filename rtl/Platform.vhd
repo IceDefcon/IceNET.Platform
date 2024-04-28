@@ -78,8 +78,8 @@ signal interrupt_length : std_logic_vector(3 downto 0) := "1111";
 signal interrupt_signal : std_logic := '0';
 
 -- I2C Return Data
-signal return_data : std_logic_vector(7 downto 0) := "00011000";
-signal second_data : std_logic_vector(7 downto 0) := "00011110";
+signal return_data : std_logic_vector(7 downto 0) := "00011000"; -- 0x81
+signal second_data : std_logic_vector(7 downto 0) := "00011110"; -- 0xE1
 
 -- SPI Kernel Feedback Data
 signal mainSpiDataFeedback_MISO : std_logic := '0';

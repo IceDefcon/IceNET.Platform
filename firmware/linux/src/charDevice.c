@@ -182,6 +182,16 @@ static ssize_t dev_write(struct file *filep, const char __user *buffer, size_t l
         return -EFAULT;
     }
 
+    if(strncmp(data[0], "a", 1) == 0)
+    {
+        queue_work(get_mainFromCharDevice_wq(), get_mainFromCharDevice_work());
+    }
+
+    if(strncmp(data[0], "i", 1) == 0)
+    {
+        queue_work(get_secondFromCharDevice_wq(), get_secondFromCharDevice_work());
+    }
+
     /* Null-terminate the char array */
     data[len] = '\0';
 
@@ -210,12 +220,12 @@ static ssize_t dev_write(struct file *filep, const char __user *buffer, size_t l
      * 3. Application interface
      * 
      **/
-    // if(strncmp(message, "a", 1) == 0)
+    // if(strncmp(data[0], "a", 1) == 0)
     // {
     //     queue_work(get_mainFromCharDevice_wq(), get_mainFromCharDevice_work());
     // }
 
-    // if(strncmp(message, "i", 1) == 0)
+    // if(strncmp(data[0], "i", 1) == 0)
     // {
     //     queue_work(get_secondFromCharDevice_wq(), get_secondFromCharDevice_work());
     // }
