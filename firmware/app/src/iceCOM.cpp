@@ -8,8 +8,7 @@
 #include <fcntl.h> 			// Open device
 #include <string.h> 		// strlem
 #include <unistd.h> 		// read/write to the file
-#include <vector>  			// For vector operations
-#include <cstring> 			// For std::strcmp if used
+#include <cstring> 			// strcmp
 #include <termios.h> 		// terminal settings
 #include "iceCOM.h"
 
@@ -116,33 +115,39 @@ int iceCOM::device_read()
 int iceCOM::device_write()
 {
 	int ret = -1;
-	// char console_TX[6];
-	/* Vector will be destroyed when function come to an end */
-	std::vector<char> data_TX;
-	std::vector<char> console_TX;
+	char console_TX[6];
 
 	Debug::Write();
 	/* Get console characters */
-	std::cin.getline(console_TX.data(), console_TX.size());
+	std::cin.getline(console_TX, BUFFER_LENGTH);
 
-	if (std::strcmp(console_TX.data(), "exit") == 0) 
+	if (std::strcmp(console_TX, "exit") == 0) 
 	{
-		/* Close connection with the iceCOM char device */
-    	iceCOM::device_close();
-    	/* Kill the iceCOMThread */
     	m_killThread = true;
+    	/**
+    	 * 
+    	 *  TODO
+    	 * 
+    	 * Consider where to close char deveice
+    	 * 
+    	 * iceCOM::device_close();
+    	 * 
+    	 */
 	}
-	else if (std::strcmp(console_TX.data(), "id") == 0)
+	else if (std::strcmp(console_TX, "mag") == 0)
 	{
-		/* Device ID Register */
-		data_TX[0] = 0x00;
-		ret = write(m_file_descriptor, data_TX.data(), data_TX.size());
+		console_TX[0] = 0x00;
+		ret = write(m_file_descriptor, console_TX, 1); /* id */
 	}
-	else if (std::strcmp(console_TX.data(), "mag") == 0)
+	else if (std::strcmp(console_TX, "mag") == 0) 
 	{
-		/* Magnetometer Registers */
-		data_TX = {0x04, 0x05, 0x06, 0x07, 0x08, 0x09}; 
-		ret = write(m_file_descriptor, data_TX.data(), data_TX.size());
+		console_TX[0] = 0x04;
+		console_TX[1] = 0x05;
+		console_TX[2] = 0x06;
+		console_TX[3] = 0x07;
+		console_TX[4] = 0x08;
+		console_TX[5] = 0x09;
+		ret = write(m_file_descriptor, console_TX, 6); /* Magnetometer */
 	}
 	else
 	{
