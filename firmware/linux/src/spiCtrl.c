@@ -46,7 +46,7 @@ static struct spi_device *spi_dev_second;
 static volatile uint8_t spi_tx_at_interruptFromFpga[] = {0x81};
 static volatile uint8_t spi_rx_at_interruptFromFpga[1];
 static volatile uint8_t spi_tx_at_mainFromCharDevice[] = {0xC3};
-static volatile uint8_t spi_rx_at_mainFromCharDevice[1];
+static volatile uint8_t spi_rx_at_mainFromCharDevice[6];
 static volatile uint8_t spi_tx_at_secondFromCharDevice[] = {0x00}; /* ID Register of the BMI160 chip */
 static volatile uint8_t spi_rx_at_secondFromCharDevice[1];
 
@@ -190,17 +190,10 @@ void mainFromCharDevice(struct work_struct *work)
 
     struct transfer_data* fpgaData = get_transfer_data();
 
-    printk(KERN_INFO "[CTRL][SPI] Testing received Data: data[%x] len[%zu]", fpgaData->data[0], fpgaData->length);
-    printk(KERN_INFO "[CTRL][SPI] Testing received Data: data[%x] len[%zu]", fpgaData->data[1], fpgaData->length);
-    printk(KERN_INFO "[CTRL][SPI] Testing received Data: data[%x] len[%zu]", fpgaData->data[2], fpgaData->length);
-    printk(KERN_INFO "[CTRL][SPI] Testing received Data: data[%x] len[%zu]", fpgaData->data[3], fpgaData->length);
-    printk(KERN_INFO "[CTRL][SPI] Testing received Data: data[%x] len[%zu]", fpgaData->data[4], fpgaData->length);
-    printk(KERN_INFO "[CTRL][SPI] Testing received Data: data[%x] len[%zu]", fpgaData->data[5], fpgaData->length);
-
     memset(&transfer, 0, sizeof(transfer));
-    transfer.tx_buf = spi_tx_at_mainFromCharDevice;
+    transfer.tx_buf = fpgaData->data;
     transfer.rx_buf = spi_rx_at_mainFromCharDevice;
-    transfer.len = sizeof(spi_tx_at_mainFromCharDevice);
+    transfer.len = fpgaData->length;
 
     spi_message_init(&msg);
     spi_message_add_tail(&transfer, &msg);
