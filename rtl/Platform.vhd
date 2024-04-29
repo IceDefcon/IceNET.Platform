@@ -244,7 +244,7 @@ I2cStateMachine_module: I2cStateMachine port map
 	I2C_SDA => I2C_SDA,
 
 	ADDRESS_I2C => "1001011", -- 0x69 ---> ID :: 1001011
-	REGISTER_I2C => "00000000", -- 0x0F L3G4200D 11110000 & 0x00 BMI160 00000000
+	REGISTER_I2C => primary_parallel_MOSI, -- 0x0F L3G4200D 11110000 & 0x00 BMI160 00000000
 
 	DATA => primary_parallel_MISO,
 
