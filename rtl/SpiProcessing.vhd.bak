@@ -28,6 +28,7 @@ signal count_bit : std_logic_vector(3 downto 0) := (others => '0');
 signal index : integer range 0 to 15 := 0;
 signal synced_sclk : std_logic := '0';
 signal spi_ready : std_logic := '0';
+signal synced_parallel_mosi : out std_logic_vector(7 downto 0);
 
 begin
     spi_process: process(CLOCK)
@@ -61,7 +62,7 @@ begin
                     if count_bit = "0111" then -- if 8 bits are processed
                         run <= '0'; -- Then stop processing
                         count_bit <= "0000"; -- Then clear the bit count
-                        spi_ready <= '1';
+                        spi_ready <= '1'; -- Interrupt to signal that synchronisation is complete 
                     end if;
                 end if;
             end if;
