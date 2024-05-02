@@ -230,15 +230,12 @@ I2cStateMachine_module: I2cStateMachine port map
 	I2C_SCK => I2C_SCK,
 	I2C_SDA => I2C_SDA,
 
-	ADDRESS_I2C => "1001011", -- 0x69 ---> Device ID :: 1001 011
+    -- 0x69 :: 1001 011
+	ADDRESS_I2C => "1001011",
 
-    --constant ADDRESS_I2C : std_logic_vector(6 downto 0) := "1001011"; -- 0x69 ---> ID :: 1001011
-    -- 0x0F ---> WHO_AM_I 11110000 in L3G4200 :: 0x00 BMI160 CHIPID 00000000
-    -- 0x68 ---> IF_CONF 1000 0110
-    -- 0x70 ---> NV_CONF 0000 0111
-    --constant REGISTER_I2C : std_logic_vector(7 downto 0) := "00000000"; -- 0x0F L3G4200D 11110000 & 0x00 BMI160 00000000
-
-	REGISTER_I2C => primary_parallel_MOSI, -- 0x0F L3G4200D 11110000 & 0x00 BMI160 00000000
+    -- 0x00 :: 00000000 :: CHIP ID
+    -- 0x01 :: 10000000 :: RESERVED
+	REGISTER_I2C => "11111110", -- primary_parallel_MOSI, -- From Kernel SPI
 
 	DATA => primary_parallel_MISO,
 
