@@ -235,7 +235,11 @@ I2cStateMachine_module: I2cStateMachine port map
 
     -- 0x00 :: 00000000 :: CHIP ID
     -- 0x01 :: 10000000 :: RESERVED
-	REGISTER_I2C => "10000000", -- primary_parallel_MOSI, -- From Kernel SPI
+    -- 0x18 :: 00011000 :: RESERVED
+    -- 0x19 :: 10011000 :: RESERVED
+    -- 0x1A :: 01011000 :: RESERVED
+    -- 0x1B :: 11011000 :: RESERVED
+	REGISTER_I2C => "00011000", -- primary_parallel_MOSI, -- From Kernel SPI
 
 	DATA => primary_parallel_MISO,
 
