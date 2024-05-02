@@ -23,7 +23,6 @@ static int __init i2c_module_init(void)
 
     // Create an I2C client for the device
     i2c_client = i2c_new_device(adapter, &board_info);
-
     // Release the I2C adapter
     i2c_put_adapter(adapter);
 
@@ -33,12 +32,7 @@ static int __init i2c_module_init(void)
     }
     else printk(KERN_INFO "I2C device created\n");
 
-    // Perform I2C operations using the i2c_client
-
-    // Example: Read data from a register
     char read_buffer[1];
-    // 
-    // int ret = i2c_smbus_read_i2c_block_data(i2c_client, 0x00, sizeof(read_buffer), read_buffer);
     int ret = i2c_smbus_read_i2c_block_data(i2c_client, 0x00, sizeof(read_buffer), read_buffer);
     if (ret < 0) {
         printk(KERN_ERR "Failed to read data from I2C device\n");
@@ -52,11 +46,7 @@ static int __init i2c_module_init(void)
         printk(KERN_INFO "Read data[%d]: 0x%02x\n", i, read_buffer[i]);
     }
 
-    // Process the received data
-
-    // Example: Write data to a register
-    // char write_buffer[1] = {0x01};
-    // ret = i2c_smbus_write_i2c_block_data(i2c_client, 0x70, sizeof(write_buffer), write_buffer);
+    // int ret = i2c_smbus_write_byte_data(i2c_client, 0x70, 0x01);
     // if (ret < 0) {
     //     printk(KERN_ERR "Failed to write data to I2C device\n");
     //     i2c_unregister_device(i2c_client);
