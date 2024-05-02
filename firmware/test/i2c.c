@@ -36,6 +36,57 @@ static int __init i2c_module_init(void)
     int i;
     int ret;
 
+    ret = i2c_smbus_read_i2c_block_data(i2c_client, 0x00, sizeof(read_buffer), read_buffer);
+    if (ret < 0) {
+        printk(KERN_ERR "Failed to read data from I2C device\n");
+        i2c_unregister_device(i2c_client);
+        return ret;
+    }
+
+    for (i = 0; i < sizeof(read_buffer); i++) {
+        printk(KERN_INFO "Read data[%d]: 0x%02x\n", i, read_buffer[i]);
+    }
+
+
+
+    ret = i2c_smbus_read_i2c_block_data(i2c_client, 0x01, sizeof(read_buffer), read_buffer);
+    if (ret < 0) {
+        printk(KERN_ERR "Failed to read data from I2C device\n");
+        i2c_unregister_device(i2c_client);
+        return ret;
+    }
+
+    for (i = 0; i < sizeof(read_buffer); i++) {
+        printk(KERN_INFO "Read data[%d]: 0x%02x\n", i, read_buffer[i]);
+    }
+
+
+
+    ret = i2c_smbus_read_i2c_block_data(i2c_client, 0x02, sizeof(read_buffer), read_buffer);
+    if (ret < 0) {
+        printk(KERN_ERR "Failed to read data from I2C device\n");
+        i2c_unregister_device(i2c_client);
+        return ret;
+    }
+
+    for (i = 0; i < sizeof(read_buffer); i++) {
+        printk(KERN_INFO "Read data[%d]: 0x%02x\n", i, read_buffer[i]);
+    }
+
+
+
+    ret = i2c_smbus_read_i2c_block_data(i2c_client, 0x03, sizeof(read_buffer), read_buffer);
+    if (ret < 0) {
+        printk(KERN_ERR "Failed to read data from I2C device\n");
+        i2c_unregister_device(i2c_client);
+        return ret;
+    }
+
+    for (i = 0; i < sizeof(read_buffer); i++) {
+        printk(KERN_INFO "Read data[%d]: 0x%02x\n", i, read_buffer[i]);
+    }
+
+
     ret = i2c_smbus_read_i2c_block_data(i2c_client, 0x04, sizeof(read_buffer), read_buffer);
     if (ret < 0) {
         printk(KERN_ERR "Failed to read data from I2C device\n");
@@ -86,6 +137,317 @@ static int __init i2c_module_init(void)
         printk(KERN_INFO "Read data[%d]: 0x%02x\n", i, read_buffer[i]);
     }
 
+
+
+    ret = i2c_smbus_read_i2c_block_data(i2c_client, 0x08, sizeof(read_buffer), read_buffer);
+    if (ret < 0) {
+        printk(KERN_ERR "Failed to read data from I2C device\n");
+        i2c_unregister_device(i2c_client);
+        return ret;
+    }
+
+    for (i = 0; i < sizeof(read_buffer); i++) {
+        printk(KERN_INFO "Read data[%d]: 0x%02x\n", i, read_buffer[i]);
+    }
+
+
+
+    ret = i2c_smbus_read_i2c_block_data(i2c_client, 0x09, sizeof(read_buffer), read_buffer);
+    if (ret < 0) {
+        printk(KERN_ERR "Failed to read data from I2C device\n");
+        i2c_unregister_device(i2c_client);
+        return ret;
+    }
+
+    for (i = 0; i < sizeof(read_buffer); i++) {
+        printk(KERN_INFO "Read data[%d]: 0x%02x\n", i, read_buffer[i]);
+    }
+
+
+
+    ret = i2c_smbus_read_i2c_block_data(i2c_client, 0x0a, sizeof(read_buffer), read_buffer);
+    if (ret < 0) {
+        printk(KERN_ERR "Failed to read data from I2C device\n");
+        i2c_unregister_device(i2c_client);
+        return ret;
+    }
+
+    for (i = 0; i < sizeof(read_buffer); i++) {
+        printk(KERN_INFO "Read data[%d]: 0x%02x\n", i, read_buffer[i]);
+    }
+
+
+
+    ret = i2c_smbus_read_i2c_block_data(i2c_client, 0x0b, sizeof(read_buffer), read_buffer);
+    if (ret < 0) {
+        printk(KERN_ERR "Failed to read data from I2C device\n");
+        i2c_unregister_device(i2c_client);
+        return ret;
+    }
+
+    for (i = 0; i < sizeof(read_buffer); i++) {
+        printk(KERN_INFO "Read data[%d]: 0x%02x\n", i, read_buffer[i]);
+    }
+
+
+
+    ret = i2c_smbus_read_i2c_block_data(i2c_client, 0x0c, sizeof(read_buffer), read_buffer);
+    if (ret < 0) {
+        printk(KERN_ERR "Failed to read data from I2C device\n");
+        i2c_unregister_device(i2c_client);
+        return ret;
+    }
+
+    for (i = 0; i < sizeof(read_buffer); i++) {
+        printk(KERN_INFO "Read data[%d]: 0x%02x\n", i, read_buffer[i]);
+    }
+
+
+
+    ret = i2c_smbus_read_i2c_block_data(i2c_client, 0x0d, sizeof(read_buffer), read_buffer);
+    if (ret < 0) {
+        printk(KERN_ERR "Failed to read data from I2C device\n");
+        i2c_unregister_device(i2c_client);
+        return ret;
+    }
+
+    for (i = 0; i < sizeof(read_buffer); i++) {
+        printk(KERN_INFO "Read data[%d]: 0x%02x\n", i, read_buffer[i]);
+    }
+
+
+
+    ret = i2c_smbus_read_i2c_block_data(i2c_client, 0x0e, sizeof(read_buffer), read_buffer);
+    if (ret < 0) {
+        printk(KERN_ERR "Failed to read data from I2C device\n");
+        i2c_unregister_device(i2c_client);
+        return ret;
+    }
+
+    for (i = 0; i < sizeof(read_buffer); i++) {
+        printk(KERN_INFO "Read data[%d]: 0x%02x\n", i, read_buffer[i]);
+    }
+
+
+
+    ret = i2c_smbus_read_i2c_block_data(i2c_client, 0x0f, sizeof(read_buffer), read_buffer);
+    if (ret < 0) {
+        printk(KERN_ERR "Failed to read data from I2C device\n");
+        i2c_unregister_device(i2c_client);
+        return ret;
+    }
+
+    for (i = 0; i < sizeof(read_buffer); i++) {
+        printk(KERN_INFO "Read data[%d]: 0x%02x\n", i, read_buffer[i]);
+    }
+
+
+
+
+    ret = i2c_smbus_read_i2c_block_data(i2c_client, 0x10, sizeof(read_buffer), read_buffer);
+    if (ret < 0) {
+        printk(KERN_ERR "Failed to read data from I2C device\n");
+        i2c_unregister_device(i2c_client);
+        return ret;
+    }
+
+    for (i = 0; i < sizeof(read_buffer); i++) {
+        printk(KERN_INFO "Read data[%d]: 0x%02x\n", i, read_buffer[i]);
+    }
+
+
+
+    ret = i2c_smbus_read_i2c_block_data(i2c_client, 0x11, sizeof(read_buffer), read_buffer);
+    if (ret < 0) {
+        printk(KERN_ERR "Failed to read data from I2C device\n");
+        i2c_unregister_device(i2c_client);
+        return ret;
+    }
+
+    for (i = 0; i < sizeof(read_buffer); i++) {
+        printk(KERN_INFO "Read data[%d]: 0x%02x\n", i, read_buffer[i]);
+    }
+
+
+
+    ret = i2c_smbus_read_i2c_block_data(i2c_client, 0x12, sizeof(read_buffer), read_buffer);
+    if (ret < 0) {
+        printk(KERN_ERR "Failed to read data from I2C device\n");
+        i2c_unregister_device(i2c_client);
+        return ret;
+    }
+
+    for (i = 0; i < sizeof(read_buffer); i++) {
+        printk(KERN_INFO "Read data[%d]: 0x%02x\n", i, read_buffer[i]);
+    }
+
+
+
+    ret = i2c_smbus_read_i2c_block_data(i2c_client, 0x13, sizeof(read_buffer), read_buffer);
+    if (ret < 0) {
+        printk(KERN_ERR "Failed to read data from I2C device\n");
+        i2c_unregister_device(i2c_client);
+        return ret;
+    }
+
+    for (i = 0; i < sizeof(read_buffer); i++) {
+        printk(KERN_INFO "Read data[%d]: 0x%02x\n", i, read_buffer[i]);
+    }
+
+
+    ret = i2c_smbus_read_i2c_block_data(i2c_client, 0x14, sizeof(read_buffer), read_buffer);
+    if (ret < 0) {
+        printk(KERN_ERR "Failed to read data from I2C device\n");
+        i2c_unregister_device(i2c_client);
+        return ret;
+    }
+
+    for (i = 0; i < sizeof(read_buffer); i++) {
+        printk(KERN_INFO "Read data[%d]: 0x%02x\n", i, read_buffer[i]);
+    }
+
+
+
+    ret = i2c_smbus_read_i2c_block_data(i2c_client, 0x15, sizeof(read_buffer), read_buffer);
+    if (ret < 0) {
+        printk(KERN_ERR "Failed to read data from I2C device\n");
+        i2c_unregister_device(i2c_client);
+        return ret;
+    }
+
+    for (i = 0; i < sizeof(read_buffer); i++) {
+        printk(KERN_INFO "Read data[%d]: 0x%02x\n", i, read_buffer[i]);
+    }
+
+
+
+    ret = i2c_smbus_read_i2c_block_data(i2c_client, 0x16, sizeof(read_buffer), read_buffer);
+    if (ret < 0) {
+        printk(KERN_ERR "Failed to read data from I2C device\n");
+        i2c_unregister_device(i2c_client);
+        return ret;
+    }
+
+    for (i = 0; i < sizeof(read_buffer); i++) {
+        printk(KERN_INFO "Read data[%d]: 0x%02x\n", i, read_buffer[i]);
+    }
+
+
+
+    ret = i2c_smbus_read_i2c_block_data(i2c_client, 0x17, sizeof(read_buffer), read_buffer);
+    if (ret < 0) {
+        printk(KERN_ERR "Failed to read data from I2C device\n");
+        i2c_unregister_device(i2c_client);
+        return ret;
+    }
+
+    for (i = 0; i < sizeof(read_buffer); i++) {
+        printk(KERN_INFO "Read data[%d]: 0x%02x\n", i, read_buffer[i]);
+    }
+
+
+
+    ret = i2c_smbus_read_i2c_block_data(i2c_client, 0x18, sizeof(read_buffer), read_buffer);
+    if (ret < 0) {
+        printk(KERN_ERR "Failed to read data from I2C device\n");
+        i2c_unregister_device(i2c_client);
+        return ret;
+    }
+
+    for (i = 0; i < sizeof(read_buffer); i++) {
+        printk(KERN_INFO "Read data[%d]: 0x%02x\n", i, read_buffer[i]);
+    }
+
+
+
+    ret = i2c_smbus_read_i2c_block_data(i2c_client, 0x19, sizeof(read_buffer), read_buffer);
+    if (ret < 0) {
+        printk(KERN_ERR "Failed to read data from I2C device\n");
+        i2c_unregister_device(i2c_client);
+        return ret;
+    }
+
+    for (i = 0; i < sizeof(read_buffer); i++) {
+        printk(KERN_INFO "Read data[%d]: 0x%02x\n", i, read_buffer[i]);
+    }
+
+
+
+    ret = i2c_smbus_read_i2c_block_data(i2c_client, 0x1a, sizeof(read_buffer), read_buffer);
+    if (ret < 0) {
+        printk(KERN_ERR "Failed to read data from I2C device\n");
+        i2c_unregister_device(i2c_client);
+        return ret;
+    }
+
+    for (i = 0; i < sizeof(read_buffer); i++) {
+        printk(KERN_INFO "Read data[%d]: 0x%02x\n", i, read_buffer[i]);
+    }
+
+
+
+    ret = i2c_smbus_read_i2c_block_data(i2c_client, 0x1b, sizeof(read_buffer), read_buffer);
+    if (ret < 0) {
+        printk(KERN_ERR "Failed to read data from I2C device\n");
+        i2c_unregister_device(i2c_client);
+        return ret;
+    }
+
+    for (i = 0; i < sizeof(read_buffer); i++) {
+        printk(KERN_INFO "Read data[%d]: 0x%02x\n", i, read_buffer[i]);
+    }
+
+
+
+    ret = i2c_smbus_read_i2c_block_data(i2c_client, 0x1c, sizeof(read_buffer), read_buffer);
+    if (ret < 0) {
+        printk(KERN_ERR "Failed to read data from I2C device\n");
+        i2c_unregister_device(i2c_client);
+        return ret;
+    }
+
+    for (i = 0; i < sizeof(read_buffer); i++) {
+        printk(KERN_INFO "Read data[%d]: 0x%02x\n", i, read_buffer[i]);
+    }
+
+
+
+    ret = i2c_smbus_read_i2c_block_data(i2c_client, 0x1d, sizeof(read_buffer), read_buffer);
+    if (ret < 0) {
+        printk(KERN_ERR "Failed to read data from I2C device\n");
+        i2c_unregister_device(i2c_client);
+        return ret;
+    }
+
+    for (i = 0; i < sizeof(read_buffer); i++) {
+        printk(KERN_INFO "Read data[%d]: 0x%02x\n", i, read_buffer[i]);
+    }
+
+
+
+    ret = i2c_smbus_read_i2c_block_data(i2c_client, 0x1e, sizeof(read_buffer), read_buffer);
+    if (ret < 0) {
+        printk(KERN_ERR "Failed to read data from I2C device\n");
+        i2c_unregister_device(i2c_client);
+        return ret;
+    }
+
+    for (i = 0; i < sizeof(read_buffer); i++) {
+        printk(KERN_INFO "Read data[%d]: 0x%02x\n", i, read_buffer[i]);
+    }
+
+
+
+    ret = i2c_smbus_read_i2c_block_data(i2c_client, 0x1f, sizeof(read_buffer), read_buffer);
+    if (ret < 0) {
+        printk(KERN_ERR "Failed to read data from I2C device\n");
+        i2c_unregister_device(i2c_client);
+        return ret;
+    }
+
+    for (i = 0; i < sizeof(read_buffer); i++) {
+        printk(KERN_INFO "Read data[%d]: 0x%02x\n", i, read_buffer[i]);
+    }
 
 
     // int ret = i2c_smbus_write_byte_data(i2c_client, 0x70, 0x01);
