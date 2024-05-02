@@ -36,7 +36,7 @@ static int __init i2c_module_init(void)
     int i, ret;
     char begin = 0x18;
 
-    for (i = 0; i < 4; ++i) 
+    for (i = 0; i < 1; ++i) 
     {
         ret = i2c_smbus_read_i2c_block_data(i2c_client, begin + i, sizeof(read_buffer), read_buffer);
         if (ret < 0) 
