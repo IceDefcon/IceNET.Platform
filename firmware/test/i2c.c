@@ -46,7 +46,7 @@ static int __init i2c_module_init(void)
             return ret;
         }
 
-        printk(KERN_INFO "Read data[%d]: 0x%02x\n", begin + i, read_buffer[0]);
+        printk(KERN_INFO "Read data[0x%02x]: 0x%02x\n", begin + i, read_buffer[0]);
     }
 
     // int ret = i2c_smbus_write_byte_data(i2c_client, 0x70, 0x01);
