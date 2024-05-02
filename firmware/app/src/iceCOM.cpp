@@ -124,19 +124,11 @@ int iceCOM::device_write()
 	if (std::strcmp(console_TX, "exit") == 0) 
 	{
     	m_killThread = true;
-    	/**
-    	 * 
-    	 *  TODO
-    	 * 
-    	 * Consider where to close char deveice
-    	 * 
-    	 * iceCOM::device_close();
-    	 * 
-    	 */
+    	device_close();
 	}
-	else if (std::strcmp(console_TX, "test") == 0)
+	else if (std::strcmp(console_TX, "status") == 0)
 	{
-		console_TX[0] = 0x04;
+		console_TX[0] = 0x1B;
 		ret = write(m_file_descriptor, console_TX, 1); /* test */
 	}
 	else if (std::strcmp(console_TX, "id") == 0)
