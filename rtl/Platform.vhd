@@ -194,22 +194,6 @@ mainSpiProcessing_module: SpiProcessing port map
 	SERIAL_MISO => PRIMARY_MISO
 );
 
---secondSpiProcessing_module: SpiProcessing port map 
---(
---	CLOCK => CLOCK_50MHz,
-
---	CS => SECONDARY_CS,
---	SCLK => SECONDARY_SCLK,
-
---	SPI_INT => spi_ready_interrut, -- Ready signal
-
---	SERIAL_MOSI => SECONDARY_MOSI,
---	PARALLEL_MOSI => secondary_parallel_MOSI,
-
---	PARALLEL_MISO => secondary_parallel_MISO,
---	SERIAL_MISO => SECONDARY_MISO
---);
-
 ------------------------------------------------------
 -- Interrupt pulse :: 0x2FAF07F/50 MHz
 -- (49999999 + 1)/50000000 Hz = 1 sec
@@ -236,8 +220,11 @@ I2cStateMachine_module: I2cStateMachine port map
 	CLOCK => CLOCK_50MHz,
 	RESET => reset_button,
 
+    -- in
     SPI_INT => spi_ready_interrut,
+    -- in
     KERNEL_INT => KERNEL_INT,
+    -- out
     FPGA_INT => FPGA_INT,
 
 	I2C_SCK => I2C_SCK,
