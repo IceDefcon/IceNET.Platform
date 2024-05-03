@@ -351,7 +351,7 @@ begin
                             if status_sda = "0110" then -- Data 
                                 if sda_timer = "111110011" then -- Half bit time
                                     sda_timer <= (others => '0');
-                                    I2C_SDA <= REGISTER_I2C(index);
+                                    I2C_SDA <= REGISTER_I2C(7 - index);
                                     index <= index + 1;
                                 else
                                     sda_timer <= sda_timer + '1';

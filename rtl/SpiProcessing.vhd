@@ -35,29 +35,37 @@ spi_process: process(CLOCK)
 begin
     if rising_edge(CLOCK) then
 
-        index <= to_integer(unsigned(count_bit));
+        if CS = '0' then
 
-        if spi_ready = '1' then
-            spi_ready <= '0';
-        end if;
+            index <= to_integer(unsigned(count_bit));
 
-        if SCLK = '1' then
-            pipe_1 <= '1';
-        elsif SCLK = '0' and pipe_1 = '1' then
-            pipe_2 <= '1';
-        end if;
+            if spi_ready = '1' then -- Interrupt bit for 20ns only
+                spi_ready <= '0'; -- Then pull Low
+            end if;
 
-        if pipe_1 = '1' and pipe_2 = '1' then
-            synced_parallel_mosi(7 - index) <= SERIAL_MOSI;
+            if SCLK = '1' then
+                pipe_1 <= '1';
+            elsif SCLK = '0' and pipe_1 = '1' then
+                pipe_2 <= '1';
+            end if;
 
-            pipe_1 <= '0';
-            pipe_2 <= '0';
-            count_bit <= count_bit + '1';
-        end if;
+            if pipe_1 = '1' then
+                SERIAL_MISO <= PARALLEL_MISO((7 - index));
+            end if;
 
-        if count_bit = "0111" then
-            spi_ready <= '1';
-            PARALLEL_MOSI <= synced_parallel_mosi;
+            if pipe_1 = '1' and pipe_2 = '1' then
+                synced_parallel_mosi(7 - index) <= SERIAL_MOSI;
+
+                pipe_1 <= '0';
+                pipe_2 <= '0';
+                count_bit <= count_bit + '1';
+            end if;
+
+            if count_bit = "1000" then
+                spi_ready <= '1'; -- Generate interrupt for I2C state machine
+                count_bit <= (others => '0');
+                PARALLEL_MOSI <= synced_parallel_mosi;
+            end if;
         end if;
     end if;    
 end process;

@@ -126,25 +126,46 @@ int iceCOM::device_write()
     	m_killThread = true;
     	device_close();
 	}
-	else if (std::strcmp(console_TX, "st") == 0)
-	{
-		console_TX[0] = 0x1B;
-		ret = write(m_file_descriptor, console_TX, 1); /* test */
-	}
 	else if (std::strcmp(console_TX, "id") == 0)
 	{
-		console_TX[0] = 0x00;
-		ret = write(m_file_descriptor, console_TX, 1); /* id */
+		console_TX[0] = 0x00; /* chip id */
+		ret = write(m_file_descriptor, console_TX, 1);
 	}
-	else if (std::strcmp(console_TX, "mag") == 0) 
+	else if (std::strcmp(console_TX, "st") == 0)
 	{
-		console_TX[0] = 0x04;
-		console_TX[1] = 0x05;
-		console_TX[2] = 0x06;
-		console_TX[3] = 0x07;
-		console_TX[4] = 0x08;
-		console_TX[5] = 0x09;
-		ret = write(m_file_descriptor, console_TX, 6); /* Magnetometer */
+		console_TX[0] = 0x1B; /* status register */
+		ret = write(m_file_descriptor, console_TX, 1);
+	}
+	else if (std::strcmp(console_TX, "s1") == 0)
+	{
+		console_TX[0] = 0x18; /* SENSORTIME_0 */
+		ret = write(m_file_descriptor, console_TX, 1);
+	}
+	else if (std::strcmp(console_TX, "s2") == 0)
+	{
+		console_TX[0] = 0x19; /* SENSORTIME_1 */
+		ret = write(m_file_descriptor, console_TX, 1);
+	}
+	else if (std::strcmp(console_TX, "s3") == 0)
+	{
+		console_TX[0] = 0x1A; /* SENSORTIME_2 */
+		ret = write(m_file_descriptor, console_TX, 1);
+	}
+	/**
+	 * 
+	 * This need to be considered 
+	 * when arriving to FPGA
+	 * 
+	 * Multiple bytes must be processed sequentially
+	 * in order to receive multiple readings from registers
+	 * 
+	 */
+	else if (std::strcmp(console_TX, "sen") == 0) 
+	{
+		console_TX[0] = 0x18; /* SENSORTIME_0 */
+		console_TX[1] = 0x19; /* SENSORTIME_1 */
+		console_TX[2] = 0x1A; /* SENSORTIME_2 */
+		ret = write(m_file_descriptor, console_TX, 3);
 	}
 	else
 	{
