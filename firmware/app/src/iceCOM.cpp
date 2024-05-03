@@ -126,7 +126,7 @@ int iceCOM::device_write()
     	m_killThread = true;
     	device_close();
 	}
-	else if (std::strcmp(console_TX, "status") == 0)
+	else if (std::strcmp(console_TX, "st") == 0)
 	{
 		console_TX[0] = 0x1B;
 		ret = write(m_file_descriptor, console_TX, 1); /* test */

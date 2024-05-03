@@ -22,53 +22,45 @@ end entity SpiProcessing;
 
 architecture rtl of SpiProcessing is
 
-signal run : std_logic := '0';
-signal count : std_logic_vector(4 downto 0) := (others => '0');
+signal pipe_1 : std_logic := '0';
+signal pipe_2 : std_logic := '0';
 signal count_bit : std_logic_vector(3 downto 0) := (others => '0');
 signal index : integer range 0 to 15 := 0;
-signal synced_sclk : std_logic := '0';
 signal spi_ready : std_logic := '0';
 signal synced_parallel_mosi : std_logic_vector(7 downto 0);
 
 begin
-    spi_process: process(CLOCK)
-    begin
-        if rising_edge(CLOCK) then
 
-            if spi_ready = '1' then
-                spi_ready <= '0';
-            end if;
+spi_process: process(CLOCK)
+begin
+    if rising_edge(CLOCK) then
 
-            if run = '1' then
-                if count = "00000" then -- If second half bit 
-                    count_bit <= count_bit + '1'; -- Then increment bit number
-                end if;
-            end if;
+        index <= to_integer(unsigned(count_bit));
 
-            index <= to_integer(unsigned(count_bit));
+        if spi_ready = '1' then
+            spi_ready <= '0';
+        end if;
 
-            if CS = '0' then
-                if SCLK = '1' then
-                    run <= '1';
-                    count <= count + '1'; -- First Half SPI Bit
-                    synced_parallel_mosi(7 - index) <= SERIAL_MOSI;
-                    SERIAL_MISO <= PARALLEL_MISO(7 - index);
-                elsif SCLK = '0' then
-                    if count > 0 then
-                        count <= count - '1'; -- Sencond Half SPI Bit
-                    end if;
-                    synced_parallel_mosi(7 - index) <= SERIAL_MOSI;
-                    SERIAL_MISO <= PARALLEL_MISO(7 - index);
-                    if count_bit = "0111" then -- if 8 bits are processed
-                        run <= '0'; -- Then stop processing
-                        count_bit <= "0000"; -- Then clear the bit count
-                        spi_ready <= '1'; -- Interrupt to signal that synchronisation is complete 
-                        PARALLEL_MOSI <= synced_parallel_mosi;
-                    end if;
-                end if;
-            end if;
-        end if;    
-    end process spi_process;
+        if SCLK = '1' then
+            pipe_1 <= '1';
+        elsif SCLK = '0' and pipe_1 = '1' then
+            pipe_2 <= '1';
+        end if;
+
+        if pipe_1 = '1' and pipe_2 = '1' then
+            synced_parallel_mosi(7 - index) <= SERIAL_MOSI;
+
+            pipe_1 <= '0';
+            pipe_2 <= '0';
+            count_bit <= count_bit + '1';
+        end if;
+
+        if count_bit = "0111" then
+            spi_ready <= '1';
+            PARALLEL_MOSI <= synced_parallel_mosi;
+        end if;
+    end if;    
+end process;
 
 SPI_INT <= spi_ready;
 
