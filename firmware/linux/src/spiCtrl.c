@@ -46,7 +46,7 @@ static struct spi_device *spi_dev_second;
 static volatile uint8_t spi_tx_at_interruptFromFpga[] = {0xCD};
 static volatile uint8_t spi_rx_at_interruptFromFpga[1];
 static volatile uint8_t spi_tx_at_mainFromCharDevice[] = {0xC3};
-// static volatile uint8_t spi_rx_at_mainFromCharDevice[8];
+static volatile uint8_t spi_rx_at_mainFromCharDevice[8];
 static volatile uint8_t spi_tx_at_secondFromCharDevice[] = {0x00}; /* ID Register of the BMI160 chip */
 static volatile uint8_t spi_rx_at_secondFromCharDevice[1];
 
@@ -194,8 +194,8 @@ void mainFromCharDevice(struct work_struct *work)
     struct transfer_data* fpgaData = get_transfer_data();
 
     memset(&transfer, 0, sizeof(transfer));
-    transfer.tx_buf = fpgaData->TxData;
-    transfer.rx_buf = fpgaData->RxData;
+    transfer.tx_buf = fpgaData->data;
+    transfer.rx_buf = spi_rx_at_mainFromCharDevice;
     transfer.len = fpgaData->length;
 
     spi_message_init(&msg);
@@ -214,7 +214,7 @@ void mainFromCharDevice(struct work_struct *work)
 
     for (i = 0; i < fpgaData->length; ++i) 
     {
-        printk(KERN_INFO "[CTRL][SPI] Byte[%d]: Kernel.TX[0x%02x] Fpga.RX[0x%02x]\n", i, fpgaData->TxData[i], fpgaData->RxData[i]);
+        printk(KERN_INFO "[CTRL][SPI] Byte[%d]: Kernel.TX[0x%02x] Fpga.RX[0x%02x]\n", i, fpgaData->data[i], spi_rx_at_mainFromCharDevice[i]);
     }
 
     /*!
@@ -222,14 +222,13 @@ void mainFromCharDevice(struct work_struct *work)
      * Here we should process 
      * feedback from FPGA
      * 
-     * Then Clear the buffers
+     * Then Clear the buffer
      * 
      */
 
     for (i = 0; i < fpgaData->length; ++i) 
     {
-        fpgaData->TxData[i] = 0x00;
-        fpgaData->RxData[i] = 0x00;
+        spi_rx_at_mainFromCharDevice[i] = 0x00;
     }
 }
 
