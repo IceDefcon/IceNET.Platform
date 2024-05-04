@@ -201,13 +201,16 @@ static ssize_t dev_write(struct file *filep, const char __user *buffer, size_t l
     /* Null-terminate the char array */
     RxData[len] = '\0';
 
+    /* Dummy TxData */
+    for (int i = 0; i < len; i++)
+    {
+        TxData[i] = 0x00;
+    }
+    TxData[len] = '\0';
+
     /* Update charDeviceTransfer */
     charDeviceTransfer.RxData = RxData;
-    for (i = 0; i < len; i++)
-    {
-        /* Dummy */
-        charDeviceTransfer.TxData[i] = i;
-    }
+    charDeviceTransfer.TxData = TxData;
     charDeviceTransfer.length = len;
     charDeviceTransfer.ready = true;
 
