@@ -72,6 +72,9 @@ static void init_charDevice_Data(void)
         return -ENOMEM;
     }
 
+    /* charDevice Preamble */
+    TxData[0] = 0xBB;
+
     charDeviceTransfer.RxData = RxData;
     charDeviceTransfer.TxData = TxData; /* TODO :: TxData is rubish */
     charDeviceTransfer.length = 0;
