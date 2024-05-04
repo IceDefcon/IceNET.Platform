@@ -30,15 +30,15 @@ static struct /* Feedback data to user-space */
     bool ready
 } charDevice_TxData;
 
-static struct transfer_data /* Transfer data from user-space */
+static struct charDevice_DataType /* Transfer data from user-space */
 {
     volatile char *RxData;
     volatile char *TxData;
     size_t length;
     bool ready;
-} charDevice_RxData;
+} charDevice_Data;
 
-/* GET TRANSFER DATA */ struct transfer_data* charDevice_getRxData(void);
+/* GET TRANSFER DATA */ struct charDevice_DataType* charDevice_getRxData(void);
 
 void charDeviceInit(void);
 void charDeviceDestroy(void);
