@@ -197,7 +197,7 @@ static ssize_t dev_write(struct file *filep, const char __user *buffer, size_t l
     charDeviceTransfer.ready = true;
 
     /* Dummy setup feedback data */
-    for (int i = 0; i < len; ++i)
+    for (i = 0; i < charDeviceTransfer.length; i++)
     {
         charDeviceTransfer.TxData[i] = i;
     }
