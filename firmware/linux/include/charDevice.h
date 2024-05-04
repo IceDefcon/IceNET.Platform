@@ -22,13 +22,6 @@
 
 #define CD_OK 0
 
-static struct /* Feedback data to user-space */
-{
-    char *data;
-    size_t length;
-    bool ready
-} charDevice_TxData;
-
 static DataTransfer charDeviceTransfer; 
 
 /* GET TRANSFER DATA */ DataTransfer* charDevice_getRxData(void);
