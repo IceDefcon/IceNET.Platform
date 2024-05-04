@@ -54,8 +54,26 @@ static struct file_operations fops =
 
 static void init_charDevice_Data(void)
 {
-    charDeviceTransfer.RxData = NULL;
-    charDeviceTransfer.TxData = NULL;
+    char *RxData, *TxData;
+
+    /* Allocate memory for RxData */
+    RxData = kmalloc(len + 1, GFP_KERNEL);
+    if (!RxData) 
+    {
+        printk(KERN_ALERT "[CTRL][ C ] RxData :: Memory allocation failed ");
+        return -ENOMEM;
+    }
+
+    /* Allocate memory for TxData */
+    TxData = kmalloc(len + 1, GFP_KERNEL);
+    if (!TxData) 
+    {
+        printk(KERN_ALERT "[CTRL][ C ] TxData :: Memory allocation failed ");
+        return -ENOMEM;
+    }
+
+    charDeviceTransfer.RxData = RxData;
+    charDeviceTransfer.TxData = TxData; /* TODO :: Data is rubish */
     charDeviceTransfer.length = 0;
     charDeviceTransfer.ready = false;
 
@@ -164,49 +182,20 @@ static ssize_t dev_read(struct file *filep, char *buffer, size_t len, loff_t *of
 
 static ssize_t dev_write(struct file *filep, const char __user *buffer, size_t len, loff_t *offset)
 {
-    char *RxData, *TxData;
     int error_count = 0;
     size_t i;
 
-    /* Allocate memory for RxData */
-    RxData = kmalloc(len + 1, GFP_KERNEL);
-    if (!RxData) 
-    {
-        printk(KERN_ALERT "[CTRL][ C ] RxData :: Memory allocation failed ");
-        return -ENOMEM;
-    }
-
-    /* Allocate memory for TxData */
-    TxData = kmalloc(len + 1, GFP_KERNEL);
-    if (!TxData) 
-    {
-        printk(KERN_ALERT "[CTRL][ C ] TxData :: Memory allocation failed ");
-        return -ENOMEM;
-    }
-
     /* Copy RxData from user space to kernel space */
-    error_count = copy_from_user(RxData, buffer, len);
+    error_count = copy_from_user(charDeviceTransfer.RxData, buffer, len);
     if (error_count != 0) 
     {
         /* Free allocated memory */
-        kfree(RxData);
+        kfree(charDeviceTransfer.RxData);
         /* Copy failed */
         return -EFAULT;
     }
 
-    /* Null-terminate the char array */
-    RxData[len] = '\0';
-
-    /* Dummy TxData */
-    for (i = 0; i < len; i++)
-    {
-        TxData[i] = (char)i;
-    }
-    TxData[len] = '\0';
-
-    /* Update charDeviceTransfer */
-    charDeviceTransfer.RxData = RxData;
-    charDeviceTransfer.TxData = TxData;
+    charDeviceTransfer.RxData[len] = '\0';  /* Null-terminate the char array */
     charDeviceTransfer.length = len;
     charDeviceTransfer.ready = true;
 
