@@ -54,16 +54,16 @@ static struct file_operations fops =
 
 static void init_transfer_data(void)
 {
-    read_data.data = NULL;
-    read_data.length = 0;
-    read_data.ready = false;
+    charDevice_RxData.data = NULL;
+    charDevice_RxData.length = 0;
+    charDevice_RxData.ready = false;
 
     printk(KERN_ALERT "[INIT][ C ] Initialize transfer data\n");
 }
 
-/* GET TRANSFER DATA */ struct transfer_data* get_transfer_data(void) 
+/* GET TRANSFER RX DATA */ struct transfer_data* charDevice_getRxData(void) 
 {
-    return &read_data;
+    return &charDevice_RxData;
 }
 
 void charDeviceInit(void)
@@ -135,18 +135,25 @@ static ssize_t dev_read(struct file *filep, char *buffer, size_t len, loff_t *of
 {
     int error_count = 0;
 
-    /* TODO :: No feedback so far */
-    write_data.data = 0;
-    write_data.length = 0;
+    /**
+     * 
+     * TODO
+     * 
+     * At the moment no data feedback
+     * is computed back to user space
+     * 
+     */
+    charDevice_TxData.data = 0;
+    charDevice_TxData.length = 0;
 
-    /* Copy to user space :: *to, *from, size :: returns 0 on success */
-    error_count = copy_to_user(buffer, write_data.data, write_data.length);
+    /* Copy to user space :: *to, *from, size */
+    error_count = copy_to_user(buffer, charDevice_TxData.data, charDevice_TxData.length);
 
     if (0 == error_count)
     {
-        printk(KERN_INFO "[CTRL][ C ] Sent %d characters to user-space\n", write_data.length);
+        printk(KERN_INFO "[CTRL][ C ] Sent %d characters to user-space\n", charDevice_TxData.length);
         /* Clear the position to the start and return NULL */
-        return (write_data.length = 0);
+        return (charDevice_TxData.length = 0);
     }
     else 
     {
@@ -168,7 +175,7 @@ static ssize_t dev_write(struct file *filep, const char __user *buffer, size_t l
     data = kmalloc(len + 1, GFP_KERNEL);
     if (!data) 
     {
-        /* Memory allocation failed */
+        printk(KERN_ALERT "[CTRL][ C ] Memory allocation failed ");
         return -ENOMEM;
     }
 
@@ -185,15 +192,15 @@ static ssize_t dev_write(struct file *filep, const char __user *buffer, size_t l
     /* Null-terminate the char array */
     data[len] = '\0';
 
-    /* Update read_data */
-    read_data.data = data;
-    read_data.length = len;
-    read_data.ready = true;
+    /* Update charDevice_RxData */
+    charDevice_RxData.data = data;
+    charDevice_RxData.length = len;
+    charDevice_RxData.ready = true;
 
     // Print each character of the data array
-    for (i = 0; i < read_data.length; i++) 
+    for (i = 0; i < charDevice_RxData.length; i++) 
     {
-        printk(KERN_INFO "[CTRL][ C ] Received Byte[%zu]: 0x%02x\n", i, (unsigned char)read_data.data[i]);
+        printk(KERN_INFO "[CTRL][ C ] Received Byte[%zu]: 0x%02x\n", i, (unsigned char)charDevice_RxData.data[i]);
     }
 
     setStateMachine(SPI);

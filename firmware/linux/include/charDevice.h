@@ -28,16 +28,16 @@ static struct /* Feedback data to user-space */
     char *data;
     size_t length;
     bool ready
-} write_data;
+} charDevice_TxData;
 
 static struct transfer_data /* Transfer data from user-space */
 {
     char *data;
     size_t length;
     bool ready;
-} read_data;
+} charDevice_RxData;
 
-/* GET TRANSFER DATA */ struct transfer_data* get_transfer_data(void);
+/* GET TRANSFER DATA */ struct transfer_data* charDevice_getRxData(void);
 
 void charDeviceInit(void);
 void charDeviceDestroy(void);
