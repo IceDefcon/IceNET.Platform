@@ -54,8 +54,8 @@ static struct file_operations fops =
 
 static void init_charDevice_Data(void)
 {
-    charDeviceTransfer.RxData[0] = 0x00;
-    charDeviceTransfer.TxData[0] = 0x00;
+    charDeviceTransfer.RxData = NULL;
+    charDeviceTransfer.TxData = NULL;
     charDeviceTransfer.length = 0;
     charDeviceTransfer.ready = false;
 
@@ -140,13 +140,15 @@ static ssize_t dev_read(struct file *filep, char *buffer, size_t len, loff_t *of
      * 
      * TODO
      * 
-     * At the moment no Dummy feedback
+     * At the moment no data feedback
      * is computed back to user space
      * 
      */
+    charDevice_TxData.data[1] = 0x11;
+    charDevice_TxData.length = 1;
 
     /* Copy to user space :: *to, *from, size */
-    error_count = copy_to_user(buffer, charDeviceTransfer.TxData, charDeviceTransfer.length);
+    error_count = copy_to_user(buffer, charDevice_TxData.data, charDevice_TxData.length);
 
     if (0 == error_count)
     {
@@ -195,13 +197,6 @@ static ssize_t dev_write(struct file *filep, const char __user *buffer, size_t l
     charDeviceTransfer.RxData = data;
     charDeviceTransfer.length = len;
     charDeviceTransfer.ready = true;
-
-    /* Dummy setup feedback data */
-    for (i = 0; i < charDeviceTransfer.length; i++)
-    {
-        charDeviceTransfer.TxData[i] = i;
-        printk(KERN_ALERT "[CTRL][ C ] charDeviceTransfer.TxData[%d] = %d ",i, charDeviceTransfer.TxData[i]);
-    }
 
     // Print each character of the data array
     for (i = 0; i < charDeviceTransfer.length; i++) 
