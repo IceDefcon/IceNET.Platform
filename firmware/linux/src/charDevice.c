@@ -62,7 +62,7 @@ static void init_charDevice_Data(void)
     printk(KERN_ALERT "[INIT][ C ] Initialize charDevice Data\n");
 }
 
-/* GET TRANSFER RX DATA */ struct charDevice_DataType* charDevice_getRxData(void) 
+/* GET TRANSFER RX DATA */ charDevice_DataType* charDevice_getRxData(void) 
 {
     return &charDevice_Data;
 }
