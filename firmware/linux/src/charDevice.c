@@ -54,17 +54,17 @@ static struct file_operations fops =
 
 static void init_charDevice_Data(void)
 {
-    charDevice_Data.RxData = NULL;
-    charDevice_Data.TxData = NULL;
-    charDevice_Data.length = 0;
-    charDevice_Data.ready = false;
+    charDevice_RxData.RxData = NULL;
+    charDevice_RxData.TxData = NULL;
+    charDevice_RxData.length = 0;
+    charDevice_RxData.ready = false;
 
     printk(KERN_ALERT "[INIT][ C ] Initialize charDevice Data\n");
 }
 
 /* GET TRANSFER RX DATA */ struct charDevice_RxData* charDevice_getRxData(void) 
 {
-    return &charDevice_Data;
+    return &charDevice_RxData;
 }
 
 void charDeviceInit(void)
@@ -193,15 +193,15 @@ static ssize_t dev_write(struct file *filep, const char __user *buffer, size_t l
     /* Null-terminate the char array */
     data[len] = '\0';
 
-    /* Update charDevice_Data */
-    charDevice_Data.RxData = data;
-    charDevice_Data.length = len;
-    charDevice_Data.ready = true;
+    /* Update charDevice_RxData */
+    charDevice_RxData.RxData = data;
+    charDevice_RxData.length = len;
+    charDevice_RxData.ready = true;
 
     // Print each character of the data array
-    for (i = 0; i < charDevice_Data.length; i++) 
+    for (i = 0; i < charDevice_RxData.length; i++) 
     {
-        printk(KERN_INFO "[CTRL][ C ] Received Byte[%zu]: 0x%02x\n", i, (unsigned char)charDevice_Data.RxData[i]);
+        printk(KERN_INFO "[CTRL][ C ] Received Byte[%zu]: 0x%02x\n", i, (unsigned char)charDevice_RxData.RxData[i]);
     }
 
     setStateMachine(SPI);
