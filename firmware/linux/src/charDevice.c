@@ -57,7 +57,7 @@ static void init_charDevice_Data(void)
     char *RxData, *TxData;
 
     /* Allocate memory for RxData */
-    RxData = kmalloc(len + 1, GFP_KERNEL);
+    RxData = kmalloc(1 + 1, GFP_KERNEL);
     if (!RxData) 
     {
         printk(KERN_ALERT "[CTRL][ C ] RxData :: Memory allocation failed ");
@@ -65,7 +65,7 @@ static void init_charDevice_Data(void)
     }
 
     /* Allocate memory for TxData */
-    TxData = kmalloc(len + 1, GFP_KERNEL);
+    TxData = kmalloc(1 + 1, GFP_KERNEL);
     if (!TxData) 
     {
         printk(KERN_ALERT "[CTRL][ C ] TxData :: Memory allocation failed ");
