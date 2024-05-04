@@ -168,37 +168,37 @@ static ssize_t dev_read(struct file *filep, char *buffer, size_t len, loff_t *of
 
 static ssize_t dev_write(struct file *filep, const char __user *buffer, size_t len, loff_t *offset)
 {
-    char *data;
+    char *RxData;
     int error_count = 0;
     size_t i;
 
     /* Allocate memory for the char array to store each character */
-    data = kmalloc(len + 1, GFP_KERNEL);
-    if (!data) 
+    RxData = kmalloc(len + 1, GFP_KERNEL);
+    if (!RxData) 
     {
         printk(KERN_ALERT "[CTRL][ C ] Memory allocation failed ");
         return -ENOMEM;
     }
 
-    /* Copy data from user space to kernel space */
-    error_count = copy_from_user(data, buffer, len);
+    /* Copy RxData from user space to kernel space */
+    error_count = copy_from_user(RxData, buffer, len);
     if (error_count != 0) 
     {
         /* Free allocated memory */
-        kfree(data);
+        kfree(RxData);
         /* Copy failed */
         return -EFAULT;
     }
 
     /* Null-terminate the char array */
-    data[len] = '\0';
+    RxData[len] = '\0';
 
     /* Update charDeviceTransfer */
-    charDeviceTransfer.RxData = data;
+    charDeviceTransfer.RxData = RxData;
     charDeviceTransfer.length = len;
     charDeviceTransfer.ready = true;
 
-    // Print each character of the data array
+    // Print each character of the RxData array
     for (i = 0; i < charDeviceTransfer.length; i++) 
     {
         printk(KERN_INFO "[CTRL][ C ] Received Byte[%zu]: 0x%02x\n", i, (unsigned char)charDeviceTransfer.RxData[i]);
