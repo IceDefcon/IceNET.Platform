@@ -115,7 +115,7 @@ int iceCOM::device_read()
 int iceCOM::device_write()
 {
 	int ret = -1;
-	char console_TX[6];
+	char console_TX[BUFFER_LENGTH] = {0};
 
 	Debug::Write();
 	/* Get console characters */

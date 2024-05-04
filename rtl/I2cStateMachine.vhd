@@ -124,7 +124,7 @@ begin
                     I2C_SCK <= 'Z';
                     I2C_SDA <= 'Z';
                     -- Reset to default
-                    DATA <= "11100111"; -- Default value after main flash 0xE7
+                    DATA <= "10101011"; -- Default value after main flash 0xAB
                 end if;
                 ------------------------------------
                 -- State Machine :: INIT

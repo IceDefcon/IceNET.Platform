@@ -43,7 +43,7 @@
 static struct spi_device *spi_dev_main;
 static struct spi_device *spi_dev_second;
 
-static volatile uint8_t spi_tx_at_interruptFromFpga[] = {0x81};
+static volatile uint8_t spi_tx_at_interruptFromFpga[] = {0xCD};
 static volatile uint8_t spi_rx_at_interruptFromFpga[1];
 static volatile uint8_t spi_tx_at_mainFromCharDevice[] = {0xC3};
 static volatile uint8_t spi_rx_at_mainFromCharDevice[8];
