@@ -144,17 +144,17 @@ static ssize_t dev_read(struct file *filep, char *buffer, size_t len, loff_t *of
      * is computed back to user space
      * 
      */
-    charDeviceTransfer.TxData = 0;
-    charDeviceTransfer.length = 0;
+    charDevice_TxData.data = 0;
+    charDevice_TxData.length = 0;
 
     /* Copy to user space :: *to, *from, size */
-    error_count = copy_to_user(buffer, charDeviceTransfer.TxData, charDeviceTransfer.length);
+    error_count = copy_to_user(buffer, charDevice_TxData.data, charDevice_TxData.length);
 
     if (0 == error_count)
     {
-        printk(KERN_INFO "[CTRL][ C ] Sent %d characters to user-space\n", charDeviceTransfer.length);
+        printk(KERN_INFO "[CTRL][ C ] Sent %d characters to user-space\n", charDevice_TxData.length);
         /* Clear the position to the start and return NULL */
-        return (charDeviceTransfer.length = 0);
+        return (charDevice_TxData.length = 0);
     }
     else 
     {
