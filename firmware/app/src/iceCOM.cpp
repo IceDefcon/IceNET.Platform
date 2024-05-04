@@ -105,7 +105,7 @@ int iceCOM::device_read()
 	else
 	{
 		Debug::Read(console_RX);
-	    printf("[iceCOM] %c\n", console_RX[0]);
+	    printf("[TEST] %c\n", console_RX[0]);
 	}
 
 	memset (console_RX, 0, BUFFER_LENGTH);
