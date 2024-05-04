@@ -64,8 +64,7 @@ void Debug::Todo(const char * message)
 
 void Debug::Read(const char * message)
 {
-	Info("[ RX ] Data: ", false);
-	Info(message);
+	Info("[ RX ] Data Transfered Successfully");
 }
 
 void Debug::Write(void)
