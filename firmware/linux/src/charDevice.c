@@ -200,7 +200,7 @@ static ssize_t dev_write(struct file *filep, const char __user *buffer, size_t l
 
     /* Null-terminate the char array */
     RxData[len] = '\0';
-s
+
     /* Dummy TxData */
     for (i = 0; i < len; i++)
     {
