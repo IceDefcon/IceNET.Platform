@@ -57,7 +57,7 @@ static void init_charDevice_Data(void)
     char *RxData, *TxData;
 
     /* Allocate memory for RxData */
-    RxData = kmalloc(1 + 1, GFP_KERNEL);
+    RxData = kmalloc(1 + 1, GFP_KERNEL); /* Register + Null terminate */
     if (!RxData) 
     {
         printk(KERN_ALERT "[CTRL][ C ] RxData :: Memory allocation failed ");
@@ -65,7 +65,7 @@ static void init_charDevice_Data(void)
     }
 
     /* Allocate memory for TxData */
-    TxData = kmalloc(1 + 1, GFP_KERNEL);
+    TxData = kmalloc(1 + 1, GFP_KERNEL); /* Register + 
     if (!TxData) 
     {
         printk(KERN_ALERT "[CTRL][ C ] TxData :: Memory allocation failed ");
@@ -195,7 +195,7 @@ static ssize_t dev_write(struct file *filep, const char __user *buffer, size_t l
         return -EFAULT;
     }
 
-    charDeviceTransfer.RxData[len] = '\0';  /* Null-terminate the char array */
+    charDeviceTransfer.RxData[len] = '\0';  /* Null terminate the char array */
     charDeviceTransfer.length = len;
     charDeviceTransfer.ready = true;
 
