@@ -65,7 +65,6 @@ void Debug::Todo(const char * message)
 void Debug::Read(const char * message)
 {
 	Info("[ RX ] Data Transfered Successfully");
-	printf("Feedback Data[0]: %c\n", message[0]);
 }
 
 void Debug::Write(void)
