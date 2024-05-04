@@ -24,13 +24,17 @@ void Debug::SetLevel(LogLevel level)
 void Debug::Error(const char * message)
 {
 	if(m_LogLevel >= LevelError)
+	{
 		std::cout << "[ERNO] " << message << std::endl;
+	}
 }
 
 void Debug::Warning(const char * message)
 {
 	if(m_LogLevel >= LevelWarning)
+	{
 		std::cout << "[WARN] " << message << std::endl;
+	}
 }
 
 void Debug::Info(const char* message)
@@ -53,13 +57,15 @@ void Debug::Info(const char * message, bool endLine)
 void Debug::Todo(const char * message)
 {
 	if(m_LogLevel >= LevelTodo)
+	{
 		std::cout << "[TODO] " << message << std::endl;
+	}
 }
 
 void Debug::Read(const char * message)
 {
-	Info("[ RX ] Command Transfered Successfully");
-	Info("[ RX ] Received data: %c", message[0]);
+	Info("[ RX ] Data: ", false);
+	Info(message[0]);
 }
 
 void Debug::Write(void)
