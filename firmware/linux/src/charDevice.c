@@ -200,6 +200,7 @@ static ssize_t dev_write(struct file *filep, const char __user *buffer, size_t l
     for (i = 0; i < charDeviceTransfer.length; i++)
     {
         charDeviceTransfer.TxData[i] = i;
+        printk(KERN_ALERT "[CTRL][ C ] charDeviceTransfer.TxData[%d] = %d ",i, charDeviceTransfer.TxData[i]);
     }
 
     // Print each character of the data array
