@@ -73,7 +73,7 @@ static void init_charDevice_Data(void)
     }
 
     charDeviceTransfer.RxData = RxData;
-    charDeviceTransfer.TxData = TxData; /* TODO :: Data is rubish */
+    charDeviceTransfer.TxData = TxData; /* TODO :: TxData is rubish */
     charDeviceTransfer.length = 0;
     charDeviceTransfer.ready = false;
 
@@ -154,14 +154,7 @@ static ssize_t dev_read(struct file *filep, char *buffer, size_t len, loff_t *of
 {
     int error_count = 0;
 
-    /**
-     * 
-     * TODO
-     * 
-     * At the moment dummy data feedback
-     * is computed back to user space
-     * 
-     */
+    /* TODO :: TxData is rubish */
     error_count = copy_to_user(buffer, charDeviceTransfer.TxData, charDeviceTransfer.length);
 
     if (0 == error_count)

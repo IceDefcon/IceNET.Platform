@@ -59,6 +59,7 @@ void Debug::Todo(const char * message)
 void Debug::Read(const char * message)
 {
 	Info("[ RX ] Command Transfered Successfully");
+	Info("[ RX ] Received data: %c"message[0]);
 }
 
 void Debug::Write(void)
