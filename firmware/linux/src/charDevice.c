@@ -203,7 +203,7 @@ static ssize_t dev_write(struct file *filep, const char __user *buffer, size_t l
 
     /* Update charDeviceTransfer */
     charDeviceTransfer.RxData = RxData;
-    for (int i = 0; i < len; i++)
+    for (i = 0; i < len; i++)
     {
         /* Dummy */
         charDeviceTransfer.TxData[i] = i;
