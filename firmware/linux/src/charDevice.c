@@ -65,7 +65,7 @@ static void init_charDevice_Data(void)
     }
 
     /* Allocate memory for TxData */
-    TxData = kmalloc(1 + 1, GFP_KERNEL); /* Register + 
+    TxData = kmalloc(1 + 1, GFP_KERNEL); /* Register + null terminate */
     if (!TxData) 
     {
         printk(KERN_ALERT "[CTRL][ C ] TxData :: Memory allocation failed ");
