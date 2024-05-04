@@ -14,7 +14,7 @@
 #include "core.h"
 
 
-const size_t BUFFER_LENGTH = 32;
+const size_t BUFFER_LENGTH = 2; /* Data + Null terminate */
 
 class iceCOM : public Core
 {
