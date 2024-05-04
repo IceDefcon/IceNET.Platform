@@ -8,8 +8,7 @@
 #ifndef CHAR_DEVICE_H
 #define CHAR_DEVICE_H
 
-#include <stdbool.h>
-#include <stddef.h>
+#include "types.h"
 
 //////////////////////
 //                  //
@@ -30,13 +29,7 @@ static struct /* Feedback data to user-space */
     bool ready
 } charDevice_TxData;
 
-static struct charDevice_DataType /* Transfer data from user-space */
-{
-    volatile char *RxData;
-    volatile char *TxData;
-    size_t length;
-    bool ready;
-} charDevice_Data;
+static dataTransfer charDevice_DataType; 
 
 /* GET TRANSFER DATA */ struct charDevice_DataType* charDevice_getRxData(void);
 
