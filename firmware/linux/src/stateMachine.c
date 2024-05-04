@@ -44,7 +44,7 @@
 static int StateMachineThread(void *data)
 {
     int counter = 0;
-    dataTransfer* transfer = charDevice_getRxData();
+    DataTransfer* transfer = charDevice_getRxData();
 
     while (!kthread_should_stop()) 
     {
