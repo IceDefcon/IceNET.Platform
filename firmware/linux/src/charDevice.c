@@ -54,7 +54,8 @@ static struct file_operations fops =
 
 static void init_transfer_data(void)
 {
-    charDevice_RxData.data = NULL;
+    charDevice_RxData.RxData = NULL;
+    charDevice_RxData.TxData = NULL;
     charDevice_RxData.length = 0;
     charDevice_RxData.ready = false;
 
@@ -193,14 +194,14 @@ static ssize_t dev_write(struct file *filep, const char __user *buffer, size_t l
     data[len] = '\0';
 
     /* Update charDevice_RxData */
-    charDevice_RxData.data = data;
+    charDevice_RxData.RxData = data;
     charDevice_RxData.length = len;
     charDevice_RxData.ready = true;
 
     // Print each character of the data array
     for (i = 0; i < charDevice_RxData.length; i++) 
     {
-        printk(KERN_INFO "[CTRL][ C ] Received Byte[%zu]: 0x%02x\n", i, (unsigned char)charDevice_RxData.data[i]);
+        printk(KERN_INFO "[CTRL][ C ] Received Byte[%zu]: 0x%02x\n", i, (unsigned char)charDevice_RxData.RxData[i]);
     }
 
     setStateMachine(SPI);

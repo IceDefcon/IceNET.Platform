@@ -32,7 +32,8 @@ static struct /* Feedback data to user-space */
 
 static struct transfer_data /* Transfer data from user-space */
 {
-    char *data;
+    volatile char *Rxdata;
+    volatile char *Txdata;
     size_t length;
     bool ready;
 } charDevice_RxData;

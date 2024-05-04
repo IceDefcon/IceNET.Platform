@@ -194,7 +194,7 @@ void mainFromCharDevice(struct work_struct *work)
     struct transfer_data* fpgaData = charDevice_getRxData();
 
     memset(&transfer, 0, sizeof(transfer));
-    transfer.tx_buf = fpgaData->data;
+    transfer.tx_buf = fpgaData->RxData;
     transfer.rx_buf = spi_rx_at_mainFromCharDevice;
     transfer.len = fpgaData->length;
 
@@ -214,7 +214,7 @@ void mainFromCharDevice(struct work_struct *work)
 
     for (i = 0; i < fpgaData->length; ++i) 
     {
-        printk(KERN_INFO "[CTRL][SPI] Byte[%d]: Kernel.TX[0x%02x] Fpga.RX[0x%02x]\n", i, fpgaData->data[i], spi_rx_at_mainFromCharDevice[i]);
+        printk(KERN_INFO "[CTRL][SPI] Byte[%d]: Kernel.TX[0x%02x] Fpga.RX[0x%02x]\n", i, fpgaData->RxData[i], spi_rx_at_mainFromCharDevice[i]);
     }
 
     /*!
