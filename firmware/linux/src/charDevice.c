@@ -144,8 +144,10 @@ static ssize_t dev_read(struct file *filep, char *buffer, size_t len, loff_t *of
      * is computed back to user space
      * 
      */
-    charDevice_TxData.data = 0;
-    charDevice_TxData.length = 0;
+    charDevice_TxData.data[0] = 1;
+    charDevice_TxData.data[1] = 2;
+    charDevice_TxData.data[2] = 3;
+    charDevice_TxData.length = 3;
 
     /* Copy to user space :: *to, *from, size */
     error_count = copy_to_user(buffer, charDevice_TxData.data, charDevice_TxData.length);
