@@ -32,10 +32,10 @@
  * 
  * SPI1
  * ============================================
- * BBB P9_28 :: ORANGE   :: SPI1_CS0  :: GREEN
- * BBB P9_30 :: YELOW    :: SPI1_D1   :: BLUE
- * BBB P9_29 :: BLUE     :: SPI1_D0   :: PURPLE
- * BBB P9_31 :: GREEN    :: SPI1_SCLK :: GREY
+ * BBB P9_28 :: ORANGE   :: SPI1_CS0
+ * BBB P9_30 :: YELOW    :: SPI1_D1
+ * BBB P9_29 :: BLUE     :: SPI1_D0
+ * BBB P9_31 :: GREEN    :: SPI1_SCLK
  * 
  */
 
@@ -46,7 +46,7 @@ static struct spi_device *spi_dev_second;
 static volatile uint8_t spi_tx_at_interruptFromFpga[] = {0xCD};
 static volatile uint8_t spi_rx_at_interruptFromFpga[1];
 static volatile uint8_t spi_tx_at_mainFromCharDevice[] = {0xC3};
-static volatile uint8_t spi_rx_at_mainFromCharDevice[8];
+// static volatile uint8_t spi_rx_at_mainFromCharDevice[8];
 static volatile uint8_t spi_tx_at_secondFromCharDevice[] = {0x00}; /* ID Register of the BMI160 chip */
 static volatile uint8_t spi_rx_at_secondFromCharDevice[1];
 
@@ -58,7 +58,8 @@ int spiInit(void)
     int ret;
 
     spi_master_main = spi_busnum_to_master(0);
-    if (!spi_master_main) {
+    if (!spi_master_main) 
+    {
         printk(KERN_ERR "[INIT][SPI] SPI Master at BUS 0 not found!\n");
         return -ENODEV;
     }
@@ -68,7 +69,8 @@ int spiInit(void)
     }
 
     spi_master_second = spi_busnum_to_master(1);
-    if (!spi_master_second) {
+    if (!spi_master_second) 
+    {
         printk(KERN_ERR "[INIT][SPI] SPI Master at BUS 1 not found!\n");
         return -ENODEV;
     }
@@ -78,7 +80,8 @@ int spiInit(void)
     }
 
     spi_dev_main = spi_alloc_device(spi_master_main);
-    if (!spi_dev_main) {
+    if (!spi_dev_main) 
+    {
         printk(KERN_ERR "[INIT][SPI] SPI0 Failed to Allocate!\n");
         return -ENOMEM;
     }
@@ -88,7 +91,8 @@ int spiInit(void)
     }
 
     spi_dev_second = spi_alloc_device(spi_master_second);
-    if (!spi_dev_second) {
+    if (!spi_dev_second) 
+    {
         printk(KERN_ERR "[INIT][SPI] SPI1 Failed to Allocate!\n");
         return -ENOMEM;
     }
@@ -104,7 +108,7 @@ int spiInit(void)
      * Only reqired when talking to FPGA
      */
     spi_dev_main->chip_select = 0;
-    spi_dev_main->mode = SPI_MODE_1;
+    spi_dev_main->mode = SPI_MODE_1; /* For Kernel <=> FPGA Communication */
     spi_dev_main->bits_per_word = 8;
     spi_dev_main->max_speed_hz = 1000000;
 
@@ -162,7 +166,7 @@ void interruptFromFpga(struct work_struct *work)
         printk(KERN_INFO "[CTRL][SPI] FPGA Transfer :: Signaled by GPIO Interrupt over SPI.0");
     }
 
-    for (i = 0; i < sizeof(spi_tx_at_secondFromCharDevice); ++i) {
+    for (i = 0; i < sizeof(spi_rx_at_interruptFromFpga); ++i) {
         printk(KERN_INFO "[CTRL][SPI] Byte[%d]: Kernel.TX[0x%02x] Fpga.RX[0x%02x]\n", i, spi_tx_at_interruptFromFpga[i], spi_rx_at_interruptFromFpga[i]);
     }
 
@@ -190,8 +194,8 @@ void mainFromCharDevice(struct work_struct *work)
     struct transfer_data* fpgaData = get_transfer_data();
 
     memset(&transfer, 0, sizeof(transfer));
-    transfer.tx_buf = fpgaData->data;
-    transfer.rx_buf = spi_rx_at_mainFromCharDevice;
+    transfer.tx_buf = fpgaData->TxData;
+    transfer.rx_buf = fpgaData->RxData;
     transfer.len = fpgaData->length;
 
     spi_message_init(&msg);
@@ -210,25 +214,23 @@ void mainFromCharDevice(struct work_struct *work)
 
     for (i = 0; i < fpgaData->length; ++i) 
     {
-        printk(KERN_INFO "[CTRL][SPI] Byte[%d]: Kernel.TX[0x%02x] Fpga.RX[0x%02x]\n", i, fpgaData->data[i], spi_rx_at_mainFromCharDevice[i]);
+        printk(KERN_INFO "[CTRL][SPI] Byte[%d]: Kernel.TX[0x%02x] Fpga.RX[0x%02x]\n", i, fpgaData->TxData[i], fpgaData->RxData[i]);
     }
-
-    spi_rx_at_mainFromCharDevice[0] = 0x00;
-    spi_rx_at_mainFromCharDevice[1] = 0x00;
-    spi_rx_at_mainFromCharDevice[2] = 0x00;
-    spi_rx_at_mainFromCharDevice[3] = 0x00;
-    spi_rx_at_mainFromCharDevice[4] = 0x00;
-    spi_rx_at_mainFromCharDevice[5] = 0x00;
-    spi_rx_at_mainFromCharDevice[6] = 0x00;
-    spi_rx_at_mainFromCharDevice[7] = 0x00;
 
     /*!
      * 
      * Here we should process 
      * feedback from FPGA
      * 
+     * Then Clear the buffers
+     * 
      */
 
+    for (i = 0; i < fpgaData->length; ++i) 
+    {
+        fpgaData->TxData[i] = 0x00;
+        fpgaData->RxData[i] = 0x00;
+    }
 }
 
 void secondFromCharDevice(struct work_struct *work)

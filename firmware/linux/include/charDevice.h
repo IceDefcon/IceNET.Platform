@@ -25,7 +25,8 @@
 
 static struct /* Feedback data to user-space */
 {
-    char *data;
+    volatile char *TxData;
+    volatile char *RxData;
     size_t length;
     bool ready
 } write_data;

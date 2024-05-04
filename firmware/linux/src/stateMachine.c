@@ -51,11 +51,11 @@ static int StateMachineThread(void *data)
         switch(getStateMachine()->state)
         {
             case IDLE:
-                // printk(KERN_INFO "[CTRL][STM] IDLE mode [%d]\n", counter);
+                // printk(KERN_INFO "[CTRL][STM] IDLE mode [%ds]\n", counter);
                 break;
 
             case SPI:
-                printk(KERN_INFO "[CTRL][STM] SPI mode [%d]\n", counter);
+                printk(KERN_INFO "[CTRL][STM] SPI mode [%ds]\n", counter);
                 if (true == transfer->ready)
                 {
                     printk(KERN_INFO "[CTRL][STM] SPI Data Ready\n");
@@ -66,15 +66,15 @@ static int StateMachineThread(void *data)
                 break;
 
             case I2C:
-                printk(KERN_INFO "[CTRL][STM] I2C mode [%d]\n", counter);
+                printk(KERN_INFO "[CTRL][STM] I2C mode [%ds]\n", counter);
                 break;
 
             case DMA:
-                printk(KERN_INFO "[CTRL][STM] DMA mode [%d]\n", counter);
+                printk(KERN_INFO "[CTRL][STM] DMA mode [%ds]\n", counter);
                 break;
 
             default:
-                printk(KERN_INFO "[CTRL][STM] Unknown mode [%d]\n", counter);
+                printk(KERN_INFO "[CTRL][STM] Unknown mode [%ds]\n", counter);
                 return EINVAL;
         }
 
