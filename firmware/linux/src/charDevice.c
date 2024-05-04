@@ -168,15 +168,23 @@ static ssize_t dev_read(struct file *filep, char *buffer, size_t len, loff_t *of
 
 static ssize_t dev_write(struct file *filep, const char __user *buffer, size_t len, loff_t *offset)
 {
-    char *RxData;
+    char *RxData, *TxData;
     int error_count = 0;
     size_t i;
 
-    /* Allocate memory for the char array to store each character */
+    /* Allocate memory for RxData */
     RxData = kmalloc(len + 1, GFP_KERNEL);
     if (!RxData) 
     {
-        printk(KERN_ALERT "[CTRL][ C ] Memory allocation failed ");
+        printk(KERN_ALERT "[CTRL][ C ] RxData :: Memory allocation failed ");
+        return -ENOMEM;
+    }
+
+    /* Allocate memory for TxData */
+    TxData = kmalloc(len + 1, GFP_KERNEL);
+    if (!TxData) 
+    {
+        printk(KERN_ALERT "[CTRL][ C ] TxData :: Memory allocation failed ");
         return -ENOMEM;
     }
 
@@ -195,6 +203,11 @@ static ssize_t dev_write(struct file *filep, const char __user *buffer, size_t l
 
     /* Update charDeviceTransfer */
     charDeviceTransfer.RxData = RxData;
+    for (int i = 0; i < len; i++)
+    {
+        /* Dummy */
+        charDeviceTransfer.TxData[i] = i;
+    }
     charDeviceTransfer.length = len;
     charDeviceTransfer.ready = true;
 
