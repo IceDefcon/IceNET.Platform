@@ -54,8 +54,8 @@ static struct file_operations fops =
 
 static void init_charDevice_Data(void)
 {
-    charDeviceTransfer.RxData = NULL;
-    charDeviceTransfer.TxData = NULL;
+    charDeviceTransfer.RxData[0] = 0x00;
+    charDeviceTransfer.TxData[0] = 0x00;
     charDeviceTransfer.length = 0;
     charDeviceTransfer.ready = false;
 
