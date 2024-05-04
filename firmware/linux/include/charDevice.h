@@ -29,9 +29,9 @@ static struct /* Feedback data to user-space */
     bool ready
 } charDevice_TxData;
 
-static dataTransfer charDevice_DataType; 
+static dataTransfer charDevice_RxData; 
 
-/* GET TRANSFER DATA */ struct charDevice_DataType* charDevice_getRxData(void);
+/* GET TRANSFER DATA */ struct charDevice_RxData* charDevice_getRxData(void);
 
 void charDeviceInit(void);
 void charDeviceDestroy(void);

@@ -44,7 +44,7 @@
 static int StateMachineThread(void *data)
 {
     int counter = 0;
-    struct charDevice_DataType* transfer = charDevice_getRxData();
+    struct charDevice_RxData* transfer = charDevice_getRxData();
 
     while (!kthread_should_stop()) 
     {
