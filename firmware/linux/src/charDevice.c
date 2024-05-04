@@ -195,7 +195,7 @@ static ssize_t dev_write(struct file *filep, const char __user *buffer, size_t l
 
     /* Update charDeviceTransfer */
     // charDeviceTransfer.RxData = data;
-    // charDeviceTransfer.length = len;
+    charDeviceTransfer.length = len;
     charDeviceTransfer.ready = true;
 
     // Print each character of the data array
