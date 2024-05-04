@@ -54,20 +54,7 @@ static struct file_operations fops =
 
 static void init_charDevice_Data(void)
 {
-    /**
-     * 
-     * Allocate memory for the RxData
-     * 
-     * Single byte + Null-terminate the char array
-     * 
-     */
-    charDeviceTransfer.RxData = kmalloc(1 + 1, GFP_KERNEL);
-    if (!charDeviceTransfer.RxData) 
-    {
-        printk(KERN_ALERT "[CTRL][ C ] RxData :: Memory allocation failed ");
-        return -ENOMEM;
-    }
-
+    charDeviceTransfer.RxData = NULL;
     charDeviceTransfer.TxData = NULL;
     charDeviceTransfer.length = 0;
     charDeviceTransfer.ready = false;
@@ -181,23 +168,33 @@ static ssize_t dev_read(struct file *filep, char *buffer, size_t len, loff_t *of
 
 static ssize_t dev_write(struct file *filep, const char __user *buffer, size_t len, loff_t *offset)
 {
+    char *data;
     int error_count = 0;
     size_t i;
 
-    /* Copy RxData from user space to kernel space */
-    error_count = copy_from_user(charDeviceTransfer.RxData, buffer, len);
+    /* Allocate memory for the char array to store each character */
+    data = kmalloc(len + 1, GFP_KERNEL);
+    if (!data) 
+    {
+        printk(KERN_ALERT "[CTRL][ C ] Memory allocation failed ");
+        return -ENOMEM;
+    }
+
+    /* Copy data from user space to kernel space */
+    error_count = copy_from_user(data, buffer, len);
     if (error_count != 0) 
     {
         /* Free allocated memory */
-        kfree(charDeviceTransfer.RxData);
+        kfree(data);
         /* Copy failed */
         return -EFAULT;
     }
 
     /* Null-terminate the char array */
-    charDeviceTransfer.RxData[len] = '\0';
+    data[len] = '\0';
 
     /* Update charDeviceTransfer */
+    charDeviceTransfer.RxData = data;
     charDeviceTransfer.length = len;
     charDeviceTransfer.ready = true;
 
