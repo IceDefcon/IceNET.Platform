@@ -66,6 +66,7 @@ void Debug::Read(const char* message)
 {
 	printf("Received Byte[0]: 0x%02X\n", message[0]);
     std::cout << "[ RX ] Byte[0] = " << message[0] << std::endl;
+    std::cout << "[ RX ] Byte[0] = " << static_cast<int>(message[0]) << std::endl;
 }
 
 void Debug::Write(void)
