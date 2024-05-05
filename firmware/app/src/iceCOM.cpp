@@ -116,7 +116,7 @@ int iceCOM::device_read()
     else
     {
         // Print received data for debugging
-        Debug::Read(charDeviceRx.data());
+        Debug::Read(charDeviceRx[0]);
 
         // Print the first four bytes received in hexadecimal format
         for (int i = 0; i < 4; ++i) {
