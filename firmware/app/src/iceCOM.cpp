@@ -10,7 +10,6 @@
 #include <unistd.h> 		// read/write to the file
 #include <cstring> 			// strcmp
 #include <termios.h> 		// terminal settings
-#include <vector>
 
 #include "iceCOM.h"
 

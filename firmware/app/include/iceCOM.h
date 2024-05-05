@@ -8,6 +8,7 @@
 
 #include <thread>
 #include <atomic>
+#include <vector>
 #include <semaphore.h>
 
 #include "debug.h"
