@@ -114,7 +114,7 @@ int iceCOM::device_read()
     {
         Debug::Info("[iceCOM] No data available");
         free(console_RX); // Free allocated memory before returning
-        return NO_DATA;
+        return ENODATA;
     }
     else
     {
