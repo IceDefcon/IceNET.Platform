@@ -158,6 +158,7 @@ static ssize_t dev_read(struct file *filep, char *buffer, size_t len, loff_t *of
     int error_count = 0;
 
     /* TODO :: TxData is rubish */
+    printk(KERN_INFO "[TEST][ C ] Trying to send: %c\n", charDeviceTransfer.TxData[0]);
     error_count = copy_to_user(buffer, charDeviceTransfer.TxData, charDeviceTransfer.length);
 
     if (0 == error_count)
