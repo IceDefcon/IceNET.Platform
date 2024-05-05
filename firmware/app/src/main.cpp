@@ -18,10 +18,10 @@ int main(void)
     /* Stack Allocation */
 	Core* CoreDevice = nullptr;
 
-	/* Heap Allocation*/
+	/* Heap Allocation */
 	iceCOM* iceCOMDevice = new iceCOM;
 
-	/* Initialise Krenel Communication*/
+	/* Initialise Kernel Communication */
 	CoreDevice = iceCOMDevice;
 	CoreDevice->device_open(ICE);
 
@@ -35,9 +35,17 @@ int main(void)
 	{
 		if (iceCOMDevice != nullptr) 
 		{
-			/* Shutdown Everything */
 		    if (iceCOMDevice->terminate()) 
 		    {
+		    	/**
+		    	 * 
+		    	 * Shutdown Kernel Communication
+		    	 * 
+		    	 * 1. Atomic Thread Kill
+		    	 * 2. Close the core Device associated with the class
+		    	 * 
+		    	 */
+		    	CoreDevice->device_close();
 		        break;
 		    }
 		}

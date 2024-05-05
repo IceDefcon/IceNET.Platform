@@ -125,7 +125,7 @@ void charDeviceInit(void)
 
     init_charDevice_Data();
 
-    printk(KERN_ALERT "[INIT][ C ] Lock on Char Device Device Mutex\n");
+    printk(KERN_ALERT "[INIT][ C ] Lock on [C] Device Mutex\n");
     mutex_init(&com_mutex);
 }
 
@@ -206,6 +206,7 @@ static ssize_t dev_write(struct file *filep, const char __user *buffer, size_t l
 
 static int dev_release(struct inode *inodep, struct file *filep)
 {
+    printk(KERN_ALERT "[INIT][ C ] Unlock [C] Device Mutex\n");
     mutex_unlock(&com_mutex);
     printk(KERN_INFO "[CTRL][ C ] Device successfully closed\n");
     return CD_OK;
