@@ -188,9 +188,12 @@ static ssize_t dev_read(struct file *filep, char *buffer, size_t len, loff_t *of
     }
     strcpy(test, "TEST"); // Copy the string into the allocated memory
 
-    printk(KERN_INFO "[TEST][ C ] charDeviceTransfer.TxData[0]: 0x%02X\n", charDeviceTransfer.TxData[0]);
-    error_count = copy_to_user(buffer, test, strlen(test) + 1); // Copy the string to user space
+    test = charDeviceTransfer.TxData;
 
+    printk(KERN_INFO "[TEST][ C ] charDeviceTransfer.TxData[0]: 0x%02X\n", charDeviceTransfer.TxData[0]);
+    // error_count = copy_to_user(buffer, test, strlen(test) + 1); // Copy the string to user space
+    error_count = copy_to_user(buffer, charDeviceTransfer.TxData, charDeviceTransfer.length);
+    
     if (error_count == 0) {
         printk(KERN_INFO "[INFO] [ RX ] Data Transfered Successfully\n");
     } else {
