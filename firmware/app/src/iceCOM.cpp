@@ -12,7 +12,6 @@
 #include <termios.h> 		// terminal settings
 #include "iceCOM.h"
 
-const size_t BUFFER_LENGTH = 32;
 
 iceCOM::iceCOM(): 
 m_file_descriptor(0), 
@@ -93,46 +92,39 @@ int iceCOM::device_open(const char* device)
 	return OK;
 }
 
+#include <vector>
+
+const size_t BUFFER_LENGTH = 32;
+
 int iceCOM::device_read()
 {
     int ret;
-    char *console_RX = (char*)malloc(BUFFER_LENGTH); // Dynamically allocate memory
-
-    if (!console_RX)
-    {
-        Debug::Error("[iceCOM] Memory allocation failed");
-        return ERROR;
-    }
+    std::vector<char> console_RX(BUFFER_LENGTH); // Dynamically allocate memory
 
     // Attempt to read data from kernel space
-    ret = read(m_file_descriptor, console_RX, BUFFER_LENGTH);
+    ret = read(m_file_descriptor, console_RX.data(), BUFFER_LENGTH);
     if (ret == -1)
     {
         Debug::Error("[iceCOM] Cannot read from kernel space");
-        free(console_RX); // Free allocated memory before returning
         return ERROR;
     }
     else if (ret == 0)
     {
         Debug::Error("[iceCOM] No data available");
-        free(console_RX); // Free allocated memory before returning
         return ENODATA;
     }
     else
     {
         // Print received data for debugging
-        Debug::Read(console_RX);
+        Debug::Read(console_RX.data());
 
-        // Print the first byte received in hexadecimal format
-        printf("Received Byte[0]: 0x%02X\n", console_RX[0]);
-        printf("Received Byte[1]: 0x%02X\n", console_RX[1]);
-        printf("Received Byte[2]: 0x%02X\n", console_RX[2]);
-        printf("Received Byte[3]: 0x%02X\n", console_RX[3]);
+        // Print the first four bytes received in hexadecimal format
+        for (int i = 0; i < 4; ++i) {
+            printf("Received Byte[%d]: 0x%02X\n", i, console_RX[i]);
+        }
 
         // Clear the buffer for further reads
-        memset(console_RX, 0, BUFFER_LENGTH);
-
-        free(console_RX); // Free allocated memory before returning
+        console_RX.clear();
         return OK;
     }
 }
