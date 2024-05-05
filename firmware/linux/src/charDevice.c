@@ -74,9 +74,11 @@ static void init_charDevice_Data(void)
 
     /* charDevice Preamble */
     TxData[0] = 0xBB;
+    printk(KERN_INFO "[TEST][ C ] TxData[0]: %c\n", TxData[0]);
 
     charDeviceTransfer.RxData = RxData;
     charDeviceTransfer.TxData = TxData; /* TODO :: TxData is rubish */
+    printk(KERN_INFO "[TEST][ C ] charDeviceTransfer.TxData[0]: %c\n", charDeviceTransfer.TxData[0]);
     charDeviceTransfer.length = 2;
     charDeviceTransfer.ready = false;
 
@@ -158,8 +160,6 @@ static ssize_t dev_read(struct file *filep, char *buffer, size_t len, loff_t *of
     int error_count = 0;
 
     /* TODO :: TxData is rubish */
-    printk(KERN_INFO "[TEST][ C ] Trying to send: %c\n", charDeviceTransfer.TxData[0]);
-    printk(KERN_INFO "[TEST][ C ] Trying to send: %c\n", charDeviceTransfer.TxData[1]);
     error_count = copy_to_user(buffer, charDeviceTransfer.TxData, charDeviceTransfer.length);
 
     if (0 == error_count)
