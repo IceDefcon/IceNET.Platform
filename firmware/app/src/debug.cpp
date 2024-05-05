@@ -64,7 +64,7 @@ void Debug::Todo(const char * message)
 
 void Debug::Read(const char* message)
 {
-    std::cout << "[ RX ] " << message << std::endl;
+    std::cout << "[ RX ] Byte[0] = " << message[0] << std::endl;
 }
 
 void Debug::Write(void)
