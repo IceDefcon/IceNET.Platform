@@ -6,7 +6,7 @@
  */
 #pragma once
 
-class Core : public Debug
+class Core : public Console
 {
 public:
 
