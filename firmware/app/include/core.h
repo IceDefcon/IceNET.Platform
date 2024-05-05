@@ -6,6 +6,8 @@
  */
 #pragma once
 
+#include "console.h"
+
 class Core : public Console
 {
 public:
