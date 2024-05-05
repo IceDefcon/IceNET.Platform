@@ -123,6 +123,9 @@ int iceCOM::device_read()
 
         // Print the first byte received in hexadecimal format
         printf("Received Byte[0]: 0x%02X\n", console_RX[0]);
+        printf("Received Byte[1]: 0x%02X\n", console_RX[1]);
+        printf("Received Byte[2]: 0x%02X\n", console_RX[2]);
+        printf("Received Byte[3]: 0x%02X\n", console_RX[3]);
 
         // Clear the buffer for further reads
         memset(console_RX, 0, BUFFER_LENGTH);
