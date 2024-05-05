@@ -12,6 +12,8 @@
 #include <termios.h> 		// terminal settings
 #include "iceCOM.h"
 
+const size_t BUFFER_LENGTH = 32;
+
 iceCOM::iceCOM(): 
 m_file_descriptor(0), 
 m_killThread(false)

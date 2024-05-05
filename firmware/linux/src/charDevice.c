@@ -160,16 +160,11 @@ static ssize_t dev_read(struct file *filep, char *buffer, size_t len, loff_t *of
     /* TODO :: TxData is rubish */
     error_count = copy_to_user(buffer, charDeviceTransfer.TxData, charDeviceTransfer.length);
 
-    /* Debug */
-    // char *test = "TEST";
-    // error_count = copy_to_user(buffer, test, strlen(test) + 1);
-
     if (error_count == 0)
     {
-        // printk(KERN_INFO "[CTRL][ C ] Sent %ld characters to user-space\n", strlen(test) + 1);
         printk(KERN_INFO "[CTRL][ C ] Sent %ld characters to user-space\n", charDeviceTransfer.length);
-        /* Length :: Preamble + Null Terminator */
-        return charDeviceTransfer.length; //strlen(test) + 1; 
+        /* Length == Preamble + Null Terminator */
+        return charDeviceTransfer.length; 
     }
     else 
     {

@@ -14,8 +14,6 @@
 #include "core.h"
 
 
-const size_t BUFFER_LENGTH = 32;
-
 class iceCOM : public Core
 {
 
@@ -35,7 +33,6 @@ private:
 public:
 
 	iceCOM();
-	iceCOM(size_t BUFFER_LENGTH);
 	~iceCOM();
 
 	void initThread();
