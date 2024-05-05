@@ -161,7 +161,7 @@ static ssize_t dev_read(struct file *filep, char *buffer, size_t len, loff_t *of
     // error_count = copy_to_user(buffer, charDeviceTransfer.TxData, charDeviceTransfer.length);
 
     /* Debug */
-    char * test = "TEST";
+    char test = "TEST";
     error_count = copy_to_user(buffer, test, strlen(test) + 1);
 
     if (0 == error_count)
