@@ -166,9 +166,10 @@ static ssize_t dev_read(struct file *filep, char *buffer, size_t len, loff_t *of
 
     if (error_count == 0)
     {
-        printk(KERN_INFO "[CTRL][ C ] Sent %ld characters to user-space\n", strlen(test) + 1);
+        // printk(KERN_INFO "[CTRL][ C ] Sent %ld characters to user-space\n", strlen(test) + 1);
+        printk(KERN_INFO "[CTRL][ C ] Sent %ld characters to user-space\n", charDeviceTransfer.length);
         /* Length :: Preamble + Null Terminator */
-        return 2; //strlen(test) + 1; 
+        return charDeviceTransfer.length; //strlen(test) + 1; 
     }
     else 
     {
