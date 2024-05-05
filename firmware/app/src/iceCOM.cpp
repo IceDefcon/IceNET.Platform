@@ -94,7 +94,7 @@ int iceCOM::device_open(const char* device)
 int iceCOM::device_read()
 {
     int ret;
-    char *console_RX = (char*)malloc(BUFFER_LENGTH); // Dynamically allocate memory
+    volatile char *console_RX = (char*)malloc(BUFFER_LENGTH); // Dynamically allocate memory
 
     if (!console_RX)
     {
@@ -157,11 +157,6 @@ int iceCOM::device_write()
         console_TX[0] = 0x00; /* chip id */
         ret = write(m_file_descriptor, console_TX, 1);
     }
-    else if (std::strcmp(console_TX, "st") == 0)
-    {
-        console_TX[0] = 0x1B; /* status register */
-        ret = write(m_file_descriptor, console_TX, 1);
-    }
     else if (std::strcmp(console_TX, "s1") == 0)
     {
         console_TX[0] = 0x18; /* SENSORTIME_0 */
@@ -175,6 +170,11 @@ int iceCOM::device_write()
     else if (std::strcmp(console_TX, "s3") == 0)
     {
         console_TX[0] = 0x1A; /* SENSORTIME_2 */
+        ret = write(m_file_descriptor, console_TX, 1);
+    }
+    else if (std::strcmp(console_TX, "st") == 0)
+    {
+        console_TX[0] = 0x1B; /* status register */
         ret = write(m_file_descriptor, console_TX, 1);
     }
     /**
