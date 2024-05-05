@@ -95,7 +95,7 @@ int iceCOM::device_read()
 {
     int ret;
     // char *console_RX = (char*)malloc(BUFFER_LENGTH); // Dynamically allocate memory
-    char console_RX[BUFFER_LENGTH] = {0];
+    char console_RX[BUFFER_LENGTH] = {0};
 
     // if (!console_RX)
     // {
