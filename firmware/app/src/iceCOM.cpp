@@ -118,6 +118,11 @@ int iceCOM::device_read()
         // Print received data for debugging
         Debug::Read(charDeviceRx.data());
 
+        // Print the first four bytes received in hexadecimal format
+        for (int i = 0; i < 4; ++i) {
+            printf("Received Byte[%d]: 0x%02X\n", i, charDeviceRx[i]);
+        }
+
         /* Clear char device Rx buffer */
         charDeviceRx.clear();
 
