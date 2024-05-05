@@ -73,7 +73,8 @@ void Debug::Todo(const char * message)
  */
 void Debug::Read(const char* message)
 {
-    std::cout << "[ RX ] Byte[0] = " << std::hex << static_cast<int>(message[0]) << std::endl;
+	Info("[ RX ] ",false);
+    std::cout << "Byte[0] = " << std::hex << static_cast<int>(message[0]) << std::endl;
 }
 
 void Debug::Write(void)
