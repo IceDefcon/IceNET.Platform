@@ -64,7 +64,8 @@ void Debug::Todo(const char * message)
 
 void Debug::Read(const char* message)
 {
-    std::cout << "[ RX ] Byte[0] = " << std::hex << message[0] << std::endl;
+	printf("Received Byte[0]: 0x%02X\n", message[0]);
+    std::cout << "[ RX ] Byte[0] = " << message[0] << std::endl;
 }
 
 void Debug::Write(void)
