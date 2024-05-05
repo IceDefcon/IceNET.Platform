@@ -8,14 +8,15 @@
 
 #include <thread>
 #include <atomic>
+#include <vector>
 #include <semaphore.h>
 
 #include "debug.h"
 #include "core.h"
 
-#include <vector>
 
-const size_t BUFFER_LENGTH = 32;
+const size_t CHAR_DEVICE_SIZE = 32;
+const size_t CONSOLE_TERMINAL_SIZE = 32;
 
 class iceCOM : public Core
 {
@@ -32,9 +33,11 @@ private:
      * 
      */
     std::atomic<bool> m_killThread;
-
-    std::vector<char> console_RX;
-    std::vector<char> console_TX;
+    /* For char Device Traffic */
+    std::vector<char> charDeviceRx;
+    std::vector<char> charDeviceTx;
+    /* Console control buffer */
+    std::vector<char> consoleControl;
 
 public:
 

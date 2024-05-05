@@ -16,8 +16,9 @@
 iceCOM::iceCOM(): 
 m_file_descriptor(0), 
 m_killThread(false),
-console_RX(BUFFER_LENGTH),
-console_TX(BUFFER_LENGTH)
+charDeviceRx(CHAR_DEVICE_SIZE),
+charDeviceTx(CHAR_DEVICE_SIZE),
+consoleControl(CONSOLE_TERMINAL_SIZE)
 {
     Debug::Info("[iceCOM] Initialise iceCOM Module");
 }
@@ -101,7 +102,7 @@ int iceCOM::device_read()
     int ret;
 
     // Attempt to read data from kernel space
-    ret = read(m_file_descriptor, console_RX.data(), BUFFER_LENGTH);
+    ret = read(m_file_descriptor, charDeviceRx.data(), BUFFER_LENGTH);
     if (ret == -1)
     {
         Debug::Error("[iceCOM] Cannot read from kernel space");
@@ -115,15 +116,15 @@ int iceCOM::device_read()
     else
     {
         // Print received data for debugging
-        Debug::Read(console_RX.data());
+        Debug::Read(charDeviceRx.data());
 
         // Print the first four bytes received in hexadecimal format
         for (int i = 0; i < 4; ++i) {
-            printf("Received Byte[%d]: 0x%02X\n", i, console_RX[i]);
+            printf("Received Byte[%d]: 0x%02X\n", i, charDeviceRx[i]);
         }
 
         // Clear the buffer for further reads
-        console_RX.clear();
+        charDeviceRx.clear();
         return OK;
     }
 }
@@ -134,36 +135,36 @@ int iceCOM::device_write()
 
     Debug::Write();
     /* Get console characters */
-    std::cin.getline(console_TX.data(), BUFFER_LENGTH);
+    std::cin.getline(consoleControl.data(), BUFFER_LENGTH);
 
-    if (std::strcmp(console_TX.data(), "exit") == 0) 
+    if (std::strcmp(consoleControl.data(), "exit") == 0) 
     {
         m_killThread = true;
     }
-    else if (std::strcmp(console_TX.data(), "id") == 0)
+    else if (std::strcmp(consoleControl.data(), "id") == 0)
     {
-        console_TX[0] = 0x00; /* chip id */
-        ret = write(m_file_descriptor, console_TX.data(), 1);
+        charDeviceTx[0] = 0x00; /* chip id */
+        ret = write(m_file_descriptor, charDeviceTx.data(), 1);
     }
-    else if (std::strcmp(console_TX.data(), "s1") == 0)
+    else if (std::strcmp(consoleControl.data(), "s1") == 0)
     {
-        console_TX[0] = 0x18; /* SENSORTIME_0 */
-        ret = write(m_file_descriptor, console_TX.data(), 1);
+        charDeviceTx[0] = 0x18; /* SENSORTIME_0 */
+        ret = write(m_file_descriptor, charDeviceTx.data(), 1);
     }
-    else if (std::strcmp(console_TX.data(), "s2") == 0)
+    else if (std::strcmp(consoleControl.data(), "s2") == 0)
     {
-        console_TX[0] = 0x19; /* SENSORTIME_1 */
-        ret = write(m_file_descriptor, console_TX.data(), 1);
+        charDeviceTx[0] = 0x19; /* SENSORTIME_1 */
+        ret = write(m_file_descriptor, charDeviceTx.data(), 1);
     }
-    else if (std::strcmp(console_TX.data(), "s3") == 0)
+    else if (std::strcmp(consoleControl.data(), "s3") == 0)
     {
-        console_TX[0] = 0x1A; /* SENSORTIME_2 */
-        ret = write(m_file_descriptor, console_TX.data(), 1);
+        charDeviceTx[0] = 0x1A; /* SENSORTIME_2 */
+        ret = write(m_file_descriptor, charDeviceTx.data(), 1);
     }
-    else if (std::strcmp(console_TX.data(), "st") == 0)
+    else if (std::strcmp(consoleControl.data(), "st") == 0)
     {
-        console_TX[0] = 0x1B; /* status register */
-        ret = write(m_file_descriptor, console_TX.data(), 1);
+        charDeviceTx[0] = 0x1B; /* status register */
+        ret = write(m_file_descriptor, charDeviceTx.data(), 1);
     }
     /**
      * 
@@ -177,12 +178,12 @@ int iceCOM::device_write()
      * in order to receive multiple readings from registers
      * 
      */
-    else if (std::strcmp(console_TX.data(), "test") == 0) 
+    else if (std::strcmp(consoleControl.data(), "test") == 0) 
     {
-        console_TX[0] = 0x18; /* SENSORTIME_0 */
-        console_TX[1] = 0x19; /* SENSORTIME_1 */
-        console_TX[2] = 0x1A; /* SENSORTIME_2 */
-        ret = write(m_file_descriptor, console_TX.data(), 3);
+        charDeviceTx[0] = 0x18; /* SENSORTIME_0 */
+        charDeviceTx[1] = 0x19; /* SENSORTIME_1 */
+        charDeviceTx[2] = 0x1A; /* SENSORTIME_2 */
+        ret = write(m_file_descriptor, charDeviceTx.data(), 3);
     }
     else
     {
