@@ -130,70 +130,45 @@ int iceCOM::device_read()
 
 int iceCOM::device_write()
 {
-    int ret = -1;
-
     Console::Write();
-    /* Get console characters */
+
     std::cin.getline(consoleControl.data(), CONSOLE_CONTROL_SIZE);
 
     if (std::strcmp(consoleControl.data(), "exit") == 0) 
     {
         m_killThread = true;
     }
-    else if (std::strcmp(consoleControl.data(), "id") == 0)
-    {
-        charDeviceTx[0] = 0x00; /* chip id */
-        ret = write(m_file_descriptor, charDeviceTx.data(), 1);
-    }
-    else if (std::strcmp(consoleControl.data(), "s1") == 0)
-    {
-        charDeviceTx[0] = 0x18; /* SENSORTIME_0 */
-        ret = write(m_file_descriptor, charDeviceTx.data(), 1);
-    }
-    else if (std::strcmp(consoleControl.data(), "s2") == 0)
-    {
-        charDeviceTx[0] = 0x19; /* SENSORTIME_1 */
-        ret = write(m_file_descriptor, charDeviceTx.data(), 1);
-    }
-    else if (std::strcmp(consoleControl.data(), "s3") == 0)
-    {
-        charDeviceTx[0] = 0x1A; /* SENSORTIME_2 */
-        ret = write(m_file_descriptor, charDeviceTx.data(), 1);
-    }
-    else if (std::strcmp(consoleControl.data(), "st") == 0)
-    {
-        charDeviceTx[0] = 0x1B; /* status register */
-        ret = write(m_file_descriptor, charDeviceTx.data(), 1);
-    }
-    /**
-     * 
-     * TODO
-     * 
-     * Extra consideration must be taken
-     * when sending data to kernel and FPGA
-     * 
-     * Multiple bytes must be processed sequentially
-     * in order to receive multiple readings 
-     * from variables and registers
-     * 
-     */
-    else if (std::strcmp(consoleControl.data(), "test") == 0) 
-    {
-        charDeviceTx[0] = 0x18; /* SENSORTIME_0 */
-        charDeviceTx[1] = 0x19; /* SENSORTIME_1 */
-        charDeviceTx[2] = 0x1A; /* SENSORTIME_2 */
-        ret = write(m_file_descriptor, charDeviceTx.data(), 3);
-    }
     else
     {
-        Console::Error("[COM] Command not found");
-        ret = -1;
-    }
+        if (consoleControl.size() >= 1) {
+            switch (consoleControl[0]) {
+                case 'id':
+                    charDeviceTx[0] = 0x00; /* chip id */
+                    break;
+                case 's1':
+                    charDeviceTx[0] = 0x18; /* SENSORTIME_0 */
+                    break;
+                case 's2':
+                    charDeviceTx[0] = 0x19; /* SENSORTIME_1 */
+                    break;
+                case 's3':
+                    charDeviceTx[0] = 0x1A; /* SENSORTIME_2 */
+                    break;
+                case 'st':
+                    charDeviceTx[0] = 0x1B; /* status register */
+                    break;
+                default:
+                    Console::Error("[COM] Command not found");
+                    return ERROR;
+            }
 
-    if (ret == -1)
-    {
-        Console::Error("[COM] Cannot write to kernel space");
-        return ERROR;
+            int ret = write(m_file_descriptor, charDeviceTx.data(), 1);
+            if (ret == -1)
+            {
+                Console::Error("[COM] Cannot write to kernel space");
+                return ERROR;
+            }
+        }
     }
 
     /* Clear charDevice Rx buffer */
