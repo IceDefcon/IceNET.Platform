@@ -153,55 +153,28 @@ static int dev_open(struct inode *inodep, struct file *filep)
     return CD_OK;
 }
 
-// static ssize_t dev_read(struct file *filep, char *buffer, size_t len, loff_t *offset)
-// {
-//     int error_count = 0;
-//     char *test = "TEST";
-//     printk(KERN_INFO "[TEST][ C ] charDeviceTransfer.TxData[0]: 0x%02X\n", charDeviceTransfer.TxData[0]);
-//     /* TODO :: TxData is rubish */
-//     // error_count = copy_to_user(buffer, charDeviceTransfer.TxData, charDeviceTransfer.length);
-//     error_count = copy_to_user(buffer, test, sizeof(test));
-
-//     if (0 == error_count)
-//     {
-//         printk(KERN_INFO "[CTRL][ C ] Sent %d characters to user-space\n", charDevice_TxData.length);
-//         /* Clear the position to the start and return NULL */
-//         return (charDevice_TxData.length = 0);
-//     }
-//     else 
-//     {
-//         printk(KERN_INFO "[CTRL][ C ] Failed to send %d characters to user-space\n", error_count);
-//         /* Failed -- return a bad address message (i.e. -14) */
-//         return -EFAULT;
-//     }
-
-//     return CD_OK;
-// }
-
 static ssize_t dev_read(struct file *filep, char *buffer, size_t len, loff_t *offset)
 {
     int error_count = 0;
-    char *test = kmalloc(strlen("TEST") + 1, GFP_KERNEL); // Allocate memory for the string
-    if (!test) {
-        printk(KERN_ALERT "Memory allocation failed\n");
-        return -ENOMEM;
-    }
-    strcpy(test, "TEST"); // Copy the string into the allocated memory
-
-    test = charDeviceTransfer.TxData;
 
     printk(KERN_INFO "[TEST][ C ] charDeviceTransfer.TxData[0]: 0x%02X\n", charDeviceTransfer.TxData[0]);
-    // error_count = copy_to_user(buffer, test, strlen(test) + 1); // Copy the string to user space
+    /* TODO :: TxData is rubish */
     error_count = copy_to_user(buffer, charDeviceTransfer.TxData, charDeviceTransfer.length);
-    
-    if (error_count == 0) {
-        printk(KERN_INFO "[INFO] [ RX ] Data Transfered Successfully\n");
-    } else {
-        printk(KERN_ALERT "Failed to send data to user space\n");
+
+    if (0 == error_count)
+    {
+        printk(KERN_INFO "[CTRL][ C ] Sent %d characters to user-space\n", charDevice_TxData.length);
+        /* Clear the position to the start and return NULL */
+        return (charDevice_TxData.length = 0);
+    }
+    else 
+    {
+        printk(KERN_INFO "[CTRL][ C ] Failed to send %d characters to user-space\n", error_count);
+        /* Failed -- return a bad address message (i.e. -14) */
+        return -EFAULT;
     }
 
-    kfree(test); // Free the allocated memory
-    return (error_count == 0) ? (ssize_t)strlen(test) + 1 : -EFAULT;
+    return CD_OK;
 }
 
 static ssize_t dev_write(struct file *filep, const char __user *buffer, size_t len, loff_t *offset)
