@@ -25,8 +25,8 @@
  * 32 is a safe value !
  * 
  */
-#define CHAR_DEVICE_BUFFER 32
-#define CONSOLE_BUFFER 32
+const size_t CHAR_DEVICE_BUFFER = 32;
+const size_t CONSOLE_BUFFER = 32;
 
 class iceCOM : public Core
 {
