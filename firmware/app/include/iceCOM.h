@@ -8,24 +8,11 @@
 
 #include <thread>
 #include <atomic>
-#include <vector>
 #include <semaphore.h>
 
 #include "debug.h"
 #include "core.h"
 
-
-/**
- * 
- * Console command buffer
- * 
- * Buffer length is defined by:
- * Length of command string + null terminator
- * 
- * 32 is a safe value !
- * 
- */
-const size_t BUFFER_LENGTH = 32;
 
 class iceCOM : public Core
 {
@@ -43,18 +30,11 @@ private:
 	 */
 	std::atomic<bool> m_killThread;
 
-	/* Dynamically allocate memory */
-	// std::vector<char> console_RX(BUFFER_LENGTH);
-	// std::vector<char> console_TX(BUFFER_LENGTH);
-
 public:
 
 	iceCOM();
 	~iceCOM();
 
-	std::vector<char> console_RX(BUFFER_LENGTH);
-	std::vector<char> console_TX(BUFFER_LENGTH);
-	
 	void initThread();
 	void iceCOMThread();
 

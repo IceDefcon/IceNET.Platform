@@ -10,8 +10,8 @@
 #include <unistd.h> 		// read/write to the file
 #include <cstring> 			// strcmp
 #include <termios.h> 		// terminal settings
-
 #include "iceCOM.h"
+
 
 iceCOM::iceCOM(): 
 m_file_descriptor(0), 
@@ -92,9 +92,14 @@ int iceCOM::device_open(const char* device)
 	return OK;
 }
 
+#include <vector>
+
+const size_t BUFFER_LENGTH = 32;
+
 int iceCOM::device_read()
 {
     int ret;
+    std::vector<char> console_RX(BUFFER_LENGTH); // Dynamically allocate memory
 
     // Attempt to read data from kernel space
     ret = read(m_file_descriptor, console_RX.data(), BUFFER_LENGTH);
@@ -127,6 +132,7 @@ int iceCOM::device_read()
 int iceCOM::device_write()
 {
     int ret = -1;
+    std::vector<char> console_TX(BUFFER_LENGTH); // Dynamically allocate memory
 
     Debug::Write();
     /* Get console characters */
