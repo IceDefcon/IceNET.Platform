@@ -55,14 +55,3 @@ int main(void)
 
 	return OK;
 }
-
-/*!
- * 
- * ----===[ STRINGS ]===----
- * 
- * char name[2] 	= {'0xA','0x7'};
- * char name[] 		= "some string";
- * const char* name = "some string";
- * std::string name = "some string";
- * 
- */
