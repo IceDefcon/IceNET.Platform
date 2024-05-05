@@ -97,7 +97,7 @@ int iceCOM::device_read()
     int ret;
 
     // Attempt to read data from kernel space
-    ret = read(m_file_descriptor, console_RX.data(), BUFFER_LENGTH);
+    ret = read(m_file_descriptor, charDeviceeRx.data(), BUFFER_LENGTH);
     if (ret == -1)
     {
         Debug::Error("[iceCOM] Cannot read from kernel space");
@@ -111,15 +111,16 @@ int iceCOM::device_read()
     else
     {
         // Print received data for debugging
-        Debug::Read(console_RX.data());
+        Debug::Read(charDeviceeRx.data());
 
         // Print the first four bytes received in hexadecimal format
-        for (int i = 0; i < 4; ++i) {
-            printf("Received Byte[%d]: 0x%02X\n", i, console_RX[i]);
+        for (int i = 0; i < 4; ++i) 
+        {
+            printf("Received Byte[%d]: 0x%02X\n", i, charDeviceeRx[i]);
         }
 
-        // Clear the buffer for further reads
-        console_RX.clear();
+    	/* Clear char device Rx buffer */
+        charDeviceeRx.clear();
         return OK;
     }
 }
@@ -130,36 +131,43 @@ int iceCOM::device_write()
 
     Debug::Write();
     /* Get console characters */
-    std::cin.getline(console_TX.data(), BUFFER_LENGTH);
+    std::cin.getline(consoleBuffer.data(), BUFFER_LENGTH);
 
-    if (std::strcmp(console_TX.data(), "exit") == 0) 
+    /**
+     * 
+     * TODO
+     * 
+     * Code needs Re-factoring
+     * 
+     */
+    if (std::strcmp(consoleBuffer.data(), "exit") == 0) 
     {
         m_killThread = true;
     }
-    else if (std::strcmp(console_TX.data(), "id") == 0)
+    else if (std::strcmp(consoleBuffer.data(), "id") == 0)
     {
-        console_TX[0] = 0x00; /* chip id */
-        ret = write(m_file_descriptor, console_TX.data(), 1);
+        charDeviceeTx[0] = 0x00; /* chip id */
+        ret = write(m_file_descriptor, charDeviceeTx.data(), 1);
     }
-    else if (std::strcmp(console_TX.data(), "s1") == 0)
+    else if (std::strcmp(consoleBuffer.data(), "s1") == 0)
     {
-        console_TX[0] = 0x18; /* SENSORTIME_0 */
-        ret = write(m_file_descriptor, console_TX.data(), 1);
+        charDeviceeTx[0] = 0x18; /* SENSORTIME_0 */
+        ret = write(m_file_descriptor, charDeviceeTx.data(), 1);
     }
-    else if (std::strcmp(console_TX.data(), "s2") == 0)
+    else if (std::strcmp(consoleBuffer.data(), "s2") == 0)
     {
-        console_TX[0] = 0x19; /* SENSORTIME_1 */
-        ret = write(m_file_descriptor, console_TX.data(), 1);
+        charDeviceeTx[0] = 0x19; /* SENSORTIME_1 */
+        ret = write(m_file_descriptor, charDeviceeTx.data(), 1);
     }
-    else if (std::strcmp(console_TX.data(), "s3") == 0)
+    else if (std::strcmp(consoleBuffer.data(), "s3") == 0)
     {
-        console_TX[0] = 0x1A; /* SENSORTIME_2 */
-        ret = write(m_file_descriptor, console_TX.data(), 1);
+        charDeviceeTx[0] = 0x1A; /* SENSORTIME_2 */
+        ret = write(m_file_descriptor, charDeviceeTx.data(), 1);
     }
-    else if (std::strcmp(console_TX.data(), "st") == 0)
+    else if (std::strcmp(consoleBuffer.data(), "st") == 0)
     {
-        console_TX[0] = 0x1B; /* status register */
-        ret = write(m_file_descriptor, console_TX.data(), 1);
+        charDeviceeTx[0] = 0x1B; /* status register */
+        ret = write(m_file_descriptor, charDeviceeTx.data(), 1);
     }
     /**
      * 
@@ -173,12 +181,12 @@ int iceCOM::device_write()
      * in order to receive multiple readings from registers
      * 
      */
-    else if (std::strcmp(console_TX.data(), "test") == 0) 
+    else if (std::strcmp(consoleBuffer.data(), "test") == 0) 
     {
-        console_TX[0] = 0x18; /* SENSORTIME_0 */
-        console_TX[1] = 0x19; /* SENSORTIME_1 */
-        console_TX[2] = 0x1A; /* SENSORTIME_2 */
-        ret = write(m_file_descriptor, console_TX.data(), 3);
+        charDeviceeTx[0] = 0x18; /* SENSORTIME_0 */
+        charDeviceeTx[1] = 0x19; /* SENSORTIME_1 */
+        charDeviceeTx[2] = 0x1A; /* SENSORTIME_2 */
+        ret = write(m_file_descriptor, charDeviceeTx.data(), 3);
     }
     else
     {
@@ -191,6 +199,11 @@ int iceCOM::device_write()
         Debug::Error("[iceCOM] Cannot write to kernel space");
         return ERROR;
     }
+
+    /* Clear console buffer */
+    consoleBuffer.clear();
+    /* Clear char device Tx buffer */
+    charDeviceeTx.clear();
 
     return OK;
 }

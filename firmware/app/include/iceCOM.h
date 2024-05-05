@@ -11,7 +11,7 @@
 #include <vector>
 #include <semaphore.h>
 
-#include "debug.h"
+#include "console.h"
 #include "core.h"
 
 
@@ -25,7 +25,8 @@
  * 32 is a safe value !
  * 
  */
-const size_t BUFFER_LENGTH = 32;
+const size_t CHAR_DEVICE_BUFFER = 32;
+const size_t CONSOLE_BUFFER = 32;
 
 class iceCOM : public Core
 {
@@ -43,9 +44,11 @@ private:
 	 */
 	std::atomic<bool> m_killThread;
 
-	/* Dynamically allocate memory */
-	std::vector<char> console_RX(BUFFER_LENGTH);
-	std::vector<char> console_TX(BUFFER_LENGTH);
+	/* Buffers for char Device transfer */
+	std::vector<char> charDeviceeRx(CHAR_DEVICE_BUFFER);
+	std::vector<char> charDeviceeTx(CHAR_DEVICE_BUFFER);
+	/* Buffer for the console character input */
+	std::vector<char> consoleBuffer(CONSOLE_BUFFER);
 
 public:
 

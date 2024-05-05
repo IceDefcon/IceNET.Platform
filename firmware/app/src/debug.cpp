@@ -4,7 +4,7 @@
  * IceNET Technology 2024
  * 
  */
-#include "debug.h"
+#include "console.h"
 
 Debug::Debug() : m_LogLevel (LevelTodo) 
 {
