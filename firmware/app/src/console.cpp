@@ -74,7 +74,7 @@ void Console::Todo(const char * message)
 void Console::Read(const char* message)
 {
 	Info("[ RX ] ",false);
-    std::cout << "Byte[0] = " << std::hex << static_cast<int>(message[0]) << std::endl;
+    std::cout << "Feedback from Kernel[0] = 0x" << std::hex << static_cast<int>(message[0]) << std::endl;
 }
 
 void Console::Write(void)
