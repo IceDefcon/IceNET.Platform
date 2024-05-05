@@ -94,14 +94,13 @@ int iceCOM::device_open(const char* device)
 int iceCOM::device_read()
 {
     int ret;
-    // char *console_RX = (char*)malloc(BUFFER_LENGTH); // Dynamically allocate memory
-    char console_RX[BUFFER_LENGTH] = {0};
+    char *console_RX = (char*)malloc(BUFFER_LENGTH); // Dynamically allocate memory
 
-    // if (!console_RX)
-    // {
-    //     Debug::Error("[iceCOM] Memory allocation failed");
-    //     return ERROR;
-    // }
+    if (!console_RX)
+    {
+        Debug::Error("[iceCOM] Memory allocation failed");
+        return ERROR;
+    }
 
     // Attempt to read data from kernel space
     ret = read(m_file_descriptor, console_RX, BUFFER_LENGTH);
