@@ -72,8 +72,8 @@ static void init_charDevice_Data(void)
         return -ENOMEM;
     }
 
-    /* charDevice Preamble */
-    TxData[0] = 0xBB;
+    TxData[0] = 0xBB; /* C Device Preamble */
+    TxData[1] = '\0'; /* Null terminator */
 
     charDeviceTransfer.RxData = RxData;
     charDeviceTransfer.TxData = TxData; /* TODO :: TxData is rubish */
@@ -158,17 +158,17 @@ static ssize_t dev_read(struct file *filep, char *buffer, size_t len, loff_t *of
     int error_count = 0;
 
     /* TODO :: TxData is rubish */
-    // error_count = copy_to_user(buffer, charDeviceTransfer.TxData, charDeviceTransfer.length);
+    error_count = copy_to_user(buffer, charDeviceTransfer.TxData, charDeviceTransfer.length);
 
     /* Debug */
-    char *test = "TEST";
-    error_count = copy_to_user(buffer, test, strlen(test) + 1);
+    // char *test = "TEST";
+    // error_count = copy_to_user(buffer, test, strlen(test) + 1);
 
     if (error_count == 0)
     {
         printk(KERN_INFO "[CTRL][ C ] Sent %ld characters to user-space\n", strlen(test) + 1);
-        /* Clear the position to the start and return NULL */
-        return strlen(test) + 1;
+        /* Length :: Preamble + Null Terminator */
+        return 2; //strlen(test) + 1; 
     }
     else 
     {
