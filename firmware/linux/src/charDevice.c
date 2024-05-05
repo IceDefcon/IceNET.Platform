@@ -156,10 +156,10 @@ static int dev_open(struct inode *inodep, struct file *filep)
 static ssize_t dev_read(struct file *filep, char *buffer, size_t len, loff_t *offset)
 {
     int error_count = 0;
+    char * test = "TEST";
 
-    printk(KERN_INFO "[TEST][ C ] charDeviceTransfer.TxData[0]: 0x%02X\n", charDeviceTransfer.TxData[0]);
     /* TODO :: TxData is rubish */
-    error_count = copy_to_user(buffer, charDeviceTransfer.TxData, charDeviceTransfer.length);
+    error_count = copy_to_user(buffer, test, sizeof(test));
 
     if (0 == error_count)
     {
