@@ -157,18 +157,15 @@ static ssize_t dev_read(struct file *filep, char *buffer, size_t len, loff_t *of
 {
     int error_count = 0;
 
-    /* TODO :: TxData is rubish */
-    // error_count = copy_to_user(buffer, charDeviceTransfer.TxData, charDeviceTransfer.length);
-
     /* Debug */
-    char * test = "TEST";
+    char *test = "TEST";
     error_count = copy_to_user(buffer, test, strlen(test) + 1);
 
-    if (0 == error_count)
+    if (error_count == 0)
     {
-        printk(KERN_INFO "[CTRL][ C ] Sent %d characters to user-space\n", charDevice_TxData.length);
+        printk(KERN_INFO "[CTRL][ C ] Sent %ld characters to user-space\n", strlen(test) + 1);
         /* Clear the position to the start and return NULL */
-        return (charDevice_TxData.length = 0);
+        return strlen(test) + 1;
     }
     else 
     {
@@ -176,8 +173,6 @@ static ssize_t dev_read(struct file *filep, char *buffer, size_t len, loff_t *of
         /* Failed -- return a bad address message (i.e. -14) */
         return -EFAULT;
     }
-
-    return CD_OK;
 }
 
 static ssize_t dev_write(struct file *filep, const char __user *buffer, size_t len, loff_t *offset)
