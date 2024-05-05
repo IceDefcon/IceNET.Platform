@@ -157,6 +157,9 @@ static ssize_t dev_read(struct file *filep, char *buffer, size_t len, loff_t *of
 {
     int error_count = 0;
 
+    /* TODO :: TxData is rubish */
+    // error_count = copy_to_user(buffer, charDeviceTransfer.TxData, charDeviceTransfer.length);
+
     /* Debug */
     char *test = "TEST";
     error_count = copy_to_user(buffer, test, strlen(test) + 1);
