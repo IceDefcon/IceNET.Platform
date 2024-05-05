@@ -77,7 +77,7 @@ static void init_charDevice_Data(void)
 
     charDeviceTransfer.RxData = RxData;
     charDeviceTransfer.TxData = TxData; /* TODO :: TxData is rubish */
-    charDeviceTransfer.length = 0;
+    charDeviceTransfer.length = 2;
     charDeviceTransfer.ready = false;
 
     printk(KERN_ALERT "[INIT][ C ] Initialize charDevice Data\n");
