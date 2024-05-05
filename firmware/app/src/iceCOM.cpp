@@ -15,9 +15,11 @@
 
 iceCOM::iceCOM(): 
 m_file_descriptor(0), 
-m_killThread(false)
+m_killThread(false),
+console_RX(BUFFER_LENGTH),
+console_TX(BUFFER_LENGTH)
 {
-	Debug::Info("[iceCOM] Initialise iceCOM Module");
+    Debug::Info("[iceCOM] Initialise iceCOM Module");
 }
 
 iceCOM::~iceCOM() 
