@@ -74,11 +74,11 @@ static void init_charDevice_Data(void)
 
     /* charDevice Preamble */
     TxData[0] = 0xBB;
-    printk(KERN_INFO "[TEST][ C ] TxData[0]: %c\n", TxData[0]);
+    printk(KERN_INFO "TxData[0]: 0x%02X\n", TxData[0]);
 
     charDeviceTransfer.RxData = RxData;
     charDeviceTransfer.TxData = TxData; /* TODO :: TxData is rubish */
-    printk(KERN_INFO "[TEST][ C ] charDeviceTransfer.TxData[0]: %c\n", charDeviceTransfer.TxData[0]);
+    printk(KERN_INFO "charDeviceTransfer.TxData[0]: 0x%02X\n", charDeviceTransfer.TxData[0]);
     charDeviceTransfer.length = 2;
     charDeviceTransfer.ready = false;
 
