@@ -162,7 +162,7 @@ static ssize_t dev_read(struct file *filep, char *buffer, size_t len, loff_t *of
 
     /* Debug */
     char * test = "TEST";
-    error_count = copy_to_user(buffer, test, sizeof(test));
+    error_count = copy_to_user(buffer, test, strlen(test) + 1);
 
     if (0 == error_count)
     {
