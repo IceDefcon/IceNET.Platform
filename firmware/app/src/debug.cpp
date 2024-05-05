@@ -62,9 +62,9 @@ void Debug::Todo(const char * message)
 	}
 }
 
-void Debug::Read(const char * message)
+void Debug::Read(const char* message)
 {
-	Info("[ RX ] Data Transfered Successfully");
+    std::cout << "[ RX ] " << message << std::endl;
 }
 
 void Debug::Write(void)

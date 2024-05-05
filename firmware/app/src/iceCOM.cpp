@@ -118,13 +118,9 @@ int iceCOM::device_read()
         // Print received data for debugging
         Debug::Read(charDeviceRx.data());
 
-        // Print the first four bytes received in hexadecimal format
-        for (int i = 0; i < 4; ++i) {
-            printf("Received Byte[%d]: 0x%02X\n", i, charDeviceRx[i]);
-        }
-
-        // Clear the buffer for further reads
+        /* Clear char device Rx buffer */
         charDeviceRx.clear();
+
         return OK;
     }
 }
@@ -170,12 +166,12 @@ int iceCOM::device_write()
      * 
      * TODO
      * 
-     * This need to be considered when send to:
-     * 1. Kernel space
-     * 2. FPGA
+     * Extra consideration must be taken
+     * when sending data to kernel and FPGA
      * 
      * Multiple bytes must be processed sequentially
-     * in order to receive multiple readings from registers
+     * in order to receive multiple readings 
+     * from variables and registers
      * 
      */
     else if (std::strcmp(consoleControl.data(), "test") == 0) 
@@ -196,6 +192,11 @@ int iceCOM::device_write()
         Debug::Error("[iceCOM] Cannot write to kernel space");
         return ERROR;
     }
+
+    /* Clear charDevice Rx buffer */
+    charDeviceTx.clear();
+    /* Clear console control buffer */
+    consoleControl.clear();
 
     return OK;
 }
