@@ -44,14 +44,17 @@ private:
 	std::atomic<bool> m_killThread;
 
 	/* Dynamically allocate memory */
-	std::vector<char> console_RX(BUFFER_LENGTH);
-	std::vector<char> console_TX(BUFFER_LENGTH);
+	// std::vector<char> console_RX(BUFFER_LENGTH);
+	// std::vector<char> console_TX(BUFFER_LENGTH);
 
 public:
 
 	iceCOM();
 	~iceCOM();
 
+	std::vector<char> console_RX(BUFFER_LENGTH);
+	std::vector<char> console_TX(BUFFER_LENGTH);
+	
 	void initThread();
 	void iceCOMThread();
 
