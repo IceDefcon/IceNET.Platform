@@ -94,7 +94,7 @@ int iceCOM::device_open(const char* device)
 int iceCOM::device_read()
 {
     int ret;
-    volatile char *console_RX = (char*)malloc(BUFFER_LENGTH); // Dynamically allocate memory
+    char *console_RX = (char*)malloc(BUFFER_LENGTH); // Dynamically allocate memory
 
     if (!console_RX)
     {
