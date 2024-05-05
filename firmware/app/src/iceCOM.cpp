@@ -94,7 +94,7 @@ int iceCOM::device_open(const char* device)
 
 #include <vector>
 
-const size_t BUFFER_LENGTH = 2;
+const size_t BUFFER_LENGTH = 32;
 
 int iceCOM::device_read()
 {
