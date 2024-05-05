@@ -131,12 +131,44 @@ void charDeviceInit(void)
 
 void charDeviceDestroy(void)
 {
-    device_destroy(C_Class, MKDEV(majorNumber, 0));
-    class_unregister(C_Class);
-    class_destroy(C_Class);
-    unregister_chrdev(majorNumber, DEVICE_NAME);
+    if(C_Device) 
+    {
+        device_destroy(C_Class, MKDEV(majorNumber, 0));
+        C_Device = NULL;
+        printk(KERN_INFO "[DESTROY][ C ] Device destroyed\n");
+    }
+    else
+    {
+        printk(KERN_INFO "[DESTROY][ C ] Canot destroy C_Device :: It is already NULL !\n");
+    }
+
+    if(C_Class) 
+    {
+        class_unregister(C_Class);
+        class_destroy(C_Class);
+        C_Class = NULL;
+        printk(KERN_INFO "[DESTROY][ C ] Class destroyed\n");
+    }
+    else
+    {
+        printk(KERN_INFO "[DESTROY][ C ] Canot destroy C_Class :: It is already NULL !\n");
+    }
+
+    if(majorNumber != 0) 
+    {
+        unregister_chrdev(majorNumber, DEVICE_NAME);
+        majorNumber = 0;
+        printk(KERN_INFO "[DESTROY][ C ] Unregistered character device\n");
+    }
+    else
+    {
+        printk(KERN_INFO "[DESTROY][ C ] Canot unregister iceCOM Device :: majorNumber is already 0 !\n");
+        printk(KERN_INFO "[DESTROY][ C ] Device destroyed\n");
+    }
+
     mutex_destroy(&com_mutex);
-    printk(KERN_INFO "[DESTROY][ C ] Destroy char device\n");
+    printk(KERN_INFO "[DESTROY][ C ] Mutex destroyed\n");
+    printk(KERN_INFO "[DESTROY][ C ] Char device destruction complete\n");
 }
 
 static int dev_open(struct inode *inodep, struct file *filep)
