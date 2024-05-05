@@ -162,6 +162,7 @@ static ssize_t dev_read(struct file *filep, char *buffer, size_t len, loff_t *of
     error_count = copy_to_user(buffer, charDeviceTransfer.TxData, charDeviceTransfer.length);
 
     printk(KERN_INFO "charDeviceTransfer.TxData[0]: 0x%02X\n", charDeviceTransfer.TxData[0]);
+    printk(KERN_INFO "buffer[0]: 0x%02X\n", buffer[0]);
     if (0 == error_count)
     {
         printk(KERN_INFO "[CTRL][ C ] Sent %d characters to user-space\n", charDevice_TxData.length);
