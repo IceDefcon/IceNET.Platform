@@ -25,7 +25,7 @@
  * 32 is a safe value !
  * 
  */
-
+const size_t BUFFER_LENGTH = 32;
 
 class iceCOM : public Core
 {
@@ -34,7 +34,6 @@ private:
 	int m_file_descriptor;
 	std::thread m_iceThread;
 
-	// const size_t BUFFER_LENGTH = 32;
 	/*!
 	 * 
 	 * Atomic in case if something 
@@ -44,11 +43,9 @@ private:
 	 */
 	std::atomic<bool> m_killThread;
 
-	/* Dynamically allocated  memory */
-	std::vector<char> charDeviceeRx(32);
-	std::vector<char> charDeviceeTx(32);
-
-	std::vector<char> consoleBuffer(32);
+	/* Dynamically allocate memory */
+	std::vector<char> console_RX(BUFFER_LENGTH);
+	std::vector<char> console_TX(BUFFER_LENGTH);
 
 public:
 
