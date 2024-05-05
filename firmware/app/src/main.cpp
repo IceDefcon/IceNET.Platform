@@ -9,7 +9,7 @@
 #include <unistd.h> // sleep
 
 #include "iceCOM.h"
-#include "console.h"
+#include "debug.h"
 
 #define ICE "/dev/iceCOM"
 

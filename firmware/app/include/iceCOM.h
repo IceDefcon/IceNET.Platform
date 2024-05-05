@@ -11,7 +11,7 @@
 #include <vector>
 #include <semaphore.h>
 
-#include "console.h"
+#include "debug.h"
 #include "core.h"
 
 
