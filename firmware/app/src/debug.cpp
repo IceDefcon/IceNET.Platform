@@ -62,10 +62,17 @@ void Debug::Todo(const char * message)
 	}
 }
 
+/*!
+ * 
+ * TODO
+ * 
+ * Read function may need to be
+ * modified in order to take more
+ * generic inputs
+ * 
+ */
 void Debug::Read(const char* message)
 {
-	printf("Received Byte[0]: 0x%02X\n", message[0]);
-    std::cout << "[ RX ] Byte[0] = " << message[0] << std::endl;
     std::cout << "[ RX ] Byte[0] = " << std::hex << static_cast<int>(message[0]) << std::endl;
 }
 

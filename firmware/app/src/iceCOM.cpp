@@ -18,8 +18,13 @@ m_file_descriptor(0),
 m_killThread(false),
 charDeviceRx(CHAR_DEVICE_SIZE),
 charDeviceTx(CHAR_DEVICE_SIZE),
-consoleControl(CONSOLE_TERMINAL_SIZE)
+consoleControl(CONSOLE_CONTROL_SIZE)
 {
+    /* Initialize charDeviceRx, charDeviceTx, and consoleControl with zeros */
+    std::fill(charDeviceRx.begin(), charDeviceRx.end(), 0);
+    std::fill(charDeviceTx.begin(), charDeviceTx.end(), 0);
+    std::fill(consoleControl.begin(), consoleControl.end(), 0);
+
     Debug::Info("[iceCOM] Initialise iceCOM Module");
 }
 
@@ -76,25 +81,23 @@ void iceCOM::iceCOMThread()
 	Debug::Info("[iceCOM] Terminate iceCOMThread");
 }
 
-int iceCOM::device_open(const char* device)
+int iceCOM::device_open(const char* device) 
 {
-	m_file_descriptor = open(device, O_RDWR);
+    m_file_descriptor = open(device, O_RDWR);
 
-	if (m_file_descriptor < 0)
-	{
-		Debug::Error("[iceCOM] Failed to open Device");
-		m_killThread = true;
-		return ERROR;
-	}
-	else
-	{
-		Debug::Info("[iceCOM] Device opened successfuly");
-		initThread();
-	}
+    if(m_file_descriptor < 0)
+    {
+        Debug::Error("[iceCOM] Failed to open Device");
+        m_killThread = true;
+        return ERROR;
+    } else 
+    {
+        Debug::Info("[iceCOM] Device opened successfuly");
+        initThread();
+    }
 
-	return OK;
+    return OK;
 }
-
 
 
 int iceCOM::device_read()
@@ -117,7 +120,6 @@ int iceCOM::device_read()
     {
         // Print received data for debugging
         Debug::Read(charDeviceRx.data());
-		printf("Received Byte[0]: 0x%02X\n", charDeviceRx[0]);
 
         /* Clear char device Rx buffer */
         charDeviceRx.clear();
@@ -132,7 +134,7 @@ int iceCOM::device_write()
 
     Debug::Write();
     /* Get console characters */
-    std::cin.getline(consoleControl.data(), CONSOLE_TERMINAL_SIZE);
+    std::cin.getline(consoleControl.data(), CONSOLE_CONTROL_SIZE);
 
     if (std::strcmp(consoleControl.data(), "exit") == 0) 
     {
@@ -202,10 +204,15 @@ int iceCOM::device_write()
     return OK;
 }
 
-int iceCOM::device_close()
+int iceCOM::device_close() 
 {
-	close(m_file_descriptor);
-	return OK;
+    if (m_file_descriptor >= 0) 
+    {
+        close(m_file_descriptor);
+        m_file_descriptor = -1; // Mark as closed
+    }
+
+    return OK;
 }
 
 bool iceCOM::terminate()
