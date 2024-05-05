@@ -97,7 +97,7 @@ int iceCOM::device_read()
     int ret;
 
     // Attempt to read data from kernel space
-    ret = read(m_file_descriptor, charDeviceeRx.data(), CHAR_DEVICE_BUFFER);
+    ret = read(m_file_descriptor, charDeviceeRx.data(), BUFFER_LENGTH);
     if (ret == -1)
     {
         Debug::Error("[iceCOM] Cannot read from kernel space");
@@ -131,7 +131,7 @@ int iceCOM::device_write()
 
     Debug::Write();
     /* Get console characters */
-    std::cin.getline(consoleBuffer.data(), CONSOLE_BUFFER);
+    std::cin.getline(consoleBuffer.data(), BUFFER_LENGTH);
 
     /**
      * 
