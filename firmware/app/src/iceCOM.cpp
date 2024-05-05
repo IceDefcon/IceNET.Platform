@@ -93,24 +93,34 @@ int iceCOM::device_open(const char* device)
 
 int iceCOM::device_read()
 {
-	int ret;
-	char console_RX[BUFFER_LENGTH];
+    int ret;
+    char console_RX[BUFFER_LENGTH];
 
-	ret = read(m_file_descriptor, console_RX, BUFFER_LENGTH);
-	if (ret == -1)
-	{
-	    Debug::Error("[iceCOM] Cannot read from kernel space");
-	    return ERROR;
-	}
-	else
-	{
-		Debug::Read(console_RX);
-    	printf("console_RX[0]: 0x%02X\n", console_RX[0]);
-	}
+    // Attempt to read data from kernel space
+    ret = read(m_file_descriptor, console_RX, BUFFER_LENGTH);
+    if (ret == -1)
+    {
+        Debug::Error("[iceCOM] Cannot read from kernel space");
+        return ERROR;
+    }
+    else if (ret == 0) // No data available
+    {
+        Debug::Info("[iceCOM] No data available");
+        return NO_DATA;
+    }
+    else
+    {
+        // Print received data for debugging
+        Debug::Read(console_RX);
 
-	memset (console_RX, 0, BUFFER_LENGTH);
+        // Print the first byte received in hexadecimal format
+        printf("Received Byte[0]: 0x%02X\n", console_RX[0]);
 
-	return OK;
+        // Clear the buffer for further reads
+        memset(console_RX, 0, BUFFER_LENGTH);
+
+        return OK;
+    }
 }
 
 int iceCOM::device_write()
