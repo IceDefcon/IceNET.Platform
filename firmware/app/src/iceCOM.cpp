@@ -94,7 +94,7 @@ int iceCOM::device_open(const char* device)
 
 #include <vector>
 
-const size_t BUFFER_LENGTH = 32;
+const size_t BUFFER_LENGTH = 2;
 
 int iceCOM::device_read()
 {
@@ -169,14 +169,17 @@ int iceCOM::device_write()
     }
     /**
      * 
-     * This need to be considered 
-     * when arriving to FPGA
+     * TODO
+     * 
+     * This need to be considered when send to:
+     * 1. Kernel space
+     * 2. FPGA
      * 
      * Multiple bytes must be processed sequentially
      * in order to receive multiple readings from registers
      * 
      */
-    else if (std::strcmp(console_TX.data(), "sen") == 0) 
+    else if (std::strcmp(console_TX.data(), "test") == 0) 
     {
         console_TX[0] = 0x18; /* SENSORTIME_0 */
         console_TX[1] = 0x19; /* SENSORTIME_1 */
