@@ -38,8 +38,8 @@ private:
 
 public:
 
-    iceCOM() {}
-    ~iceCOM() {}
+    iceCOM();
+    ~iceCOM();
 
     void initThread();
     void iceCOMThread();
