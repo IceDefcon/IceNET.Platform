@@ -11,8 +11,8 @@
 #include <vector>
 #include <semaphore.h>
 
-#include "debug.h"
 #include "core.h"
+#include "console.h"
 
 
 const size_t CHAR_DEVICE_SIZE = 32;

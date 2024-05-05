@@ -4,24 +4,24 @@
  * IceNET Technology 2024
  * 
  */
-#include "debug.h"
+#include "console.h"
 
-Debug::Debug() : m_LogLevel (LevelTodo) 
+Console::Console() : m_LogLevel (LevelTodo) 
 {
-	Debug::Info("[Debug] Initialise Debug Console");
+	Console::Info("[Console] Initialise Debug Console");
 }
 
-Debug::~Debug()
+Console::~Console()
 {
-	Debug::Info("[Debug] Terminate Debug Console");
+	Console::Info("[Console] Terminate Debug Console");
 }
 
-void Debug::SetLevel(LogLevel level)
+void Console::SetLevel(LogLevel level)
 {
 	m_LogLevel = level;
 }
 
-void Debug::Error(const char * message)
+void Console::Error(const char * message)
 {
 	if(m_LogLevel >= LevelError)
 	{
@@ -29,7 +29,7 @@ void Debug::Error(const char * message)
 	}
 }
 
-void Debug::Warning(const char * message)
+void Console::Warning(const char * message)
 {
 	if(m_LogLevel >= LevelWarning)
 	{
@@ -37,7 +37,7 @@ void Debug::Warning(const char * message)
 	}
 }
 
-void Debug::Info(const char* message)
+void Console::Info(const char* message)
 {
     if (m_LogLevel >= LevelInfo)
     {
@@ -45,7 +45,7 @@ void Debug::Info(const char* message)
     }
 }
 
-void Debug::Info(const char * message, bool endLine)
+void Console::Info(const char * message, bool endLine)
 {
 	if(m_LogLevel >= LevelInfo)
 	{
@@ -54,7 +54,7 @@ void Debug::Info(const char * message, bool endLine)
 	}
 }
 
-void Debug::Todo(const char * message)
+void Console::Todo(const char * message)
 {
 	if(m_LogLevel >= LevelTodo)
 	{
@@ -71,13 +71,13 @@ void Debug::Todo(const char * message)
  * generic inputs
  * 
  */
-void Debug::Read(const char* message)
+void Console::Read(const char* message)
 {
 	Info("[ RX ] ",false);
     std::cout << "Byte[0] = " << std::hex << static_cast<int>(message[0]) << std::endl;
 }
 
-void Debug::Write(void)
+void Console::Write(void)
 {
 	Info("[ TX ] ",false);
 }

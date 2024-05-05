@@ -25,12 +25,12 @@ consoleControl(CONSOLE_CONTROL_SIZE)
     std::fill(charDeviceTx.begin(), charDeviceTx.end(), 0);
     std::fill(consoleControl.begin(), consoleControl.end(), 0);
 
-    Debug::Info("[iceCOM] Initialise iceCOM Module");
+    Console::Info("[iceCOM] Initialise iceCOM Module");
 }
 
 iceCOM::~iceCOM() 
 {
-	Debug::Info("[iceCOM] Destroying iceCOM Module");
+	Console::Info("[iceCOM] Destroying iceCOM Module");
     if (m_iceThread.joinable()) 
     {
     	m_iceThread.join();
@@ -39,13 +39,13 @@ iceCOM::~iceCOM()
 
 void iceCOM::initThread()
 {
-	Debug::Info("[iceCOM] Init the iceCOMThread");
+	Console::Info("[iceCOM] Init the iceCOMThread");
 	m_iceThread = std::thread(&iceCOM::iceCOMThread, this);
 }
 
 void iceCOM::iceCOMThread()
 {
-	Debug::Info("[iceCOM] Enter iceCOMThread");
+	Console::Info("[iceCOM] Enter iceCOMThread");
 
     while(!m_killThread) 
     {
@@ -61,7 +61,7 @@ void iceCOM::iceCOMThread()
 
     	if(OK != device_write())
     	{
-			Debug::Error("[iceCOM] Cannot write into the console");
+			Console::Error("[iceCOM] Cannot write into the console");
     	}
     	else
     	{
@@ -73,12 +73,12 @@ void iceCOM::iceCOMThread()
     		 */
 	    	if(OK != device_read())
 	    	{
-				Debug::Error("[iceCOM] Cannot read from the console");
+				Console::Error("[iceCOM] Cannot read from the console");
 	    	}
     	}
     }
 
-	Debug::Info("[iceCOM] Terminate iceCOMThread");
+	Console::Info("[iceCOM] Terminate iceCOMThread");
 }
 
 int iceCOM::device_open(const char* device) 
@@ -87,12 +87,12 @@ int iceCOM::device_open(const char* device)
 
     if(m_file_descriptor < 0)
     {
-        Debug::Error("[iceCOM] Failed to open Device");
+        Console::Error("[iceCOM] Failed to open Device");
         m_killThread = true;
         return ERROR;
     } else 
     {
-        Debug::Info("[iceCOM] Device opened successfuly");
+        Console::Info("[iceCOM] Device opened successfuly");
         initThread();
     }
 
@@ -108,18 +108,18 @@ int iceCOM::device_read()
     ret = read(m_file_descriptor, charDeviceRx.data(), CHAR_DEVICE_SIZE);
     if (ret == -1)
     {
-        Debug::Error("[iceCOM] Cannot read from kernel space");
+        Console::Error("[iceCOM] Cannot read from kernel space");
         return ERROR;
     }
     else if (ret == 0)
     {
-        Debug::Error("[iceCOM] No data available");
+        Console::Error("[iceCOM] No data available");
         return ENODATA;
     }
     else
     {
         // Print received data for debugging
-        Debug::Read(charDeviceRx.data());
+        Console::Read(charDeviceRx.data());
 
         /* Clear char device Rx buffer */
         charDeviceRx.clear();
@@ -132,7 +132,7 @@ int iceCOM::device_write()
 {
     int ret = -1;
 
-    Debug::Write();
+    Console::Write();
     /* Get console characters */
     std::cin.getline(consoleControl.data(), CONSOLE_CONTROL_SIZE);
 
@@ -186,13 +186,13 @@ int iceCOM::device_write()
     }
     else
     {
-        Debug::Error("[iceCOM] Command not found");
+        Console::Error("[iceCOM] Command not found");
         ret = -1;
     }
 
     if (ret == -1)
     {
-        Debug::Error("[iceCOM] Cannot write to kernel space");
+        Console::Error("[iceCOM] Cannot write to kernel space");
         return ERROR;
     }
 

@@ -5,10 +5,11 @@
  * 
  */
 #pragma once
+
 #include <iostream>
 #include "types.h"
 
-class Debug
+class Console
 {
 public:
 
@@ -26,8 +27,8 @@ private:
 
 public:
 
-	Debug();
-	~Debug();
+	Console();
+	~Console();
 
 	// This is currently not in use !!
 	void SetLevel(LogLevel level);
