@@ -25,7 +25,7 @@
  * 32 is a safe value !
  * 
  */
-const size_t BUFFER_LENGTH = 32;
+
 
 class iceCOM : public Core
 {
@@ -34,6 +34,7 @@ private:
 	int m_file_descriptor;
 	std::thread m_iceThread;
 
+	const size_t BUFFER_LENGTH = 32;
 	/*!
 	 * 
 	 * Atomic in case if something 
