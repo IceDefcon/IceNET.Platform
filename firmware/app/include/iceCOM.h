@@ -13,6 +13,9 @@
 #include "debug.h"
 #include "core.h"
 
+#include <vector>
+
+const size_t BUFFER_LENGTH = 32;
 
 class iceCOM : public Core
 {
@@ -29,6 +32,9 @@ private:
 	 * 
 	 */
 	std::atomic<bool> m_killThread;
+
+    std::vector<char> console_RX(BUFFER_LENGTH); // Dynamically allocate memory
+    std::vector<char> console_TX(BUFFER_LENGTH); // Dynamically allocate memory
 
 public:
 
