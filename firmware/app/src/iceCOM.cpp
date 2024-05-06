@@ -131,7 +131,7 @@ int iceCOM::device_read()
 
 
 
-uint8_t computeRegister(const char* in)
+uint8_t iceCOM::computeRegister(const char* in)
 {
     uint8_t temp[2] = {0};
     uint8_t out = 0;
