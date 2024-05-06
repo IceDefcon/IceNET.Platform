@@ -18,6 +18,7 @@ port
 
     ADDRESS_I2C : in std_logic_vector(6 downto 0);
     REGISTER_I2C : in std_logic_vector(7 downto 0);
+    RW_BIT : in std_logic;
 
     DATA : out std_logic_vector(7 downto 0);
 
@@ -43,6 +44,7 @@ signal kernel_interrupt : std_logic := '0';
 -- SM Init
 signal system_start : std_logic := '0';
 --SM Parameters
+signal rw : std_logic := '0';
 constant smStartDelay : std_logic_vector(15 downto 0):= "1100001101001111"; -- 1000ns
 constant smStateDelay : std_logic_vector(15 downto 0):= "1100001101001111"; -- 1000ns
 -- SM Status Register
@@ -150,6 +152,7 @@ begin
                         ----------------------------
                         -- Body
                         ----------------------------
+                        rw <= RW_BIT;
                         sck_timer <= "11111001"; -- Reset timer so SCK is invereted @ 1st clock cycle
                         sda_timer <= "111110011"; -- Reset timer so data is passed @ 1st clock cycle
                         sda_offset <= "0000000001100011"; -- [100-1] :: SDA Offset
@@ -206,12 +209,12 @@ begin
                             if status_timer = "0011010010111011" then -- [13500-1] :: INIT SDA RETURN
                                 status_sck <= "1000";
                             end if;
-
+                            -- Includes: Repeted start + Address + RW + ACK/NAK
                             if status_timer = "0011011010101111" then -- [14000-1] :: Return Clock 3
                                 status_sck <= "1001";
                             end if;
 
-                            if status_timer = "0101101111001011" then -- [23500-1] :: BARIER 3
+                            if status_timer = "0101101111001011" then -- [23500-1] :: Stop Bit
                                 status_sck <= "1010";
                             end if;
 ------------------------------------------------------
@@ -249,7 +252,7 @@ begin
                                 status_sda <= "1000";
                             end if;
 
-                            if status_timer = sda_offset + "0011010110110110" then -- [13750] :: INIT SDA RETURN
+                            if status_timer = sda_offset + "0011010110110110" then -- [13750] :: REPETED START
                                 status_sda <= "1001";
                             end if;
 
@@ -312,7 +315,7 @@ begin
                             end if;
 
                             if status_sck = "1000" -- INIT SDA
-                            or status_sck = "1010" -- BARIER 3
+                            or status_sck = "1010" -- Stop Bit
                             then
                                 I2C_SCK <= '1';
                             end if;
@@ -341,7 +344,7 @@ begin
                             if status_sda = "0011" then -- RW 1
                                 if sda_timer = "111110011" then -- Half bit time
                                     sda_timer <= (others => '0');
-                                    I2C_SDA <= '0';
+                                    I2C_SDA <= rw;
                                     index <= 0;
                                 else
                                     sda_timer <= sda_timer + '1';
@@ -358,7 +361,7 @@ begin
                                 end if;
                             end if;
 
-                            if status_sda = "1001" then --  INIT SDA
+                            if status_sda = "1001" then --  REPETED START
                                 I2C_SDA <= '0';
                             end if;
 
@@ -375,7 +378,7 @@ begin
                             if status_sda = "1011" then -- RW 2
                                 if sda_timer = "111110011" then -- Half bit time
                                     sda_timer <= (others => '0');
-                                    I2C_SDA <= '1';
+                                    I2C_SDA <= not rw;
                                     index <= 0;
                                 else
                                     sda_timer <= sda_timer + '1';
@@ -473,9 +476,9 @@ begin
                 LED_3 <= isCONFIG;
                 LED_4 <= isDEVICE;
                 LED_5 <= isDONE;
-                LED_6 <= '0';
-                LED_7 <= status_sda(0) or status_sda(1) or status_sda(2) or status_sda(3);
-                LED_8 <= status_sck(0) or status_sck(1) or status_sck(2) or status_sck(3);
+                --LED_6 <= '1';
+                --LED_7 <= '1';
+                --LED_8 <= '1';
 
             end if;
         end if;

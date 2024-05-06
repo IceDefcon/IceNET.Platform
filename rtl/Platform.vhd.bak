@@ -153,7 +153,6 @@ port
 
     ADDRESS_I2C : in std_logic_vector(6 downto 0);
     REGISTER_I2C : in std_logic_vector(7 downto 0);
-    RW_BIT : in std_logic;
 
     DATA : out std_logic_vector(7 downto 0);
 
@@ -173,10 +172,10 @@ port
 (
     clk      : in  std_logic;
     reset    : in  std_logic;
-    data_in  : in  std_logic_vector(7 downto 0);
+    data_in  : in  std_logic_vector(WIDTH-1 downto 0);
     wr_en    : in  std_logic;
     rd_en    : in  std_logic;
-    data_out : out std_logic_vector(7 downto 0);
+    data_out : out std_logic_vector(WIDTH-1 downto 0);
     full     : out std_logic;
     empty    : out std_logic
 );
@@ -269,7 +268,6 @@ I2cStateMachine_module: I2cStateMachine port map
     -- Reversed :: 11011000
     --
 	REGISTER_I2C => primary_parallel_MOSI, -- From Kernel SPI
-	RW_BIT => '0',
 
 	DATA => primary_parallel_MISO,
 
@@ -283,13 +281,13 @@ I2cStateMachine_module: I2cStateMachine port map
 	LED_8 => open
 );
 
-fifo_write_process:
+fifo_process:
 process(CLOCK_50MHz)
 begin
-    if rising_edge(CLOCK_50MHz) then
-        fifo_data_in <= primary_parallel_MOSI;
-        fifo_wr_en <= spi_ready_interrut;
-        fifo_rd_en <= '0';
+    if rising_edge(CLOCK) then
+        fifo_data_in <= "11000011";
+        fifo_wr_en <= '1';
+        fifo_rd_en <= '0'
     end if;
 end process;
 
