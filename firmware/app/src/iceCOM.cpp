@@ -147,11 +147,16 @@ int iceCOM::device_write()
     char chartest[4] = {0};
     int inttest[4] = {0};
 
-    test[0] = consoleControl[0];
-    test[1] = consoleControl[1];
-    test[2] = consoleControl[2];
-    test[3] = consoleControl[3];
+    chartest[0] = consoleControl[0];
+    chartest[1] = consoleControl[1];
+    chartest[2] = consoleControl[2];
+    chartest[3] = consoleControl[3];
 
+    inttest[0] = consoleControl[0];
+    inttest[1] = consoleControl[1];
+    inttest[2] = consoleControl[2];
+    inttest[3] = consoleControl[3];
+    
     for (int i = 0; i < 4; ++i)
     {
         printf("%c\n", chartest[i]);
