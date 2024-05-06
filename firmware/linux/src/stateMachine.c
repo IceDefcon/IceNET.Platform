@@ -43,7 +43,6 @@
  */
 static int StateMachineThread(void *data)
 {
-    int counter = 0;
     DataTransfer* transfer = charDevice_getRxData();
 
     while (!kthread_should_stop()) 
@@ -51,11 +50,11 @@ static int StateMachineThread(void *data)
         switch(getStateMachine()->state)
         {
             case IDLE:
-                // printk(KERN_INFO "[CTRL][STM] IDLE mode [%ds]\n", counter);
+                // printk(KERN_INFO "[CTRL][STM] IDLE mode\n");
                 break;
 
             case SPI:
-                printk(KERN_INFO "[CTRL][STM] SPI mode [%ds]\n", counter);
+                printk(KERN_INFO "[CTRL][STM] SPI mode\n");
                 if (true == transfer->ready)
                 {
                     printk(KERN_INFO "[CTRL][STM] SPI Data Ready\n");
@@ -66,20 +65,18 @@ static int StateMachineThread(void *data)
                 break;
 
             case I2C:
-                printk(KERN_INFO "[CTRL][STM] I2C mode [%ds]\n", counter);
+                printk(KERN_INFO "[CTRL][STM] I2C mode\n");
                 break;
 
             case DMA:
-                printk(KERN_INFO "[CTRL][STM] DMA mode [%ds]\n", counter);
+                printk(KERN_INFO "[CTRL][STM] DMA mode\n");
                 break;
 
             default:
-                printk(KERN_INFO "[CTRL][STM] Unknown mode [%ds]\n", counter);
+                printk(KERN_INFO "[CTRL][STM] Unknown mode\n");
                 return EINVAL;
         }
 
-        msleep(1000);  // Delay for 1 second
-        counter++;
     }
 
     return SM_OK;
