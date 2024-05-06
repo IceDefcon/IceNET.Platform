@@ -150,20 +150,22 @@ int iceCOM::device_write()
         std::cout << "Test: " << oneByte[0];
         std::cout << oneByte[1];
 
+        char& byte = oneByte[0];
+
         if(consoleControl[2] >= 0x30 && consoleControl[2] <= 0x37)
         {
-            oneByte[0] += static_cast<char>(consoleControl[2] - 0x30) << 4;
+            byte += static_cast<char>(consoleControl[2] - 0x30) << 4;
             std::cout << oneByte[2];
         }
 
         if(consoleControl[3] >= 0x30 && consoleControl[3] <= 0x39)
         {
-            oneByte[0] += static_cast<char>(consoleControl[3] - 0x30);
+            byte += static_cast<char>(consoleControl[3] - 0x30);
             std::cout << oneByte[3];
         }
         else if(consoleControl[3] >= 0x61 && consoleControl[3] <= 0x66)
         {
-            oneByte[0] += static_cast<char>(consoleControl[3] - 0x61 + 0x0A);
+            byte += static_cast<char>(consoleControl[3] - 0x61 + 0x0A);
             std::cout << oneByte[3];
         }
     }
