@@ -161,7 +161,7 @@ int iceCOM::device_write()
             oneByte[0] += (consoleControl[3] - 0x61 + 0x0A);
         }
         
-        std::cout << "Test: " << oneByte[0] << std::endl;
+        printf("Test: %x \n", oneByte[0]);
     }
     else
     {
