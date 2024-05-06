@@ -142,23 +142,23 @@ int iceCOM::device_write()
     std::cout << consoleControl[3] << std::endl;
 
     std::vector<char> oneByte[1];
-    oneByte.clear();
+    oneByte[0] = 0x00;
 
     /* Use small case register values :: Ex. 0xab */
     if(consoleControl[0] == '0' && consoleControl[1] == 'x')
     {
         if(consoleControl[2] >= 0x30 && consoleControl[2] <= 0x37)
         {
-            oneByte[0] += (consoleControl[2] - 0x30) << 4;
+            oneByte[0] = oneByte[0] + (consoleControl[2] - 0x30) << 4;
         }
 
         if(consoleControl[3] >= 0x30 && consoleControl[3] <= 0x39)
         {
-            oneByte[0] += (consoleControl[3] - 0x30);
+            oneByte[0] = oneByte[0] + (consoleControl[3] - 0x30);
         }
         else if(consoleControl[3] >= 0x61 && consoleControl[3] <= 0x66)
         {
-            oneByte[0] += (consoleControl[3] - 0x61 + 0x0A);
+            oneByte[0] = oneByte[0] + (consoleControl[3] - 0x61 + 0x0A);
         }
         
         printf("Test: %x \n", oneByte[0]);
