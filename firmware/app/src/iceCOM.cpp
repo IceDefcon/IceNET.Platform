@@ -178,49 +178,8 @@ int iceCOM::device_write()
         m_killThread = true;
     }
 
-    uint8_t test[2] = {0};
-    uint8_t final = 0;
-
-    test[0] = consoleControl[0];
-    test[1] = consoleControl[1];
-
-    for (int i = 0; i < 2; ++i)
-    {
-        printf("%x\n", test[i]);
-    }
-
-    if(test[0] >= 0x30 && test[0] <= 0x37)
-    {
-        final = (test[0] - 0x30) << 4;
-    }
-    else
-    {
-        final = 0xFF;
-        Console::Error("[COM] Register Not Found");
-    }
-
-    if(test[1] >= 0x30 && test[1] <= 0x39)
-    {
-        final = final + test[1] - 0x30;
-    }
-    else if(test[1] >= 0x61 && test[1] <= 0x66)
-    {
-        final = final + test[1] - 0x61 + 0x0A;
-    }
-    else
-    {
-        final = 0xFF;
-        Console::Error("[COM] Register Not Found");
-    }
-
-    printf("final 1: %x\n", final);
-
-    final = computeRegister(consoleControl.data());
-
-    printf("final 2: %x\n", final);
-
-    // charDeviceTx[0] = final; /* chip id */
-    // ret = write(m_file_descriptor, charDeviceTx.data(), 1);
+    charDeviceTx[0] = computeRegister(consoleControl.data());
+    ret = write(m_file_descriptor, charDeviceTx.data(), 1);
 
     // if (std::strcmp(consoleControl.data(), "exit") == 0) 
     // {
