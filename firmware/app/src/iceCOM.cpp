@@ -147,27 +147,21 @@ int iceCOM::device_write()
     /* Use small case register values :: Ex. 0xab */
     if(consoleControl[0] == '0' && consoleControl[1] == 'x')
     {
-        std::cout << "Test: " << oneByte[0];
-        std::cout << oneByte[1];
-
-        char& byte = oneByte[0];
-
         if(consoleControl[2] >= 0x30 && consoleControl[2] <= 0x37)
         {
-            byte += static_cast<char>(consoleControl[2] - 0x30) << 4;
-            std::cout << oneByte[2];
+            oneByte[0] += (consoleControl[2] - 0x30) << 4;
         }
 
         if(consoleControl[3] >= 0x30 && consoleControl[3] <= 0x39)
         {
-            byte += static_cast<char>(consoleControl[3] - 0x30);
-            std::cout << oneByte[3];
+            oneByte[0] += (consoleControl[3] - 0x30);
         }
         else if(consoleControl[3] >= 0x61 && consoleControl[3] <= 0x66)
         {
-            byte += static_cast<char>(consoleControl[3] - 0x61 + 0x0A);
-            std::cout << oneByte[3];
+            oneByte[0] += (consoleControl[3] - 0x61 + 0x0A);
         }
+        
+        std::cout << "Test: " << oneByte[0] << endl;
     }
     else
     {
