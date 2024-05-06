@@ -158,6 +158,7 @@ int iceCOM::device_write()
     final = (test[0] - 0x30) << 4;
     final = final + test[1] - 0x30;
 
+    printf("final: %x\n", final);
 
     // if (std::strcmp(consoleControl.data(), "exit") == 0) 
     // {
