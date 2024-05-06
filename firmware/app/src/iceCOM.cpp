@@ -145,36 +145,31 @@ int iceCOM::device_write()
         charDeviceTx[0] = consoleControl[0];
         ret = write(m_file_descriptor, charDeviceTx.data(), 1);
     } 
-    else 
+    else if (std::strcmp(consoleControl.data(), "id") == 0)
     {
-        Console::Error("[COM] Command not found");
+        charDeviceTx[0] = 0x00; /* chip id */
+        ret = write(m_file_descriptor, charDeviceTx.data(), 1);
     }
-
-    // else if (std::strcmp(consoleControl.data(), "id") == 0)
-    // {
-    //     charDeviceTx[0] = 0x00; /* chip id */
-    //     ret = write(m_file_descriptor, charDeviceTx.data(), 1);
-    // }
-    // else if (std::strcmp(consoleControl.data(), "s1") == 0)
-    // {
-    //     charDeviceTx[0] = 0x18; /* SENSORTIME_0 */
-    //     ret = write(m_file_descriptor, charDeviceTx.data(), 1);
-    // }
-    // else if (std::strcmp(consoleControl.data(), "s2") == 0)
-    // {
-    //     charDeviceTx[0] = 0x19; /* SENSORTIME_1 */
-    //     ret = write(m_file_descriptor, charDeviceTx.data(), 1);
-    // }
-    // else if (std::strcmp(consoleControl.data(), "s3") == 0)
-    // {
-    //     charDeviceTx[0] = 0x1A; /* SENSORTIME_2 */
-    //     ret = write(m_file_descriptor, charDeviceTx.data(), 1);
-    // }
-    // else if (std::strcmp(consoleControl.data(), "st") == 0)
-    // {
-    //     charDeviceTx[0] = 0x1B; /* status register */
-    //     ret = write(m_file_descriptor, charDeviceTx.data(), 1);
-    // }
+    else if (std::strcmp(consoleControl.data(), "s1") == 0)
+    {
+        charDeviceTx[0] = 0x18; /* SENSORTIME_0 */
+        ret = write(m_file_descriptor, charDeviceTx.data(), 1);
+    }
+    else if (std::strcmp(consoleControl.data(), "s2") == 0)
+    {
+        charDeviceTx[0] = 0x19; /* SENSORTIME_1 */
+        ret = write(m_file_descriptor, charDeviceTx.data(), 1);
+    }
+    else if (std::strcmp(consoleControl.data(), "s3") == 0)
+    {
+        charDeviceTx[0] = 0x1A; /* SENSORTIME_2 */
+        ret = write(m_file_descriptor, charDeviceTx.data(), 1);
+    }
+    else if (std::strcmp(consoleControl.data(), "st") == 0)
+    {
+        charDeviceTx[0] = 0x1B; /* status register */
+        ret = write(m_file_descriptor, charDeviceTx.data(), 1);
+    }
     /**
      * 
      * TODO
@@ -187,24 +182,24 @@ int iceCOM::device_write()
      * from variables and registers
      * 
      */
-    // else if (std::strcmp(consoleControl.data(), "test") == 0) 
-    // {
-    //     charDeviceTx[0] = 0x18; /* SENSORTIME_0 */
-    //     charDeviceTx[1] = 0x19; /* SENSORTIME_1 */
-    //     charDeviceTx[2] = 0x1A; /* SENSORTIME_2 */
-    //     ret = write(m_file_descriptor, charDeviceTx.data(), 3);
-    // }
-    // else
-    // {
-    //     Console::Error("[COM] Command not found");
-    //     ret = -1;
-    // }
+    else if (std::strcmp(consoleControl.data(), "test") == 0) 
+    {
+        charDeviceTx[0] = 0x18; /* SENSORTIME_0 */
+        charDeviceTx[1] = 0x19; /* SENSORTIME_1 */
+        charDeviceTx[2] = 0x1A; /* SENSORTIME_2 */
+        ret = write(m_file_descriptor, charDeviceTx.data(), 3);
+    }
+    else
+    {
+        Console::Error("[COM] Command not found");
+        ret = -1;
+    }
 
-    // if (ret == -1)
-    // {
-    //     Console::Error("[COM] Cannot write to kernel space");
-    //     return ERROR;
-    // }
+    if (ret == -1)
+    {
+        Console::Error("[COM] Cannot write to kernel space");
+        return ERROR;
+    }
 
     /* Clear charDevice Rx buffer */
     charDeviceTx.clear();
