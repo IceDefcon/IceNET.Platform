@@ -136,36 +136,15 @@ int iceCOM::device_write()
     /* Get console characters */
     std::cin.getline(consoleControl.data(), CONSOLE_CONTROL_SIZE);
 
+    std::cout << "Character " << i << ": " << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(consoleControl[0]) << std::endl;
+    std::cout << "Character " << i << ": " << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(consoleControl[1]) << std::endl;
+    std::cout << "Character " << i << ": " << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(consoleControl[2]) << std::endl;
+    std::cout << "Character " << i << ": " << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(consoleControl[3]) << std::endl;
     std::cout << consoleControl[0] << std::endl;
     std::cout << consoleControl[1] << std::endl;
     std::cout << consoleControl[2] << std::endl;
     std::cout << consoleControl[3] << std::endl;
 
-    std::vector<char> oneByte[1];
-
-    /* Use small case register values :: Ex. 0xab */
-    if(consoleControl[0] == '0' && consoleControl[1] == 'x')
-    {
-        if(consoleControl[2] >= 0x30 && consoleControl[2] <= 0x37)
-        {
-            oneByte[0] = oneByte[0] + static_cast<char>((consoleControl[2] - 0x30) << 4);
-        }
-
-        if(consoleControl[3] >= 0x30 && consoleControl[3] <= 0x39)
-        {
-            oneByte[0] = oneByte[0] + static_cast<char>(consoleControl[3] - 0x30);
-        }
-        else if(consoleControl[3] >= 0x61 && consoleControl[3] <= 0x66)
-        {
-            oneByte[0] = oneByte[0] + static_cast<char>(consoleControl[3] - 0x61 + 0x0A);
-        }
-        
-        printf("Test: %x \n", oneByte[0]);
-    }
-    else
-    {
-        Console::Error("[COM] Register not found in BMI160");
-    }
 
     if (std::strcmp(consoleControl.data(), "exit") == 0) 
     {
