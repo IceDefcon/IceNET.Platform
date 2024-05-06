@@ -152,7 +152,7 @@ int iceCOM::device_write()
     ss >> hexValue;
 
     // Print the hexadecimal value
-    std::cout << "Hex value: 0x" << std::hex << hexValue << std::endl;
+    std::cout << "Hex value: 0x" << std::hex << static_cast<int>(hexValue) << std::endl;
 
     charDeviceTx[0] = hexValue; /* chip id */
     ret = write(m_file_descriptor, charDeviceTx.data(), 1);
