@@ -171,7 +171,7 @@ int iceCOM::device_write()
     }
     else if(test[1] >= 0x61 && test[1] <= 0x66)
     {
-        final = final + test[1] - 0x61;
+        final = final + test[1] - 0x61 + 0x0A;
     }
     else
     {
