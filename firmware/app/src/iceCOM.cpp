@@ -139,10 +139,10 @@ int iceCOM::device_write()
     /* Get console characters */
     std::cin.getline(consoleControl.data(), CONSOLE_CONTROL_SIZE);
 
-    std::cout << "Character " << i << ": " << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(consoleControl[0]) << std::endl;
-    std::cout << "Character " << i << ": " << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(consoleControl[1]) << std::endl;
-    std::cout << "Character " << i << ": " << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(consoleControl[2]) << std::endl;
-    std::cout << "Character " << i << ": " << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(consoleControl[3]) << std::endl;
+    std::cout << "Character[0] " << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(consoleControl[0]) << std::endl;
+    std::cout << "Character[1] " << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(consoleControl[1]) << std::endl;
+    std::cout << "Character[2] " << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(consoleControl[2]) << std::endl;
+    std::cout << "Character[3] " << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(consoleControl[3]) << std::endl;
     std::cout << consoleControl[0] << std::endl;
     std::cout << consoleControl[1] << std::endl;
     std::cout << consoleControl[2] << std::endl;
