@@ -144,28 +144,20 @@ int iceCOM::device_write()
         m_killThread = true;
     }
 
-    char chartest[4] = {0};
-    int inttest[4] = {0};
+    uint8_t test[2] = {0};
+    uint8_t final = 0;
 
-    chartest[0] = consoleControl[0];
-    chartest[1] = consoleControl[1];
-    chartest[2] = consoleControl[2];
-    chartest[3] = consoleControl[3];
+    test[0] = consoleControl[0];
+    test[1] = consoleControl[1];
 
-    inttest[0] = consoleControl[0];
-    inttest[1] = consoleControl[1];
-    inttest[2] = consoleControl[2];
-    inttest[3] = consoleControl[3];
-    
-    for (int i = 0; i < 4; ++i)
+    for (int i = 0; i < 2; ++i)
     {
-        printf("%c\n", chartest[i]);
+        printf("%x\n", test[i]);
     }
 
-    for (int i = 0; i < 4; ++i)
-    {
-        printf("%x\n", inttest[i]);
-    }
+    final = (test[0] - 0x30) << 4;
+    final = final + test[1] - 0x30;
+
 
     // if (std::strcmp(consoleControl.data(), "exit") == 0) 
     // {
