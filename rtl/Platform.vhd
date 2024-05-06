@@ -84,6 +84,13 @@ signal mag_y_15_8 : std_logic_vector(7 downto 0):= (others => '0');
 signal mag_y_7_0 : std_logic_vector(7 downto 0):= (others => '0');
 signal mag_x_15_8 : std_logic_vector(7 downto 0):= (others => '0');
 signal mag_x_7_0 : std_logic_vector(7 downto 0):= (others => '0');
+-- FIFO
+signal data_in : std_logic_vector(7 downto 0) := (others => '0');
+signal wr_en : std_logic := '0';
+signal rd_en : std_logic := '0';
+signal data_out : std_logic_vector(7 downto 0) := (others => '0');
+signal full : std_logic := '0';
+signal empty : std_logic := '0';
 
 ----------------------------------------------------------------------------------------------------------------
 -- COMPONENTS DECLARATION
@@ -157,6 +164,25 @@ port
     LED_6 : out std_logic;
     LED_7 : out std_logic;
     LED_8 : out std_logic
+);
+end component;
+
+component fifo
+generic 
+(
+    WIDTH   : integer := 8;
+    DEPTH   : integer := 16
+);
+port 
+(
+    clk      : in  std_logic;
+    reset    : in  std_logic;
+    data_in  : in  std_logic_vector(WIDTH-1 downto 0);
+    wr_en    : in  std_logic;
+    rd_en    : in  std_logic;
+    data_out : out std_logic_vector(WIDTH-1 downto 0);
+    full     : out std_logic;
+    empty    : out std_logic
 );
 end component;
 
@@ -258,6 +284,43 @@ I2cStateMachine_module: I2cStateMachine port map
 	LED_7 => LED_7,
 	LED_8 => LED_8
 );
+
+---------------------------------------
+--
+-- TODO
+--
+-- Fifo to store bytes from Kernel SPI
+--
+-- Byte[0] Ctrl Byte :: RW, MR, RC
+-- Byte[1] Address of Device
+-- Byte[2] Address of Register
+-- Byte[n] Address of Register
+-- ...
+-- Byte[3] Checksum :: b[n+1] = b[0] ^ b[1] ^ b[2] ^ ... b[n-1]
+--
+---------------------------------------
+fifo_module: fifo
+generic map 
+(
+    WIDTH => 8,
+    DEPTH => 16
+)
+port map 
+(
+    -- IN
+    clk      => CLOCK_50MHz,
+    reset    => '0',
+    data_in  => data_in,
+    wr_en    => wr_en,
+    rd_en    => rd_en,
+    -- OUT
+    data_out => data_out,
+    full     => full,
+    empty    => empty
+);
+
+
+
 
 -----------------------------------------------
 -- Interrupt is pulled down
