@@ -129,8 +129,6 @@ int iceCOM::device_read()
     }
 }
 
-
-
 uint8_t iceCOM::computeRegister(const char* in)
 {
     uint8_t temp[2] = {0};
@@ -166,7 +164,6 @@ uint8_t iceCOM::computeRegister(const char* in)
 
     return out;
 }
-
 
 int iceCOM::device_write()
 {

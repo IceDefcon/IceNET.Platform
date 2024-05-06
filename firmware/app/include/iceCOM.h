@@ -52,7 +52,7 @@ public:
     int device_write() override;
     int device_close() override;
 
-    uint8_t computeRegister(const char* in)
+    uint8_t computeRegister(const char* in);
 
     bool terminate();
 };
