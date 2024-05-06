@@ -130,6 +130,7 @@ int iceCOM::device_read()
 
 #include <iostream>
 #include <iomanip>
+#include <sstream>
 
 int iceCOM::device_write()
 {
@@ -147,6 +148,23 @@ int iceCOM::device_write()
     std::cout << consoleControl[1] << std::endl;
     std::cout << consoleControl[2] << std::endl;
     std::cout << consoleControl[3] << std::endl;
+
+
+
+
+    char oneByte;
+
+    // Convert ASCII character to hexadecimal string
+    std::stringstream ss;
+    ss << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(consoleControl[3]);
+    std::string hexStr = ss.str();
+
+    // Extract the first character from the hexadecimal string and assign it to oneByte
+    if (!hexStr.empty()) {
+        oneByte = hexStr[0];
+    }
+
+    std::cout << "Final: " << oneByte;
 
 
     if (std::strcmp(consoleControl.data(), "exit") == 0) 
