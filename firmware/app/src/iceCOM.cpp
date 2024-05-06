@@ -181,7 +181,7 @@ int iceCOM::device_write()
 
     printf("final: %x\n", final);
 
-    charDeviceTx[0] = 0x00; /* chip id */
+    charDeviceTx[0] = final; /* chip id */
     ret = write(m_file_descriptor, charDeviceTx.data(), 1);
 
     // if (std::strcmp(consoleControl.data(), "exit") == 0) 
