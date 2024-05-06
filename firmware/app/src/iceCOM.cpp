@@ -141,6 +141,36 @@ int iceCOM::device_write()
     std::cout << consoleControl[2] << std::endl;
     std::cout << consoleControl[3] << std::endl;
 
+    std::vector<char> oneByte[1];
+    oneByte.clear();
+
+    /* Use small case register values :: Ex. 0xab */
+    if(consoleControl[0] == '0' && consoleControl[1] == 'x')
+    {
+        std::cout << "Test: " << oneByte[0];
+        std::cout << oneByte[1];
+
+        if(consoleControl[2] >= 0x30 && consoleControl[2] <= 0x37)
+        {
+            oneByte[0] += (consoleControl[2] - 0x30) << 4;
+            std::cout << oneByte[2];
+        }
+
+        if(consoleControl[3] >= 0x30 && consoleControl[3] <= 0x39)
+        {
+            oneByte[0] += (consoleControl[3] - 0x30);
+            std::cout << oneByte[3];
+        }
+        else if(consoleControl[3] >= 0x61 && consoleControl[3] <= 0x66)
+        {
+            oneByte[0] += (consoleControl[3] - 0x61 + 0x0A);
+            std::cout << oneByte[3];
+        }
+    }
+    else
+    {
+        Console::Error("[COM] Register not found in BMI160");
+    }
 
     if (std::strcmp(consoleControl.data(), "exit") == 0) 
     {
