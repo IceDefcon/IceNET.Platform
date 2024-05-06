@@ -144,23 +144,22 @@ int iceCOM::device_write()
         m_killThread = true;
     }
 
-    consoleControl[std::cin.gcount() - 1] = '\0'; // Null-terminate the string
+    char test[4] = {0};
 
-    // Convert the input to a hexadecimal value
-    std::string hexString(consoleControl.data());
-    uint8_t hexValue = 0; // Initialize to 8-bit value of 0
-    std::stringstream ss;
-    ss << std::hex << hexString;
-    ss >> hexValue;
+    test[0] = consoleControl[0];
+    test[1] = consoleControl[1];
+    test[2] = consoleControl[2];
+    test[3] = consoleControl[3];
 
-    // Print the hexadecimal value
-    std::cout << "Hex value: 0x" << std::hex << static_cast<int>(hexValue) << std::endl;
+    for (int i = 0; i < 4; ++i)
+    {
+        printf("%c\n", test[i]);
+    }
 
-
-    charDeviceTx[0] = hexValue; /* chip id */
-    ret = write(m_file_descriptor, charDeviceTx.data(), 1);
-
-    hexValue = 0; 
+    for (int i = 0; i < 4; ++i)
+    {
+        printf("%x\n", test[i]);
+    }
 
     // if (std::strcmp(consoleControl.data(), "exit") == 0) 
     // {
