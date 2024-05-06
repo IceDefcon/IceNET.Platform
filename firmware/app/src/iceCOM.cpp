@@ -10,6 +10,8 @@
 #include <unistd.h> 		// read/write to the file
 #include <cstring> 			// strcmp
 #include <termios.h> 		// terminal settings
+#include <sstream>          // stream operations
+#include <cstdint>          // for uint8_t
 #include "iceCOM.h"
 
 
@@ -128,7 +130,6 @@ int iceCOM::device_read()
     }
 }
 
-#include <sstream>
 
 int iceCOM::device_write()
 {
@@ -145,7 +146,7 @@ int iceCOM::device_write()
 
     // Convert the input to a hexadecimal value
     std::string hexString(consoleControl.begin(), consoleControl.end());
-    int hexValue;
+    uint8_t hexValue = 0; // Initialize to 8-bit value of 0
     std::stringstream ss;
     ss << std::hex << hexString;
     ss >> hexValue;
