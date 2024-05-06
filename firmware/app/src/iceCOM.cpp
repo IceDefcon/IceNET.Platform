@@ -161,7 +161,6 @@ uint8_t iceCOM::computeRegister(const char* in)
         Console::Error("[COM] Register Not Found");
     }
 
-
     return out;
 }
 
@@ -176,40 +175,42 @@ int iceCOM::device_write()
     if (std::strcmp(consoleControl.data(), "exit") == 0) 
     {
         m_killThread = true;
+        return ret;
     }
 
     charDeviceTx[0] = computeRegister(consoleControl.data());
     ret = write(m_file_descriptor, charDeviceTx.data(), 1);
 
-    // if (std::strcmp(consoleControl.data(), "exit") == 0) 
-    // {
-    //     m_killThread = true;
-    // }
-    // else if (std::strcmp(consoleControl.data(), "id") == 0)
-    // {
-    //     charDeviceTx[0] = 0x00; /* chip id */
-    //     ret = write(m_file_descriptor, charDeviceTx.data(), 1);
-    // }
-    // else if (std::strcmp(consoleControl.data(), "s1") == 0)
-    // {
-    //     charDeviceTx[0] = 0x18; /* SENSORTIME_0 */
-    //     ret = write(m_file_descriptor, charDeviceTx.data(), 1);
-    // }
-    // else if (std::strcmp(consoleControl.data(), "s2") == 0)
-    // {
-    //     charDeviceTx[0] = 0x19; /* SENSORTIME_1 */
-    //     ret = write(m_file_descriptor, charDeviceTx.data(), 1);
-    // }
-    // else if (std::strcmp(consoleControl.data(), "s3") == 0)
-    // {
-    //     charDeviceTx[0] = 0x1A; /* SENSORTIME_2 */
-    //     ret = write(m_file_descriptor, charDeviceTx.data(), 1);
-    // }
-    // else if (std::strcmp(consoleControl.data(), "st") == 0)
-    // {
-    //     charDeviceTx[0] = 0x1B; /* status register */
-    //     ret = write(m_file_descriptor, charDeviceTx.data(), 1);
-    // }
+#if 0 /* Previous implementation */
+    if (std::strcmp(consoleControl.data(), "exit") == 0) 
+    {
+        m_killThread = true;
+    }
+    else if (std::strcmp(consoleControl.data(), "id") == 0)
+    {
+        charDeviceTx[0] = 0x00; /* chip id */
+        ret = write(m_file_descriptor, charDeviceTx.data(), 1);
+    }
+    else if (std::strcmp(consoleControl.data(), "s1") == 0)
+    {
+        charDeviceTx[0] = 0x18; /* SENSORTIME_0 */
+        ret = write(m_file_descriptor, charDeviceTx.data(), 1);
+    }
+    else if (std::strcmp(consoleControl.data(), "s2") == 0)
+    {
+        charDeviceTx[0] = 0x19; /* SENSORTIME_1 */
+        ret = write(m_file_descriptor, charDeviceTx.data(), 1);
+    }
+    else if (std::strcmp(consoleControl.data(), "s3") == 0)
+    {
+        charDeviceTx[0] = 0x1A; /* SENSORTIME_2 */
+        ret = write(m_file_descriptor, charDeviceTx.data(), 1);
+    }
+    else if (std::strcmp(consoleControl.data(), "st") == 0)
+    {
+        charDeviceTx[0] = 0x1B; /* status register */
+        ret = write(m_file_descriptor, charDeviceTx.data(), 1);
+    }
     /**
      * 
      * TODO
@@ -222,18 +223,19 @@ int iceCOM::device_write()
      * from variables and registers
      * 
      */
-    // else if (std::strcmp(consoleControl.data(), "test") == 0) 
-    // {
-    //     charDeviceTx[0] = 0x18; /* SENSORTIME_0 */
-    //     charDeviceTx[1] = 0x19; /* SENSORTIME_1 */
-    //     charDeviceTx[2] = 0x1A; /* SENSORTIME_2 */
-    //     ret = write(m_file_descriptor, charDeviceTx.data(), 3);
-    // }
-    // else
-    // {
-    //     Console::Error("[COM] Command not found");
-    //     ret = -1;
-    // }
+    else if (std::strcmp(consoleControl.data(), "test") == 0) 
+    {
+        charDeviceTx[0] = 0x18; /* SENSORTIME_0 */
+        charDeviceTx[1] = 0x19; /* SENSORTIME_1 */
+        charDeviceTx[2] = 0x1A; /* SENSORTIME_2 */
+        ret = write(m_file_descriptor, charDeviceTx.data(), 3);
+    }
+    else
+    {
+        Console::Error("[COM] Command not found");
+        ret = -1;
+    }
+#endif
 
     if (ret == -1)
     {
