@@ -10,7 +10,6 @@
 #include <unistd.h> 		// read/write to the file
 #include <cstring> 			// strcmp
 #include <termios.h> 		// terminal settings
-#include <sstream>          // stream operations
 #include <cstdint>          // for uint8_t
 #include "iceCOM.h"
 
@@ -131,6 +130,44 @@ int iceCOM::device_read()
 }
 
 
+
+uint8_t computeRegister(const char* in)
+{
+    uint8_t temp[2] = 0;
+    uint8_t out = 0;
+
+    temp[0] = in[0];
+    temp[1] = in[1];
+
+    if(temp[0] >= 0x30 && temp[0] <= 0x37)
+    {
+        out = (temp[0] - 0x30) << 4;
+    }
+    else
+    {
+        out = 0xFF;
+        Console::Error("[COM] Register Not Found");
+    }
+
+    if(temp[1] >= 0x30 && temp[1] <= 0x39)
+    {
+        out = out + temp[1] - 0x30;
+    }
+    else if(temp[1] >= 0x61 && temp[1] <= 0x66)
+    {
+        out = out + temp[1] - 0x61 + 0x0A;
+    }
+    else
+    {
+        out = 0xFF;
+        Console::Error("[COM] Register Not Found");
+    }
+
+
+    return out;
+}
+
+
 int iceCOM::device_write()
 {
     int ret = -1;
@@ -179,10 +216,14 @@ int iceCOM::device_write()
         Console::Error("[COM] Register Not Found");
     }
 
-    printf("final: %x\n", final);
+    printf("final 1: %x\n", final);
 
-    charDeviceTx[0] = final; /* chip id */
-    ret = write(m_file_descriptor, charDeviceTx.data(), 1);
+    final = computeRegister(consoleControl.data());
+
+    printf("final 2: %x\n", final);
+
+    // charDeviceTx[0] = final; /* chip id */
+    // ret = write(m_file_descriptor, charDeviceTx.data(), 1);
 
     // if (std::strcmp(consoleControl.data(), "exit") == 0) 
     // {
