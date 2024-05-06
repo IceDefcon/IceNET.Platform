@@ -157,6 +157,8 @@ int iceCOM::device_write()
     charDeviceTx[0] = hexValue; /* chip id */
     ret = write(m_file_descriptor, charDeviceTx.data(), 1);
 
+    hexValue = 0; 
+
     // if (std::strcmp(consoleControl.data(), "exit") == 0) 
     // {
     //     m_killThread = true;
