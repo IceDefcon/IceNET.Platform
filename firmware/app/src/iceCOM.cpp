@@ -155,8 +155,29 @@ int iceCOM::device_write()
         printf("%x\n", test[i]);
     }
 
-    final = (test[0] - 0x30) << 4;
-    final = final + test[1] - 0x30;
+    if(test[0] >= 0x30 && test[0] <= 0x37)
+    {
+        final = (test[0] - 0x30) << 4;
+    }
+    else
+    {
+        final = 0xFF;
+        Console::Error("[COM] Register Not Found");
+    }
+
+    if(test[1] >= 0x30 && test[1] <= 0x39)
+    {
+        final = final + test[1] - 0x30;
+    }
+    else if(test[1] >= 0x61 && test[1] <= 0x66)
+    {
+        final = final + test[1] - 0x61;
+    }
+    else
+    {
+        final = 0xFF;
+        Console::Error("[COM] Register Not Found");
+    }
 
     printf("final: %x\n", final);
 
