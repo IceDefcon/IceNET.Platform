@@ -140,11 +140,6 @@ int iceCOM::device_write()
     {
         m_killThread = true;
     }
-    else if (consoleControl[0] >= 0x00 && consoleControl[0] <= 0x7E) 
-    {
-        charDeviceTx[0] = consoleControl[0];
-        ret = write(m_file_descriptor, charDeviceTx.data(), 1);
-    } 
     else if (std::strcmp(consoleControl.data(), "id") == 0)
     {
         charDeviceTx[0] = 0x00; /* chip id */
