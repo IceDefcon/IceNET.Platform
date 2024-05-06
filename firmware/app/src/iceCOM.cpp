@@ -128,6 +128,9 @@ int iceCOM::device_read()
     }
 }
 
+#include <iostream>
+#include <iomanip>
+
 int iceCOM::device_write()
 {
     int ret = -1;
