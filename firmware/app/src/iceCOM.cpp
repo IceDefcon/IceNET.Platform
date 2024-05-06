@@ -136,6 +136,12 @@ int iceCOM::device_write()
     /* Get console characters */
     std::cin.getline(consoleControl.data(), CONSOLE_CONTROL_SIZE);
 
+    std::cout << consoleControl[0] << std::endl;
+    std::cout << consoleControl[1] << std::endl;
+    std::cout << consoleControl[2] << std::endl;
+    std::cout << consoleControl[3] << std::endl;
+
+
     if (std::strcmp(consoleControl.data(), "exit") == 0) 
     {
         m_killThread = true;
