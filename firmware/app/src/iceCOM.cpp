@@ -208,7 +208,7 @@ int iceCOM::device_write()
     charDeviceTx[0] = computeRegisterAddress(consoleControl.data());
     charDeviceTx[1] = computeControlRegister(consoleControl.data());
 
-    if(charDeviceTx[0] == 0xFF || charDeviceTx[2] == 0xFF) return ret
+    if(charDeviceTx[0] == 0xFF || charDeviceTx[2] == 0xFF) return ret;
 
     ret = write(m_file_descriptor, charDeviceTx.data(), 2);
 
