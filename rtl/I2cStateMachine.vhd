@@ -12,6 +12,7 @@ port
     SPI_INT : in std_logic;
     KERNEL_INT : in std_logic;
     FPGA_INT : out std_logic;
+    FIFO_INT : out std_logic;
     
     I2C_SCK : inout std_logic;
     I2C_SDA : inout std_logic;
@@ -82,11 +83,15 @@ signal isINIT : std_logic := '0';
 signal isCONFIG : std_logic := '0';
 signal isDEVICE : std_logic := '0';
 signal isDONE : std_logic := '0';
+-- fifo
+signal fifo_interrupt : std_logic := '0';
 
 ----------------------------------------------------------------------------------------------------------------
 -- MAIN ROUTINE
 ----------------------------------------------------------------------------------------------------------------
 begin
+
+--FIFO_INT <= fifo_interrupt;
 
 state_machine_process:
 process(CLOCK, RESET, kernel_interrupt, system_start, state_current, 
@@ -95,7 +100,16 @@ process(CLOCK, RESET, kernel_interrupt, system_start, state_current,
 begin
     if rising_edge(CLOCK) then
 
+        --------------------------------------------
+        -- Interrupt Vector
+        --------------------------------------------
         kernel_interrupt <= KERNEL_INT;
+
+        if fifo_interrupt = '1' then
+            fifo_interrupt <= '0';
+        end if;
+
+        FIFO_INT <= fifo_interrupt;
 
         --------------------------------------------
         -- State Machine :: Start
@@ -397,6 +411,7 @@ begin
 
                             if status_sda = "1111" then --  Stop bit 
                                 FPGA_INT <= '1';
+                                fifo_interrupt <= '1';
                                 I2C_SDA <= '0';
                             end if;
 

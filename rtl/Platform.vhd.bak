@@ -91,7 +91,6 @@ signal fifo_rd_en : std_logic := '0';
 signal fifo_data_out : std_logic_vector(7 downto 0) := (others => '0');
 signal fifo_full : std_logic := '0';
 signal fifo_empty : std_logic := '0';
-signal fifo_int : std_logic := '0';
 
 ----------------------------------------------------------------------------------------------------------------
 -- COMPONENTS DECLARATION
@@ -148,7 +147,6 @@ port
     SPI_INT : in std_logic;
     KERNEL_INT : in std_logic;
     FPGA_INT : out std_logic;
-    FIFO_INT : out std_logic;
 
     I2C_SCK : inout std_logic;
     I2C_SDA : inout std_logic;
@@ -251,7 +249,6 @@ I2cStateMachine_module: I2cStateMachine port map
     KERNEL_INT => KERNEL_INT,
     -- out
     FPGA_INT => FPGA_INT,
-    FIFO_INT => fifo_int,
 
 	I2C_SCK => I2C_SCK,
 	I2C_SDA => I2C_SDA,
@@ -290,7 +287,7 @@ fifo_write_process:
 process(CLOCK_50MHz)
 begin
     if rising_edge(CLOCK_50MHz) then
-        fifo_data_in <= primary_parallel_MOSI;
+        fifo_data_in <= primary_parallel_MOSI; ????
         fifo_wr_en <= spi_ready_interrut;
         fifo_rd_en <= '0';
     end if;
