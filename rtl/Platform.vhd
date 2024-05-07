@@ -210,11 +210,11 @@ mainSpiProcessing_module: SpiProcessing port map
     -- out
 	SPI_INT => spi_ready_interrut,
 
-	SERIAL_MOSI => PRIMARY_MOSI,
-	PARALLEL_MOSI => primary_parallel_MOSI,
+	SERIAL_MOSI => PRIMARY_MOSI, -- in
+	PARALLEL_MOSI => primary_parallel_MOSI, -- out
 
-	PARALLEL_MISO => primary_parallel_MISO,
-	SERIAL_MISO => PRIMARY_MISO
+	PARALLEL_MISO => primary_parallel_MISO, -- in
+	SERIAL_MISO => PRIMARY_MISO -- out
 );
 
 ------------------------------------------------------
@@ -287,7 +287,7 @@ fifo_write_process:
 process(CLOCK_50MHz)
 begin
     if rising_edge(CLOCK_50MHz) then
-        fifo_data_in <= primary_parallel_MOSI;
+        fifo_data_in <= primary_parallel_MOSI; ????
         fifo_wr_en <= spi_ready_interrut;
         fifo_rd_en <= '0';
     end if;

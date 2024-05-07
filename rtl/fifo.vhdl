@@ -18,10 +18,13 @@ end fifo;
 architecture rtl of fifo is
 
 type mem_type is array (0 to 15) of std_logic_vector(7 downto 0);
-signal memory   : mem_type;
-signal wr_ptr   : integer range 0 to 15 := 0;
-signal rd_ptr   : integer range 0 to 15 := 0;
-signal count    : integer range 0 to 16 := 0;
+signal memory : mem_type;
+signal wr_ptr : integer range 0 to 15 := 0;
+signal rd_ptr : integer range 0 to 15 := 0;
+signal count : integer range 0 to 16 := 0;
+-- Debugs to remove
+signal curr : std_logic_vector(7 downto 0) := (others => '0');
+signal prev : std_logic_vector(7 downto 0) := (others => '0');
 
 begin
 

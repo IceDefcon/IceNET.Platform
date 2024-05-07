@@ -206,6 +206,23 @@ int iceCOM::device_write()
     }
 
     charDeviceTx[0] = computeRegisterAddress(consoleControl.data());
+
+#if 0
+    /**
+     * 
+     * TODO
+     * 
+     * Control Register coputation is ready
+     * However, we need to pass data trough
+     * the FIFO in order to separate bytes
+     * from eachother in order to pass
+     * them to i2c state machine
+     * 
+     * 1. BMI160 register
+     * 2. Control Byte
+     * 
+     */
+
     charDeviceTx[1] = computeControlRegister(consoleControl.data());
 
     if(charDeviceTx[0] == 0xFF || charDeviceTx[1] == 0xFF) 
@@ -215,62 +232,9 @@ int iceCOM::device_write()
     }
 
     ret = write(m_file_descriptor, charDeviceTx.data(), 2);
-
-#if 0 /* Previous implementation */
-    if (std::strcmp(consoleControl.data(), "exit") == 0) 
-    {
-        m_killThread = true;
-    }
-    else if (std::strcmp(consoleControl.data(), "id") == 0)
-    {
-        charDeviceTx[0] = 0x00; /* chip id */
-        ret = write(m_file_descriptor, charDeviceTx.data(), 1);
-    }
-    else if (std::strcmp(consoleControl.data(), "s1") == 0)
-    {
-        charDeviceTx[0] = 0x18; /* SENSORTIME_0 */
-        ret = write(m_file_descriptor, charDeviceTx.data(), 1);
-    }
-    else if (std::strcmp(consoleControl.data(), "s2") == 0)
-    {
-        charDeviceTx[0] = 0x19; /* SENSORTIME_1 */
-        ret = write(m_file_descriptor, charDeviceTx.data(), 1);
-    }
-    else if (std::strcmp(consoleControl.data(), "s3") == 0)
-    {
-        charDeviceTx[0] = 0x1A; /* SENSORTIME_2 */
-        ret = write(m_file_descriptor, charDeviceTx.data(), 1);
-    }
-    else if (std::strcmp(consoleControl.data(), "st") == 0)
-    {
-        charDeviceTx[0] = 0x1B; /* status register */
-        ret = write(m_file_descriptor, charDeviceTx.data(), 1);
-    }
-    /**
-     * 
-     * TODO
-     * 
-     * Extra consideration must be taken
-     * when sending data to kernel and FPGA
-     * 
-     * Multiple bytes must be processed sequentially
-     * in order to receive multiple readings 
-     * from variables and registers
-     * 
-     */
-    else if (std::strcmp(consoleControl.data(), "test") == 0) 
-    {
-        charDeviceTx[0] = 0x18; /* SENSORTIME_0 */
-        charDeviceTx[1] = 0x19; /* SENSORTIME_1 */
-        charDeviceTx[2] = 0x1A; /* SENSORTIME_2 */
-        ret = write(m_file_descriptor, charDeviceTx.data(), 3);
-    }
-    else
-    {
-        Console::Error("[COM] Command not found");
-        ret = -1;
-    }
 #endif
+
+    ret = write(m_file_descriptor, charDeviceTx.data(), 1);
 
     if (ret == -1)
     {
