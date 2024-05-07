@@ -129,7 +129,7 @@ int iceCOM::device_read()
     }
 }
 
-uint8_t iceCOM::computeRegister(const char* in)
+uint8_t iceCOM::computeRegisterAddress(const char* in)
 {
     uint8_t temp[2] = {0};
     uint8_t out = 0;
@@ -143,8 +143,8 @@ uint8_t iceCOM::computeRegister(const char* in)
     }
     else
     {
-        out = 0xFF;
         Console::Error("[COM] Register Not Found");
+        return 0xFF;
     }
 
     if(temp[1] >= 0x30 && temp[1] <= 0x39)
@@ -157,8 +157,35 @@ uint8_t iceCOM::computeRegister(const char* in)
     }
     else
     {
-        out = 0xFF;
         Console::Error("[COM] Register Not Found");
+        return 0xFF;
+    }
+
+    return out;
+}
+
+uint8_t iceCOM::computeControlRegister(const char* in)
+{
+    uint8_t temp[2] = {0};
+    uint8_t out = 0;
+
+    temp[0] = in[3];
+    temp[1] = in[4];
+
+    if(temp[0] == 0x20)
+    {
+        if(temp[1] == 0x72) out = 0x00; /* Read */
+        else if(temp[1] == 0x77) out = 0x01; /* Write */
+        else
+        {
+            Console::Error("[COM] Bad R/W operator");
+            return 0xFF;
+        }
+    }
+    else
+    {
+        Console::Error("[COM] No space between register and R/W operator");
+        return 0xFF;
     }
 
     return out;
@@ -178,8 +205,10 @@ int iceCOM::device_write()
         return ret;
     }
 
-    charDeviceTx[0] = computeRegister(consoleControl.data());
-    ret = write(m_file_descriptor, charDeviceTx.data(), 1);
+    charDeviceTx[0] = computeRegisterAddress(consoleControl.data());
+    charDeviceTx[1] = computeControlRegister(consoleControl.data());
+
+    ret = write(m_file_descriptor, charDeviceTx.data(), 2);
 
 #if 0 /* Previous implementation */
     if (std::strcmp(consoleControl.data(), "exit") == 0) 
