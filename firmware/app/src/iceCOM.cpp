@@ -208,7 +208,7 @@ int iceCOM::device_write()
     charDeviceTx[0] = computeRegisterAddress(consoleControl.data());
     charDeviceTx[1] = computeControlRegister(consoleControl.data());
 
-    if(charDeviceTx[0] == 0xFF || charDeviceTx[2] == 0xFF) 
+    if(charDeviceTx[0] == 0xFF || charDeviceTx[1] == 0xFF) 
     {
         Console::Error("[COM] Bytes computation failure");
         return ret;
