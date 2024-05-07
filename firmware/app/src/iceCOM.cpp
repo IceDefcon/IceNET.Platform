@@ -169,8 +169,8 @@ uint8_t iceCOM::computeControlRegister(const char* in)
     uint8_t temp[2] = {0};
     uint8_t out = 0;
 
-    temp[0] = in[3];
-    temp[1] = in[4];
+    temp[0] = in[2];
+    temp[1] = in[3];
 
     if(temp[0] == 0x20)
     {
@@ -185,7 +185,6 @@ uint8_t iceCOM::computeControlRegister(const char* in)
     else
     {
         Console::Error("[COM] No space between register and R/W operator");
-        std::cout << "Check in[3] = " << in[3] << std::endl;
         return 0xFF;
     }
 
@@ -208,6 +207,8 @@ int iceCOM::device_write()
 
     charDeviceTx[0] = computeRegisterAddress(consoleControl.data());
     charDeviceTx[1] = computeControlRegister(consoleControl.data());
+
+    if(charDeviceTx[0] == 0xFF || charDeviceTx[2] == 0xFF) return ret
 
     ret = write(m_file_descriptor, charDeviceTx.data(), 2);
 
