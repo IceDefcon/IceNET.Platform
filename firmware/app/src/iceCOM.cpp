@@ -185,6 +185,7 @@ uint8_t iceCOM::computeControlRegister(const char* in)
     else
     {
         Console::Error("[COM] No space between register and R/W operator");
+        std::cout << "Check in[3] = " << in[3] << std::endl;
         return 0xFF;
     }
 
