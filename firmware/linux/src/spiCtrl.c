@@ -156,14 +156,14 @@ void interruptFromFpga(struct work_struct *work)
     spi_message_init(&msg);
     spi_message_add_tail(&transfer, &msg);
 
-    ret = spi_sync(spi_dev_main, &msg);
+    ret = spi_sync(spi_dev_second, &msg);
     if (ret < 0) {
         printk(KERN_ERR "[CTRL][SPI] SPI transfer at interrupt From Fpga failed: %d\n", ret);
         return;
     }
     else
     {
-        printk(KERN_INFO "[CTRL][SPI] FPGA Transfer :: Signaled by GPIO Interrupt over SPI.0");
+        printk(KERN_INFO "[CTRL][SPI] FPGA Transfer :: Signaled by GPIO Interrupt over SPI.1");
     }
 
     for (i = 0; i < sizeof(spi_rx_at_interruptFromFpga); ++i) {

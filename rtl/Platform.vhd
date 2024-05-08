@@ -75,8 +75,6 @@ signal primary_parallel_MOSI : std_logic_vector(7 downto 0) := "00011000"; -- 0x
 signal secondary_ready_MISO : std_logic := '0';
 signal secondary_parallel_MISO : std_logic_vector(7 downto 0) := "00011110"; -- 0xE1
 signal secondary_parallel_MOSI : std_logic_vector(7 downto 0) := "00011110"; -- 0xE1
--- Spi Ready
-signal spi_ready_interrut : std_logic := '0';
 -- BMI160 Gyroscope registers
 signal mag_z_15_8 : std_logic_vector(7 downto 0):= (others => '0');
 signal mag_z_7_0 : std_logic_vector(7 downto 0):= (others => '0');
@@ -210,13 +208,30 @@ mainSpiProcessing_module: SpiProcessing port map
 	SCLK => PRIMARY_SCLK,
 
     -- out
-	SPI_INT => spi_ready_interrut,
+	SPI_INT => primary_ready_MISO,
 
 	SERIAL_MOSI => PRIMARY_MOSI, -- in
 	PARALLEL_MOSI => primary_parallel_MOSI, -- out
 
 	PARALLEL_MISO => primary_parallel_MISO, -- in
 	SERIAL_MISO => PRIMARY_MISO -- out
+);
+
+mainSpiProcessing_module: SpiProcessing port map 
+(
+    CLOCK => CLOCK_50MHz,
+
+    CS => SECONDARY_CS,
+    SCLK => SECONDARY_SCLK,
+
+    -- out
+    SPI_INT => secondary_ready_MISO,
+
+    SERIAL_MOSI => SECONDARY_MOSI, -- in
+    PARALLEL_MOSI => secondary_parallel_MOSI, -- out
+
+    PARALLEL_MISO => secondary_parallel_MISO, -- in
+    SERIAL_MISO => SECONDARY_MISO -- out
 );
 
 ------------------------------------------------------
@@ -246,7 +261,7 @@ I2cStateMachine_module: I2cStateMachine port map
 	RESET => reset_button,
 
     -- in
-    SPI_INT => spi_ready_interrut,
+    SPI_INT => primary_ready_MISO,
     -- in
     KERNEL_INT => KERNEL_INT,
     -- out
@@ -274,7 +289,7 @@ I2cStateMachine_module: I2cStateMachine port map
 	REGISTER_I2C => primary_parallel_MOSI, -- From Kernel SPI
 	RW_BIT => '0',
 
-	DATA => primary_parallel_MISO,
+	DATA => secondary_parallel_MISO,
 
 	LED_1 => LED_1,
 	LED_2 => LED_2,
@@ -286,12 +301,22 @@ I2cStateMachine_module: I2cStateMachine port map
 	LED_8 => open
 );
 
-fifo_write_process:
+--fifo_write_i2c_process:
+--process(CLOCK_50MHz)
+--begin
+--    if rising_edge(CLOCK_50MHz) then
+--        fifo_data_in <= primary_parallel_MISO;
+--        fifo_wr_en <= fifo_int;
+--        fifo_rd_en <= '0';
+--    end if;
+--end process;
+
+fifo_write_spi_process:
 process(CLOCK_50MHz)
 begin
     if rising_edge(CLOCK_50MHz) then
         fifo_data_in <= primary_parallel_MOSI;
-        fifo_wr_en <= spi_ready_interrut;
+        fifo_wr_en <= primary_ready_MISO;
         fifo_rd_en <= '0';
     end if;
 end process;
