@@ -43,9 +43,9 @@
 static struct spi_device *spi_dev_main;
 static struct spi_device *spi_dev_second;
 
-static volatile uint8_t spi_tx_at_interruptFromFpga[] = {0xCD};
+static volatile uint8_t spi_tx_at_interruptFromFpga[] = {0x81};
 static volatile uint8_t spi_rx_at_interruptFromFpga[1];
-static volatile uint8_t spi_tx_at_mainFromCharDevice[] = {0xC3};
+static volatile uint8_t spi_tx_at_mainFromCharDevice[] = {0xAA};
 static volatile uint8_t spi_rx_at_mainFromCharDevice[8];
 static volatile uint8_t spi_tx_at_secondFromCharDevice[] = {0x00}; /* ID Register of the BMI160 chip */
 static volatile uint8_t spi_rx_at_secondFromCharDevice[1];
@@ -167,7 +167,7 @@ void interruptFromFpga(struct work_struct *work)
     }
 
     for (i = 0; i < sizeof(spi_rx_at_interruptFromFpga); ++i) {
-        printk(KERN_INFO "[CTRL][SPI] Byte[%d]: Kernel.TX[0x%02x] Fpga.RX[0x%02x]\n", i, spi_tx_at_interruptFromFpga[i], spi_rx_at_interruptFromFpga[i]);
+        printk(KERN_INFO "[CTRL][SPI] Byte[%d]: [Preamble]Kernel.TX[0x%02x] Fpga.RX[0x%02x]\n", i, spi_tx_at_interruptFromFpga[i], spi_rx_at_interruptFromFpga[i]);
     }
 
     spi_rx_at_interruptFromFpga[0] = 0x00;
@@ -214,7 +214,7 @@ void mainFromCharDevice(struct work_struct *work)
 
     for (i = 0; i < fpgaData->length; ++i) 
     {
-        printk(KERN_INFO "[CTRL][SPI] Byte[%d]: Kernel.TX[0x%02x] Fpga.RX[0x%02x]\n", i, fpgaData->RxData[i], spi_rx_at_mainFromCharDevice[i]);
+        printk(KERN_INFO "[CTRL][SPI] Byte[%d]: Kernel.TX[0x%02x] [Preamble]Fpga.RX[0x%02x]\n", i, fpgaData->RxData[i], spi_rx_at_mainFromCharDevice[i]);
     }
 
     /*!

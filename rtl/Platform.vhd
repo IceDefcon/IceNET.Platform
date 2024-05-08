@@ -69,8 +69,8 @@ signal interrupt_length : std_logic_vector(3 downto 0) := "1111";
 signal interrupt_signal : std_logic := '0';
 -- Spi.0 Primary
 signal primary_ready_MISO : std_logic := '0';
-signal primary_parallel_MISO : std_logic_vector(7 downto 0) := "00011000"; -- 0x81
-signal primary_parallel_MOSI : std_logic_vector(7 downto 0) := "00011000"; -- 0x81
+signal primary_parallel_MISO : std_logic_vector(7 downto 0) := "00011000"; -- 0x18 [Preamble]
+signal primary_parallel_MOSI : std_logic_vector(7 downto 0) := "00100100"; -- 0x42
 -- Spi.1 Secondary
 signal secondary_ready_MISO : std_logic := '0';
 signal secondary_parallel_MISO : std_logic_vector(7 downto 0) := "00011110"; -- 0xE1
@@ -200,7 +200,7 @@ Debounce_module: Debounce port map
 	button_out_4 => open
 );
 
-mainSpiProcessing_module: SpiProcessing port map 
+primarySpiProcessing_module: SpiProcessing port map 
 (
 	CLOCK => CLOCK_50MHz,
 
@@ -217,7 +217,7 @@ mainSpiProcessing_module: SpiProcessing port map
 	SERIAL_MISO => PRIMARY_MISO -- out
 );
 
-mainSpiProcessing_module: SpiProcessing port map 
+secondarySpiProcessing_module: SpiProcessing port map 
 (
     CLOCK => CLOCK_50MHz,
 
