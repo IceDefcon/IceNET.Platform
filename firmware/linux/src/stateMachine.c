@@ -59,7 +59,7 @@ static int StateMachineThread(void *data)
                 {
                     printk(KERN_INFO "[CTRL][STM] SPI Data Ready\n");
                     transfer->ready = false;
-                    queue_work(get_mainFromCharDevice_wq(), get_mainFromCharDevice_work());
+                    queue_work(get_transferFromCharDevice_wq(), get_transferFromCharDevice_work());
                     setStateMachine(IDLE);
                 }
                 break;

@@ -18,22 +18,22 @@
 //                  //
 //////////////////////
 
-/* WORK QUEUE */ static struct workqueue_struct *mainFromCharDevice_wq;
+/* WORK QUEUE */ static struct workqueue_struct *transferFromCharDevice_wq;
 /* WORK QUEUE */ static struct workqueue_struct* interruptFromFpga_wq;
-/* WORK */ static struct work_struct mainFromCharDevice_work;
+/* WORK */ static struct work_struct transferFromCharDevice_work;
 /* WORK */ static struct work_struct interruptFromFpga_work;
 
-/* GET WORK QUEUE*/ struct workqueue_struct* get_mainFromCharDevice_wq(void) 
+/* GET WORK QUEUE*/ struct workqueue_struct* get_transferFromCharDevice_wq(void) 
 {
-    return mainFromCharDevice_wq;
+    return transferFromCharDevice_wq;
 }
 /* GET WORK QUEUE */ struct workqueue_struct* get_interruptFromFpga_wq(void)
 {
 	return interruptFromFpga_wq;
 }
-/* GET WORK */ struct work_struct* get_mainFromCharDevice_work(void) 
+/* GET WORK */ struct work_struct* get_transferFromCharDevice_work(void) 
 {
-    return &mainFromCharDevice_work;
+    return &transferFromCharDevice_work;
 }
 /* GET WORK */ struct work_struct* get_interruptFromFpga_work(void)
 {
@@ -54,17 +54,17 @@ static void interruptFromFpga_WorkInit(void)
 	}
 }
 
-static void mainFromCharDevice_WorkInit(void)
+static void transferFromCharDevice_WorkInit(void)
 {
-	INIT_WORK(get_mainFromCharDevice_work(), mainFromCharDevice);
-	mainFromCharDevice_wq = create_singlethread_workqueue("mainFromCharDevice_workqueue");
-	if (!mainFromCharDevice_wq) 
+	INIT_WORK(get_transferFromCharDevice_work(), transferFromCharDevice);
+	transferFromCharDevice_wq = create_singlethread_workqueue("transferFromCharDevice_workqueue");
+	if (!transferFromCharDevice_wq) 
 	{
-	    printk(KERN_ERR "[INIT][WRK] Failed to initialise single thread workqueue for mainFromCharDevice: -ENOMEM\n");
+	    printk(KERN_ERR "[INIT][WRK] Failed to initialise single thread workqueue for transferFromCharDevice: -ENOMEM\n");
 	}
 	else
 	{
-		printk(KERN_ERR "[INIT][WRK] Create single thread workqueue for mainFromCharDevice\n");
+		printk(KERN_ERR "[INIT][WRK] Create single thread workqueue for transferFromCharDevice\n");
 	}
 }
 
@@ -78,25 +78,25 @@ static void interruptFromFpga_WorkDestroy(void)
     }
 }
 
-static void mainFromCharDevice_WorkDestroy(void)
+static void transferFromCharDevice_WorkDestroy(void)
 {
-    cancel_work_sync(get_mainFromCharDevice_work());
-    if (mainFromCharDevice_wq) {
-        flush_workqueue(mainFromCharDevice_wq);
-        destroy_workqueue(mainFromCharDevice_wq);
-        mainFromCharDevice_wq = NULL;
+    cancel_work_sync(get_transferFromCharDevice_work());
+    if (transferFromCharDevice_wq) {
+        flush_workqueue(transferFromCharDevice_wq);
+        destroy_workqueue(transferFromCharDevice_wq);
+        transferFromCharDevice_wq = NULL;
     }
 }
 
 void spiWorkInit(void)
 {
 	interruptFromFpga_WorkInit();
-	mainFromCharDevice_WorkInit();
+	transferFromCharDevice_WorkInit();
 }
 
 void spiWorkDestroy(void)
 {
 	interruptFromFpga_WorkDestroy();
-	mainFromCharDevice_WorkDestroy();
+	transferFromCharDevice_WorkDestroy();
 	printk(KERN_ERR "[DESTROY][WRK] Destroy kernel workflow\n");
 }

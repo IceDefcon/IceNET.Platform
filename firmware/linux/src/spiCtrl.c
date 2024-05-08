@@ -45,8 +45,8 @@ static struct spi_device *spi_dev_second;
 
 static volatile uint8_t spi_tx_at_interruptFromFpga[] = {0x81};
 static volatile uint8_t spi_rx_at_interruptFromFpga[1];
-static volatile uint8_t spi_tx_at_mainFromCharDevice[] = {0xAA};
-static volatile uint8_t spi_rx_at_mainFromCharDevice[8];
+static volatile uint8_t spi_tx_at_transferFromCharDevice[] = {0xAA};
+static volatile uint8_t spi_rx_at_transferFromCharDevice[8];
 
 int spiInit(void)
 {
@@ -182,7 +182,7 @@ void interruptFromFpga(struct work_struct *work)
      */
 }
 
-void mainFromCharDevice(struct work_struct *work)
+void transferFromCharDevice(struct work_struct *work)
 {
     struct spi_message msg;
     struct spi_transfer transfer;
@@ -193,7 +193,7 @@ void mainFromCharDevice(struct work_struct *work)
 
     memset(&transfer, 0, sizeof(transfer));
     transfer.tx_buf = fpgaData->RxData;
-    transfer.rx_buf = spi_rx_at_mainFromCharDevice;
+    transfer.rx_buf = spi_rx_at_transferFromCharDevice;
     transfer.len = fpgaData->length;
 
     spi_message_init(&msg);
@@ -212,7 +212,7 @@ void mainFromCharDevice(struct work_struct *work)
 
     for (i = 0; i < fpgaData->length; ++i) 
     {
-        printk(KERN_INFO "[CTRL][SPI] Byte[%d]: [Data]Kernel.TX[0x%02x] [Preamble]Fpga.RX[0x%02x]\n", i, fpgaData->RxData[i], spi_rx_at_mainFromCharDevice[i]);
+        printk(KERN_INFO "[CTRL][SPI] Byte[%d]: [Data]Kernel.TX[0x%02x] [Preamble]Fpga.RX[0x%02x]\n", i, fpgaData->RxData[i], spi_rx_at_transferFromCharDevice[i]);
     }
 
     /*!
@@ -226,7 +226,7 @@ void mainFromCharDevice(struct work_struct *work)
 
     for (i = 0; i < fpgaData->length; ++i) 
     {
-        spi_rx_at_mainFromCharDevice[i] = 0x00;
+        spi_rx_at_transferFromCharDevice[i] = 0x00;
     }
 }
 
