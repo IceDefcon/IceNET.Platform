@@ -40,8 +40,8 @@
  */
 
 
-static struct spi_device *spi_dev_main;
-static struct spi_device *spi_dev_second;
+static struct spi_device *spi_dev_primary;
+static struct spi_device *spi_dev_secondary;
 
 static volatile uint8_t spi_tx_at_interruptFromFpga[] = {0x81};
 static volatile uint8_t spi_rx_at_interruptFromFpga[1];
@@ -51,12 +51,12 @@ static volatile uint8_t spi_rx_at_transferFromCharDevice[8];
 int spiInit(void)
 {
 
-    struct spi_master *spi_master_main;
-    struct spi_master *spi_master_second;
+    struct spi_master *spi_master_primary;
+    struct spi_master *spi_master_secondary;
     int ret;
 
-    spi_master_main = spi_busnum_to_master(0);
-    if (!spi_master_main) 
+    spi_master_primary = spi_busnum_to_master(0);
+    if (!spi_master_primary) 
     {
         printk(KERN_ERR "[INIT][SPI] SPI Master at BUS 0 not found!\n");
         return -ENODEV;
@@ -66,8 +66,8 @@ int spiInit(void)
         printk(KERN_ERR "[INIT][SPI] SPI Master at BUS 0 Registered\n");
     }
 
-    spi_master_second = spi_busnum_to_master(1);
-    if (!spi_master_second) 
+    spi_master_secondary = spi_busnum_to_master(1);
+    if (!spi_master_secondary) 
     {
         printk(KERN_ERR "[INIT][SPI] SPI Master at BUS 1 not found!\n");
         return -ENODEV;
@@ -77,8 +77,8 @@ int spiInit(void)
         printk(KERN_ERR "[INIT][SPI] SPI Master at BUS 1 Registered\n");
     }
 
-    spi_dev_main = spi_alloc_device(spi_master_main);
-    if (!spi_dev_main) 
+    spi_dev_primary = spi_alloc_device(spi_master_primary);
+    if (!spi_dev_primary) 
     {
         printk(KERN_ERR "[INIT][SPI] SPI0 Failed to Allocate!\n");
         return -ENOMEM;
@@ -88,8 +88,8 @@ int spiInit(void)
         printk(KERN_ERR "[INIT][SPI] SPI0 Allocated\n");
     }
 
-    spi_dev_second = spi_alloc_device(spi_master_second);
-    if (!spi_dev_second) 
+    spi_dev_secondary = spi_alloc_device(spi_master_secondary);
+    if (!spi_dev_secondary) 
     {
         printk(KERN_ERR "[INIT][SPI] SPI1 Failed to Allocate!\n");
         return -ENOMEM;
@@ -105,15 +105,15 @@ int spiInit(void)
      * 
      * Only reqired when talking to FPGA
      */
-    spi_dev_main->chip_select = 0;
-    spi_dev_main->mode = SPI_MODE_1; /* For Kernel <=> FPGA Communication */
-    spi_dev_main->bits_per_word = 8;
-    spi_dev_main->max_speed_hz = 1000000;
+    spi_dev_primary->chip_select = 0;
+    spi_dev_primary->mode = SPI_MODE_1; /* For Kernel <=> FPGA Communication */
+    spi_dev_primary->bits_per_word = 8;
+    spi_dev_primary->max_speed_hz = 1000000;
 
-    ret = spi_setup(spi_dev_main);
+    ret = spi_setup(spi_dev_primary);
     if (ret < 0) {
         printk(KERN_ERR "[INIT][SPI] SPI0 device Failed to setup! ret[%d]\n", ret);
-        spi_dev_put(spi_dev_main);
+        spi_dev_put(spi_dev_primary);
         return ret;
     }
     else
@@ -121,15 +121,15 @@ int spiInit(void)
         printk(KERN_ERR "[INIT][SPI] SPI0 device setup\n");
     }
 
-    spi_dev_second->chip_select = 0;
-    spi_dev_second->mode = SPI_MODE_1; /* For Kernel <=> FPGA Communication */
-    spi_dev_second->bits_per_word = 8;
-    spi_dev_second->max_speed_hz = 1000000;
+    spi_dev_secondary->chip_select = 0;
+    spi_dev_secondary->mode = SPI_MODE_1; /* For Kernel <=> FPGA Communication */
+    spi_dev_secondary->bits_per_word = 8;
+    spi_dev_secondary->max_speed_hz = 1000000;
 
-    ret = spi_setup(spi_dev_second);
+    ret = spi_setup(spi_dev_secondary);
     if (ret < 0) {
         printk(KERN_ERR "[INIT][SPI] SPI1 device Failed to setup! ret[%d]\n", ret);
-        spi_dev_put(spi_dev_second);
+        spi_dev_put(spi_dev_secondary);
         return ret;
     }
     else
@@ -154,7 +154,7 @@ void interruptFromFpga(struct work_struct *work)
     spi_message_init(&msg);
     spi_message_add_tail(&transfer, &msg);
 
-    ret = spi_sync(spi_dev_second, &msg);
+    ret = spi_sync(spi_dev_secondary, &msg);
     if (ret < 0) {
         printk(KERN_ERR "[CTRL][SPI] SPI transfer at interrupt From Fpga failed: %d\n", ret);
         return;
@@ -199,7 +199,7 @@ void transferFromCharDevice(struct work_struct *work)
     spi_message_init(&msg);
     spi_message_add_tail(&transfer, &msg);
 
-    ret = spi_sync(spi_dev_main, &msg);
+    ret = spi_sync(spi_dev_primary, &msg);
     if (ret < 0) 
     {
         printk(KERN_ERR "[CTRL][SPI] SPI transfer at signal From Char Device failed: %d\n", ret);
@@ -232,7 +232,7 @@ void transferFromCharDevice(struct work_struct *work)
 
 int spiDestroy(void)
 {
-    spi_dev_put(spi_dev_main);
-	spi_dev_put(spi_dev_second);
+    spi_dev_put(spi_dev_primary);
+	spi_dev_put(spi_dev_secondary);
     printk(KERN_INFO "[DESTROY][SPI] Destroy SPI Devices\n");
 }
