@@ -23,7 +23,6 @@
 /* SPI */ int spiInit(void);
 /* KERNEL */ void interruptFromFpga(struct work_struct *work);
 /* MAIN */ void mainFromCharDevice(struct work_struct *work);
-/* SECOND */ void secondFromCharDevice(struct work_struct *work);
 /* SPI */ int spiDestroy(void);
 
 #endif // SPI_FPGA_H
