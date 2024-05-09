@@ -229,7 +229,7 @@ static ssize_t dev_write(struct file *filep, const char __user *buffer, size_t l
         printk(KERN_INFO "[CTRL][ C ] Received Byte[%zu]: 0x%02x\n", i, (unsigned char)charDeviceTransfer.RxData[i]);
     }
 
-    if (strcmp(charDeviceTransfer.RxData, "rd") == 0)
+    if (strcmp(charDeviceTransfer.RxData[0], "r") == 0)
     {
         setStateMachine(INTERRUPT);
         return CD_OK;
