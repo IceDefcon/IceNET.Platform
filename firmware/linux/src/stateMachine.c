@@ -12,6 +12,7 @@
 
 #include "stateMachine.h"
 #include "charDevice.h"
+#include "isrCtrl.h"
 #include "spiWork.h"
 
 /////////////////////////
