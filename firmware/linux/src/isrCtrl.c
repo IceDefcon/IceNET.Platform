@@ -40,7 +40,8 @@ static int interruptFromKernelInit(void)
     int result;
 
     result = gpio_request(GPIO_KERNEL_INTERRUPT, "   Response");
-    if (result < 0) {
+    if (result < 0) 
+    {
         printk(KERN_ERR "[INIT][ISR] Failed GPIO Request :: Pin [%d]\n", GPIO_KERNEL_INTERRUPT);
         return result;
     }
@@ -51,7 +52,8 @@ static int interruptFromKernelInit(void)
 
     // Set GPIO pin as an output
     result = gpio_direction_output(GPIO_KERNEL_INTERRUPT, 0); // Write low (0) to sink current to ground
-    if (result < 0) {
+    if (result < 0) 
+    {
         printk(KERN_ERR "[INIT][ISR] Failed to set GPIO direction :: Pin [%d]\n", GPIO_KERNEL_INTERRUPT);
         gpio_free(GPIO_KERNEL_INTERRUPT);
         return result;

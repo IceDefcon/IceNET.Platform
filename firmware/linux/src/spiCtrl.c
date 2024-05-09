@@ -7,6 +7,7 @@
 
 #include <linux/module.h>
 #include <linux/kernel.h>
+#include <linux/delay.h>
 
 #include "spiCtrl.h"
 #include "isrCtrl.h"
@@ -217,6 +218,7 @@ void transferFromCharDevice(struct work_struct *work)
     }
 
     isrSetGpio(GPIO_FPGA_INTERRUPT,1);
+    msleep(100);
     isrSetGpio(GPIO_FPGA_INTERRUPT,0);
 
     /*!
