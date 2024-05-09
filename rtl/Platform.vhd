@@ -83,13 +83,13 @@ signal mag_y_7_0 : std_logic_vector(7 downto 0):= (others => '0');
 signal mag_x_15_8 : std_logic_vector(7 downto 0):= (others => '0');
 signal mag_x_7_0 : std_logic_vector(7 downto 0):= (others => '0');
 -- FIFO
-signal fifo_data_in : std_logic_vector(7 downto 0) := (others => '0');
-signal fifo_wr_en : std_logic := '0';
-signal fifo_rd_en : std_logic := '0';
-signal fifo_data_out : std_logic_vector(7 downto 0) := (others => '0');
-signal fifo_full : std_logic := '0';
-signal fifo_empty : std_logic := '0';
-signal fifo_int : std_logic := '0';
+signal primary_fifo_data_in : std_logic_vector(7 downto 0) := (others => '0');
+signal primary_fifo_wr_en : std_logic := '0';
+signal primary_fifo_rd_en : std_logic := '0';
+signal primary_fifo_data_out : std_logic_vector(7 downto 0) := (others => '0');
+signal primary_fifo_full : std_logic := '0';
+signal primary_fifo_empty : std_logic := '0';
+signal primary_fifo_int : std_logic := '0';
 
 ----------------------------------------------------------------------------------------------------------------
 -- COMPONENTS DECLARATION
@@ -224,8 +224,7 @@ secondarySpiProcessing_module: SpiProcessing port map
     CS => SECONDARY_CS,
     SCLK => SECONDARY_SCLK,
 
-    -- out
-    SPI_INT => secondary_ready_MISO,
+    SPI_INT => secondary_ready_MISO, -- out
 
     SERIAL_MOSI => SECONDARY_MOSI, -- in
     PARALLEL_MOSI => secondary_parallel_MOSI, -- out
@@ -266,13 +265,12 @@ I2cStateMachine_module: I2cStateMachine port map
     KERNEL_INT => KERNEL_INT,
     -- out
     FPGA_INT => FPGA_INT, -- SM is ready for SPI.1 transfer
-    FIFO_INT => fifo_int, -- 20n interrupt >> FIFO write enable 
+    FIFO_INT => primary_fifo_int, -- 20n interrupt >> FIFO write enable 
 
 	I2C_SCK => I2C_SCK,
 	I2C_SDA => I2C_SDA,
 
-    -- 0x69 :: 1001 011
-	ADDRESS_I2C => "1001011",
+	ADDRESS_I2C => "1001011", -- 0x69
 
     --
     -- 0x00 :: 00000000 :: CHIP ID
@@ -301,23 +299,13 @@ I2cStateMachine_module: I2cStateMachine port map
 	LED_8 => open
 );
 
---fifo_write_i2c_process:
---process(CLOCK_50MHz)
---begin
---    if rising_edge(CLOCK_50MHz) then
---        fifo_data_in <= primary_parallel_MISO;
---        fifo_wr_en <= fifo_int;
---        fifo_rd_en <= '0';
---    end if;
---end process;
-
-fifo_write_spi_process:
+primary_fifo_write_spi_process:
 process(CLOCK_50MHz)
 begin
     if rising_edge(CLOCK_50MHz) then
-        fifo_data_in <= primary_parallel_MOSI;
-        fifo_wr_en <= primary_ready_MISO;
-        fifo_rd_en <= '0';
+        primary_fifo_data_in <= primary_parallel_MOSI;
+        primary_fifo_wr_en <= primary_ready_MISO;
+        primary_fifo_rd_en <= '0';
     end if;
 end process;
 
@@ -335,26 +323,20 @@ end process;
 -- Byte[3] Checksum :: b[n+1] = b[0] ^ b[1] ^ b[2] ^ ... b[n-1]
 --
 ---------------------------------------
-fifo_module: fifo
+primary_fifo_module: fifo
 port map 
 (
     -- IN
     clk      => CLOCK_50MHz,
     reset    => '0',
-    data_in  => fifo_data_in,
-    wr_en    => fifo_wr_en,
-    rd_en    => fifo_rd_en,
+    data_in  => primary_fifo_data_in,
+    wr_en    => primary_fifo_wr_en,
+    rd_en    => primary_fifo_rd_en,
     -- OUT
-    data_out => fifo_data_out,
-    full     => fifo_full,
-    empty    => fifo_empty
+    data_out => primary_fifo_data_out,
+    full     => primary_fifo_full,
+    empty    => primary_fifo_empty
 );
-
-
-
-LED_6 <= fifo_data_out(0);
-LED_7 <= fifo_full;
-LED_8 <= fifo_empty;
 
 -----------------------------------------------
 -- Interrupt is pulled down

@@ -207,7 +207,7 @@ int iceCOM::device_write()
 
     charDeviceTx[0] = computeRegisterAddress(consoleControl.data());
 
-#if 0
+#if 1
     /**
      * 
      * TODO
@@ -232,9 +232,9 @@ int iceCOM::device_write()
     }
 
     ret = write(m_file_descriptor, charDeviceTx.data(), 2);
-#endif
-
+#else
     ret = write(m_file_descriptor, charDeviceTx.data(), 1);
+#endif
 
     if (ret == -1)
     {
