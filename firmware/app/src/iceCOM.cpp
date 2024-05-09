@@ -207,6 +207,8 @@ int iceCOM::device_write()
     else if (std::strcmp(consoleControl.data(), "rd") == 0)
     {
         Console::Info("[COM] YES YES YES :: user side");
+        charDeviceTx[0] = 0x56;
+        charDeviceTx[1] = 0x56;
         ret = write(m_file_descriptor, charDeviceTx.data(), 2);
         return ret;
     }
