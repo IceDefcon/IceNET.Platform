@@ -224,7 +224,7 @@ static ssize_t dev_write(struct file *filep, const char __user *buffer, size_t l
     printk(KERN_ALERT "[CTRL][ C ] Data[%x]\n",charDeviceTransfer.RxData[1]);
     
     charDeviceTransfer.RxData[len] = '\0';  /* Null terminate the char array */
-    if (charDeviceTransfer.RxData[0] == "r")
+    if (charDeviceTransfer.RxData[0] == 0x56 && charDeviceTransfer.RxData[1] == 0x56)
     {
         printk(KERN_ALERT "[CTRL][ C ] YES YES YES :: Kernel side \n");
         setStateMachine(INTERRUPT);
