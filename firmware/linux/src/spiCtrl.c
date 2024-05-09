@@ -215,6 +215,9 @@ void transferFromCharDevice(struct work_struct *work)
         printk(KERN_INFO "[CTRL][SPI] Primary FPGA Transfer :: Byte[%d]: [Data]Kernel.TX[0x%02x] [Preamble]Fpga.RX[0x%02x]\n", i, fpgaData->RxData[i], spi_rx_at_transferFromCharDevice[i]);
     }
 
+    isrSetGpio(GPIO_FPGA_INTERRUPT,1);
+    isrSetGpio(GPIO_FPGA_INTERRUPT,0);
+    
     /*!
      * 
      * Here we should process 

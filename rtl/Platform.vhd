@@ -83,6 +83,8 @@ signal mag_y_7_0 : std_logic_vector(7 downto 0):= (others => '0');
 signal mag_x_15_8 : std_logic_vector(7 downto 0):= (others => '0');
 signal mag_x_7_0 : std_logic_vector(7 downto 0):= (others => '0');
 -- FIFO
+constant primary_fifo_WIDTH : integer := 8;
+constant primary_fifo_DEPTH : integer := 256;
 signal primary_fifo_data_in : std_logic_vector(7 downto 0) := (others => '0');
 signal primary_fifo_wr_en : std_logic := '0';
 signal primary_fifo_rd_en : std_logic := '0';
@@ -169,6 +171,11 @@ port
 end component;
 
 component fifo
+generic 
+(
+    WIDTH   : integer := 8;
+    DEPTH   : integer := 16
+);
 port 
 (
     clk      : in  std_logic;
@@ -262,7 +269,7 @@ I2cStateMachine_module: I2cStateMachine port map
     -- in
     SPI_INT => primary_ready_MISO,
     -- in
-    KERNEL_INT => KERNEL_INT,
+    KERNEL_INT => '0',
     -- out
     FPGA_INT => FPGA_INT, -- SM is ready for SPI.1 transfer
     FIFO_INT => primary_fifo_int, -- 20n interrupt >> FIFO write enable 
@@ -299,13 +306,29 @@ I2cStateMachine_module: I2cStateMachine port map
 	LED_8 => open
 );
 
+-- Convert KERNEL_INT into 20n pulse
+kernel_int_process:
+process(CLOCK_50MHz, KERNEL_INT, kernel_int_stop)
+begin
+    if rising_edge(CLOCK_50MHz) then
+        if KERNEL_INT = '1' and kernel_int_stop = '0' then
+            kernel_interrupt <= '1';
+            kernel_int_stop <= '1';
+        elsif KERNEL_INT = '0' then -- make sure stop is reset and
+            kernel_int_stop <= '0'; -- ready for another interrupt
+        else
+            kernel_interrupt <= '0';
+        end if;
+    end if;
+end process;
+
 primary_fifo_write_spi_process:
-process(CLOCK_50MHz)
+process(CLOCK_50MHz, primary_parallel_MOSI, primary_ready_MISO, kernel_interrupt)
 begin
     if rising_edge(CLOCK_50MHz) then
         primary_fifo_data_in <= primary_parallel_MOSI;
         primary_fifo_wr_en <= primary_ready_MISO;
-        primary_fifo_rd_en <= '0';
+        primary_fifo_rd_en <= kernel_interrupt;
     end if;
 end process;
 
@@ -318,12 +341,17 @@ end process;
 -- Byte[0] Ctrl Byte :: RW, MR, RC
 -- Byte[1] Address of Device
 -- Byte[2] Address of Register
--- Byte[n] Address of Register
+-- Byte[3] Address of Register
 -- ...
--- Byte[3] Checksum :: b[n+1] = b[0] ^ b[1] ^ b[2] ^ ... b[n-1]
+-- Byte[n-1] Checksum :: chk = b[0] ^ b[1] ^ b[2] ^ ... b[n-1]
 --
 ---------------------------------------
 primary_fifo_module: fifo
+generic map 
+(
+    WIDTH => primary_fifo_WIDTH,
+    DEPTH => primary_fifo_DEPTH
+)
 port map 
 (
     -- IN
