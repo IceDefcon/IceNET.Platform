@@ -65,8 +65,8 @@ static int StateMachineThread(void *data)
                 }
                 break;
 
-            case GPIO:
-                printk(KERN_INFO "[CTRL][STM] GPIO mode\n");
+            case INTERRUPT:
+                printk(KERN_INFO "[CTRL][STM] INTERRUPT mode\n");
                 gpio_set_value(GPIO_KERNEL_INTERRUPT, 1);
                 gpio_set_value(GPIO_KERNEL_INTERRUPT, 0);
                 setStateMachine(IDLE);

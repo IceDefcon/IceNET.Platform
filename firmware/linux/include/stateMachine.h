@@ -26,7 +26,7 @@ typedef enum
 {
     IDLE = 0,
     SPI,
-    GPIO,
+    INTERRUPT,
     I2C,    
     DMA
 } stateType;
