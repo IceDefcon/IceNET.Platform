@@ -8,6 +8,7 @@
 #include <linux/kernel.h>
 #include <linux/kthread.h>
 #include <linux/delay.h> // For msleep
+#include <linux/gpio.h>
 
 #include "stateMachine.h"
 #include "charDevice.h"
@@ -43,8 +44,6 @@
  */
 static int StateMachineThread(void *data)
 {
-    DataTransfer* transfer = charDevice_getRxData();
-
     while (!kthread_should_stop()) 
     {
         switch(getStateMachine()->state)
@@ -55,6 +54,7 @@ static int StateMachineThread(void *data)
 
             case SPI:
                 printk(KERN_INFO "[CTRL][STM] SPI mode\n");
+                DataTransfer* transfer = charDevice_getRxData();
                 if (true == transfer->ready)
                 {
                     printk(KERN_INFO "[CTRL][STM] SPI Data Ready\n");
@@ -62,6 +62,13 @@ static int StateMachineThread(void *data)
                     queue_work(get_transferFromCharDevice_wq(), get_transferFromCharDevice_work());
                     setStateMachine(IDLE);
                 }
+                break;
+
+            case GPIO:
+                printk(KERN_INFO "[CTRL][STM] GPIO mode\n");
+                gpio_set_value(GPIO_KERNEL_INTERRUPT, 1);
+                gpio_set_value(GPIO_KERNEL_INTERRUPT, 0);
+                setStateMachine(IDLE);
                 break;
 
             case I2C:

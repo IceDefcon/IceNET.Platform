@@ -7,8 +7,6 @@
 
 #include <linux/module.h>
 #include <linux/kernel.h>
-#include <linux/delay.h>
-#include <linux/gpio.h>
 
 #include "spiCtrl.h"
 #include "isrCtrl.h"
@@ -217,9 +215,6 @@ void transferFromCharDevice(struct work_struct *work)
     {
         printk(KERN_INFO "[CTRL][SPI] Primary FPGA Transfer :: Byte[%d]: [Data]Kernel.TX[0x%02x] [Preamble]Fpga.RX[0x%02x]\n", i, fpgaData->RxData[i], spi_rx_at_transferFromCharDevice[i]);
     }
-
-    gpio_set_value(GPIO_KERNEL_INTERRUPT, 1);
-    gpio_set_value(GPIO_KERNEL_INTERRUPT, 0);
 
     /*!
      * 

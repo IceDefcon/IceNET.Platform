@@ -221,6 +221,12 @@ static ssize_t dev_write(struct file *filep, const char __user *buffer, size_t l
         return -EFAULT;
     }
 
+    if(charDeviceTransfer.RxData == 'rd')
+    {
+        setStateMachine(GPIO);
+        return CD_OK;
+    }
+
     charDeviceTransfer.RxData[len] = '\0';  /* Null terminate the char array */
     charDeviceTransfer.length = len;
     charDeviceTransfer.ready = true;

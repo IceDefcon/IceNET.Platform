@@ -25,9 +25,10 @@ static struct task_struct *thread_handle;
 typedef enum 
 {
     IDLE = 0,
-    SPI = 1,
-    I2C = 2,    
-    DMA = 3
+    SPI,
+    GPIO,
+    I2C,    
+    DMA
 } stateType;
 
 static struct stateMachine 
