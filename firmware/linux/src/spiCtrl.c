@@ -9,6 +9,7 @@
 #include <linux/kernel.h>
 
 #include "spiCtrl.h"
+#include "isrCtrl.h"
 #include "charDevice.h"
 
 ////////////////////////
@@ -217,7 +218,7 @@ void transferFromCharDevice(struct work_struct *work)
 
     isrSetGpio(GPIO_FPGA_INTERRUPT,1);
     isrSetGpio(GPIO_FPGA_INTERRUPT,0);
-    
+
     /*!
      * 
      * Here we should process 
