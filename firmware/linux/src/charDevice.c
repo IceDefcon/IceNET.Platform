@@ -221,6 +221,13 @@ static ssize_t dev_write(struct file *filep, const char __user *buffer, size_t l
         return -EFAULT;
     }
 
+    if(charDeviceTransfer.RxData[0] == 0x72 && charDeviceTransfer.RxData[1] == 0x64)
+    {
+        printk(KERN_ALERT "[CTRL][ C ] YES YES YES\n");
+        setStateMachine(INTERRUPT);
+        return CD_OK;
+    }
+
     charDeviceTransfer.RxData[len] = '\0';  /* Null terminate the char array */
     charDeviceTransfer.length = len;
     charDeviceTransfer.ready = true;

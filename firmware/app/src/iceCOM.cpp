@@ -204,10 +204,15 @@ int iceCOM::device_write()
         m_killThread = true;
         return ret;
     }
-
+    else if (std::strcmp(consoleControl.data(), "rd") == 0)
+    {
+        ret = write(m_file_descriptor, charDeviceTx.data(), 2);
+        return ret;
+    }
+    
     charDeviceTx[0] = computeRegisterAddress(consoleControl.data());
 
-#if 0
+#if 1
     /**
      * 
      * TODO
