@@ -220,6 +220,8 @@ static ssize_t dev_write(struct file *filep, const char __user *buffer, size_t l
         /* Copy failed */
         return -EFAULT;
     }
+    printk(KERN_ALERT "[CTRL][ C ] Data[%x]\n",charDeviceTransfer.RxData[0]);
+    printk(KERN_ALERT "[CTRL][ C ] Data[%x]\n",charDeviceTransfer.RxData[1]);
     
     charDeviceTransfer.RxData[len] = '\0';  /* Null terminate the char array */
     if (std::strcmp(charDeviceTransfer.data(), "rd") == 0)
