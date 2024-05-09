@@ -206,10 +206,11 @@ int iceCOM::device_write()
     }
     else if (std::strcmp(consoleControl.data(), "rd") == 0)
     {
+        Console::Info("[COM] YES YES YES :: user side");
         ret = write(m_file_descriptor, charDeviceTx.data(), 2);
         return ret;
     }
-    
+
     charDeviceTx[0] = computeRegisterAddress(consoleControl.data());
 
 #if 1
