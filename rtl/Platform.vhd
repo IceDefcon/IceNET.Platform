@@ -92,6 +92,9 @@ signal primary_fifo_data_out : std_logic_vector(7 downto 0) := (others => '0');
 signal primary_fifo_full : std_logic := '0';
 signal primary_fifo_empty : std_logic := '0';
 signal primary_fifo_int : std_logic := '0';
+-- Kernel interrupt
+signal kernel_interrupt : std_logic := '0';
+signal kernel_interrupt_stop : std_logic := '0';
 
 ----------------------------------------------------------------------------------------------------------------
 -- COMPONENTS DECLARATION
@@ -308,14 +311,14 @@ I2cStateMachine_module: I2cStateMachine port map
 
 -- Convert KERNEL_INT into 20n pulse
 kernel_int_process:
-process(CLOCK_50MHz, KERNEL_INT, kernel_int_stop)
+process(CLOCK_50MHz, KERNEL_INT, kernel_interrupt_stop)
 begin
     if rising_edge(CLOCK_50MHz) then
-        if KERNEL_INT = '1' and kernel_int_stop = '0' then
+        if KERNEL_INT = '1' and kernel_interrupt_stop = '0' then
             kernel_interrupt <= '1';
-            kernel_int_stop <= '1';
+            kernel_interrupt_stop <= '1';
         elsif KERNEL_INT = '0' then -- make sure stop is reset and
-            kernel_int_stop <= '0'; -- ready for another interrupt
+            kernel_interrupt_stop <= '0'; -- ready for another interrupt
         else
             kernel_interrupt <= '0';
         end if;

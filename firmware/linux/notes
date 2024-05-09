@@ -2,6 +2,12 @@
 ID = 0x68 when SA0 = GND
 ID = 0x69 when SA0 = Vdd
 
+/* Check pin config */ 
+config-pin -q p9.14
+
+/* Set pin as GPIO */
+config-pin P9.14 gpio
+
 /* Enable SPI1 Device 1 */ 
 config-pin p9.28 spi_cs
 config-pin p9.29 spi
