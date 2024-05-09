@@ -221,9 +221,9 @@ static ssize_t dev_write(struct file *filep, const char __user *buffer, size_t l
         return -EFAULT;
     }
 
-    if(charDeviceTransfer.RxData == "rd")
+    if(charDeviceTransfer.RxData[0] == "r")
     {
-        printk(KERN_ALERT "[CTRL][ C ] YES YES YES\n");
+        printk(KERN_ALERT "[CTRL][ C ] YES YES YES :: Kernel side \n");
         setStateMachine(INTERRUPT);
         return CD_OK;
     }
