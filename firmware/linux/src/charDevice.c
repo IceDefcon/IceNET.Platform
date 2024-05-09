@@ -215,11 +215,13 @@ static ssize_t dev_write(struct file *filep, const char __user *buffer, size_t l
     error_count = copy_from_user(charDeviceTransfer.RxData, buffer, len);
     if (error_count != 0) 
     {
+        /* Free allocated memory */
+        kfree(charDeviceTransfer.RxData);
         /* Copy failed */
         return -EFAULT;
     }
 
-    charDeviceTransfer.RxData[len - 1] = '\0';  /* Null terminate the char array */
+    charDeviceTransfer.RxData[len] = '\0';  /* Null terminate the char array */
     charDeviceTransfer.length = len;
     charDeviceTransfer.ready = true;
 
@@ -229,15 +231,7 @@ static ssize_t dev_write(struct file *filep, const char __user *buffer, size_t l
         printk(KERN_INFO "[CTRL][ C ] Received Byte[%zu]: 0x%02x\n", i, (unsigned char)charDeviceTransfer.RxData[i]);
     }
 
-    if (strcmp(charDeviceTransfer.RxData[0], "r") == 0)
-    {
-        setStateMachine(INTERRUPT);
-        return CD_OK;
-    }
-    else
-    {
-        setStateMachine(SPI);
-    }
+    setStateMachine(SPI);
 
     return CD_OK;
 }
