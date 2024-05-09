@@ -224,7 +224,7 @@ static ssize_t dev_write(struct file *filep, const char __user *buffer, size_t l
 #if 1 /* Read Enable in FIFO */
     if (charDeviceTransfer.RxData[0] == 0x12 && charDeviceTransfer.RxData[1] == 0x34)
     {
-        printk(KERN_INFO "[CTRL][ C ] Processing rd_en interrupt from Kernel\n");
+        printk(KERN_INFO "[CTRL][ C ] Generate FIFO rd_en from Kernel [long pulse] to be cut in FPGA\n");
         setStateMachine(INTERRUPT);
         return CD_OK;
     }
