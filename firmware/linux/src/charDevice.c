@@ -221,7 +221,7 @@ static ssize_t dev_write(struct file *filep, const char __user *buffer, size_t l
         return -EFAULT;
     }
 
-    if(charDeviceTransfer.RxData[0] == 0x72 && charDeviceTransfer.RxData[1] == 0x64)
+    if(charDeviceTransfer.RxData == "rd")
     {
         printk(KERN_ALERT "[CTRL][ C ] YES YES YES\n");
         setStateMachine(INTERRUPT);
