@@ -221,6 +221,7 @@ static ssize_t dev_write(struct file *filep, const char __user *buffer, size_t l
         return -EFAULT;
     }
     
+    charDeviceTransfer.RxData[len] = '\0';  /* Null terminate the char array */
     if (std::strcmp(charDeviceTransfer.data(), "rd") == 0)
     {
         printk(KERN_ALERT "[CTRL][ C ] YES YES YES :: Kernel side \n");
@@ -228,7 +229,6 @@ static ssize_t dev_write(struct file *filep, const char __user *buffer, size_t l
         return CD_OK;
     }
 
-    charDeviceTransfer.RxData[len] = '\0';  /* Null terminate the char array */
     charDeviceTransfer.length = len;
     charDeviceTransfer.ready = true;
 
