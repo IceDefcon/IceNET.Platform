@@ -218,9 +218,9 @@ void transferFromCharDevice(struct work_struct *work)
         printk(KERN_INFO "[CTRL][SPI] Primary FPGA Transfer :: Byte[%d]: [Data]Kernel.TX[0x%02x] [Preamble]Fpga.RX[0x%02x]\n", i, fpgaData->RxData[i], spi_rx_at_transferFromCharDevice[i]);
     }
 
-    gpio_set_value(GPIO_PIN, 1); // Set pin high
+    gpio_set_value(50, 1); // Set pin high
     msleep(100); // Wait for 100 milliseconds
-    gpio_set_value(GPIO_PIN, 0); // Set pin low
+    gpio_set_value(50, 0); // Set pin low
 
     /*!
      * 
