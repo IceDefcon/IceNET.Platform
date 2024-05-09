@@ -220,8 +220,8 @@ static ssize_t dev_write(struct file *filep, const char __user *buffer, size_t l
         /* Copy failed */
         return -EFAULT;
     }
-
-    if(charDeviceTransfer.RxData[0] == "r")
+    
+    if (std::strcmp(charDeviceTransfer.data(), "rd") == 0)
     {
         printk(KERN_ALERT "[CTRL][ C ] YES YES YES :: Kernel side \n");
         setStateMachine(INTERRUPT);
