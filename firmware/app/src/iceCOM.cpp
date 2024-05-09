@@ -204,18 +204,20 @@ int iceCOM::device_write()
         m_killThread = true;
         return ret;
     }
+
+#if 1 /* Read Enable in FIFO */
     else if (std::strcmp(consoleControl.data(), "rd") == 0)
     {
-        Console::Info("[COM] YES YES YES :: user side");
-        charDeviceTx[0] = 0x56;
-        charDeviceTx[1] = 0x56;
+        charDeviceTx[0] = 0x12; /* Custom Kernel Byte Map :: Check reciprocal in charDevice.c */
+        charDeviceTx[1] = 0x34; /* Custom Kernel Byte Map :: Check reciprocal in charDevice.c */
         ret = write(m_file_descriptor, charDeviceTx.data(), 2);
         return ret;
     }
 
     charDeviceTx[0] = computeRegisterAddress(consoleControl.data());
+#endif
 
-#if 1
+#if 1 /* Register + Control Byte */
     /**
      * 
      * TODO

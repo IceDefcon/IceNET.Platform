@@ -76,7 +76,7 @@ static void init_charDevice_Data(void)
     TxData[1] = '\0'; /* Null terminator */
 
     charDeviceTransfer.RxData = RxData;
-    charDeviceTransfer.TxData = TxData; /* TODO :: TxData is rubish */
+    charDeviceTransfer.TxData = TxData; /* TODO :: TxData is Dummy 0xBB */
     charDeviceTransfer.length = 2;
     charDeviceTransfer.ready = false;
 
@@ -189,7 +189,7 @@ static ssize_t dev_read(struct file *filep, char *buffer, size_t len, loff_t *of
 {
     int error_count = 0;
 
-    /* TODO :: TxData is rubish */
+    /* TODO :: TxData is Dummy 0xBB */
     error_count = copy_to_user(buffer, charDeviceTransfer.TxData, charDeviceTransfer.length);
 
     if (error_count == 0)
@@ -220,17 +220,17 @@ static ssize_t dev_write(struct file *filep, const char __user *buffer, size_t l
         /* Copy failed */
         return -EFAULT;
     }
-    printk(KERN_ALERT "[CTRL][ C ] Data[%x]\n",charDeviceTransfer.RxData[0]);
-    printk(KERN_ALERT "[CTRL][ C ] Data[%x]\n",charDeviceTransfer.RxData[1]);
-    
-    charDeviceTransfer.RxData[len] = '\0';  /* Null terminate the char array */
-    if (charDeviceTransfer.RxData[0] == 0x56 && charDeviceTransfer.RxData[1] == 0x56)
+
+#if 1 /* Read Enable in FIFO */
+    if (charDeviceTransfer.RxData[0] == 0x12 && charDeviceTransfer.RxData[1] == 0x34)
     {
-        printk(KERN_ALERT "[CTRL][ C ] YES YES YES :: Kernel side \n");
+        printk(KERN_INFO "[CTRL][ C ] Processing rd_en interrupt from Kernel\n");
         setStateMachine(INTERRUPT);
         return CD_OK;
     }
+#endif
 
+    charDeviceTransfer.RxData[len] = '\0';  /* Null terminate the char array */
     charDeviceTransfer.length = len;
     charDeviceTransfer.ready = true;
 
