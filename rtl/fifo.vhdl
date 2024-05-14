@@ -16,7 +16,9 @@ port
     rd_en   : in  std_logic;
     data_out: out std_logic_vector(WIDTH-1 downto 0);
     full    : out std_logic;
-    empty   : out std_logic
+    empty   : out std_logic;
+
+    i2c_ready : out std_logic
 );
 end fifo;
 
@@ -30,6 +32,9 @@ signal count : integer range 0 to DEPTH := 0;
 -- Debugs to remove
 signal curr : std_logic_vector(WIDTH-1 downto 0) := (others => '0');
 signal prev : std_logic_vector(WIDTH-1 downto 0) := (others => '0');
+
+signal odd : std_logic := '0';
+signal even : std_logic := '0';
 
 begin
 
@@ -51,9 +56,20 @@ begin
                 count <= count - 1;
             end if;
         end if;
+
+        if count mod 2 = 0 then
+            even <= '1';
+            odd <= '0';
+        else
+            even <= '0';
+            odd <= '1';
+        end if;
+
     end process;
 
     full  <= '1' when count = DEPTH else '0';
     empty <= '1' when count = 0 else '0';
+
+    i2c_ready <= '1' when even = '1' else '0';
 
 end rtl;

@@ -91,7 +91,7 @@ signal primary_fifo_rd_en : std_logic := '0';
 signal primary_fifo_data_out : std_logic_vector(7 downto 0) := (others => '0');
 signal primary_fifo_full : std_logic := '0';
 signal primary_fifo_empty : std_logic := '0';
-signal primary_fifo_int : std_logic := '0';
+signal primary_fifo_i2c_ready : std_logic := '0';
 -- Kernel interrupt
 signal kernel_interrupt : std_logic := '0';
 signal kernel_interrupt_stop : std_logic := '0';
@@ -188,7 +188,9 @@ port
     rd_en    : in  std_logic;
     data_out : out std_logic_vector(7 downto 0);
     full     : out std_logic;
-    empty    : out std_logic
+    empty    : out std_logic;
+
+    i2c_ready : out std_logic
 );
 end component;
 
@@ -275,7 +277,7 @@ I2cStateMachine_module: I2cStateMachine port map
     KERNEL_INT => '0',
     -- out
     FPGA_INT => FPGA_INT, -- SM is ready for SPI.1 transfer
-    FIFO_INT => primary_fifo_int, -- 20n interrupt >> FIFO write enable 
+    FIFO_INT => primary_fifo_i2c_ready, -- 20n interrupt >> FIFO write enable 
 
 	I2C_SCK => I2C_SCK,
 	I2C_SDA => I2C_SDA,
@@ -366,7 +368,9 @@ port map
     -- OUT
     data_out => primary_fifo_data_out,
     full     => primary_fifo_full,
-    empty    => primary_fifo_empty
+    empty    => primary_fifo_empty,
+
+    i2c_ready => primary_fifo_i2c_ready
 );
 
 -----------------------------------------------
