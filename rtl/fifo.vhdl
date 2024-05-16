@@ -4,6 +4,7 @@ use IEEE.STD_LOGIC_1164.ALL;
 entity fifo is
 generic 
 (
+    BYTES   : integer := 2;
     WIDTH   : integer := 8;
     DEPTH   : integer := 16
 );
@@ -16,7 +17,8 @@ port
     rd_en   : in  std_logic;
     data_out: out std_logic_vector(WIDTH-1 downto 0);
     full    : out std_logic;
-    empty   : out std_logic
+    empty   : out std_logic;
+    offload : out std_logic
 );
 end fifo;
 
@@ -30,8 +32,6 @@ signal count : integer range 0 to DEPTH := 0;
 -- Debugs to remove
 signal curr : std_logic_vector(WIDTH-1 downto 0) := (others => '0');
 signal prev : std_logic_vector(WIDTH-1 downto 0) := (others => '0');
--- ctrl byte is stored ready
-signal ctrl : std_logic := '0';
 
 begin
 
@@ -53,6 +53,13 @@ begin
             rd_ptr <= (rd_ptr + 1) mod DEPTH;
             count <= count - 1;
         end if;
+
+        if count = 0 then
+            offload <= '0';
+        elsif count mod BYTES = 0 then
+            offload <= '1';
+        end if;
+
     end if;
 end process;
 

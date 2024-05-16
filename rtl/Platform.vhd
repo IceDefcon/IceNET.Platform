@@ -83,18 +83,28 @@ signal mag_y_7_0 : std_logic_vector(7 downto 0):= (others => '0');
 signal mag_x_15_8 : std_logic_vector(7 downto 0):= (others => '0');
 signal mag_x_7_0 : std_logic_vector(7 downto 0):= (others => '0');
 -- FIFO
+constant primary_fifo_BYTES : integer := 2;
 constant primary_fifo_WIDTH : integer := 8;
-constant primary_fifo_DEPTH : integer := 256;
+constant primary_fifo_DEPTH : integer := 16;
 signal primary_fifo_data_in : std_logic_vector(7 downto 0) := (others => '0');
 signal primary_fifo_wr_en : std_logic := '0';
 signal primary_fifo_rd_en : std_logic := '0';
 signal primary_fifo_data_out : std_logic_vector(7 downto 0) := (others => '0');
 signal primary_fifo_full : std_logic := '0';
 signal primary_fifo_empty : std_logic := '0';
-signal primary_fifo_i2c_ready : std_logic := '0';
+signal primary_fifo_offload : std_logic := '0';
 -- Kernel interrupt
 signal kernel_interrupt : std_logic := '0';
 signal kernel_interrupt_stop : std_logic := '0';
+-- Offload
+signal offload_interrupt : std_logic := '0';
+type STATE is 
+(
+    IDLE,
+    SPIN,
+    DONE
+);
+signal state_current, state_next: STATE := IDLE;
 
 ----------------------------------------------------------------------------------------------------------------
 -- COMPONENTS DECLARATION
@@ -176,6 +186,7 @@ end component;
 component fifo
 generic 
 (
+    BYTES   : integer := 2;
     WIDTH   : integer := 8;
     DEPTH   : integer := 16
 );
@@ -188,7 +199,8 @@ port
     rd_en    : in  std_logic;
     data_out : out std_logic_vector(7 downto 0);
     full     : out std_logic;
-    empty    : out std_logic
+    empty    : out std_logic;
+    offload  : out std_logic
 );
 end component;
 
@@ -270,7 +282,7 @@ I2cStateMachine_module: I2cStateMachine port map
 	RESET => reset_button,
 
     -- in
-    SPI_INT => primary_ready_MISO,
+    SPI_INT => '0', -- primary_ready_MISO, -- i2c process ready to begin
     -- in
     KERNEL_INT => '0',
     -- out
@@ -331,7 +343,7 @@ begin
     if rising_edge(CLOCK_50MHz) then
         primary_fifo_data_in <= primary_parallel_MOSI;
         primary_fifo_wr_en <= primary_ready_MISO;
-        primary_fifo_rd_en <= kernel_interrupt;
+        offload_interrupt <= kernel_interrupt;
     end if;
 end process;
 
@@ -352,6 +364,7 @@ end process;
 primary_fifo_module: fifo
 generic map 
 (
+    BYTES => primary_fifo_BYTES,
     WIDTH => primary_fifo_WIDTH,
     DEPTH => primary_fifo_DEPTH
 )
@@ -366,8 +379,57 @@ port map
     -- OUT
     data_out => primary_fifo_data_out,
     full     => primary_fifo_full,
-    empty    => primary_fifo_empty
+    empty    => primary_fifo_empty,
+    offload  => primary_fifo_offload
 );
+
+
+offload_process:
+process(CLOCK_50MHz)
+begin
+    if rising_edge(CLOCK_50MHz) then
+
+        ------------------------------------
+        -- State Machine :: IDLE
+        ------------------------------------
+        if state_current = IDLE then
+            if offload_interrupt = '1' then
+                state_next <= SPIN;
+            else
+                state_next <= IDLE;
+            end if;
+        end if;
+
+        ------------------------------------
+        -- State Machine :: SPIN
+        ------------------------------------
+        if state_current = SPIN then
+            if primary_fifo_offload = '1' then
+                primary_fifo_rd_en <= '1';
+                state_next <= SPIN;
+            else
+                primary_fifo_rd_en <= '0';
+                state_next <= DONE;
+            end if;
+        end if;
+
+        ------------------------------------
+        -- State Machine :: DONE
+        ------------------------------------
+        if state_current = DONE then
+            state_next <= IDLE;
+        end if;
+
+        ------------------------------------
+        -- State Machine :: Update
+        ------------------------------------
+        state_current <= state_next;
+
+    end if;
+end process;
+
+
+
 
 -----------------------------------------------
 -- Interrupt is pulled down
