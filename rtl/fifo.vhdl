@@ -16,9 +16,7 @@ port
     rd_en   : in  std_logic;
     data_out: out std_logic_vector(WIDTH-1 downto 0);
     full    : out std_logic;
-    empty   : out std_logic;
-
-    i2c_ready : out std_logic
+    empty   : out std_logic
 );
 end fifo;
 
@@ -32,44 +30,33 @@ signal count : integer range 0 to DEPTH := 0;
 -- Debugs to remove
 signal curr : std_logic_vector(WIDTH-1 downto 0) := (others => '0');
 signal prev : std_logic_vector(WIDTH-1 downto 0) := (others => '0');
-
-signal odd : std_logic := '0';
-signal even : std_logic := '0';
+-- ctrl byte is stored ready
+signal ctrl : std_logic := '0';
 
 begin
 
-    process(clk, reset)
-    begin
-        if reset = '1' then
-            wr_ptr <= 0;
-            rd_ptr <= 0;
-            count  <= 0;
-        elsif rising_edge(clk) then
-            if wr_en = '1' then
-                memory(wr_ptr) <= data_in;
-                wr_ptr <= (wr_ptr + 1) mod DEPTH;
-                count <= count + 1;
-            end if;
-            if rd_en = '1' then
-                data_out <= memory(rd_ptr);
-                rd_ptr <= (rd_ptr + 1) mod DEPTH;
-                count <= count - 1;
-            end if;
+process(clk, reset)
+begin
+    if reset = '1' then
+        wr_ptr <= 0;
+        rd_ptr <= 0;
+        count  <= 0;
+    elsif rising_edge(clk) then
+        if wr_en = '1' and count < DEPTH then
+            memory(wr_ptr) <= data_in;
+            wr_ptr <= (wr_ptr + 1) mod DEPTH;
+            count <= count + 1;
         end if;
-
-        if count mod 2 = 0 then
-            even <= '1';
-            odd <= '0';
-        else
-            even <= '0';
-            odd <= '1';
+        
+        if rd_en = '1' and count > 0 then
+            data_out <= memory(rd_ptr);
+            rd_ptr <= (rd_ptr + 1) mod DEPTH;
+            count <= count - 1;
         end if;
+    end if;
+end process;
 
-    end process;
-
-    full  <= '1' when count = DEPTH else '0';
-    empty <= '1' when count = 0 else '0';
-
-    i2c_ready <= '1' when even = '1' else '0';
+full  <= '1' when count = DEPTH else '0';
+empty <= '1' when count = 0 else '0';
 
 end rtl;
