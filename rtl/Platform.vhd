@@ -98,6 +98,7 @@ signal kernel_interrupt : std_logic := '0';
 signal kernel_interrupt_stop : std_logic := '0';
 -- Offload
 signal offload_interrupt : std_logic := '0';
+signal offload_stop : std_logic := '0';
 type STATE is 
 (
     IDLE,
@@ -404,8 +405,9 @@ begin
         -- State Machine :: SPIN
         ------------------------------------
         if state_current = SPIN then
-            if primary_fifo_offload = '1' then
+            if primary_fifo_offload = '1' and offload_stop = '0' then
                 primary_fifo_rd_en <= '1';
+                offload_stop <= '1';
                 state_next <= SPIN;
             else
                 primary_fifo_rd_en <= '0';
@@ -417,6 +419,7 @@ begin
         -- State Machine :: DONE
         ------------------------------------
         if state_current = DONE then
+            offload_stop <= '0';
             state_next <= IDLE;
         end if;
 
