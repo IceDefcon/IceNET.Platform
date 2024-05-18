@@ -98,12 +98,14 @@ signal kernel_interrupt : std_logic := '0';
 signal kernel_interrupt_stop : std_logic := '0';
 -- Offload
 signal offload_interrupt : std_logic := '0';
-signal offload_stop : std_logic := '0';
+signal offload_ready : std_logic := '0';
+signal offload_ctrl : std_logic_vector(7 downto 0) := (others => '0');
+signal offload_data : std_logic_vector(7 downto 0) := (others => '0');
+signal offload_count : std_logic_vector(1 downto 0) := "00";
 type STATE is 
 (
     IDLE,
-    SPIN,
-    DONE
+    SPIN
 );
 signal state_current, state_next: STATE := IDLE;
 
@@ -283,7 +285,7 @@ I2cStateMachine_module: I2cStateMachine port map
 	RESET => reset_button,
 
     -- in
-    SPI_INT => '0', -- primary_ready_MISO, -- i2c process ready to begin
+    SPI_INT => offload_ready, -- i2c transfer ready to begin
     -- in
     KERNEL_INT => '0',
     -- out
@@ -307,8 +309,8 @@ I2cStateMachine_module: I2cStateMachine port map
     -- Originally :: 00011011
     -- Reversed :: 11011000
     --
-	REGISTER_I2C => primary_parallel_MOSI, -- From Kernel SPI
-	RW_BIT => '0',
+	REGISTER_I2C => offload_data, -- primary_parallel_MOSI, -- From Kernel SPI
+	RW_BIT => offload_ctrl(0), -- '0',
 
 	DATA => secondary_parallel_MISO,
 
@@ -394,6 +396,7 @@ begin
         -- State Machine :: IDLE
         ------------------------------------
         if state_current = IDLE then
+            offload_ready <= '0';
             if offload_interrupt = '1' then
                 state_next <= SPIN;
             else
@@ -405,22 +408,16 @@ begin
         -- State Machine :: SPIN
         ------------------------------------
         if state_current = SPIN then
-            if primary_fifo_offload = '1' and offload_stop = '0' then
+            if primary_fifo_offload = '1' then
                 primary_fifo_rd_en <= '1';
-                offload_stop <= '1';
+                offload_count <= offload_count + '1';
                 state_next <= SPIN;
             else
                 primary_fifo_rd_en <= '0';
-                state_next <= DONE;
+                offload_ready <= '1';
+                offload_count <= "00";
+                state_next <= IDLE;
             end if;
-        end if;
-
-        ------------------------------------
-        -- State Machine :: DONE
-        ------------------------------------
-        if state_current = DONE then
-            offload_stop <= '0';
-            state_next <= IDLE;
         end if;
 
         ------------------------------------
@@ -428,11 +425,17 @@ begin
         ------------------------------------
         state_current <= state_next;
 
+        if offload_count = "01" then
+            offload_data <= primary_fifo_data_out;
+        elsif offload_count = "10" then
+            offload_ctrl <= primary_fifo_data_out;
+        end if;
     end if;
 end process;
 
-
-
+LED_6 <= offload_data(0) or offload_data(1) or offload_data(2) or offload_data(3);
+LED_7 <= offload_data(4) or offload_data(5) or offload_data(6) or offload_data(7) or offload_ready;
+LED_8 <= offload_ctrl(0) or offload_ctrl(1) or offload_ctrl(2) or offload_ctrl(3) or offload_ctrl(4) or offload_ctrl(5) or offload_ctrl(6) or offload_ctrl(7);
 
 -----------------------------------------------
 -- Interrupt is pulled down

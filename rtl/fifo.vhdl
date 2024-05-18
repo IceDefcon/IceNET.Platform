@@ -32,9 +32,20 @@ signal count : integer range 0 to DEPTH := 0;
 -- Debugs to remove
 signal curr : std_logic_vector(WIDTH-1 downto 0) := (others => '0');
 signal prev : std_logic_vector(WIDTH-1 downto 0) := (others => '0');
+-- Offload
+signal offload_count : std_logic_vector(3 downto 0) := (others => '0');
+-- SM
+type STATE is 
+(
+    IDLE,
+    CHECK,
+    DONE
+);
+signal state_current, state_next: STATE := IDLE;
 
 begin
 
+fifo_flow_process:
 process(clk, reset)
 begin
     if reset = '1' then
@@ -53,11 +64,48 @@ begin
             rd_ptr <= (rd_ptr + 1) mod DEPTH;
             count <= count - 1;
         end if;
+    end if;
+end process;
 
-        if count = 0 then
-            offload <= '0';
-        elsif count mod BYTES = 0 then
-            offload <= '1';
+fifo_offload_process:
+process(clk)
+begin
+    if rising_edge(clk) then
+
+        ------------------------------------
+        -- State Machine :: IDLE
+        ------------------------------------
+        if state_current = IDLE then
+            if count = 0 then
+                state_next <= IDLE;
+            if count mod 2 = 0 then
+                offload_count <= offload_count + '1';
+                state_next <= CHECK;
+            else
+                state_next <= IDLE;
+            end if;
+        end if;
+
+        ------------------------------------
+        -- State Machine :: CHECK
+        ------------------------------------
+        if state_current = CHECK then
+            if ? = '1' then
+                state_next <= CHECK;
+            else
+                state_next <= IDLE;
+            end if;
+        end if;
+
+        ------------------------------------
+        -- State Machine :: DONE
+        ------------------------------------
+        if state_current = DONE then
+            if ? = '1' then
+                state_next <= DONE;
+            else
+                state_next <= IDLE;
+            end if;
         end if;
 
     end if;
