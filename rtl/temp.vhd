@@ -18,51 +18,49 @@ architecture rtl of temp is
 type STATE is 
 (
     IDLE,
-    SPIN,
-    DONE
+    SPIN
 );
-signal state_current, state_next: STATE := IDLE;
--- Test
-signal isIDLE : std_logic := '0';
-signal isSPIN : std_logic := '0';
-signal isDONE : std_logic := '0';
-signal state_current, state_next: STATE := IDLE;
+signal test_state : STATE := IDLE;
+signal test_interrupt : std_logic := '0';
+signal test_count : std_logic_vector(1 downto 0) := '0';
 
-offload_process:
-process (CLOCK_50MHz, offload_reset)
+process (CLOCK_50MHz)
 begin
-    if offload_reset = '1' then
-        state_current <= IDLE;
-    elsif rising_edge(CLOCK_50MHz) then
-        case state_current is
+    if rising_edge(CLOCK_50MHz) then
+        case test_state is
+
             when IDLE =>
-                isIDLE <= '1';
-                isSPIN <= '0';
-                isDONE <= '0';
-                if offload_interrupt = '1' then
-                    state_next <= SPIN;
+                --
+                -- BODY
+                --
+                if test_interrupt = '1' then
+                    test_state <= SPIN;
                 else
-                    state_next <= IDLE;
+                    test_state <= IDLE;
                 end if;
 
             when SPIN =>
-                isIDLE <= '0';
-                isSPIN <= '1';
-                isDONE <= '0';
-                state_next <= DONE;
-
-            when DONE =>
-                isIDLE <= '0';
-                isSPIN <= '0';
-                isDONE <= '1';
-                state_next <= IDLE;
+                if test_count = "00" then
+                    --
+                    -- BODY
+                    --
+                    test_state <= SPIN;
+                elsif test_count = "01" then
+                    --
+                    -- BODY
+                    --
+                    test_state <= SPIN;
+                else
+                    --
+                    -- BODY
+                    --
+                    test_state <= IDLE;
+                end if;
 
             when others =>
-                state_next <= IDLE;
+                test_state <= IDLE;
 
         end case;
-
-        state_current <= state_next;
     end if;
 end process;
 
