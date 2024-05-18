@@ -108,6 +108,10 @@ type STATE is
     SPIN
 );
 signal state_current, state_next: STATE := IDLE;
+-- Test
+signal test_1 : std_logic := '0';
+signal test_2 : std_logic := '0';
+signal test_3 : std_logic := '0';
 
 ----------------------------------------------------------------------------------------------------------------
 -- COMPONENTS DECLARATION
@@ -310,7 +314,7 @@ I2cStateMachine_module: I2cStateMachine port map
     -- Reversed :: 11011000
     --
 	REGISTER_I2C => offload_data, -- primary_parallel_MOSI, -- From Kernel SPI
-	RW_BIT => offload_ctrl(0), -- '0',
+	RW_BIT => offload_ctrl(0), -- '0', -- Read or Write
 
 	DATA => secondary_parallel_MISO,
 
@@ -387,8 +391,7 @@ port map
 );
 
 
-offload_process:
-process(CLOCK_50MHz)
+offload_process: process(CLOCK_50MHz)
 begin
     if rising_edge(CLOCK_50MHz) then
 
@@ -399,25 +402,26 @@ begin
             offload_ready <= '0';
             if offload_interrupt = '1' then
                 state_next <= SPIN;
-            else
-                state_next <= IDLE;
             end if;
+            LED_6 <= '1';
+            LED_7 <= '0';
         end if;
 
         ------------------------------------
         -- State Machine :: SPIN
         ------------------------------------
         if state_current = SPIN then
-            if primary_fifo_offload = '1' then
+            if offload_count < "10" then
                 primary_fifo_rd_en <= '1';
                 offload_count <= offload_count + '1';
-                state_next <= SPIN;
-            else
+            elsif offload_count = "10" then
                 primary_fifo_rd_en <= '0';
                 offload_ready <= '1';
                 offload_count <= "00";
                 state_next <= IDLE;
             end if;
+            LED_6 <= '0';
+            LED_7 <= '1';
         end if;
 
         ------------------------------------
@@ -425,17 +429,48 @@ begin
         ------------------------------------
         state_current <= state_next;
 
+        ------------------------------------
+        -- Offload
+        ------------------------------------
         if offload_count = "01" then
             offload_data <= primary_fifo_data_out;
         elsif offload_count = "10" then
             offload_ctrl <= primary_fifo_data_out;
         end if;
+
     end if;
 end process;
 
-LED_6 <= offload_data(0) or offload_data(1) or offload_data(2) or offload_data(3);
-LED_7 <= offload_data(4) or offload_data(5) or offload_data(6) or offload_data(7) or offload_ready;
-LED_8 <= offload_ctrl(0) or offload_ctrl(1) or offload_ctrl(2) or offload_ctrl(3) or offload_ctrl(4) or offload_ctrl(5) or offload_ctrl(6) or offload_ctrl(7);
+--
+-- TEST
+--
+--process_test:
+--process(CLOCK_50MHz)
+--begin
+--    if rising_edge(CLOCK_50MHz) then
+--        if test_1 = '0' then
+--            test_1 <= '1';
+--        end if;
+
+--        if test_1 = '1' then
+--            test_2 <= '1';
+--        end if;
+        
+--        if test_2 = '1' then
+--            test_3 <= '1';
+--        end if;
+        
+--        if test_3 = '1' then
+--            test_1 <= '0';
+--            test_2 <= '0';
+--            test_3 <= '0';
+--        end if;
+--    end if;
+--end process;
+
+--LED_6 <= offload_data(0) or offload_data(1) or offload_data(2) or offload_data(3);
+--LED_7 <= offload_data(4) or offload_data(5) or offload_data(6) or offload_data(7) or offload_ready;
+LED_8 <= offload_ctrl(0) or offload_ctrl(1) or offload_ctrl(2) or offload_ctrl(3) or offload_ctrl(4) or offload_ctrl(5) or offload_ctrl(6) or offload_ctrl(7) or test_1 or test_2 or test_3;
 
 -----------------------------------------------
 -- Interrupt is pulled down

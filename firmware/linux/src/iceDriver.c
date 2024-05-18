@@ -42,7 +42,9 @@ static int __init fpga_driver_init(void)
     /* Initialise gpio ISR */
     isrGpioInit();
 
-    printk(KERN_INFO "[READY] Driver loaded successfuly     \n");
+    printk(KERN_INFO "----------------------------------\n");
+    printk(KERN_INFO "[READY] Driver loaded successfuly \n");
+    printk(KERN_INFO "----------------------------------\n");
 
     return NULL;
 }

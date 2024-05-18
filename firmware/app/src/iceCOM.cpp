@@ -213,9 +213,9 @@ int iceCOM::device_write()
         ret = write(m_file_descriptor, charDeviceTx.data(), 2);
         return ret;
     }
+#endif
 
     charDeviceTx[0] = computeRegisterAddress(consoleControl.data());
-#endif
 
 #if 1 /* Register + Control Byte */
     /**
