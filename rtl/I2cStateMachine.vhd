@@ -76,7 +76,7 @@ type STATE is
     DONE
 );
 --State machine indicators
-signal state_current, state_next: STATE := IDLE;
+signal state_current: STATE := IDLE;
 -- Status Indicators
 signal isIDLE : std_logic := '0';
 signal isINIT : std_logic := '0';
@@ -93,11 +93,7 @@ signal fifo_flag : std_logic := '0';
 begin
 
 
-state_machine_process:
-process(CLOCK, RESET, kernel_interrupt, system_start, state_current, 
-    system_timer, init_timer, config_timer, send_timer, done_timer, status_timer, 
-    sck_timer_toggle, sda_offset,
-    fifo_interrupt, fifo_flag)
+state_machine_process : process(CLOCK, RESET)
 begin
     if rising_edge(CLOCK) then
 
@@ -113,7 +109,7 @@ begin
         if system_start = '0' then
             if system_timer = smStartDelay then
                 system_start <= '1';
-                state_next <= IDLE;
+                state_current <= IDLE;
             else
                 system_timer <= system_timer + '1';
             end if;
@@ -122,7 +118,7 @@ begin
             -- State Machine :: Reset
             ----------------------------------------
             if RESET = '1' or SPI_INT = '1' then
-                state_next <= INIT;
+                state_current <= INIT;
             else
                 ------------------------------------
                 -- State Machine :: IDLE
@@ -143,7 +139,7 @@ begin
                 ------------------------------------
                 if state_current = INIT then
                     if init_timer = smStateDelay then -- delay for the reset to stabilise
-                        state_next <= CONFIG;
+                        state_current <= CONFIG;
                     else
                         init_timer <= init_timer + '1';
                     end if;
@@ -158,12 +154,12 @@ begin
                 ------------------------------------
                 if state_current = CONFIG then
                     if config_timer = smStateDelay then
-                        state_next <= SEND;
+                        state_current <= SEND;
                         ----------------------------
                         -- Body
                         ----------------------------
                         rw <= RW_BIT;
-                        sck_timer <= "11111001"; -- Reset timer so SCK is invereted @ 1st clock cycle
+                        sck_timer <= "11111001"; -- Reset timer so SCK is inverted @ 1st clock cycle
                         sda_timer <= "111110011"; -- Reset timer so data is passed @ 1st clock cycle
                         sda_offset <= "0000000001100011"; -- [100-1] :: SDA Offset
                     else    
@@ -181,7 +177,7 @@ begin
                 ------------------------------------
                 if state_current = SEND then
                     if send_timer = smStateDelay then
-                        state_next <= DONE;
+                        state_current <= DONE;
                     else
                         if status_timer = "1111111111111111" then -- Length :: 25k clock cycles :: -----===[ RESET ]===----
                         else
@@ -219,7 +215,7 @@ begin
                             if status_timer = "0011010010111011" then -- [13500-1] :: INIT SDA RETURN
                                 status_sck <= "1000";
                             end if;
-                            -- Includes: Repeted start + Address + RW + ACK/NAK
+                            -- Includes: Repeated start + Address + RW + ACK/NAK
                             if status_timer = "0011011010101111" then -- [14000-1] :: Return Clock 3
                                 status_sck <= "1001";
                             end if;
@@ -262,7 +258,7 @@ begin
                                 status_sda <= "1000";
                             end if;
 
-                            if status_timer = sda_offset + "0011010110110110" then -- [13750] :: REPETED START
+                            if status_timer = sda_offset + "0011010110110110" then -- [13750] :: REPEATED START
                                 status_sda <= "1001";
                             end if;
 
@@ -371,7 +367,7 @@ begin
                                 end if;
                             end if;
 
-                            if status_sda = "1001" then --  REPETED START
+                            if status_sda = "1001" then -- REPEATED START
                                 I2C_SDA <= '0';
                             end if;
 
@@ -405,7 +401,7 @@ begin
                                 end if;
                             end if;
 
-                            if status_sda = "1111" then --  Stop bit 
+                            if status_sda = "1111" then -- Stop bit 
                                 FPGA_INT <= '1';
 
                                 if fifo_interrupt = '0' and fifo_flag = '0' then
@@ -464,7 +460,7 @@ begin
                         status_sck <= "0000";
                         status_sda <= "0000";
                         -- Switch to IDLE
-                        state_next <= IDLE;
+                        state_current <= IDLE;
                         -- Reset to default
                         DATA <= "11100111";
                         -- Rest fifo interrupt flag
@@ -479,14 +475,6 @@ begin
                     isDEVICE <= '0';
                     isDONE <= '1';
                 end if;
-                ------------------------------------
-                -- State Machine :: Update
-                ------------------------------------
-                state_current <= state_next;
-
-                ------------------------------------
-                -- State Machine :: Output
-                ------------------------------------
 
                 ------------------------------------
                 -- State Machine :: Status

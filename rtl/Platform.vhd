@@ -327,14 +327,14 @@ I2cStateMachine_module: I2cStateMachine port map
 
 -- Convert KERNEL_INT into 20n pulse
 kernel_int_process:
-process(CLOCK_50MHz, KERNEL_INT, kernel_interrupt_stop)
+process(CLOCK_50MHz)
 begin
     if rising_edge(CLOCK_50MHz) then
         if KERNEL_INT = '1' and kernel_interrupt_stop = '0' then
             kernel_interrupt <= '1';
             kernel_interrupt_stop <= '1';
-        elsif KERNEL_INT = '0' then -- make sure stop is reset and
-            kernel_interrupt_stop <= '0'; -- ready for another interrupt
+        elsif KERNEL_INT = '0' then
+            kernel_interrupt_stop <= '0';
         else
             kernel_interrupt <= '0';
         end if;
