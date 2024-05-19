@@ -4,7 +4,6 @@ use IEEE.STD_LOGIC_1164.ALL;
 entity fifo is
 generic 
 (
-    BYTES   : integer := 2;
     WIDTH   : integer := 8;
     DEPTH   : integer := 16
 );
@@ -17,8 +16,7 @@ port
     rd_en   : in  std_logic;
     data_out: out std_logic_vector(WIDTH-1 downto 0);
     full    : out std_logic;
-    empty   : out std_logic;
-    offload : out std_logic
+    empty   : out std_logic
 );
 end fifo;
 
@@ -35,35 +33,27 @@ signal prev : std_logic_vector(WIDTH-1 downto 0) := (others => '0');
 
 begin
 
-process(clk, reset)
-begin
-    if reset = '1' then
-        wr_ptr <= 0;
-        rd_ptr <= 0;
-        count  <= 0;
-    elsif rising_edge(clk) then
-        if wr_en = '1' and count < DEPTH then
-            memory(wr_ptr) <= data_in;
-            wr_ptr <= (wr_ptr + 1) mod DEPTH;
-            count <= count + 1;
+    process(clk, reset)
+    begin
+        if reset = '1' then
+            wr_ptr <= 0;
+            rd_ptr <= 0;
+            count  <= 0;
+        elsif rising_edge(clk) then
+            if wr_en = '1' and count < DEPTH then
+                memory(wr_ptr) <= data_in;
+                wr_ptr <= (wr_ptr + 1) mod DEPTH;
+                count <= count + 1;
+            end if;
+            if rd_en = '1' and count > 0 then
+                data_out <= memory(rd_ptr);
+                rd_ptr <= (rd_ptr + 1) mod DEPTH;
+                count <= count - 1;
+            end if;
         end if;
-        
-        if rd_en = '1' and count > 0 then
-            data_out <= memory(rd_ptr);
-            rd_ptr <= (rd_ptr + 1) mod DEPTH;
-            count <= count - 1;
-        end if;
+    end process;
 
-        if count = 0 then
-            offload <= '0';
-        elsif count mod BYTES = 0 then
-            offload <= '1';
-        end if;
-
-    end if;
-end process;
-
-full  <= '1' when count = DEPTH else '0';
-empty <= '1' when count = 0 else '0';
+    full  <= '1' when count = DEPTH else '0';
+    empty <= '1' when count = 0 else '0';
 
 end rtl;

@@ -8,6 +8,12 @@ config-pin -q p9.14
 /* Set pin as GPIO */
 config-pin P9.14 gpio
 
+/* Enable SPI1 Device 0 */ 
+config-pin P9_17 spi_cs
+config-pin P9_18 spi
+config-pin P9_21 spi
+config-pin P9_22 spi_sclk
+
 /* Enable SPI1 Device 1 */ 
 config-pin p9.28 spi_cs
 config-pin p9.29 spi

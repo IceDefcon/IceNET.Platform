@@ -131,8 +131,6 @@ begin
                     isDONE <= '0';
                     I2C_SCK <= 'Z';
                     I2C_SDA <= 'Z';
-                    -- Reset to default
-                    DATA <= "10101011"; -- Default value after main flash 0xAB
                 end if;
                 ------------------------------------
                 -- State Machine :: INIT
@@ -461,8 +459,6 @@ begin
                         status_sda <= "0000";
                         -- Switch to IDLE
                         state_current <= IDLE;
-                        -- Reset to default
-                        DATA <= "11100111";
                         -- Rest fifo interrupt flag
                         fifo_flag <= '0';
                     else
