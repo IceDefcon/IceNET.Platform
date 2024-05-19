@@ -38,15 +38,17 @@ static int __init i2c_module_init(void)
 
     /**
      * 
+     * 0x00 :: CHIP ID  ---==[ Constant]==---
      * 0x18 :: SENSORTIME_0
      * 0x19 :: SENSORTIME_1
      * 0x1A :: SENSORTIME_2
-     * 0x1B :: STATUS ---> Constant !
+     * 0x1B :: STATUS ---==[ Constant]==---
      * 
      */
     for (i = 0; i < 1; ++i) 
     {
-        ret = i2c_smbus_read_i2c_block_data(i2c_client, begin + i, sizeof(read_buffer), read_buffer);
+        // ret = i2c_smbus_read_i2c_block_data(i2c_client, begin + i, sizeof(read_buffer), read_buffer);
+        ret = i2c_smbus_read_i2c_block_data(i2c_client, 0x01, sizeof(read_buffer), read_buffer);
         if (ret < 0) 
         {
             printk(KERN_ERR "Failed to read data from I2C device\n");
