@@ -11,7 +11,7 @@ port
 
     SPI_INT : in std_logic;
     KERNEL_INT : in std_logic;
-    FPGA_INT : out std_logic;
+    FPGA_INT : out std_logic; -- 1000*20ns interrupt back to Kernel
     FIFO_INT : out std_logic;
     
     I2C_SCK : inout std_logic;
@@ -216,13 +216,33 @@ begin
                             if status_timer = "0011010010111011" then -- [13500-1] :: INIT SDA RETURN
                                 status_sck <= "1000";
                             end if;
-                            -- Includes: Repeated start + Address + RW + ACK/NAK
-                            if status_timer = "0011011010101111" then -- [14000-1] :: Return Clock
+
+                            if status_timer = "0011011010101111" then -- [14000-1] :: Repeted Device Address
                                 status_sck <= "1001";
                             end if;
 
-                            if status_timer = "0101101111001011" then -- [23500-1] :: Stop Bit
+                            if status_timer = "0100010001011011" then -- [17500-1] :: Write
                                 status_sck <= "1010";
+                            end if;
+
+                            if status_timer = "0100011001001111" then -- [18000-1] :: ACK/NAK
+                                status_sck <= "1011";
+                            end if;
+
+                            if status_timer = "0100100001000011" then -- [18500-1] :: Data From Register
+                                status_sck <= "1100";
+                            end if;
+
+                            if status_timer = "0101011111100011" then -- [22500-1] :: ACK/NAK
+                                status_sck <= "1101";
+                            end if;
+
+                            if status_timer = "0101100111010111" then -- [23000-1] :: Additional Cycle
+                                status_sck <= "1110";
+                            end if;
+
+                            if status_timer = "0101101111001011" then -- [23500-1] :: Stop Bit
+                                status_sck <= "1111";
                             end if;
 ------------------------------------------------------
 -- PIPE[0] :: Read SDA Status Registers
@@ -298,7 +318,12 @@ begin
                             or status_sck = "0011" -- [4500-1] :: ACK/NAK
                             or status_sck = "0101" -- [7000-1] :: Register Address
                             or status_sck = "0110" -- [11000-1] :: ACK/NAK
-                            or status_sck = "1001" -- [14000-1] :: Return Clock
+                            or status_sck = "1001" -- [14000-1] :: Repeted Device Address
+                            or status_sck = "1010" -- [17500-1] :: Write
+                            or status_sck = "1011" -- [18000-1] :: ACK/NAK
+                            or status_sck = "1100" -- [18500-1] :: Data From Register
+                            or status_sck = "1101" -- [22500-1] :: ACK/NAK
+                            or status_sck = "1110" -- [23000-1] :: Additional Cycle
                             then
                                 if sck_timer = "11111001" then -- Half bit time
                                     sck_timer_toggle <= not sck_timer_toggle;
@@ -322,7 +347,7 @@ begin
                             end if;
 
                             if status_sck = "1000" -- [13500-1] :: INIT SDA RETURN
-                            or status_sck = "1010" -- [23500-1] :: Stop Bit
+                            or status_sck = "1111" -- [23500-1] :: Stop Bit
                             then
                                 I2C_SCK <= '1';
                             end if;

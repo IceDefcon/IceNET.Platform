@@ -286,7 +286,7 @@ I2cStateMachine_module: I2cStateMachine port map
     -- in
     KERNEL_INT => '0',
     -- out
-    FPGA_INT => FPGA_INT, -- SM is ready for SPI.1 transfer
+    FPGA_INT => FPGA_INT, -- SM is ready for SPI.1 transfer :: 1000*20ns interrupt
     FIFO_INT => open,
 
 	I2C_SCK => I2C_SCK,

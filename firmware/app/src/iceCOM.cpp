@@ -169,7 +169,7 @@ uint8_t iceCOM::computeControlRegister(const char* in)
     uint8_t temp[2] = {0};
     uint8_t out = 0;
 
-    temp[0] = in[2];
+    temp[0] = in[2]; /* This is ASCII space :: Not checked */ 
     temp[1] = in[3];
 
     if(temp[0] == 0x20)
@@ -185,6 +185,45 @@ uint8_t iceCOM::computeControlRegister(const char* in)
     else
     {
         Console::Error("[COM] No space between register and R/W operator");
+        return 0xFF;
+    }
+
+    return out;
+}
+
+uint8_t iceCOM::computeWriteData(const char* in)
+{
+    uint8_t temp[2] = {0};
+    uint8_t out = 0;
+
+    temp[0] = in[5];
+    temp[1] = in[6];
+
+    if(temp[0] >= 0x30 && temp[0] <= 0x39)
+    {
+        out = (temp[0] - 0x30) << 4;
+    }
+    else if(temp[1] >= 0x61 && temp[1] <= 0x66)
+    {
+        out = (temp[0] - 0x61 + 0x0A;) << 4;
+    }
+    else
+    {
+        Console::Error("[COM] Invalid Write Data");
+        return 0xFF;
+    }
+
+    if(temp[1] >= 0x30 && temp[1] <= 0x39)
+    {
+        out = out + temp[1] - 0x30;
+    }
+    else if(temp[1] >= 0x61 && temp[1] <= 0x66)
+    {
+        out = out + temp[1] - 0x61 + 0x0A;
+    }
+    else
+    {
+        Console::Error("[COM] Invalid Write Data");
         return 0xFF;
     }
 
@@ -217,7 +256,7 @@ int iceCOM::device_write()
 
     charDeviceTx[0] = computeRegisterAddress(consoleControl.data());
 
-#if 1 /* Register + Control Byte */
+#if 1 /* Register + Control Byte + */
     /**
      * 
      * TODO
@@ -230,15 +269,37 @@ int iceCOM::device_write()
      * 
      * 1. BMI160 register
      * 2. Control Byte
+     * 3. Write Data
+     * 
+     * 0x30 ---> 0x39 for 0 to 9
+     * 0x61 ---> 0x66 for a to f
+     * 
+     * 
      * 
      */
 
     charDeviceTx[1] = computeControlRegister(consoleControl.data());
 
-    if(charDeviceTx[0] == 0xFF || charDeviceTx[1] == 0xFF) 
+    if(charDeviceTx[1] == 0x01)
     {
-        Console::Error("[COM] Bytes computation failure");
-        return ret;
+        charDeviceTx[2] = computeWriteData(consoleControl.data());
+
+        std::cout << "Data to Write: " << charDeviceTx[2] << std::endl;
+        return ERROR;
+
+        if(charDeviceTx[0] == 0xFF || charDeviceTx[1] == 0xFF || harDeviceTx[1] == 0xFF) 
+        {
+            Console::Error("[COM] Bytes computation failure [WR]");
+            return ret;
+        }
+    }
+    else
+    {
+        if(charDeviceTx[0] == 0xFF || charDeviceTx[1] == 0xFF) 
+        {
+            Console::Error("[COM] Bytes computation failure");
+            return ret;
+        }
     }
 
     ret = write(m_file_descriptor, charDeviceTx.data(), 2);
