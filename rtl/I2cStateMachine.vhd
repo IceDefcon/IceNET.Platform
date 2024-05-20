@@ -159,7 +159,7 @@ begin
                         else
                             state_current <= WR;
                         end if;
-                        rw <= RW_BIT;
+                        rw <= '0';
                         sck_timer <= "11111001"; -- Reset timer so SCK is inverted @ 1st clock cycle
                         sda_timer <= "111110011"; -- Reset timer so data is passed @ 1st clock cycle
                         sda_offset <= "0000000001100011"; -- [100-1] :: SDA Offset
@@ -488,8 +488,12 @@ begin
                                 status_sck <= "1000";
                             end if;
 
-                            if status_timer = "0011111001111111" then -- [16000-1] :: Stop Bit
+                            if status_timer = "0011111001111111" then -- [16000-1] :: Additional Cycle
                                 status_sck <= "1001";
+                            end if;
+
+                            if status_timer = "0100000001110011" then -- [16500-1] :: Stop Bit
+                                status_sck <= "1010";
                             end if;
 
 ------------------------------------------------------
@@ -532,11 +536,11 @@ begin
                             end if;
 
                             if status_timer = sda_offset + "0011111010000000" then -- [16000] :: Stop Bit
-                                status_sda <= "1001";
+                                status_sda <= "1010";
                             end if;
 
                             if status_timer = sda_offset + "0100001001101000" then -- [17000] :: Final BARIER
-                                status_sda <= "1010";
+                                status_sda <= "1011";
                             end if;
  
 ------------------------------------------------------
@@ -549,6 +553,7 @@ begin
                             or status_sck = "0110" -- [11000-1] :: ACK/NAK
                             or status_sck = "0111" -- [11500-1] :: Register Data
                             or status_sck = "1000" -- [15500-1] :: ACK/NAK
+                            or status_sck = "1001" -- [16000-1] :: Additional Cycle
                             then
                                 if sck_timer = "11111001" then -- Half bit time
                                     sck_timer_toggle <= not sck_timer_toggle;
@@ -570,7 +575,7 @@ begin
                                 I2C_SCK <= '0';
                             end if;
 
-                            if status_sck = "1001" -- [16000-1] :: Stop Bit
+                            if status_sck = "1010" -- [16000-1] :: Stop Bit
                             then
                                 I2C_SCK <= '1';
                             end if;
@@ -626,7 +631,7 @@ begin
                                 end if;
                             end if;
 
-                            if status_sda = "1001" then -- [16000] :: Stop Bit
+                            if status_sda = "1010" then -- [16000] :: Stop Bit
                                 I2C_SDA <= '0';
                             end if;
 
@@ -634,7 +639,7 @@ begin
                             or status_sda = "0101" -- [5000] :: BARIER[1]
                             or status_sda = "0111" -- [11000] :: ACK/NAK
                             or status_sda = "1001" -- [15500] :: ACK/NAK
-                            or status_sda = "1010" -- [17000] :: Final BARIER
+                            or status_sda = "1011" -- [17000] :: Final BARIER
                             then -- BARIER :: 'Z'
                                 I2C_SDA <= 'Z';
                             end if;
