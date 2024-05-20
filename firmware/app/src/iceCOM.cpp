@@ -287,7 +287,7 @@ int iceCOM::device_write()
         std::cout << "Data to Write: " << charDeviceTx[2] << std::endl;
         return ERROR;
 
-        if(charDeviceTx[0] == 0xFF || charDeviceTx[1] == 0xFF || harDeviceTx[1] == 0xFF) 
+        if(charDeviceTx[0] == 0xFF || charDeviceTx[1] == 0xFF || charDeviceTx[2] == 0xFF) 
         {
             Console::Error("[COM] Bytes computation failure [WR]");
             return ret;
