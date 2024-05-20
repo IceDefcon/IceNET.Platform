@@ -284,7 +284,7 @@ int iceCOM::device_write()
     {
         charDeviceTx[2] = computeWriteRegister(consoleControl.data());
 
-        std::cout << "Data to Write: " << charDeviceTx[2] << std::endl;
+        std::cout << "Data to Write = 0x" << std::hex << static_cast<int>(charDeviceTx[2]) << std::endl;
         return ERROR;
 
         if(charDeviceTx[0] == 0xFF || charDeviceTx[1] == 0xFF || charDeviceTx[2] == 0xFF) 
