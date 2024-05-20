@@ -99,12 +99,18 @@ signal offload_interrupt : std_logic := '0';
 signal offload_reset : std_logic := '0';
 signal offload_ready : std_logic := '0';
 signal offload_ctrl : std_logic_vector(7 downto 0) := (others => '0');
+signal offload_register : std_logic_vector(7 downto 0) := (others => '0');
 signal offload_data : std_logic_vector(7 downto 0) := (others => '0');
-signal offload_count : std_logic_vector(1 downto 0) := "00";
 type STATE is 
 (
     IDLE,
-    SPIN
+    DELAY_INIT,
+    DELAY_CONFIG,
+    READ_REGISTER,
+    WRITE_CHECK,
+    READ_CONTROL_DONE,
+    READ_CONTROL,
+    READ_DATA
 );
 signal offload_state: STATE := IDLE;
 
@@ -168,9 +174,10 @@ port
     I2C_SCK : inout std_logic;
     I2C_SDA : inout std_logic;
 
-    ADDRESS_I2C : in std_logic_vector(6 downto 0);
-    REGISTER_I2C : in std_logic_vector(7 downto 0);
-    RW_BIT : in std_logic;
+    OFFLOAD_ID : in std_logic_vector(6 downto 0);
+    OFFLOAD_REGISTER : in std_logic_vector(7 downto 0);
+    OFFLOAD_COTROL : in std_logic;
+    OFFLOAD_DATA : in std_logic_vector(7 downto 0);
 
     DATA : out std_logic_vector(7 downto 0);
 
@@ -291,24 +298,12 @@ I2cStateMachine_module: I2cStateMachine port map
 
 	I2C_SCK => I2C_SCK,
 	I2C_SDA => I2C_SDA,
-
-	ADDRESS_I2C => "1001011", -- 0x69
-
-    --
-    -- 0x00 :: 00000000 :: CHIP ID
-    -- 0x18 :: 00011000 :: SENSORTIME_0
-    -- 0x19 :: 10011000 :: SENSORTIME_1
-    -- 0x1A :: 01011000 :: SENSORTIME_2
-    -- 0x1B :: 11011000 :: STATUS
-    --
-    -- Bits are Reversed, For example: STATUS Register 0x1B
-    --
-    -- Originally :: 00011011
-    -- Reversed :: 11011000
-    --
-	REGISTER_I2C => offload_data, -- primary_parallel_MOSI, -- From Kernel SPI
-	RW_BIT => offload_ctrl(0), -- '0', -- Read or Write
-
+    -- in
+	OFFLOAD_ID => "1001011", -- Device ID
+	OFFLOAD_REGISTER => offload_register, -- Device Register
+	OFFLOAD_COTROL => offload_ctrl(0), -- For now :: Read/Write
+    OFFLOAD_DATA => offload_data, -- Write Data
+    -- out
 	DATA => secondary_parallel_MISO,
 
 	LED_1 => LED_1,
@@ -389,31 +384,48 @@ begin
             when IDLE =>
                 offload_ready <= '0';
                 if offload_interrupt = '1' then
-                    offload_state <= SPIN;
+                    offload_state <= DELAY_INIT;
                 else
                     offload_state <= IDLE;
                 end if;
 
-            when SPIN =>
-                if offload_count = "00" then
-                    primary_fifo_rd_en <= '1';
-                    offload_count <= offload_count + '1';
-                    offload_state <= SPIN;
-                elsif offload_count = "01" then
-                    primary_fifo_rd_en <= '1';
-                    offload_count <= offload_count + '1';
-                    offload_state <= SPIN;
-                elsif offload_count = "10" then
+            when DELAY_INIT =>
+                primary_fifo_rd_en <= '1';
+                offload_state <= DELAY_CONFIG;
+ 
+            when DELAY_CONFIG =>
+                primary_fifo_rd_en <= '1';
+                offload_state <= READ_REGISTER;
+
+            When READ_REGISTER =>
+                primary_fifo_rd_en <= '0';
+                offload_register <= primary_fifo_data_out; -- Register
+                offload_state <= WRITE_CHECK;
+
+            When WRITE_CHECK =>
+                if primary_fifo_data_out(0) = '0' then
                     primary_fifo_rd_en <= '0';
-                    offload_count <= offload_count + '1';
-                    offload_data <= primary_fifo_data_out; -- Read data.byte
-                    offload_state <= SPIN;
-                else
-                    offload_ctrl <= primary_fifo_data_out; -- Read ctrl.byte
-                    offload_ready <= '1';
-                    offload_count <= "00";
-                    offload_state <= IDLE;
+                    offload_state <= READ_CONTROL_DONE;
+                elsif primary_fifo_data_out(0) = '1' then
+                    primary_fifo_rd_en <= '1';
+                    offload_state <= READ_CONTROL;
                 end if;
+
+            when READ_CONTROL_DONE => 
+                offload_ctrl <= primary_fifo_data_out; -- Control
+                offload_ready <= '1';
+                offload_state <= IDLE;
+
+            when READ_CONTROL =>
+                primary_fifo_rd_en <= '0';
+                offload_ctrl <= primary_fifo_data_out; -- Control
+                offload_state <= READ_DATA;
+
+            when READ_DATA =>
+                primary_fifo_rd_en <= '0';
+                offload_data <= primary_fifo_data_out; -- Data
+                offload_ready <= '1';
+                offload_state <= IDLE;
 
             when others =>
                 offload_state <= IDLE;
@@ -421,6 +433,9 @@ begin
         end case;
     end if;
 end process;
+
+
+
 
 -----------------------------------------------
 -- Interrupt is pulled down

@@ -17,9 +17,10 @@ port
     I2C_SCK : inout std_logic;
     I2C_SDA : inout std_logic;
 
-    ADDRESS_I2C : in std_logic_vector(6 downto 0);
-    REGISTER_I2C : in std_logic_vector(7 downto 0);
-    RW_BIT : in std_logic;
+    OFFLOAD_ID : in std_logic_vector(6 downto 0);
+    OFFLOAD_REGISTER : in std_logic_vector(7 downto 0);
+    OFFLOAD_COTROL : in std_logic;
+    OFFLOAD_DATA : in std_logic_vector(7 downto 0);
 
     DATA : out std_logic_vector(7 downto 0);
 
@@ -87,8 +88,6 @@ signal isDONE : std_logic := '0';
 -- fifo interrupt
 signal fifo_interrupt : std_logic := '0';
 signal fifo_flag : std_logic := '0';
--- Debug
-signal WRITE_I2C : std_logic_vector(7 downto 0) := "00000001";
 ----------------------------------------------------------------------------------------------------------------
 -- MAIN ROUTINE
 ----------------------------------------------------------------------------------------------------------------
@@ -154,7 +153,7 @@ begin
                 ------------------------------------
                 if state_current = CONFIG then
                     if config_timer = smStateDelay then
-                        if RW_BIT = '0' then
+                        if OFFLOAD_COTROL = '0' then
                             state_current <= RD;
                         else
                             state_current <= WR;
@@ -366,7 +365,7 @@ begin
                             if status_sda = "0010" then -- [500] :: Device Address
                                 if sda_timer = "111110011" then -- Half bit time
                                     sda_timer <= (others => '0');
-                                    I2C_SDA <= ADDRESS_I2C(index);
+                                    I2C_SDA <= OFFLOAD_ID(index);
                                     index <= index + 1;
                                 else
                                     sda_timer <= sda_timer + '1';
@@ -386,7 +385,7 @@ begin
                             if status_sda = "0110" then -- [7000] :: Register Address
                                 if sda_timer = "111110011" then -- Half bit time
                                     sda_timer <= (others => '0');
-                                    I2C_SDA <= REGISTER_I2C(7 - index);
+                                    I2C_SDA <= OFFLOAD_REGISTER(7 - index);
                                     index <= index + 1;
                                 else
                                     sda_timer <= sda_timer + '1';
@@ -400,7 +399,7 @@ begin
                             if status_sda = "1010" then -- [14000] :: Repeted Device Address
                                 if sda_timer = "111110011" then -- Half bit time
                                     sda_timer <= (others => '0');
-                                    I2C_SDA <= ADDRESS_I2C(index);
+                                    I2C_SDA <= OFFLOAD_ID(index);
                                     index <= index + 1;
                                 else
                                     sda_timer <= sda_timer + '1';
@@ -619,7 +618,7 @@ begin
                             if status_sda = "0010" then -- [500] :: Device Address
                                 if sda_timer = "111110011" then -- Half bit time
                                     sda_timer <= (others => '0');
-                                    I2C_SDA <= ADDRESS_I2C(index); -- Address Data 1
+                                    I2C_SDA <= OFFLOAD_ID(index); -- Address Data 1
                                     index <= index + 1;
                                 else
                                     sda_timer <= sda_timer + '1';
@@ -639,7 +638,7 @@ begin
                             if status_sda = "0110" then -- [7000] :: Register Address
                                 if sda_timer = "111110011" then -- Half bit time
                                     sda_timer <= (others => '0');
-                                    I2C_SDA <= REGISTER_I2C(7 - index);
+                                    I2C_SDA <= OFFLOAD_REGISTER(7 - index);
                                     index <= index + 1;
                                 else
                                     sda_timer <= sda_timer + '1';
@@ -649,7 +648,7 @@ begin
                             if status_sda = "1000" then -- [11500] :: Register Data
                                 if sda_timer = "111110011" then -- Half bit time
                                     sda_timer <= (others => '0');
-                                    I2C_SDA <= WRITE_I2C(7 - index);
+                                    I2C_SDA <= OFFLOAD_DATA(7 - index);
                                     index <= index + 1;
                                 else
                                     sda_timer <= sda_timer + '1';
