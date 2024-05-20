@@ -4,11 +4,32 @@
 #include <linux/init.h>
 
 #define SPI_BUS 0
-#define SPI_BUS_CS1 0
+#define SPI_BUS_CS1 0  // Assuming chip select 0
 #define SPI_BUS_SPEED 50000
-#define REGISTER_TO_READ 0x0F
 
 static struct spi_device *spi_device;
+
+static int spi_read_register(uint8_t reg, uint8_t *val) {
+    uint8_t tx_buf[2] = { reg | 0x80, 0x00 }; // 0x80 to set read mode
+    uint8_t rx_buf[2] = { 0 };
+    struct spi_transfer transfer = {
+        .tx_buf = tx_buf,
+        .rx_buf = rx_buf,
+        .len = 2,
+    };
+    struct spi_message message;
+
+    spi_message_init(&message);
+    spi_message_add_tail(&transfer, &message);
+
+    if (spi_sync(spi_device, &message)) {
+        printk(KERN_ALERT "Failed to transfer SPI message for register 0x%02X.\n", reg);
+        return -EIO;
+    }
+
+    *val = rx_buf[1];
+    return 0;
+}
 
 static int __init spi_module_init(void) {
     struct spi_master *master;
@@ -19,15 +40,7 @@ static int __init spi_module_init(void) {
         .chip_select = SPI_BUS_CS1,
         .mode = SPI_MODE_0,
     };
-
-    uint8_t tx_buf[2] = { REGISTER_TO_READ | 0x80, 0x00 }; // 0x80 to set read mode
-    uint8_t rx_buf[2] = { 0 };
-    struct spi_transfer transfer = {
-        .tx_buf = tx_buf,
-        .rx_buf = rx_buf,
-        .len = 2,
-    };
-    struct spi_message message;
+    uint8_t val;
 
     printk(KERN_INFO "SPI Module Init\n");
 
@@ -49,16 +62,13 @@ static int __init spi_module_init(void) {
         return -ENODEV;
     }
 
-    spi_message_init(&message);
-    spi_message_add_tail(&transfer, &message);
-
-    if (spi_sync(spi_device, &message)) {
-        printk(KERN_ALERT "Failed to transfer SPI message.\n");
-        spi_unregister_device(spi_device);
-        return -EIO;
+    if (spi_read_register(0x7F, &val) == 0) {
+        printk(KERN_INFO "Read value from register 0x7F: 0x%02X\n", val);
     }
 
-    printk(KERN_INFO "Read value from register 0x%02X: 0x%02X\n", REGISTER_TO_READ, rx_buf[1]);
+    if (spi_read_register(0x0F, &val) == 0) {
+        printk(KERN_INFO "Read value from register 0x0F: 0x%02X\n", val);
+    }
 
     return 0;
 }
