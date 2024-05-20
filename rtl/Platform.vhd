@@ -376,6 +376,7 @@ port map
     empty    => primary_fifo_empty
 );
 
+offload_process:
 process (CLOCK_50MHz)
 begin
     if rising_edge(CLOCK_50MHz) then
