@@ -54,7 +54,7 @@ public:
 
     uint8_t computeRegisterAddress(const char* in);
     uint8_t computeControlRegister(const char* in);
-    uint8_t iceCOM::computeWriteData(const char* in);
-    
+    uint8_t computeWriteRegister(const char* in);
+
     bool terminate();
 };

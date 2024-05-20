@@ -191,7 +191,7 @@ uint8_t iceCOM::computeControlRegister(const char* in)
     return out;
 }
 
-uint8_t iceCOM::computeWriteData(const char* in)
+uint8_t iceCOM::computeWriteRegister(const char* in)
 {
     uint8_t temp[2] = {0};
     uint8_t out = 0;
@@ -282,7 +282,7 @@ int iceCOM::device_write()
 
     if(charDeviceTx[1] == 0x01)
     {
-        charDeviceTx[2] = computeWriteData(consoleControl.data());
+        charDeviceTx[2] = computeWriteRegister(consoleControl.data());
 
         std::cout << "Data to Write: " << charDeviceTx[2] << std::endl;
         return ERROR;
