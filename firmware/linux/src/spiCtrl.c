@@ -106,7 +106,7 @@ int spiInit(void)
      * Only reqired when talking to FPGA
      */
     spi_dev_primary->chip_select = 0;
-    spi_dev_primary->mode = SPI_MODE_1; /* For Kernel <=> FPGA Communication */
+    spi_dev_primary->mode = SPI_MODE_0; /* For Kernel <=> FPGA Communication */
     spi_dev_primary->bits_per_word = 8;
     spi_dev_primary->max_speed_hz = 1000000;
 
