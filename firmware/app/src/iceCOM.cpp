@@ -256,7 +256,7 @@ int iceCOM::device_write()
 
     charDeviceTx[0] = computeRegisterAddress(consoleControl.data());
 
-#if 0 /* Register + Control Byte + Write data*/
+#if 1 /* Register + Control Byte + Write data*/
     /**
      * 
      * TODO
