@@ -33,7 +33,7 @@ static int __init i2c_module_init(void)
     else printk(KERN_INFO "I2C device created\n");
 
 #if 1 /* Write only */
-    int ret = i2c_smbus_write_byte_data(i2c_client, 0x44, 0x08);
+    int ret = i2c_smbus_write_byte_data(i2c_client, 0x70, 0x01);
     if (ret < 0) 
     {
         printk(KERN_ERR "Failed to write data to I2C device\n");

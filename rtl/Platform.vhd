@@ -236,22 +236,22 @@ Debounce_module: Debounce port map
 	button_out_4 => open
 );
 
-primarySpiProcessing_module: SpiProcessing port map 
-(
-	CLOCK => CLOCK_50MHz,
+--primarySpiProcessing_module: SpiProcessing port map 
+--(
+--	CLOCK => CLOCK_50MHz,
 
-	CS => PRIMARY_CS,
-	SCLK => PRIMARY_SCLK,
+--	CS => PRIMARY_CS,
+--	SCLK => PRIMARY_SCLK,
 
-    -- out
-	SPI_INT => primary_ready_MISO,
+--    -- out
+--	SPI_INT => primary_ready_MISO,
 
-	SERIAL_MOSI => PRIMARY_MOSI, -- in
-	PARALLEL_MOSI => primary_parallel_MOSI, -- out
+--	SERIAL_MOSI => PRIMARY_MOSI, -- in
+--	PARALLEL_MOSI => primary_parallel_MOSI, -- out
 
-	PARALLEL_MISO => primary_parallel_MISO, -- in
-	SERIAL_MISO => PRIMARY_MISO -- out
-);
+--	PARALLEL_MISO => primary_parallel_MISO, -- in
+--	SERIAL_MISO => PRIMARY_MISO -- out
+--);
 
 secondarySpiProcessing_module: SpiProcessing port map 
 (
