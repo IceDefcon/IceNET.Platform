@@ -154,7 +154,7 @@ begin
                 ------------------------------------
                 if state_current = CONFIG then
                     if config_timer = smStateDelay then
-                        if RW_BIT = '1' then
+                        if RW_BIT = '0' then
                             state_current <= RD;
                         else
                             state_current <= WR;
@@ -627,14 +627,6 @@ begin
                             end if;
 
                             if status_sda = "1001" then -- [16000] :: Stop Bit
-
-                                if fifo_interrupt = '0' and fifo_flag = '0' then
-                                    fifo_interrupt <= '1';
-                                    fifo_flag <= '1';
-                                else
-                                    fifo_interrupt <= '0';
-                                end if;
-
                                 I2C_SDA <= '0';
                             end if;
 
