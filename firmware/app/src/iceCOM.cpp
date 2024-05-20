@@ -256,7 +256,7 @@ int iceCOM::device_write()
 
     charDeviceTx[0] = computeRegisterAddress(consoleControl.data());
 
-#if 1 /* Register + Control Byte + */
+#if 1 /* Register + Control Byte + Write data*/
     /**
      * 
      * TODO
@@ -271,11 +271,6 @@ int iceCOM::device_write()
      * 2. Control Byte
      * 3. Write Data
      * 
-     * 0x30 ---> 0x39 for 0 to 9
-     * 0x61 ---> 0x66 for a to f
-     * 
-     * 
-     * 
      */
 
     charDeviceTx[1] = computeControlRegister(consoleControl.data());
@@ -284,25 +279,25 @@ int iceCOM::device_write()
     {
         charDeviceTx[2] = computeWriteRegister(consoleControl.data());
 
-        std::cout << "Data to Write = 0x" << std::hex << static_cast<int>(charDeviceTx[2]) << std::endl;
-        return ERROR;
-
         if(charDeviceTx[0] == 0xFF || charDeviceTx[1] == 0xFF || charDeviceTx[2] == 0xFF) 
         {
             Console::Error("[COM] Bytes computation failure [WR]");
             return ret;
         }
+        
+        ret = write(m_file_descriptor, charDeviceTx.data(), 3);
     }
     else
     {
         if(charDeviceTx[0] == 0xFF || charDeviceTx[1] == 0xFF) 
         {
-            Console::Error("[COM] Bytes computation failure");
+            Console::Error("[COM] Bytes computation failure [RD]");
             return ret;
         }
+        
+        ret = write(m_file_descriptor, charDeviceTx.data(), 2);
     }
 
-    ret = write(m_file_descriptor, charDeviceTx.data(), 2);
 #else /* Just Register Byte */
     ret = write(m_file_descriptor, charDeviceTx.data(), 1);
 #endif
