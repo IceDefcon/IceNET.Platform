@@ -205,7 +205,7 @@ uint8_t iceCOM::computeWriteData(const char* in)
     }
     else if(temp[1] >= 0x61 && temp[1] <= 0x66)
     {
-        out = (temp[0] - 0x61 + 0x0A;) << 4;
+        out = (temp[0] - 0x61 + 0x0A) << 4;
     }
     else
     {
