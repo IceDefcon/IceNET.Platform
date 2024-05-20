@@ -17,10 +17,10 @@ port
 	-- FPGA Reference Clock
     CLOCK_50MHz : in std_logic; -- PIN_T2
     -- BBB SPI0
-    PRIMARY_CS : in std_logic;    -- PIN_A5   :: BBB P9_17 :: PULPLE :: SPI0_CS0
-    PRIMARY_MISO : out std_logic; -- PIN_A6   :: BBB P9_21 :: BROWN  :: SPI0_D0
-    PRIMARY_MOSI : in std_logic;  -- PIN_A7   :: BBB P9_18 :: BLUE   :: SPI0_D1
-    PRIMARY_SCLK : in std_logic;  -- PIN_A8   :: BBB P9_22 :: BLACK  :: SPI0_SCLK
+    PRIMARY_CS : in std_logic;    -- PIN_A5   :: BBB P9_17 :: PULPLE :: SPI0_CS0    :: White
+    PRIMARY_MISO : out std_logic; -- PIN_A6   :: BBB P9_21 :: BROWN  :: SPI0_D0     :: Brown
+    PRIMARY_MOSI : in std_logic;  -- PIN_A7   :: BBB P9_18 :: BLUE   :: SPI0_D1     :: Black
+    PRIMARY_SCLK : in std_logic;  -- PIN_A8   :: BBB P9_22 :: BLACK  :: SPI0_SCLK   :: Red
     -- BBB SPI1
     SECONDARY_CS : in std_logic;    -- PIN_B5 :: BBB P9_28 :: ORANGE :: SPI1_CS0
     SECONDARY_MISO : out std_logic; -- PIN_B6 :: BBB P9_29 :: BLUE   :: SPI1_D0
@@ -229,22 +229,22 @@ Debounce_module: Debounce port map
 	button_out_4 => open
 );
 
-primarySpiProcessing_module: SpiProcessing port map 
-(
-	CLOCK => CLOCK_50MHz,
+--primarySpiProcessing_module: SpiProcessing port map 
+--(
+--	CLOCK => CLOCK_50MHz,
 
-	CS => PRIMARY_CS,
-	SCLK => PRIMARY_SCLK,
+--	CS => PRIMARY_CS,
+--	SCLK => PRIMARY_SCLK,
 
-    -- out
-	SPI_INT => primary_ready_MISO,
+--    -- out
+--	SPI_INT => primary_ready_MISO,
 
-	SERIAL_MOSI => PRIMARY_MOSI, -- in
-	PARALLEL_MOSI => primary_parallel_MOSI, -- out
+--	SERIAL_MOSI => PRIMARY_MOSI, -- in
+--	PARALLEL_MOSI => primary_parallel_MOSI, -- out
 
-	PARALLEL_MISO => primary_parallel_MISO, -- in
-	SERIAL_MISO => PRIMARY_MISO -- out
-);
+--	PARALLEL_MISO => primary_parallel_MISO, -- in
+--	SERIAL_MISO => PRIMARY_MISO -- out
+--);
 
 secondarySpiProcessing_module: SpiProcessing port map 
 (
