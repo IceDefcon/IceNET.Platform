@@ -113,7 +113,13 @@ type STATE is
     READ_DATA
 );
 signal offload_state: STATE := IDLE;
-
+-- Bypass test
+signal bypass_timer : std_logic_vector(7 downto 0) := (others => '0');
+signal bypass_count : std_logic_vector(4 downto 0) := (others => '0');
+signal bypass_clock : std_logic := '0';
+signal bypass_delay : std_logic_vector(27 downto 0) := (others => '0');
+signal bypass_start : std_logic := '0';
+signal bypass_stop : std_logic := '0';
 ----------------------------------------------------------------------------------------------------------------
 -- COMPONENTS DECLARATION
 ----------------------------------------------------------------------------------------------------------------
@@ -432,6 +438,38 @@ begin
                 offload_state <= IDLE;
 
         end case;
+    end if;
+end process;
+
+
+bypass_process:
+process (CLOCK_50MHz)
+begin
+    if rising_edge(CLOCK_50MHz) then
+        if bypass_stop = '0' then
+
+            if bypass_delay = "1011111010111100000111111111" then
+                bypass_start <= '1';
+            else
+                bypass_delay <= bypass_delay + '1';
+            end if;
+
+            if bypass_start = '1' then
+                if bypass_timer = "110001"  then
+                    bypass_clock <= not bypass_clock;
+                    bypass_timer <= (others => '0');
+                    if bypass_count = "10000" then
+                        bypass_stop <= '1';
+                    else
+                        bypass_count <= bypass_count + '1';
+                    end if;
+                else
+                    bypass_timer <= bypass_timer + '1';
+                end if;
+
+                BYPASS_SCLK <= bypass_clock;
+            end if;
+        end if;
     end if;
 end process;
 
