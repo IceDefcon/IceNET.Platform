@@ -1,22 +1,10 @@
 <session jtag_chain="USB-Blaster [1-1.1]" jtag_device="@1: 10CL016(Y|Z)/EP3C16/EP4CE15 (0x020F20DD)" sof_file="">
   <display_tree gui_logging_enabled="0">
-    <display_branch instance="auto_signaltap_0" signal_set="USE_GLOBAL_TEMP" trigger="USE_GLOBAL_TEMP"/>
+    <display_branch instance="auto_signaltap_0" log="USE_GLOBAL_TEMP" signal_set="USE_GLOBAL_TEMP" trigger="USE_GLOBAL_TEMP"/>
   </display_tree>
   <instance enabled="true" entity_name="sld_signaltap" is_auto_node="yes" is_expanded="true" name="auto_signaltap_0" source_file="sld_signaltap.vhd">
     <node_ip_info instance_id="0" mfg_id="110" node_id="0" version="6"/>
-    <position_info>
-      <single attribute="active tab" value="1"/>
-      <single attribute="data horizontal scroll position" value="7974"/>
-      <single attribute="data vertical scroll position" value="0"/>
-      <single attribute="setup horizontal scroll position" value="0"/>
-      <single attribute="setup vertical scroll position" value="0"/>
-      <single attribute="zoom level denominator" value="1"/>
-      <single attribute="zoom level numerator" value="16"/>
-      <single attribute="zoom offset denominator" value="1"/>
-      <single attribute="zoom offset numerator" value="6144"/>
-      <multi attribute="timebars" size="2" value="9141,9241"/>
-    </position_info>
-    <signal_set global_temp="1" name="signal_set: 2024/05/21 02:44:56  #0">
+    <signal_set global_temp="1" is_expanded="true" name="signal_set: 2024/05/21 02:44:56  #0">
       <clock name="CLOCK_50MHz" polarity="posedge" tap_mode="classic"/>
       <config pipeline_level="0" ram_type="AUTO" reserved_data_nodes="0" reserved_storage_qualifier_nodes="0" reserved_trigger_nodes="0" sample_depth="32768" trigger_in_enable="no" trigger_out_enable="no"/>
       <top_entity/>
@@ -86,15 +74,14 @@
         <trigger_in_editor/>
         <trigger_out_editor/>
       </presentation>
-      <trigger attribute_mem_mode="false" gap_record="true" global_temp="1" name="trigger: 2024/05/21 02:44:56  #1" position="pre" power_up_trigger_mode="false" record_data_gap="true" segment_size="32768" storage_mode="off" storage_qualifier_disabled="no" storage_qualifier_port_is_pin="true" storage_qualifier_port_name="auto_stp_external_storage_qualifier" storage_qualifier_port_tap_mode="classic" trigger_type="circular">
+      <trigger CRC="F45F1AB5" attribute_mem_mode="false" gap_record="true" global_temp="1" is_expanded="true" name="trigger: 2024/05/21 02:44:56  #1" position="pre" power_up_trigger_mode="false" record_data_gap="true" segment_size="32768" storage_mode="off" storage_qualifier_disabled="no" storage_qualifier_port_is_pin="true" storage_qualifier_port_name="auto_stp_external_storage_qualifier" storage_qualifier_port_tap_mode="classic" trigger_type="circular">
         <power_up_trigger position="pre" storage_qualifier_disabled="no"/>
         <events use_custom_flow_control="no">
           <level editor="basic_or" enabled="yes" name="condition1" type="advanced">
             <power_up enabled="yes">
               <power_up_expression><![CDATA[(mbpm('X',{'BYPASS_CS'}) && variable(1)) || (mbpm('X',{'BYPASS_MISO'}) && variable(1)) || (mbpm('X',{'BYPASS_MOSI'}) && variable(1)) || (mbpm('X',{'BYPASS_SCLK'}) && variable(1)) || (mbpm('X',{'PRIMARY_CS'}) && variable(1)) || (mbpm('X',{'PRIMARY_MISO'}) && variable(1)) || (mbpm('X',{'PRIMARY_MOSI'}) && variable(1)) || (mbpm('X',{'PRIMARY_SCLK'}) && variable(1))]]>
               </power_up_expression>
-            </power_up>
-            <expression><![CDATA[(mbpm('X',{'BYPASS_CS'}) && variable(0)) || (mbpm('X',{'BYPASS_MISO'}) && variable(0)) || (mbpm('X',{'BYPASS_MOSI'}) && variable(0)) || (mbpm('R',{'BYPASS_SCLK'}) && variable(1)) || (mbpm('F',{'PRIMARY_CS'}) && variable(1)) || (mbpm('X',{'PRIMARY_MISO'}) && variable(0)) || (mbpm('X',{'PRIMARY_MOSI'}) && variable(0)) || (mbpm('X',{'PRIMARY_SCLK'}) && variable(0))]]>
+            </power_up><expression><![CDATA[(mbpm('X',{'BYPASS_CS'}) && variable(0)) || (mbpm('X',{'BYPASS_MISO'}) && variable(0)) || (mbpm('X',{'BYPASS_MOSI'}) && variable(0)) || (mbpm('R',{'BYPASS_SCLK'}) && variable(1)) || (mbpm('F',{'PRIMARY_CS'}) && variable(1)) || (mbpm('X',{'PRIMARY_MISO'}) && variable(0)) || (mbpm('X',{'PRIMARY_MOSI'}) && variable(0)) || (mbpm('X',{'PRIMARY_SCLK'}) && variable(0))]]>
             </expression>
             <op_node/>
           </level>
@@ -119,8 +106,24 @@
             <op_node/>
           </storage_qualifier_level>
         </storage_qualifier_events>
+        <log>
+          <data global_temp="1" name="log: 2024/05/22 22:09:01  #0"/>
+          <extradata/>
+        </log>
       </trigger>
     </signal_set>
+    <position_info>
+      <single attribute="active tab" value="0"/>
+      <single attribute="data horizontal scroll position" value="0"/>
+      <single attribute="data vertical scroll position" value="0"/>
+      <single attribute="setup horizontal scroll position" value="0"/>
+      <single attribute="setup vertical scroll position" value="0"/>
+      <single attribute="zoom level denominator" value="1"/>
+      <single attribute="zoom level numerator" value="1"/>
+      <single attribute="zoom offset denominator" value="1"/>
+      <single attribute="zoom offset numerator" value="98304"/>
+      <multi attribute="timebars" size="2" value="9141,9241"/>
+    </position_info>
   </instance>
   <mnemonics/>
   <static_plugin_mnemonics/>
