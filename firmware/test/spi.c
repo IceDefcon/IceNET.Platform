@@ -3,79 +3,111 @@
 #include <linux/kernel.h>
 #include <linux/init.h>
 
-#define SPI_BUS 0
-#define SPI_BUS_CS1 0  // Assuming chip select 0
-#define SPI_BUS_SPEED 50000
+static struct spi_device *spi_dev_primary;
 
-static struct spi_device *spi_device;
-
-static int spi_read_register(uint8_t reg, uint8_t *val) {
-    uint8_t tx_buf[2] = { reg | 0x80, 0x00 }; // 0x80 to set read mode
-    uint8_t rx_buf[2] = { 0 };
-    struct spi_transfer transfer = {
-        .tx_buf = tx_buf,
-        .rx_buf = rx_buf,
-        .len = 2,
-    };
-    struct spi_message message;
-
-    spi_message_init(&message);
-    spi_message_add_tail(&transfer, &message);
-
-    if (spi_sync(spi_device, &message)) {
-        printk(KERN_ALERT "Failed to transfer SPI message for register 0x%02X.\n", reg);
-        return -EIO;
-    }
-
-    *val = rx_buf[1];
-    return 0;
-}
+static volatile uint8_t spi_tx_at_transferFromCharDevice[] = {0xAA};
+static volatile uint8_t spi_rx_at_transferFromCharDevice[8];
 
 static int __init spi_module_init(void) {
-    struct spi_master *master;
-    struct spi_board_info spi_device_info = {
-        .modalias = "spidev",
-        .max_speed_hz = SPI_BUS_SPEED,
-        .bus_num = SPI_BUS,
-        .chip_select = SPI_BUS_CS1,
-        .mode = SPI_MODE_0,
-    };
-    uint8_t val;
+ 
+    struct spi_master *spi_master_primary;
+    int ret;
 
-    printk(KERN_INFO "SPI Module Init\n");
-
-    master = spi_busnum_to_master(spi_device_info.bus_num);
-    if (!master) {
-        printk(KERN_ALERT "SPI Master not found.\n");
+    spi_master_primary = spi_busnum_to_master(0);
+    if (!spi_master_primary) 
+    {
+        printk(KERN_ERR "[INIT][SPI] SPI Master at BUS 0 not found!\n");
         return -ENODEV;
     }
-
-    spi_device = spi_new_device(master, &spi_device_info);
-    if (!spi_device) {
-        printk(KERN_ALERT "Failed to create SPI device.\n");
-        return -ENODEV;
+    else
+    {
+        printk(KERN_ERR "[INIT][SPI] SPI Master at BUS 0 Registered\n");
     }
 
-    if (spi_setup(spi_device)) {
-        printk(KERN_ALERT "Failed to setup SPI device.\n");
-        spi_unregister_device(spi_device);
-        return -ENODEV;
+    spi_dev_primary = spi_alloc_device(spi_master_primary);
+    if (!spi_dev_primary) 
+    {
+        printk(KERN_ERR "[INIT][SPI] SPI0 Failed to Allocate!\n");
+        return -ENOMEM;
+    }
+    else
+    {
+        printk(KERN_ERR "[INIT][SPI] SPI0 Allocated\n");
     }
 
-    if (spi_read_register(0x7F, &val) == 0) {
-        printk(KERN_INFO "Read value from register 0x7F: 0x%02X\n", val);
+    /*! 
+     * The mode is set to 1 to pass the
+     * High clock control signal to FPGA
+     * 
+     * Only reqired when talking to FPGA
+     */
+    spi_dev_primary->chip_select = 0;
+    spi_dev_primary->mode = SPI_MODE_0;
+    spi_dev_primary->bits_per_word = 8;
+    spi_dev_primary->max_speed_hz = 1000000;
+
+    ret = spi_setup(spi_dev_primary);
+    if (ret < 0) {
+        printk(KERN_ERR "[INIT][SPI] SPI0 device Failed to setup! ret[%d]\n", ret);
+        spi_dev_put(spi_dev_primary);
+        return ret;
+    }
+    else
+    {
+        printk(KERN_ERR "[INIT][SPI] SPI0 device setup\n");
     }
 
-    if (spi_read_register(0x0F, &val) == 0) {
-        printk(KERN_INFO "Read value from register 0x0F: 0x%02X\n", val);
+    struct spi_message msg;
+    struct spi_transfer transfer;
+    int ret;
+    int i;
+
+    DataTransfer* fpgaData = charDevice_getRxData();
+
+    memset(&transfer, 0, sizeof(transfer));
+    transfer.tx_buf = fpgaData->RxData;
+    transfer.rx_buf = spi_rx_at_transferFromCharDevice;
+    transfer.len = fpgaData->length;
+
+    spi_message_init(&msg);
+    spi_message_add_tail(&transfer, &msg);
+
+    ret = spi_sync(spi_dev_primary, &msg);
+    if (ret < 0) 
+    {
+        printk(KERN_ERR "[CTRL][SPI] SPI transfer at signal From Char Device failed: %d\n", ret);
+        return;
+    }
+    else
+    {
+        printk(KERN_INFO "[CTRL][SPI] Primary FPGA Transfer :: Signaled by transferFromCharDevice over SPI.0");
+    }
+
+    for (i = 0; i < fpgaData->length; ++i) 
+    {
+        printk(KERN_INFO "[CTRL][SPI] Primary FPGA Transfer :: Byte[%d]: [Data]Kernel.TX[0x%02x] [Preamble]Fpga.RX[0x%02x]\n", i, fpgaData->RxData[i], spi_rx_at_transferFromCharDevice[i]);
+    }
+
+    /*!
+     * 
+     * Here we should process 
+     * feedback from FPGA
+     * 
+     * Then Clear the buffer
+     * 
+     */
+
+    for (i = 0; i < fpgaData->length; ++i) 
+    {
+        spi_rx_at_transferFromCharDevice[i] = 0x00;
     }
 
     return 0;
 }
 
-static void __exit spi_module_exit(void) {
-    printk(KERN_INFO "SPI Module Exit\n");
-    spi_unregister_device(spi_device);
+static void __exit spi_module_exit(void) 
+{
+    spi_dev_put(spi_dev_primary);
 }
 
 module_init(spi_module_init);

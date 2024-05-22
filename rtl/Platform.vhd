@@ -248,8 +248,8 @@ primarySpiProcessing_module: SpiProcessing port map
 	SERIAL_MOSI => PRIMARY_MOSI, -- in
 	PARALLEL_MOSI => primary_parallel_MOSI, -- out
 
-	PARALLEL_MISO => primary_parallel_MISO, -- in
-	SERIAL_MISO => PRIMARY_MISO -- out
+	PARALLEL_MISO => "00000000",--primary_parallel_MISO, -- in
+	SERIAL_MISO => open--PRIMARY_MISO -- out
 );
 
 secondarySpiProcessing_module: SpiProcessing port map 
@@ -442,36 +442,41 @@ begin
 end process;
 
 
-bypass_process:
-process (CLOCK_50MHz)
-begin
-    if rising_edge(CLOCK_50MHz) then
-        if bypass_stop = '0' then
+--bypass_process:
+--process (CLOCK_50MHz)
+--begin
+--    if rising_edge(CLOCK_50MHz) then
+--        if bypass_stop = '0' then
 
-            if bypass_delay = "1011111010111100000111111111" then
-                bypass_start <= '1';
-            else
-                bypass_delay <= bypass_delay + '1';
-            end if;
+--            if bypass_delay = "1011111010111100000111111111" then
+--                bypass_start <= '1';
+--            else
+--                bypass_delay <= bypass_delay + '1';
+--            end if;
 
-            if bypass_start = '1' then
-                if bypass_timer = "110001"  then
-                    bypass_clock <= not bypass_clock;
-                    bypass_timer <= (others => '0');
-                    if bypass_count = "10000" then
-                        bypass_stop <= '1';
-                    else
-                        bypass_count <= bypass_count + '1';
-                    end if;
-                else
-                    bypass_timer <= bypass_timer + '1';
-                end if;
+--            if bypass_start = '1' then
+--                if bypass_timer = "110001"  then
+--                    bypass_clock <= not bypass_clock;
+--                    bypass_timer <= (others => '0');
+--                    if bypass_count = "10000" then
+--                        bypass_stop <= '1';
+--                    else
+--                        bypass_count <= bypass_count + '1';
+--                    end if;
+--                else
+--                    bypass_timer <= bypass_timer + '1';
+--                end if;
 
-                BYPASS_SCLK <= bypass_clock;
-            end if;
-        end if;
-    end if;
-end process;
+--                BYPASS_SCLK <= bypass_clock;
+--            end if;
+--        end if;
+--    end if;
+--end process;
+
+BYPASS_CS <= PRIMARY_CS;
+PRIMARY_MISO <= BYPASS_MISO;
+BYPASS_MOSI <= PRIMARY_MOSI;
+BYPASS_SCLK <= PRIMARY_SCLK;
 
 -----------------------------------------------
 -- Interrupt is pulled down

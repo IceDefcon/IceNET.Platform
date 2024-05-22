@@ -113,7 +113,13 @@ type STATE is
     READ_DATA
 );
 signal offload_state: STATE := IDLE;
-
+-- Bypass test
+signal bypass_timer : std_logic_vector(7 downto 0) := (others => '0');
+signal bypass_count : std_logic_vector(4 downto 0) := (others => '0');
+signal bypass_clock : std_logic := '0';
+signal bypass_delay : std_logic_vector(27 downto 0) := (others => '0');
+signal bypass_start : std_logic := '0';
+signal bypass_stop : std_logic := '0';
 ----------------------------------------------------------------------------------------------------------------
 -- COMPONENTS DECLARATION
 ----------------------------------------------------------------------------------------------------------------
@@ -216,13 +222,6 @@ end component;
 ----------------------------------------------------------------------------------------------------------------
 begin
 
--------------------------------
--- SPI Testing chip
--------------------------------
-BYPASS_CS <= PRIMARY_CS;
-PRIMARY_MISO <= BYPASS_MISO;
-BYPASS_MOSI <= PRIMARY_MOSI;
-BYPASS_SCLK <= PRIMARY_SCLK;
 Debounce_module: Debounce port map 
 (
 	clock => CLOCK_50MHz,
@@ -249,8 +248,8 @@ primarySpiProcessing_module: SpiProcessing port map
 	SERIAL_MOSI => PRIMARY_MOSI, -- in
 	PARALLEL_MOSI => primary_parallel_MOSI, -- out
 
-	PARALLEL_MISO => primary_parallel_MISO, -- in
-	SERIAL_MISO => PRIMARY_MISO -- out
+	PARALLEL_MISO => "00000000";--primary_parallel_MISO, -- in
+	SERIAL_MISO => open--PRIMARY_MISO -- out
 );
 
 secondarySpiProcessing_module: SpiProcessing port map 
@@ -441,6 +440,43 @@ begin
         end case;
     end if;
 end process;
+
+
+bypass_process:
+process (CLOCK_50MHz)
+begin
+    if rising_edge(CLOCK_50MHz) then
+        if bypass_stop = '0' then
+
+            if bypass_delay = "1011111010111100000111111111" then
+                bypass_start <= '1';
+            else
+                bypass_delay <= bypass_delay + '1';
+            end if;
+
+            if bypass_start = '1' then
+                if bypass_timer = "110001"  then
+                    bypass_clock <= not bypass_clock;
+                    bypass_timer <= (others => '0');
+                    if bypass_count = "10000" then
+                        bypass_stop <= '1';
+                    else
+                        bypass_count <= bypass_count + '1';
+                    end if;
+                else
+                    bypass_timer <= bypass_timer + '1';
+                end if;
+
+                BYPASS_SCLK <= bypass_clock;
+            end if;
+        end if;
+    end if;
+end process;
+
+BYPASS_CS <= PRIMARY_CS;
+PRIMARY_MISO <= BYPASS_MISO;
+BYPASS_MOSI <= PRIMARY_MOSI;
+BYPASS_SCLK <= PRIMARY_SCLK;
 
 -----------------------------------------------
 -- Interrupt is pulled down
