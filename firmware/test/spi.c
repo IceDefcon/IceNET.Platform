@@ -4,9 +4,10 @@
 #include <linux/init.h>
 #include <linux/slab.h>  // For kmalloc and kfree
 
+#define REGISTER_ADDRESS 0x00
+
 static struct spi_device *spi_dev_primary;
 
-static struct spi_device *spi_device;
 
 static int __init spi_example_init(void)
 {
@@ -63,7 +64,7 @@ static int __init spi_example_init(void)
 
 static void __exit spi_example_exit(void)
 {
-    spi_unregister_device(spi_device);
+    spi_unregister_device(spi_dev_primary);
     pr_info("SPI example module exited.\n");
 }
 
