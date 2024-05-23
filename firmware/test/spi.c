@@ -6,7 +6,7 @@
 
 static struct spi_device *spi_dev_primary;
 
-static volatile uint8_t spi_tx_at_transferFromCharDevice[] = {0xAA};
+static volatile uint8_t spi_tx_at_transferFromCharDevice[] = {0x00};
 static volatile uint8_t spi_rx_at_transferFromCharDevice[1];
 
 static int __init spi_module_init(void) {
@@ -50,15 +50,6 @@ static int __init spi_module_init(void) {
     struct spi_message msg;
     struct spi_transfer transfer;
     int i;
-
-    // Assuming DataTransfer is a structure that contains the length of data
-    // and charDevice_getRxData() is a function that returns a pointer to DataTransfer
-    DataTransfer* fpgaData = charDevice_getRxData();  // You need to implement or include this function
-    if (!fpgaData) {
-        printk(KERN_ERR "[INIT][SPI] Failed to get data from char device\n");
-        spi_dev_put(spi_dev_primary);
-        return -EFAULT;
-    }
 
     memset(&transfer, 0, sizeof(transfer));
     transfer.tx_buf = spi_tx_at_transferFromCharDevice;
