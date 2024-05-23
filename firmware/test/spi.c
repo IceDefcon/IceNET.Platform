@@ -59,6 +59,20 @@ static int __init spi_example_init(void)
     tx_buffer[0] = REGISTER_ADDRESS;
     tx_buffer[1] = 0x00; // Dummy byte
 
+    // Send the message
+    spi_message_init(&message);
+    spi_message_add_tail(&transfer, &message);
+
+    ret = spi_sync(spi_dev_primary, &message);
+    if (ret) {
+        printk(KERN_ERR "[INIT][SPI] SPI read failed.\n");
+        spi_unregister_device(spi_dev_primary);
+        put_device(&spi_master_primary->dev);  // Clean up master reference
+        return ret;
+    }
+
+    printk(KERN_INFO "Register 0x00 value: 0x%02X\n", rx_buffer[1]);
+    
     return 0;
 }
 
