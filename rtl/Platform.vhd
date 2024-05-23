@@ -69,7 +69,7 @@ signal interrupt_length : std_logic_vector(3 downto 0) := "1111";
 signal interrupt_signal : std_logic := '0';
 -- Spi.0 Primary
 signal primary_ready_MISO : std_logic := '0';
-signal primary_parallel_MISO : std_logic_vector(7 downto 0) := "00011000"; -- 0x18 [Preamble]
+signal primary_parallel_MISO : std_logic_vector(7 downto 0) := "00011000"; -- 0x18 [Feedback]
 signal primary_parallel_MOSI : std_logic_vector(7 downto 0) := "00100100"; -- 0x42
 -- Spi.1 Secondary
 signal secondary_ready_MISO : std_logic := '0';
@@ -98,14 +98,16 @@ signal kernel_interrupt_stop : std_logic := '0';
 signal offload_interrupt : std_logic := '0';
 signal offload_reset : std_logic := '0';
 signal offload_ready : std_logic := '0';
-signal offload_ctrl : std_logic_vector(7 downto 0) := (others => '0');
+signal offload_id : std_logic_vector(6 downto 0) := (others => '0');
 signal offload_register : std_logic_vector(7 downto 0) := (others => '0');
+signal offload_ctrl : std_logic_vector(7 downto 0) := (others => '0');
 signal offload_data : std_logic_vector(7 downto 0) := (others => '0');
 type STATE is 
 (
     IDLE,
     DELAY_INIT,
     DELAY_CONFIG,
+    READ_ID,
     READ_REGISTER,
     WRITE_CHECK,
     READ_CONTROL_DONE,
@@ -305,7 +307,7 @@ I2cStateMachine_module: I2cStateMachine port map
 	I2C_SCK => I2C_SCK,
 	I2C_SDA => I2C_SDA,
     -- in
-	OFFLOAD_ID => "1100101", -- Device ID :: BMI160@0x69=1001011 :: ADXL345@0x53=1100101 
+	OFFLOAD_ID => offload_id, -- Device ID :: BMI160@0x69=1001011 :: ADXL345@0x53=1100101 
 	OFFLOAD_REGISTER => offload_register, -- Device Register
 	OFFLOAD_COTROL => offload_ctrl(0), -- For now :: Read/Write
     OFFLOAD_DATA => offload_data, -- Write Data
@@ -399,9 +401,17 @@ begin
             when DELAY_INIT =>
                 primary_fifo_rd_en <= '1';
                 offload_state <= DELAY_CONFIG;
- 
+
             when DELAY_CONFIG =>
                 primary_fifo_rd_en <= '1';
+                offload_state <= READ_ID;
+
+            When READ_ID =>
+                primary_fifo_rd_en <= '1';
+                offload_id <= primary_fifo_data_out(0) & primary_fifo_data_out(1) 
+                & primary_fifo_data_out(2) & primary_fifo_data_out(3) 
+                & primary_fifo_data_out(4) & primary_fifo_data_out(5) 
+                & primary_fifo_data_out(6); -- Device ID :: Reverse concatenation
                 offload_state <= READ_REGISTER;
 
             When READ_REGISTER =>
