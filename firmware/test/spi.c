@@ -72,7 +72,7 @@ static int __init spi_example_init(void)
         return ret;
     }
 
-    printk(KERN_INFO "SPI transfer completed, received bytes: 0x%02X 0x%02X\n", rx_buffer[0]);
+    printk(KERN_INFO "SPI transfer completed, received bytes: 0x%02X\n", rx_buffer[0]);
 
     // Fill the tx_buffer with the bytes to send
     tx_buffer[0] = 0x00;
@@ -90,7 +90,7 @@ static int __init spi_example_init(void)
         return ret;
     }
 
-    printk(KERN_INFO "SPI transfer completed, received bytes: 0x%02X 0x%02X\n", rx_buffer[0]);
+    printk(KERN_INFO "SPI transfer completed, received bytes: 0x%02X\n", rx_buffer[0]);
 
     return 0;
 }
