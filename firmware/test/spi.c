@@ -52,13 +52,12 @@ static int __init spi_example_init(void)
     struct spi_transfer transfer = {
         .tx_buf = tx_buffer,
         .rx_buf = rx_buffer,
-        .len = 2,
+        .len = 1,
     };
     struct spi_message message;
 
     // Fill the tx_buffer with the bytes to send
-    tx_buffer[0] = 0xFF;
-    tx_buffer[1] = 0xB6;
+    tx_buffer[0] = 0x7F;
 
 
     // Send the message
@@ -73,11 +72,10 @@ static int __init spi_example_init(void)
         return ret;
     }
 
-    printk(KERN_INFO "SPI transfer completed, received bytes: 0x%02X 0x%02X\n", rx_buffer[0], rx_buffer[1]);
+    printk(KERN_INFO "SPI transfer completed, received bytes: 0x%02X 0x%02X\n", rx_buffer[0]);
 
     // Fill the tx_buffer with the bytes to send
-    tx_buffer[0] = 0x80;
-    tx_buffer[1] = 0xB6;
+    tx_buffer[0] = 0x00;
 
 
     // Send the message
@@ -92,7 +90,7 @@ static int __init spi_example_init(void)
         return ret;
     }
 
-    printk(KERN_INFO "SPI transfer completed, received bytes: 0x%02X 0x%02X\n", rx_buffer[0], rx_buffer[1]);
+    printk(KERN_INFO "SPI transfer completed, received bytes: 0x%02X 0x%02X\n", rx_buffer[0]);
 
     return 0;
 }
