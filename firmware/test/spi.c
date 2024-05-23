@@ -6,8 +6,8 @@
 
 static struct spi_device *spi_dev_primary;
 
-static volatile uint8_t spi_tx_at_transferFromCharDevice[] = {0x00};
-static volatile uint8_t spi_rx_at_transferFromCharDevice[1];
+static volatile uint8_t spi_tx_at_transferFromCharDevice[] = {0xFF,0xB6,0x00,0xB6};
+static volatile uint8_t spi_rx_at_transferFromCharDevice[4];
 
 static int __init spi_module_init(void) {
     struct spi_master *spi_master_primary;
