@@ -64,7 +64,7 @@ static int __init spi_example_init(void)
 
 static void __exit spi_example_exit(void)
 {
-    put_device(spi_dev_primary);  // Clean up master reference
+    spi_dev_put(spi_dev_primary);
     pr_info("SPI example module exited.\n");
 }
 
