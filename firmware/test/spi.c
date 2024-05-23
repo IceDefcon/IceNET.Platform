@@ -6,10 +6,12 @@
 
 static struct spi_device *spi_dev_primary;
 
-static volatile uint8_t spi_tx_at_transferFromCharDevice[] = {0xFF,0xB6,0x00,0xB6};
-static volatile uint8_t spi_rx_at_transferFromCharDevice[4];
+#define REGISTER_ADDRESS 0x00
 
-static int __init spi_module_init(void) {
+static struct spi_device *spi_device;
+
+static int __init spi_example_init(void)
+{
     struct spi_master *spi_master_primary;
     int ret;
 
@@ -45,47 +47,39 @@ static int __init spi_module_init(void) {
         printk(KERN_INFO "[INIT][SPI] SPI0 device setup\n");
     }
 
-    // Placeholder for the data transfer
-    // You need to define DataTransfer and charDevice_getRxData()
-    struct spi_message msg;
-    struct spi_transfer transfer;
-    int i;
+    // Allocate memory for the buffer
+    uint8_t tx_buffer[2];
+    uint8_t rx_buffer[2];
+    struct spi_transfer transfer = {
+        .tx_buf = tx_buffer,
+        .rx_buf = rx_buffer,
+        .len = 2,
+    };
+    struct spi_message message;
 
-    memset(&transfer, 0, sizeof(transfer));
-    transfer.tx_buf = spi_tx_at_transferFromCharDevice;
-    transfer.rx_buf = spi_rx_at_transferFromCharDevice;
-    transfer.len = sizeof(spi_rx_at_transferFromCharDevice);
+    tx_buffer[0] = REGISTER_ADDRESS;
+    tx_buffer[1] = 0x00; // Dummy byte
 
-    spi_message_init(&msg);
-    spi_message_add_tail(&transfer, &msg);
+    spi_message_init(&message);
+    spi_message_add_tail(&transfer, &message);
 
-    ret = spi_sync(spi_dev_primary, &msg);
-    if (ret < 0) {
-        printk(KERN_ERR "[CTRL][SPI] SPI transfer at signal From Char Device failed: %d\n", ret);
-        return ret;
-    } else {
-        printk(KERN_INFO "[CTRL][SPI] Primary FPGA Transfer :: Signaled by transferFromCharDevice over SPI.0\n");
-    }
+    // Send the message
+    spi_sync(spi_device, &message);
 
-    for (i = 0; i < sizeof(spi_tx_at_transferFromCharDevice); ++i) {
-        printk(KERN_INFO "[CTRL][SPI] Primary FPGA Transfer :: Byte[%d]: [Data]Kernel.TX[0x%02x] [Preamble]Fpga.RX[0x%02x]\n", 
-            i, spi_tx_at_transferFromCharDevice[i], spi_rx_at_transferFromCharDevice[i]);
-    }
-
-    // Clear the buffer
-    memset(spi_rx_at_transferFromCharDevice, 0, sizeof(spi_rx_at_transferFromCharDevice));
+    pr_info("Register 0x00 value: 0x%02X\n", rx_buffer[1]);
 
     return 0;
 }
 
-static void __exit spi_module_exit(void) {
-    spi_dev_put(spi_dev_primary);
+static void __exit spi_example_exit(void)
+{
+    spi_unregister_device(spi_device);
+    pr_info("SPI example module exited.\n");
 }
-
-module_init(spi_module_init);
-module_exit(spi_module_exit);
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Your Name");
-MODULE_DESCRIPTION("SPI Read Kernel Module");
-MODULE_VERSION("0.1");
+MODULE_DESCRIPTION("SPI example kernel module for reading register 0x00");
+
+module_init(spi_example_init);
+module_exit(spi_example_exit);
