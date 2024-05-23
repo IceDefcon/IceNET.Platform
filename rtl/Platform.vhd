@@ -69,10 +69,8 @@ signal interrupt_length : std_logic_vector(3 downto 0) := "1111";
 signal interrupt_signal : std_logic := '0';
 -- Spi.0 Primary
 signal primary_ready_MISO : std_logic := '0';
-signal primary_parallel_MISO : std_logic_vector(7 downto 0) := "00011000"; -- 0x18 [Feedback]
 signal primary_parallel_MOSI : std_logic_vector(7 downto 0) := "00100100"; -- 0x42
 -- Spi.1 Secondary
-signal secondary_ready_MISO : std_logic := '0';
 signal secondary_parallel_MISO : std_logic_vector(7 downto 0) := "00011110"; -- 0xE1
 signal secondary_parallel_MOSI : std_logic_vector(7 downto 0) := "00011110"; -- 0xE1
 -- BMI160 Gyroscope registers
@@ -242,16 +240,16 @@ primarySpiProcessing_module: SpiProcessing port map
 	CLOCK => CLOCK_50MHz,
 
 	CS => PRIMARY_CS,
-	SCLK => PRIMARY_SCLK,
+	SCLK => PRIMARY_SCLK, -- Kernel Master always initialise SPI transfer
 
     -- out
-	SPI_INT => primary_ready_MISO,
-
-	SERIAL_MOSI => PRIMARY_MOSI, -- in
-	PARALLEL_MOSI => primary_parallel_MOSI, -- out
-
-	PARALLEL_MISO => primary_parallel_MISO, -- in
-	SERIAL_MISO => PRIMARY_MISO -- out
+	SPI_INT => primary_ready_MISO, -- Interrupt when data byte is ready [FIFO Read Enable]
+    -- From Kernel to FIFO
+	SERIAL_MOSI => PRIMARY_MOSI, -- in :: Kernel Data input to Serialize
+	PARALLEL_MOSI => primary_parallel_MOSI, -- out :: Serialized Kernel Data to FIFO
+    -- Back to Kernel
+	PARALLEL_MISO => "00011000", -- in :: 0x18 Hard coded Feedback to Serialize
+	SERIAL_MISO => PRIMARY_MISO -- out :: 0x18 Serialized Hard coded Feedback to Kernel
 );
 
 secondarySpiProcessing_module: SpiProcessing port map 
@@ -259,15 +257,15 @@ secondarySpiProcessing_module: SpiProcessing port map
     CLOCK => CLOCK_50MHz,
 
     CS => SECONDARY_CS,
-    SCLK => SECONDARY_SCLK,
+    SCLK => SECONDARY_SCLK, -- Kernel Master always initialise SPI transfer
 
-    SPI_INT => secondary_ready_MISO, -- out
+    SPI_INT => open, -- out :: Parallel ready interrupt :: Not in use !
 
-    SERIAL_MOSI => SECONDARY_MOSI, -- in
-    PARALLEL_MOSI => secondary_parallel_MOSI, -- out
+    SERIAL_MOSI => SECONDARY_MOSI, -- in Serialized Feedback from Kernel :: Set in Kernel to 0x81
+    PARALLEL_MOSI => secondary_parallel_MOSI, -- out Parallel Feedback from Kernel :: Set in Kernel to 0x81
 
-    PARALLEL_MISO => secondary_parallel_MISO, -- in
-    SERIAL_MISO => SECONDARY_MISO -- out
+    PARALLEL_MISO => secondary_parallel_MISO, -- in [Parallel Data] from i2c state machine
+    SERIAL_MISO => SECONDARY_MISO -- out [Parallel Data] from i2c state machine ---> Back to Kernel 
 );
 
 ------------------------------------------------------
@@ -302,7 +300,7 @@ I2cStateMachine_module: I2cStateMachine port map
     KERNEL_INT => '0',
     -- out
     FPGA_INT => FPGA_INT, -- SM is ready for SPI.1 transfer :: 1000*20ns interrupt
-    FIFO_INT => open,
+    FIFO_INT => open, -- TODO :: Store output data in secondary FIFO
 
 	I2C_SCK => I2C_SCK,
 	I2C_SDA => I2C_SDA,

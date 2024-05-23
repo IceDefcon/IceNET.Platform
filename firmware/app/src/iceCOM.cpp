@@ -336,8 +336,6 @@ int iceCOM::device_write()
             Console::Error("[COM] Bytes computation failure [WR]");
             return ret;
         }
-        
-        ret = write(m_file_descriptor, charDeviceTx.data(), 4);
     }
     else
     {
@@ -347,8 +345,18 @@ int iceCOM::device_write()
             return ret;
         }
         
-        ret = write(m_file_descriptor, charDeviceTx.data(), 3);
+        /**
+         * 
+         * Additional byte 
+         * at read procedure
+         * to always make 4 bytes 
+         * FIFO input/output geometry
+         * 
+         */
+        charDeviceTx[3] = 0x00;
     }
+
+    ret = write(m_file_descriptor, charDeviceTx.data(), 4);
 
     if (ret == -1)
     {
