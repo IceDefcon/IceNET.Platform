@@ -52,9 +52,10 @@ public:
     int device_write() override;
     int device_close() override;
 
+    uint8_t computeDeviceAddress(const char* in);
     uint8_t computeRegisterAddress(const char* in);
-    uint8_t computeControlRegister(const char* in);
-    uint8_t computeWriteRegister(const char* in);
+    uint8_t computeRegisterControl(const char* in);
+    uint8_t computeRegisterData(const char* in);
 
     bool terminate();
 };

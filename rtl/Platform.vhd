@@ -248,8 +248,8 @@ primarySpiProcessing_module: SpiProcessing port map
 	SERIAL_MOSI => PRIMARY_MOSI, -- in
 	PARALLEL_MOSI => primary_parallel_MOSI, -- out
 
-	PARALLEL_MISO => "00000000",--primary_parallel_MISO, -- in
-	SERIAL_MISO => open--PRIMARY_MISO -- out
+	PARALLEL_MISO => primary_parallel_MISO, -- in
+	SERIAL_MISO => PRIMARY_MISO -- out
 );
 
 secondarySpiProcessing_module: SpiProcessing port map 
@@ -305,7 +305,7 @@ I2cStateMachine_module: I2cStateMachine port map
 	I2C_SCK => I2C_SCK,
 	I2C_SDA => I2C_SDA,
     -- in
-	OFFLOAD_ID => "1001011", -- Device ID
+	OFFLOAD_ID => "1100101", -- Device ID :: BMI160@0x69=1001011 :: ADXL345@0x53=1100101 
 	OFFLOAD_REGISTER => offload_register, -- Device Register
 	OFFLOAD_COTROL => offload_ctrl(0), -- For now :: Read/Write
     OFFLOAD_DATA => offload_data, -- Write Data
@@ -473,10 +473,10 @@ end process;
 --    end if;
 --end process;
 
-BYPASS_CS <= PRIMARY_CS;
-PRIMARY_MISO <= BYPASS_MISO;
-BYPASS_MOSI <= PRIMARY_MOSI;
-BYPASS_SCLK <= PRIMARY_SCLK;
+--BYPASS_CS <= PRIMARY_CS;
+--PRIMARY_MISO <= BYPASS_MISO;
+--BYPASS_MOSI <= PRIMARY_MOSI;
+--BYPASS_SCLK <= PRIMARY_SCLK;
 
 -----------------------------------------------
 -- Interrupt is pulled down
