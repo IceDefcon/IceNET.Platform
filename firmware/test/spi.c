@@ -8,27 +8,21 @@
 
 static struct spi_device *spi_dev_primary;
 
+
 static int __init spi_example_init(void)
 {
     struct spi_master *spi_master_primary;
-    struct spi_board_info spi_device_info = {
-        .modalias = "spidev",
-        .max_speed_hz = 1000000,
-        .bus_num = 0,
-        .chip_select = 0,
-        .mode = SPI_MODE_0,
-    };
     int ret;
 
-    spi_master_primary = spi_busnum_to_master(spi_device_info.bus_num);
+    spi_master_primary = spi_busnum_to_master(0);
     if (!spi_master_primary) {
-        printk(KERN_ERR "[INIT][SPI] SPI Master at BUS %d not found!\n", spi_device_info.bus_num);
+        printk(KERN_ERR "[INIT][SPI] SPI Master at BUS 0 not found!\n");
         return -ENODEV;
     } else {
-        printk(KERN_INFO "[INIT][SPI] SPI Master at BUS %d Registered\n", spi_device_info.bus_num);
+        printk(KERN_INFO "[INIT][SPI] SPI Master at BUS 0 Registered\n");
     }
 
-    spi_dev_primary = spi_new_device(spi_master_primary, &spi_device_info);
+    spi_dev_primary = spi_alloc_device(spi_master_primary);
     if (!spi_dev_primary) {
         printk(KERN_ERR "[INIT][SPI] SPI0 Failed to Allocate!\n");
         put_device(&spi_master_primary->dev);
@@ -37,13 +31,16 @@ static int __init spi_example_init(void)
         printk(KERN_INFO "[INIT][SPI] SPI0 Allocated\n");
     }
 
+    spi_dev_primary->chip_select = 0;
+    spi_dev_primary->mode = SPI_MODE_0;
     spi_dev_primary->bits_per_word = 8;
+    spi_dev_primary->max_speed_hz = 1000000;
+    spi_dev_primary->controller_data = NULL;
 
     ret = spi_setup(spi_dev_primary);
     if (ret < 0) {
         printk(KERN_ERR "[INIT][SPI] SPI0 device Failed to setup! ret[%d]\n", ret);
-        spi_unregister_device(spi_dev_primary);
-        put_device(&spi_master_primary->dev);  // Clean up master reference
+        spi_dev_put(spi_dev_primary);
         return ret;
     } else {
         printk(KERN_INFO "[INIT][SPI] SPI0 device setup\n");
@@ -61,20 +58,6 @@ static int __init spi_example_init(void)
 
     tx_buffer[0] = REGISTER_ADDRESS;
     tx_buffer[1] = 0x00; // Dummy byte
-
-    // Send the message
-    spi_message_init(&message);
-    spi_message_add_tail(&transfer, &message);
-
-    ret = spi_sync(spi_dev_primary, &message);
-    if (ret) {
-        printk(KERN_ERR "[INIT][SPI] SPI read failed.\n");
-        spi_unregister_device(spi_dev_primary);
-        put_device(&spi_master_primary->dev);  // Clean up master reference
-        return ret;
-    }
-
-    printk(KERN_INFO "Register 0x00 value: 0x%02X\n", rx_buffer[1]);
 
     return 0;
 }
