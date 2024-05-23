@@ -59,7 +59,7 @@ static int __init spi_example_init(void)
     // Fill the tx_buffer with the bytes to send
     tx_buffer[0] = 0xFF;
     tx_buffer[1] = 0xB6;
-    tx_buffer[2] = 0x00;
+    tx_buffer[2] = 0x80;
     tx_buffer[3] = 0xB6;
 
 
