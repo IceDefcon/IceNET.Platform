@@ -8,7 +8,6 @@
 
 static struct spi_device *spi_dev_primary;
 
-
 static int __init spi_example_init(void)
 {
     struct spi_master *spi_master_primary;
@@ -47,17 +46,20 @@ static int __init spi_example_init(void)
     }
 
     // Allocate memory for the buffer
-    uint8_t tx_buffer[2];
-    uint8_t rx_buffer[2];
+    uint8_t tx_buffer[4];
+    uint8_t rx_buffer[4];
     struct spi_transfer transfer = {
         .tx_buf = tx_buffer,
         .rx_buf = rx_buffer,
-        .len = 2,
+        .len = 4,
     };
     struct spi_message message;
 
-    tx_buffer[0] = REGISTER_ADDRESS;
-    tx_buffer[1] = 0x00; // Dummy byte
+    // Fill the tx_buffer with the bytes to send
+    tx_buffer[0] = 0xFF;
+    tx_buffer[1] = 0xB6;
+    tx_buffer[2] = 0x00;
+    tx_buffer[3] = 0xB6;
 
     // Send the message
     spi_message_init(&message);
@@ -65,26 +67,32 @@ static int __init spi_example_init(void)
 
     ret = spi_sync(spi_dev_primary, &message);
     if (ret) {
-        printk(KERN_ERR "[INIT][SPI] SPI read failed.\n");
+        printk(KERN_ERR "[INIT][SPI] SPI transfer failed.\n");
         spi_unregister_device(spi_dev_primary);
         put_device(&spi_master_primary->dev);  // Clean up master reference
         return ret;
     }
 
-    printk(KERN_INFO "Register 0x00 value: 0x%02X\n", rx_buffer[1]);
-    
+    printk(KERN_INFO "SPI transfer completed, received bytes: 0x%02X 0x%02X 0x%02X 0x%02X\n",
+           rx_buffer[0], rx_buffer[1], rx_buffer[2], rx_buffer[3]);
+
     return 0;
 }
 
 static void __exit spi_example_exit(void)
 {
-    spi_dev_put(spi_dev_primary);
+    if (spi_dev_primary) {
+        struct spi_master *master = spi_dev_primary->master;
+        spi_unregister_device(spi_dev_primary);
+        put_device(&master->dev);  // Clean up master reference
+        spi_dev_primary = NULL;
+    }
     pr_info("SPI example module exited.\n");
 }
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Your Name");
-MODULE_DESCRIPTION("SPI example kernel module for reading register 0x00");
+MODULE_DESCRIPTION("SPI example kernel module for sending and receiving SPI bytes");
 
 module_init(spi_example_init);
 module_exit(spi_example_exit);
