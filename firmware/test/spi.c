@@ -75,7 +75,7 @@ static int __init spi_example_init(void)
         return ret;
     }
 
-    printk(KERN_INFO "Register 0x00 value: 0x%02X\n", rx_buffer[1]);
+    printk(KERN_INFO "SPI transfer completed, received bytes: 0x%02X 0x%02X 0x%02X 0x%02X\n", rx_buffer[0], rx_buffer[1], rx_buffer[2], rx_buffer[3]);
 
     return 0;
 }
