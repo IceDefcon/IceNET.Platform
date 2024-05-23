@@ -8,6 +8,7 @@
 
 static struct spi_device *spi_dev_primary;
 
+
 static int __init spi_example_init(void)
 {
     struct spi_master *spi_master_primary;
@@ -61,20 +62,20 @@ static int __init spi_example_init(void)
     tx_buffer[2] = 0x00;
     tx_buffer[3] = 0xB6;
 
+
     // Send the message
     spi_message_init(&message);
     spi_message_add_tail(&transfer, &message);
 
     ret = spi_sync(spi_dev_primary, &message);
     if (ret) {
-        printk(KERN_ERR "[INIT][SPI] SPI transfer failed.\n");
+        printk(KERN_ERR "[INIT][SPI] SPI read failed.\n");
         spi_unregister_device(spi_dev_primary);
         put_device(&spi_master_primary->dev);  // Clean up master reference
         return ret;
     }
 
-    printk(KERN_INFO "SPI transfer completed, received bytes: 0x%02X 0x%02X 0x%02X 0x%02X\n",
-           rx_buffer[0], rx_buffer[1], rx_buffer[2], rx_buffer[3]);
+    printk(KERN_INFO "Register 0x00 value: 0x%02X\n", rx_buffer[1]);
 
     return 0;
 }
@@ -87,7 +88,9 @@ static void __exit spi_example_exit(void)
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Your Name");
-MODULE_DESCRIPTION("SPI example kernel module for sending and receiving SPI bytes");
+MODULE_DESCRIPTION("SPI example kernel module for reading register 0x00");
 
 module_init(spi_example_init);
 module_exit(spi_example_exit);
+
+
