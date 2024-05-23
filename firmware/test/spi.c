@@ -47,20 +47,18 @@ static int __init spi_example_init(void)
     }
 
     // Allocate memory for the buffer
-    uint8_t tx_buffer[4];
-    uint8_t rx_buffer[4];
+    uint8_t tx_buffer[2];
+    uint8_t rx_buffer[2];
     struct spi_transfer transfer = {
         .tx_buf = tx_buffer,
         .rx_buf = rx_buffer,
-        .len = 4,
+        .len = 2,
     };
     struct spi_message message;
 
     // Fill the tx_buffer with the bytes to send
     tx_buffer[0] = 0xFF;
     tx_buffer[1] = 0xB6;
-    tx_buffer[2] = 0x80;
-    tx_buffer[3] = 0xB6;
 
 
     // Send the message
@@ -75,7 +73,26 @@ static int __init spi_example_init(void)
         return ret;
     }
 
-    printk(KERN_INFO "SPI transfer completed, received bytes: 0x%02X 0x%02X 0x%02X 0x%02X\n", rx_buffer[0], rx_buffer[1], rx_buffer[2], rx_buffer[3]);
+    printk(KERN_INFO "SPI transfer completed, received bytes: 0x%02X 0x%02X\n", rx_buffer[0], rx_buffer[1]);
+
+    // Fill the tx_buffer with the bytes to send
+    tx_buffer[0] = 0x80;
+    tx_buffer[1] = 0xB6;
+
+
+    // Send the message
+    spi_message_init(&message);
+    spi_message_add_tail(&transfer, &message);
+
+    ret = spi_sync(spi_dev_primary, &message);
+    if (ret) {
+        printk(KERN_ERR "[INIT][SPI] SPI read failed.\n");
+        spi_unregister_device(spi_dev_primary);
+        put_device(&spi_master_primary->dev);  // Clean up master reference
+        return ret;
+    }
+
+    printk(KERN_INFO "SPI transfer completed, received bytes: 0x%02X 0x%02X\n", rx_buffer[0], rx_buffer[1]);
 
     return 0;
 }
