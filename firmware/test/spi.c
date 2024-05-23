@@ -6,8 +6,6 @@
 
 static struct spi_device *spi_dev_primary;
 
-#define REGISTER_ADDRESS 0x00
-
 static struct spi_device *spi_device;
 
 static int __init spi_example_init(void)
@@ -46,27 +44,6 @@ static int __init spi_example_init(void)
     } else {
         printk(KERN_INFO "[INIT][SPI] SPI0 device setup\n");
     }
-
-    // Allocate memory for the buffer
-    uint8_t tx_buffer[2];
-    uint8_t rx_buffer[2];
-    struct spi_transfer transfer = {
-        .tx_buf = tx_buffer,
-        .rx_buf = rx_buffer,
-        .len = 2,
-    };
-    struct spi_message message;
-
-    tx_buffer[0] = REGISTER_ADDRESS;
-    tx_buffer[1] = 0x00; // Dummy byte
-
-    spi_message_init(&message);
-    spi_message_add_tail(&transfer, &message);
-
-    // Send the message
-    spi_sync(spi_device, &message);
-
-    pr_info("Register 0x00 value: 0x%02X\n", rx_buffer[1]);
 
     return 0;
 }
