@@ -81,12 +81,7 @@ static int __init spi_example_init(void)
 
 static void __exit spi_example_exit(void)
 {
-    if (spi_dev_primary) {
-        struct spi_master *master = spi_dev_primary->master;
-        spi_unregister_device(spi_dev_primary);
-        put_device(&master->dev);  // Clean up master reference
-        spi_dev_primary = NULL;
-    }
+    spi_dev_put(spi_dev_primary);
     pr_info("SPI example module exited.\n");
 }
 
