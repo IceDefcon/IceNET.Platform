@@ -45,6 +45,19 @@ static int __init spi_example_init(void)
         printk(KERN_INFO "[INIT][SPI] SPI0 device setup\n");
     }
 
+    // Allocate memory for the buffer
+    uint8_t tx_buffer[2];
+    uint8_t rx_buffer[2];
+    struct spi_transfer transfer = {
+        .tx_buf = tx_buffer,
+        .rx_buf = rx_buffer,
+        .len = 2,
+    };
+    struct spi_message message;
+
+    tx_buffer[0] = REGISTER_ADDRESS;
+    tx_buffer[1] = 0x00; // Dummy byte
+
     return 0;
 }
 
