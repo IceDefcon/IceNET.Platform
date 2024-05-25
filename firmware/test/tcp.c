@@ -6,50 +6,16 @@
 #include <linux/socket.h>
 #include <linux/slab.h>
 #include <linux/string.h>
-#include <linux/kthread.h>
 
 MODULE_LICENSE("GPL");
-MODULE_AUTHOR("Your Name");
-MODULE_DESCRIPTION("A simple kernel module for TCP communication");
-MODULE_VERSION("0.1");
+MODULE_AUTHOR("Ice Marek");
+MODULE_DESCRIPTION("TCP communication");
+MODULE_VERSION("1.0");
 
 static struct socket *sock;
-static struct sockaddr_in server_addr;
-static char buffer[1024];
+static struct sockaddr_in server_addr, client_addr;
 
 #define PORT 12345
-
-static int tcp_receive_data(struct socket *sock) {
-    struct msghdr msg;
-    struct kvec iov;
-    int len;
-
-    iov.iov_base = buffer;
-    iov.iov_len = sizeof(buffer);
-
-    memset(&msg, 0, sizeof(msg));
-    msg.msg_flags = MSG_DONTWAIT;
-    msg.msg_control = NULL;
-    msg.msg_controllen = 0;
-    msg.msg_iocb = &iov;
-    msg.msg_namelen = 1;
-    msg.msg_control = NULL;
-
-    len = kernel_recvmsg(sock, &msg, &iov, 1, sizeof(buffer), msg.msg_flags);
-    if (len < 0) {
-        if (len == -EAGAIN || len == -EWOULDBLOCK) {
-            return 0; // No data available
-        }
-        printk(KERN_ALERT "Error receiving data: %d\n", len);
-        return len;
-    } else if (len == 0) {
-        return 0; // Connection closed
-    } else {
-        buffer[len] = '\0'; // Null-terminate the received data
-        printk(KERN_INFO "Received data from client: %s\n", buffer);
-        return len;
-    }
-}
 
 static int __init tcp_module_init(void) {
     int ret;
@@ -84,31 +50,6 @@ static int __init tcp_module_init(void) {
     }
 
     printk(KERN_INFO "Kernel module listening on port %d\n", PORT);
-
-    // Accept connections and receive data
-    while (!kthread_should_stop()) {
-        struct socket *newsock;
-        ret = sock_create(PF_INET, SOCK_STREAM, IPPROTO_TCP, &newsock);
-        if (ret < 0) {
-            printk(KERN_ALERT "Failed to create new socket\n");
-            continue;
-        }
-
-        ret = sock->ops->accept(sock, newsock);
-        if (ret < 0) {
-            if (ret != -EAGAIN && ret != -EWOULDBLOCK) {
-                printk(KERN_ALERT "Error accepting connection: %d\n", ret);
-            }
-            sock_release(newsock);
-            continue;
-        }
-
-        // Receive data
-        tcp_receive_data(newsock);
-
-        sock_release(newsock);
-    }
-
     return 0;
 }
 
