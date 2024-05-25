@@ -9,14 +9,18 @@
 #include <linux/delay.h>
 #include <linux/uaccess.h>
 #include <linux/string.h>
+#include <linux/mutex.h>
 
 MODULE_LICENSE("GPL");
-MODULE_AUTHOR("Ice Marek ");
+MODULE_AUTHOR("Ice Marek");
 MODULE_DESCRIPTION("TCP Server");
 
 static int port = 2005;
 static char *server_ip = "10.0.0.2";
 static struct socket *server_socket = NULL;
+static char *client_message = NULL;
+
+static DEFINE_MUTEX(accept_mutex);
 
 static int server_thread(void *data) {
     struct socket *client_socket = NULL;
@@ -31,15 +35,35 @@ static int server_thread(void *data) {
     // Accept incoming connection
     printk(KERN_INFO "Waiting for client connection...\n");
 
+    /**
+     * 
+     * Atomic check for new TCP Packet
+     * 
+     * In case if we decide to unload the module
+     * during the accept exection
+     * 
+     */
     while (true) {
+        mutex_lock(&accept_mutex);
+
+        if (!server_socket) {
+            printk(KERN_ERR "Server socket is NULL\n");
+            mutex_unlock(&accept_mutex);
+            return -EFAULT;
+        }
+
         ret = kernel_accept(server_socket, &client_socket, O_NONBLOCK);
         if (ret == -EAGAIN) {
+            mutex_unlock(&accept_mutex);
             msleep(100); // Sleep for a while before retrying
             continue;
         } else if (ret < 0) {
             printk(KERN_ERR "Error accepting connection: %d\n", ret);
+            mutex_unlock(&accept_mutex);
             return ret;
         }
+
+        mutex_unlock(&accept_mutex);
         break;
     }
 
@@ -51,7 +75,7 @@ static int server_thread(void *data) {
     msg.msg_namelen = client_addr_len;
 
     // Receive client's message
-    char *client_message = kmalloc(2000, GFP_KERNEL);
+    client_message = kmalloc(2000, GFP_KERNEL);
     if (!client_message) {
         printk(KERN_ERR "Failed to allocate memory for client message\n");
         return -ENOMEM;
@@ -115,16 +139,31 @@ static int server_init(void) {
     printk(KERN_INFO "Listening for incoming connections...\n");
 
     // Start server thread
-    kthread_run(server_thread, NULL, "server_thread");
+    if (!IS_ERR(kthread_run(server_thread, NULL, "server_thread"))) {
+        printk(KERN_INFO "Server thread started successfully\n");
+    } else {
+        printk(KERN_ERR "Failed to start server thread\n");
+        sock_release(server_socket);
+        return -EFAULT;
+    }
 
     return 0;
 }
 
 static void server_exit(void) {
+    mutex_lock(&accept_mutex); // Lock the mutex before checking server_socket
+
     if (server_socket != NULL) {
         sock_release(server_socket);
         printk(KERN_INFO "Server socket released\n");
     }
+
+    if (client_message != NULL) {
+        kfree(client_message);
+        printk(KERN_INFO "Client message memory freed\n");
+    }
+
+    mutex_unlock(&accept_mutex); // Unlock the mutex after releasing resources
 }
 
 module_init(server_init);
