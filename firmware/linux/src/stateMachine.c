@@ -85,6 +85,15 @@ static int StateMachineThread(void *data)
                 return EINVAL;
         }
 
+        /**
+         * 
+         * Reduce consumption of CPU resources
+         * Add a short delay to prevent 
+         * busy waiting
+         * 
+         */
+        msleep(10); /* Release 90% of CPU resources */ 
+
     }
 
     return SM_OK;
