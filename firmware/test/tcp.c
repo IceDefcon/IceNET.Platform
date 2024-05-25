@@ -14,14 +14,12 @@ MODULE_AUTHOR("Ice Marek");
 MODULE_DESCRIPTION("TCP communication");
 MODULE_VERSION("1.0");
 
-static struct socket *sock;
-static struct sockaddr_in server_addr, client_addr;
-
 #define PORT 12345
+
+static struct socket *sock;
 
 // Declare the kernel thread
 static struct task_struct *tcpStateMachine;
-
 
 // Kernel thread function
 static int tcp_state_machine(void *data) {
@@ -31,22 +29,21 @@ static int tcp_state_machine(void *data) {
         printk(KERN_INFO "TCP State Machine: Running\n");
 
         // Accept incoming connections and receive data
-        if (sock) 
-        {
+        if (sock) {
             struct socket *new_sock;
             struct sockaddr_in client_addr;
             int size = sizeof(client_addr);
             char buffer[1];
 
             // Accept connection
-            ret = sock_create_lite(sock->sk->sk_family, sock->type, sock->sk->sk_protocol, &new_sock);
+            ret = sock_create(PF_INET, SOCK_STREAM, IPPROTO_TCP, &new_sock);
             if (ret < 0) {
                 printk(KERN_ALERT "Failed to create new socket\n");
                 return ret;
             }
 
             // Accept the connection
-            ret = sock->ops->accept(sock, new_sock, O_NONBLOCK);
+            ret = kernel_accept(sock, &new_sock, O_NONBLOCK);
             if (ret < 0) {
                 printk(KERN_ALERT "Failed to accept connection\n");
                 sock_release(new_sock);
@@ -55,6 +52,7 @@ static int tcp_state_machine(void *data) {
 
             // Receive data
             memset(buffer, 0, sizeof(buffer));
+            struct msghdr msg;
             ret = kernel_recvmsg(new_sock, &msg, NULL, 0, sizeof(buffer), 0);
             if (ret < 0) {
                 printk(KERN_ALERT "Failed to receive data\n");
@@ -88,6 +86,7 @@ static int __init tcp_module_init(void) {
     }
 
     // Prepare the server address
+    struct sockaddr_in server_addr;
     memset(&server_addr, 0, sizeof(server_addr));
     server_addr.sin_family = AF_INET;
     server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
