@@ -31,8 +31,8 @@ static int tcp_receive_data(struct socket *sock) {
     msg.msg_flags = MSG_DONTWAIT;
     msg.msg_control = NULL;
     msg.msg_controllen = 0;
-    msg.msg_iov = &iov;
-    msg.msg_iovlen = 1;
+    msg.msg_iocb = &iov;
+    msg.msg_namelen = 1;
     msg.msg_control = NULL;
 
     len = kernel_recvmsg(sock, &msg, &iov, 1, sizeof(buffer), msg.msg_flags);
