@@ -129,7 +129,10 @@ type PWM is
 );
 signal pwm_state: PWM := IDLE;
 signal pwm_base_pulse : std_logic := '0';
-signal pwm_timer : std_logic_vector(19 downto 0) := (others => '0');
+signal pwm_pulse : std_logic := '0';
+signal pwm_width : std_logic_vector(15 downto 0) := (others => '0');
+signal pwm_base_timer : std_logic_vector(19 downto 0) := (others => '0');
+signal pwm_timer : std_logic_vector(15 downto 0) := (others => '0');
 
 ----------------------------------------------------------------------------------------------------------------
 -- COMPONENTS DECLARATION
@@ -495,11 +498,11 @@ pwm_process:
 process(CLOCK_50MHz)
 begin
     if rising_edge(CLOCK_50MHz) then
-        if pwm_timer = "11110100001000111111" then
-            pwm_timer <= (others => '0');
+        if pwm_base_timer = "11110100001000111111" then
+            pwm_base_timer <= (others => '0');
             pwm_base_pulse <= '1';
         else
-            pwm_timer <= pwm_timer + '1';
+            pwm_base_timer <= pwm_base_timer + '1';
             pwm_base_pulse <= '0';
         end if;
 
@@ -515,10 +518,19 @@ begin
                 pwm_state <= CONFIG;
 
             when CONFIG =>
+                pwm_width <= "0110000110101000"; -- [25000] Half :: for testing
                 pwm_state <= PRODUCE;
 
             when PRODUCE =>
-                pwm_state <= DONE;
+                if pwm_timer = pwm_width then
+                    pwm_pulse <= '0';
+                    pwm_timer <= (others => '0');
+                    pwm_state <= DONE;
+                else
+                    pwm_pulse <= '1';
+                    pwm_timer <= pwm_timer + '1';
+                    pwm_state <= PRODUCE;
+                end if;
 
             when DONE =>
                 pwm_state <= IDLE;
@@ -527,20 +539,9 @@ begin
                 pwm_state <= IDLE;
 
         end case;
-
     end if;
 end process;
 
-
-
-
-
-
-
-
-
-
+LED_7 <= pwm_pulse;
 
 end rtl;
-
-
