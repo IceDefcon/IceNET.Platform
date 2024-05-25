@@ -107,8 +107,6 @@ type STATE is
     DELAY_CONFIG,
     READ_ID,
     READ_REGISTER,
-    WRITE_CHECK,
-    READ_CONTROL_DONE,
     READ_CONTROL,
     READ_DATA
 );
@@ -120,6 +118,19 @@ signal bypass_clock : std_logic := '0';
 signal bypass_delay : std_logic_vector(27 downto 0) := (others => '0');
 signal bypass_start : std_logic := '0';
 signal bypass_stop : std_logic := '0';
+-- Pwm
+type PWM is 
+(
+    IDLE,
+    INIT,
+    CONFIG,
+    PRODUCE,
+    DONE
+);
+signal pwm_state: PWM := IDLE;
+signal pwm_base_pulse : std_logic := '0';
+signal pwm_timer : std_logic_vector(19 downto 0) := (others => '0');
+
 ----------------------------------------------------------------------------------------------------------------
 -- COMPONENTS DECLARATION
 ----------------------------------------------------------------------------------------------------------------
@@ -413,23 +424,9 @@ begin
                 offload_state <= READ_REGISTER;
 
             When READ_REGISTER =>
-                primary_fifo_rd_en <= '0';
+                primary_fifo_rd_en <= '1';
                 offload_register <= primary_fifo_data_out; -- Register
-                offload_state <= WRITE_CHECK;
-
-            When WRITE_CHECK =>
-                if primary_fifo_data_out(0) = '0' then
-                    primary_fifo_rd_en <= '0';
-                    offload_state <= READ_CONTROL_DONE;
-                elsif primary_fifo_data_out(0) = '1' then
-                    primary_fifo_rd_en <= '1';
-                    offload_state <= READ_CONTROL;
-                end if;
-
-            when READ_CONTROL_DONE => 
-                offload_ctrl <= primary_fifo_data_out; -- Control
-                offload_ready <= '1';
-                offload_state <= IDLE;
+                offload_state <= READ_CONTROL;
 
             when READ_CONTROL =>
                 primary_fifo_rd_en <= '0';
@@ -437,7 +434,6 @@ begin
                 offload_state <= READ_DATA;
 
             when READ_DATA =>
-                primary_fifo_rd_en <= '0';
                 offload_data <= primary_fifo_data_out; -- Data
                 offload_ready <= '1';
                 offload_state <= IDLE;
@@ -449,6 +445,8 @@ begin
     end if;
 end process;
 
+-- To keep all the offload_ctrl bits visible in debug :: Not optimized by the HDL compiler
+LED_8 <= offload_ctrl(0) and offload_ctrl(1) and offload_ctrl(2) and offload_ctrl(3) and offload_ctrl(4) and offload_ctrl(5) and offload_ctrl(6) and offload_ctrl(7);
 
 --bypass_process:
 --process (CLOCK_50MHz)
@@ -492,6 +490,56 @@ end process;
 -- Controler for the gyroscope
 -----------------------------------------------
 --FPGA_INT <= interrupt_signal;
+
+pwm_process:
+process(CLOCK_50MHz)
+begin
+    if rising_edge(CLOCK_50MHz) then
+        if pwm_timer = "11110100001000111111" then
+            pwm_timer <= (others => '0');
+            pwm_base_pulse <= '1';
+        else
+            pwm_timer <= pwm_timer + '1';
+            pwm_base_pulse <= '0';
+        end if;
+
+        case pwm_state is
+            when IDLE =>
+                if pwm_base_pulse = '1' then
+                    pwm_state <= INIT;
+                else
+                    pwm_state <= IDLE;
+                end if;
+
+            when INIT =>
+                pwm_state <= CONFIG;
+
+            when CONFIG =>
+                pwm_state <= PRODUCE;
+
+            when PRODUCE =>
+                pwm_state <= DONE;
+
+            when DONE =>
+                pwm_state <= IDLE;
+
+            when others =>
+                pwm_state <= IDLE;
+
+        end case;
+
+    end if;
+end process;
+
+
+
+
+
+
+
+
+
+
 
 end rtl;
 
