@@ -8,69 +8,68 @@
 #include <linux/string.h>
 #include <linux/kthread.h> // Include kthread related headers
 #include <linux/delay.h>   // Include mdelay
+#include <linux/inet.h>
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Ice Marek");
 MODULE_DESCRIPTION("TCP communication");
 MODULE_VERSION("1.0");
 
-#define PORT 12345
-
 static struct socket *sock;
+static struct sockaddr_in server_addr, client_addr;
+
+#define PORT 12345
+// Define your destination IP address here
+#define DEST_IP "10.0.0.1"
 
 // Declare the kernel thread
 static struct task_struct *tcpStateMachine;
 
-// Kernel thread function
+// // Kernel thread function
+// static int tcp_state_machine(void *data) {
+//     while (!kthread_should_stop()) {
+//         printk(KERN_INFO "TCP State Machine: Running\n");
+//         msleep(1000); // Sleep for 1000 milliseconds (1 second)
+//     }
+//     return 0;
+// }
+
 static int tcp_state_machine(void *data) {
     int ret;
+    struct sockaddr_in saddr;
+
+    // Create a TCP socket
+    ret = sock_create_kern(AF_INET, SOCK_STREAM, IPPROTO_TCP, &sock);
+    if (ret) {
+        printk(KERN_ERR "Failed to create socket\n");
+        return ret;
+    }
+
+    // Set up the socket address structure
+    memset(&saddr, 0, sizeof(saddr));
+    saddr.sin_family = AF_INET;
+    saddr.sin_port = htons(1234); // Example port number
+    if (!in4_pton(DEST_IP, -1, (u8 *)&saddr.sin_addr.s_addr, '\0', NULL)) {
+        printk(KERN_ERR "Failed to convert IP address\n");
+        sock_release(sock);
+        return -EINVAL;
+    }
+
+    // Connect the socket
+    ret = kernel_connect(sock, (struct sockaddr *)&saddr, sizeof(saddr), 0);
+    if (ret) {
+        printk(KERN_ERR "Failed to connect socket\n");
+        sock_release(sock);
+        return ret;
+    }
 
     while (!kthread_should_stop()) {
         printk(KERN_INFO "TCP State Machine: Running\n");
-
-        // Accept incoming connections and receive data
-        if (sock) {
-            struct socket *new_sock;
-            struct sockaddr_in client_addr;
-            int size = sizeof(client_addr);
-            char buffer[1];
-
-            // Accept connection
-            ret = sock_create(PF_INET, SOCK_STREAM, IPPROTO_TCP, &new_sock);
-            if (ret < 0) {
-                printk(KERN_ALERT "Failed to create new socket\n");
-                return ret;
-            }
-
-            // Accept the connection
-            ret = kernel_accept(sock, &new_sock, O_NONBLOCK);
-            if (ret < 0) {
-                printk(KERN_ALERT "Failed to accept connection\n");
-                sock_release(new_sock);
-                return ret;
-            }
-
-            // Receive data
-            memset(buffer, 0, sizeof(buffer));
-            struct msghdr msg;
-            ret = kernel_recvmsg(new_sock, &msg, NULL, 0, sizeof(buffer), 0);
-            if (ret < 0) {
-                printk(KERN_ALERT "Failed to receive data\n");
-            } else {
-                // Check received data
-                if (buffer[0] == 0xAB) {
-                    printk(KERN_INFO "Received 0xAB from client\n");
-                } else {
-                    printk(KERN_INFO "Received unexpected data from client\n");
-                }
-            }
-
-            // Release socket
-            sock_release(new_sock);
-        }
-
         msleep(1000); // Sleep for 1000 milliseconds (1 second)
     }
+
+    // Release the socket when the thread stops
+    sock_release(sock);
 
     return 0;
 }
@@ -86,7 +85,6 @@ static int __init tcp_module_init(void) {
     }
 
     // Prepare the server address
-    struct sockaddr_in server_addr;
     memset(&server_addr, 0, sizeof(server_addr));
     server_addr.sin_family = AF_INET;
     server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
