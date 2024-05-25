@@ -22,12 +22,47 @@ static struct sockaddr_in server_addr, client_addr;
 // Declare the kernel thread
 static struct task_struct *tcpStateMachine;
 
+
 // Kernel thread function
 static int tcp_state_machine(void *data) {
+    int ret;
+
     while (!kthread_should_stop()) {
         printk(KERN_INFO "TCP State Machine: Running\n");
+
+        // Accept incoming connections and receive data
+        if (sock) {
+            struct socket *new_sock;
+            struct sockaddr_in client_addr;
+            int size = sizeof(client_addr);
+            char buffer[1];
+
+            // Accept connection
+            ret = sock->ops->accept(sock, &new_sock, O_NONBLOCK);
+            if (ret < 0) {
+                printk(KERN_ALERT "Failed to accept connection\n");
+            } else {
+                // Receive data
+                memset(buffer, 0, sizeof(buffer));
+                ret = kernel_recvmsg(new_sock, &msg, NULL, 0, sizeof(buffer), 0);
+                if (ret < 0) {
+                    printk(KERN_ALERT "Failed to receive data\n");
+                } else {
+                    // Check received data
+                    if (buffer[0] == 0xAB) {
+                        printk(KERN_INFO "Received 0xAB from client\n");
+                    } else {
+                        printk(KERN_INFO "Received unexpected data from client\n");
+                    }
+                }
+                // Release socket
+                sock_release(new_sock);
+            }
+        }
+
         msleep(1000); // Sleep for 1000 milliseconds (1 second)
     }
+
     return 0;
 }
 
