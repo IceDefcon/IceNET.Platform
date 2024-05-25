@@ -19,7 +19,7 @@ static char buffer[1024];
 
 #define PORT 12345
 
-static int tcp_receive_data(void) {
+static int tcp_receive_data(struct socket *sock) {
     struct msghdr msg;
     struct kvec iov;
     int len;
@@ -31,8 +31,8 @@ static int tcp_receive_data(void) {
     msg.msg_flags = MSG_DONTWAIT;
     msg.msg_control = NULL;
     msg.msg_controllen = 0;
-    msg.msg_iov = &iov;
-    msg.msg_iovlen = 1;
+    msg.msg_iter.iov = &iov;
+    msg.msg_iter.iovlen = 1;
     msg.msg_control = NULL;
 
     len = kernel_recvmsg(sock, &msg, &iov, 1, sizeof(buffer), msg.msg_flags);
@@ -94,7 +94,7 @@ static int __init tcp_module_init(void) {
             continue;
         }
 
-        ret = sock->ops->accept(sock, newsock);
+        ret = sock->ops->accept(sock, newsock, 0);
         if (ret < 0) {
             if (ret != -EAGAIN && ret != -EWOULDBLOCK) {
                 printk(KERN_ALERT "Error accepting connection: %d\n", ret);
@@ -104,7 +104,7 @@ static int __init tcp_module_init(void) {
         }
 
         // Receive data
-        tcp_receive_data();
+        tcp_receive_data(newsock);
 
         sock_release(newsock);
     }
