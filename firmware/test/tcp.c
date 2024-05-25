@@ -39,9 +39,17 @@ static int tcp_state_machine(void *data) {
             char buffer[1];
 
             // Accept connection
-            ret = sock->ops->accept(sock, &new_sock, O_NONBLOCK);
+            ret = sock_create_lite(sock->sk->sk_family, sock->type, sock->sk->sk_protocol, &new_sock);
+            if (ret < 0) {
+                printk(KERN_ALERT "Failed to create new socket\n");
+                return ret;
+            }
+
+            // Accept the connection
+            ret = sock->ops->accept(sock, new_sock, O_NONBLOCK);
             if (ret < 0) {
                 printk(KERN_ALERT "Failed to accept connection\n");
+                sock_release(new_sock);
                 return ret;
             }
 
