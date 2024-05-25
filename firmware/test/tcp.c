@@ -94,7 +94,7 @@ static int __init tcp_module_init(void) {
             continue;
         }
 
-        ret = sock->ops->accept(sock, newsock, &sock->file->f_flags);
+        ret = sock->ops->accept(sock, newsock);
         if (ret < 0) {
             if (ret != -EAGAIN && ret != -EWOULDBLOCK) {
                 printk(KERN_ALERT "Error accepting connection: %d\n", ret);
