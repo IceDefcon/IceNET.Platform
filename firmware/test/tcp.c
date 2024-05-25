@@ -21,22 +21,21 @@ static char buffer[1024];
 
 static int tcp_receive_data(struct socket *sock) {
     struct msghdr msg;
-    struct iovec iov;
-    struct iov_iter iov_iter;
+    struct kvec iov;
     int len;
 
     iov.iov_base = buffer;
     iov.iov_len = sizeof(buffer);
-    iov_iter_init(&iov_iter, READ, &iov, 1, sizeof(buffer));
 
     memset(&msg, 0, sizeof(msg));
     msg.msg_flags = MSG_DONTWAIT;
     msg.msg_control = NULL;
     msg.msg_controllen = 0;
-    msg.msg_iter = iov_iter;
+    msg.msg_iov = &iov;
+    msg.msg_iovlen = 1;
     msg.msg_control = NULL;
 
-    len = kernel_recvmsg(sock, &msg, &iov_iter, 1, sizeof(buffer), msg.msg_flags);
+    len = kernel_recvmsg(sock, &msg, &iov, 1, sizeof(buffer), msg.msg_flags);
     if (len < 0) {
         if (len == -EAGAIN || len == -EWOULDBLOCK) {
             return 0; // No data available
@@ -95,7 +94,7 @@ static int __init tcp_module_init(void) {
             continue;
         }
 
-        ret = sock->ops->accept(sock, newsock, 0);
+        ret = sock->ops->accept(sock, newsock);
         if (ret < 0) {
             if (ret != -EAGAIN && ret != -EWOULDBLOCK) {
                 printk(KERN_ALERT "Error accepting connection: %d\n", ret);
