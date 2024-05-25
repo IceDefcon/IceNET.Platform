@@ -6,14 +6,15 @@
 #include <linux/socket.h>
 #include <linux/slab.h>
 #include <linux/string.h>
+#include <linux/kthread.h>
 
 MODULE_LICENSE("GPL");
-MODULE_AUTHOR("Ice Marek");
-MODULE_DESCRIPTION("TCP communication");
-MODULE_VERSION("1.0");
+MODULE_AUTHOR("Your Name");
+MODULE_DESCRIPTION("A simple kernel module for TCP communication");
+MODULE_VERSION("0.1");
 
 static struct socket *sock;
-static struct sockaddr_in server_addr, client_addr;
+static struct sockaddr_in server_addr;
 static char buffer[1024];
 
 #define PORT 12345
@@ -21,7 +22,7 @@ static char buffer[1024];
 static int tcp_receive_data(void) {
     struct msghdr msg;
     struct kvec iov;
-    int len, ret;
+    int len;
 
     iov.iov_base = buffer;
     iov.iov_len = sizeof(buffer);
@@ -93,7 +94,7 @@ static int __init tcp_module_init(void) {
             continue;
         }
 
-        ret = sock->ops->accept(sock, newsock, O_NONBLOCK);
+        ret = sock->ops->accept(sock, newsock, &sock->file->f_flags);
         if (ret < 0) {
             if (ret != -EAGAIN && ret != -EWOULDBLOCK) {
                 printk(KERN_ALERT "Error accepting connection: %d\n", ret);
