@@ -9,7 +9,8 @@
 int main() {
     int sock = 0;
     struct sockaddr_in serv_addr;
-    char *hello = "Hello from client";
+    char send_buffer[] = {0xAB};  // Send 0xAB
+    char recv_buffer[1];
 
     if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
         std::cerr << "Socket creation error" << std::endl;
@@ -30,8 +31,12 @@ int main() {
         return -1;
     }
 
-    send(sock, hello, strlen(hello), 0);
-    std::cout << "Hello message sent" << std::endl;
+    send(sock, send_buffer, sizeof(send_buffer), 0);
+    std::cout << "Data sent: 0xAB" << std::endl;
+
+    recv(sock, recv_buffer, sizeof(recv_buffer), 0);
+    std::cout << "Received data: 0x" << std::hex << (unsigned int)recv_buffer[0] << std::endl;
+
     close(sock);
     return 0;
 }
