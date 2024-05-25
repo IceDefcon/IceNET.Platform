@@ -9,8 +9,8 @@
 int main() {
     int sock = 0;
     struct sockaddr_in serv_addr;
-    char send_buffer[] = {0xAB};  // Send 0xAB
-    char recv_buffer[1];
+    unsigned char send_buffer[] = {0xAB};  // Send 0xAB
+    unsigned char recv_buffer[1];
 
     if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
         std::cerr << "Socket creation error" << std::endl;

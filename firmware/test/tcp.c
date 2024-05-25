@@ -6,6 +6,8 @@
 #include <linux/socket.h>
 #include <linux/slab.h>
 #include <linux/string.h>
+#include <linux/kthread.h> // Include kthread related headers
+#include <linux/delay.h>   // Include mdelay
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Ice Marek");
@@ -16,6 +18,18 @@ static struct socket *sock;
 static struct sockaddr_in server_addr, client_addr;
 
 #define PORT 12345
+
+// Declare the kernel thread
+static struct task_struct *tcpStateMachine;
+
+// Kernel thread function
+static int tcp_state_machine(void *data) {
+    while (!kthread_should_stop()) {
+        printk(KERN_INFO "TCP State Machine: Running\n");
+        msleep(1000); // Sleep for 1000 milliseconds (1 second)
+    }
+    return 0;
+}
 
 static int __init tcp_module_init(void) {
     int ret;
@@ -49,11 +63,23 @@ static int __init tcp_module_init(void) {
         return ret;
     }
 
+    // Create the kernel thread
+    tcpStateMachine = kthread_run(tcp_state_machine, NULL, "tcpStateMachine");
+    if (IS_ERR(tcpStateMachine)) {
+        printk(KERN_ALERT "Failed to create kernel thread\n");
+        sock_release(sock);
+        return PTR_ERR(tcpStateMachine);
+    }
+
     printk(KERN_INFO "Kernel module listening on port %d\n", PORT);
     return 0;
 }
 
 static void __exit tcp_module_exit(void) {
+    // Stop and clean up the kernel thread
+    if (tcpStateMachine) {
+        kthread_stop(tcpStateMachine);
+    }
     sock_release(sock);
     printk(KERN_INFO "Kernel module unloaded\n");
 }
