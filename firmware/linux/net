@@ -50,12 +50,19 @@ eth0: flags=-28605<UP,BROADCAST,RUNNING,MULTICAST,DYNAMIC>  mtu 1500
         TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
         device interrupt 55
 
+Remove if necessary:
+
+    sudo ip route del 169.254.0.0/16 dev eth0
+
 Debian setup + Add DNS:  nano /etc/resolv.conf
 
     sudo ifconfig eth0 10.0.0.2 netmask 255.255.255.0
     sudo route add default gw 10.0.0.1
     echo "nameserver 8.8.8.8" | sudo tee -a /etc/resolv.conf
     echo "nameserver 8.8.4.4" | sudo tee -a /etc/resolv.conf
+    tail -f /var/log/kern.log
+    
+    ping google.com
 
 Check routing:
 
@@ -79,3 +86,12 @@ iface eth0 inet static
 sudo systemctl restart networking
 
 
+
+
+//
+// check for port
+//
+lsof -i :12345
+netstat -tuln | grep 12345
+
+fuser -k 12345/tcp
