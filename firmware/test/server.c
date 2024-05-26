@@ -94,7 +94,7 @@ static int server_kthread_function(void *data)
             message_received = true;
         }
 
-#if 0
+#if 0 /* TODO :: Need synchronisation */
         // Prepare to send response
         memset(&msg, 0, sizeof(msg));
         iov.iov_base = response_message;

@@ -72,7 +72,7 @@ int main(void)
     }
     printf("Message sent successfully\n");
 
-#if 0
+#if 0 /* TODO :: Need synchronisation */
     // Receive the server's response:
     printf("Waiting for server response...\n");
     ssize_t bytes_received = recv(socket_desc, server_message, sizeof(server_message) - 1, 0);
