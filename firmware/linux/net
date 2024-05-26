@@ -60,9 +60,9 @@ Debian setup + Add DNS:  nano /etc/resolv.conf
     sudo route add default gw 10.0.0.1
     echo "nameserver 8.8.8.8" | sudo tee -a /etc/resolv.conf
     echo "nameserver 8.8.4.4" | sudo tee -a /etc/resolv.conf
-    tail -f /var/log/kern.log
-    
     ping google.com
+
+    tail -f /var/log/kern.log
 
 Check routing:
 

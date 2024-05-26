@@ -1,143 +1,205 @@
 #include <linux/init.h>
 #include <linux/module.h>
 #include <linux/kernel.h>
-#include <linux/kthread.h> // Include kthread header file
+#include <linux/socket.h>
 #include <linux/net.h>
-#include <linux/tcp.h>
-#include <net/tcp.h>
-#include <linux/delay.h> // For msleep
+#include <linux/inet.h>
+#include <linux/slab.h>
+#include <linux/kthread.h>
+#include <linux/delay.h>
+#include <linux/uaccess.h>
+#include <linux/string.h>
+#include <linux/sched.h>
 
 MODULE_LICENSE("GPL");
-MODULE_AUTHOR("Ice Marek");
+MODULE_AUTHOR("Ice Marek ");
 MODULE_DESCRIPTION("TCP Server");
 
-static DEFINE_MUTEX(accept_mutex); // Define a mutex
-
-static struct task_struct *accept_thread; // Define the accept thread
-
+static int port = 2555;
+static char *server_ip = "10.0.0.2";
 static struct socket *server_socket = NULL;
 
-// Function to handle client connection
-static void handle_client_connection(struct socket *client_socket) 
-{
-    // Add your logic to handle the client connection here
-    // For example, you can receive data from the client and send responses back
-}
+static struct task_struct *server_kthread;
 
-// Function executed by the kthread
-static int accept_thread_func(void *data)
+static int server_kthread_function(void *data) 
 {
-    struct socket *client_socket = NULL;
-    int ret;
-
-    while (!kthread_should_stop()) // Loop until the thread is stopped
+    while (!kthread_should_stop()) 
     {
-        /**
-         * 
-         * O_NONBLOCK :: should return immediately if there are no pending connections
-         * true ::  indicating whether the socket is blocking or non-blocking
-         * 
-         */
-        ret = server_socket->ops->accept(server_socket, client_socket, O_NONBLOCK, true); // Pass address of client_socket
+        struct socket *client_socket = NULL;
+        struct sockaddr_in client_addr;
+        int client_addr_len = sizeof(client_addr);
+        char *response_message = "message received";
+        int ret;
+        struct kvec iov;
+        struct msghdr msg;
+        bool message_received = false;
 
+        // Accept incoming connection
+        printk(KERN_INFO "Waiting for client connection...\n");
+
+        while (!kthread_should_stop()) 
+        {
+            ret = kernel_accept(server_socket, &client_socket, O_NONBLOCK);
+            if (ret == -EAGAIN) 
+            {
+                msleep(100); // Sleep for a while before retrying
+                continue;
+            } 
+            else if (ret < 0) 
+            {
+                printk(KERN_ERR "Error accepting connection: %d\n", ret);
+                return ret;
+            }
+            break;
+        }
+
+        if (kthread_should_stop()) 
+        {
+            if (client_socket) 
+            {
+                sock_release(client_socket);
+            }
+            break;
+        }
+
+        printk(KERN_INFO "Client connected\n");
+
+        // Initialize the msghdr structure
+        memset(&msg, 0, sizeof(msg));
+        msg.msg_name = &client_addr;
+        msg.msg_namelen = client_addr_len;
+
+        // Receive client's message
+        char *client_message = kmalloc(2000, GFP_KERNEL);
+        if (!client_message) 
+        {
+            printk(KERN_ERR "Failed to allocate memory for client message\n");
+            sock_release(client_socket);
+            return -ENOMEM;
+        }
+
+        while (!message_received && !kthread_should_stop()) 
+        {
+            iov.iov_base = client_message;
+            iov.iov_len = 2000;
+            ret = kernel_recvmsg(client_socket, &msg, &iov, 1, 2000, MSG_WAITALL);
+            if (ret < 0) 
+            {
+                printk(KERN_ERR "Error receiving message from client: %d\n", ret);
+                kfree(client_message);
+                sock_release(client_socket);
+                return ret;
+            }
+            printk(KERN_INFO "Message from client: %s\n", client_message);
+            message_received = true;
+        }
+
+#if 0
+        // Prepare to send response
+        memset(&msg, 0, sizeof(msg));
+        iov.iov_base = response_message;
+        iov.iov_len = strlen(response_message);
+        msg.msg_name = &client_addr;
+        msg.msg_namelen = client_addr_len;
+
+        // Send response message to client
+        ret = kernel_sendmsg(client_socket, &msg, &iov, 1, strlen(response_message));
         if (ret < 0) 
         {
-            if (ret != -EAGAIN && ret != -EWOULDBLOCK) // Ignore non-blocking errors
-            {
-                printk(KERN_ERR "Failed to accept incoming connection\n");
-                break; // Break the loop on any error other than non-blocking
-            }
+            printk(KERN_ERR "Error sending message to client: %d\n", ret);
         } 
         else 
         {
-            // Handle the accepted connection
-            handle_client_connection(client_socket);
+            printk(KERN_INFO "Sent response to client: %s\n", response_message);
         }
+#endif
 
-        // msleep(10); /* Release 90% of CPU resources */ 
+        kfree(client_message);
+
+        // Close the client socket
+        sock_release(client_socket);
     }
-
-    mutex_unlock(&accept_mutex); // Unlock the mutex before thread exit
-
-    return 0;
-}
-
-static int __init tcp_server_init(void) 
-{
-    struct sockaddr_in addr;
-    struct socket *client_socket = NULL;
-    int ret;
-
-    ret = sock_create(PF_INET, SOCK_STREAM, IPPROTO_TCP, &server_socket);
-    if (ret < 0) 
-    {
-        printk(KERN_ERR "Failed to create socket\n");
-        return ret;
-    }
-
-    memset(&addr, 0, sizeof(struct sockaddr_in));
-    addr.sin_family = AF_INET;
-    addr.sin_port = htons(12345);
-    // addr.sin_addr.s_addr = htonl(INADDR_ANY);
-    addr.sin_addr.s_addr = htonl(0x0A000002); // 10.0.0.2
-
-    ret = server_socket->ops->bind(server_socket, (struct sockaddr *)&addr, sizeof(struct sockaddr_in));
-    if (ret < 0) 
-    {
-        printk(KERN_ERR "Failed to bind socket\n");
-
-        if (server_socket) 
-        {
-            sock_release(server_socket);
-            printk(KERN_INFO "TCP server socket released at binding problem\n");
-        }
-
-        return ret;
-    }
-
-    ret = server_socket->ops->listen(server_socket, 5);
-    if (ret < 0) 
-    {
-        printk(KERN_ERR "Failed to listen on socket\n");
-        return ret;
-    }
-
-    printk(KERN_INFO "TCP server initialized\n");
-
-    mutex_init(&accept_mutex);
     
-    // Create the kthread for accepting connections
-    accept_thread = kthread_run(accept_thread_func, NULL, "accept_thread");
-    if (IS_ERR(accept_thread)) 
+    pr_info("server_kthread stopping\n");
+    return 0;
+}
+
+
+
+static int server_init(void) 
+{
+    struct sockaddr_in server_addr;
+    int error;
+
+    // Create socket
+    error = sock_create_kern(&init_net, AF_INET, SOCK_STREAM, IPPROTO_TCP, &server_socket);
+    if (error < 0) 
     {
-        printk(KERN_ERR "Failed to create accept thread\n");
-        return PTR_ERR(accept_thread);
+        printk(KERN_ERR "Error while creating socket: %d\n", error);
+        return error;
     }
+    printk(KERN_INFO "Socket created successfully\n");
+
+    // Set server address
+    memset(&server_addr, 0, sizeof(server_addr));
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_addr.s_addr = in_aton(server_ip);
+    server_addr.sin_port = htons(port);
+
+    // Bind socket
+    error = kernel_bind(server_socket, (struct sockaddr *)&server_addr, sizeof(server_addr));
+    if (error < 0) 
+    {
+        printk(KERN_ERR "Couldn't bind to the port: %d\n", error);
+        sock_release(server_socket);
+        return error;
+    }
+    printk(KERN_INFO "Done with binding\n");
+
+    // Listen for clients
+    error = kernel_listen(server_socket, 1);
+    if (error < 0) 
+    {
+        printk(KERN_ERR "Error while listening: %d\n", error);
+        sock_release(server_socket);
+        return error;
+    }
+    printk(KERN_INFO "Listening for incoming connections...\n");
+
+    pr_info("Loading tcp server_kthread \n");
+
+    // Create the kernel thread
+    server_kthread = kthread_create(server_kthread_function, NULL, "server_kthread");
+    if (IS_ERR(server_kthread)) 
+    {
+        pr_err("Failed to create server_kthread\n");
+        return PTR_ERR(server_kthread);
+    }
+
+    // Start the thread
+    wake_up_process(server_kthread);
+    pr_info("server_kthread created and started\n");
 
     return 0;
 }
 
-static void __exit tcp_server_exit(void) 
+static void server_exit(void) 
 {
-    if (server_socket) 
+    pr_info("Unloading tcp server\n");
+
+    if (server_socket != NULL) 
     {
         sock_release(server_socket);
-        printk(KERN_INFO "TCP server socket released\n");
+        printk(KERN_INFO "Server socket released\n");
     }
 
-    // Stop and free the accept thread
-    if (accept_thread) 
+    if (server_kthread) 
     {
-        kthread_stop(accept_thread);
-
-        // Lock the mutex to ensure the thread has completed before cleanup
-        mutex_lock(&accept_mutex);
-        mutex_unlock(&accept_mutex);
+        // Stop the thread
+        kthread_stop(server_kthread);
+        pr_info("server_kthread stopped\n");
     }
-
-    // Destroy the mutex
-    mutex_destroy(&accept_mutex);
 }
 
-module_init(tcp_server_init);
-module_exit(tcp_server_exit);
+module_init(server_init);
+module_exit(server_exit);
