@@ -1,67 +1,93 @@
 #include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
 #include <string.h>
 #include <sys/socket.h>
-#include <netinet/in.h>
 #include <arpa/inet.h>
+#include <unistd.h>
 
-#define SERVER_PORT 12345
-#define SERVER_IP "10.0.0.2" // Assuming the server is running locally
+#define MAX_MESSAGE_SIZE 2000
+#define SERVER_PORT 2555
+#define SERVER_IP "10.0.0.2"
 
-int main() 
+int main(void)
 {
-    int client_socket;
+    int socket_desc;
     struct sockaddr_in server_addr;
-    char buffer[1024] = {0};
-    char *message = "Hello from client";
-
-    // Create socket
-    if ((client_socket = socket(AF_INET, SOCK_STREAM, 0)) < 0) 
+    char server_message[MAX_MESSAGE_SIZE], client_message[MAX_MESSAGE_SIZE];
+    
+    // Clean buffers:
+    memset(server_message, '\0', sizeof(server_message));
+    memset(client_message, '\0', sizeof(client_message));
+    
+    // Create socket:
+    socket_desc = socket(AF_INET, SOCK_STREAM, 0);
+    if(socket_desc == -1)
     {
-        perror("Socket creation failed");
-        exit(EXIT_FAILURE);
+        perror("Unable to create socket");
+        return -1;
     }
-    else
-    {
-        printf("Socket created successfuly\n");
-    }
-
-    // Set server address structure
+    printf("Socket created successfully\n");
+    
+    // Set port and IP the same as server-side:
     server_addr.sin_family = AF_INET;
     server_addr.sin_port = htons(SERVER_PORT);
-    if (inet_pton(AF_INET, SERVER_IP, &server_addr.sin_addr) <= 0) 
+    server_addr.sin_addr.s_addr = inet_addr(SERVER_IP);
+    
+    // Send connection request to server:
+    printf("Attempting to connect to server...\n");
+    if(connect(socket_desc, (struct sockaddr*)&server_addr, sizeof(server_addr)) < 0)
     {
-        perror("Invalid address/ Address not supported");
-        exit(EXIT_FAILURE);
+        perror("Unable to connect");
+        return -1;
     }
-    else
+    printf("Connected with server successfully\n");
+    
+    // Get input from the user:
+    printf("Enter message: ");
+    if (fgets(client_message, sizeof(client_message), stdin) == NULL)
     {
-        printf("Valid address detected\n");
+        perror("Error reading input");
+        return -1;
     }
-
-    // Connect to server
-    if (connect(client_socket, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) 
+    
+    // Remove newline character if present
+    size_t message_len = strlen(client_message);
+    if (client_message[message_len - 1] == '\n') 
     {
-        perror("Connection failed");
-        exit(EXIT_FAILURE);
+        client_message[message_len - 1] = '\0';
+        message_len--;
     }
-    else
+    
+    // Send the message to server:
+    printf("Sending message to server...\n");
+    ssize_t total_sent = 0;
+    while (total_sent < message_len) 
     {
-        printf("Connected to server\n");
+        ssize_t sent = send(socket_desc, client_message + total_sent, message_len - total_sent, 0);
+        if (sent < 0)
+        {
+            perror("Unable to send message");
+            return -1;
+        }
+        total_sent += sent;
     }
-
-    // Send message to server
-    send(client_socket, message, strlen(message), 0);
-    printf("Message sent to server: %s\n", message);
+    printf("Message sent successfully\n");
 
 #if 0
-    // Receive message from server
-    recv(client_socket, buffer, sizeof(buffer), 0);
-    printf("Message from server: %s\n", buffer);
+    // Receive the server's response:
+    printf("Waiting for server response...\n");
+    ssize_t bytes_received = recv(socket_desc, server_message, sizeof(server_message) - 1, 0);
+    if(bytes_received < 0)
+    {
+        perror("Error while receiving server's msg");
+        return -1;
+    }
+    server_message[bytes_received] = '\0'; // Null-terminate the received message
+    printf("Server's response: %s\n", server_message);
 #endif
-    // Close socket
-    close(client_socket);
 
+    // Close the socket:
+    close(socket_desc);
+    printf("Socket closed\n");
+    
     return 0;
 }
