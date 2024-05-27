@@ -32,16 +32,16 @@ consoleControl(CONSOLE_CONTROL_SIZE)
 iceCOM::~iceCOM() 
 {
 	Console::Info("[COM] Destroying iceCOM Module");
-    if (m_iceThread.joinable()) 
+    if (m_iceCOMThread.joinable()) 
     {
-    	m_iceThread.join();
+    	m_iceCOMThread.join();
    	}
 }
 
 void iceCOM::initThread()
 {
 	Console::Info("[COM] Init the iceCOMThread");
-	m_iceThread = std::thread(&iceCOM::iceCOMThread, this);
+	m_iceCOMThread = std::thread(&iceCOM::iceCOMThread, this);
 }
 
 void iceCOM::iceCOMThread()
@@ -204,8 +204,6 @@ uint8_t iceCOM::computeRegisterAddress(const char* in)
         Console::Error("[COM] No space between DevicAaddress & RegisterAddress");
         return 0xFF;
     }
-
-
 
     return out;
 }
