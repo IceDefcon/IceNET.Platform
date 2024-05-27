@@ -1,3 +1,10 @@
+/*!
+ * 
+ * Author: Ice.Marek
+ * IceNET Technology 2024
+ * 
+ */
+
 #include <linux/init.h>
 #include <linux/module.h>
 #include <linux/kernel.h>
@@ -11,14 +18,11 @@
 #include <linux/string.h>
 #include <linux/sched.h>
 
-MODULE_LICENSE("GPL");
-MODULE_AUTHOR("Ice Marek ");
-MODULE_DESCRIPTION("TCP Server");
+#include "networkStack.h"
 
 static int port = 2555;
 static char *server_ip = "10.0.0.2";
 static struct socket *server_socket = NULL;
-
 static struct task_struct *server_kthread;
 
 static int server_kthread_function(void *data) 
@@ -35,7 +39,7 @@ static int server_kthread_function(void *data)
         bool message_received = false;
 
         // Accept incoming connection
-        printk(KERN_INFO "Waiting for client connection...\n");
+        printk(KERN_INFO "[CTRL][NET] Waiting for client connection...\n");
 
         while (!kthread_should_stop()) 
         {
@@ -47,7 +51,7 @@ static int server_kthread_function(void *data)
             } 
             else if (ret < 0) 
             {
-                printk(KERN_ERR "Error accepting connection: %d\n", ret);
+                printk(KERN_ERR "[CTRL][NET] Error accepting connection: %d\n", ret);
                 return ret;
             }
             break;
@@ -57,12 +61,14 @@ static int server_kthread_function(void *data)
         {
             if (client_socket) 
             {
+                printk(KERN_INFO "[CTRL][NET] TCP server_kthread terminated\n");
+                printk(KERN_INFO "[CTRL][NET] Release client socket\n");
                 sock_release(client_socket);
             }
             break;
         }
 
-        printk(KERN_INFO "Client connected\n");
+        printk(KERN_INFO "[CTRL][NET] Client connected\n");
 
         // Initialize the msghdr structure
         memset(&msg, 0, sizeof(msg));
@@ -73,9 +79,13 @@ static int server_kthread_function(void *data)
         char *client_message = kmalloc(2000, GFP_KERNEL);
         if (!client_message) 
         {
-            printk(KERN_ERR "Failed to allocate memory for client message\n");
+            printk(KERN_ERR "[CTRL][NET] Failed to allocate memory for client message\n");
             sock_release(client_socket);
             return -ENOMEM;
+        }
+        else
+        {
+            printk(KERN_ERR "[CTRL][NET] Memory allocated for client message\n");
         }
 
         while (!message_received && !kthread_should_stop()) 
@@ -85,12 +95,12 @@ static int server_kthread_function(void *data)
             ret = kernel_recvmsg(client_socket, &msg, &iov, 1, 2000, MSG_WAITALL);
             if (ret < 0) 
             {
-                printk(KERN_ERR "Error receiving message from client: %d\n", ret);
+                printk(KERN_ERR "[CTRL][NET] Error receiving message from client: %d\n", ret);
                 kfree(client_message);
                 sock_release(client_socket);
                 return ret;
             }
-            printk(KERN_INFO "Message from client: %s\n", client_message);
+            printk(KERN_INFO "[CTRL][NET] TODO :: Message from client: %s\n", client_message);
             message_received = true;
         }
 
@@ -106,11 +116,11 @@ static int server_kthread_function(void *data)
         ret = kernel_sendmsg(client_socket, &msg, &iov, 1, strlen(response_message));
         if (ret < 0) 
         {
-            printk(KERN_ERR "Error sending message to client: %d\n", ret);
+            printk(KERN_ERR "[CTRL][NET] Error sending message to client: %d\n", ret);
         } 
         else 
         {
-            printk(KERN_INFO "Sent response to client: %s\n", response_message);
+            printk(KERN_INFO "[CTRL][NET] Sent response to client: %s\n", response_message);
         }
 #endif
 
@@ -120,13 +130,11 @@ static int server_kthread_function(void *data)
         sock_release(client_socket);
     }
     
-    pr_info("server_kthread stopping\n");
+    printk(KERN_INFO "[CTRL][NET] Stopping server_kthread\n");
     return 0;
 }
 
-
-
-static int server_init(void) 
+int tcpServerInit(void) 
 {
     struct sockaddr_in server_addr;
     int error;
@@ -135,10 +143,13 @@ static int server_init(void)
     error = sock_create_kern(&init_net, AF_INET, SOCK_STREAM, IPPROTO_TCP, &server_socket);
     if (error < 0) 
     {
-        printk(KERN_ERR "Error while creating socket: %d\n", error);
+        printk(KERN_ERR "[INIT][NET] Error while creating socket: %d\n", error);
         return error;
     }
-    printk(KERN_INFO "Socket created successfully\n");
+    else
+    {
+        printk(KERN_INFO "[INIT][NET] Socket created successfully\n");
+    }
 
     // Set server address
     memset(&server_addr, 0, sizeof(server_addr));
@@ -150,56 +161,55 @@ static int server_init(void)
     error = kernel_bind(server_socket, (struct sockaddr *)&server_addr, sizeof(server_addr));
     if (error < 0) 
     {
-        printk(KERN_ERR "Couldn't bind to the port: %d\n", error);
+        printk(KERN_ERR "[INIT][NET] Couldn't bind to the port: %d\n", error);
         sock_release(server_socket);
         return error;
     }
-    printk(KERN_INFO "Done with binding\n");
+    else
+    {
+        printk(KERN_INFO "[INIT][NET] Port %d binded successfully\n", port);
+    }
 
     // Listen for clients
     error = kernel_listen(server_socket, 1);
     if (error < 0) 
     {
-        printk(KERN_ERR "Error while listening: %d\n", error);
+        printk(KERN_ERR "[INIT][NET] Error while listening: %d\n", error);
         sock_release(server_socket);
         return error;
     }
-    printk(KERN_INFO "Listening for incoming connections...\n");
-
-    pr_info("Loading tcp server_kthread \n");
+    else
+    {
+        printk(KERN_INFO "[INIT][NET] Listening for incoming connections...\n");
+    }
 
     // Create the kernel thread
     server_kthread = kthread_create(server_kthread_function, NULL, "server_kthread");
     if (IS_ERR(server_kthread)) 
     {
-        pr_err("Failed to create server_kthread\n");
+        printk(KERN_INFO "[INIT][NET] Failed to create server_kthread\n");
         return PTR_ERR(server_kthread);
     }
 
     // Start the thread
     wake_up_process(server_kthread);
-    pr_info("server_kthread created and started\n");
+    printk(KERN_INFO "[INIT][NET] TCP server_kthread created and started\n");
 
     return 0;
 }
 
-static void server_exit(void) 
+void tcpServerDestroy(void) 
 {
-    pr_info("Unloading tcp server\n");
-
     if (server_socket != NULL) 
     {
         sock_release(server_socket);
-        printk(KERN_INFO "Server socket released\n");
+        printk(KERN_INFO "[DESTROY][NET] Server socket released\n");
     }
 
     if (server_kthread) 
     {
         // Stop the thread
         kthread_stop(server_kthread);
-        pr_info("server_kthread stopped\n");
+        printk(KERN_INFO "[DESTROY][NET] server_kthread stopped\n");
     }
 }
-
-module_init(server_init);
-module_exit(server_exit);

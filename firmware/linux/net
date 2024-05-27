@@ -92,6 +92,6 @@ sudo systemctl restart networking
 // check for port
 //
 lsof -i :12345
-netstat -tuln | grep 12345
+netstat -tuln | grep 2555
 
 fuser -k 12345/tcp
