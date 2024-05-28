@@ -47,10 +47,10 @@ class iceCOM : public Core
         void initThread();
         void iceCOMThread();
 
-        int device_open(const char* device) override;
-        int device_read() override;
-        int device_write() override;
-        int device_close() override;
+        int startCOM(const char* device) override;
+        int dataTX() override;
+        int dataRX() override;
+        int closeCOM() override;
 
         uint8_t computeDeviceAddress(const char* in);
         uint8_t computeRegisterAddress(const char* in);

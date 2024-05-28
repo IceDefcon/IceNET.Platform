@@ -13,6 +13,8 @@
 #include <cstdint>          // for uint8_t
 #include "iceCOM.h"
 
+#include <chrono> // sleep_for
+#include <thread> // sleep_for
 
 iceCOM::iceCOM(): 
 m_file_descriptor(0), 
@@ -44,6 +46,16 @@ void iceCOM::initThread()
 	m_iceCOMThread = std::thread(&iceCOM::iceCOMThread, this);
 }
 
+/**
+ * 
+ * TODO
+ * 
+ * Application takes about
+ * 95% of the CPU usage
+ * 
+ * This need to be debuged !!!
+ * 
+ */
 void iceCOM::iceCOMThread()
 {
 	Console::Info("[COM] Enter iceCOMThread");
@@ -60,7 +72,7 @@ void iceCOM::iceCOMThread()
     	 * 
     	 */
 
-    	if(OK != device_write())
+    	if(OK != dataTX())
     	{
 			Console::Error("[COM] Cannot write into the console");
     	}
@@ -72,17 +84,26 @@ void iceCOM::iceCOMThread()
     		 * about successfully transfered command 
     		 * 
     		 */
-	    	if(OK != device_read())
+	    	if(OK != dataRX())
 	    	{
 				Console::Error("[COM] Cannot read from the console");
 	    	}
     	}
+
+        /**
+         * 
+         * Not Working !!!
+         * 
+         * 100ms delay :: For CPU resources release
+         * 
+         */
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
 
 	Console::Info("[COM] Terminate iceCOMThread");
 }
 
-int iceCOM::device_open(const char* device) 
+int iceCOM::startCOM(const char* device) 
 {
     m_file_descriptor = open(device, O_RDWR);
 
@@ -101,7 +122,7 @@ int iceCOM::device_open(const char* device)
 }
 
 
-int iceCOM::device_read()
+int iceCOM::dataRX()
 {
     int ret;
 
@@ -283,7 +304,7 @@ uint8_t iceCOM::computeRegisterData(const char* in)
     return out;
 }
 
-int iceCOM::device_write()
+int iceCOM::dataTX()
 {
     int ret = -1;
 
@@ -370,7 +391,7 @@ int iceCOM::device_write()
     return OK;
 }
 
-int iceCOM::device_close() 
+int iceCOM::closeCOM() 
 {
     if (m_file_descriptor >= 0) 
     {

@@ -10,8 +10,14 @@
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <string>
+#include <thread>
+#include <atomic>
+#include <vector>
 
-class iceNET 
+#include "core.h"
+#include "console.h"
+
+class iceNET : public Core
 {
     private:
         int portNumber;
@@ -37,7 +43,12 @@ class iceNET
         ~iceNET();
 
         void initThread();
-        void iceNetThread();
+        void iceNETThread();
+
+        int startCOM(const char* device) override;
+        int dataTX() override;
+        int dataRX() override;
+        int closeCOM() override;
 
         bool acceptClient();
         ssize_t dataTX(const std::string& message);

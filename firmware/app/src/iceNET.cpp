@@ -4,10 +4,10 @@
  * IceNET Technology 2024
  * 
  */
-#include "iceNET.h"
 #include <iostream>
 #include <cstring>
 #include <unistd.h>
+#include "iceNET.h"
 
 iceNET::iceNET(int portNumber):
 portNumber(portNumber),
@@ -19,15 +19,24 @@ clientConnected(false)
     serverAddress.sin_family = AF_INET;
     serverAddress.sin_addr.s_addr = INADDR_ANY;
     serverAddress.sin_port = htons(portNumber);
+
+    initThread();
 }
 
 iceNET::~iceNET() 
 {
-    std::cout << "[INFO] Destroying iceNET" << std::endl;
+    Console::Info("[NET] Destroying iceNET");
+
     closeClient();
+    
     if (serverSocket >= 0) 
     {
         close(serverSocket);
+    }
+
+    if (m_iceNETThread.joinable()) 
+    {
+        m_iceNETThread.join();
     }
 }
 
@@ -36,6 +45,9 @@ void iceNET::initThread()
     Console::Info("[NET] Init the iceNETThread");
     m_iceNETThread = std::thread(&iceNET::iceNETThread, this);
 }
+
+#include <chrono>
+#include <thread>
 
 void iceNET::iceNETThread()
 {
@@ -76,23 +88,30 @@ void iceNET::iceNETThread()
 
     while(!m_killThread) 
     {
-        /* TODO */
+        std::this_thread::sleep_for(std::chrono::seconds(1)); /* wait for a second */
+        Console::Info("[NET] iceNETThread is running");
+        /**
+         * 
+         * TODO
+         * 
+         * Compute the client handler
+         * 
+         * 
+         * 
+         * 
+         * 
+         * implement m_killThread flag !!!!!!!!!!!!!!!!! ????????????????? to kill the thread at application close
+         * 
+         * 
+         * 
+         * 
+         * 
+         * 
+         */
     }
 
     Console::Info("[NET] Terminate iceNETThread");
 }
-
-
-
-
-
-
-
-
-
-
-
-
 
 bool iceNET::acceptClient() 
 {
@@ -143,3 +162,11 @@ void iceNET::closeClient()
         clientConnected = false;
     }
 }
+
+
+/* Dummy :: For the core class */
+int iceNET::startCOM(const char* device) {return 0;}
+int iceNET::dataTX() {return 0;}
+int iceNET::dataRX() {return 0;}
+int iceNET::closeCOM() {return 0;}
+
