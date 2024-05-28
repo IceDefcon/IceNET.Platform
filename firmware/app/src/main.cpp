@@ -9,21 +9,42 @@
 #include <unistd.h> // sleep
 
 #include "iceCOM.h"
+#include "iceNET.h"
 #include "console.h"
 
 #define ICE "/dev/iceCOM"
 
 int main(void)
 {
-    /* Stack Allocation */
-	Core* CoreDevice = nullptr;
+    /**
+     * 
+     * Stack Allocation pointer
+     * for switching between
+     * iceCOM and iceNET
+     * 
+     */
+	Core* CoreClass = nullptr;
 
-	/* Heap Allocation */
-	iceCOM* iceCOMDevice = new iceCOM;
+	/**
+	 * 
+	 * Heap allocation of the
+	 * communication interfaces
+	 * 
+	 */
+	iceCOM* iceCOMDevice = new iceCOM; /* char Device */
+	iceNET* iceNETServer = new iceNET(2555); /* tcp Server */
 
 	/* Initialise Kernel Communication */
-	CoreDevice = iceCOMDevice;
-	CoreDevice->device_open(ICE);
+	CoreClass = iceCOMDevice;
+	CoreClass->startCOM(ICE);
+	/**
+	 * 
+	 * TODO
+	 * 
+	 * Initialise TCP
+	 * listen and accept
+	 * 
+	 */
 
 	/**
 	 * 
@@ -45,13 +66,14 @@ int main(void)
 		    	 * 2. Close the core Device associated with the class
 		    	 * 
 		    	 */
-		    	CoreDevice->device_close();
+		    	CoreClass->closeCOM();
 		        break;
 		    }
 		}
 	}
 
 	delete iceCOMDevice;
+	delete iceNETServer;
 
 	return OK;
 }
