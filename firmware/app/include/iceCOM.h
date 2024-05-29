@@ -24,15 +24,8 @@ class iceCOM : public Core
     private:
         int m_file_descriptor;
         std::thread m_iceCOMThread;
-
-        /*!
-         * 
-         * Atomic in case if something 
-         * decide to interrupt kill 
-         * flag processing
-         * 
-         */
         std::atomic<bool> m_killThread;
+        
         /* For char Device Traffic */
         std::vector<char> charDeviceRx;
         std::vector<char> charDeviceTx;
@@ -47,7 +40,7 @@ class iceCOM : public Core
         void initThread();
         void iceCOMThread();
 
-        int startCOM(const char* device) override;
+        int openCOM(const char* device) override;
         int dataTX() override;
         int dataRX() override;
         int closeCOM() override;

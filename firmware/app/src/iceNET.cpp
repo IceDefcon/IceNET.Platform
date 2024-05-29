@@ -4,23 +4,24 @@
  * IceNET Technology 2024
  * 
  */
+#include <chrono> // delay
+#include <thread> // delay
 #include <iostream>
 #include <cstring>
 #include <unistd.h>
 #include "iceNET.h"
 
 iceNET::iceNET(int portNumber):
-portNumber(portNumber),
-serverSocket(-1),
-clientSocket(-1),
-clientConnected(false) 
+m_killThread(false),
+m_portNumber(portNumber),
+m_serverSocket(-1),
+m_clientSocket(-1),
+m_clientConnected(false) 
 {
-    memset(&serverAddress, 0, sizeof(serverAddress));
-    serverAddress.sin_family = AF_INET;
-    serverAddress.sin_addr.s_addr = INADDR_ANY;
-    serverAddress.sin_port = htons(portNumber);
-
-    initThread();
+    memset(&m_serverAddress, 0, sizeof(m_serverAddress));
+    m_serverAddress.sin_family = AF_INET;
+    m_serverAddress.sin_addr.s_addr = INADDR_ANY;
+    m_serverAddress.sin_port = htons(portNumber);
 }
 
 iceNET::~iceNET() 
@@ -29,9 +30,9 @@ iceNET::~iceNET()
 
     closeClient();
     
-    if (serverSocket >= 0) 
+    if (m_serverSocket >= 0) 
     {
-        close(serverSocket);
+        close(m_serverSocket);
     }
 
     if (m_iceNETThread.joinable()) 
@@ -46,15 +47,44 @@ void iceNET::initThread()
     m_iceNETThread = std::thread(&iceNET::iceNETThread, this);
 }
 
-#include <chrono>
-#include <thread>
-
 void iceNET::iceNETThread()
 {
     Console::Info("[NET] Enter iceNETThread");
+    
+    socklen_t clientLength = sizeof(m_clientAddress);
 
-    serverSocket = socket(AF_INET, SOCK_STREAM, 0);
-    if (serverSocket < 0)
+    while(!m_killThread) 
+    {
+        Console::Info("[NET] iceNETThread is running");
+
+        if(false == m_clientConnected)
+        {
+            m_clientSocket = accept(m_serverSocket, (struct sockaddr *)&m_clientAddress, &clientLength);
+            
+            if (m_clientSocket < 0) 
+            {
+                Console::Error("[NET] Failed to accept the client connection");
+            }
+            else
+            {
+                m_clientConnected = true;
+            }
+        }
+        else
+        {
+            Console::Info("[NET] Wait 5s and retry the connection");
+            std::this_thread::sleep_for(std::chrono::seconds(5)); /* wait for a second */
+        }
+    }
+
+    Console::Info("[NET] Terminate iceNETThread");
+}
+
+int iceNET::openCOM(const char* device) 
+{
+    m_serverSocket = socket(AF_INET, SOCK_STREAM, 0);
+    
+    if (m_serverSocket < 0)
     {
         Console::Error("[NET] Error opening socket");
     }
@@ -69,85 +99,72 @@ void iceNET::iceNETThread()
      * 
      */
     int option = 1;
-    
-    if (setsockopt(serverSocket, SOL_SOCKET, SO_REUSEADDR, &option, sizeof(option)) < 0) 
+    int ret = -1;
+
+    ret = setsockopt(m_serverSocket, SOL_SOCKET, SO_REUSEADDR, &option, sizeof(option));
+    if (ret < 0) 
     {
         Console::Error("[NET] Error setting socket options");
     }
+    else
+    {
+        Console::Info("[NET] Socket option set correctly");
+    }
 
-    if (bind(serverSocket, (struct sockaddr *)&serverAddress, sizeof(serverAddress)) < 0) 
+    ret = bind(m_serverSocket, (struct sockaddr *)&m_serverAddress, sizeof(m_serverAddress));
+    if (ret < 0) 
     {
         Console::Error("[NET] Error on binding the socket");
     }
+    else
+    {
+        Console::Info("[NET] Socket bind successfully");
+    }
 
-    /* listen at the TCP Port */
-    if (listen(serverSocket, 5) < 0) 
+    /**
+     * 
+     * backlog parameter = 5 
+     * 
+     * Maximum number of 
+     * pending connections
+     * 
+     */
+    listen(m_serverSocket, 5);
+    if (ret < 0) 
     {
         Console::Error("[NET] Error listening for connections");
     }
-
-    while(!m_killThread) 
+    else
     {
-        std::this_thread::sleep_for(std::chrono::seconds(1)); /* wait for a second */
-        Console::Info("[NET] iceNETThread is running");
-        /**
-         * 
-         * TODO
-         * 
-         * Compute the client handler
-         * 
-         * 
-         * 
-         * 
-         * 
-         * implement m_killThread flag !!!!!!!!!!!!!!!!! ????????????????? to kill the thread at application close
-         * 
-         * 
-         * 
-         * 
-         * 
-         * 
-         */
+        Console::Info("[NET] Listening at the TCP Port...");
+        initThread();
     }
 
-    Console::Info("[NET] Terminate iceNETThread");
-}
-
-bool iceNET::acceptClient() 
-{
-    socklen_t clientLength = sizeof(clientAddress);
-    clientSocket = accept(serverSocket, (struct sockaddr *)&clientAddress, &clientLength);
-    if (clientSocket < 0) 
-    {
-        perror("Socket Server: failed to accept the client connection");
-        return false;
-    }
-    clientConnected = true;
-    return true;
+    return OK;
 }
 
 ssize_t iceNET::dataTX(const std::string& message) 
 {
-    if (!clientConnected) 
+    if (!m_clientConnected) 
     {
         std::cerr << "Socket Server: no client connected" << std::endl;
         return -1;
     }
-    return write(clientSocket, message.c_str(), message.length());
+    return write(m_clientSocket, message.c_str(), message.length());
 }
 
 std::string iceNET::dataRX(size_t bufferSize) 
 {
-    if (!clientConnected) 
+    if (!m_clientConnected) 
     {
         std::cerr << "Socket Server: no client connected" << std::endl;
         return "";
     }
     char buffer[bufferSize];
-    ssize_t bytesRead = read(clientSocket, buffer, bufferSize);
+    ssize_t bytesRead = read(m_clientSocket, buffer, bufferSize);
     if (bytesRead < 0) 
     {
-        perror("Socket Server: error reading from socket");
+        Console::Error("[NET] Error lreading from socket");
         return "";
     }
     return std::string(buffer, bytesRead);
@@ -155,17 +172,14 @@ std::string iceNET::dataRX(size_t bufferSize)
 
 void iceNET::closeClient() 
 {
-    if (clientSocket >= 0) 
+    if (m_clientSocket >= 0) 
     {
-        close(clientSocket);
-        clientSocket = -1;
-        clientConnected = false;
+        close(m_clientSocket);
+        m_clientSocket = -1;
+        m_clientConnected = false;
     }
 }
 
-
-/* Dummy :: For the core class */
-int iceNET::startCOM(const char* device) {return 0;}
 int iceNET::dataTX() {return 0;}
 int iceNET::dataRX() {return 0;}
 int iceNET::closeCOM() {return 0;}

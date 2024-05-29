@@ -20,23 +20,15 @@
 class iceNET : public Core
 {
     private:
-        int portNumber;
-        int serverSocket;
-        int clientSocket;
-        struct sockaddr_in serverAddress;
-        struct sockaddr_in clientAddress;
-        bool clientConnected;
-
+        int m_portNumber;
+        int m_serverSocket;
+        int m_clientSocket;
+        bool m_clientConnected;
         std::thread m_iceNETThread;
-
-        /*!
-         * 
-         * Atomic in case if something 
-         * decide to interrupt kill 
-         * flag processing
-         * 
-         */
         std::atomic<bool> m_killThread;
+
+        struct sockaddr_in m_serverAddress;
+        struct sockaddr_in m_clientAddress;
 
     public:
         iceNET(int portNumber);
@@ -45,12 +37,11 @@ class iceNET : public Core
         void initThread();
         void iceNETThread();
 
-        int startCOM(const char* device) override;
+        int openCOM(const char* device) override;
         int dataTX() override;
         int dataRX() override;
         int closeCOM() override;
 
-        bool acceptClient();
         ssize_t dataTX(const std::string& message);
         std::string dataRX(size_t bufferSize = 1024);
         void closeClient();

@@ -11,10 +11,9 @@
 #include <cstring> 			// strcmp
 #include <termios.h> 		// terminal settings
 #include <cstdint>          // for uint8_t
-#include "iceCOM.h"
-
 #include <chrono> // sleep_for
 #include <thread> // sleep_for
+#include "iceCOM.h"
 
 iceCOM::iceCOM(): 
 m_file_descriptor(0), 
@@ -103,7 +102,7 @@ void iceCOM::iceCOMThread()
 	Console::Info("[COM] Terminate iceCOMThread");
 }
 
-int iceCOM::startCOM(const char* device) 
+int iceCOM::openCOM(const char* device) 
 {
     m_file_descriptor = open(device, O_RDWR);
 
@@ -112,7 +111,8 @@ int iceCOM::startCOM(const char* device)
         Console::Error("[COM] Failed to open Device");
         m_killThread = true;
         return ERROR;
-    } else 
+    } 
+    else 
     {
         Console::Info("[COM] Device opened successfuly");
         initThread();
@@ -120,7 +120,6 @@ int iceCOM::startCOM(const char* device)
 
     return OK;
 }
-
 
 int iceCOM::dataRX()
 {
@@ -304,6 +303,8 @@ uint8_t iceCOM::computeRegisterData(const char* in)
     return out;
 }
 
+#include "iceNET.h"
+
 int iceCOM::dataTX()
 {
     int ret = -1;
@@ -317,7 +318,15 @@ int iceCOM::dataTX()
         m_killThread = true;
         return ret;
     }
-
+    else if (std::strcmp(consoleControl.data(), "tcp") == 0)
+    {
+        Console::Info("[NET] Creating iceNET object");
+        iceNET* iceNETServer = new iceNET(2555); /* tcp Server */
+        iceNETServer->openCOM("tcpServer");
+        // pCore = getCore();
+        // pCore = iceNETServer;
+        // pCore->openCOM("tcpServer");
+    }
 #if 1 /* Read Enable in FIFO */
     else if (std::strcmp(consoleControl.data(), "rd") == 0)
     {
