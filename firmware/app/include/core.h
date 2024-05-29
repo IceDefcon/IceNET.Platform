@@ -22,7 +22,7 @@ public:
 		Console::Info("[Core] Destroy the Core");
 	}
 
-	virtual int startCOM(const char* device) = 0;
+	virtual int openCOM(const char* device) = 0;
 	virtual int dataTX() = 0;
 	virtual int dataRX() = 0;
 	virtual int closeCOM() = 0;

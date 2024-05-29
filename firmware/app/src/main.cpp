@@ -12,31 +12,21 @@
 #include "iceNET.h"
 #include "console.h"
 
-#define ICE "/dev/iceCOM"
+#define iceDEV "/dev/iceCOM"
 
 int main(void)
 {
-    /**
-     * 
-     * Stack Allocation pointer
-     * for switching between
-     * iceCOM and iceNET
-     * 
-     */
+    /* Stack :: Interfaces pointer */
 	Core* CoreClass = nullptr;
 
-	/**
-	 * 
-	 * Heap allocation of the
-	 * communication interfaces
-	 * 
-	 */
+	/* Heap :: Communication interfaces */
 	iceCOM* iceCOMDevice = new iceCOM; /* char Device */
-	iceNET* iceNETServer = new iceNET(2555); /* tcp Server */
+	// iceNET* iceNETServer = new iceNET(2555); /* tcp Server */
 
 	/* Initialise Kernel Communication */
 	CoreClass = iceCOMDevice;
-	CoreClass->startCOM(ICE);
+	CoreClass->openCOM(iceDEV);
+
 	/**
 	 * 
 	 * TODO
@@ -73,7 +63,7 @@ int main(void)
 	}
 
 	delete iceCOMDevice;
-	delete iceNETServer;
+	// delete iceNETServer;
 
 	return OK;
 }
