@@ -1,5 +1,5 @@
 #include <iostream>
-#include "tcp/SocketClient.h"
+#include "tcpClient.h"
 
 int main(int argc, char *argv[])
 {
@@ -13,7 +13,7 @@ int main(int argc, char *argv[])
     std::cout << "[NET] Initialising TCP Client" << std::endl;
 
     // Heap allocation
-    SocketClient* client = new SocketClient(argv[1], 2555);
+    tcpClient* client = new tcpClient(argv[1], 2555);
     if (client->connectToServer() != 0)
     {
         std::cerr << "[NET] Failed to connect to server" << std::endl;
