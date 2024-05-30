@@ -3,7 +3,7 @@
 #include <cstring>
 #include <unistd.h>
 
-tcpClient::tcpClient(const std::string &serverName, int portNumber): 
+tcpClient::tcpClient(const std::string &serverName, int portNumber):
 m_serverName(serverName), 
 m_portNumber(portNumber), 
 m_socketfd(-1), 
@@ -12,7 +12,13 @@ m_isConnected(false)
 {
     memset(&m_serverAddress, 0, sizeof(m_serverAddress));
     m_serverAddress.sin_family = AF_INET;
-    m_serverAddress.sin_addr.s_addr = INADDR_ANY;
+    m_server = gethostbyname(m_serverName.c_str());
+    if (m_server == nullptr) 
+    {
+        std::cerr << "[NET] Error - no such host" << std::endl;
+        return;
+    }
+    memcpy(&m_serverAddress.sin_addr.s_addr, m_server->h_addr, m_server->h_length);
     m_serverAddress.sin_port = htons(m_portNumber);
 }
 
@@ -21,20 +27,13 @@ int tcpClient::connectToServer()
     m_socketfd = socket(AF_INET, SOCK_STREAM, 0);
     if (m_socketfd < 0)
     {
-        perror("[NET] Socket Client: error opening socket");
-        return 1;
-    }
-
-    m_server = gethostbyname(m_serverName.c_str());
-    if (m_server == nullptr) 
-    {
-        std::cerr << "[NET] Socket Client: error - no such host" << std::endl;
+        perror("[NET] Error opening socket");
         return 1;
     }
 
     if (connect(m_socketfd, (struct sockaddr *) &m_serverAddress, sizeof(m_serverAddress)) < 0)
     {
-        perror("[NET] Socket Client: error connecting to the server");
+        perror("[NET] Error connecting to the server");
         return 1;
     }
 

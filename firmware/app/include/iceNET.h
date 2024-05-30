@@ -18,7 +18,6 @@
 #include "console.h"
 
 const size_t TCP_SERVER_SIZE = 32;
-const size_t TCP_CONSOLE_SIZE = 32;
 
 class iceNET : public Core
 {
@@ -36,8 +35,6 @@ class iceNET : public Core
         /* For char Device Traffic */
         std::vector<char> tcpServerRx;
         std::vector<char> tcpServerTx;
-        /* Console control buffer */
-        std::vector<char> consoleControl;
 
         ssize_t m_bytesRead;
 

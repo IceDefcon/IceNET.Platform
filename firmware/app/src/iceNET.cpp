@@ -20,7 +20,6 @@ m_iceNETThread(),
 m_killThread(false),
 tcpServerRx(TCP_SERVER_SIZE),
 tcpServerTx(TCP_SERVER_SIZE),
-consoleControl(TCP_CONSOLE_SIZE),
 m_bytesRead(0)
 {
     memset(&m_serverAddress, 0, sizeof(m_serverAddress));
@@ -28,10 +27,9 @@ m_bytesRead(0)
     m_serverAddress.sin_addr.s_addr = INADDR_ANY;
     m_serverAddress.sin_port = htons(m_portNumber);
 
-    /* Initialize tcpServerRx, tcpServerTx, and consoleControl with zeros */
+    /* Initialize tcpServerRx and tcpServerTx with zeros */
     std::fill(tcpServerRx.begin(), tcpServerRx.end(), 0);
     std::fill(tcpServerTx.begin(), tcpServerTx.end(), 0);
-    std::fill(consoleControl.begin(), consoleControl.end(), 0);
 }
 
 iceNET::~iceNET() 
@@ -84,7 +82,7 @@ void iceNET::iceNETThread()
                 {
                     if (m_bytesRead > 0) 
                     {
-                        std::cout << "Received data: " << std::string(consoleControl.begin(), consoleControl.begin() + m_bytesRead) << std::endl;
+                        std::cout << "Received data: " << std::string(tcpServerRx.begin(), tcpServerRx.begin() + m_bytesRead) << std::endl;
                     } 
                     else 
                     {
@@ -202,7 +200,7 @@ int iceNET::dataRX()
         return ERROR;
     }
     
-    m_bytesRead = read(m_clientSocket, consoleControl.data(), consoleControl.size());
+    m_bytesRead = read(m_clientSocket, tcpServerRx.data(), tcpServerRx.size());
     if (m_bytesRead < 0) 
     {
         Console::Error("[NET] Error reading from socket");
@@ -210,7 +208,7 @@ int iceNET::dataRX()
     }
 
     /* Resize to actual bytes read */
-    consoleControl.resize(m_bytesRead);
+    tcpServerRx.resize(m_bytesRead);
 
     return OK;
 }
