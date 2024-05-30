@@ -42,31 +42,6 @@ int tcpClient::connectToServer()
     return 0;
 }
 
-int SocketClient::connectToServer(){
-
-    socketfd = socket(AF_INET, SOCK_STREAM, 0);
-    if (socketfd < 0){
-        perror("Socket Client: error opening socket.\n");
-        return 1;
-    }
-    server = gethostbyname(serverName.data());
-    if (server == NULL) {
-        perror("Socket Client: error - no such host.\n");
-        return 1;
-    }
-    bzero((char *) &serverAddress, sizeof(serverAddress));
-    serverAddress.sin_family = AF_INET;
-    bcopy((char *)server->h_addr,(char *)&serverAddress.sin_addr.s_addr, server->h_length);
-    serverAddress.sin_port = htons(portNumber);
-
-    if (connect(socketfd, (struct sockaddr *) &serverAddress, sizeof(serverAddress)) < 0){
-        perror("Socket Client: error connecting to the server.\n");
-        return 1;
-    }
-    this->isConnected = true;
-    return 0;
-}
-
 int tcpClient::send(const std::string &message)
 {
     if (!m_isConnected)
