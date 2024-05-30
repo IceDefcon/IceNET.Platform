@@ -14,18 +14,20 @@ public:
 
 	Core()
 	{
-		Console::Info("[Core] Initialise the Core");
+		Console::Info("[INIT] Initialise the Core");
 	}
 
 	virtual ~Core()
 	{
-		Console::Info("[Core] Destroy the Core");
+		Console::Info("[DESTROY] Destroy the Core");
 	}
 
-	virtual int openCOM(const char* device) = 0;
+	virtual int openCOM() = 0;
 	virtual int dataTX() = 0;
 	virtual int dataRX() = 0;
 	virtual int closeCOM() = 0;
+
+	virtual bool terminate() = 0;
 
 private:
 

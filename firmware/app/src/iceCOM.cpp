@@ -11,9 +11,11 @@
 #include <cstring> 			// strcmp
 #include <termios.h> 		// terminal settings
 #include <cstdint>          // for uint8_t
-#include <chrono> // sleep_for
-#include <thread> // sleep_for
+#include <chrono>           // sleep_for
+#include <thread>           // sleep_for
 #include "iceCOM.h"
+
+#define iceDEV "/dev/iceCOM"
 
 iceCOM::iceCOM(): 
 m_file_descriptor(0), 
@@ -45,32 +47,12 @@ void iceCOM::initThread()
 	m_iceCOMThread = std::thread(&iceCOM::iceCOMThread, this);
 }
 
-/**
- * 
- * TODO
- * 
- * Application takes about
- * 95% of the CPU usage
- * 
- * This need to be debuged !!!
- * 
- */
 void iceCOM::iceCOMThread()
 {
 	Console::Info("[COM] Enter iceCOMThread");
 
     while(!m_killThread) 
     {
-    	/*!
-    	 * 
-    	 * ----===[ TODO ]===----
-    	 * 
-    	 * In addition we can print some feedback
-    	 * information on the [ RX ] console 
-    	 * when SPI transfers are executed
-    	 * 
-    	 */
-
     	if(OK != dataTX())
     	{
 			Console::Error("[COM] Cannot write into the console");
@@ -89,22 +71,16 @@ void iceCOM::iceCOMThread()
 	    	}
     	}
 
-        /**
-         * 
-         * Not Working !!!
-         * 
-         * 100ms delay :: For CPU resources release
-         * 
-         */
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        /* Reduce consumption of CPU resources */
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
 
 	Console::Info("[COM] Terminate iceCOMThread");
 }
 
-int iceCOM::openCOM(const char* device) 
+int iceCOM::openCOM() 
 {
-    m_file_descriptor = open(device, O_RDWR);
+    m_file_descriptor = open(iceDEV, O_RDWR);
 
     if(m_file_descriptor < 0)
     {
@@ -318,15 +294,14 @@ int iceCOM::dataTX()
         m_killThread = true;
         return ret;
     }
+#if 0 /* init server from i2c cosole */
     else if (std::strcmp(consoleControl.data(), "tcp") == 0)
     {
         Console::Info("[NET] Creating iceNET object");
         iceNET* iceNETServer = new iceNET(2555); /* tcp Server */
         iceNETServer->openCOM("tcpServer");
-        // pCore = getCore();
-        // pCore = iceNETServer;
-        // pCore->openCOM("tcpServer");
     }
+#endif
 #if 1 /* Read Enable in FIFO */
     else if (std::strcmp(consoleControl.data(), "rd") == 0)
     {

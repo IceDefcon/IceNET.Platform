@@ -40,7 +40,7 @@ class iceCOM : public Core
         void initThread();
         void iceCOMThread();
 
-        int openCOM(const char* device) override;
+        int openCOM() override;
         int dataTX() override;
         int dataRX() override;
         int closeCOM() override;
@@ -50,5 +50,5 @@ class iceCOM : public Core
         uint8_t computeRegisterControl(const char* in);
         uint8_t computeRegisterData(const char* in);
 
-        bool terminate();
+        bool terminate() override;
 };

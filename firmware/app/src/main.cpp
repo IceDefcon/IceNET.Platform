@@ -5,36 +5,46 @@
  * 
  */
 #include <iostream>
+#include <cstring>
 #include <thread>
 #include <unistd.h> // sleep
+#include <chrono> // delay
+#include <thread> // delay
 
 #include "iceCOM.h"
 #include "iceNET.h"
 #include "console.h"
 
-#define iceDEV "/dev/iceCOM"
-
-int main(void)
+int main(int argc, char *argv[]) 
 {
+    if (argc != 2) 
+    {
+        std::cerr << "[ERROR] Missing console parameter" << std::endl;
+        return ERROR; // indicating error
+    }
+
     /* Stack :: Interfaces pointer */
 	Core* CoreClass = nullptr;
 
-	/* Heap :: Communication interfaces */
-	iceCOM* iceCOMDevice = new iceCOM; /* char Device */
-	// iceNET* iceNETServer = new iceNET(2555); /* tcp Server */
+    if (strcmp(argv[1], "i2c") == 0) 
+    {
+        /* Initialise Kernel Communication */
+        iceCOM* iceCOMinstance = new iceCOM;
+        CoreClass = iceCOMinstance;
+    } 
+    else if (strcmp(argv[1], "tcp") == 0) 
+    {
+        /* Initialise Kernel Communication */
+        iceNET* iceNETinstance = new iceNET(2555);
+        CoreClass = iceNETinstance;
+    } 
+    else 
+    {
+        std::cerr << "[ERROR] Wrong console parameter" << std::endl;
+        return ERROR;
+    }
 
-	/* Initialise Kernel Communication */
-	CoreClass = iceCOMDevice;
-	CoreClass->openCOM(iceDEV);
-
-	/**
-	 * 
-	 * TODO
-	 * 
-	 * Initialise TCP
-	 * listen and accept
-	 * 
-	 */
+	CoreClass->openCOM();
 
 	/**
 	 * 
@@ -44,26 +54,25 @@ int main(void)
 	 */
 	while(true)
 	{
-		if (iceCOMDevice != nullptr) 
-		{
-		    if (iceCOMDevice->terminate()) 
-		    {
-		    	/**
-		    	 * 
-		    	 * Shutdown Kernel Communication
-		    	 * 
-		    	 * 1. Atomic Thread Kill
-		    	 * 2. Close the core Device associated with the class
-		    	 * 
-		    	 */
-		    	CoreClass->closeCOM();
-		        break;
-		    }
-		}
+	    if (CoreClass->terminate()) 
+	    {
+	    	/**
+	    	 * 
+	    	 * Shutdown Kernel Communication
+	    	 * 
+	    	 * 1. Atomic Thread Kill
+	    	 * 2. Close the core Device associated with the class
+	    	 * 
+	    	 */
+	    	CoreClass->closeCOM();
+	        break;
+	    }
+
+	    /* Reduce consumption of CPU resources */
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
 	}
 
-	delete iceCOMDevice;
-	// delete iceNETServer;
+	delete CoreClass;
 
 	return OK;
 }

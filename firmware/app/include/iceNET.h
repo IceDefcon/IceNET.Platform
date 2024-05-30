@@ -37,7 +37,7 @@ class iceNET : public Core
         void initThread();
         void iceNETThread();
 
-        int openCOM(const char* device) override;
+        int openCOM() override;
         int dataTX() override;
         int dataRX() override;
         int closeCOM() override;
@@ -45,4 +45,6 @@ class iceNET : public Core
         ssize_t dataTX(const std::string& message);
         std::string dataRX(size_t bufferSize = 1024);
         void closeClient();
+
+        bool terminate() override;
 };
