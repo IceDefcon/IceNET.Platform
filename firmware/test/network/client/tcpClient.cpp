@@ -1,9 +1,9 @@
-#include "SocketClient.h"
+#include "tcpClient.h"
 #include <iostream>
 #include <cstring>
 #include <unistd.h>
 
-SocketClient::SocketClient(const std::string &serverName, int portNumber) : 
+tcpClient::tcpClient(const std::string &serverName, int portNumber) : 
     serverName(serverName), 
     portNumber(portNumber), 
     socketfd(-1), server(nullptr), 
@@ -12,7 +12,7 @@ SocketClient::SocketClient(const std::string &serverName, int portNumber) :
         /* TODO */
     }
 
-int SocketClient::connectToServer()
+int tcpClient::connectToServer()
 {
     socketfd = socket(AF_INET, SOCK_STREAM, 0);
     if (socketfd < 0)
@@ -43,7 +43,7 @@ int SocketClient::connectToServer()
     return 0;
 }
 
-int SocketClient::send(const std::string &message)
+int tcpClient::send(const std::string &message)
 {
     if (!isConnected)
     {
@@ -61,7 +61,7 @@ int SocketClient::send(const std::string &message)
     return 0;
 }
 
-std::string SocketClient::receive(int size)
+std::string tcpClient::receive(int size)
 {
     if (!isConnected)
     {
@@ -82,7 +82,7 @@ std::string SocketClient::receive(int size)
     return std::string(readBuffer, n);
 }
 
-int SocketClient::disconnectFromServer()
+int tcpClient::disconnectFromServer()
 {
     if (isConnected)
     {
@@ -92,7 +92,7 @@ int SocketClient::disconnectFromServer()
     return 0;
 }
 
-SocketClient::~SocketClient() 
+tcpClient::~tcpClient() 
 {
     if (isConnected)
     {

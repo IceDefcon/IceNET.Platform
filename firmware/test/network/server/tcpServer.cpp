@@ -1,6 +1,6 @@
 /*!
  * 
- * Author: Ice.Marek and Ventor
+ * Author: Ice.Marek
  * IceNET Technology 2024
  * 
  */

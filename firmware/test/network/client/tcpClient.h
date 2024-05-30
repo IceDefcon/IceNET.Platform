@@ -1,5 +1,10 @@
-#ifndef SOCKETCLIENT_H_
-#define SOCKETCLIENT_H_
+/*!
+ * 
+ * Author: Ice.Marek
+ * IceNET Technology 2024
+ * 
+ */
+#pragma once
 
 #include <sys/socket.h>
 #include <sys/types.h>
@@ -7,7 +12,8 @@
 #include <netdb.h>
 #include <string>
 
-class SocketClient 
+
+class tcpClient 
 {
     private:
         int socketfd;
@@ -18,13 +24,11 @@ class SocketClient
         bool isConnected;
 
     public:
-        SocketClient(const std::string &serverName, int portNumber);
+        tcpClient(const std::string &serverName, int portNumber);
         virtual int connectToServer();
         virtual int disconnectFromServer();
         virtual int send(const std::string &message);
         virtual std::string receive(int size = 1024);
         bool isClientConnected() const { return this->isConnected; }
-        virtual ~SocketClient();
+        virtual ~tcpClient();
 };
-
-#endif /* SOCKETCLIENT_H_ */

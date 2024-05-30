@@ -294,14 +294,6 @@ int iceCOM::dataTX()
         m_killThread = true;
         return ret;
     }
-#if 0 /* init server from i2c cosole */
-    else if (std::strcmp(consoleControl.data(), "tcp") == 0)
-    {
-        Console::Info("[NET] Creating iceNET object");
-        iceNET* iceNETServer = new iceNET(2555); /* tcp Server */
-        iceNETServer->openCOM("tcpServer");
-    }
-#endif
 #if 1 /* Read Enable in FIFO */
     else if (std::strcmp(consoleControl.data(), "rd") == 0)
     {
