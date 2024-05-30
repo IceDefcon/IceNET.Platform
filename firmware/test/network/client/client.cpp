@@ -21,6 +21,8 @@ int main(int argc, char *argv[])
         return 1;
     }
 
+    // std::cin.getline(consoleControl.data(), CONSOLE_CONTROL_SIZE);
+    
     std::string message("[CLIENT] ---> [SERVER]");
     std::cout << "[NET] Client TX :: " << message << std::endl;
     if (client->send(message) != 0)

@@ -3,58 +3,57 @@
 #include <cstring>
 #include <unistd.h>
 
-tcpClient::tcpClient(const std::string &serverName, int portNumber) : 
-    serverName(serverName), 
-    portNumber(portNumber), 
-    socketfd(-1), server(nullptr), 
-    isConnected(false) 
-    {
-        /* TODO */
-    }
+tcpClient::tcpClient(const std::string &serverName, int portNumber): 
+m_serverName(serverName), 
+m_portNumber(portNumber), 
+m_socketfd(-1), 
+m_server(nullptr), 
+m_isConnected(false) 
+{
+    memset(&m_serverAddress, 0, sizeof(m_serverAddress));
+    m_serverAddress.sin_family = AF_INET;
+    m_serverAddress.sin_addr.s_addr = INADDR_ANY;
+    m_serverAddress.sin_port = htons(m_portNumber);
+}
 
 int tcpClient::connectToServer()
 {
-    socketfd = socket(AF_INET, SOCK_STREAM, 0);
-    if (socketfd < 0)
+    m_socketfd = socket(AF_INET, SOCK_STREAM, 0);
+    if (m_socketfd < 0)
     {
-        perror("Socket Client: error opening socket");
+        perror("[NET] Socket Client: error opening socket");
         return 1;
     }
 
-    server = gethostbyname(serverName.c_str());
-    if (server == nullptr) 
+    m_server = gethostbyname(m_serverName.c_str());
+    if (m_server == nullptr) 
     {
-        std::cerr << "Socket Client: error - no such host" << std::endl;
+        std::cerr << "[NET] Socket Client: error - no such host" << std::endl;
         return 1;
     }
 
-    bzero((char *) &serverAddress, sizeof(serverAddress));
-    serverAddress.sin_family = AF_INET;
-    bcopy((char *)server->h_addr, (char *)&serverAddress.sin_addr.s_addr, server->h_length);
-    serverAddress.sin_port = htons(portNumber);
-
-    if (connect(socketfd, (struct sockaddr *) &serverAddress, sizeof(serverAddress)) < 0)
+    if (connect(m_socketfd, (struct sockaddr *) &m_serverAddress, sizeof(m_serverAddress)) < 0)
     {
-        perror("Socket Client: error connecting to the server");
+        perror("[NET] Socket Client: error connecting to the server");
         return 1;
     }
 
-    isConnected = true;
+    m_isConnected = true;
     return 0;
 }
 
 int tcpClient::send(const std::string &message)
 {
-    if (!isConnected)
+    if (!m_isConnected)
     {
-        std::cerr << "Socket Client: not connected to server" << std::endl;
+        std::cerr << "[NET] Socket Client: not connected to server" << std::endl;
         return 1;
     }
 
-    ssize_t n = write(this->socketfd, message.c_str(), message.length());
+    ssize_t n = write(m_socketfd, message.c_str(), message.length());
     if (n < 0)
     {
-        perror("Socket Client: error writing to socket");
+        perror("[NET] Socket Client: error writing to socket");
         return 1;
     }
 
@@ -63,19 +62,19 @@ int tcpClient::send(const std::string &message)
 
 std::string tcpClient::receive(int size)
 {
-    if (!isConnected)
+    if (!m_isConnected)
     {
-        std::cerr << "Socket Client: not connected to server" << std::endl;
+        std::cerr << "[NET] Socket Client: not connected to server" << std::endl;
         return "";
     }
 
     char readBuffer[size];
     bzero(readBuffer, size);
 
-    ssize_t n = read(this->socketfd, readBuffer, size - 1);
+    ssize_t n = read(m_socketfd, readBuffer, size - 1);
     if (n < 0)
     {
-        perror("Socket Client: error reading from socket");
+        perror("[NET] Socket Client: error reading from socket");
         return "";
     }
 
@@ -84,18 +83,23 @@ std::string tcpClient::receive(int size)
 
 int tcpClient::disconnectFromServer()
 {
-    if (isConnected)
+    if (m_isConnected)
     {
-        close(this->socketfd);
-        isConnected = false;
+        close(m_socketfd);
+        m_isConnected = false;
     }
     return 0;
 }
 
 tcpClient::~tcpClient() 
 {
-    if (isConnected)
+    if (m_isConnected)
     {
         disconnectFromServer();
     }
+}
+
+bool tcpClient::isClientConnected()
+{ 
+    return m_isConnected; 
 }

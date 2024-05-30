@@ -13,7 +13,7 @@
 
 class tcpServer {
 private:
-    int portNumber;
+    int m_portNumber;
     int serverSocket;
     int clientSocket;
     struct sockaddr_in serverAddress;
