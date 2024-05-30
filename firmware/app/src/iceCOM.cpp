@@ -22,7 +22,7 @@ m_file_descriptor(0),
 m_killThread(false),
 charDeviceRx(CHAR_DEVICE_SIZE),
 charDeviceTx(CHAR_DEVICE_SIZE),
-consoleControl(CONSOLE_CONTROL_SIZE)
+consoleControl(CHAR_CONSOLE_SIZE)
 {
     /* Initialize charDeviceRx, charDeviceTx, and consoleControl with zeros */
     std::fill(charDeviceRx.begin(), charDeviceRx.end(), 0);
@@ -287,7 +287,7 @@ int iceCOM::dataTX()
 
     Console::Write();
     /* Get console characters */
-    std::cin.getline(consoleControl.data(), CONSOLE_CONTROL_SIZE);
+    std::cin.getline(consoleControl.data(), CHAR_CONSOLE_SIZE);
 
     if (std::strcmp(consoleControl.data(), "exit") == 0) 
     {

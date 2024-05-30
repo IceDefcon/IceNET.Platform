@@ -12,17 +12,24 @@
 #include "iceNET.h"
 
 iceNET::iceNET(int portNumber):
-    m_portNumber(portNumber),
-    m_serverSocket(-1),
-    m_clientSocket(-1),
-    m_clientConnected(false),
-    m_iceNETThread(),
-    m_killThread(false)
+m_portNumber(portNumber),
+m_serverSocket(-1),
+m_clientSocket(-1),
+m_clientConnected(false),
+m_iceNETThread(),
+m_killThread(false),
+tcpServerRx(TCP_SERVER_SIZE),
+tcpServerTx(TCP_SERVER_SIZE),
+m_bytesRead(0)
 {
     memset(&m_serverAddress, 0, sizeof(m_serverAddress));
     m_serverAddress.sin_family = AF_INET;
     m_serverAddress.sin_addr.s_addr = INADDR_ANY;
     m_serverAddress.sin_port = htons(m_portNumber);
+
+    /* Initialize tcpServerRx and tcpServerTx with zeros */
+    std::fill(tcpServerRx.begin(), tcpServerRx.end(), 0);
+    std::fill(tcpServerTx.begin(), tcpServerTx.end(), 0);
 }
 
 iceNET::~iceNET() 
@@ -71,16 +78,27 @@ void iceNET::iceNETThread()
             {
                 m_clientConnected = true;
 
-                std::string receivedMessage = dataRX(1024);
-                if (receivedMessage.empty()) 
+                if (OK == dataRX())
                 {
-                    std::cerr << "[NET] Failed to receive message" << std::endl;
+                    if (m_bytesRead > 0) 
+                    {
+                        std::cout << "Received data: " << std::string(tcpServerRx.begin(), tcpServerRx.begin() + m_bytesRead) << std::endl;
+                    } 
+                    else 
+                    {
+                        std::cout << "No data received." << std::endl;
+                    }
+                } 
+                else 
+                {
+                    std::cerr << "[NET] Failed to receive message, error code: " << std::endl;
                 }
-
-                std::cout << "[INFO] [NET] Server RX :: " << receivedMessage << std::endl;
 
                 std::string responseMessage("[SERVER] <--- [CLIENT]");
                 std::cout << "[INFO] [NET] Server TX :: " << responseMessage << std::endl;
+
+
+
 
                 if (dataTX(responseMessage) < 0) 
                 {
@@ -174,21 +192,25 @@ ssize_t iceNET::dataTX(const std::string& message)
     return write(m_clientSocket, message.c_str(), message.length());
 }
 
-std::string iceNET::dataRX(size_t bufferSize) 
+int iceNET::dataRX()
 {
     if (!m_clientConnected) 
     {
         std::cerr << "Socket Server: no client connected" << std::endl;
-        return "";
+        return ERROR;
     }
-    char buffer[bufferSize];
-    ssize_t bytesRead = read(m_clientSocket, buffer, bufferSize);
-    if (bytesRead < 0) 
+    
+    m_bytesRead = read(m_clientSocket, tcpServerRx.data(), tcpServerRx.size());
+    if (m_bytesRead < 0) 
     {
         Console::Error("[NET] Error reading from socket");
-        return "";
+        return ERROR;
     }
-    return std::string(buffer, bytesRead);
+
+    /* Resize to actual bytes read */
+    tcpServerRx.resize(m_bytesRead);
+
+    return OK;
 }
 
 void iceNET::closeClient() 
@@ -202,7 +224,6 @@ void iceNET::closeClient()
 }
 
 int iceNET::dataTX() {return 0;}
-int iceNET::dataRX() {return 0;}
 int iceNET::closeCOM() {return 0;}
 
 bool iceNET::terminate()

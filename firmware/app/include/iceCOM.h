@@ -15,7 +15,7 @@
 #include "console.h"
 
 const size_t CHAR_DEVICE_SIZE = 32;
-const size_t CONSOLE_CONTROL_SIZE = 32;
+const size_t CHAR_CONSOLE_SIZE = 32;
 
 class iceCOM : public Core
 {
