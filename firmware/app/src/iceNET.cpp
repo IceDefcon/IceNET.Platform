@@ -55,10 +55,11 @@ void iceNET::iceNETThread()
 
     while(!m_killThread) 
     {
-        Console::Info("[NET] iceNETThread is running");
+        Console::Info("[NET] iceNETThread ready for next TCP packet");
 
         if(false == m_clientConnected)
         {
+            /* Wait for the TCP client connection */
             m_clientSocket = accept(m_serverSocket, (struct sockaddr *)&m_clientAddress, &clientLength);
             
             if (m_clientSocket < 0) 
@@ -68,19 +69,38 @@ void iceNET::iceNETThread()
             else
             {
                 m_clientConnected = true;
+
+                std::string receivedMessage = dataRX(1024);
+                if (receivedMessage.empty()) 
+                {
+                    std::cerr << "[NET] Failed to receive message" << std::endl;
+                }
+
+                std::cout << "[INFO] [NET] Server RX :: " << receivedMessage << std::endl;
+
+                std::string responseMessage("[SERVER] <--- [CLIENT]");
+                std::cout << "[INFO] [NET] Server TX :: " << responseMessage << std::endl;
+
+                if (dataTX(responseMessage) < 0) 
+                {
+                    std::cerr << "[NET] Failed to send message" << std::endl;
+                }
+                else
+                {
+                    Console::Info("[NET] Transfer complete");
+                    closeClient();
+                }
             }
         }
-        else
-        {
-            Console::Info("[NET] Wait 5s and retry the connection");
-            std::this_thread::sleep_for(std::chrono::seconds(5)); /* wait for a second */
-        }
+
+        /* Reduce consumption of CPU resources */
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
 
     Console::Info("[NET] Terminate iceNETThread");
 }
 
-int iceNET::openCOM(const char* device) 
+int iceNET::openCOM() 
 {
     m_serverSocket = socket(AF_INET, SOCK_STREAM, 0);
     
@@ -184,3 +204,7 @@ int iceNET::dataTX() {return 0;}
 int iceNET::dataRX() {return 0;}
 int iceNET::closeCOM() {return 0;}
 
+bool iceNET::terminate()
+{
+    return m_killThread;
+}
