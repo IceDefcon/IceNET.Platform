@@ -12,16 +12,15 @@
 #include <netdb.h>
 #include <string>
 
-
 class tcpClient 
 {
     private:
-        int socketfd;
-        struct sockaddr_in serverAddress;
-        struct hostent *server;
-        std::string serverName;
-        int portNumber;
-        bool isConnected;
+        std::string m_serverName;
+        int m_portNumber;
+        int m_socketfd;
+        struct sockaddr_in m_serverAddress;
+        struct hostent *m_server;
+        bool m_isConnected;
 
     public:
         tcpClient(const std::string &serverName, int portNumber);
@@ -29,6 +28,6 @@ class tcpClient
         virtual int disconnectFromServer();
         virtual int send(const std::string &message);
         virtual std::string receive(int size = 1024);
-        bool isClientConnected() const { return this->isConnected; }
+        bool isClientConnected();
         virtual ~tcpClient();
 };

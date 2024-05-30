@@ -12,16 +12,17 @@
 #include "iceNET.h"
 
 iceNET::iceNET(int portNumber):
-m_killThread(false),
-m_portNumber(portNumber),
-m_serverSocket(-1),
-m_clientSocket(-1),
-m_clientConnected(false) 
+    m_portNumber(portNumber),
+    m_serverSocket(-1),
+    m_clientSocket(-1),
+    m_clientConnected(false),
+    m_iceNETThread(),
+    m_killThread(false)
 {
     memset(&m_serverAddress, 0, sizeof(m_serverAddress));
     m_serverAddress.sin_family = AF_INET;
     m_serverAddress.sin_addr.s_addr = INADDR_ANY;
-    m_serverAddress.sin_port = htons(portNumber);
+    m_serverAddress.sin_port = htons(m_portNumber);
 }
 
 iceNET::~iceNET() 
@@ -184,7 +185,7 @@ std::string iceNET::dataRX(size_t bufferSize)
     ssize_t bytesRead = read(m_clientSocket, buffer, bufferSize);
     if (bytesRead < 0) 
     {
-        Console::Error("[NET] Error lreading from socket");
+        Console::Error("[NET] Error reading from socket");
         return "";
     }
     return std::string(buffer, bytesRead);
