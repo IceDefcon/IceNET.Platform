@@ -17,6 +17,9 @@
 #include "core.h"
 #include "console.h"
 
+const size_t TCP_SERVER_SIZE = 32;
+const size_t TCP_CONSOLE_SIZE = 32;
+
 class iceNET : public Core
 {
     private:
@@ -29,6 +32,14 @@ class iceNET : public Core
 
         struct sockaddr_in m_serverAddress;
         struct sockaddr_in m_clientAddress;
+
+        /* For char Device Traffic */
+        std::vector<char> tcpServerRx;
+        std::vector<char> tcpServerTx;
+        /* Console control buffer */
+        std::vector<char> consoleControl;
+
+        ssize_t m_bytesRead;
 
     public:
         iceNET(int portNumber);
@@ -43,7 +54,6 @@ class iceNET : public Core
         int closeCOM() override;
 
         ssize_t dataTX(const std::string& message);
-        std::string dataRX(size_t bufferSize = 1024);
         void closeClient();
 
         bool terminate() override;

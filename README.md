@@ -1,4 +1,4 @@
-# IceNET.Platform :: CPU & FPGA Computer System
+# IceNET.Platform :: CPU & FPGA Computer Platform
 
 # Active :: Sub Applications
 
