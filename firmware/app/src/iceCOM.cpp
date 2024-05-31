@@ -41,43 +41,6 @@ iceCOM::~iceCOM()
    	}
 }
 
-void iceCOM::initThread()
-{
-	Console::Info("[COM] Init the iceCOMThread");
-	m_iceCOMThread = std::thread(&iceCOM::iceCOMThread, this);
-}
-
-void iceCOM::iceCOMThread()
-{
-	Console::Info("[COM] Enter iceCOMThread");
-
-    while(!m_killThread) 
-    {
-    	if(OK != dataTX())
-    	{
-			Console::Error("[COM] Cannot write into the console");
-    	}
-    	else
-    	{
-    		/**
-    		 * 
-    		 * At the moment Feedback only print info 
-    		 * about successfully transfered command 
-    		 * 
-    		 */
-	    	if(OK != dataRX())
-	    	{
-				Console::Error("[COM] Cannot read from the console");
-	    	}
-    	}
-
-        /* Reduce consumption of CPU resources */
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
-    }
-
-	Console::Info("[COM] Terminate iceCOMThread");
-}
-
 int iceCOM::openCOM() 
 {
     m_file_descriptor = open(iceDEV, O_RDWR);
@@ -123,6 +86,145 @@ int iceCOM::dataRX()
 
         return OK;
     }
+}
+
+int iceCOM::dataTX()
+{
+    int ret = -1;
+
+    Console::Write();
+    /* Get console characters */
+    std::cin.getline(consoleControl.data(), CHAR_CONSOLE_SIZE);
+
+    if (std::strcmp(consoleControl.data(), "exit") == 0) 
+    {
+        m_killThread = true;
+        return ret;
+    }
+#if 1 /* Read Enable in FIFO */
+    else if (std::strcmp(consoleControl.data(), "rd") == 0)
+    {
+        charDeviceTx[0] = 0x12; /* Custom Kernel Byte Map :: Check reciprocal in charDevice.c */
+        charDeviceTx[1] = 0x34; /* Custom Kernel Byte Map :: Check reciprocal in charDevice.c */
+        ret = write(m_file_descriptor, charDeviceTx.data(), 2);
+        return ret;
+    }
+#endif
+
+    /**
+     * 
+     * We have to pass data trough the FIFO
+     * to separate bytes from eachother 
+     * in order to pass them to the 
+     * i2c state machine in FPGA
+     * 
+     * Byte[0] :: Device Address
+     * Byte[1] :: Register Address
+     * Byte[2] :: Register Control
+     * Byte[3] :: Register Data
+     * 
+     */
+    charDeviceTx[0] = computeDeviceAddress(consoleControl.data());
+    charDeviceTx[1] = computeRegisterAddress(consoleControl.data());
+    charDeviceTx[2] = computeRegisterControl(consoleControl.data());
+
+    /* If Write then compute RegisterData */
+    if(charDeviceTx[2] == 0x01)
+    {
+        charDeviceTx[3] = computeRegisterData(consoleControl.data());
+
+        if(charDeviceTx[0] == 0xFF || charDeviceTx[1] == 0xFF || charDeviceTx[2] == 0xFF || charDeviceTx[3] == 0xFF) 
+        {
+            Console::Error("[COM] Bytes computation failure [WR]");
+            return ret;
+        }
+    }
+    else
+    {
+        if(charDeviceTx[0] == 0xFF || charDeviceTx[1] == 0xFF || charDeviceTx[2] == 0xFF) 
+        {
+            Console::Error("[COM] Bytes computation failure [RD]");
+            return ret;
+        }
+        
+        /**
+         * 
+         * Additional byte 
+         * at read procedure
+         * to always make 4 bytes 
+         * FIFO input/output geometry
+         * 
+         */
+        charDeviceTx[3] = 0x00;
+    }
+
+    ret = write(m_file_descriptor, charDeviceTx.data(), 4);
+
+    if (ret == -1)
+    {
+        Console::Error("[COM] Cannot write to kernel space");
+        return ERROR;
+    }
+
+    /* Clear charDevice Rx buffer */
+    charDeviceTx.clear();
+    /* Clear console control buffer */
+    consoleControl.clear();
+
+    return OK;
+}
+
+int iceCOM::closeCOM() 
+{
+    if (m_file_descriptor >= 0) 
+    {
+        close(m_file_descriptor);
+        m_file_descriptor = -1; // Mark as closed
+    }
+
+    return OK;
+}
+
+void iceCOM::initThread()
+{
+    Console::Info("[COM] Init the iceCOMThread");
+    m_iceCOMThread = std::thread(&iceCOM::iceCOMThread, this);
+}
+
+bool iceCOM::isThreadKilled()
+{
+	return m_killThread;
+}
+
+void iceCOM::iceCOMThread()
+{
+    Console::Info("[COM] Enter iceCOMThread");
+
+    while(!m_killThread) 
+    {
+        if(OK != dataTX())
+        {
+            Console::Error("[COM] Cannot write into the console");
+        }
+        else
+        {
+            /**
+             * 
+             * At the moment Feedback only print info 
+             * about successfully transfered command 
+             * 
+             */
+            if(OK != dataRX())
+            {
+                Console::Error("[COM] Cannot read from the console");
+            }
+        }
+
+        /* Reduce consumption of CPU resources */
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
+
+    Console::Info("[COM] Terminate iceCOMThread");
 }
 
 uint8_t iceCOM::computeDeviceAddress(const char* in)
@@ -277,108 +379,4 @@ uint8_t iceCOM::computeRegisterData(const char* in)
     }
 
     return out;
-}
-
-#include "iceNET.h"
-
-int iceCOM::dataTX()
-{
-    int ret = -1;
-
-    Console::Write();
-    /* Get console characters */
-    std::cin.getline(consoleControl.data(), CHAR_CONSOLE_SIZE);
-
-    if (std::strcmp(consoleControl.data(), "exit") == 0) 
-    {
-        m_killThread = true;
-        return ret;
-    }
-#if 1 /* Read Enable in FIFO */
-    else if (std::strcmp(consoleControl.data(), "rd") == 0)
-    {
-        charDeviceTx[0] = 0x12; /* Custom Kernel Byte Map :: Check reciprocal in charDevice.c */
-        charDeviceTx[1] = 0x34; /* Custom Kernel Byte Map :: Check reciprocal in charDevice.c */
-        ret = write(m_file_descriptor, charDeviceTx.data(), 2);
-        return ret;
-    }
-#endif
-
-    /**
-     * 
-     * We have to pass data trough the FIFO
-     * to separate bytes from eachother 
-     * in order to pass them to the 
-     * i2c state machine in FPGA
-     * 
-     * Byte[0] :: Device Address
-     * Byte[1] :: Register Address
-     * Byte[2] :: Register Control
-     * Byte[3] :: Register Data
-     * 
-     */
-    charDeviceTx[0] = computeDeviceAddress(consoleControl.data());
-    charDeviceTx[1] = computeRegisterAddress(consoleControl.data());
-    charDeviceTx[2] = computeRegisterControl(consoleControl.data());
-
-    /* If Write then compute RegisterData */
-    if(charDeviceTx[2] == 0x01)
-    {
-        charDeviceTx[3] = computeRegisterData(consoleControl.data());
-
-        if(charDeviceTx[0] == 0xFF || charDeviceTx[1] == 0xFF || charDeviceTx[2] == 0xFF || charDeviceTx[3] == 0xFF) 
-        {
-            Console::Error("[COM] Bytes computation failure [WR]");
-            return ret;
-        }
-    }
-    else
-    {
-        if(charDeviceTx[0] == 0xFF || charDeviceTx[1] == 0xFF || charDeviceTx[2] == 0xFF) 
-        {
-            Console::Error("[COM] Bytes computation failure [RD]");
-            return ret;
-        }
-        
-        /**
-         * 
-         * Additional byte 
-         * at read procedure
-         * to always make 4 bytes 
-         * FIFO input/output geometry
-         * 
-         */
-        charDeviceTx[3] = 0x00;
-    }
-
-    ret = write(m_file_descriptor, charDeviceTx.data(), 4);
-
-    if (ret == -1)
-    {
-        Console::Error("[COM] Cannot write to kernel space");
-        return ERROR;
-    }
-
-    /* Clear charDevice Rx buffer */
-    charDeviceTx.clear();
-    /* Clear console control buffer */
-    consoleControl.clear();
-
-    return OK;
-}
-
-int iceCOM::closeCOM() 
-{
-    if (m_file_descriptor >= 0) 
-    {
-        close(m_file_descriptor);
-        m_file_descriptor = -1; // Mark as closed
-    }
-
-    return OK;
-}
-
-bool iceCOM::terminate()
-{
-	return m_killThread;
 }

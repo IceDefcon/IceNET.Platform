@@ -27,7 +27,8 @@ public:
 	virtual int dataRX() = 0;
 	virtual int closeCOM() = 0;
 
-	virtual bool terminate() = 0;
+    virtual void initThread() = 0;
+    virtual bool isThreadKilled() = 0;
 
 private:
 

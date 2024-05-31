@@ -137,6 +137,7 @@ int spiInit(void)
         printk(KERN_ERR "[INIT][SPI] SPI1 device setup\n");
     }
 
+    return 0;
 }
 
 void interruptFromFpga(struct work_struct *work)
@@ -147,8 +148,8 @@ void interruptFromFpga(struct work_struct *work)
     int i;
 
     memset(&transfer, 0, sizeof(transfer));
-    transfer.tx_buf = spi_tx_at_interruptFromFpga;
-    transfer.rx_buf = spi_rx_at_interruptFromFpga;
+    transfer.tx_buf = (void *)spi_tx_at_interruptFromFpga;
+    transfer.rx_buf = (void *)spi_rx_at_interruptFromFpga;
     transfer.len = sizeof(spi_tx_at_interruptFromFpga);
 
     spi_message_init(&msg);
@@ -192,8 +193,8 @@ void transferFromCharDevice(struct work_struct *work)
     DataTransfer* fpgaData = charDevice_getRxData();
 
     memset(&transfer, 0, sizeof(transfer));
-    transfer.tx_buf = fpgaData->RxData;
-    transfer.rx_buf = spi_rx_at_transferFromCharDevice;
+    transfer.tx_buf = (void *)fpgaData->RxData;
+    transfer.rx_buf = (void *)spi_rx_at_transferFromCharDevice;
     transfer.len = fpgaData->length;
 
     spi_message_init(&msg);
@@ -230,7 +231,7 @@ void transferFromCharDevice(struct work_struct *work)
     }
 }
 
-int spiDestroy(void)
+void spiDestroy(void)
 {
     spi_dev_put(spi_dev_primary);
 	spi_dev_put(spi_dev_secondary);

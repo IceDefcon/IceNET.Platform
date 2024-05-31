@@ -20,8 +20,6 @@
 
 #define SM_OK 0
 
-static struct task_struct *thread_handle;
-
 typedef enum 
 {
     IDLE = 0,
@@ -31,14 +29,7 @@ typedef enum
     DMA
 } stateType;
 
-static struct stateMachine 
-{ 
-    stateType state;
-} stateStaus;
-
-/* GET STATE */ struct stateMachine* getStateMachine(void);
 /* SET STATE */ void setStateMachine(stateType newState);
-
 
 void stateMachineInit(void);
 void stateMachineDestroy(void);

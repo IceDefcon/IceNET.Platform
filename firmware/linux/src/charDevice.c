@@ -34,8 +34,6 @@
 static int majorNumber;
 static struct class*  C_Class  = NULL;
 static struct device* C_Device = NULL;
-static char message[256] = {0};
-static unsigned long size_of_message;
 static int numberOpens = 0;
 static DEFINE_MUTEX(com_mutex);
 
@@ -43,6 +41,8 @@ static int dev_open(struct inode *inodep, struct file *filep);
 static ssize_t dev_read(struct file *, char *, size_t, loff_t *);
 static ssize_t dev_write(struct file *, const char *, size_t, loff_t *);
 static int dev_release(struct inode *inodep, struct file *filep);
+
+static DataTransfer charDeviceTransfer; 
 
 static struct file_operations fops =
 {
@@ -61,7 +61,6 @@ static void init_charDevice_Data(void)
     if (!RxData) 
     {
         printk(KERN_ALERT "[CTRL][ C ] RxData :: Memory allocation failed ");
-        return -ENOMEM;
     }
 
     /* Allocate memory for TxData */
@@ -69,7 +68,6 @@ static void init_charDevice_Data(void)
     if (!TxData) 
     {
         printk(KERN_ALERT "[CTRL][ C ] TxData :: Memory allocation failed ");
-        return -ENOMEM;
     }
 
     TxData[0] = 0xBB; /* C Device Preamble */
@@ -190,11 +188,11 @@ static ssize_t dev_read(struct file *filep, char *buffer, size_t len, loff_t *of
     int error_count = 0;
 
     /* TODO :: TxData is Dummy 0xBB */
-    error_count = copy_to_user(buffer, charDeviceTransfer.TxData, charDeviceTransfer.length);
+    error_count = copy_to_user(buffer, (const void *)charDeviceTransfer.TxData, charDeviceTransfer.length);
 
     if (error_count == 0)
     {
-        printk(KERN_INFO "[CTRL][ C ] Sent %ld characters to user-space\n", charDeviceTransfer.length);
+        printk(KERN_INFO "[CTRL][ C ] Sent %zu characters to user-space\n", charDeviceTransfer.length);
         /* Length == Preamble + Null Terminator */
         return charDeviceTransfer.length; 
     }
@@ -212,11 +210,11 @@ static ssize_t dev_write(struct file *filep, const char __user *buffer, size_t l
     size_t i;
 
     /* Copy RxData from user space to kernel space */
-    error_count = copy_from_user(charDeviceTransfer.RxData, buffer, len);
+    error_count = copy_from_user((void *)charDeviceTransfer.RxData, buffer, len);
     if (error_count != 0) 
     {
         /* Free allocated memory */
-        kfree(charDeviceTransfer.RxData);
+        kfree((void *)charDeviceTransfer.RxData);
         /* Copy failed */
         return -EFAULT;
     }

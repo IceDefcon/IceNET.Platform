@@ -50,7 +50,7 @@ static int __init fpga_driver_init(void)
     printk(KERN_INFO "[READY] Driver loaded successfuly \n");
     printk(KERN_INFO "----------------------------------\n");
 
-    return NULL;
+    return 0;
 }
 
 //////////////////////////

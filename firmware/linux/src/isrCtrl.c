@@ -43,7 +43,6 @@ static int interruptFromKernelInit(void)
     if (result < 0) 
     {
         printk(KERN_ERR "[INIT][ISR] Failed GPIO Request :: Pin [%d]\n", GPIO_KERNEL_INTERRUPT);
-        return result;
     }
     else
     {
@@ -56,12 +55,13 @@ static int interruptFromKernelInit(void)
     {
         printk(KERN_ERR "[INIT][ISR] Failed to set GPIO direction :: Pin [%d]\n", GPIO_KERNEL_INTERRUPT);
         gpio_free(GPIO_KERNEL_INTERRUPT);
-        return result;
     }
     else
     {
         printk(KERN_ERR "[INIT][ISR] Setup GPIO Pin [%d] as output\n", GPIO_KERNEL_INTERRUPT);
     }
+
+    return result;
 }
 
 static int interruptFromFpgaInit(void)

@@ -27,6 +27,8 @@ static struct task_struct *server_kthread;
 
 static int server_kthread_function(void *data) 
 {
+    char *client_message;
+
     while (!kthread_should_stop()) 
     {
         struct socket *client_socket = NULL;
@@ -76,7 +78,8 @@ static int server_kthread_function(void *data)
         msg.msg_namelen = client_addr_len;
 
         // Receive client's message
-        char *client_message = kmalloc(2000, GFP_KERNEL);
+        client_message = kmalloc(2000, GFP_KERNEL);
+
         if (!client_message) 
         {
             printk(KERN_ERR "[CTRL][NET] Failed to allocate memory for client message\n");
@@ -131,6 +134,7 @@ static int server_kthread_function(void *data)
     }
     
     printk(KERN_INFO "[CTRL][NET] Stopping server_kthread\n");
+
     return 0;
 }
 

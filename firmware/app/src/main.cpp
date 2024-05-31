@@ -20,7 +20,7 @@ int main(int argc, char *argv[])
     if (argc != 2) 
     {
         std::cerr << "[ERROR] Missing console parameter" << std::endl;
-        return ERROR; // indicating error
+        return ERROR;
     }
 
     /* Stack :: Interfaces pointer */
@@ -34,7 +34,7 @@ int main(int argc, char *argv[])
     } 
     else if (strcmp(argv[1], "tcp") == 0) 
     {
-        /* Initialise Kernel Communication */
+        /* Initialise TCP Server Communication */
         iceNET* iceNETinstance = new iceNET(2555);
         CoreClass = iceNETinstance;
     } 
@@ -54,7 +54,7 @@ int main(int argc, char *argv[])
 	 */
 	while(true)
 	{
-	    if (CoreClass->terminate()) 
+	    if (CoreClass->isThreadKilled()) 
 	    {
 	    	/**
 	    	 * 
