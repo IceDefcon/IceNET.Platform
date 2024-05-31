@@ -58,10 +58,10 @@ int main(int argc, char *argv[])
 	    {
 	    	/**
 	    	 * 
-	    	 * Shutdown Kernel Communication
+	    	 * Shutdown Communication Interface
 	    	 * 
 	    	 * 1. Atomic Thread Kill
-	    	 * 2. Close the core Device associated with the class
+	    	 * 2. Close the core Device associated with instantiated class
 	    	 * 
 	    	 */
 	    	CoreClass->closeCOM();

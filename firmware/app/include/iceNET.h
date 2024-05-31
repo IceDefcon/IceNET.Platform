@@ -17,7 +17,7 @@
 #include "core.h"
 #include "console.h"
 
-const size_t TCP_SERVER_SIZE = 32;
+const size_t TCP_BUFFER_SIZE = 32;
 
 class iceNET : public Core
 {
