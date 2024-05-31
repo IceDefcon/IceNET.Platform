@@ -8,6 +8,7 @@
 #include <thread> // delay
 #include <iostream>
 #include <cstring>
+#include <iomanip> // Include the <iomanip> header for setw and setfill
 #include <unistd.h>
 #include "iceNET.h"
 
@@ -18,8 +19,8 @@ m_clientSocket(-1),
 m_clientConnected(false),
 m_iceNETThread(),
 m_killThread(false),
-tcpServerRx(TCP_SERVER_SIZE),
-tcpServerTx(TCP_SERVER_SIZE),
+tcpServerRx(TCP_BUFFER_SIZE),
+tcpServerTx(TCP_BUFFER_SIZE),
 m_bytesRead(0)
 {
     memset(&m_serverAddress, 0, sizeof(m_serverAddress));
@@ -58,49 +59,55 @@ void iceNET::initThread()
 void iceNET::iceNETThread()
 {
     Console::Info("[NET] Enter iceNETThread");
-    
+
     socklen_t clientLength = sizeof(m_clientAddress);
 
-    while(!m_killThread) 
+    while (!m_killThread)
     {
         Console::Info("[NET] iceNETThread ready for next TCP packet");
 
-        if(false == m_clientConnected)
+        if (false == m_clientConnected)
         {
             /* Wait for the TCP client connection */
             m_clientSocket = accept(m_serverSocket, (struct sockaddr *)&m_clientAddress, &clientLength);
-            
-            if (m_clientSocket < 0) 
+
+            if (m_clientSocket < 0)
             {
                 Console::Error("[NET] Failed to accept the client connection");
             }
             else
             {
+                Console::Info("[NET] Client connected to server");
                 m_clientConnected = true;
 
-                if (OK == dataRX())
+                int bytesReceived = recv(m_clientSocket, tcpServerRx.data(), TCP_BUFFER_SIZE, 0);
+
+                if (bytesReceived > 0)
                 {
-                    if (m_bytesRead > 0) 
+                    std::cout << "[INFO] [NET] Received " << bytesReceived << " Bytes of data: ";
+                    for (int i = 0; i < bytesReceived; ++i)
                     {
-                        std::cout << "Received data: " << std::string(tcpServerRx.begin(), tcpServerRx.begin() + m_bytesRead) << std::endl;
-                    } 
-                    else 
-                    {
-                        std::cout << "No data received." << std::endl;
+                        std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(tcpServerRx.data()[i]) << " ";
                     }
-                } 
-                else 
+                    std::cout << std::endl;
+                }
+                else if (bytesReceived == 0)
                 {
-                    std::cerr << "[NET] Failed to receive message, error code: " << std::endl;
+                    std::cout << "[NET] Connection closed by client." << std::endl;
+                }
+                else
+                {
+                    std::cerr << "[NET] Error receiving data." << std::endl;
                 }
 
-                std::string responseMessage("[SERVER] <--- [CLIENT]");
-                std::cout << "[INFO] [NET] Server TX :: " << responseMessage << std::endl;
+                tcpServerTx[0] = 0x69; /* i */
+                tcpServerTx[1] = 0x63; /* c */
+                tcpServerTx[2] = 0x65; /* e */
+                tcpServerTx[3] = 0x4E; /* N */
+                tcpServerTx[4] = 0x45; /* E */
+                tcpServerTx[5] = 0x54; /* T */
 
-
-
-
-                if (dataTX(responseMessage) < 0) 
+                if (dataTX(tcpServerTx.data()) < 0)
                 {
                     std::cerr << "[NET] Failed to send message" << std::endl;
                 }
@@ -118,6 +125,8 @@ void iceNET::iceNETThread()
 
     Console::Info("[NET] Terminate iceNETThread");
 }
+
+
 
 int iceNET::openCOM() 
 {
