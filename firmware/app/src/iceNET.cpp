@@ -37,7 +37,7 @@ iceNET::~iceNET()
 {
     Console::Info("[NET] Destroying iceNET");
 
-    closeClient();
+    closeCOM();
     
     if (m_serverSocket >= 0) 
     {
@@ -49,84 +49,6 @@ iceNET::~iceNET()
         m_iceNETThread.join();
     }
 }
-
-void iceNET::initThread()
-{
-    Console::Info("[NET] Init the iceNETThread");
-    m_iceNETThread = std::thread(&iceNET::iceNETThread, this);
-}
-
-void iceNET::iceNETThread()
-{
-    Console::Info("[NET] Enter iceNETThread");
-
-    socklen_t clientLength = sizeof(m_clientAddress);
-
-    while (!m_killThread)
-    {
-        Console::Info("[NET] iceNETThread ready for next TCP packet");
-
-        if (false == m_clientConnected)
-        {
-            /* Wait for the TCP client connection */
-            m_clientSocket = accept(m_serverSocket, (struct sockaddr *)&m_clientAddress, &clientLength);
-
-            if (m_clientSocket < 0)
-            {
-                Console::Error("[NET] Failed to accept the client connection");
-            }
-            else
-            {
-                Console::Info("[NET] Client connected to server");
-                m_clientConnected = true;
-
-                int bytesReceived = recv(m_clientSocket, tcpServerRx.data(), TCP_BUFFER_SIZE, 0);
-
-                if (bytesReceived > 0)
-                {
-                    std::cout << "[INFO] [NET] Received " << bytesReceived << " Bytes of data: ";
-                    for (int i = 0; i < bytesReceived; ++i)
-                    {
-                        std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(tcpServerRx.data()[i]) << " ";
-                    }
-                    std::cout << std::endl;
-                }
-                else if (bytesReceived == 0)
-                {
-                    std::cout << "[NET] Connection closed by client." << std::endl;
-                }
-                else
-                {
-                    std::cerr << "[NET] Error receiving data." << std::endl;
-                }
-
-                tcpServerTx[0] = 0x69; /* i */
-                tcpServerTx[1] = 0x63; /* c */
-                tcpServerTx[2] = 0x65; /* e */
-                tcpServerTx[3] = 0x4E; /* N */
-                tcpServerTx[4] = 0x45; /* E */
-                tcpServerTx[5] = 0x54; /* T */
-
-                if (dataTX(tcpServerTx.data()) < 0)
-                {
-                    std::cerr << "[NET] Failed to send message" << std::endl;
-                }
-                else
-                {
-                    Console::Info("[NET] Transfer complete");
-                    closeClient();
-                }
-            }
-        }
-
-        /* Reduce consumption of CPU resources */
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
-    }
-
-    Console::Info("[NET] Terminate iceNETThread");
-}
-
-
 
 int iceNET::openCOM() 
 {
@@ -191,14 +113,28 @@ int iceNET::openCOM()
     return OK;
 }
 
-ssize_t iceNET::dataTX(const std::string& message) 
+int iceNET::dataTX() 
 {
+    ssize_t ret = -1;
+
     if (!m_clientConnected) 
     {
         std::cerr << "Socket Server: no client connected" << std::endl;
-        return -1;
     }
-    return write(m_clientSocket, message.c_str(), message.length());
+    else
+    {
+        tcpServerTx[0] = 0x69; /* i */
+        tcpServerTx[1] = 0x63; /* c */
+        tcpServerTx[2] = 0x65; /* e */
+        tcpServerTx[3] = 0x4E; /* N */
+        tcpServerTx[4] = 0x45; /* E */
+        tcpServerTx[5] = 0x54; /* T */
+        tcpServerTx[6] = '\n'; /* Next line for the GUI console */
+
+        ret = write(m_clientSocket, tcpServerTx.data(), tcpServerTx.size());
+    }
+
+    return ret;
 }
 
 int iceNET::dataRX()
@@ -222,7 +158,7 @@ int iceNET::dataRX()
     return OK;
 }
 
-void iceNET::closeClient() 
+int iceNET::closeCOM() 
 {
     if (m_clientSocket >= 0) 
     {
@@ -230,12 +166,81 @@ void iceNET::closeClient()
         m_clientSocket = -1;
         m_clientConnected = false;
     }
+
+    return OK;
 }
 
-int iceNET::dataTX() {return 0;}
-int iceNET::closeCOM() {return 0;}
+void iceNET::initThread()
+{
+    Console::Info("[NET] Init the iceNETThread");
+    m_iceNETThread = std::thread(&iceNET::iceNETThread, this);
+}
 
-bool iceNET::terminate()
+bool iceNET::isThreadKilled()
 {
     return m_killThread;
+}
+
+void iceNET::iceNETThread()
+{
+    Console::Info("[NET] Enter iceNETThread");
+
+    socklen_t clientLength = sizeof(m_clientAddress);
+
+    while (!m_killThread)
+    {
+        Console::Info("[NET] iceNETThread ready for next TCP packet");
+
+        if (false == m_clientConnected)
+        {
+            /* Wait for the TCP client connection */
+            m_clientSocket = accept(m_serverSocket, (struct sockaddr *)&m_clientAddress, &clientLength);
+
+            if (m_clientSocket < 0)
+            {
+                Console::Error("[NET] Failed to accept the client connection");
+            }
+            else
+            {
+                Console::Info("[NET] Client connected to server");
+                m_clientConnected = true;
+
+                int bytesReceived = recv(m_clientSocket, tcpServerRx.data(), TCP_BUFFER_SIZE, 0);
+
+                if (bytesReceived > 0)
+                {
+                    std::cout << "[INFO] [NET] Received " << bytesReceived << " Bytes of data: ";
+                    for (int i = 0; i < bytesReceived; ++i)
+                    {
+                        std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(tcpServerRx.data()[i]) << " ";
+                    }
+                    std::cout << std::endl;
+                }
+                else if (bytesReceived == 0)
+                {
+                    Console::Info("[NET] Connection closed by client");
+                }
+                else
+                {
+                    Console::Error("[NET] Error receiving data");
+                }
+
+                if (dataTX() < 0)
+                {
+                    Console::Error("[NET] Failed to send message");
+                }
+                else
+                {
+                    Console::Info("[NET] Transfer complete");
+                }
+
+                closeCOM();
+            }
+        }
+
+        /* Reduce consumption of CPU resources */
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
+
+    Console::Info("[NET] Terminate iceNETThread");
 }

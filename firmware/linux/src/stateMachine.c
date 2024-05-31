@@ -25,15 +25,12 @@
 //                     //
 /////////////////////////
 
-
-/* GET STATE */ struct stateMachine* getStateMachine(void)
-{
-    return &stateStaus;
-}
+static struct task_struct *thread_handle;
+static stateType currentState = IDLE;
 
 /* SET STATE */ void setStateMachine(stateType newState)
 {
-    stateStaus.state = newState;
+    currentState = newState;
 }
 
 /**
@@ -45,9 +42,11 @@
  */
 static int StateMachineThread(void *data)
 {
+    DataTransfer* transfer;
+    
     while (!kthread_should_stop()) 
     {
-        switch(getStateMachine()->state)
+        switch(currentState)
         {
             case IDLE:
                 // printk(KERN_INFO "[CTRL][STM] IDLE mode\n");
@@ -55,7 +54,7 @@ static int StateMachineThread(void *data)
 
             case SPI:
                 printk(KERN_INFO "[CTRL][STM] SPI mode\n");
-                DataTransfer* transfer = charDevice_getRxData();
+                transfer = charDevice_getRxData();
                 if (true == transfer->ready)
                 {
                     printk(KERN_INFO "[CTRL][STM] SPI Data Ready\n");

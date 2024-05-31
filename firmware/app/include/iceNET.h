@@ -42,16 +42,13 @@ class iceNET : public Core
         iceNET(int portNumber);
         ~iceNET();
 
-        void initThread();
-        void iceNETThread();
-
         int openCOM() override;
         int dataTX() override;
         int dataRX() override;
         int closeCOM() override;
 
-        ssize_t dataTX(const std::string& message);
-        void closeClient();
+        void initThread() override;
+        bool isThreadKilled() override;
 
-        bool terminate() override;
+        void iceNETThread();
 };

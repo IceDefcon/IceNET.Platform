@@ -36,18 +36,18 @@ class iceCOM : public Core
         iceCOM();
         ~iceCOM();
 
-        void initThread();
-        void iceCOMThread();
-
         int openCOM() override;
         int dataTX() override;
         int dataRX() override;
         int closeCOM() override;
 
+        void initThread() override;
+        bool isThreadKilled() override;
+
+        void iceCOMThread();
+
         uint8_t computeDeviceAddress(const char* in);
         uint8_t computeRegisterAddress(const char* in);
         uint8_t computeRegisterControl(const char* in);
         uint8_t computeRegisterData(const char* in);
-
-        bool terminate() override;
 };
