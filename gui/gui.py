@@ -19,17 +19,17 @@ def send_data():
         tcp_socket.connect((server_address, port))
         log_message("[iceNET] Server connection established")
 
-        # Get data from the entry field
-        data = entry_data.get()
+        address = int(device_address.get(), 16)  # Convert hex address to integer
+        register = int(device_register.get(), 16)  # Convert hex register to integer
         
-        # Check if the input data exceeds 8 ASCII characters
-        if len(data) > 8:
-            log_message("[iceNET] Error: Data length exceeds 8 ASCII characters")
-            return
-        
+        if tick_var.get():
+            data = bytes([address, register, 0x01]) + bytes.fromhex(register_data.get())
+        else:
+            data = bytes([address, register, 0x00, 0x00])
+
         # Send data over TCP
-        tcp_socket.sendall(data.encode())
-        log_message(f"[iceNET] Client TX :: {data}")
+        tcp_socket.sendall(data)
+        log_message(f"[iceNET] Client TX :: {data.hex()}")  # Log the hexadecimal representation of the data
         
         # Receive feedback data from the server
         feedback_data = tcp_socket.recv(1024)
@@ -45,6 +45,7 @@ def send_data():
             tcp_socket.close()
             log_message("[iceNET] Server connection terminated")
 
+
 def quit_application():
     log_message("[iceNET] Quitting application...")
     root.quit()
@@ -55,10 +56,13 @@ root = tk.Tk()
 root.title("TCP Client")
 
 # Set the window size
-root.geometry("1000x500")
+root.geometry("1200x500")
 
-quit_button = tk.Button(root, text="QUIT", command=quit_application, width=16)
+quit_button = tk.Button(root, text="QUIT", command=quit_application, width=12)
 quit_button.grid(row=0, column=0, pady=5, padx=5, sticky='w')
+
+execute_button = tk.Button(root, text="GO", command=send_data, width=14)
+execute_button.grid(row=0, column=1, pady=5, padx=5, sticky='w')
 
 ip_label = tk.Label(root, text="Server IP Address")
 ip_label.grid(row=1, column=0, pady=5, padx=5, sticky='e')
@@ -72,31 +76,31 @@ port_data = tk.Entry(root, width=16)
 port_data.grid(row=2, column=1, pady=5, padx=5, sticky='w')
 port_data.insert(0, "2555")
 
-device_label = tk.Label(root, text="I2C Device Address")
+device_label = tk.Label(root, text="Device Address")
 device_label.grid(row=3, column=0, pady=5, padx=5, sticky='e')
 device_address = tk.Entry(root, width=16)
 device_address.grid(row=3, column=1, pady=5, padx=5, sticky='w')
 device_address.insert(0, "69")
 
-device_register_label = tk.Label(root, text="I2C Register Address")
+device_register_label = tk.Label(root, text="Register Address")
 device_register_label.grid(row=4, column=0, pady=5, padx=5, sticky='e')
 device_register = tk.Entry(root, width=16)
 device_register.grid(row=4, column=1, pady=5, padx=5, sticky='w')
 device_register.insert(0, "00")
 
-register_data_label = tk.Label(root, text="I2C Register Data")
+register_data_label = tk.Label(root, text="Write Data")
 register_data_label.grid(row=5, column=0, pady=5, padx=5, sticky='e')
 register_data = tk.Entry(root, width=16)
 register_data.grid(row=5, column=1, pady=5, padx=5, sticky='w')
 register_data.insert(0, "00")
 
-command_button = tk.Button(root, text="Command", command=send_data, width=16)
-command_button.grid(row=6, column=0, pady=5, padx=5, sticky='w')
-entry_data = tk.Entry(root, width=16)
-entry_data.grid(row=6, column=1, pady=5, padx=5, sticky='w')
+# Add a tick box (Checkbutton)
+tick_var = tk.BooleanVar()
+tick_box = tk.Checkbutton(root, text="Write", variable=tick_var)
+tick_box.grid(row=5, column=2, pady=5, padx=5, sticky='w')
 
 feedback_display = tk.Text(root, width=100, height=12, state=tk.DISABLED)
-feedback_display.grid(row=7, column=1, pady=5, padx=5, sticky='w')
+feedback_display.grid(row=7, column=0, columnspan=100, pady=5, padx=5, sticky='w')
 
 # Start the GUI event loop
 root.mainloop()
