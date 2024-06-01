@@ -13,6 +13,7 @@
 
 #include "iceCOM.h"
 #include "iceNET.h"
+#include "stateMachine.h"
 #include "console.h"
 
 int main(int argc, char *argv[]) 
@@ -37,6 +38,12 @@ int main(int argc, char *argv[])
         /* Initialise TCP Server Communication */
         iceNET* iceNETinstance = new iceNET(2555);
         CoreClass = iceNETinstance;
+    }
+    else if (strcmp(argv[1], "sm") == 0) 
+    {
+        /* Initialise Application State Machine */
+        StateMachine* smInstance = new StateMachine;
+        CoreClass = smInstance;
     } 
     else 
     {
@@ -46,24 +53,25 @@ int main(int argc, char *argv[])
 
 	CoreClass->openCOM();
 
-	/**
-	 * 
-	 * 1. Terminate Program
-	 * 2. Clean Memory 
-	 * 
-	 */
+	/* Terminate Instance and Clean Memory */
 	while(true)
 	{
+		/**
+		 * 
+		 * TODO
+		 * 
+		 * Be aware that only iceCOM
+		 * is terminated by "exit" 
+		 * message from the
+		 * input console
+		 * 
+		 * Flags for iceNET and StateMachine are not 
+		 * computed, threads will not terminate
+		 *
+		 */
 	    if (CoreClass->isThreadKilled()) 
 	    {
-	    	/**
-	    	 * 
-	    	 * Shutdown Communication Interface
-	    	 * 
-	    	 * 1. Atomic Thread Kill
-	    	 * 2. Close the core Device associated with instantiated class
-	    	 * 
-	    	 */
+	    	/* Close the core Device associated with instantiated class */
 	    	CoreClass->closeCOM();
 	        break;
 	    }

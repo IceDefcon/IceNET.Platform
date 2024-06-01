@@ -16,10 +16,11 @@
 
 #include "core.h"
 #include "console.h"
+#include "compute.h"
 
 const size_t TCP_BUFFER_SIZE = 32;
 
-class iceNET : public Core
+class iceNET : public Core, public Compute
 {
     private:
         int m_portNumber;
@@ -32,7 +33,7 @@ class iceNET : public Core
         struct sockaddr_in m_serverAddress;
         struct sockaddr_in m_clientAddress;
 
-        /* For char Device Traffic */
+        /* For TCP server Traffic */
         std::vector<char> tcpServerRx;
         std::vector<char> tcpServerTx;
 
@@ -51,4 +52,7 @@ class iceNET : public Core
         bool isThreadKilled() override;
 
         void iceNETThread();
+
+        std::vector<char>* GET_tcpServerRx();
+        void SET_tcpServerTx(std::vector<char>* tcpVector);
 };

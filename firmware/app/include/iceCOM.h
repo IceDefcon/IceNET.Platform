@@ -13,11 +13,12 @@
 
 #include "core.h"
 #include "console.h"
+#include "compute.h"
 
 const size_t CHAR_DEVICE_SIZE = 32;
 const size_t CHAR_CONSOLE_SIZE = 32;
 
-class iceCOM : public Core
+class iceCOM : public Core, public Compute
 {
 
     private:
@@ -45,9 +46,4 @@ class iceCOM : public Core
         bool isThreadKilled() override;
 
         void iceCOMThread();
-
-        uint8_t computeDeviceAddress(const char* in);
-        uint8_t computeRegisterAddress(const char* in);
-        uint8_t computeRegisterControl(const char* in);
-        uint8_t computeRegisterData(const char* in);
 };
