@@ -27,7 +27,6 @@ def send_data():
         else:
             data = bytes([address, register, 0x00, 0x00])
 
-
         # Send data over TCP
         tcp_socket.sendall(data)
         log_message(f"[iceNET] Client TX :: {data.hex()}")  # Log the hexadecimal representation of the data
