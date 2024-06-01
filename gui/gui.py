@@ -2,10 +2,10 @@ import tkinter as tk
 import socket
 
 def log_message(message):
-    feedback_display.config(state=tk.NORMAL)
-    feedback_display.insert(tk.END, message + "\n")
-    feedback_display.config(state=tk.DISABLED)
-    feedback_display.see(tk.END)  # Scroll to the end of the Text widget
+    log_display.config(state=tk.NORMAL)
+    log_display.insert(tk.END, message + "\n")
+    log_display.config(state=tk.DISABLED)
+    log_display.see(tk.END)  # Scroll to the end of the Text widget
 
 def send_data():
     tcp_socket = None
@@ -22,7 +22,7 @@ def send_data():
         address = int(device_address.get(), 16)  # Convert hex address to integer
         register = int(device_register.get(), 16)  # Convert hex register to integer
         
-        if tick_var.get():
+        if write_var.get():
             data = bytes([address, register, 0x01]) + bytes.fromhex(register_data.get())
         else:
             data = bytes([address, register, 0x00, 0x00])
@@ -56,12 +56,12 @@ root = tk.Tk()
 root.title("TCP Client")
 
 # Set the window size
-root.geometry("1200x500")
+root.geometry("850x500")
 
 quit_button = tk.Button(root, text="QUIT", command=quit_application, width=12)
 quit_button.grid(row=0, column=0, pady=5, padx=5, sticky='w')
 
-execute_button = tk.Button(root, text="GO", command=send_data, width=14)
+execute_button = tk.Button(root, text="SEND I2C", command=send_data, width=14)
 execute_button.grid(row=0, column=1, pady=5, padx=5, sticky='w')
 
 ip_label = tk.Label(root, text="Server IP Address")
@@ -95,12 +95,12 @@ register_data.grid(row=5, column=1, pady=5, padx=5, sticky='w')
 register_data.insert(0, "00")
 
 # Add a tick box (Checkbutton)
-tick_var = tk.BooleanVar()
-tick_box = tk.Checkbutton(root, text="Write", variable=tick_var)
-tick_box.grid(row=5, column=2, pady=5, padx=5, sticky='w')
+write_var = tk.BooleanVar()
+write_box = tk.Checkbutton(root, text="Write", variable=write_var)
+write_box.grid(row=5, column=2, pady=5, padx=5, sticky='w')
 
-feedback_display = tk.Text(root, width=100, height=12, state=tk.DISABLED)
-feedback_display.grid(row=7, column=0, columnspan=100, pady=5, padx=5, sticky='w')
+log_display = tk.Text(root, width=100, height=12, state=tk.DISABLED)
+log_display.grid(row=7, column=0, columnspan=100, pady=5, padx=5, sticky='w')
 
 # Start the GUI event loop
 root.mainloop()

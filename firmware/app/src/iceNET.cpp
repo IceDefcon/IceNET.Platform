@@ -10,6 +10,7 @@
 #include <cstring>
 #include <iomanip> // Include the <iomanip> header for setw and setfill
 #include <unistd.h>
+
 #include "iceNET.h"
 
 iceNET::iceNET(int portNumber):
@@ -38,7 +39,7 @@ iceNET::~iceNET()
     Console::Info("[NET] Destroying iceNET");
 
     closeCOM();
-    
+
     if (m_serverSocket >= 0) 
     {
         close(m_serverSocket);
@@ -146,6 +147,16 @@ int iceNET::dataRX()
     }
     
     m_bytesRead = read(m_clientSocket, tcpServerRx.data(), tcpServerRx.size());
+
+    /**
+     * 
+     * TODO
+     * 
+     * m_killThread flag is not computed
+     * 
+     * This need to be done later 
+     * 
+     */
     if (m_bytesRead < 0) 
     {
         Console::Error("[NET] Error reading from socket");
@@ -207,6 +218,13 @@ void iceNET::iceNETThread()
 
                 int bytesReceived = recv(m_clientSocket, tcpServerRx.data(), TCP_BUFFER_SIZE, 0);
 
+                /**
+                 * 
+                 * Here we need a signaling for the char Device
+                 * to get data obtained from the TCP client
+                 * 
+                 */
+
                 if (bytesReceived > 0)
                 {
                     std::cout << "[INFO] [NET] Received " << bytesReceived << " Bytes of data: ";
@@ -243,4 +261,14 @@ void iceNET::iceNETThread()
     }
 
     Console::Info("[NET] Terminate iceNETThread");
+}
+
+std::vector<char>* iceNET::GET_tcpServerRx()
+{
+    return &tcpServerRx;
+}
+
+void iceNET::SET_tcpServerTx(std::vector<char>* tcpVector)
+{
+    tcpServerTx = *tcpVector;
 }

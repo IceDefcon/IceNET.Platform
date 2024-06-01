@@ -6,20 +6,20 @@
  */
 #pragma once
 
-#include "console.h"
+#include <iostream>
 
-class Core : public Console
+class Core
 {
 public:
 
 	Core()
 	{
-		Console::Info("[INIT] Initialise the Core");
+		std::cout << "[INFO] [INIT] Initialise the Core" << std::endl;
 	}
 
 	virtual ~Core()
 	{
-		Console::Info("[DESTROY] Destroy the Core");
+		std::cout << "[INFO] [INIT] Destroy the Core" << std::endl;
 	}
 
 	virtual int openCOM() = 0;

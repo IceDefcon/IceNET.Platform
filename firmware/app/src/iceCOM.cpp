@@ -13,6 +13,7 @@
 #include <cstdint>          // for uint8_t
 #include <chrono>           // sleep_for
 #include <thread>           // sleep_for
+
 #include "iceCOM.h"
 
 #define iceDEV "/dev/iceCOM"
@@ -124,14 +125,14 @@ int iceCOM::dataTX()
      * Byte[3] :: Register Data
      * 
      */
-    charDeviceTx[0] = computeDeviceAddress(consoleControl.data());
-    charDeviceTx[1] = computeRegisterAddress(consoleControl.data());
-    charDeviceTx[2] = computeRegisterControl(consoleControl.data());
+    charDeviceTx[0] = Compute::computeDeviceAddress(consoleControl.data());
+    charDeviceTx[1] = Compute::computeRegisterAddress(consoleControl.data());
+    charDeviceTx[2] = Compute::computeRegisterControl(consoleControl.data());
 
     /* If Write then compute RegisterData */
     if(charDeviceTx[2] == 0x01)
     {
-        charDeviceTx[3] = computeRegisterData(consoleControl.data());
+        charDeviceTx[3] = Compute::computeRegisterData(consoleControl.data());
 
         if(charDeviceTx[0] == 0xFF || charDeviceTx[1] == 0xFF || charDeviceTx[2] == 0xFF || charDeviceTx[3] == 0xFF) 
         {
@@ -225,158 +226,4 @@ void iceCOM::iceCOMThread()
     }
 
     Console::Info("[COM] Terminate iceCOMThread");
-}
-
-uint8_t iceCOM::computeDeviceAddress(const char* in)
-{
-    uint8_t temp[2] = {0x00};
-    uint8_t out = 0x00;
-
-    temp[0] = in[0];
-    temp[1] = in[1];
-
-    if(temp[0] >= 0x30 && temp[0] <= 0x37)
-    {
-        out = (temp[0] - 0x30) << 4;
-    }
-    else
-    {
-        Console::Error("[COM] Bad device address :: Max 7-bits");
-        return 0xFF;
-    }
-
-    if(temp[1] >= 0x30 && temp[1] <= 0x39)
-    {
-        out = out + temp[1] - 0x30;
-    }
-    else if(temp[1] >= 0x61 && temp[1] <= 0x66)
-    {
-        out = out + temp[1] - 0x61 + 0x0A;
-    }
-    else
-    {
-        Console::Error("[COM] Bad device address :: Max 7-bits");
-        return 0xFF;
-    }
-
-    return out;
-}
-
-uint8_t iceCOM::computeRegisterAddress(const char* in)
-{
-    uint8_t temp[3] = {0x00};
-    uint8_t out = 0x00;
-
-    temp[0] = in[2];
-    temp[1] = in[3];
-    temp[2] = in[4];
-
-    if(temp[0] == 0x20) /* Check for ASCII space */ 
-    {
-        if(temp[1] >= 0x30 && temp[1] <= 0x37)
-        {
-            out = (temp[1] - 0x30) << 4;
-        }
-        else
-        {
-            Console::Error("[COM] Register Not Found");
-            return 0xFF;
-        }
-
-        if(temp[2] >= 0x30 && temp[2] <= 0x39)
-        {
-            out = out + temp[2] - 0x30;
-        }
-        else if(temp[2] >= 0x61 && temp[2] <= 0x66)
-        {
-            out = out + temp[2] - 0x61 + 0x0A;
-        }
-        else
-        {
-            Console::Error("[COM] Register Not Found");
-            return 0xFF;
-        }
-    }
-    else
-    {
-        Console::Error("[COM] No space between DevicAaddress & RegisterAddress");
-        return 0xFF;
-    }
-
-    return out;
-}
-
-uint8_t iceCOM::computeRegisterControl(const char* in)
-{
-    uint8_t temp[2] = {0x00};
-    uint8_t out = 0x00;
-
-    temp[0] = in[5];
-    temp[1] = in[6];
-
-    if(temp[0] == 0x20) /* Check for ASCII space */ 
-    {
-        if(temp[1] == 0x72) out = 0x00; /* Read */
-        else if(temp[1] == 0x77) out = 0x01; /* Write */
-        else
-        {
-            Console::Error("[COM] Bad R/W operator");
-            return 0xFF;
-        }
-    }
-    else
-    {
-        Console::Error("[COM] No space between RegisterAddress & R/W operator");
-        return 0xFF;
-    }
-
-    return out;
-}
-
-uint8_t iceCOM::computeRegisterData(const char* in)
-{
-    uint8_t temp[3] = {0x00};
-    uint8_t out = 0x00;
-
-    temp[0] = in[7];
-    temp[1] = in[8];
-    temp[2] = in[9];
-
-    if(temp[0] == 0x20) /* Check for ASCII space */ 
-    {
-        if(temp[1] >= 0x30 && temp[1] <= 0x39)
-        {
-            out = (temp[1] - 0x30) << 4;
-        }
-        else if(temp[1] >= 0x61 && temp[1] <= 0x66)
-        {
-            out = (temp[1] - 0x61 + 0x0A) << 4;
-        }
-        else
-        {
-            Console::Error("[COM] Invalid Write Data");
-            return 0xFF;
-        }
-
-        if(temp[2] >= 0x30 && temp[2] <= 0x39)
-        {
-            out = out + temp[2] - 0x30;
-        }
-        else if(temp[2] >= 0x61 && temp[2] <= 0x66)
-        {
-            out = out + temp[2] - 0x61 + 0x0A;
-        }
-        else
-        {
-            Console::Error("[COM] Invalid Write Data");
-            return 0xFF;
-        }
-    }
-    else
-    {
-        Console::Error("[COM] No space between R/W operator & RegisterData");
-        return 0xFF;
-    }
-
-    return out;
 }
