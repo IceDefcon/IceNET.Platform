@@ -8,12 +8,12 @@
 
 Console::Console() : m_LogLevel (LevelTodo) 
 {
-	Console::Info("[INIT] Initialise Debug Console");
+	Console::Info("[CONSTRUCTOR] Initialise Debug Console Object");
 }
 
 Console::~Console()
 {
-	Console::Info("[DESTROY] Terminate Debug Console");
+	Console::Info("[DESTRUCTOR] Destroy Debug Console Object");
 }
 
 void Console::SetLevel(LogLevel level)

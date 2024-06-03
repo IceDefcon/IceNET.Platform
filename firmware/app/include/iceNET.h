@@ -14,18 +14,17 @@
 #include <atomic>
 #include <vector>
 
-#include "core.h"
-#include "console.h"
 #include "compute.h"
 
 const size_t TCP_BUFFER_SIZE = 32;
 
-class iceNET : public Core, public Compute
+class iceNET : public Compute
 {
     private:
         int m_portNumber;
         int m_serverSocket;
         int m_clientSocket;
+        int m_bytesReceived;
         bool m_clientConnected;
         std::thread m_iceNETThread;
         std::atomic<bool> m_killThread;
@@ -43,13 +42,13 @@ class iceNET : public Core, public Compute
         iceNET(int portNumber);
         ~iceNET();
 
-        int openCOM() override;
-        int dataTX() override;
-        int dataRX() override;
-        int closeCOM() override;
+        int openCOM();
+        int dataTX();
+        int dataRX();
+        int closeCOM();
 
-        void initThread() override;
-        bool isThreadKilled() override;
+        void initThread();
+        bool isThreadKilled();
 
         void iceNETThread();
 

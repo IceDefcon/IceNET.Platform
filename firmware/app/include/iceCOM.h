@@ -11,14 +11,12 @@
 #include <vector>
 #include <semaphore.h>
 
-#include "core.h"
-#include "console.h"
 #include "compute.h"
 
 const size_t CHAR_DEVICE_SIZE = 32;
 const size_t CHAR_CONSOLE_SIZE = 32;
 
-class iceCOM : public Core, public Compute
+class iceCOM : public Compute
 {
 
     private:
@@ -37,13 +35,13 @@ class iceCOM : public Core, public Compute
         iceCOM();
         ~iceCOM();
 
-        int openCOM() override;
-        int dataTX() override;
-        int dataRX() override;
-        int closeCOM() override;
+        int openCOM();
+        int dataTX();
+        int dataRX();
+        int closeCOM();
 
-        void initThread() override;
-        bool isThreadKilled() override;
+        void initThread();
+        bool isThreadKilled();
 
         void iceCOMThread();
 };
