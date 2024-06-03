@@ -30,12 +30,12 @@ consoleControl(CHAR_CONSOLE_SIZE)
     std::fill(charDeviceTx.begin(), charDeviceTx.end(), 0);
     std::fill(consoleControl.begin(), consoleControl.end(), 0);
 
-    Console::Info("[COM] Initialise iceCOM Module");
+    Info("[CONSTRUCTOR] Initialise iceCOM Object");
 }
 
 iceCOM::~iceCOM() 
 {
-	Console::Info("[COM] Destroying iceCOM Module");
+	Info("[DESTRUCTOR] Destroy iceCOM Object");
     if (m_iceCOMThread.joinable()) 
     {
     	m_iceCOMThread.join();
@@ -48,13 +48,13 @@ int iceCOM::openCOM()
 
     if(m_file_descriptor < 0)
     {
-        Console::Error("[COM] Failed to open Device");
+        Error("[COM] Failed to open Device");
         m_killThread = true;
         return ERROR;
     } 
     else 
     {
-        Console::Info("[COM] Device opened successfuly");
+        Info("[COM] Device opened successfuly");
         initThread();
     }
 
@@ -69,18 +69,18 @@ int iceCOM::dataRX()
     ret = read(m_file_descriptor, charDeviceRx.data(), CHAR_DEVICE_SIZE);
     if (ret == -1)
     {
-        Console::Error("[COM] Cannot read from kernel space");
+        Error("[COM] Cannot read from kernel space");
         return ERROR;
     }
     else if (ret == 0)
     {
-        Console::Error("[COM] No data available");
+        Error("[COM] No data available");
         return ENODATA;
     }
     else
     {
         // Print received data for debugging
-        Console::Read(charDeviceRx.data());
+        Read(charDeviceRx.data());
 
         /* Clear char device Rx buffer */
         charDeviceRx.clear();
@@ -93,7 +93,7 @@ int iceCOM::dataTX()
 {
     int ret = -1;
 
-    Console::Write();
+    Write();
     /* Get console characters */
     std::cin.getline(consoleControl.data(), CHAR_CONSOLE_SIZE);
 
@@ -136,7 +136,7 @@ int iceCOM::dataTX()
 
         if(charDeviceTx[0] == 0xFF || charDeviceTx[1] == 0xFF || charDeviceTx[2] == 0xFF || charDeviceTx[3] == 0xFF) 
         {
-            Console::Error("[COM] Bytes computation failure [WR]");
+            Error("[COM] Bytes computation failure [WR]");
             return ret;
         }
     }
@@ -144,7 +144,7 @@ int iceCOM::dataTX()
     {
         if(charDeviceTx[0] == 0xFF || charDeviceTx[1] == 0xFF || charDeviceTx[2] == 0xFF) 
         {
-            Console::Error("[COM] Bytes computation failure [RD]");
+            Error("[COM] Bytes computation failure [RD]");
             return ret;
         }
         
@@ -163,7 +163,7 @@ int iceCOM::dataTX()
 
     if (ret == -1)
     {
-        Console::Error("[COM] Cannot write to kernel space");
+        Error("[COM] Cannot write to kernel space");
         return ERROR;
     }
 
@@ -188,7 +188,7 @@ int iceCOM::closeCOM()
 
 void iceCOM::initThread()
 {
-    Console::Info("[COM] Init the iceCOMThread");
+    Info("[COM] Init the iceCOMThread");
     m_iceCOMThread = std::thread(&iceCOM::iceCOMThread, this);
 }
 
@@ -199,13 +199,13 @@ bool iceCOM::isThreadKilled()
 
 void iceCOM::iceCOMThread()
 {
-    Console::Info("[COM] Enter iceCOMThread");
+    Info("[COM] Enter iceCOMThread");
 
     while(!m_killThread) 
     {
         if(OK != dataTX())
         {
-            Console::Error("[COM] Cannot write into the console");
+            Error("[COM] Cannot write into the console");
         }
         else
         {
@@ -217,7 +217,7 @@ void iceCOM::iceCOMThread()
              */
             if(OK != dataRX())
             {
-                Console::Error("[COM] Cannot read from the console");
+                Error("[COM] Cannot read from the console");
             }
         }
 
@@ -225,5 +225,5 @@ void iceCOM::iceCOMThread()
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
 
-    Console::Info("[COM] Terminate iceCOMThread");
+    Info("[COM] Terminate iceCOMThread");
 }

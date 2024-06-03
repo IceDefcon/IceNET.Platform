@@ -8,12 +8,12 @@
 
 Compute::Compute() 
 {
-	Console::Info("[COM] Destroying Compute Module");
+	Info("[CONSTRUCTOR] Initialise Compute Object");
 }
 
 Compute::~Compute() 
 {
-	Console::Info("[COM] Destroying Compute Module");
+	Info("[DESTRUCTOR] Destroy Compute Object");
 }
 
 uint8_t Compute::computeDeviceAddress(const char* in)
@@ -30,7 +30,7 @@ uint8_t Compute::computeDeviceAddress(const char* in)
     }
     else
     {
-        Console::Error("[COM] Bad device address :: Max 7-bits");
+        Error("[COM] Bad device address :: Max 7-bits");
         return 0xFF;
     }
 
@@ -44,7 +44,7 @@ uint8_t Compute::computeDeviceAddress(const char* in)
     }
     else
     {
-        Console::Error("[COM] Bad device address :: Max 7-bits");
+        Error("[COM] Bad device address :: Max 7-bits");
         return 0xFF;
     }
 
@@ -68,7 +68,7 @@ uint8_t Compute::computeRegisterAddress(const char* in)
         }
         else
         {
-            Console::Error("[COM] Register Not Found");
+            Error("[COM] Register Not Found");
             return 0xFF;
         }
 
@@ -82,13 +82,13 @@ uint8_t Compute::computeRegisterAddress(const char* in)
         }
         else
         {
-            Console::Error("[COM] Register Not Found");
+            Error("[COM] Register Not Found");
             return 0xFF;
         }
     }
     else
     {
-        Console::Error("[COM] No space between DevicAaddress & RegisterAddress");
+        Error("[COM] No space between DevicAaddress & RegisterAddress");
         return 0xFF;
     }
 
@@ -109,13 +109,13 @@ uint8_t Compute::computeRegisterControl(const char* in)
         else if(temp[1] == 0x77) out = 0x01; /* Write */
         else
         {
-            Console::Error("[COM] Bad R/W operator");
+            Error("[COM] Bad R/W operator");
             return 0xFF;
         }
     }
     else
     {
-        Console::Error("[COM] No space between RegisterAddress & R/W operator");
+        Error("[COM] No space between RegisterAddress & R/W operator");
         return 0xFF;
     }
 
@@ -143,7 +143,7 @@ uint8_t Compute::computeRegisterData(const char* in)
         }
         else
         {
-            Console::Error("[COM] Invalid Write Data");
+            Error("[COM] Invalid Write Data");
             return 0xFF;
         }
 
@@ -157,13 +157,13 @@ uint8_t Compute::computeRegisterData(const char* in)
         }
         else
         {
-            Console::Error("[COM] Invalid Write Data");
+            Error("[COM] Invalid Write Data");
             return 0xFF;
         }
     }
     else
     {
-        Console::Error("[COM] No space between R/W operator & RegisterData");
+        Error("[COM] No space between R/W operator & RegisterData");
         return 0xFF;
     }
 

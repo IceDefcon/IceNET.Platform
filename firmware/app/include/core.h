@@ -14,12 +14,12 @@ public:
 
 	Core()
 	{
-		std::cout << "[INFO] [INIT] Initialise the Core" << std::endl;
+		std::cout << "[INFO] [CONSTRUCTOR] Initialise the Core Object" << std::endl;
 	}
 
 	virtual ~Core()
 	{
-		std::cout << "[INFO] [INIT] Destroy the Core" << std::endl;
+		std::cout << "[INFO] [DESTRUCTOR] Destroy the Core Object" << std::endl;
 	}
 
 	virtual int openCOM() = 0;
