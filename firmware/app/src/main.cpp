@@ -7,27 +7,26 @@
 #include <chrono> // delay
 #include <thread> // delay
 
-#include "core.h"
 #include "iceCOM.h"
 #include "iceNET.h"
 #include "iceSM.h"
 
 int main() 
 {
-    /* Stack :: Interfaces pointer */
-	// Core* CoreClass = nullptr;
-
-    // iceNET* iceNETinstance = new iceNET(2555); /* Initialise TCP Server Communication */
-    // iceNETinstance->openCOM();
-
-    // iceSM* smInstance = new iceSM; /* Initialise Application State Machine */
-	// smInstance->openCOM();
-
+	/* Instantiation and Heap Allocation */ 
+    iceSM* smInstance = new iceSM; /* Initialise Application State Machine */
     iceCOM* iceCOMinstance = new iceCOM; /* Initialise Kernel Communication */
-	iceCOMinstance->openCOM();
-
     iceNET* iceNETinstance = new iceNET(2555); /* Initialise TCP Server Communication */
+
+	/* Configure iceCOM and iceNET instances in State Machine*/
+	smInstance->setIceCOMinstance(iceCOMinstance);
+	smInstance->setIceNETinstance(iceNETinstance);
+
+	/* Init Threads */
+	smInstance->openCOM();
+	iceCOMinstance->openCOM();
     iceNETinstance->openCOM();
+
 
 	/* Terminate Kernel comms and Clean Memory */
 	while(true)
@@ -35,6 +34,9 @@ int main()
 	    if (iceCOMinstance->isThreadKilled()) 
 	    {
 	    	iceCOMinstance->closeCOM();
+	    	smInstance->killThread();
+	    	/* TODO :: Thread is not killing dur to accept function */
+			iceNETinstance->killThread();
 	        break;
 	    }
 
@@ -42,9 +44,9 @@ int main()
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
 	}
 
-	delete iceCOMinstance;
 	delete iceNETinstance;
-	// delete smInstance;
+	delete iceCOMinstance;
+	delete smInstance;
 
 	return 0;
 }

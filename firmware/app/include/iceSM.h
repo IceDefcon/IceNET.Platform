@@ -8,11 +8,13 @@
 
 #include <thread>
 #include <atomic>
+#include <iostream>
 
+#include "iceCOM.h"
+#include "iceNET.h"
 #include "types.h"
-#include "console.h"
 
-class iceSM : public Console
+class iceSM
 {
 	private:
 
@@ -20,6 +22,9 @@ class iceSM : public Console
 		std::atomic<bool> m_killThread;
 		
 		stateType m_currentState;
+
+		iceCOM* m_iceCOMInstance;
+		iceNET* m_iceNETInstance;
 
 	public:
 
@@ -33,7 +38,12 @@ class iceSM : public Console
 
         void initThread();
         bool isThreadKilled();
+        void killThread();
 
 		void iceSMThread();
 		void setStateMachine(stateType newState);
+
+		void setIceCOMinstance(iceCOM* instance);
+		void setIceNETinstance(iceNET* instance);
+
 };
