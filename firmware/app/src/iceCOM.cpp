@@ -23,7 +23,8 @@ m_file_descriptor(0),
 m_killThread(false),
 charDeviceRx(CHAR_DEVICE_SIZE),
 charDeviceTx(CHAR_DEVICE_SIZE),
-consoleControl(CHAR_CONSOLE_SIZE)
+consoleControl(CHAR_CONSOLE_SIZE),
+m_dataReady(false)
 {
     /* Initialize charDeviceRx, charDeviceTx, and consoleControl with zeros */
     std::fill(charDeviceRx.begin(), charDeviceRx.end(), 0);
@@ -219,6 +220,9 @@ void iceCOM::iceCOMThread()
             {
                 Error("[COM] Cannot read from the console");
             }
+
+            /* TODO :: Set the flag to indicate the data is ready */
+            setDataReady(true);
         }
 
         /* Reduce consumption of CPU resources */
@@ -226,4 +230,14 @@ void iceCOM::iceCOMThread()
     }
 
     Info("[COM] Terminate iceCOMThread");
+}
+
+bool iceCOM::getDataReady()
+{
+    return m_dataReady;
+}
+
+void iceCOM::setDataReady(bool flag)
+{
+    m_dataReady = flag;
 }

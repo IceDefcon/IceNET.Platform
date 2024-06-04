@@ -30,6 +30,9 @@ class iceCOM : public Compute
         /* Console control buffer */
         std::vector<char> consoleControl;
 
+        /* Data ready :: For SM */
+        bool m_dataReady;
+
     public:
 
         iceCOM();
@@ -44,4 +47,7 @@ class iceCOM : public Compute
         bool isThreadKilled();
 
         void iceCOMThread();
+        
+        bool getDataReady();
+        void setDataReady(bool flag);
 };

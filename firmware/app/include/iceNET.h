@@ -14,11 +14,9 @@
 #include <atomic>
 #include <vector>
 
-#include "compute.h"
-
 const size_t TCP_BUFFER_SIZE = 32;
 
-class iceNET : public Compute
+class iceNET
 {
     private:
         int m_portNumber;
@@ -36,6 +34,9 @@ class iceNET : public Compute
         std::vector<char> tcpServerRx;
         std::vector<char> tcpServerTx;
 
+        /* Data ready :: For SM */
+        bool m_dataReady;
+
         ssize_t m_bytesRead;
 
     public:
@@ -49,8 +50,12 @@ class iceNET : public Compute
 
         void initThread();
         bool isThreadKilled();
+        void killThread();
 
         void iceNETThread();
+
+        bool getDataReady();
+        void setDataReady(bool flag);
 
         std::vector<char>* GET_tcpServerRx();
         void SET_tcpServerTx(std::vector<char>* tcpVector);

@@ -22,10 +22,11 @@ m_iceNETThread(),
 m_killThread(false),
 tcpServerRx(TCP_BUFFER_SIZE),
 tcpServerTx(TCP_BUFFER_SIZE),
+m_dataReady(false),
 m_bytesRead(0)
 {
-    Info("[CONSTRUCTOR] Initialise iceNET Object");
-    
+    std::cout << "[INFO] [CONSTRUCTOR] Initialise iceNET Object" << std::endl;
+
     memset(&m_serverAddress, 0, sizeof(m_serverAddress));
     m_serverAddress.sin_family = AF_INET;
     m_serverAddress.sin_addr.s_addr = INADDR_ANY;
@@ -38,7 +39,7 @@ m_bytesRead(0)
 
 iceNET::~iceNET() 
 {
-    Info("[DESTRUCTOR] Destroy iceNET Object");
+    std::cout << "[INFO] [DESTRUCTOR] Destroy iceNET Object" << std::endl;
 
     closeCOM();
 
@@ -59,7 +60,7 @@ int iceNET::openCOM()
     
     if (m_serverSocket < 0)
     {
-        Error("[NET] Error opening socket");
+        std::cout << "[ERROR] [NET] Error opening socket" << std::endl;
     }
 
     /**
@@ -77,21 +78,21 @@ int iceNET::openCOM()
     ret = setsockopt(m_serverSocket, SOL_SOCKET, SO_REUSEADDR, &option, sizeof(option));
     if (ret < 0) 
     {
-        Error("[NET] Error setting socket options");
+        std::cout << "[ERROR] [NET] Error setting socket options" << std::endl;
     }
     else
     {
-        Info("[NET] Socket option set correctly");
+        std::cout << "[INFO] [NET] Socket option set correctly" << std::endl;
     }
 
     ret = bind(m_serverSocket, (struct sockaddr *)&m_serverAddress, sizeof(m_serverAddress));
     if (ret < 0) 
     {
-        Error("[NET] Error on binding the socket");
+        std::cout << "[ERROR] [NET] Error on binding the socket" << std::endl;
     }
     else
     {
-        Info("[NET] Socket bind successfully");
+        std::cout << "[INFO] [NET] Socket bind successfully" << std::endl;
     }
 
     /**
@@ -105,15 +106,15 @@ int iceNET::openCOM()
     listen(m_serverSocket, 5);
     if (ret < 0) 
     {
-        Error("[NET] Error listening for connections");
+        std::cout << "[ERROR] [NET] Error listening for connections" << std::endl;
     }
     else
     {
-        Info("[NET] Listening at the TCP Port...");
+        std::cout << "[INFO] [NET] Listening at the TCP Port..." << std::endl;
         initThread();
     }
 
-    return OK;
+    return 0;
 }
 
 int iceNET::dataTX() 
@@ -144,11 +145,11 @@ int iceNET::dataRX()
 {
     if (m_clientSocket < 0)
     {
-        Error("[NET] Failed to accept the client connection");
+        std::cout << "[ERROR] [NET] Failed to accept the client connection" << std::endl;
     }
     else
     {
-        Info("[NET] Client connected to server");
+        std::cout << "[INFO] [NET] Client connected to server" << std::endl;
         m_clientConnected = true;
 
         m_bytesReceived = recv(m_clientSocket, tcpServerRx.data(), TCP_BUFFER_SIZE, 0);
@@ -171,11 +172,11 @@ int iceNET::dataRX()
         }
         else if (m_bytesReceived == 0)
         {
-            Info("[NET] Connection closed by client");
+            std::cout << "[INFO] [NET] Connection closed by client" << std::endl;
         }
         else
         {
-            Error("[NET] Error receiving data");
+            std::cout << "[ERROR] [NET] Error receiving data" << std::endl;
         }
     }
     
@@ -194,12 +195,12 @@ int iceNET::closeCOM()
         m_clientConnected = false;
     }
 
-    return OK;
+    return 0;
 }
 
 void iceNET::initThread()
 {
-    Info("[NET] Init the iceNETThread");
+    std::cout << "[INFO] [NET] Init the iceNETThread" << std::endl;
     m_iceNETThread = std::thread(&iceNET::iceNETThread, this);
 }
 
@@ -208,15 +209,20 @@ bool iceNET::isThreadKilled()
     return m_killThread;
 }
 
+void iceNET::killThread()
+{
+    m_killThread = true;
+}
+
 void iceNET::iceNETThread()
 {
-    Info("[NET] Enter iceNETThread");
+    std::cout << "[INFO] [NET] Enter iceNETThread" << std::endl;
 
     socklen_t clientLength = sizeof(m_clientAddress);
 
     while (!m_killThread)
     {
-        Info("[NET] iceNETThread ready for next TCP packet");
+        std::cout << "[INFO] [NET] iceNETThread ready for next TCP packet" << std::endl;
 
         if (false == m_clientConnected)
         {
@@ -225,21 +231,21 @@ void iceNET::iceNETThread()
 
             if(dataRX() > 0)
             {
-                // Info("[NET] setStateMachine ---> TCP_TO_CHAR");
-                // setStateMachine(TCP_TO_CHAR);
+                /* TODO :: Set the flag to indicate data ready */
+                setDataReady(true);
             }
             else
             {
-                Info("[NET] Nothing Received :: Cannot set TCP_TO_CHAR in State Machine");
+                std::cout << "[INFO] [NET] Nothing Received :: Cannot set TCP_TO_CHAR in State Machine" << std::endl;
             }
 
             if (dataTX() < 0)
             {
-                Error("[NET] Failed to send message");
+                std::cout << "[ERROR] [NET] Failed to send message" << std::endl;
             }
             else
             {
-                Info("[NET] Transfer complete");
+                std::cout << "[INFO] [NET] Transfer complete" << std::endl;
             }
 
             closeCOM();
@@ -250,7 +256,7 @@ void iceNET::iceNETThread()
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
 
-    Info("[NET] Terminate iceNETThread");
+    std::cout << "[INFO] [NET] Terminate iceNETThread" << std::endl;
 }
 
 std::vector<char>* iceNET::GET_tcpServerRx()
@@ -261,4 +267,14 @@ std::vector<char>* iceNET::GET_tcpServerRx()
 void iceNET::SET_tcpServerTx(std::vector<char>* tcpVector)
 {
     tcpServerTx = *tcpVector;
+}
+
+bool iceNET::getDataReady()
+{
+    return m_dataReady;
+}
+
+void iceNET::setDataReady(bool flag)
+{
+    m_dataReady = flag;
 }

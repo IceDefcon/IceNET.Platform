@@ -73,11 +73,11 @@ void Console::Todo(const char * message)
  */
 void Console::Read(const char* message)
 {
-	Info("[ RX ] ",false);
+	Info("[RX:] ",false);
     std::cout << "Feedback from Kernel[0] = 0x" << std::hex << static_cast<int>(message[0]) << std::endl;
 }
 
 void Console::Write(void)
 {
-	Info("[ TX ] ",false);
+	Info("[TX:] ",false);
 }

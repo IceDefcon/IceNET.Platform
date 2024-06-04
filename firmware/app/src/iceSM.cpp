@@ -12,12 +12,16 @@
 
 iceSM::iceSM()
 {
-    Info("[STM] Create iceSM object");
+    std::cout << "[INFO] [CONSTRUCTOR] Initialise iceSM Object" << std::endl;
 }
 
 iceSM::~iceSM()
 {
-    Info("[STM] Destroy iceSM object");
+    std::cout << "[INFO] [DESTRUCTOR] Destroy iceSM Object" << std::endl;
+    if (m_iceSMThread.joinable()) 
+    {
+        m_iceSMThread.join();
+    }
 }
 
 int iceSM::openCOM()
@@ -45,7 +49,7 @@ int iceSM::closeCOM()
 
 void iceSM::initThread()
 {
-    Info("[STM] Init the iceSMThread");
+    std::cout << "[INFO] [STM] Init the iceSMThread" << std::endl;
     m_iceSMThread = std::thread(&iceSM::iceSMThread, this);
 }
 
@@ -55,30 +59,44 @@ bool iceSM::isThreadKilled()
 	return false;
 }
 
+void iceSM::killThread()
+{
+    m_killThread = true;
+}
+
 void iceSM::iceSMThread()
 {
-    Info("[STM] Enter iceSMThread");
+    std::cout << "[INFO] [STM] Enter iceSMThread" << std::endl;
 
     while(!m_killThread) 
     {
         switch(m_currentState)
         {
             case IDLE:
-                // Info("[STM] IDLE mode");
+                if(true == m_iceNETInstance->getDataReady())
+                {
+                    setStateMachine(TCP_TO_CHAR);
+                    m_iceNETInstance->setDataReady(false);
+                }
+                else if(true == m_iceCOMInstance->getDataReady())
+                {
+                    setStateMachine(CHAR_TO_TCP);
+                    m_iceCOMInstance->setDataReady(false);
+                }
                 break;
 
             case CHAR_TO_TCP:
-                Info("[STM] CHAR_TO_TCP mode");
+                std::cout << "[INFO] [STM] CHAR_TO_TCP mode" << std::endl;
                 setStateMachine(IDLE);
                 break;
 
             case TCP_TO_CHAR:
-                Info("[STM] TCP_TO_CHAR mode");
+                std::cout << "[INFO] [STM] TCP_TO_CHAR mode" << std::endl;
                 setStateMachine(IDLE);
                 break;
 
             default:
-                Info("[STM] Unknown mode");
+                std::cout << "[INFO] [STM] Unknown mode" << std::endl;
         }
 
 
@@ -86,10 +104,20 @@ void iceSM::iceSMThread()
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
 
-    Info("[STM] Terminate iceSMThread");
+    std::cout << "[INFO] [STM] Terminate iceSMThread" << std::endl;
 }
 
 void iceSM::setStateMachine(stateType newState)
 {
     m_currentState = newState;
+}
+
+void iceSM::setIceCOMinstance(iceCOM* instance)
+{
+    m_iceCOMInstance = instance;
+}
+
+void iceSM::setIceNETinstance(iceNET* instance)
+{
+    m_iceNETInstance = instance;
 }
