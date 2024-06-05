@@ -26,6 +26,10 @@ class iceSM
 		iceCOM* m_iceCOMInstance;
 		iceNET* m_iceNETInstance;
 
+        /* For data Traffic */
+        std::vector<char>* smRx;
+        std::vector<char>* smTx;
+
 	public:
 
 		iceSM();

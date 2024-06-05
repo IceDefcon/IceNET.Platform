@@ -73,25 +73,30 @@ void iceSM::iceSMThread()
         switch(m_currentState)
         {
             case IDLE:
-                if(true == m_iceNETInstance->getDataReady())
+                if(true == m_iceNETInstance->getTcpRxReady())
                 {
                     setStateMachine(TCP_TO_CHAR);
-                    m_iceNETInstance->setDataReady(false);
+                    m_iceNETInstance->setTcpRxReady(false);
                 }
-                else if(true == m_iceCOMInstance->getDataReady())
+                else if(true == m_iceCOMInstance->getCharRxReady())
                 {
                     setStateMachine(CHAR_TO_TCP);
-                    m_iceCOMInstance->setDataReady(false);
+                    m_iceCOMInstance->setCharRxReady(false);
                 }
-                break;
-
-            case CHAR_TO_TCP:
-                std::cout << "[INFO] [STM] CHAR_TO_TCP mode" << std::endl;
-                setStateMachine(IDLE);
                 break;
 
             case TCP_TO_CHAR:
                 std::cout << "[INFO] [STM] TCP_TO_CHAR mode" << std::endl;
+
+                smRx = m_iceNETInstance->getTcpServerRx();
+                m_iceCOMInstance->setCharDeviceTx(smRx);
+                m_iceCOMInstance->setCharTxReady(true);
+
+                setStateMachine(IDLE);
+                break;
+
+            case CHAR_TO_TCP:
+                std::cout << "[INFO] [STM] CHAR_TO_TCP mode" << std::endl;
                 setStateMachine(IDLE);
                 break;
 

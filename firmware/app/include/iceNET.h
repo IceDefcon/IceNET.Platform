@@ -31,11 +31,12 @@ class iceNET
         struct sockaddr_in m_clientAddress;
 
         /* For TCP server Traffic */
-        std::vector<char> tcpServerRx;
-        std::vector<char> tcpServerTx;
+        std::vector<char> m_tcpServerRx;
+        std::vector<char> m_tcpServerTx;
 
         /* Data ready :: For SM */
-        bool m_dataReady;
+        bool m_tcpRxReady;
+        bool m_tcpTxReady;
 
         ssize_t m_bytesRead;
 
@@ -54,9 +55,13 @@ class iceNET
 
         void iceNETThread();
 
-        bool getDataReady();
-        void setDataReady(bool flag);
+        std::vector<char>* getTcpServerRx();
+        void setTcpServerTx(std::vector<char>* tcpVector);
 
-        std::vector<char>* GET_tcpServerRx();
-        void SET_tcpServerTx(std::vector<char>* tcpVector);
+        bool getTcpRxReady();
+        void setTcpRxReady(bool flag);
+        bool getTcpTxReady();
+        void setTcpTxReady(bool flag);
+
+
 };

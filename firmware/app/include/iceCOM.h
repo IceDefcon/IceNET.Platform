@@ -25,13 +25,14 @@ class iceCOM : public Compute
         std::atomic<bool> m_killThread;
         
         /* For char Device Traffic */
-        std::vector<char> charDeviceRx;
-        std::vector<char> charDeviceTx;
+        std::vector<char> m_charDeviceRx;
+        std::vector<char> m_charDeviceTx;
         /* Console control buffer */
-        std::vector<char> consoleControl;
+        std::vector<char> m_consoleControl;
 
         /* Data ready :: For SM */
-        bool m_dataReady;
+        bool m_charRxReady;
+        bool m_charTxReady;
 
     public:
 
@@ -47,7 +48,13 @@ class iceCOM : public Compute
         bool isThreadKilled();
 
         void iceCOMThread();
-        
-        bool getDataReady();
-        void setDataReady(bool flag);
+
+        std::vector<char>* getCharDeviceRx();
+        void setCharDeviceTx(std::vector<char>* charVector);
+
+        bool getCharRxReady();
+        void setCharRxReady(bool flag);
+        bool getCharTxReady();
+        void setCharTxReady(bool flag);
+
 };

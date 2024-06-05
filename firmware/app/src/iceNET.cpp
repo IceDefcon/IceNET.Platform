@@ -20,9 +20,10 @@ m_clientSocket(-1),
 m_clientConnected(false),
 m_iceNETThread(),
 m_killThread(false),
-tcpServerRx(TCP_BUFFER_SIZE),
-tcpServerTx(TCP_BUFFER_SIZE),
-m_dataReady(false),
+m_tcpServerRx(TCP_BUFFER_SIZE),
+m_tcpServerTx(TCP_BUFFER_SIZE),
+m_tcpRxReady(false),
+m_tcpTxReady(false),
 m_bytesRead(0)
 {
     std::cout << "[INFO] [CONSTRUCTOR] Initialise iceNET Object" << std::endl;
@@ -32,9 +33,9 @@ m_bytesRead(0)
     m_serverAddress.sin_addr.s_addr = INADDR_ANY;
     m_serverAddress.sin_port = htons(m_portNumber);
 
-    /* Initialize tcpServerRx and tcpServerTx with zeros */
-    std::fill(tcpServerRx.begin(), tcpServerRx.end(), 0);
-    std::fill(tcpServerTx.begin(), tcpServerTx.end(), 0);
+    /* Initialize m_tcpServerRx and m_tcpServerTx with zeros */
+    std::fill(m_tcpServerRx.begin(), m_tcpServerRx.end(), 0);
+    std::fill(m_tcpServerTx.begin(), m_tcpServerTx.end(), 0);
 }
 
 iceNET::~iceNET() 
@@ -127,15 +128,15 @@ int iceNET::dataTX()
     }
     else
     {
-        tcpServerTx[0] = 0x69; /* i */
-        tcpServerTx[1] = 0x63; /* c */
-        tcpServerTx[2] = 0x65; /* e */
-        tcpServerTx[3] = 0x4E; /* N */
-        tcpServerTx[4] = 0x45; /* E */
-        tcpServerTx[5] = 0x54; /* T */
-        tcpServerTx[6] = '\n'; /* Next line for the GUI console */
+        m_tcpServerTx[0] = 0x69; /* i */
+        m_tcpServerTx[1] = 0x63; /* c */
+        m_tcpServerTx[2] = 0x65; /* e */
+        m_tcpServerTx[3] = 0x4E; /* N */
+        m_tcpServerTx[4] = 0x45; /* E */
+        m_tcpServerTx[5] = 0x54; /* T */
+        m_tcpServerTx[6] = '\n'; /* Next line for the GUI console */
 
-        ret = write(m_clientSocket, tcpServerTx.data(), tcpServerTx.size());
+        ret = write(m_clientSocket, m_tcpServerTx.data(), m_tcpServerTx.size());
     }
 
     return ret;
@@ -152,7 +153,7 @@ int iceNET::dataRX()
         std::cout << "[INFO] [NET] Client connected to server" << std::endl;
         m_clientConnected = true;
 
-        m_bytesReceived = recv(m_clientSocket, tcpServerRx.data(), TCP_BUFFER_SIZE, 0);
+        m_bytesReceived = recv(m_clientSocket, m_tcpServerRx.data(), TCP_BUFFER_SIZE, 0);
 
         /**
          * 
@@ -166,7 +167,7 @@ int iceNET::dataRX()
             std::cout << "[INFO] [NET] Received " << m_bytesReceived << " Bytes of data: ";
             for (int i = 0; i < m_bytesReceived; ++i)
             {
-                std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(tcpServerRx.data()[i]) << " ";
+                std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(m_tcpServerRx.data()[i]) << " ";
             }
             std::cout << std::endl;
         }
@@ -181,7 +182,7 @@ int iceNET::dataRX()
     }
     
     /* Resize to actual bytes read */
-    // tcpServerRx.resize(m_bytesRead);
+    // m_tcpServerRx.resize(m_bytesRead);
 
     return m_bytesReceived;
 }
@@ -232,7 +233,7 @@ void iceNET::iceNETThread()
             if(dataRX() > 0)
             {
                 /* TODO :: Set the flag to indicate data ready */
-                setDataReady(true);
+                setTcpRxReady(true);
             }
             else
             {
@@ -259,22 +260,42 @@ void iceNET::iceNETThread()
     std::cout << "[INFO] [NET] Terminate iceNETThread" << std::endl;
 }
 
-std::vector<char>* iceNET::GET_tcpServerRx()
+/**
+ * 
+ * Data
+ * 
+ */
+std::vector<char>* iceNET::getTcpServerRx()
 {
-    return &tcpServerRx;
+    return &m_tcpServerRx;
 }
 
-void iceNET::SET_tcpServerTx(std::vector<char>* tcpVector)
+void iceNET::setTcpServerTx(std::vector<char>* tcpVector)
 {
-    tcpServerTx = *tcpVector;
+    m_tcpServerTx = *tcpVector;
 }
 
-bool iceNET::getDataReady()
+/**
+ * 
+ * Flags
+ * 
+ */
+bool iceNET::getTcpRxReady()
 {
-    return m_dataReady;
+    return m_tcpRxReady;
 }
 
-void iceNET::setDataReady(bool flag)
+void iceNET::setTcpRxReady(bool flag)
 {
-    m_dataReady = flag;
+    m_tcpRxReady = flag;
+}
+
+bool iceNET::getTcpTxReady()
+{
+    return m_tcpTxReady;
+}
+
+void iceNET::setTcpTxReady(bool flag)
+{
+    m_tcpTxReady = flag;
 }
