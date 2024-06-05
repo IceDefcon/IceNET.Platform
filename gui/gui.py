@@ -1,3 +1,7 @@
+#
+# Author: Ice.Marek
+# IceNET Technology 2024
+#
 import tkinter as tk
 import socket
 
@@ -61,8 +65,8 @@ root.geometry("850x500")
 quit_button = tk.Button(root, text="QUIT", command=quit_application, width=12)
 quit_button.grid(row=0, column=0, pady=5, padx=5, sticky='w')
 
-execute_button = tk.Button(root, text="SEND I2C", command=send_data, width=14)
-execute_button.grid(row=0, column=1, pady=5, padx=5, sticky='w')
+send_button = tk.Button(root, text="OFFLOAD", command=send_data, width=14)
+send_button.grid(row=0, column=1, pady=5, padx=5, sticky='w')
 
 ip_label = tk.Label(root, text="Server IP Address")
 ip_label.grid(row=1, column=0, pady=5, padx=5, sticky='e')
