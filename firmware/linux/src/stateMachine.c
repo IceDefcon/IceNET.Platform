@@ -9,10 +9,12 @@
 #include <linux/kthread.h>
 #include <linux/delay.h> // For msleep
 #include <linux/gpio.h>
+#include <linux/mutex.h>
 
 #include "stateMachine.h"
 #include "charDevice.h"
 #include "isrCtrl.h"
+#include "spiCtrl.h"
 #include "spiWork.h"
 
 /////////////////////////
@@ -25,12 +27,25 @@
 //                     //
 /////////////////////////
 
+static DEFINE_MUTEX(state_mutex);
+
 static struct task_struct *thread_handle;
 static stateType currentState = IDLE;
 
 /* SET STATE */ void setStateMachine(stateType newState)
 {
+    mutex_lock(&state_mutex);
     currentState = newState;
+    mutex_unlock(&state_mutex);
+}
+
+/* GET STATE */ stateType getStateMachine(void)
+{
+    stateType state;
+    mutex_lock(&state_mutex);
+    state = currentState;
+    mutex_unlock(&state_mutex);
+    return state;
 }
 
 /**
@@ -43,10 +58,13 @@ static stateType currentState = IDLE;
 static int StateMachineThread(void *data)
 {
     DataTransfer* transfer;
+    DataTransfer* transferCtrl;
+    stateType state;
     
     while (!kthread_should_stop()) 
     {
-        switch(currentState)
+        state = getStateMachine();
+        switch(state)
         {
             case IDLE:
                 // printk(KERN_INFO "[CTRL][STM] IDLE mode\n");
@@ -71,12 +89,14 @@ static int StateMachineThread(void *data)
                 setStateMachine(IDLE);
                 break;
 
-            case I2C:
-                printk(KERN_INFO "[CTRL][STM] I2C mode\n");
-                break;
-
-            case DMA:
-                printk(KERN_INFO "[CTRL][STM] DMA mode\n");
+            case FEEDBACK:
+                printk(KERN_INFO "[CTRL][STM] FEEDBACK mode\n");
+                transfer = charDevice_getRxData();
+                transferCtrl = spiCtrl_getRxData();
+                transfer->TxData[0] = (char)transferCtrl->RxData[0];
+                transfer->TxData[1] = '\0';
+                transfer->readyFlag = true;
+                setStateMachine(IDLE);
                 break;
 
             default:

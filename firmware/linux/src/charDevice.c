@@ -17,6 +17,7 @@
 #include "stateMachine.h"
 #include "charDevice.h"
 #include "spiWork.h"
+#include "types.h"
 
 //////////////////////
 //                  //
@@ -77,6 +78,7 @@ static void init_charDevice_Data(void)
     charDeviceTransfer.TxData = TxData; /* TODO :: TxData is Dummy 0xBB */
     charDeviceTransfer.length = 2;
     charDeviceTransfer.ready = false;
+    charDeviceTransfer.readyFlag = false;
 
     printk(KERN_ALERT "[INIT][ C ] Initialize charDevice Data\n");
 }

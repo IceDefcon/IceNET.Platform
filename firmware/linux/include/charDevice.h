@@ -22,7 +22,7 @@
 
 #define CD_OK 0
 
-/* GET TRANSFER DATA */ DataTransfer* charDevice_getRxData(void);
+/* GET TRANSFER RX DATA */ DataTransfer* charDevice_getRxData(void);
 
 void charDeviceInit(void);
 void charDeviceDestroy(void);

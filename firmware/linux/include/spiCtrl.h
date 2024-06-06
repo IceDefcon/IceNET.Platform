@@ -9,6 +9,7 @@
 #define SPI_FPGA_H
 
 #include <linux/spi/spi.h>
+#include "types.h"
 
 //////////////////////
 //                  //
@@ -24,5 +25,7 @@
 /* KERNEL */ void interruptFromFpga(struct work_struct *work);
 /* MAIN */ void transferFromCharDevice(struct work_struct *work);
 /* SPI */ void spiDestroy(void);
+
+/* GET TRANSFER RX DATA */ DataTransfer* spiCtrl_getRxData(void);
 
 #endif // SPI_FPGA_H

@@ -23,4 +23,11 @@
 	6. Order J-Link Cable :: SEGGER
 	7. Attach to CPU @ Ozone Debuger
 
+# Testing Module List
+
+	HC-12 - Radio Module 433MHz
+	RTC DS1307 - Real time clock
+	SYN115 - Radio Module 433MHz
+	L3G4200D - Gyroscope Module
+
 # ICE

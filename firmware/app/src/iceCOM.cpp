@@ -72,6 +72,7 @@ int iceCOM::dataRX()
 
     // Attempt to read data from kernel space
     ret = read(m_file_descriptor, m_charDeviceRx.data(), CHAR_DEVICE_SIZE);
+    
     if (ret == -1)
     {
         Error("[COM] Cannot read from kernel space");
