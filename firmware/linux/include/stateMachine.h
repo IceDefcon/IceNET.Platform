@@ -25,8 +25,7 @@ typedef enum
     IDLE = 0,
     SPI,
     INTERRUPT,
-    I2C,    
-    DMA
+    FEEDBACK
 } stateType;
 
 /* SET STATE */ void setStateMachine(stateType newState);

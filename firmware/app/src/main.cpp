@@ -9,34 +9,21 @@
 
 #include "iceCOM.h"
 #include "iceNET.h"
-#include "iceSM.h"
 
 int main() 
 {
-	/* Instantiation and Heap Allocation */ 
-    iceSM* smInstance = new iceSM; /* Initialise Application State Machine */
-    iceCOM* iceCOMinstance = new iceCOM; /* Initialise Kernel Communication */
-    iceNET* iceNETinstance = new iceNET(2555); /* Initialise TCP Server Communication */
+	/* Heap Allocation */ 
+    iceCOM* iceCOMinstance = new iceCOM; /* Kernel Communication */
+    iceNET* iceNETinstance = new iceNET; /* TCP Server class */
 
-	/* Configure iceCOM and iceNET instances in State Machine*/
-	smInstance->setIceCOMinstance(iceCOMinstance);
-	smInstance->setIceNETinstance(iceNETinstance);
+	iceCOMinstance->openDEV(); /* Open char device */
+	iceNETinstance->openDEV(); /* Open char device */
 
-	/* Init Threads */
-	smInstance->openCOM();
-	iceCOMinstance->openCOM();
-    iceNETinstance->openCOM();
-
-
-	/* Terminate Kernel comms and Clean Memory */
-	while(true)
+	while(true) /* Terminate Kernel comms and Clean Memory */
 	{
 	    if (iceCOMinstance->isThreadKilled()) 
 	    {
-	    	iceCOMinstance->closeCOM();
-	    	smInstance->killThread();
-	    	/* TODO :: Thread is not killing dur to accept function */
-			iceNETinstance->killThread();
+	    	iceCOMinstance->closeDEV();
 	        break;
 	    }
 
@@ -44,9 +31,8 @@ int main()
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
 	}
 
-	delete iceNETinstance;
 	delete iceCOMinstance;
-	delete smInstance;
+	delete iceNETinstance;
 
 	return 0;
 }

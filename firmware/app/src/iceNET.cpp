@@ -9,24 +9,24 @@
 #include <iostream>
 #include <cstring>
 #include <iomanip> // Include the <iomanip> header for setw and setfill
-#include <unistd.h>
+#include <fcntl.h> // For open, O_RDWR, etc.
+#include <unistd.h>// For close, read, write, etc.
 
 #include "iceNET.h"
+#include "types.h"
 
-iceNET::iceNET(int portNumber):
-m_portNumber(portNumber),
-m_serverSocket(-1),
-m_clientSocket(-1),
-m_clientConnected(false),
-m_iceNETThread(),
-m_killThread(false),
-m_tcpServerRx(TCP_BUFFER_SIZE),
-m_tcpServerTx(TCP_BUFFER_SIZE),
-m_tcpRxReady(false),
-m_tcpTxReady(false),
-m_bytesRead(0)
+iceNET::iceNET() :
+    m_file_descriptor(0), 
+    m_killThread(false),
+    m_portNumber(2555),
+    m_serverSocket(-1),
+    m_clientSocket(-1),
+    m_bytesReceived(0),
+    m_clientConnected(false),
+    m_tcpServerRx(TCP_BUFFER_SIZE),
+    m_tcpServerTx(TCP_BUFFER_SIZE)
 {
-    std::cout << "[INFO] [CONSTRUCTOR] Initialise iceNET Object" << std::endl;
+    std::cout << "[INFO] [CONSTRUCTOR] Instantiate iceNET" << std::endl;
 
     memset(&m_serverAddress, 0, sizeof(m_serverAddress));
     m_serverAddress.sin_family = AF_INET;
@@ -40,9 +40,9 @@ m_bytesRead(0)
 
 iceNET::~iceNET() 
 {
-    std::cout << "[INFO] [DESTRUCTOR] Destroy iceNET Object" << std::endl;
+    std::cout << "[INFO] [DESTRUCTOR] Destroy iceNET" << std::endl;
 
-    closeCOM();
+    closeDEV();
 
     if (m_serverSocket >= 0) 
     {
@@ -55,6 +55,104 @@ iceNET::~iceNET()
     }
 }
 
+int iceNET::openDEV() 
+{
+    Status ret = UNKNOWN;
+    m_file_descriptor = open("/dev/iceNET", O_RDWR);
+
+    if(m_file_descriptor < 0)
+    {
+        std::cout << "[ERROR] [NET] Failed to open Device" << std::endl;
+        ret = ERROR;
+    } 
+    else 
+    {
+        std::cout << "[INFO] [NET] Device opened successfuly" << std::endl;
+        initThread();
+        ret = OK;
+    }
+
+    return ret;
+}
+
+int iceNET::dataRX()
+{
+    return OK;
+}
+
+int iceNET::dataTX()
+{
+    return OK;
+}
+
+int iceNET::closeDEV() 
+{
+    if (m_file_descriptor >= 0) 
+    {
+        close(m_file_descriptor);
+        m_file_descriptor = -1; // Mark as closed
+    }
+
+    return OK;
+}
+
+void iceNET::initThread()
+{
+    std::cout << "[INFO] [NET] Init the iceNETThread" << std::endl;
+    m_iceNETThread = std::thread(&iceNET::iceNETThread, this);
+}
+
+bool iceNET::isThreadKilled()
+{
+    return m_killThread;
+}
+
+void iceNET::iceNETThread()
+{
+    std::cout << "[INFO] [NET] Enter iceNETThread" << std::endl;
+
+    // socklen_t clientLength = sizeof(m_clientAddress);
+
+    while (!m_killThread)
+    {
+        std::cout << "[INFO] [NET] iceNETThread ready for next TCP packet" << std::endl;
+#if 0
+        if (false == m_clientConnected)
+        {
+            /* Wait for the TCP client connection */
+            m_clientSocket = accept(m_serverSocket, (struct sockaddr *)&m_clientAddress, &clientLength);
+
+            if(dataRX() > 0)
+            {
+                /* TODO :: Set the flag to indicate data ready */
+                setTcpRxReady(true);
+            }
+            else
+            {
+                std::cout << "[INFO] [NET] Nothing Received :: Cannot set TCP_TO_CHAR in State Machine" << std::endl;
+            }
+
+            if (dataTX() < 0)
+            {
+                std::cout << "[ERROR] [NET] Failed to send message" << std::endl;
+            }
+            else
+            {
+                std::cout << "[INFO] [NET] Transfer complete" << std::endl;
+            }
+
+            closeCOM();
+
+        }
+#endif
+        /* Reduce consumption of CPU resources */
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
+
+    std::cout << "[INFO] [NET] Terminate iceNETThread" << std::endl;
+}
+
+#if 0
 int iceNET::openCOM() 
 {
     m_serverSocket = socket(AF_INET, SOCK_STREAM, 0);
@@ -198,104 +296,4 @@ int iceNET::closeCOM()
 
     return 0;
 }
-
-void iceNET::initThread()
-{
-    std::cout << "[INFO] [NET] Init the iceNETThread" << std::endl;
-    m_iceNETThread = std::thread(&iceNET::iceNETThread, this);
-}
-
-bool iceNET::isThreadKilled()
-{
-    return m_killThread;
-}
-
-void iceNET::killThread()
-{
-    m_killThread = true;
-}
-
-void iceNET::iceNETThread()
-{
-    std::cout << "[INFO] [NET] Enter iceNETThread" << std::endl;
-
-    socklen_t clientLength = sizeof(m_clientAddress);
-
-    while (!m_killThread)
-    {
-        std::cout << "[INFO] [NET] iceNETThread ready for next TCP packet" << std::endl;
-
-        if (false == m_clientConnected)
-        {
-            /* Wait for the TCP client connection */
-            m_clientSocket = accept(m_serverSocket, (struct sockaddr *)&m_clientAddress, &clientLength);
-
-            if(dataRX() > 0)
-            {
-                /* TODO :: Set the flag to indicate data ready */
-                setTcpRxReady(true);
-            }
-            else
-            {
-                std::cout << "[INFO] [NET] Nothing Received :: Cannot set TCP_TO_CHAR in State Machine" << std::endl;
-            }
-
-            if (dataTX() < 0)
-            {
-                std::cout << "[ERROR] [NET] Failed to send message" << std::endl;
-            }
-            else
-            {
-                std::cout << "[INFO] [NET] Transfer complete" << std::endl;
-            }
-
-            closeCOM();
-
-        }
-
-        /* Reduce consumption of CPU resources */
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
-    }
-
-    std::cout << "[INFO] [NET] Terminate iceNETThread" << std::endl;
-}
-
-/**
- * 
- * Data
- * 
- */
-std::vector<char>* iceNET::getTcpServerRx()
-{
-    return &m_tcpServerRx;
-}
-
-void iceNET::setTcpServerTx(std::vector<char>* tcpVector)
-{
-    m_tcpServerTx = *tcpVector;
-}
-
-/**
- * 
- * Flags
- * 
- */
-bool iceNET::getTcpRxReady()
-{
-    return m_tcpRxReady;
-}
-
-void iceNET::setTcpRxReady(bool flag)
-{
-    m_tcpRxReady = flag;
-}
-
-bool iceNET::getTcpTxReady()
-{
-    return m_tcpTxReady;
-}
-
-void iceNET::setTcpTxReady(bool flag)
-{
-    m_tcpTxReady = flag;
-}
+#endif
