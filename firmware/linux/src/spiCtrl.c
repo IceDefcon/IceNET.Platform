@@ -173,7 +173,7 @@ void interruptFromFpga(struct work_struct *work)
     for (i = 0; i < sizeof(spi_rx_at_interruptFromFpga); ++i) {
         printk(KERN_INFO "[CTRL][SPI] Secondary FPGA Transfer :: Byte[%d]: [Feedback]Kernel.TX[0x%02x] [Data]Fpga.RX[0x%02x]\n", i, spi_tx_at_interruptFromFpga[i], spi_rx_at_interruptFromFpga[i]);
     }
-
+#if 0
     // Allocate memory for RxData
     spiCtrlTransfer.RxData = (char *)kmalloc(1 * sizeof(char), GFP_KERNEL);
     if (!spiCtrlTransfer.RxData) 
@@ -190,7 +190,7 @@ void interruptFromFpga(struct work_struct *work)
 
     spi_rx_at_interruptFromFpga[0] = 0x00;
     setStateMachine(FEEDBACK);
-
+#endif
     /*!
      * 
      * 

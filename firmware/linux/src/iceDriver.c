@@ -43,8 +43,6 @@ static int __init fpga_driver_init(void)
     spiWorkInit();
     /* Initialise gpio ISR */
     isrGpioInit();
-    /* Initialise network stack */
-    // tcpServerInit();
 
     printk(KERN_INFO "----------------------------------\n");
     printk(KERN_INFO "[READY] Driver loaded successfuly \n");
@@ -63,7 +61,6 @@ static int __init fpga_driver_init(void)
 static void __exit fpga_driver_exit(void)
 {
     /* Destroy everything */
-    // tcpServerDestroy();
     isrGpioDestroy();
     spiWorkDestroy();
     spiDestroy();

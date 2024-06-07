@@ -8,12 +8,12 @@
 
 Compute::Compute() 
 {
-	Info("[CONSTRUCTOR] Initialise Compute Object");
+	Info("[CONSTRUCTOR] Instantiate Compute");
 }
 
 Compute::~Compute() 
 {
-	Info("[DESTRUCTOR] Destroy Compute Object");
+	Info("[DESTRUCTOR] Destroy Compute");
 }
 
 uint8_t Compute::computeDeviceAddress(const char* in)
