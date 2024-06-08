@@ -57,7 +57,6 @@ static stateType currentState = IDLE;
  */
 static int StateMachineThread(void *data)
 {
-    DataTransfer* transfer;
     stateType state;
     
     while (!kthread_should_stop()) 
@@ -71,14 +70,9 @@ static int StateMachineThread(void *data)
 
             case SPI:
                 printk(KERN_INFO "[CTRL][STM] SPI mode\n");
-                transfer = charDevice_getRxData();
-                if (true == transfer->ready)
-                {
-                    printk(KERN_INFO "[CTRL][STM] SPI Data Ready\n");
-                    transfer->ready = false;
-                    queue_work(get_transferFromCharDevice_wq(), get_transferFromCharDevice_work());
-                    setStateMachine(IDLE);
-                }
+                /* This will queue execution of transferFromCharDevice */
+                queue_work(get_transferFromCharDevice_wq(), get_transferFromCharDevice_work());
+                setStateMachine(IDLE);
                 break;
 
             case INTERRUPT:
@@ -91,11 +85,10 @@ static int StateMachineThread(void *data)
             case FEEDBACK:
                 printk(KERN_INFO "[CTRL][STM] FEEDBACK mode\n");
 #if 0
-                transfer = charDevice_getRxData();
+                feedbckTransfer = charDevice_getRxData();
                 transferCtrl = spiCtrl_getRxData();
-                transfer->TxData[0] = (char)transferCtrl->RxData[0];
-                transfer->TxData[1] = '\0';
-                transfer->readyFlag = true;
+                feedbckTransfer->TxData[0] = (char)transferCtrl->RxData[0];
+                feedbckTransfer->TxData[1] = '\0';
 #endif
                 setStateMachine(IDLE);
                 break;

@@ -43,10 +43,13 @@ static int numberOpens[2] = {0,0};
 static DEFINE_MUTEX(com_mutex);
 static DEFINE_MUTEX(net_mutex);
 
-static int dev_open(struct inode *inodep, struct file *filep);
+static int dev_open_com(struct inode *inodep, struct file *filep);
 static ssize_t dev_read(struct file *, char *, size_t, loff_t *);
 static ssize_t dev_write(struct file *, const char *, size_t, loff_t *);
-static int dev_release(struct inode *inodep, struct file *filep);
+static int dev_close_com(struct inode *inodep, struct file *filep);
+
+static int dev_open_net(struct inode *inodep, struct file *filep);
+static int dev_close_net(struct inode *inodep, struct file *filep);
 
 static DataTransfer charDeviceTransfer; 
 
@@ -59,16 +62,16 @@ enum deviceTYPE
 static struct file_operations fops[2] =
 {
    {
-       .open = dev_open,
+       .open = dev_open_com,
        .read = dev_read,
        .write = dev_write,
-       .release = dev_release,
+       .release = dev_close_com,
    },
    {
-       .open = dev_open,
+       .open = dev_open_net,
        .read = dev_read,
        .write = dev_write,
-       .release = dev_release,
+       .release = dev_close_net,
    }
 };
 
@@ -96,7 +99,6 @@ static void init_charDevice_Data(void)
     charDeviceTransfer.RxData = RxData;
     charDeviceTransfer.TxData = TxData; /* TODO :: TxData is Dummy 0xBB */
     charDeviceTransfer.length = 2;
-    charDeviceTransfer.ready = false;
 
     printk(KERN_ALERT "[INIT][COM] Initialize charDevice Data\n");
 }
@@ -279,7 +281,7 @@ void charDeviceDestroy(void)
     printk(KERN_INFO "[DESTROY][NET] Char device destruction complete\n");
 }
 
-static int dev_open(struct inode *inodep, struct file *filep)
+static int dev_open_com(struct inode *inodep, struct file *filep)
 {
     if(!mutex_trylock(&com_mutex))
     {
@@ -290,6 +292,11 @@ static int dev_open(struct inode *inodep, struct file *filep)
     numberOpens[ICE_COM]++;
     printk(KERN_INFO "[CTRL][COM] Device has been opened %d time(s)\n", numberOpens[ICE_COM]);
 
+    return 0;
+}
+
+static int dev_open_net(struct inode *inodep, struct file *filep)
+{
     if(!mutex_trylock(&net_mutex))
     {
         printk(KERN_ALERT "[CTRL][NET] Device in use by another process");
@@ -349,7 +356,6 @@ static ssize_t dev_write(struct file *filep, const char __user *buffer, size_t l
 
     charDeviceTransfer.RxData[len] = '\0';  /* Null terminate the char array */
     charDeviceTransfer.length = len;
-    charDeviceTransfer.ready = true;
 
     // Print each character of the RxData array
     for (i = 0; i < charDeviceTransfer.length; i++) 
@@ -362,10 +368,18 @@ static ssize_t dev_write(struct file *filep, const char __user *buffer, size_t l
     return 0;
 }
 
-static int dev_release(struct inode *inodep, struct file *filep)
+static int dev_close_com(struct inode *inodep, struct file *filep)
 {
     printk(KERN_ALERT "[INIT][COM] Unlock [C] Device Mutex\n");
     mutex_unlock(&com_mutex);
     printk(KERN_INFO "[CTRL][COM] Device successfully closed\n");
+    return 0;
+}
+
+static int dev_close_net(struct inode *inodep, struct file *filep)
+{
+    printk(KERN_ALERT "[INIT][NET] Unlock [C] Device Mutex\n");
+    mutex_unlock(&net_mutex);
+    printk(KERN_INFO "[CTRL][NET] Device successfully closed\n");
     return 0;
 }

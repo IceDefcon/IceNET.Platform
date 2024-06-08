@@ -57,22 +57,21 @@ iceNET::~iceNET()
 
 int iceNET::openDEV() 
 {
-    Status ret = UNKNOWN;
     m_file_descriptor = open("/dev/iceNET", O_RDWR);
 
     if(m_file_descriptor < 0)
     {
-        std::cout << "[ERROR] [NET] Failed to open Device" << std::endl;
-        ret = ERROR;
+        std::cout << "[NET] Failed to open Device" << std::endl;
+        m_killThread = true;
+        return ERROR;
     } 
     else 
     {
-        std::cout << "[INFO] [NET] Device opened successfuly" << std::endl;
+        std::cout << "[NET] Device opened successfuly" << std::endl;
         initThread();
-        ret = OK;
     }
 
-    return ret;
+    return OK;
 }
 
 int iceNET::dataRX()
@@ -92,6 +91,9 @@ int iceNET::closeDEV()
         close(m_file_descriptor);
         m_file_descriptor = -1; // Mark as closed
     }
+
+    /* TODO :: Temporarily here */
+    m_killThread = true;
 
     return OK;
 }
@@ -115,8 +117,8 @@ void iceNET::iceNETThread()
 
     while (!m_killThread)
     {
-        std::cout << "[INFO] [NET] iceNETThread ready for next TCP packet" << std::endl;
 #if 0
+        std::cout << "[INFO] [NET] iceNETThread ready for next TCP packet" << std::endl;
         if (false == m_clientConnected)
         {
             /* Wait for the TCP client connection */

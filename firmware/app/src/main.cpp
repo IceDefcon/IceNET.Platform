@@ -13,17 +13,18 @@
 int main() 
 {
 	/* Heap Allocation */ 
-    iceCOM* iceCOMinstance = new iceCOM; /* Kernel Communication */
     iceNET* iceNETinstance = new iceNET; /* TCP Server class */
+    iceCOM* iceCOMinstance = new iceCOM; /* Kernel Communication */
 
-	iceCOMinstance->openDEV(); /* Open char device */
 	iceNETinstance->openDEV(); /* Open char device */
+	iceCOMinstance->openDEV(); /* Open char device */
 
 	while(true) /* Terminate Kernel comms and Clean Memory */
 	{
 	    if (iceCOMinstance->isThreadKilled()) 
 	    {
 	    	iceCOMinstance->closeDEV();
+	    	iceNETinstance->closeDEV();
 	        break;
 	    }
 

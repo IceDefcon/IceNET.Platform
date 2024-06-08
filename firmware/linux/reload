@@ -1,4 +1,5 @@
 rmmod iceDriver
+make clean
 make
 insmod iceDriver.ko
 ../app/app

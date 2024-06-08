@@ -23,7 +23,7 @@
 //                      //
 //////////////////////////
 
-static irqreturn_t interruptFromFpga(int irq, void *data)
+static irqreturn_t interruptFromFpgaISR(int irq, void *data)
 {
     static int counter = 0;
 
@@ -106,7 +106,7 @@ static int interruptFromFpgaInit(void)
         printk(KERN_ERR "[INIT][ISR] Setup GPIO Pin [%d] as interrupt\n", GPIO_FPGA_INTERRUPT);
     }
 
-    result = request_irq(irq_kernel, interruptFromFpga, IRQF_TRIGGER_RISING, "Request IRQ", NULL);
+    result = request_irq(irq_kernel, interruptFromFpgaISR, IRQF_TRIGGER_RISING, "Request IRQ", NULL);
     if (result < 0) 
     {
         printk(KERN_ERR "[INIT][ISR] Failed to request IRQ number :: Pin [%d]\n", GPIO_FPGA_INTERRUPT);
@@ -115,7 +115,7 @@ static int interruptFromFpgaInit(void)
     }
     else
     {
-        printk(KERN_ERR "[INIT][ISR] Register interruptFromFpga callback at Pin [%d] IRQ\n", GPIO_FPGA_INTERRUPT);
+        printk(KERN_ERR "[INIT][ISR] Register interruptFromFpgaISR callback at Pin [%d] IRQ\n", GPIO_FPGA_INTERRUPT);
     }
 
     return 0;

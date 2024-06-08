@@ -51,7 +51,7 @@ static volatile uint8_t spi_tx_at_transferFromCharDevice[] = {0xAA};
 static volatile uint8_t spi_rx_at_transferFromCharDevice[8];
 
 #include "types.h"
-static DataTransfer spiCtrlTransfer; 
+static DataTransfer fpgaFeedbackTransfer; 
 
 int spiInit(void)
 {
@@ -173,39 +173,21 @@ void interruptFromFpga(struct work_struct *work)
     for (i = 0; i < sizeof(spi_rx_at_interruptFromFpga); ++i) {
         printk(KERN_INFO "[CTRL][SPI] Secondary FPGA Transfer :: Byte[%d]: [Feedback]Kernel.TX[0x%02x] [Data]Fpga.RX[0x%02x]\n", i, spi_tx_at_interruptFromFpga[i], spi_rx_at_interruptFromFpga[i]);
     }
-#if 0
-    // Allocate memory for RxData
-    spiCtrlTransfer.RxData = (char *)kmalloc(1 * sizeof(char), GFP_KERNEL);
-    if (!spiCtrlTransfer.RxData) 
+
+    /* Feedback processing */
+    fpgaFeedbackTransfer.RxData = (char *)kmalloc(1 * sizeof(char), GFP_KERNEL);
+    if (!fpgaFeedbackTransfer.RxData) 
     {
-        // Handle memory allocation failure
-        printk(KERN_ERR "Memory allocation failed for RxData\n");
+        printk(KERN_ERR "[CTRL][SPI] Memory allocation failed for RxData\n");
     }
-
-    // Set the first byte of RxData
-    spiCtrlTransfer.RxData[0] = (char)spi_rx_at_interruptFromFpga[0];
-
-    // Set the ready flag
-    spiCtrlTransfer.ready = true;
-
+    fpgaFeedbackTransfer.RxData[0] = (char)spi_rx_at_interruptFromFpga[0];
     spi_rx_at_interruptFromFpga[0] = 0x00;
     setStateMachine(FEEDBACK);
-#endif
-    /*!
-     * 
-     * 
-     * 
-     * Here we should receive data from
-     * FPGA for kernel processing
-     * 
-     * 
-     * 
-     */
 }
 
 /* GET TRANSFER RX DATA */ DataTransfer* spiCtrl_getRxData(void) 
 {
-    return &spiCtrlTransfer;
+    return &fpgaFeedbackTransfer;
 }
 
 void transferFromCharDevice(struct work_struct *work)
