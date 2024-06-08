@@ -26,7 +26,6 @@ typedef struct
     volatile char *RxData;
     volatile char *TxData;
     size_t length;
-    bool ready;
 } DataTransfer;
 
 #endif // SPI_TYPES_H

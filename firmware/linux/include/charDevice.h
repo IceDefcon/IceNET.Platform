@@ -20,8 +20,6 @@
 //                  //
 //////////////////////
 
-#define CD_OK 0
-
 /* GET TRANSFER RX DATA */ DataTransfer* charDevice_getRxData(void);
 
 void charDeviceInit(void);
