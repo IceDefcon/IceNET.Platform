@@ -70,7 +70,7 @@ static int StateMachineThread(void *data)
 
             case SPI:
                 printk(KERN_INFO "[CTRL][STM] SPI mode\n");
-                /* This will queue execution of transferFromCharDevice */
+                /* QUEUE :: Execution of transferFromCharDevice */
                 queue_work(get_transferFromCharDevice_wq(), get_transferFromCharDevice_work());
                 setStateMachine(IDLE);
                 break;
@@ -84,12 +84,8 @@ static int StateMachineThread(void *data)
 
             case FEEDBACK:
                 printk(KERN_INFO "[CTRL][STM] FEEDBACK mode\n");
-#if 0
-                feedbckTransfer = charDevice_getRxData();
-                transferCtrl = spiCtrl_getRxData();
-                feedbckTransfer->TxData[0] = (char)transferCtrl->RxData[0];
-                feedbckTransfer->TxData[1] = '\0';
-#endif
+                /* QUEUE :: Execution of feedbackTransferFromFPGA */
+                queue_work(get_feedbackTransferFromFPGA_wq(), get_feedbackTransferFromFPGA_work());
                 setStateMachine(IDLE);
                 break;
 

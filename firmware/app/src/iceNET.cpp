@@ -61,13 +61,13 @@ int iceNET::openDEV()
 
     if(m_file_descriptor < 0)
     {
-        std::cout << "[NET] Failed to open Device" << std::endl;
+        std::cout << "[ERNO] [NET] Failed to open Device" << std::endl;
         m_killThread = true;
         return ERROR;
     } 
     else 
     {
-        std::cout << "[NET] Device opened successfuly" << std::endl;
+        std::cout << "[INFO] [NET] Device opened successfuly" << std::endl;
         initThread();
     }
 
@@ -113,40 +113,39 @@ void iceNET::iceNETThread()
 {
     std::cout << "[INFO] [NET] Enter iceNETThread" << std::endl;
 
-    // socklen_t clientLength = sizeof(m_clientAddress);
+    tcpOpen();
+
+    socklen_t clientLength = sizeof(m_clientAddress);
 
     while (!m_killThread)
     {
-#if 0
         std::cout << "[INFO] [NET] iceNETThread ready for next TCP packet" << std::endl;
         if (false == m_clientConnected)
         {
             /* Wait for the TCP client connection */
             m_clientSocket = accept(m_serverSocket, (struct sockaddr *)&m_clientAddress, &clientLength);
 
-            if(dataRX() > 0)
+            if(tcpRX() > 0)
             {
                 /* TODO :: Set the flag to indicate data ready */
-                setTcpRxReady(true);
             }
             else
             {
                 std::cout << "[INFO] [NET] Nothing Received :: Cannot set TCP_TO_CHAR in State Machine" << std::endl;
             }
 
-            if (dataTX() < 0)
+            if (tcpTX() < 0)
             {
-                std::cout << "[ERROR] [NET] Failed to send message" << std::endl;
+                std::cout << "[ERNO] [NET] Failed to send message" << std::endl;
             }
             else
             {
                 std::cout << "[INFO] [NET] Transfer complete" << std::endl;
             }
 
-            closeCOM();
+            tcpClose();
 
         }
-#endif
         /* Reduce consumption of CPU resources */
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
@@ -154,14 +153,13 @@ void iceNET::iceNETThread()
     std::cout << "[INFO] [NET] Terminate iceNETThread" << std::endl;
 }
 
-#if 0
-int iceNET::openCOM() 
+int iceNET::tcpOpen() 
 {
     m_serverSocket = socket(AF_INET, SOCK_STREAM, 0);
     
     if (m_serverSocket < 0)
     {
-        std::cout << "[ERROR] [NET] Error opening socket" << std::endl;
+        std::cout << "[ERNO] [NET] Error opening socket" << std::endl;
     }
 
     /**
@@ -179,7 +177,7 @@ int iceNET::openCOM()
     ret = setsockopt(m_serverSocket, SOL_SOCKET, SO_REUSEADDR, &option, sizeof(option));
     if (ret < 0) 
     {
-        std::cout << "[ERROR] [NET] Error setting socket options" << std::endl;
+        std::cout << "[ERNO] [NET] Error setting socket options" << std::endl;
     }
     else
     {
@@ -189,7 +187,7 @@ int iceNET::openCOM()
     ret = bind(m_serverSocket, (struct sockaddr *)&m_serverAddress, sizeof(m_serverAddress));
     if (ret < 0) 
     {
-        std::cout << "[ERROR] [NET] Error on binding the socket" << std::endl;
+        std::cout << "[ERNO] [NET] Error on binding the socket" << std::endl;
     }
     else
     {
@@ -207,24 +205,23 @@ int iceNET::openCOM()
     listen(m_serverSocket, 5);
     if (ret < 0) 
     {
-        std::cout << "[ERROR] [NET] Error listening for connections" << std::endl;
+        std::cout << "[ERNO] [NET] Error listening for connections" << std::endl;
     }
     else
     {
         std::cout << "[INFO] [NET] Listening at the TCP Port..." << std::endl;
-        initThread();
     }
 
     return 0;
 }
 
-int iceNET::dataTX() 
+int iceNET::tcpTX() 
 {
     ssize_t ret = -1;
 
     if (!m_clientConnected) 
     {
-        std::cerr << "Socket Server: no client connected" << std::endl;
+        std::cerr << "[ERNO] [NET] No client connected" << std::endl;
     }
     else
     {
@@ -242,11 +239,11 @@ int iceNET::dataTX()
     return ret;
 }
 
-int iceNET::dataRX()
+int iceNET::tcpRX()
 {
     if (m_clientSocket < 0)
     {
-        std::cout << "[ERROR] [NET] Failed to accept the client connection" << std::endl;
+        std::cout << "[ERNO] [NET] Failed to accept the client connection" << std::endl;
     }
     else
     {
@@ -277,7 +274,7 @@ int iceNET::dataRX()
         }
         else
         {
-            std::cout << "[ERROR] [NET] Error receiving data" << std::endl;
+            std::cout << "[ERNO] [NET] Error receiving data" << std::endl;
         }
     }
     
@@ -287,7 +284,7 @@ int iceNET::dataRX()
     return m_bytesReceived;
 }
 
-int iceNET::closeCOM() 
+int iceNET::tcpClose() 
 {
     if (m_clientSocket >= 0) 
     {
@@ -298,4 +295,3 @@ int iceNET::closeCOM()
 
     return 0;
 }
-#endif

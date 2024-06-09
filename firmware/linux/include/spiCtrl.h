@@ -22,10 +22,11 @@
 //////////////////////
 
 /* SPI */ int spiInit(void);
-/* KERNEL */ void interruptFromFpga(struct work_struct *work);
-/* MAIN */ void transferFromCharDevice(struct work_struct *work);
+/* FPGA */ void interruptFromFpga(struct work_struct *work);
+/* KERNEL */ void transferFromCharDevice(struct work_struct *work);
+/* KERNEL */ void feedbackTransferFromFPGA(struct work_struct *work);
 /* SPI */ void spiDestroy(void);
 
-/* GET TRANSFER RX DATA */ DataTransfer* spiCtrl_getRxData(void);
+/* GET TRANSFER RX DATA */ DataTransfer* get_fpgaFeedbackTransfer(void);
 
 #endif // SPI_FPGA_H
