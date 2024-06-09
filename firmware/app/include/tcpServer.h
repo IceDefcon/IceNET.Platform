@@ -14,13 +14,15 @@
 #include <atomic>
 #include <vector>
 
-const size_t ICE_NET_BUFFER_SIZE = 32;
+#include "stateMachine.h"
 
-class iceNET
+const size_t TCP_BUFFER_SIZE = 32;
+
+class tcpServer
 {
     private:
         int m_file_descriptor;
-        std::thread m_iceNETThread;
+        std::thread m_tcpServerThread;
         std::atomic<bool> m_killThread;
 
         int m_portNumber;
@@ -33,12 +35,14 @@ class iceNET
         struct sockaddr_in m_clientAddress;
 
         /* For TCP server Traffic */
-        std::vector<char> m_iceNETRx;
-        std::vector<char> m_iceNETTx;
+        std::vector<char>* m_tcpServerRx;
+        std::vector<char>* m_tcpServerTx;
+
+        stateMachine* m_StateMachineIstance;
 
     public:
-        iceNET();
-        ~iceNET();
+        tcpServer();
+        ~tcpServer();
 
         int openDEV();
         int dataTX();
@@ -48,5 +52,12 @@ class iceNET
         void initThread();
         bool isThreadKilled();
 
-        void iceNETThread();
+        void tcpServerThread();
+
+        int initServer();
+        int tcpTX();
+        int tcpRX();
+        int tcpClose();
+
+        void setStateMachineIstance(stateMachine* instance);
 };

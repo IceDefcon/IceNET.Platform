@@ -9,16 +9,33 @@
 
 #include "iceCOM.h"
 #include "iceNET.h"
+#include "tcpServer.h"
 #include "stateMachine.h"
 
 int main() 
 {
 	/* Heap Allocation */ 
+    tcpServer* tcpServerinstance = new tcpServer;
     stateMachine* stateMachineinstance = new stateMachine;
     iceNET* iceNETinstance = new iceNET;
     iceCOM* iceCOMinstance = new iceCOM;
 
-    stateMachineinstance->initSM(); /* Initialise State Machine */
+    /* Set instances */
+    tcpServerinstance->setStateMachineIstance(stateMachineinstance);
+    stateMachineinstance->setIceCOMinstance(iceCOMinstance);
+    stateMachineinstance->setIceNETinstance(iceNETinstance);
+
+    /**
+     * 
+     * TODO
+     * 
+     * Core class inplementation
+     * required for creadted
+     * inherited objects
+     * 
+     */
+    tcpServerinstance->openDEV();
+    stateMachineinstance->openDEV(); /* Initialise State Machine */
 	iceNETinstance->openDEV(); /* Open iceNET Device */
 	iceCOMinstance->openDEV(); /* Open iceCOM Device */
 
@@ -28,7 +45,17 @@ int main()
 	    {
 	    	iceCOMinstance->closeDEV();
 	    	iceNETinstance->closeDEV();
-	    	stateMachineinstance->shutdownSM();
+	    	stateMachineinstance->closeDEV();
+	    	/**
+	    	 * 
+	    	 * TODO
+	    	 * 
+	    	 * When this is executed TCP client must offload
+	    	 * in order to release the accept function
+	    	 * and join the iceNET Thread
+	    	 * 
+	    	 */
+	    	tcpServerinstance->closeDEV();
 	        break;
 	    }
 
@@ -37,6 +64,7 @@ int main()
 	}
 
 	delete stateMachineinstance;
+	delete tcpServerinstance;
 	delete iceCOMinstance;
 	delete iceNETinstance;
 
