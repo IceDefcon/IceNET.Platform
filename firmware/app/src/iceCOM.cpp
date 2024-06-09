@@ -21,13 +21,13 @@
 iceCOM::iceCOM() : 
     m_file_descriptor(0), 
     m_killThread(false),
-    m_charDeviceRx(CHAR_DEVICE_SIZE),
-    m_charDeviceTx(CHAR_DEVICE_SIZE),
+    m_iceCOMRx(CHAR_DEVICE_SIZE),
+    m_iceCOMTx(CHAR_DEVICE_SIZE),
     m_consoleControl(CHAR_CONSOLE_SIZE)
 {
-    // Initialize m_charDeviceRx, m_charDeviceTx, and m_consoleControl with zeros
-    std::fill(m_charDeviceRx.begin(), m_charDeviceRx.end(), 0);
-    std::fill(m_charDeviceTx.begin(), m_charDeviceTx.end(), 0);
+    // Initialize m_iceCOMRx, m_iceCOMTx, and m_consoleControl with zeros
+    std::fill(m_iceCOMRx.begin(), m_iceCOMRx.end(), 0);
+    std::fill(m_iceCOMTx.begin(), m_iceCOMTx.end(), 0);
     std::fill(m_consoleControl.begin(), m_consoleControl.end(), 0);
 
     Info("[CONSTRUCTOR] Instantiate iceCOM");
@@ -66,7 +66,7 @@ int iceCOM::dataRX()
     int ret;
 
     // Attempt to read data from kernel space
-    ret = read(m_file_descriptor, m_charDeviceRx.data(), CHAR_DEVICE_SIZE);
+    ret = read(m_file_descriptor, m_iceCOMRx.data(), CHAR_DEVICE_SIZE);
     
     if (ret == -1)
     {
@@ -81,10 +81,10 @@ int iceCOM::dataRX()
     else
     {
         // Print received data for debugging
-        Read(m_charDeviceRx.data());
+        Read(m_iceCOMRx.data());
 
         /* Clear char device Rx buffer */
-        m_charDeviceRx.clear();
+        m_iceCOMRx.clear();
 
         return OK;
     }
@@ -103,15 +103,6 @@ int iceCOM::dataTX()
         m_killThread = true;
         return ret;
     }
-#if 0 /* Console control FIFO offload */
-    else if (std::strcmp(m_consoleControl.data(), "rd") == 0)
-    {
-        m_charDeviceTx[0] = 0x12; /* Custom Kernel Byte Map :: Check reciprocal in charDevice.c */
-        m_charDeviceTx[1] = 0x34; /* Custom Kernel Byte Map :: Check reciprocal in charDevice.c */
-        ret = write(m_file_descriptor, m_charDeviceTx.data(), 2);
-        return ret;
-    }
-#endif
 
     /**
      * 
@@ -126,16 +117,16 @@ int iceCOM::dataTX()
      * Byte[3] :: Register Data
      * 
      */
-    m_charDeviceTx[0] = Compute::computeDeviceAddress(m_consoleControl.data());
-    m_charDeviceTx[1] = Compute::computeRegisterAddress(m_consoleControl.data());
-    m_charDeviceTx[2] = Compute::computeRegisterControl(m_consoleControl.data());
+    m_iceCOMTx[0] = Compute::computeDeviceAddress(m_consoleControl.data());
+    m_iceCOMTx[1] = Compute::computeRegisterAddress(m_consoleControl.data());
+    m_iceCOMTx[2] = Compute::computeRegisterControl(m_consoleControl.data());
 
     /* If Write then compute RegisterData */
-    if(m_charDeviceTx[2] == 0x01)
+    if(m_iceCOMTx[2] == 0x01)
     {
-        m_charDeviceTx[3] = Compute::computeRegisterData(m_consoleControl.data());
+        m_iceCOMTx[3] = Compute::computeRegisterData(m_consoleControl.data());
 
-        if(m_charDeviceTx[0] == 0xFF || m_charDeviceTx[1] == 0xFF || m_charDeviceTx[2] == 0xFF || m_charDeviceTx[3] == 0xFF) 
+        if(m_iceCOMTx[0] == 0xFF || m_iceCOMTx[1] == 0xFF || m_iceCOMTx[2] == 0xFF || m_iceCOMTx[3] == 0xFF) 
         {
             Error("[COM] Bytes computation failure [WR]");
             return ret;
@@ -143,7 +134,7 @@ int iceCOM::dataTX()
     }
     else
     {
-        if(m_charDeviceTx[0] == 0xFF || m_charDeviceTx[1] == 0xFF || m_charDeviceTx[2] == 0xFF) 
+        if(m_iceCOMTx[0] == 0xFF || m_iceCOMTx[1] == 0xFF || m_iceCOMTx[2] == 0xFF) 
         {
             Error("[COM] Bytes computation failure [RD]");
             return ret;
@@ -157,10 +148,10 @@ int iceCOM::dataTX()
          * FIFO input/output geometry
          * 
          */
-        m_charDeviceTx[3] = 0x00;
+        m_iceCOMTx[3] = 0x00;
     }
 
-    ret = write(m_file_descriptor, m_charDeviceTx.data(), 4);
+    ret = write(m_file_descriptor, m_iceCOMTx.data(), 4);
 
     if (ret == -1)
     {
@@ -182,12 +173,12 @@ int iceCOM::dataTX()
      * 
      */
     std::this_thread::sleep_for(std::chrono::milliseconds(20));
-    m_charDeviceTx[0] = 0x12; /* Custom Kernel Byte Map :: Check reciprocal in charDevice.c */
-    m_charDeviceTx[1] = 0x34; /* Custom Kernel Byte Map :: Check reciprocal in charDevice.c */
-    ret = write(m_file_descriptor, m_charDeviceTx.data(), 2);
+    m_iceCOMTx[0] = 0x12; /* Custom Kernel Byte Map :: Check reciprocal in charDevice.c */
+    m_iceCOMTx[1] = 0x34; /* Custom Kernel Byte Map :: Check reciprocal in charDevice.c */
+    ret = write(m_file_descriptor, m_iceCOMTx.data(), 2);
 
     
-    m_charDeviceTx.clear(); /* Clear charDevice Rx buffer */
+    m_iceCOMTx.clear(); /* Clear charDevice Rx buffer */
     m_consoleControl.clear(); /* Clear console control buffer */
 
     return OK;

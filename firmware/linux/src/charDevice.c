@@ -125,7 +125,7 @@ static void init_charDevice_Data(void)
     {
         // Handle the error, e.g., log it or assert
     }
-    printk(KERN_INFO "[CTRL][NET] Data set in the iceNETTransfer :: iceNETTransfer->RxData[0] = %02x \n", iceNETTransfer.RxData[0]);
+    printk(KERN_INFO "[CTRL][NET] Data set in the iceNETTransfer :: iceNETTransfer->RxData[0] = 0x%02x \n", iceNETTransfer.RxData[0]);
 
     mutex_unlock(&wait_mutex);
     printk(KERN_INFO "[CTRL][NET] Data from FPGA Received :: Unlock the mutex\n");

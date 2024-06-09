@@ -12,6 +12,8 @@
 #include <iostream>
 
 #include "types.h"
+#include "iceCOM.h"
+#include "iceNET.h"
 
 class stateMachine
 {
@@ -26,19 +28,27 @@ class stateMachine
         std::vector<char>* smRx;
         std::vector<char>* smTx;
 
+        iceNET* m_iceNETinstance;
+        iceCOM* m_iceCOMinstance;
+
 	public:
 
 		stateMachine();
 		~stateMachine();
 
-        int initSM();
+        int openDEV();
         int dataTX();
         int dataRX();
-        int shutdownSM();
+        int closeDEV();
 
         void initThread();
         bool isThreadKilled();
 
 		void stateMachineThread();
 		void setStateMachine(stateType newState);
+
+        void setIceCOMinstance(iceCOM* instance);
+        void setIceNETinstance(iceNET* instance);
+
+		void setStateMachineRx(std::vector<char>* DataRx);
 };
