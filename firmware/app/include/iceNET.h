@@ -49,4 +49,9 @@ class iceNET
         bool isThreadKilled();
 
         void iceNETThread();
+
+        int tcpOpen();
+        int tcpTX();
+        int tcpRX();
+        int tcpClose();
 };

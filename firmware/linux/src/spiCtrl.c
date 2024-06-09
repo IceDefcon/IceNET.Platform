@@ -12,6 +12,7 @@
 #include "spiCtrl.h"
 #include "charDevice.h"
 #include "stateMachine.h"
+#include "types.h"
 
 ////////////////////////
 //                    //
@@ -50,8 +51,12 @@ static volatile uint8_t spi_rx_at_interruptFromFpga[1];
 static volatile uint8_t spi_tx_at_transferFromCharDevice[] = {0xAA};
 static volatile uint8_t spi_rx_at_transferFromCharDevice[8];
 
-#include "types.h"
 static DataTransfer fpgaFeedbackTransfer; 
+
+/* GET TRANSFER RX DATA */ DataTransfer* get_fpgaFeedbackTransfer(void) 
+{
+    return &fpgaFeedbackTransfer;
+}
 
 int spiInit(void)
 {
@@ -185,11 +190,6 @@ void interruptFromFpga(struct work_struct *work)
     setStateMachine(FEEDBACK);
 }
 
-/* GET TRANSFER RX DATA */ DataTransfer* spiCtrl_getRxData(void) 
-{
-    return &fpgaFeedbackTransfer;
-}
-
 void transferFromCharDevice(struct work_struct *work)
 {
     struct spi_message msg;
@@ -197,7 +197,7 @@ void transferFromCharDevice(struct work_struct *work)
     int ret;
     int i;
 
-    DataTransfer* fpgaData = charDevice_getRxData();
+    DataTransfer* fpgaData = get_iceCOMTransfer();
 
     memset(&transfer, 0, sizeof(transfer));
     transfer.tx_buf = (void *)fpgaData->RxData;
@@ -226,7 +226,8 @@ void transferFromCharDevice(struct work_struct *work)
     /*!
      * 
      * Here we should process 
-     * feedback from FPGA
+     * additional feedback 
+     * from FPGA
      * 
      * Then Clear the buffer
      * 
@@ -236,6 +237,11 @@ void transferFromCharDevice(struct work_struct *work)
     {
         spi_rx_at_transferFromCharDevice[i] = 0x00;
     }
+}
+
+void feedbackTransferFromFPGA(struct work_struct *work)
+{
+    set_fpgaFeedbackTransfer(&fpgaFeedbackTransfer);
 }
 
 void spiDestroy(void)

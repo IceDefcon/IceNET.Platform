@@ -20,7 +20,8 @@
 //                  //
 //////////////////////
 
-/* GET TRANSFER RX DATA */ DataTransfer* charDevice_getRxData(void);
+/* GET iceCOM TRANSFER */ DataTransfer* get_iceCOMTransfer(void);
+/* SET FEEDBACK TRANSFER */ void set_fpgaFeedbackTransfer(const DataTransfer* transferData);
 
 void charDeviceInit(void);
 void charDeviceDestroy(void);

@@ -42,16 +42,20 @@ static int numberOpens[2] = {0,0};
 
 static DEFINE_MUTEX(com_mutex);
 static DEFINE_MUTEX(net_mutex);
+static DEFINE_MUTEX(wait_mutex);
 
 static int dev_open_com(struct inode *inodep, struct file *filep);
-static ssize_t dev_read(struct file *, char *, size_t, loff_t *);
-static ssize_t dev_write(struct file *, const char *, size_t, loff_t *);
+static ssize_t dev_read_com(struct file *, char *, size_t, loff_t *);
+static ssize_t dev_write_com(struct file *, const char *, size_t, loff_t *);
 static int dev_close_com(struct inode *inodep, struct file *filep);
 
 static int dev_open_net(struct inode *inodep, struct file *filep);
+static ssize_t dev_read_net(struct file *, char *, size_t, loff_t *);
+static ssize_t dev_write_net(struct file *, const char *, size_t, loff_t *);
 static int dev_close_net(struct inode *inodep, struct file *filep);
 
-static DataTransfer charDeviceTransfer; 
+static DataTransfer iceCOMTransfer; 
+static DataTransfer iceNETTransfer; 
 
 enum deviceTYPE
 {
@@ -63,14 +67,14 @@ static struct file_operations fops[2] =
 {
    {
        .open = dev_open_com,
-       .read = dev_read,
-       .write = dev_write,
+       .read = dev_read_com,
+       .write = dev_write_com,
        .release = dev_close_com,
    },
    {
        .open = dev_open_net,
-       .read = dev_read,
-       .write = dev_write,
+       .read = dev_read_net,
+       .write = dev_write_net,
        .release = dev_close_net,
    }
 };
@@ -96,16 +100,35 @@ static void init_charDevice_Data(void)
     TxData[0] = 0xBB; /* C Device Preamble */
     TxData[1] = '\0'; /* Null terminator */
 
-    charDeviceTransfer.RxData = RxData;
-    charDeviceTransfer.TxData = TxData; /* TODO :: TxData is Dummy 0xBB */
-    charDeviceTransfer.length = 2;
+    iceCOMTransfer.RxData = RxData;
+    iceCOMTransfer.TxData = TxData; /* TODO :: TxData is Dummy 0xBB */
+    iceCOMTransfer.length = 2;
 
-    printk(KERN_ALERT "[INIT][COM] Initialize charDevice Data\n");
+    /* Lock and wait until feedback transfer unlock it */
+    mutex_lock(&wait_mutex);
+
+    printk(KERN_INFO "[INIT][COM] Initialize charDevice Data :: Lock the mutex\n");
 }
 
-/* GET TRANSFER RX DATA */ DataTransfer* charDevice_getRxData(void) 
+/* GET iceCOM TRANSFER */ DataTransfer* get_iceCOMTransfer(void) 
 {
-    return &charDeviceTransfer;
+    return &iceCOMTransfer;
+}
+
+/* SET FEEDBACK TRANSFER */ void set_fpgaFeedbackTransfer(const DataTransfer* transferData)
+{
+    if (transferData != NULL)
+    {
+        iceNETTransfer = *transferData;
+    }
+    else
+    {
+        // Handle the error, e.g., log it or assert
+    }
+    printk(KERN_INFO "[CTRL][NET] Data set in the iceNETTransfer :: iceNETTransfer->RxData[0] = %02x \n", iceNETTransfer.RxData[0]);
+
+    mutex_unlock(&wait_mutex);
+    printk(KERN_INFO "[CTRL][NET] Data from FPGA Received :: Unlock the mutex\n");
 }
 
 void charDeviceInit(void)
@@ -192,6 +215,9 @@ void charDeviceInit(void)
 
     printk(KERN_ALERT "[INIT][NET] Lock on [C] Device Mutex\n");
     mutex_init(&net_mutex);
+
+    /* Initial feedback mutex lock */
+    mutex_init(&wait_mutex);
 }
 
 void charDeviceDestroy(void)
@@ -235,7 +261,7 @@ void charDeviceDestroy(void)
     }
 
     mutex_destroy(&com_mutex);
-    printk(KERN_INFO "[DESTROY][COM] Mutex destroyed\n");
+    printk(KERN_INFO "[DESTROY][COM] Com Mutex destroyed\n");
     printk(KERN_INFO "[DESTROY][COM] Char device destruction complete\n");
 
     //
@@ -277,10 +303,20 @@ void charDeviceDestroy(void)
     }
 
     mutex_destroy(&net_mutex);
-    printk(KERN_INFO "[DESTROY][NET] Mutex destroyed\n");
+    printk(KERN_INFO "[DESTROY][NET] Net Mutex destroyed\n");
+
+    mutex_destroy(&wait_mutex);
+    printk(KERN_INFO "[DESTROY][NET] Wait Mutex destroyed\n");
     printk(KERN_INFO "[DESTROY][NET] Char device destruction complete\n");
 }
 
+/**
+ * 
+ * 
+ * iceCOM Interface
+ * 
+ * 
+ */
 static int dev_open_com(struct inode *inodep, struct file *filep)
 {
     if(!mutex_trylock(&com_mutex))
@@ -295,6 +331,79 @@ static int dev_open_com(struct inode *inodep, struct file *filep)
     return 0;
 }
 
+static ssize_t dev_read_com(struct file *filep, char *buffer, size_t len, loff_t *offset)
+{
+    int error_count = 0;
+
+    /* TODO :: TxData is Dummy 0xBB */
+    error_count = copy_to_user(buffer, (const void *)iceCOMTransfer.TxData, iceCOMTransfer.length);
+
+    if (error_count == 0)
+    {
+        printk(KERN_INFO "[CTRL][COM] Sent %zu characters to user-space\n", iceCOMTransfer.length);
+        /* Length == Preamble + Null Terminator */
+        return iceCOMTransfer.length; 
+    }
+    else 
+    {
+        printk(KERN_INFO "[CTRL][COM] Failed to send %d characters to user-space\n", error_count);
+        /* Failed -- return a bad address message (i.e. -14) */
+        return -EFAULT;
+    }
+}
+
+static ssize_t dev_write_com(struct file *filep, const char __user *buffer, size_t len, loff_t *offset)
+{
+    int error_count = 0;
+    size_t i;
+
+    /* Copy RxData from user space to kernel space */
+    error_count = copy_from_user((void *)iceCOMTransfer.RxData, buffer, len);
+    if (error_count != 0) 
+    {
+        /* Free allocated memory */
+        kfree((void *)iceCOMTransfer.RxData);
+        /* Copy failed */
+        return -EFAULT;
+    }
+
+    /* 20ms delayed :: Read Enable pulse to FIFO */
+    if (iceCOMTransfer.RxData[0] == 0x12 && iceCOMTransfer.RxData[1] == 0x34)
+    {
+        printk(KERN_INFO "[CTRL][COM] Generate FIFO rd_en from Kernel [long pulse] to be cut in FPGA\n");
+        setStateMachine(INTERRUPT);
+        return 0;
+    }
+
+    iceCOMTransfer.RxData[len] = '\0';  /* Null terminate the char array */
+    iceCOMTransfer.length = len;
+
+    // Print each character of the RxData array
+    for (i = 0; i < iceCOMTransfer.length; i++) 
+    {
+        printk(KERN_INFO "[CTRL][COM] Received Byte[%zu]: 0x%02x\n", i, (unsigned char)iceCOMTransfer.RxData[i]);
+    }
+
+    setStateMachine(SPI);
+
+    return 0;
+}
+
+static int dev_close_com(struct inode *inodep, struct file *filep)
+{
+    printk(KERN_ALERT "[INIT][COM] Unlock [C] Device Mutex\n");
+    mutex_unlock(&com_mutex);
+    printk(KERN_INFO "[CTRL][COM] Device successfully closed\n");
+    return 0;
+}
+
+/**
+ * 
+ * 
+ * iceNET Interface
+ * 
+ * 
+ */
 static int dev_open_net(struct inode *inodep, struct file *filep)
 {
     if(!mutex_trylock(&net_mutex))
@@ -309,18 +418,21 @@ static int dev_open_net(struct inode *inodep, struct file *filep)
     return 0;
 }
 
-static ssize_t dev_read(struct file *filep, char *buffer, size_t len, loff_t *offset)
+static ssize_t dev_read_net(struct file *filep, char *buffer, size_t len, loff_t *offset)
 {
     int error_count = 0;
 
+    printk(KERN_INFO "[CTRL][SPI] Wait for FPGA Data :: Lock the mutex\n");
+    mutex_lock(&wait_mutex);
+
     /* TODO :: TxData is Dummy 0xBB */
-    error_count = copy_to_user(buffer, (const void *)charDeviceTransfer.TxData, charDeviceTransfer.length);
+    error_count = copy_to_user(buffer, (const void *)iceNETTransfer.TxData, iceNETTransfer.length);
 
     if (error_count == 0)
     {
-        printk(KERN_INFO "[CTRL][COM] Sent %zu characters to user-space\n", charDeviceTransfer.length);
+        printk(KERN_INFO "[CTRL][COM] Sent %zu characters to user-space\n", iceNETTransfer.length);
         /* Length == Preamble + Null Terminator */
-        return charDeviceTransfer.length; 
+        return iceNETTransfer.length; 
     }
     else 
     {
@@ -330,49 +442,30 @@ static ssize_t dev_read(struct file *filep, char *buffer, size_t len, loff_t *of
     }
 }
 
-static ssize_t dev_write(struct file *filep, const char __user *buffer, size_t len, loff_t *offset)
+static ssize_t dev_write_net(struct file *filep, const char __user *buffer, size_t len, loff_t *offset)
 {
     int error_count = 0;
     size_t i;
 
     /* Copy RxData from user space to kernel space */
-    error_count = copy_from_user((void *)charDeviceTransfer.RxData, buffer, len);
+    error_count = copy_from_user((void *)iceNETTransfer.RxData, buffer, len);
     if (error_count != 0) 
     {
         /* Free allocated memory */
-        kfree((void *)charDeviceTransfer.RxData);
+        kfree((void *)iceNETTransfer.RxData);
         /* Copy failed */
         return -EFAULT;
     }
 
-#if 1 /* Test :: Read Enable pulse to FIFO */
-    if (charDeviceTransfer.RxData[0] == 0x12 && charDeviceTransfer.RxData[1] == 0x34)
-    {
-        printk(KERN_INFO "[CTRL][COM] Generate FIFO rd_en from Kernel [long pulse] to be cut in FPGA\n");
-        setStateMachine(INTERRUPT);
-        return 0;
-    }
-#endif
-
-    charDeviceTransfer.RxData[len] = '\0';  /* Null terminate the char array */
-    charDeviceTransfer.length = len;
+    iceNETTransfer.RxData[len] = '\0';  /* Null terminate the char array */
+    iceNETTransfer.length = len;
 
     // Print each character of the RxData array
-    for (i = 0; i < charDeviceTransfer.length; i++) 
+    for (i = 0; i < iceNETTransfer.length; i++) 
     {
-        printk(KERN_INFO "[CTRL][COM] Received Byte[%zu]: 0x%02x\n", i, (unsigned char)charDeviceTransfer.RxData[i]);
+        printk(KERN_INFO "[CTRL][COM] Received Byte[%zu]: 0x%02x\n", i, (unsigned char)iceNETTransfer.RxData[i]);
     }
 
-    setStateMachine(SPI);
-
-    return 0;
-}
-
-static int dev_close_com(struct inode *inodep, struct file *filep)
-{
-    printk(KERN_ALERT "[INIT][COM] Unlock [C] Device Mutex\n");
-    mutex_unlock(&com_mutex);
-    printk(KERN_INFO "[CTRL][COM] Device successfully closed\n");
     return 0;
 }
 
