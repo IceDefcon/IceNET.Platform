@@ -30,6 +30,7 @@ iceCOM::iceCOM() :
     std::fill(m_iceCOMTx->begin(), m_iceCOMTx->end(), 0);
     std::fill(m_consoleControl->begin(), m_consoleControl->end(), 0);
 
+    m_iceCOMmutex.lock();
     Info("[CONSTRUCTOR] Instantiate iceCOM");
 }
 
@@ -40,6 +41,8 @@ iceCOM::~iceCOM()
     {
         m_iceCOMThread.join();
     }
+
+    m_iceCOMmutex.unlock();
 }
 
 int iceCOM::openDEV() 
@@ -65,7 +68,6 @@ int iceCOM::dataRX()
 {
     int ret;
 
-    // Attempt to read data from kernel space
     ret = read(m_file_descriptor, m_iceCOMRx->data(), CHAR_DEVICE_SIZE);
     
     if (ret == -1)
@@ -104,6 +106,7 @@ int iceCOM::dataTX()
         return ret;
     }
 
+#if 0 /* Console control :: Moved to TCP server */
     /**
      * 
      * We have to pass data trough the FIFO
@@ -150,7 +153,11 @@ int iceCOM::dataTX()
          */
         (*m_iceCOMTx)[3] = 0x00;
     }
+#endif
 
+    /* Wait for data from TCP client */
+    Info("[COM] Lock m_iceCOMmutex");
+    m_iceCOMmutex.lock();
     ret = write(m_file_descriptor, m_iceCOMTx->data(), 4);
 
     if (ret == -1)
@@ -238,4 +245,11 @@ void iceCOM::iceCOMThread()
     }
 
     Info("[COM] Terminate iceCOMThread");
+}
+
+void iceCOM::setIceCOMTx(std::vector<char>* DataRx)
+{
+    m_iceCOMTx = DataRx;
+    Info("[COM] Unlock m_iceCOMmutex");
+    m_iceCOMmutex.unlock();
 }

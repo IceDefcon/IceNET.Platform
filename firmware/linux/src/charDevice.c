@@ -125,7 +125,9 @@ static void init_charDevice_Data(void)
     {
         // Handle the error, e.g., log it or assert
     }
+    iceNETTransfer.length = 1;
     printk(KERN_INFO "[CTRL][NET] Data set in the iceNETTransfer :: iceNETTransfer->RxData[0] = 0x%02x \n", iceNETTransfer.RxData[0]);
+    printk(KERN_INFO "[CTRL][NET] Data set in the iceNETTransfer :: iceNETTransfer->lenght = %d \n", iceNETTransfer.length);
 
     mutex_unlock(&wait_mutex);
     printk(KERN_INFO "[CTRL][NET] Data from FPGA Received :: Unlock the mutex\n");
@@ -426,7 +428,7 @@ static ssize_t dev_read_net(struct file *filep, char *buffer, size_t len, loff_t
     mutex_lock(&wait_mutex);
 
     /* TODO :: TxData is Dummy 0xBB */
-    error_count = copy_to_user(buffer, (const void *)iceNETTransfer.TxData, iceNETTransfer.length);
+    error_count = copy_to_user(buffer, (const void *)iceNETTransfer.RxData, iceNETTransfer.length);
 
     if (error_count == 0)
     {

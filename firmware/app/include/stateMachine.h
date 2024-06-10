@@ -25,8 +25,8 @@ class stateMachine
 		stateType m_currentState;
 
         /* For data Traffic */
-        std::vector<char>* smRx;
-        std::vector<char>* smTx;
+        std::vector<char>* m_smRx;
+        std::vector<char>* m_smTx;
 
         iceNET* m_iceNETinstance;
         iceCOM* m_iceCOMinstance;
