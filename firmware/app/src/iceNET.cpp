@@ -18,14 +18,14 @@
 iceNET::iceNET() :
     m_file_descriptor(0), 
     m_killThread(false),
-    m_iceNETRx(ICE_NET_BUFFER_SIZE),
-    m_iceNETTx(ICE_NET_BUFFER_SIZE)
+    m_iceNETRx(new std::vector<char>(ICE_NET_BUFFER_SIZE)),
+    m_iceNETTx(new std::vector<char>(ICE_NET_BUFFER_SIZE))
 {
     std::cout << "[INFO] [CONSTRUCTOR] Instantiate iceNET" << std::endl;
 
     /* Initialize m_iceNETRx and m_iceNETTx with zeros */
-    std::fill(m_iceNETRx.begin(), m_iceNETRx.end(), 0);
-    std::fill(m_iceNETTx.begin(), m_iceNETTx.end(), 0);
+    std::fill(m_iceNETRx->begin(), m_iceNETRx->end(), 0);
+    std::fill(m_iceNETTx->begin(), m_iceNETTx->end(), 0);
 }
 
 iceNET::~iceNET() 

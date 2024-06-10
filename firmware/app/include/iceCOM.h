@@ -24,10 +24,10 @@ private:
     std::atomic<bool> m_killThread;
     
     /* For char Device Traffic */
-    std::vector<char> m_iceCOMRx;
-    std::vector<char> m_iceCOMTx;
+    std::vector<char>* m_iceCOMRx;
+    std::vector<char>* m_iceCOMTx;
     /* Console control buffer */
-    std::vector<char> m_consoleControl;
+    std::vector<char>* m_consoleControl;
 
 public:
     iceCOM();
