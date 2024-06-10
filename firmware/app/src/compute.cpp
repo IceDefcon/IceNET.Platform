@@ -30,7 +30,7 @@ uint8_t Compute::computeDeviceAddress(const char* in)
     }
     else
     {
-        Error("[COM] Bad device address :: Max 7-bits");
+        Error("[COMPUTE] Bad device address :: Max 7-bits");
         return 0xFF;
     }
 
@@ -44,7 +44,7 @@ uint8_t Compute::computeDeviceAddress(const char* in)
     }
     else
     {
-        Error("[COM] Bad device address :: Max 7-bits");
+        Error("[COMPUTE] Bad device address :: Max 7-bits");
         return 0xFF;
     }
 
@@ -68,7 +68,7 @@ uint8_t Compute::computeRegisterAddress(const char* in)
         }
         else
         {
-            Error("[COM] Register Not Found");
+            Error("[COMPUTE] Register Not Found");
             return 0xFF;
         }
 
@@ -82,13 +82,13 @@ uint8_t Compute::computeRegisterAddress(const char* in)
         }
         else
         {
-            Error("[COM] Register Not Found");
+            Error("[COMPUTE] Register Not Found");
             return 0xFF;
         }
     }
     else
     {
-        Error("[COM] No space between DevicAaddress & RegisterAddress");
+        Error("[COMPUTE] No space between DevicAaddress & RegisterAddress");
         return 0xFF;
     }
 
@@ -109,13 +109,13 @@ uint8_t Compute::computeRegisterControl(const char* in)
         else if(temp[1] == 0x77) out = 0x01; /* Write */
         else
         {
-            Error("[COM] Bad R/W operator");
+            Error("[COMPUTE] Bad R/W operator");
             return 0xFF;
         }
     }
     else
     {
-        Error("[COM] No space between RegisterAddress & R/W operator");
+        Error("[COMPUTE] No space between RegisterAddress & R/W operator");
         return 0xFF;
     }
 
@@ -143,7 +143,7 @@ uint8_t Compute::computeRegisterData(const char* in)
         }
         else
         {
-            Error("[COM] Invalid Write Data");
+            Error("[COMPUTE] Invalid Write Data");
             return 0xFF;
         }
 
@@ -157,13 +157,13 @@ uint8_t Compute::computeRegisterData(const char* in)
         }
         else
         {
-            Error("[COM] Invalid Write Data");
+            Error("[COMPUTE] Invalid Write Data");
             return 0xFF;
         }
     }
     else
     {
-        Error("[COM] No space between R/W operator & RegisterData");
+        Error("[COMPUTE] No space between R/W operator & RegisterData");
         return 0xFF;
     }
 

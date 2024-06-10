@@ -13,7 +13,6 @@
 
 #include "types.h"
 #include "iceCOM.h"
-#include "iceNET.h"
 
 class stateMachine
 {
@@ -28,7 +27,6 @@ class stateMachine
         std::vector<char>* m_smRx;
         std::vector<char>* m_smTx;
 
-        iceNET* m_iceNETinstance;
         iceCOM* m_iceCOMinstance;
 
 	public:
@@ -48,7 +46,6 @@ class stateMachine
 		void setStateMachine(stateType newState);
 
         void setIceCOMinstance(iceCOM* instance);
-        void setIceNETinstance(iceNET* instance);
 
 		void setStateMachineRx(std::vector<char>* DataRx);
 };

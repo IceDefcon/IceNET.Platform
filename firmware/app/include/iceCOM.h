@@ -9,7 +9,6 @@
 #include <thread>
 #include <atomic>
 #include <vector>
-#include <mutex>
 #include <semaphore.h>
 
 #include "compute.h"
@@ -30,7 +29,7 @@ private:
     /* Console control buffer */
     std::vector<char>* m_consoleControl;
 
-    std::mutex m_iceCOMmutex;
+    bool m_iceCOMwait;
 
 public:
     iceCOM();

@@ -12,15 +12,14 @@
 #include "stateMachine.h"
 
 stateMachine::stateMachine() :
-    m_iceNETinstance(nullptr),
     m_iceCOMinstance(nullptr)
 {
-    std::cout << "[INFO] [CONSTRUCTOR] Initialise stateMachine Object" << std::endl;
+    std::cout << "[INFO] [CONSTRUCTOR] Instantiate stateMachine" << std::endl;
 }
 
 stateMachine::~stateMachine()
 {
-    std::cout << "[INFO] [DESTRUCTOR] Destroy stateMachine Object" << std::endl;
+    std::cout << "[INFO] [DESTRUCTOR] Destroy stateMachine" << std::endl;
     if (m_stateMachineThread.joinable()) 
     {
         m_stateMachineThread.join();
@@ -54,7 +53,7 @@ int stateMachine::closeDEV()
 
 void stateMachine::initThread()
 {
-    std::cout << "[INFO] [STM] Init the stateMachineThread" << std::endl;
+    std::cout << "[INFO] [THREAD] Initialize State Machine" << std::endl;
     m_stateMachineThread = std::thread(&stateMachine::stateMachineThread, this);
 }
 
@@ -66,8 +65,6 @@ bool stateMachine::isThreadKilled()
 
 void stateMachine::stateMachineThread()
 {
-    std::cout << "[INFO] [STM] Enter stateMachineThread" << std::endl;
-
     while(!m_killThread) 
     {
         switch(m_currentState)
@@ -98,6 +95,8 @@ void stateMachine::stateMachineThread()
                 //
                 //
                 //
+                /* TODO :: Temporary */
+                m_killThread = true;
                 setStateMachine(IDLE);
                 break;
 
@@ -110,7 +109,7 @@ void stateMachine::stateMachineThread()
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
 
-    std::cout << "[INFO] [STM] Terminate stateMachineThread" << std::endl;
+    std::cout << "[INFO] [THREAD] Terminate State Machine" << std::endl;
 }
 
 void stateMachine::setStateMachine(stateType newState)
@@ -123,10 +122,10 @@ void stateMachine::setIceCOMinstance(iceCOM* instance)
     m_iceCOMinstance = instance;
 }
 
-void stateMachine::setIceNETinstance(iceNET* instance)
-{
-    m_iceNETinstance = instance;
-}
+// void stateMachine::setIceNETinstance(iceNET* instance)
+// {
+//     m_iceNETinstance = instance;
+// }
 
 void stateMachine::setStateMachineRx(std::vector<char>* DataRx)
 {

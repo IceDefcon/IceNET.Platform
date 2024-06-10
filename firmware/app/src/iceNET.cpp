@@ -46,13 +46,13 @@ int iceNET::openDEV()
 
     if(m_file_descriptor < 0)
     {
-        std::cout << "[ERNO] [NET] Failed to open Device" << std::endl;
+        std::cout << "[ERNO] [iceNET] Failed to open Device" << std::endl;
         m_killThread = true;
         return ERROR;
     } 
     else 
     {
-        std::cout << "[INFO] [NET] Device opened successfuly" << std::endl;
+        std::cout << "[INFO] [iceNET] Device opened successfuly" << std::endl;
         initThread();
     }
 
@@ -61,12 +61,11 @@ int iceNET::openDEV()
 
 int iceNET::dataRX()
 {
-
     int ret;
 
     ret = read(m_file_descriptor, m_iceNETRx->data(), ICE_NET_BUFFER_SIZE);
 
-    std::cout << "[INFO] [NET] Received " << ret << " Bytes of data: ";
+    std::cout << "[INFO] [iceNET] Received " << ret << " Bytes of data: ";
     for (int i = 0; i < ret; ++i)
     {
         std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>((*m_iceNETRx)[i]) << " ";
@@ -97,7 +96,7 @@ int iceNET::closeDEV()
 
 void iceNET::initThread()
 {
-    std::cout << "[INFO] [NET] Init the iceNETThread" << std::endl;
+    std::cout << "[INFO] [THREAD] Initialize iceNET" << std::endl;
     m_iceNETThread = std::thread(&iceNET::iceNETThread, this);
 }
 
@@ -108,30 +107,36 @@ bool iceNET::isThreadKilled()
 
 void iceNET::iceNETThread()
 {
-    std::cout << "[INFO] [NET] Enter iceNETThread" << std::endl;
-
     while (!m_killThread)
     {
-        std::cout << "[INFO] [NET] Waiting for next Feedback message" << std::endl;
+        std::cout << "[INFO] [iceNET] Waiting for next Feedback message" << std::endl;
         
         if(OK != dataTX())
         {
-            std::cout << "[ERNO] [NET] Cannot write into the console" << std::endl;
+            std::cout << "[ERNO] [iceNET] Cannot write into the console" << std::endl;
         }
         else
         {
             if(OK != dataRX())
             {
-                std::cout << "[ERNO] [NET] Cannot read from the console" << std::endl;
+                std::cout << "[ERNO] [iceNET] Cannot read from the console" << std::endl;
             }
-
-            /* TODO :: Set the flag to indicate the data is ready */
-
+            else
+            {
+                /* TODO :: Temporary */
+                m_killThread = true;
+                /* TODO :: Temporarily here to avoid freezing the system */
+            }
         }
 
         /* Reduce consumption of CPU resources */
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
 
-    std::cout << "[INFO] [NET] Terminate iceNETThread" << std::endl;
+    std::cout << "[INFO] [THREAD] Terminate iceNET" << std::endl;
+}
+
+void iceNET::setStateMachineIstance(stateMachine* instance)
+{
+    m_StateMachineIstance = instance;
 }

@@ -23,14 +23,14 @@ iceCOM::iceCOM() :
     m_killThread(false),
     m_iceCOMRx(new std::vector<char>(CHAR_DEVICE_SIZE)),
     m_iceCOMTx(new std::vector<char>(CHAR_DEVICE_SIZE)),
-    m_consoleControl(new std::vector<char>(CHAR_CONSOLE_SIZE))
+    m_consoleControl(new std::vector<char>(CHAR_CONSOLE_SIZE)),
+    m_iceCOMwait(true)
 {
     // Initialize m_iceCOMRx, m_iceCOMTx, and m_consoleControl with zeros
     std::fill(m_iceCOMRx->begin(), m_iceCOMRx->end(), 0);
     std::fill(m_iceCOMTx->begin(), m_iceCOMTx->end(), 0);
     std::fill(m_consoleControl->begin(), m_consoleControl->end(), 0);
 
-    m_iceCOMmutex.lock();
     Info("[CONSTRUCTOR] Instantiate iceCOM");
 }
 
@@ -42,7 +42,7 @@ iceCOM::~iceCOM()
         m_iceCOMThread.join();
     }
 
-    m_iceCOMmutex.unlock();
+    m_iceCOMwait = false;
 }
 
 int iceCOM::openDEV() 
@@ -51,13 +51,13 @@ int iceCOM::openDEV()
 
     if(m_file_descriptor < 0)
     {
-        Error("[COM] Failed to open Device");
+        Error("[iceCOM] Failed to open Device");
         m_killThread = true;
         return ERROR;
     } 
     else 
     {
-        Info("[COM] Device opened successfuly");
+        Info("[iceCOM] Device opened successfuly");
         initThread();
     }
 
@@ -72,12 +72,12 @@ int iceCOM::dataRX()
     
     if (ret == -1)
     {
-        Error("[COM] Cannot read from kernel space");
+        Error("[iceCOM] Cannot read from kernel space");
         return ERROR;
     }
     else if (ret == 0)
     {
-        Error("[COM] No data available");
+        Error("[iceCOM] No data available");
         return ENODATA;
     }
     else
@@ -96,6 +96,8 @@ int iceCOM::dataTX()
 {
     int ret = -1;
 
+#if 0 /* Console control :: Moved to TCP server */
+
     Write();
     /* Get console characters */
     std::cin.getline(m_consoleControl->data(), CHAR_CONSOLE_SIZE);
@@ -106,7 +108,6 @@ int iceCOM::dataTX()
         return ret;
     }
 
-#if 0 /* Console control :: Moved to TCP server */
     /**
      * 
      * We have to pass data trough the FIFO
@@ -131,7 +132,7 @@ int iceCOM::dataTX()
 
         if((*m_iceCOMTx)[0] == 0xFF || (*m_iceCOMTx)[1] == 0xFF || (*m_iceCOMTx)[2] == 0xFF || (*m_iceCOMTx)[3] == 0xFF) 
         {
-            Error("[COM] Bytes computation failure [WR]");
+            Error("[iceCOM] Bytes computation failure [WR]");
             return ret;
         }
     }
@@ -139,7 +140,7 @@ int iceCOM::dataTX()
     {
         if((*m_iceCOMTx)[0] == 0xFF || (*m_iceCOMTx)[1] == 0xFF || (*m_iceCOMTx)[2] == 0xFF) 
         {
-            Error("[COM] Bytes computation failure [RD]");
+            Error("[iceCOM] Bytes computation failure [RD]");
             return ret;
         }
         
@@ -156,13 +157,18 @@ int iceCOM::dataTX()
 #endif
 
     /* Wait for data from TCP client */
-    Info("[COM] Lock m_iceCOMmutex");
-    m_iceCOMmutex.lock();
+    Info("[iceCOM] Wait for the iceCOM Flag");
+    while(true == m_iceCOMwait)
+    {
+        std::this_thread::sleep_for(std::chrono::milliseconds(20));
+    }
+    m_iceCOMwait = true;
+
     ret = write(m_file_descriptor, m_iceCOMTx->data(), 4);
 
     if (ret == -1)
     {
-        Error("[COM] Cannot write to kernel space");
+        Error("[iceCOM] Cannot write to kernel space");
         return ERROR;
     }
 
@@ -199,12 +205,14 @@ int iceCOM::closeDEV()
         m_file_descriptor = -1; // Mark as closed
     }
 
+    m_killThread = true;
+    
     return OK;
 }
 
 void iceCOM::initThread()
 {
-    Info("[COM] Init the iceCOMThread");
+    Info("[THREAD] Initialize iceCOM");
     m_iceCOMThread = std::thread(&iceCOM::iceCOMThread, this);
 }
 
@@ -215,13 +223,11 @@ bool iceCOM::isThreadKilled()
 
 void iceCOM::iceCOMThread()
 {
-    Info("[COM] Enter iceCOMThread");
-
     while(!m_killThread) 
     {
         if(OK != dataTX())
         {
-            Error("[COM] Cannot write into the console");
+            Error("[iceCOM] Cannot write into the console");
         }
         else
         {
@@ -231,25 +237,28 @@ void iceCOM::iceCOMThread()
              * about successfully transfered command 
              * 
              */
+#if 0 /* No need for feedback here since we get it over iceNET */
             if(OK != dataRX())
             {
-                Error("[COM] Cannot read from the console");
+                Error("[iceCOM] Cannot read from the console");
             }
-
+#endif
             /* TODO :: Set the flag to indicate the data is ready */
 
+            /* TODO :: Temporary */
+            m_killThread = true;
         }
 
         /* Reduce consumption of CPU resources */
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
 
-    Info("[COM] Terminate iceCOMThread");
+    Info("[THREAD] Terminate iceCOM");
 }
 
 void iceCOM::setIceCOMTx(std::vector<char>* DataRx)
 {
     m_iceCOMTx = DataRx;
-    Info("[COM] Unlock m_iceCOMmutex");
-    m_iceCOMmutex.unlock();
+    Info("[iceCOM] Release iceCOM Flag");
+    m_iceCOMwait = false;
 }

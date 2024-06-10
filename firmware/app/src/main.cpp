@@ -15,47 +15,29 @@
 int main() 
 {
 	/* Heap Allocation */ 
+    iceCOM* iceCOMinstance = new iceCOM;
+    iceNET* iceNETinstance = new iceNET;
     tcpServer* tcpServerinstance = new tcpServer;
     stateMachine* stateMachineinstance = new stateMachine;
-    iceNET* iceNETinstance = new iceNET;
-    iceCOM* iceCOMinstance = new iceCOM;
 
-    /* Set instances */
+    /* Set Instances */
     tcpServerinstance->setStateMachineIstance(stateMachineinstance);
     stateMachineinstance->setIceCOMinstance(iceCOMinstance);
-    stateMachineinstance->setIceNETinstance(iceNETinstance);
 
-    /**
-     * 
-     * TODO
-     * 
-     * Core class inplementation
-     * required for creadted
-     * inherited objects
-     * 
-     */
+    /* Initialize Interfaces */
+	iceCOMinstance->openDEV();
+	iceNETinstance->openDEV();
     tcpServerinstance->openDEV();
-    stateMachineinstance->openDEV(); /* Initialise State Machine */
-	iceNETinstance->openDEV(); /* Open iceNET Device */
-	iceCOMinstance->openDEV(); /* Open iceCOM Device */
+    stateMachineinstance->openDEV();
 
 	while(true) /* Terminate Kernel comms and Clean Memory */
 	{
-	    if (iceCOMinstance->isThreadKilled()) 
+	    if (iceNETinstance->isThreadKilled()) 
 	    {
-	    	iceCOMinstance->closeDEV();
-	    	iceNETinstance->closeDEV();
-	    	stateMachineinstance->closeDEV();
-	    	/**
-	    	 * 
-	    	 * TODO
-	    	 * 
-	    	 * When this is executed TCP client must offload
-	    	 * in order to release the accept function
-	    	 * and join the iceNET Thread
-	    	 * 
-	    	 */
 	    	tcpServerinstance->closeDEV();
+	    	iceNETinstance->closeDEV();
+	    	iceCOMinstance->closeDEV();
+	    	stateMachineinstance->closeDEV();
 	        break;
 	    }
 
@@ -65,8 +47,8 @@ int main()
 
 	delete stateMachineinstance;
 	delete tcpServerinstance;
-	delete iceCOMinstance;
 	delete iceNETinstance;
+	delete iceCOMinstance;
 
 	return 0;
 }

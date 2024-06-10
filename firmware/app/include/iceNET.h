@@ -14,6 +14,8 @@
 #include <atomic>
 #include <vector>
 
+#include "stateMachine.h"
+
 const size_t ICE_NET_BUFFER_SIZE = 32;
 
 class iceNET
@@ -36,6 +38,8 @@ class iceNET
         std::vector<char>* m_iceNETRx;
         std::vector<char>* m_iceNETTx;
 
+        stateMachine* m_StateMachineIstance;
+
     public:
         iceNET();
         ~iceNET();
@@ -49,4 +53,6 @@ class iceNET
         bool isThreadKilled();
 
         void iceNETThread();
+
+        void setStateMachineIstance(stateMachine* instance);
 };

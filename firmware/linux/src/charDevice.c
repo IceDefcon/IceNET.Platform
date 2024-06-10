@@ -40,8 +40,8 @@ static struct class*  C_Class[2]  = {NULL,NULL};
 static struct device* C_Device[2] = {NULL,NULL};
 static int numberOpens[2] = {0,0};
 
-static DEFINE_MUTEX(com_mutex);
-static DEFINE_MUTEX(net_mutex);
+static DEFINE_MUTEX(iceCOM_mutex);
+static DEFINE_MUTEX(iceNET_mutex);
 static DEFINE_MUTEX(wait_mutex);
 
 static int dev_open_com(struct inode *inodep, struct file *filep);
@@ -135,6 +135,15 @@ static void init_charDevice_Data(void)
 
 void charDeviceInit(void)
 {
+    printk(KERN_ALERT "[INIT][COM] Lock on [C] Device Mutex\n");
+    mutex_init(&iceCOM_mutex);
+
+    printk(KERN_ALERT "[INIT][NET] Lock on [C] Device Mutex\n");
+    mutex_init(&iceNET_mutex);
+
+    printk(KERN_ALERT "[INIT][NET] Lock on Wait Mutex\n");
+    mutex_init(&wait_mutex);
+
     //
     // iceCOM
     //
@@ -172,9 +181,6 @@ void charDeviceInit(void)
     }
 
     init_charDevice_Data();
-
-    printk(KERN_ALERT "[INIT][COM] Lock on [C] Device Mutex\n");
-    mutex_init(&com_mutex);
 
     //
     // iceNET
@@ -214,12 +220,6 @@ void charDeviceInit(void)
 
     /* TODO :: Need data architecture for NET communication */
     // init_charDevice_Data();
-
-    printk(KERN_ALERT "[INIT][NET] Lock on [C] Device Mutex\n");
-    mutex_init(&net_mutex);
-
-    /* Initial feedback mutex lock */
-    mutex_init(&wait_mutex);
 }
 
 void charDeviceDestroy(void)
@@ -262,7 +262,7 @@ void charDeviceDestroy(void)
         printk(KERN_INFO "[DESTROY][COM] Device destroyed\n");
     }
 
-    mutex_destroy(&com_mutex);
+    mutex_destroy(&iceCOM_mutex);
     printk(KERN_INFO "[DESTROY][COM] Com Mutex destroyed\n");
     printk(KERN_INFO "[DESTROY][COM] Char device destruction complete\n");
 
@@ -304,7 +304,7 @@ void charDeviceDestroy(void)
         printk(KERN_INFO "[DESTROY][NET] Device destroyed\n");
     }
 
-    mutex_destroy(&net_mutex);
+    mutex_destroy(&iceNET_mutex);
     printk(KERN_INFO "[DESTROY][NET] Net Mutex destroyed\n");
 
     mutex_destroy(&wait_mutex);
@@ -321,7 +321,7 @@ void charDeviceDestroy(void)
  */
 static int dev_open_com(struct inode *inodep, struct file *filep)
 {
-    if(!mutex_trylock(&com_mutex))
+    if(!mutex_trylock(&iceCOM_mutex))
     {
         printk(KERN_ALERT "[CTRL][COM] Device in use by another process");
         return -EBUSY;
@@ -394,7 +394,7 @@ static ssize_t dev_write_com(struct file *filep, const char __user *buffer, size
 static int dev_close_com(struct inode *inodep, struct file *filep)
 {
     printk(KERN_ALERT "[INIT][COM] Unlock [C] Device Mutex\n");
-    mutex_unlock(&com_mutex);
+    mutex_unlock(&iceCOM_mutex);
     printk(KERN_INFO "[CTRL][COM] Device successfully closed\n");
     return 0;
 }
@@ -408,7 +408,7 @@ static int dev_close_com(struct inode *inodep, struct file *filep)
  */
 static int dev_open_net(struct inode *inodep, struct file *filep)
 {
-    if(!mutex_trylock(&net_mutex))
+    if(!mutex_trylock(&iceNET_mutex))
     {
         printk(KERN_ALERT "[CTRL][NET] Device in use by another process");
         return -EBUSY;
@@ -474,7 +474,7 @@ static ssize_t dev_write_net(struct file *filep, const char __user *buffer, size
 static int dev_close_net(struct inode *inodep, struct file *filep)
 {
     printk(KERN_ALERT "[INIT][NET] Unlock [C] Device Mutex\n");
-    mutex_unlock(&net_mutex);
+    mutex_unlock(&iceNET_mutex);
     printk(KERN_INFO "[CTRL][NET] Device successfully closed\n");
     return 0;
 }
