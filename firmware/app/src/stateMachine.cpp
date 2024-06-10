@@ -81,19 +81,15 @@ void stateMachine::stateMachineThread()
 
             case iceCOM_TRANSFER:
                 std::cout << "[INFO] [STM] iceCOM mode" << std::endl;
-                //
-                //
-                // Here we must pass data 
-                // Received from tcpServer
-                // to iceCOM !!!!
-                //
-                //
                 std::cout << "[INFO] [STM] Received 4 Bytes of data: ";
                 for (int i = 0; i < 4; ++i)
                 {
-                    std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>((*smRx)[i]) << " ";
+                    std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>((*m_smRx)[i]) << " ";
                 }
                 std::cout << std::endl;
+
+                m_iceCOMinstance->setIceCOMTx(m_smRx);
+
                 setStateMachine(IDLE);
                 break;
 
@@ -134,5 +130,5 @@ void stateMachine::setIceNETinstance(iceNET* instance)
 
 void stateMachine::setStateMachineRx(std::vector<char>* DataRx)
 {
-    smRx = DataRx;
+    m_smRx = DataRx;
 }

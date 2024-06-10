@@ -21,15 +21,16 @@
 iceCOM::iceCOM() : 
     m_file_descriptor(0), 
     m_killThread(false),
-    m_iceCOMRx(CHAR_DEVICE_SIZE),
-    m_iceCOMTx(CHAR_DEVICE_SIZE),
-    m_consoleControl(CHAR_CONSOLE_SIZE)
+    m_iceCOMRx(new std::vector<char>(CHAR_DEVICE_SIZE)),
+    m_iceCOMTx(new std::vector<char>(CHAR_DEVICE_SIZE)),
+    m_consoleControl(new std::vector<char>(CHAR_CONSOLE_SIZE))
 {
     // Initialize m_iceCOMRx, m_iceCOMTx, and m_consoleControl with zeros
-    std::fill(m_iceCOMRx.begin(), m_iceCOMRx.end(), 0);
-    std::fill(m_iceCOMTx.begin(), m_iceCOMTx.end(), 0);
-    std::fill(m_consoleControl.begin(), m_consoleControl.end(), 0);
+    std::fill(m_iceCOMRx->begin(), m_iceCOMRx->end(), 0);
+    std::fill(m_iceCOMTx->begin(), m_iceCOMTx->end(), 0);
+    std::fill(m_consoleControl->begin(), m_consoleControl->end(), 0);
 
+    m_iceCOMmutex.lock();
     Info("[CONSTRUCTOR] Instantiate iceCOM");
 }
 
@@ -40,6 +41,8 @@ iceCOM::~iceCOM()
     {
         m_iceCOMThread.join();
     }
+
+    m_iceCOMmutex.unlock();
 }
 
 int iceCOM::openDEV() 
@@ -65,8 +68,7 @@ int iceCOM::dataRX()
 {
     int ret;
 
-    // Attempt to read data from kernel space
-    ret = read(m_file_descriptor, m_iceCOMRx.data(), CHAR_DEVICE_SIZE);
+    ret = read(m_file_descriptor, m_iceCOMRx->data(), CHAR_DEVICE_SIZE);
     
     if (ret == -1)
     {
@@ -81,10 +83,10 @@ int iceCOM::dataRX()
     else
     {
         // Print received data for debugging
-        Read(m_iceCOMRx.data());
+        Read(m_iceCOMRx->data());
 
         /* Clear char device Rx buffer */
-        m_iceCOMRx.clear();
+        m_iceCOMRx->clear();
 
         return OK;
     }
@@ -96,14 +98,15 @@ int iceCOM::dataTX()
 
     Write();
     /* Get console characters */
-    std::cin.getline(m_consoleControl.data(), CHAR_CONSOLE_SIZE);
+    std::cin.getline(m_consoleControl->data(), CHAR_CONSOLE_SIZE);
 
-    if (std::strcmp(m_consoleControl.data(), "exit") == 0) 
+    if (std::strcmp(m_consoleControl->data(), "exit") == 0) 
     {
         m_killThread = true;
         return ret;
     }
 
+#if 0 /* Console control :: Moved to TCP server */
     /**
      * 
      * We have to pass data trough the FIFO
@@ -117,16 +120,16 @@ int iceCOM::dataTX()
      * Byte[3] :: Register Data
      * 
      */
-    m_iceCOMTx[0] = Compute::computeDeviceAddress(m_consoleControl.data());
-    m_iceCOMTx[1] = Compute::computeRegisterAddress(m_consoleControl.data());
-    m_iceCOMTx[2] = Compute::computeRegisterControl(m_consoleControl.data());
+    (*m_iceCOMTx)[0] = static_cast<char>(Compute::computeDeviceAddress(m_consoleControl->data()));
+    (*m_iceCOMTx)[1] = static_cast<char>(Compute::computeRegisterAddress(m_consoleControl->data()));
+    (*m_iceCOMTx)[2] = static_cast<char>(Compute::computeRegisterControl(m_consoleControl->data()));
 
     /* If Write then compute RegisterData */
-    if(m_iceCOMTx[2] == 0x01)
+    if((*m_iceCOMTx)[2] == 0x01)
     {
-        m_iceCOMTx[3] = Compute::computeRegisterData(m_consoleControl.data());
+        (*m_iceCOMTx)[3] = static_cast<char>(Compute::computeRegisterData(m_consoleControl->data()));
 
-        if(m_iceCOMTx[0] == 0xFF || m_iceCOMTx[1] == 0xFF || m_iceCOMTx[2] == 0xFF || m_iceCOMTx[3] == 0xFF) 
+        if((*m_iceCOMTx)[0] == 0xFF || (*m_iceCOMTx)[1] == 0xFF || (*m_iceCOMTx)[2] == 0xFF || (*m_iceCOMTx)[3] == 0xFF) 
         {
             Error("[COM] Bytes computation failure [WR]");
             return ret;
@@ -134,7 +137,7 @@ int iceCOM::dataTX()
     }
     else
     {
-        if(m_iceCOMTx[0] == 0xFF || m_iceCOMTx[1] == 0xFF || m_iceCOMTx[2] == 0xFF) 
+        if((*m_iceCOMTx)[0] == 0xFF || (*m_iceCOMTx)[1] == 0xFF || (*m_iceCOMTx)[2] == 0xFF) 
         {
             Error("[COM] Bytes computation failure [RD]");
             return ret;
@@ -148,10 +151,14 @@ int iceCOM::dataTX()
          * FIFO input/output geometry
          * 
          */
-        m_iceCOMTx[3] = 0x00;
+        (*m_iceCOMTx)[3] = 0x00;
     }
+#endif
 
-    ret = write(m_file_descriptor, m_iceCOMTx.data(), 4);
+    /* Wait for data from TCP client */
+    Info("[COM] Lock m_iceCOMmutex");
+    m_iceCOMmutex.lock();
+    ret = write(m_file_descriptor, m_iceCOMTx->data(), 4);
 
     if (ret == -1)
     {
@@ -173,13 +180,13 @@ int iceCOM::dataTX()
      * 
      */
     std::this_thread::sleep_for(std::chrono::milliseconds(20));
-    m_iceCOMTx[0] = 0x12; /* Custom Kernel Byte Map :: Check reciprocal in charDevice.c */
-    m_iceCOMTx[1] = 0x34; /* Custom Kernel Byte Map :: Check reciprocal in charDevice.c */
-    ret = write(m_file_descriptor, m_iceCOMTx.data(), 2);
+    (*m_iceCOMTx)[0] = 0x12; /* Custom Kernel Byte Map :: Check reciprocal in charDevice.c */
+    (*m_iceCOMTx)[1] = 0x34; /* Custom Kernel Byte Map :: Check reciprocal in charDevice.c */
+    ret = write(m_file_descriptor, m_iceCOMTx->data(), 2);
 
     
-    m_iceCOMTx.clear(); /* Clear charDevice Rx buffer */
-    m_consoleControl.clear(); /* Clear console control buffer */
+    m_iceCOMTx->clear(); /* Clear charDevice Rx buffer */
+    m_consoleControl->clear(); /* Clear console control buffer */
 
     return OK;
 }
@@ -238,4 +245,11 @@ void iceCOM::iceCOMThread()
     }
 
     Info("[COM] Terminate iceCOMThread");
+}
+
+void iceCOM::setIceCOMTx(std::vector<char>* DataRx)
+{
+    m_iceCOMTx = DataRx;
+    Info("[COM] Unlock m_iceCOMmutex");
+    m_iceCOMmutex.unlock();
 }

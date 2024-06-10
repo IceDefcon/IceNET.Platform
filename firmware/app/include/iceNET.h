@@ -33,8 +33,8 @@ class iceNET
         struct sockaddr_in m_clientAddress;
 
         /* For TCP server Traffic */
-        std::vector<char> m_iceNETRx;
-        std::vector<char> m_iceNETTx;
+        std::vector<char>* m_iceNETRx;
+        std::vector<char>* m_iceNETTx;
 
     public:
         iceNET();

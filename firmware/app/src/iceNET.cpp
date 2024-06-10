@@ -18,14 +18,14 @@
 iceNET::iceNET() :
     m_file_descriptor(0), 
     m_killThread(false),
-    m_iceNETRx(ICE_NET_BUFFER_SIZE),
-    m_iceNETTx(ICE_NET_BUFFER_SIZE)
+    m_iceNETRx(new std::vector<char>(ICE_NET_BUFFER_SIZE)),
+    m_iceNETTx(new std::vector<char>(ICE_NET_BUFFER_SIZE))
 {
     std::cout << "[INFO] [CONSTRUCTOR] Instantiate iceNET" << std::endl;
 
     /* Initialize m_iceNETRx and m_iceNETTx with zeros */
-    std::fill(m_iceNETRx.begin(), m_iceNETRx.end(), 0);
-    std::fill(m_iceNETTx.begin(), m_iceNETTx.end(), 0);
+    std::fill(m_iceNETRx->begin(), m_iceNETRx->end(), 0);
+    std::fill(m_iceNETTx->begin(), m_iceNETTx->end(), 0);
 }
 
 iceNET::~iceNET() 
@@ -61,6 +61,18 @@ int iceNET::openDEV()
 
 int iceNET::dataRX()
 {
+
+    int ret;
+
+    ret = read(m_file_descriptor, m_iceNETRx->data(), ICE_NET_BUFFER_SIZE);
+
+    std::cout << "[INFO] [NET] Received " << ret << " Bytes of data: ";
+    for (int i = 0; i < ret; ++i)
+    {
+        std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>((*m_iceNETRx)[i]) << " ";
+    }
+    std::cout << std::endl;
+
     return OK;
 }
 
@@ -100,19 +112,25 @@ void iceNET::iceNETThread()
 
     while (!m_killThread)
     {
+        std::cout << "[INFO] [NET] Waiting for next Feedback message" << std::endl;
+        
+        if(OK != dataTX())
+        {
+            std::cout << "[ERNO] [NET] Cannot write into the console" << std::endl;
+        }
+        else
+        {
+            if(OK != dataRX())
+            {
+                std::cout << "[ERNO] [NET] Cannot read from the console" << std::endl;
+            }
 
-        //////////////////////////////////////////////////////////
-        //
-        //
-        //
-        // BODY
-        //
-        //
-        //
-        //////////////////////////////////////////////////////////
+            /* TODO :: Set the flag to indicate the data is ready */
+
+        }
 
         /* Reduce consumption of CPU resources */
-        std::this_thread::sleep_for(std::chrono::seconds(1));
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
 
     std::cout << "[INFO] [NET] Terminate iceNETThread" << std::endl;

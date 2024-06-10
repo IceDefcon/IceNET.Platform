@@ -9,6 +9,7 @@
 #include <thread>
 #include <atomic>
 #include <vector>
+#include <mutex>
 #include <semaphore.h>
 
 #include "compute.h"
@@ -24,10 +25,12 @@ private:
     std::atomic<bool> m_killThread;
     
     /* For char Device Traffic */
-    std::vector<char> m_iceCOMRx;
-    std::vector<char> m_iceCOMTx;
+    std::vector<char>* m_iceCOMRx;
+    std::vector<char>* m_iceCOMTx;
     /* Console control buffer */
-    std::vector<char> m_consoleControl;
+    std::vector<char>* m_consoleControl;
+
+    std::mutex m_iceCOMmutex;
 
 public:
     iceCOM();
@@ -42,4 +45,8 @@ public:
     bool isThreadKilled();
 
     void iceCOMThread();
+
+    void setIceCOMTx(std::vector<char>* DataRx);
+
+
 };

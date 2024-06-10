@@ -85,7 +85,7 @@ int tcpServer::closeDEV()
 
 void tcpServer::initThread()
 {
-    std::cout << "[INFO] [NET] Init the tcpServerThread" << std::endl;
+    std::cout << "[INFO] [TCP] Init the tcpServerThread" << std::endl;
     m_tcpServerThread = std::thread(&tcpServer::tcpServerThread, this);
 }
 
@@ -96,7 +96,7 @@ bool tcpServer::isThreadKilled()
 
 void tcpServer::tcpServerThread()
 {
-    std::cout << "[INFO] [NET] Enter tcpServerThread" << std::endl;
+    std::cout << "[INFO] [TCP] Enter tcpServerThread" << std::endl;
 
     initServer();
 
@@ -104,7 +104,7 @@ void tcpServer::tcpServerThread()
 
     while (!m_killThread)
     {
-        std::cout << "[INFO] [NET] tcpServerThread ready for next TCP packet" << std::endl;
+        std::cout << "[INFO] [TCP] tcpServerThread ready for next TCP packet" << std::endl;
         if (false == m_clientConnected)
         {
             /* Wait for the TCP client connection */
@@ -116,16 +116,16 @@ void tcpServer::tcpServerThread()
             }
             else
             {
-                std::cout << "[INFO] [NET] Nothing Received :: Cannot set TCP_TO_CHAR in State Machine" << std::endl;
+                std::cout << "[INFO] [TCP] Nothing Received :: Cannot set TCP_TO_CHAR in State Machine" << std::endl;
             }
 
             if (tcpTX() < 0)
             {
-                std::cout << "[ERNO] [NET] Failed to send message" << std::endl;
+                std::cout << "[ERNO] [TCP] Failed to send message" << std::endl;
             }
             else
             {
-                std::cout << "[INFO] [NET] Transfer complete" << std::endl;
+                std::cout << "[INFO] [TCP] Transfer complete" << std::endl;
             }
 
             tcpClose();
@@ -135,7 +135,7 @@ void tcpServer::tcpServerThread()
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
 
-    std::cout << "[INFO] [NET] Terminate tcpServerThread" << std::endl;
+    std::cout << "[INFO] [TCP] Terminate tcpServerThread" << std::endl;
 }
 
 int tcpServer::initServer() 
@@ -144,7 +144,7 @@ int tcpServer::initServer()
     
     if (m_serverSocket < 0)
     {
-        std::cout << "[ERNO] [NET] Error opening socket" << std::endl;
+        std::cout << "[ERNO] [TCP] Error opening socket" << std::endl;
     }
 
     /**
@@ -162,21 +162,21 @@ int tcpServer::initServer()
     ret = setsockopt(m_serverSocket, SOL_SOCKET, SO_REUSEADDR, &option, sizeof(option));
     if (ret < 0) 
     {
-        std::cout << "[ERNO] [NET] Error setting socket options" << std::endl;
+        std::cout << "[ERNO] [TCP] Error setting socket options" << std::endl;
     }
     else
     {
-        std::cout << "[INFO] [NET] Socket option set correctly" << std::endl;
+        std::cout << "[INFO] [TCP] Socket option set correctly" << std::endl;
     }
 
     ret = bind(m_serverSocket, (struct sockaddr *)&m_serverAddress, sizeof(m_serverAddress));
     if (ret < 0) 
     {
-        std::cout << "[ERNO] [NET] Error on binding the socket" << std::endl;
+        std::cout << "[ERNO] [TCP] Error on binding the socket" << std::endl;
     }
     else
     {
-        std::cout << "[INFO] [NET] Socket bind successfully" << std::endl;
+        std::cout << "[INFO] [TCP] Socket bind successfully" << std::endl;
     }
 
     /**
@@ -190,11 +190,11 @@ int tcpServer::initServer()
     listen(m_serverSocket, 5);
     if (ret < 0) 
     {
-        std::cout << "[ERNO] [NET] Error listening for connections" << std::endl;
+        std::cout << "[ERNO] [TCP] Error listening for connections" << std::endl;
     }
     else
     {
-        std::cout << "[INFO] [NET] Listening at the TCP Port..." << std::endl;
+        std::cout << "[INFO] [TCP] Listening at the TCP Port..." << std::endl;
     }
 
     return 0;
@@ -206,7 +206,7 @@ int tcpServer::tcpTX()
 
     if (!m_clientConnected) 
     {
-        std::cerr << "[ERNO] [NET] No client connected" << std::endl;
+        std::cerr << "[ERNO] [TCP] No client connected" << std::endl;
     }
     else
     {
@@ -228,11 +228,11 @@ int tcpServer::tcpRX()
 {
     if (m_clientSocket < 0)
     {
-        std::cout << "[ERNO] [NET] Failed to accept the client connection" << std::endl;
+        std::cout << "[ERNO] [TCP] Failed to accept the client connection" << std::endl;
     }
     else
     {
-        std::cout << "[INFO] [NET] Client connected to server" << std::endl;
+        std::cout << "[INFO] [TCP] Client connected to server" << std::endl;
         m_clientConnected = true;
 
         m_bytesReceived = recv(m_clientSocket, m_tcpServerRx->data(), TCP_BUFFER_SIZE, 0);
@@ -245,7 +245,7 @@ int tcpServer::tcpRX()
          */
         if (m_bytesReceived > 0)
         {
-            std::cout << "[INFO] [NET] Received " << m_bytesReceived << " Bytes of data: ";
+            std::cout << "[INFO] [TCP] Received " << m_bytesReceived << " Bytes of data: ";
             for (int i = 0; i < m_bytesReceived; ++i)
             {
                 std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>((*m_tcpServerRx)[i]) << " ";
@@ -254,11 +254,11 @@ int tcpServer::tcpRX()
         }
         else if (m_bytesReceived == 0)
         {
-            std::cout << "[INFO] [NET] Connection closed by client" << std::endl;
+            std::cout << "[INFO] [TCP] Connection closed by client" << std::endl;
         }
         else
         {
-            std::cout << "[ERNO] [NET] Error receiving data" << std::endl;
+            std::cout << "[ERNO] [TCP] Error receiving data" << std::endl;
         }
 
         m_StateMachineIstance->setStateMachineRx(m_tcpServerRx);
