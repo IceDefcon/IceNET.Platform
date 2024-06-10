@@ -85,7 +85,7 @@ int tcpServer::closeDEV()
 
 void tcpServer::initThread()
 {
-    std::cout << "[INFO] [TCP] Init the tcpServerThread" << std::endl;
+    std::cout << "[INFO] [THREAD] Initialize TCP Server" << std::endl;
     m_tcpServerThread = std::thread(&tcpServer::tcpServerThread, this);
 }
 
@@ -96,8 +96,6 @@ bool tcpServer::isThreadKilled()
 
 void tcpServer::tcpServerThread()
 {
-    std::cout << "[INFO] [TCP] Enter tcpServerThread" << std::endl;
-
     initServer();
 
     socklen_t clientLength = sizeof(m_clientAddress);
@@ -130,12 +128,14 @@ void tcpServer::tcpServerThread()
 
             tcpClose();
 
+            /* TODO :: Temporary */
+            m_killThread = true;
         }
         /* Reduce consumption of CPU resources */
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
 
-    std::cout << "[INFO] [TCP] Terminate tcpServerThread" << std::endl;
+    std::cout << "[INFO] [THREAD] Terminate TCP Server" << std::endl;
 }
 
 int tcpServer::initServer() 

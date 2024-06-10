@@ -1,3 +1,9 @@
+/* Kill zombie */
+
+1. Identify PPID :: ps -o ppid= -p <PID>
+2. Find parent process :: ps -p <PPID>
+3. kill -9 <PPID>
+
 /* I2C Address */
 ID = 0x68 when SA0 = GND
 ID = 0x69 when SA0 = Vdd
