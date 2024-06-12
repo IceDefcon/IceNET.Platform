@@ -154,7 +154,8 @@ int iceCOM::dataTX()
          */
         (*m_iceCOMTx)[3] = 0x00;
     }
-#endif
+
+#else
 
     /* Wait for data from TCP client */
     Info("[iceCOM] Wait for the iceCOM Flag");
@@ -163,6 +164,8 @@ int iceCOM::dataTX()
         std::this_thread::sleep_for(std::chrono::milliseconds(20));
     }
     m_iceCOMwait = true;
+
+#endif
 
     ret = write(m_file_descriptor, m_iceCOMTx->data(), 4);
 

@@ -12,7 +12,8 @@
 #include "stateMachine.h"
 
 stateMachine::stateMachine() :
-    m_iceCOMinstance(nullptr)
+    m_iceCOMinstance(nullptr),
+    m_iceNETfeedbackDataReady(false)
 {
     std::cout << "[INFO] [CONSTRUCTOR] Instantiate stateMachine" << std::endl;
 }
@@ -77,7 +78,7 @@ void stateMachine::stateMachineThread()
                 break;
 
             case iceCOM_TRANSFER:
-                std::cout << "[INFO] [STM] iceCOM mode" << std::endl;
+                std::cout << "[INFO] [STM] iceCOM_TRANSFER mode" << std::endl;
                 std::cout << "[INFO] [STM] Received 4 Bytes of data: ";
                 for (int i = 0; i < 4; ++i)
                 {
@@ -91,10 +92,11 @@ void stateMachine::stateMachineThread()
                 break;
 
             case iceNET_TRANSFER:
-                std::cout << "[INFO] [STM] iceNET mode" << std::endl;
+                std::cout << "[INFO] [STM] iceNET_TRANSFER mode" << std::endl;
                 //
                 //
                 //
+                m_iceNETfeedbackDataReady = true;
                 /* TODO :: Temporary */
                 m_killThread = true;
                 setStateMachine(IDLE);
@@ -122,12 +124,27 @@ void stateMachine::setIceCOMinstance(iceCOM* instance)
     m_iceCOMinstance = instance;
 }
 
-// void stateMachine::setIceNETinstance(iceNET* instance)
-// {
-//     m_iceNETinstance = instance;
-// }
-
 void stateMachine::setStateMachineRx(std::vector<char>* DataRx)
 {
     m_smRx = DataRx;
+}
+
+void stateMachine::setStateMachineTx(std::vector<char>* DataTx)
+{
+    m_smTx = DataTx;
+}
+
+std::vector<char>* stateMachine::getStateMachineTx()
+{
+    return m_smTx;
+}
+
+void stateMachine::resetFeedbackFlag()
+{
+    m_iceNETfeedbackDataReady = false;
+}
+
+bool stateMachine::getFeedbackFlag()
+{
+    return m_iceNETfeedbackDataReady;
 }

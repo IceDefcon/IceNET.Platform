@@ -210,6 +210,7 @@ int tcpServer::tcpTX()
     }
     else
     {
+#if 0 /* Debug Message */
         (*m_tcpServerTx)[0] = 0x69; /* i */
         (*m_tcpServerTx)[1] = 0x63; /* c */
         (*m_tcpServerTx)[2] = 0x65; /* e */
@@ -217,6 +218,15 @@ int tcpServer::tcpTX()
         (*m_tcpServerTx)[4] = 0x45; /* E */
         (*m_tcpServerTx)[5] = 0x54; /* T */
         (*m_tcpServerTx)[6] = '\n'; /* Next line for the GUI console */
+#else
+        while(false == m_StateMachineIstance->getFeedbackFlag())
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        }
+
+        m_tcpServerTx = m_StateMachineIstance->getStateMachineTx();
+        m_StateMachineIstance->resetFeedbackFlag();
+#endif
 
         ret = write(m_clientSocket, m_tcpServerTx->data(), m_tcpServerTx->size());
     }

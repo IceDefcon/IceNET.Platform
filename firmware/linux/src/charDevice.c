@@ -424,7 +424,8 @@ static ssize_t dev_read_net(struct file *filep, char *buffer, size_t len, loff_t
 {
     int error_count = 0;
 
-    printk(KERN_INFO "[CTRL][SPI] Wait for FPGA Data :: Lock the mutex\n");
+    printk(KERN_INFO "[CTRL][SPI] Application is waiting for FPGA Data\n");
+    printk(KERN_INFO "[CTRL][SPI] Kernel is waiting for mutex Unlock\n");
     mutex_lock(&wait_mutex);
 
     /* TODO :: TxData is Dummy 0xBB */

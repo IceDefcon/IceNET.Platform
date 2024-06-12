@@ -29,6 +29,8 @@ class stateMachine
 
         iceCOM* m_iceCOMinstance;
 
+        bool m_iceNETfeedbackDataReady;
+
 	public:
 
 		stateMachine();
@@ -48,4 +50,8 @@ class stateMachine
         void setIceCOMinstance(iceCOM* instance);
 
 		void setStateMachineRx(std::vector<char>* DataRx);
+		void setStateMachineTx(std::vector<char>* DataTx);
+		std::vector<char>* getStateMachineTx();
+		void resetFeedbackFlag();
+		bool getFeedbackFlag();
 };

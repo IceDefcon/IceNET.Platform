@@ -36,9 +36,13 @@ def send_data():
         log_message(f"[iceNET] Client TX :: {data.hex()}")  # Log the hexadecimal representation of the data
         
         # Receive feedback data from the server
-        feedback_data = tcp_socket.recv(1024)
-        feedback_text = feedback_data.decode()
-        log_message(f"[iceNET] Client RX :: {feedback_text}")
+        feedback_data = tcp_socket.recv(4)
+        #
+        # Dont use decode function when non ASCII hex is send over TCP
+        #
+        # feedback_text = feedback_data.decode()
+        # log_message(f"[iceNET] Client RX :: {feedback_text}")
+        log_message(f"[iceNET] Client RX :: {feedback_data.hex()}")  # Log the hexadecimal representation of the received data
 
     except Exception as e:
         log_message(f"[iceNET] Error sending/receiving data over TCP: {e}")

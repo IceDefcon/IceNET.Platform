@@ -21,6 +21,7 @@ int main()
     stateMachine* stateMachineinstance = new stateMachine;
 
     /* Set Instances */
+    iceNETinstance->setStateMachineIstance(stateMachineinstance);
     tcpServerinstance->setStateMachineIstance(stateMachineinstance);
     stateMachineinstance->setIceCOMinstance(iceCOMinstance);
 
