@@ -657,15 +657,23 @@ begin
 
                             if status_sda = "1010" then -- [16000] :: Stop Bit
                                 I2C_SDA <= '0';
+                                DATA <= "01111110";
+                                FPGA_INT <= '1';
                             end if;
 
                             if status_sda = "0100" -- [4500] :: ACK/NAK
                             or status_sda = "0101" -- [5000] :: BARIER[1]
                             or status_sda = "0111" -- [11000] :: ACK/NAK
                             or status_sda = "1001" -- [15500] :: ACK/NAK
-                            or status_sda = "1011" -- [17000] :: Final BARIER
                             then -- BARIER :: 'Z'
                                 I2C_SDA <= 'Z';
+                            end if;
+
+                            if status_sda = "1011" -- [17000] :: Final BARIER
+                            then -- BARIER :: 'Z'
+                                I2C_SDA <= 'Z';
+                                DATA <= "00000000";
+                                FPGA_INT <= '0';
                             end if;
 ------------------------------------------------------
 -- PIPE[1] :: Increment Status Timer

@@ -20,7 +20,7 @@
 //                  //
 //////////////////////
 
-/* GET iceCOM TRANSFER */ DataTransfer* get_iceCOMTransfer(void);
+/* GET inputCOM TRANSFER */ DataTransfer* get_inputCOMTransfer(void);
 /* SET FEEDBACK TRANSFER */ void set_fpgaFeedbackTransfer(const DataTransfer* transferData);
 
 void charDeviceInit(void);

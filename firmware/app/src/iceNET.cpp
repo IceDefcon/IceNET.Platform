@@ -123,9 +123,19 @@ void iceNET::iceNETThread()
             }
             else
             {
-                /* TODO :: Temporary */
+                m_StateMachineIstance->setStateMachineTx(m_iceNETRx);
+                m_StateMachineIstance->setStateMachine(iceNET_TRANSFER);
+                /**
+                 * 
+                 * TODO
+                 * 
+                 * Temporarily here to avoid 
+                 * system freeze at TCP
+                 * thread
+                 * 
+                 */
                 m_killThread = true;
-                /* TODO :: Temporarily here to avoid freezing the system */
+                
             }
         }
 

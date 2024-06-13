@@ -16,24 +16,24 @@
 const size_t CHAR_DEVICE_SIZE = 32;
 const size_t CHAR_CONSOLE_SIZE = 32;
 
-class iceCOM : public Compute
+class inputCOM : public Compute
 {
 private:
     int m_file_descriptor;
-    std::thread m_iceCOMThread;
+    std::thread m_inputCOMThread;
     std::atomic<bool> m_killThread;
     
     /* For char Device Traffic */
-    std::vector<char>* m_iceCOMRx;
-    std::vector<char>* m_iceCOMTx;
+    std::vector<char>* m_inputCOMRx;
+    std::vector<char>* m_inputCOMTx;
     /* Console control buffer */
     std::vector<char>* m_consoleControl;
 
-    bool m_iceCOMwait;
+    bool m_inputCOMwait;
 
 public:
-    iceCOM();
-    ~iceCOM();
+    inputCOM();
+    ~inputCOM();
 
     int openDEV();
     int dataTX();
@@ -43,9 +43,9 @@ public:
     void initThread();
     bool isThreadKilled();
 
-    void iceCOMThread();
+    void inputCOMThread();
 
-    void setIceCOMTx(std::vector<char>* DataRx);
+    void setinputCOMTx(std::vector<char>* DataRx);
 
 
 };

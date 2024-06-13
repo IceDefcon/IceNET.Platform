@@ -12,7 +12,7 @@
 #include <iostream>
 
 #include "types.h"
-#include "iceCOM.h"
+#include "inputCOM.h"
 
 class stateMachine
 {
@@ -27,7 +27,9 @@ class stateMachine
         std::vector<char>* m_smRx;
         std::vector<char>* m_smTx;
 
-        iceCOM* m_iceCOMinstance;
+        inputCOM* m_inputCOMinstance;
+
+        bool m_iceNETfeedbackDataReady;
 
 	public:
 
@@ -45,7 +47,11 @@ class stateMachine
 		void stateMachineThread();
 		void setStateMachine(stateType newState);
 
-        void setIceCOMinstance(iceCOM* instance);
+        void setinputCOMinstance(inputCOM* instance);
 
 		void setStateMachineRx(std::vector<char>* DataRx);
+		void setStateMachineTx(std::vector<char>* DataTx);
+		std::vector<char>* getStateMachineTx();
+		void resetFeedbackFlag();
+		bool getFeedbackFlag();
 };

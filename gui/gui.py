@@ -11,6 +11,19 @@ def log_message(message):
     log_display.config(state=tk.DISABLED)
     log_display.see(tk.END)  # Scroll to the end of the Text widget
 
+def kill_application():
+        # Create a TCP socket
+        tcp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        
+        # Connect to the server
+        server_address = ip_data.get()
+        port = int(port_data.get())
+        tcp_socket.connect((server_address, port))
+        log_message("[iceNET] Killing Linux Application")
+
+        data = data = bytes([0xDE, 0xAD])
+        tcp_socket.sendall(data)
+
 def send_data():
     tcp_socket = None
     try:
@@ -36,9 +49,13 @@ def send_data():
         log_message(f"[iceNET] Client TX :: {data.hex()}")  # Log the hexadecimal representation of the data
         
         # Receive feedback data from the server
-        feedback_data = tcp_socket.recv(1024)
-        feedback_text = feedback_data.decode()
-        log_message(f"[iceNET] Client RX :: {feedback_text}")
+        feedback_data = tcp_socket.recv(4)
+        #
+        # Dont use decode function when non ASCII hex is send over TCP
+        #
+        # feedback_text = feedback_data.decode()
+        # log_message(f"[iceNET] Client RX :: {feedback_text}")
+        log_message(f"[iceNET] Client RX :: {feedback_data.hex()}")  # Log the hexadecimal representation of the received data
 
     except Exception as e:
         log_message(f"[iceNET] Error sending/receiving data over TCP: {e}")
@@ -67,6 +84,9 @@ quit_button.grid(row=0, column=0, pady=5, padx=5, sticky='w')
 
 send_button = tk.Button(root, text="OFFLOAD", command=send_data, width=14)
 send_button.grid(row=0, column=1, pady=5, padx=5, sticky='w')
+
+kill_button = tk.Button(root, text="KILL APP", command=kill_application, width=14)
+kill_button.grid(row=0, column=2, pady=5, padx=5, sticky='w')
 
 ip_label = tk.Label(root, text="Server IP Address")
 ip_label.grid(row=1, column=0, pady=5, padx=5, sticky='e')
