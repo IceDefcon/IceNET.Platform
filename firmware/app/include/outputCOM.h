@@ -16,13 +16,13 @@
 
 #include "linkCOM.h"
 
-const size_t TCP_BUFFER_SIZE = 32;
+const size_t ICE_NET_BUFFER_SIZE = 32;
 
-class serverTCP
+class outputCOM
 {
     private:
         int m_file_descriptor;
-        std::thread m_serverTCPThread;
+        std::thread m_outputCOMThread;
         std::atomic<bool> m_killThread;
 
         int m_portNumber;
@@ -35,14 +35,14 @@ class serverTCP
         struct sockaddr_in m_clientAddress;
 
         /* For TCP server Traffic */
-        std::vector<char>* m_serverTCPRx;
-        std::vector<char>* m_serverTCPTx;
+        std::vector<char>* m_outputCOMRx;
+        std::vector<char>* m_outputCOMTx;
 
         linkCOM* m_linkCOMIstance;
 
     public:
-        serverTCP();
-        ~serverTCP();
+        outputCOM();
+        ~outputCOM();
 
         int openDEV();
         int dataTX();
@@ -52,12 +52,7 @@ class serverTCP
         void initThread();
         bool isThreadKilled();
 
-        void serverTCPThread();
-
-        int initServer();
-        int tcpTX();
-        int tcpRX();
-        int tcpClose();
+        void outputCOMThread();
 
         void setlinkCOMIstance(linkCOM* instance);
 };

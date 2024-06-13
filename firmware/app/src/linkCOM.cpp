@@ -9,42 +9,42 @@
 #include <thread> // sleep_for
 #include <iomanip> // Include the <iomanip> header for setw and setfill
 
-#include "stateMachine.h"
+#include "linkCOM.h"
 
-stateMachine::stateMachine() :
+linkCOM::linkCOM() :
     m_inputCOMinstance(nullptr),
     m_outputCOMfeedbackDataReady(false)
 {
-    std::cout << "[INFO] [CONSTRUCTOR] Instantiate stateMachine" << std::endl;
+    std::cout << "[INFO] [CONSTRUCTOR] Instantiate linkCOM" << std::endl;
 }
 
-stateMachine::~stateMachine()
+linkCOM::~linkCOM()
 {
-    std::cout << "[INFO] [DESTRUCTOR] Destroy stateMachine" << std::endl;
-    if (m_stateMachineThread.joinable()) 
+    std::cout << "[INFO] [DESTRUCTOR] Destroy linkCOM" << std::endl;
+    if (m_linkCOMThread.joinable()) 
     {
-        m_stateMachineThread.join();
+        m_linkCOMThread.join();
     }
 }
 
-int stateMachine::openDEV()
+int linkCOM::openDEV()
 {
 	initThread();
 
 	return 0;
 }
 
-int stateMachine::dataTX()
+int linkCOM::dataTX()
 {
 	return 0;
 }
 
-int stateMachine::dataRX()
+int linkCOM::dataRX()
 {
 	return 0;
 }
 
-int stateMachine::closeDEV()
+int linkCOM::closeDEV()
 {
     m_killThread = true;
 
@@ -52,19 +52,19 @@ int stateMachine::closeDEV()
 }
 
 
-void stateMachine::initThread()
+void linkCOM::initThread()
 {
     std::cout << "[INFO] [THREAD] Initialize State Machine" << std::endl;
-    m_stateMachineThread = std::thread(&stateMachine::stateMachineThread, this);
+    m_linkCOMThread = std::thread(&linkCOM::linkCOMThread, this);
 }
 
 
-bool stateMachine::isThreadKilled()
+bool linkCOM::isThreadKilled()
 {
 	return false;
 }
 
-void stateMachine::stateMachineThread()
+void linkCOM::linkCOMThread()
 {
     while(!m_killThread) 
     {
@@ -84,7 +84,7 @@ void stateMachine::stateMachineThread()
 
                 m_inputCOMinstance->setinputCOMTx(m_smRx);
 
-                setStateMachine(IDLE);
+                setlinkCOM(IDLE);
                 break;
 
             case outputCOM_TRANSFER:
@@ -92,7 +92,7 @@ void stateMachine::stateMachineThread()
                 m_outputCOMfeedbackDataReady = true;
                 /* TODO :: Temporary */
                 m_killThread = true;
-                setStateMachine(IDLE);
+                setlinkCOM(IDLE);
                 break;
 
             default:
@@ -107,37 +107,37 @@ void stateMachine::stateMachineThread()
     std::cout << "[INFO] [THREAD] Terminate State Machine" << std::endl;
 }
 
-void stateMachine::setStateMachine(stateType newState)
+void linkCOM::setlinkCOM(stateType newState)
 {
     m_currentState = newState;
 }
 
-void stateMachine::setinputCOMinstance(inputCOM* instance)
+void linkCOM::setinputCOMinstance(inputCOM* instance)
 {
     m_inputCOMinstance = instance;
 }
 
-void stateMachine::setStateMachineRx(std::vector<char>* DataRx)
+void linkCOM::setlinkCOMRx(std::vector<char>* DataRx)
 {
     m_smRx = DataRx;
 }
 
-void stateMachine::setStateMachineTx(std::vector<char>* DataTx)
+void linkCOM::setlinkCOMTx(std::vector<char>* DataTx)
 {
     m_smTx = DataTx;
 }
 
-std::vector<char>* stateMachine::getStateMachineTx()
+std::vector<char>* linkCOM::getlinkCOMTx()
 {
     return m_smTx;
 }
 
-void stateMachine::resetFeedbackFlag()
+void linkCOM::resetFeedbackFlag()
 {
     m_outputCOMfeedbackDataReady = false;
 }
 
-bool stateMachine::getFeedbackFlag()
+bool linkCOM::getFeedbackFlag()
 {
     return m_outputCOMfeedbackDataReady;
 }

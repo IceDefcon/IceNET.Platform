@@ -219,13 +219,13 @@ int serverTCP::tcpTX()
         (*m_serverTCPTx)[5] = 0x54; /* T */
         (*m_serverTCPTx)[6] = '\n'; /* Next line for the GUI console */
 #else
-        while(false == m_StateMachineIstance->getFeedbackFlag())
+        while(false == m_linkCOMIstance->getFeedbackFlag())
         {
             std::this_thread::sleep_for(std::chrono::milliseconds(10));
         }
 
-        m_serverTCPTx = m_StateMachineIstance->getStateMachineTx();
-        m_StateMachineIstance->resetFeedbackFlag();
+        m_serverTCPTx = m_linkCOMIstance->getlinkCOMTx();
+        m_linkCOMIstance->resetFeedbackFlag();
 #endif
 
         ret = write(m_clientSocket, m_serverTCPTx->data(), m_serverTCPTx->size());
@@ -271,8 +271,8 @@ int serverTCP::tcpRX()
             std::cout << "[ERNO] [TCP] Error receiving data" << std::endl;
         }
 
-        m_StateMachineIstance->setStateMachineRx(m_serverTCPRx);
-        m_StateMachineIstance->setStateMachine(inputCOM_TRANSFER);
+        m_linkCOMIstance->setlinkCOMRx(m_serverTCPRx);
+        m_linkCOMIstance->setlinkCOM(inputCOM_TRANSFER);
     }
     
     /* Resize to actual bytes read */
@@ -293,7 +293,7 @@ int serverTCP::tcpClose()
     return 0;
 }
 
-void serverTCP::setStateMachineIstance(stateMachine* instance)
+void serverTCP::setlinkCOMIstance(linkCOM* instance)
 {
-    m_StateMachineIstance = instance;
+    m_linkCOMIstance = instance;
 }

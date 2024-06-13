@@ -10,7 +10,7 @@
 #include "inputCOM.h"
 #include "outputCOM.h"
 #include "serverTCP.h"
-#include "stateMachine.h"
+#include "linkCOM.h"
 
 int main() 
 {
@@ -18,18 +18,18 @@ int main()
     inputCOM* inputCOMinstance = new inputCOM;
     outputCOM* outputCOMinstance = new outputCOM;
     serverTCP* serverTCPinstance = new serverTCP;
-    stateMachine* stateMachineinstance = new stateMachine;
+    linkCOM* linkCOMinstance = new linkCOM;
 
     /* Set Instances */
-    outputCOMinstance->setStateMachineIstance(stateMachineinstance);
-    serverTCPinstance->setStateMachineIstance(stateMachineinstance);
-    stateMachineinstance->setinputCOMinstance(inputCOMinstance);
+    outputCOMinstance->setlinkCOMIstance(linkCOMinstance);
+    serverTCPinstance->setlinkCOMIstance(linkCOMinstance);
+    linkCOMinstance->setinputCOMinstance(inputCOMinstance);
 
     /* Initialize Interfaces */
 	inputCOMinstance->openDEV();
 	outputCOMinstance->openDEV();
     serverTCPinstance->openDEV();
-    stateMachineinstance->openDEV();
+    linkCOMinstance->openDEV();
 
 	while(true) /* Terminate Kernel comms and Clean Memory */
 	{
@@ -38,7 +38,7 @@ int main()
 	    	serverTCPinstance->closeDEV();
 	    	outputCOMinstance->closeDEV();
 	    	inputCOMinstance->closeDEV();
-	    	stateMachineinstance->closeDEV();
+	    	linkCOMinstance->closeDEV();
 	        break;
 	    }
 
@@ -46,7 +46,7 @@ int main()
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
 	}
 
-	delete stateMachineinstance;
+	delete linkCOMinstance;
 	delete serverTCPinstance;
 	delete outputCOMinstance;
 	delete inputCOMinstance;

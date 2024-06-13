@@ -14,11 +14,11 @@
 #include "types.h"
 #include "inputCOM.h"
 
-class stateMachine
+class linkCOM
 {
 	private:
 
-		std::thread m_stateMachineThread;
+		std::thread m_linkCOMThread;
 		std::atomic<bool> m_killThread;
 		
 		stateType m_currentState;
@@ -33,8 +33,8 @@ class stateMachine
 
 	public:
 
-		stateMachine();
-		~stateMachine();
+		linkCOM();
+		~linkCOM();
 
         int openDEV();
         int dataTX();
@@ -44,14 +44,14 @@ class stateMachine
         void initThread();
         bool isThreadKilled();
 
-		void stateMachineThread();
-		void setStateMachine(stateType newState);
+		void linkCOMThread();
+		void setlinkCOM(stateType newState);
 
         void setinputCOMinstance(inputCOM* instance);
 
-		void setStateMachineRx(std::vector<char>* DataRx);
-		void setStateMachineTx(std::vector<char>* DataTx);
-		std::vector<char>* getStateMachineTx();
+		void setlinkCOMRx(std::vector<char>* DataRx);
+		void setlinkCOMTx(std::vector<char>* DataTx);
+		std::vector<char>* getlinkCOMTx();
 		void resetFeedbackFlag();
 		bool getFeedbackFlag();
 };
