@@ -9,7 +9,7 @@
 
 #include "inputCOM.h"
 #include "outputCOM.h"
-#include "tcpServer.h"
+#include "serverTCP.h"
 #include "stateMachine.h"
 
 int main() 
@@ -17,25 +17,25 @@ int main()
 	/* Heap Allocation */ 
     inputCOM* inputCOMinstance = new inputCOM;
     outputCOM* outputCOMinstance = new outputCOM;
-    tcpServer* tcpServerinstance = new tcpServer;
+    serverTCP* serverTCPinstance = new serverTCP;
     stateMachine* stateMachineinstance = new stateMachine;
 
     /* Set Instances */
     outputCOMinstance->setStateMachineIstance(stateMachineinstance);
-    tcpServerinstance->setStateMachineIstance(stateMachineinstance);
+    serverTCPinstance->setStateMachineIstance(stateMachineinstance);
     stateMachineinstance->setinputCOMinstance(inputCOMinstance);
 
     /* Initialize Interfaces */
 	inputCOMinstance->openDEV();
 	outputCOMinstance->openDEV();
-    tcpServerinstance->openDEV();
+    serverTCPinstance->openDEV();
     stateMachineinstance->openDEV();
 
 	while(true) /* Terminate Kernel comms and Clean Memory */
 	{
 	    if (outputCOMinstance->isThreadKilled()) 
 	    {
-	    	tcpServerinstance->closeDEV();
+	    	serverTCPinstance->closeDEV();
 	    	outputCOMinstance->closeDEV();
 	    	inputCOMinstance->closeDEV();
 	    	stateMachineinstance->closeDEV();
@@ -47,7 +47,7 @@ int main()
 	}
 
 	delete stateMachineinstance;
-	delete tcpServerinstance;
+	delete serverTCPinstance;
 	delete outputCOMinstance;
 	delete inputCOMinstance;
 

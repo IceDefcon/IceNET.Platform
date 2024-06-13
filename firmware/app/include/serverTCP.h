@@ -16,13 +16,13 @@
 
 #include "stateMachine.h"
 
-const size_t ICE_NET_BUFFER_SIZE = 32;
+const size_t TCP_BUFFER_SIZE = 32;
 
-class outputCOM
+class serverTCP
 {
     private:
         int m_file_descriptor;
-        std::thread m_outputCOMThread;
+        std::thread m_serverTCPThread;
         std::atomic<bool> m_killThread;
 
         int m_portNumber;
@@ -35,14 +35,14 @@ class outputCOM
         struct sockaddr_in m_clientAddress;
 
         /* For TCP server Traffic */
-        std::vector<char>* m_outputCOMRx;
-        std::vector<char>* m_outputCOMTx;
+        std::vector<char>* m_serverTCPRx;
+        std::vector<char>* m_serverTCPTx;
 
         stateMachine* m_StateMachineIstance;
 
     public:
-        outputCOM();
-        ~outputCOM();
+        serverTCP();
+        ~serverTCP();
 
         int openDEV();
         int dataTX();
@@ -52,7 +52,12 @@ class outputCOM
         void initThread();
         bool isThreadKilled();
 
-        void outputCOMThread();
+        void serverTCPThread();
+
+        int initServer();
+        int tcpTX();
+        int tcpRX();
+        int tcpClose();
 
         void setStateMachineIstance(stateMachine* instance);
 };
