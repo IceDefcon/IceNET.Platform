@@ -7,38 +7,38 @@
 #include <chrono> // delay
 #include <thread> // delay
 
-#include "inputCOM.h"
-#include "iceNET.h"
-#include "tcpServer.h"
-#include "stateMachine.h"
+#include "Kernel_IN.h"
+#include "Kernel_OUT.h"
+#include "ServerTCP.h"
+#include "NetworkTraffic.h"
 
 int main() 
 {
 	/* Heap Allocation */ 
-    inputCOM* inputCOMinstance = new inputCOM;
-    iceNET* iceNETinstance = new iceNET;
-    tcpServer* tcpServerinstance = new tcpServer;
-    stateMachine* stateMachineinstance = new stateMachine;
+    Kernel_IN* Kernel_INinstance = new Kernel_IN;
+    Kernel_OUT* Kernel_OUTinstance = new Kernel_OUT;
+    ServerTCP* ServerTCPinstance = new ServerTCP;
+    NetworkTraffic* NetworkTrafficinstance = new NetworkTraffic;
 
     /* Set Instances */
-    iceNETinstance->setStateMachineIstance(stateMachineinstance);
-    tcpServerinstance->setStateMachineIstance(stateMachineinstance);
-    stateMachineinstance->setinputCOMinstance(inputCOMinstance);
+    Kernel_OUTinstance->setNetworkTrafficIstance(NetworkTrafficinstance);
+    ServerTCPinstance->setNetworkTrafficIstance(NetworkTrafficinstance);
+    NetworkTrafficinstance->setKernel_INinstance(Kernel_INinstance);
 
     /* Initialize Interfaces */
-	inputCOMinstance->openDEV();
-	iceNETinstance->openDEV();
-    tcpServerinstance->openDEV();
-    stateMachineinstance->openDEV();
+	Kernel_INinstance->openDEV();
+	Kernel_OUTinstance->openDEV();
+    ServerTCPinstance->openDEV();
+    NetworkTrafficinstance->openDEV();
 
 	while(true) /* Terminate Kernel comms and Clean Memory */
 	{
-	    if (iceNETinstance->isThreadKilled()) 
+	    if (Kernel_OUTinstance->isThreadKilled()) 
 	    {
-	    	tcpServerinstance->closeDEV();
-	    	iceNETinstance->closeDEV();
-	    	inputCOMinstance->closeDEV();
-	    	stateMachineinstance->closeDEV();
+	    	ServerTCPinstance->closeDEV();
+	    	Kernel_OUTinstance->closeDEV();
+	    	Kernel_INinstance->closeDEV();
+	    	NetworkTrafficinstance->closeDEV();
 	        break;
 	    }
 
@@ -46,10 +46,10 @@ int main()
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
 	}
 
-	delete stateMachineinstance;
-	delete tcpServerinstance;
-	delete iceNETinstance;
-	delete inputCOMinstance;
+	delete NetworkTrafficinstance;
+	delete ServerTCPinstance;
+	delete Kernel_OUTinstance;
+	delete Kernel_INinstance;
 
 	return 0;
 }

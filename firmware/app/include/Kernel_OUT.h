@@ -14,15 +14,15 @@
 #include <atomic>
 #include <vector>
 
-#include "stateMachine.h"
+#include "NetworkTraffic.h"
 
 const size_t ICE_NET_BUFFER_SIZE = 32;
 
-class iceNET
+class Kernel_OUT
 {
     private:
         int m_file_descriptor;
-        std::thread m_iceNETThread;
+        std::thread m_Kernel_OUTThread;
         std::atomic<bool> m_killThread;
 
         int m_portNumber;
@@ -35,14 +35,14 @@ class iceNET
         struct sockaddr_in m_clientAddress;
 
         /* For TCP server Traffic */
-        std::vector<char>* m_iceNETRx;
-        std::vector<char>* m_iceNETTx;
+        std::vector<char>* m_Kernel_OUTRx;
+        std::vector<char>* m_Kernel_OUTTx;
 
-        stateMachine* m_StateMachineIstance;
+        NetworkTraffic* m_NetworkTrafficIstance;
 
     public:
-        iceNET();
-        ~iceNET();
+        Kernel_OUT();
+        ~Kernel_OUT();
 
         int openDEV();
         int dataTX();
@@ -52,7 +52,7 @@ class iceNET
         void initThread();
         bool isThreadKilled();
 
-        void iceNETThread();
+        void Kernel_OUTThread();
 
-        void setStateMachineIstance(stateMachine* instance);
+        void setNetworkTrafficIstance(NetworkTraffic* instance);
 };

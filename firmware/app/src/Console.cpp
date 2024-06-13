@@ -4,7 +4,7 @@
  * IceNET Technology 2024
  * 
  */
-#include "console.h"
+#include "Console.h"
 
 Console::Console() : m_LogLevel (LevelTodo) 
 {

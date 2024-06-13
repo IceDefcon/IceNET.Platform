@@ -7,7 +7,7 @@
 #pragma once
 
 #include <iostream>
-#include "types.h"
+#include "Types.h"
 
 class Console
 {

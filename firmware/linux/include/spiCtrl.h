@@ -9,7 +9,7 @@
 #define SPI_FPGA_H
 
 #include <linux/spi/spi.h>
-#include "types.h"
+#include "Types.h"
 
 //////////////////////
 //                  //

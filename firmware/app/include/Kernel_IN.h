@@ -11,29 +11,29 @@
 #include <vector>
 #include <semaphore.h>
 
-#include "compute.h"
+#include "Compute.h"
 
 const size_t CHAR_DEVICE_SIZE = 32;
 const size_t CHAR_CONSOLE_SIZE = 32;
 
-class inputCOM : public Compute
+class Kernel_IN : public Compute
 {
 private:
     int m_file_descriptor;
-    std::thread m_inputCOMThread;
+    std::thread m_Kernel_INThread;
     std::atomic<bool> m_killThread;
     
     /* For char Device Traffic */
-    std::vector<char>* m_inputCOMRx;
-    std::vector<char>* m_inputCOMTx;
+    std::vector<char>* m_Kernel_INRx;
+    std::vector<char>* m_Kernel_INTx;
     /* Console control buffer */
     std::vector<char>* m_consoleControl;
 
-    bool m_inputCOMwait;
+    bool m_Kernel_INwait;
 
 public:
-    inputCOM();
-    ~inputCOM();
+    Kernel_IN();
+    ~Kernel_IN();
 
     int openDEV();
     int dataTX();
@@ -43,9 +43,9 @@ public:
     void initThread();
     bool isThreadKilled();
 
-    void inputCOMThread();
+    void Kernel_INThread();
 
-    void setinputCOMTx(std::vector<char>* DataRx);
+    void setKernel_INTx(std::vector<char>* DataRx);
 
 
 };

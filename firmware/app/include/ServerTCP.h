@@ -14,15 +14,15 @@
 #include <atomic>
 #include <vector>
 
-#include "stateMachine.h"
+#include "NetworkTraffic.h"
 
 const size_t TCP_BUFFER_SIZE = 32;
 
-class tcpServer
+class ServerTCP
 {
     private:
         int m_file_descriptor;
-        std::thread m_tcpServerThread;
+        std::thread m_ServerTCPThread;
         std::atomic<bool> m_killThread;
 
         int m_portNumber;
@@ -35,14 +35,14 @@ class tcpServer
         struct sockaddr_in m_clientAddress;
 
         /* For TCP server Traffic */
-        std::vector<char>* m_tcpServerRx;
-        std::vector<char>* m_tcpServerTx;
+        std::vector<char>* m_ServerTCPRx;
+        std::vector<char>* m_ServerTCPTx;
 
-        stateMachine* m_StateMachineIstance;
+        NetworkTraffic* m_NetworkTrafficIstance;
 
     public:
-        tcpServer();
-        ~tcpServer();
+        ServerTCP();
+        ~ServerTCP();
 
         int openDEV();
         int dataTX();
@@ -52,12 +52,12 @@ class tcpServer
         void initThread();
         bool isThreadKilled();
 
-        void tcpServerThread();
+        void ServerTCPThread();
 
         int initServer();
         int tcpTX();
         int tcpRX();
         int tcpClose();
 
-        void setStateMachineIstance(stateMachine* instance);
+        void setNetworkTrafficIstance(NetworkTraffic* instance);
 };

@@ -8,7 +8,7 @@
 
 #include <stdint.h>
 
-#include "console.h"
+#include "Console.h"
 
 class Compute : public Console
 {
