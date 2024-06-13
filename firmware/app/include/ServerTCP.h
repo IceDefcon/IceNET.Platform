@@ -14,15 +14,15 @@
 #include <atomic>
 #include <vector>
 
-#include "linkCOM.h"
+#include "NetworkTraffic.h"
 
 const size_t TCP_BUFFER_SIZE = 32;
 
-class serverTCP
+class ServerTCP
 {
     private:
         int m_file_descriptor;
-        std::thread m_serverTCPThread;
+        std::thread m_ServerTCPThread;
         std::atomic<bool> m_killThread;
 
         int m_portNumber;
@@ -35,14 +35,14 @@ class serverTCP
         struct sockaddr_in m_clientAddress;
 
         /* For TCP server Traffic */
-        std::vector<char>* m_serverTCPRx;
-        std::vector<char>* m_serverTCPTx;
+        std::vector<char>* m_ServerTCPRx;
+        std::vector<char>* m_ServerTCPTx;
 
-        linkCOM* m_linkCOMIstance;
+        NetworkTraffic* m_NetworkTrafficIstance;
 
     public:
-        serverTCP();
-        ~serverTCP();
+        ServerTCP();
+        ~ServerTCP();
 
         int openDEV();
         int dataTX();
@@ -52,12 +52,12 @@ class serverTCP
         void initThread();
         bool isThreadKilled();
 
-        void serverTCPThread();
+        void ServerTCPThread();
 
         int initServer();
         int tcpTX();
         int tcpRX();
         int tcpClose();
 
-        void setlinkCOMIstance(linkCOM* instance);
+        void setNetworkTrafficIstance(NetworkTraffic* instance);
 };

@@ -4,7 +4,7 @@
  * IceNET Technology 2024
  * 
  */
-#include "compute.h"
+#include "Compute.h"
 
 Compute::Compute() 
 {

@@ -12,7 +12,7 @@
 #include "spiCtrl.h"
 #include "charDevice.h"
 #include "stateMachine.h"
-#include "types.h"
+#include "Types.h"
 
 ////////////////////////
 //                    //
@@ -197,7 +197,7 @@ void transferFromCharDevice(struct work_struct *work)
     int ret;
     int i;
 
-    DataTransfer* fpgaData = get_inputCOMTransfer();
+    DataTransfer* fpgaData = get_Kernel_INTransfer();
 
     memset(&transfer, 0, sizeof(transfer));
     transfer.tx_buf = (void *)fpgaData->RxData;

@@ -11,14 +11,14 @@
 #include <vector>
 #include <iostream>
 
-#include "types.h"
-#include "inputCOM.h"
+#include "Types.h"
+#include "Kernel_IN.h"
 
-class linkCOM
+class NetworkTraffic
 {
 	private:
 
-		std::thread m_linkCOMThread;
+		std::thread m_NetworkTrafficThread;
 		std::atomic<bool> m_killThread;
 		
 		stateType m_currentState;
@@ -27,14 +27,14 @@ class linkCOM
         std::vector<char>* m_smRx;
         std::vector<char>* m_smTx;
 
-        inputCOM* m_inputCOMinstance;
+        Kernel_IN* m_Kernel_INinstance;
 
-        bool m_outputCOMfeedbackDataReady;
+        bool m_Kernel_OUTfeedbackDataReady;
 
 	public:
 
-		linkCOM();
-		~linkCOM();
+		NetworkTraffic();
+		~NetworkTraffic();
 
         int openDEV();
         int dataTX();
@@ -44,14 +44,14 @@ class linkCOM
         void initThread();
         bool isThreadKilled();
 
-		void linkCOMThread();
-		void setlinkCOM(stateType newState);
+		void NetworkTrafficThread();
+		void setNetworkTraffic(stateType newState);
 
-        void setinputCOMinstance(inputCOM* instance);
+        void setKernel_INinstance(Kernel_IN* instance);
 
-		void setlinkCOMRx(std::vector<char>* DataRx);
-		void setlinkCOMTx(std::vector<char>* DataTx);
-		std::vector<char>* getlinkCOMTx();
+		void setNetworkTrafficRx(std::vector<char>* DataRx);
+		void setNetworkTrafficTx(std::vector<char>* DataTx);
+		std::vector<char>* getNetworkTrafficTx();
 		void resetFeedbackFlag();
 		bool getFeedbackFlag();
 };

@@ -16,83 +16,83 @@
 #include <vector>
 #include <iomanip>          // for std::hex and std::setfill
 
-#include "inputCOM.h"
+#include "Kernel_IN.h"
 
-inputCOM::inputCOM() : 
+Kernel_IN::Kernel_IN() : 
     m_file_descriptor(0), 
     m_killThread(false),
-    m_inputCOMRx(new std::vector<char>(CHAR_DEVICE_SIZE)),
-    m_inputCOMTx(new std::vector<char>(CHAR_DEVICE_SIZE)),
+    m_Kernel_INRx(new std::vector<char>(CHAR_DEVICE_SIZE)),
+    m_Kernel_INTx(new std::vector<char>(CHAR_DEVICE_SIZE)),
     m_consoleControl(new std::vector<char>(CHAR_CONSOLE_SIZE)),
-    m_inputCOMwait(true)
+    m_Kernel_INwait(true)
 {
-    // Initialize m_inputCOMRx, m_inputCOMTx, and m_consoleControl with zeros
-    std::fill(m_inputCOMRx->begin(), m_inputCOMRx->end(), 0);
-    std::fill(m_inputCOMTx->begin(), m_inputCOMTx->end(), 0);
+    // Initialize m_Kernel_INRx, m_Kernel_INTx, and m_consoleControl with zeros
+    std::fill(m_Kernel_INRx->begin(), m_Kernel_INRx->end(), 0);
+    std::fill(m_Kernel_INTx->begin(), m_Kernel_INTx->end(), 0);
     std::fill(m_consoleControl->begin(), m_consoleControl->end(), 0);
 
-    Info("[CONSTRUCTOR] Instantiate inputCOM");
+    Info("[CONSTRUCTOR] Instantiate Kernel_IN");
 }
 
-inputCOM::~inputCOM() 
+Kernel_IN::~Kernel_IN() 
 {
-    Info("[DESTRUCTOR] Destroy inputCOM");
-    if (m_inputCOMThread.joinable()) 
+    Info("[DESTRUCTOR] Destroy Kernel_IN");
+    if (m_Kernel_INThread.joinable()) 
     {
-        m_inputCOMThread.join();
+        m_Kernel_INThread.join();
     }
 
-    m_inputCOMwait = false;
+    m_Kernel_INwait = false;
 }
 
-int inputCOM::openDEV() 
+int Kernel_IN::openDEV() 
 {
-    m_file_descriptor = open("/dev/inputCOM", O_RDWR);
+    m_file_descriptor = open("/dev/Kernel_IN", O_RDWR);
 
     if(m_file_descriptor < 0)
     {
-        Error("[inputCOM] Failed to open Device");
+        Error("[Kernel_IN] Failed to open Device");
         m_killThread = true;
         return ERROR;
     } 
     else 
     {
-        Info("[inputCOM] Device opened successfuly");
+        Info("[Kernel_IN] Device opened successfuly");
         initThread();
     }
 
     return OK;
 }
 
-int inputCOM::dataRX()
+int Kernel_IN::dataRX()
 {
     int ret;
 
-    ret = read(m_file_descriptor, m_inputCOMRx->data(), CHAR_DEVICE_SIZE);
+    ret = read(m_file_descriptor, m_Kernel_INRx->data(), CHAR_DEVICE_SIZE);
     
     if (ret == -1)
     {
-        Error("[inputCOM] Cannot read from kernel space");
+        Error("[Kernel_IN] Cannot read from kernel space");
         return ERROR;
     }
     else if (ret == 0)
     {
-        Error("[inputCOM] No data available");
+        Error("[Kernel_IN] No data available");
         return ENODATA;
     }
     else
     {
         // Print received data for debugging
-        Read(m_inputCOMRx->data());
+        Read(m_Kernel_INRx->data());
 
         /* Clear char device Rx buffer */
-        m_inputCOMRx->clear();
+        m_Kernel_INRx->clear();
 
         return OK;
     }
 }
 
-int inputCOM::dataTX()
+int Kernel_IN::dataTX()
 {
     int ret = -1;
 
@@ -121,26 +121,26 @@ int inputCOM::dataTX()
      * Byte[3] :: Register Data
      * 
      */
-    (*m_inputCOMTx)[0] = static_cast<char>(Compute::computeDeviceAddress(m_consoleControl->data()));
-    (*m_inputCOMTx)[1] = static_cast<char>(Compute::computeRegisterAddress(m_consoleControl->data()));
-    (*m_inputCOMTx)[2] = static_cast<char>(Compute::computeRegisterControl(m_consoleControl->data()));
+    (*m_Kernel_INTx)[0] = static_cast<char>(Compute::computeDeviceAddress(m_consoleControl->data()));
+    (*m_Kernel_INTx)[1] = static_cast<char>(Compute::computeRegisterAddress(m_consoleControl->data()));
+    (*m_Kernel_INTx)[2] = static_cast<char>(Compute::computeRegisterControl(m_consoleControl->data()));
 
     /* If Write then compute RegisterData */
-    if((*m_inputCOMTx)[2] == 0x01)
+    if((*m_Kernel_INTx)[2] == 0x01)
     {
-        (*m_inputCOMTx)[3] = static_cast<char>(Compute::computeRegisterData(m_consoleControl->data()));
+        (*m_Kernel_INTx)[3] = static_cast<char>(Compute::computeRegisterData(m_consoleControl->data()));
 
-        if((*m_inputCOMTx)[0] == 0xFF || (*m_inputCOMTx)[1] == 0xFF || (*m_inputCOMTx)[2] == 0xFF || (*m_inputCOMTx)[3] == 0xFF) 
+        if((*m_Kernel_INTx)[0] == 0xFF || (*m_Kernel_INTx)[1] == 0xFF || (*m_Kernel_INTx)[2] == 0xFF || (*m_Kernel_INTx)[3] == 0xFF) 
         {
-            Error("[inputCOM] Bytes computation failure [WR]");
+            Error("[Kernel_IN] Bytes computation failure [WR]");
             return ret;
         }
     }
     else
     {
-        if((*m_inputCOMTx)[0] == 0xFF || (*m_inputCOMTx)[1] == 0xFF || (*m_inputCOMTx)[2] == 0xFF) 
+        if((*m_Kernel_INTx)[0] == 0xFF || (*m_Kernel_INTx)[1] == 0xFF || (*m_Kernel_INTx)[2] == 0xFF) 
         {
-            Error("[inputCOM] Bytes computation failure [RD]");
+            Error("[Kernel_IN] Bytes computation failure [RD]");
             return ret;
         }
         
@@ -152,26 +152,26 @@ int inputCOM::dataTX()
          * FIFO input/output geometry
          * 
          */
-        (*m_inputCOMTx)[3] = 0x00;
+        (*m_Kernel_INTx)[3] = 0x00;
     }
 
 #else
 
     /* Wait for data from TCP client */
-    Info("[inputCOM] Wait for the inputCOM Flag");
-    while(true == m_inputCOMwait)
+    Info("[Kernel_IN] Wait for the Kernel_IN Flag");
+    while(true == m_Kernel_INwait)
     {
         std::this_thread::sleep_for(std::chrono::milliseconds(20));
     }
-    m_inputCOMwait = true;
+    m_Kernel_INwait = true;
 
 #endif
 
-    ret = write(m_file_descriptor, m_inputCOMTx->data(), 4);
+    ret = write(m_file_descriptor, m_Kernel_INTx->data(), 4);
 
     if (ret == -1)
     {
-        Error("[inputCOM] Cannot write to kernel space");
+        Error("[Kernel_IN] Cannot write to kernel space");
         return ERROR;
     }
 
@@ -189,18 +189,18 @@ int inputCOM::dataTX()
      * 
      */
     std::this_thread::sleep_for(std::chrono::milliseconds(20));
-    (*m_inputCOMTx)[0] = 0x12; /* Custom Kernel Byte Map :: Check reciprocal in charDevice.c */
-    (*m_inputCOMTx)[1] = 0x34; /* Custom Kernel Byte Map :: Check reciprocal in charDevice.c */
-    ret = write(m_file_descriptor, m_inputCOMTx->data(), 2);
+    (*m_Kernel_INTx)[0] = 0x12; /* Custom Kernel Byte Map :: Check reciprocal in charDevice.c */
+    (*m_Kernel_INTx)[1] = 0x34; /* Custom Kernel Byte Map :: Check reciprocal in charDevice.c */
+    ret = write(m_file_descriptor, m_Kernel_INTx->data(), 2);
 
     
-    m_inputCOMTx->clear(); /* Clear charDevice Rx buffer */
+    m_Kernel_INTx->clear(); /* Clear charDevice Rx buffer */
     m_consoleControl->clear(); /* Clear console control buffer */
 
     return OK;
 }
 
-int inputCOM::closeDEV() 
+int Kernel_IN::closeDEV() 
 {
     if (m_file_descriptor >= 0) 
     {
@@ -213,24 +213,24 @@ int inputCOM::closeDEV()
     return OK;
 }
 
-void inputCOM::initThread()
+void Kernel_IN::initThread()
 {
-    Info("[THREAD] Initialize inputCOM");
-    m_inputCOMThread = std::thread(&inputCOM::inputCOMThread, this);
+    Info("[THREAD] Initialize Kernel_IN");
+    m_Kernel_INThread = std::thread(&Kernel_IN::Kernel_INThread, this);
 }
 
-bool inputCOM::isThreadKilled()
+bool Kernel_IN::isThreadKilled()
 {
 	return m_killThread;
 }
 
-void inputCOM::inputCOMThread()
+void Kernel_IN::Kernel_INThread()
 {
     while(!m_killThread) 
     {
         if(OK != dataTX())
         {
-            Error("[inputCOM] Cannot write into the console");
+            Error("[Kernel_IN] Cannot write into the console");
         }
         else
         {
@@ -240,10 +240,10 @@ void inputCOM::inputCOMThread()
              * about successfully transfered command 
              * 
              */
-#if 0 /* No need for feedback here since we get it over outputCOM */
+#if 0 /* No need for feedback here since we get it over Kernel_OUT */
             if(OK != dataRX())
             {
-                Error("[inputCOM] Cannot read from the console");
+                Error("[Kernel_IN] Cannot read from the console");
             }
 #endif
             /* TODO :: Set the flag to indicate the data is ready */
@@ -256,12 +256,12 @@ void inputCOM::inputCOMThread()
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
 
-    Info("[THREAD] Terminate inputCOM");
+    Info("[THREAD] Terminate Kernel_IN");
 }
 
-void inputCOM::setinputCOMTx(std::vector<char>* DataRx)
+void Kernel_IN::setKernel_INTx(std::vector<char>* DataRx)
 {
-    m_inputCOMTx = DataRx;
-    Info("[inputCOM] Release inputCOM Flag");
-    m_inputCOMwait = false;
+    m_Kernel_INTx = DataRx;
+    Info("[Kernel_IN] Release Kernel_IN Flag");
+    m_Kernel_INwait = false;
 }

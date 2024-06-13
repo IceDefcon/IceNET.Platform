@@ -14,15 +14,15 @@
 #include <atomic>
 #include <vector>
 
-#include "linkCOM.h"
+#include "NetworkTraffic.h"
 
 const size_t ICE_NET_BUFFER_SIZE = 32;
 
-class outputCOM
+class Kernel_OUT
 {
     private:
         int m_file_descriptor;
-        std::thread m_outputCOMThread;
+        std::thread m_Kernel_OUTThread;
         std::atomic<bool> m_killThread;
 
         int m_portNumber;
@@ -35,14 +35,14 @@ class outputCOM
         struct sockaddr_in m_clientAddress;
 
         /* For TCP server Traffic */
-        std::vector<char>* m_outputCOMRx;
-        std::vector<char>* m_outputCOMTx;
+        std::vector<char>* m_Kernel_OUTRx;
+        std::vector<char>* m_Kernel_OUTTx;
 
-        linkCOM* m_linkCOMIstance;
+        NetworkTraffic* m_NetworkTrafficIstance;
 
     public:
-        outputCOM();
-        ~outputCOM();
+        Kernel_OUT();
+        ~Kernel_OUT();
 
         int openDEV();
         int dataTX();
@@ -52,7 +52,7 @@ class outputCOM
         void initThread();
         bool isThreadKilled();
 
-        void outputCOMThread();
+        void Kernel_OUTThread();
 
-        void setlinkCOMIstance(linkCOM* instance);
+        void setNetworkTrafficIstance(NetworkTraffic* instance);
 };

@@ -7,38 +7,38 @@
 #include <chrono> // delay
 #include <thread> // delay
 
-#include "inputCOM.h"
-#include "outputCOM.h"
-#include "serverTCP.h"
-#include "linkCOM.h"
+#include "Kernel_IN.h"
+#include "Kernel_OUT.h"
+#include "ServerTCP.h"
+#include "NetworkTraffic.h"
 
 int main() 
 {
 	/* Heap Allocation */ 
-    inputCOM* inputCOMinstance = new inputCOM;
-    outputCOM* outputCOMinstance = new outputCOM;
-    serverTCP* serverTCPinstance = new serverTCP;
-    linkCOM* linkCOMinstance = new linkCOM;
+    Kernel_IN* Kernel_INinstance = new Kernel_IN;
+    Kernel_OUT* Kernel_OUTinstance = new Kernel_OUT;
+    ServerTCP* ServerTCPinstance = new ServerTCP;
+    NetworkTraffic* NetworkTrafficinstance = new NetworkTraffic;
 
     /* Set Instances */
-    outputCOMinstance->setlinkCOMIstance(linkCOMinstance);
-    serverTCPinstance->setlinkCOMIstance(linkCOMinstance);
-    linkCOMinstance->setinputCOMinstance(inputCOMinstance);
+    Kernel_OUTinstance->setNetworkTrafficIstance(NetworkTrafficinstance);
+    ServerTCPinstance->setNetworkTrafficIstance(NetworkTrafficinstance);
+    NetworkTrafficinstance->setKernel_INinstance(Kernel_INinstance);
 
     /* Initialize Interfaces */
-	inputCOMinstance->openDEV();
-	outputCOMinstance->openDEV();
-    serverTCPinstance->openDEV();
-    linkCOMinstance->openDEV();
+	Kernel_INinstance->openDEV();
+	Kernel_OUTinstance->openDEV();
+    ServerTCPinstance->openDEV();
+    NetworkTrafficinstance->openDEV();
 
 	while(true) /* Terminate Kernel comms and Clean Memory */
 	{
-	    if (outputCOMinstance->isThreadKilled()) 
+	    if (Kernel_OUTinstance->isThreadKilled()) 
 	    {
-	    	serverTCPinstance->closeDEV();
-	    	outputCOMinstance->closeDEV();
-	    	inputCOMinstance->closeDEV();
-	    	linkCOMinstance->closeDEV();
+	    	ServerTCPinstance->closeDEV();
+	    	Kernel_OUTinstance->closeDEV();
+	    	Kernel_INinstance->closeDEV();
+	    	NetworkTrafficinstance->closeDEV();
 	        break;
 	    }
 
@@ -46,10 +46,10 @@ int main()
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
 	}
 
-	delete linkCOMinstance;
-	delete serverTCPinstance;
-	delete outputCOMinstance;
-	delete inputCOMinstance;
+	delete NetworkTrafficinstance;
+	delete ServerTCPinstance;
+	delete Kernel_OUTinstance;
+	delete Kernel_INinstance;
 
 	return 0;
 }

@@ -16,6 +16,6 @@ enum Status
 typedef enum 
 {
     IDLE = 0,
-    inputCOM_TRANSFER,
-    outputCOM_TRANSFER
+    Kernel_IN_TRANSFER,
+    Kernel_OUT_TRANSFER
 } stateType;
