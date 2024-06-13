@@ -18,11 +18,11 @@
 
 const size_t ICE_NET_BUFFER_SIZE = 32;
 
-class iceNET
+class outputCOM
 {
     private:
         int m_file_descriptor;
-        std::thread m_iceNETThread;
+        std::thread m_outputCOMThread;
         std::atomic<bool> m_killThread;
 
         int m_portNumber;
@@ -35,14 +35,14 @@ class iceNET
         struct sockaddr_in m_clientAddress;
 
         /* For TCP server Traffic */
-        std::vector<char>* m_iceNETRx;
-        std::vector<char>* m_iceNETTx;
+        std::vector<char>* m_outputCOMRx;
+        std::vector<char>* m_outputCOMTx;
 
         stateMachine* m_StateMachineIstance;
 
     public:
-        iceNET();
-        ~iceNET();
+        outputCOM();
+        ~outputCOM();
 
         int openDEV();
         int dataTX();
@@ -52,7 +52,7 @@ class iceNET
         void initThread();
         bool isThreadKilled();
 
-        void iceNETThread();
+        void outputCOMThread();
 
         void setStateMachineIstance(stateMachine* instance);
 };

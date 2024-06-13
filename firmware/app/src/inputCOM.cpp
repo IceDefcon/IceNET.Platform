@@ -240,7 +240,7 @@ void inputCOM::inputCOMThread()
              * about successfully transfered command 
              * 
              */
-#if 0 /* No need for feedback here since we get it over iceNET */
+#if 0 /* No need for feedback here since we get it over outputCOM */
             if(OK != dataRX())
             {
                 Error("[inputCOM] Cannot read from the console");

@@ -8,7 +8,7 @@
 #include <thread> // delay
 
 #include "inputCOM.h"
-#include "iceNET.h"
+#include "outputCOM.h"
 #include "tcpServer.h"
 #include "stateMachine.h"
 
@@ -16,27 +16,27 @@ int main()
 {
 	/* Heap Allocation */ 
     inputCOM* inputCOMinstance = new inputCOM;
-    iceNET* iceNETinstance = new iceNET;
+    outputCOM* outputCOMinstance = new outputCOM;
     tcpServer* tcpServerinstance = new tcpServer;
     stateMachine* stateMachineinstance = new stateMachine;
 
     /* Set Instances */
-    iceNETinstance->setStateMachineIstance(stateMachineinstance);
+    outputCOMinstance->setStateMachineIstance(stateMachineinstance);
     tcpServerinstance->setStateMachineIstance(stateMachineinstance);
     stateMachineinstance->setinputCOMinstance(inputCOMinstance);
 
     /* Initialize Interfaces */
 	inputCOMinstance->openDEV();
-	iceNETinstance->openDEV();
+	outputCOMinstance->openDEV();
     tcpServerinstance->openDEV();
     stateMachineinstance->openDEV();
 
 	while(true) /* Terminate Kernel comms and Clean Memory */
 	{
-	    if (iceNETinstance->isThreadKilled()) 
+	    if (outputCOMinstance->isThreadKilled()) 
 	    {
 	    	tcpServerinstance->closeDEV();
-	    	iceNETinstance->closeDEV();
+	    	outputCOMinstance->closeDEV();
 	    	inputCOMinstance->closeDEV();
 	    	stateMachineinstance->closeDEV();
 	        break;
@@ -48,7 +48,7 @@ int main()
 
 	delete stateMachineinstance;
 	delete tcpServerinstance;
-	delete iceNETinstance;
+	delete outputCOMinstance;
 	delete inputCOMinstance;
 
 	return 0;

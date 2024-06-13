@@ -13,7 +13,7 @@
 
 stateMachine::stateMachine() :
     m_inputCOMinstance(nullptr),
-    m_iceNETfeedbackDataReady(false)
+    m_outputCOMfeedbackDataReady(false)
 {
     std::cout << "[INFO] [CONSTRUCTOR] Instantiate stateMachine" << std::endl;
 }
@@ -87,9 +87,9 @@ void stateMachine::stateMachineThread()
                 setStateMachine(IDLE);
                 break;
 
-            case iceNET_TRANSFER:
-                std::cout << "[INFO] [STM] iceNET_TRANSFER mode" << std::endl;
-                m_iceNETfeedbackDataReady = true;
+            case outputCOM_TRANSFER:
+                std::cout << "[INFO] [STM] outputCOM_TRANSFER mode" << std::endl;
+                m_outputCOMfeedbackDataReady = true;
                 /* TODO :: Temporary */
                 m_killThread = true;
                 setStateMachine(IDLE);
@@ -134,10 +134,10 @@ std::vector<char>* stateMachine::getStateMachineTx()
 
 void stateMachine::resetFeedbackFlag()
 {
-    m_iceNETfeedbackDataReady = false;
+    m_outputCOMfeedbackDataReady = false;
 }
 
 bool stateMachine::getFeedbackFlag()
 {
-    return m_iceNETfeedbackDataReady;
+    return m_outputCOMfeedbackDataReady;
 }

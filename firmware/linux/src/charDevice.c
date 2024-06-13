@@ -32,8 +32,8 @@
 #define  DEVICE_COM "inputCOM"
 #define  CLASS_COM  "inputCOM"
 
-#define  DEVICE_NET "iceNET"
-#define  CLASS_NET  "iceNET"
+#define  DEVICE_NET "outputCOM"
+#define  CLASS_NET  "outputCOM"
 
 static int majorNumber[2];
 static struct class*  C_Class[2]  = {NULL,NULL};
@@ -41,7 +41,7 @@ static struct device* C_Device[2] = {NULL,NULL};
 static int numberOpens[2] = {0,0};
 
 static DEFINE_MUTEX(inputCOM_mutex);
-static DEFINE_MUTEX(iceNET_mutex);
+static DEFINE_MUTEX(outputCOM_mutex);
 static DEFINE_MUTEX(wait_mutex);
 
 static int dev_open_com(struct inode *inodep, struct file *filep);
@@ -55,7 +55,7 @@ static ssize_t dev_write_net(struct file *, const char *, size_t, loff_t *);
 static int dev_close_net(struct inode *inodep, struct file *filep);
 
 static DataTransfer inputCOMTransfer; 
-static DataTransfer iceNETTransfer; 
+static DataTransfer outputCOMTransfer; 
 
 enum deviceTYPE
 {
@@ -119,15 +119,15 @@ static void init_charDevice_Data(void)
 {
     if (transferData != NULL)
     {
-        iceNETTransfer = *transferData;
+        outputCOMTransfer = *transferData;
     }
     else
     {
         // Handle the error, e.g., log it or assert
     }
-    iceNETTransfer.length = 1;
-    printk(KERN_INFO "[CTRL][NET] Data set in the iceNETTransfer :: iceNETTransfer->RxData[0] = 0x%02x \n", iceNETTransfer.RxData[0]);
-    printk(KERN_INFO "[CTRL][NET] Data set in the iceNETTransfer :: iceNETTransfer->lenght = %d \n", iceNETTransfer.length);
+    outputCOMTransfer.length = 1;
+    printk(KERN_INFO "[CTRL][NET] Data set in the outputCOMTransfer :: outputCOMTransfer->RxData[0] = 0x%02x \n", outputCOMTransfer.RxData[0]);
+    printk(KERN_INFO "[CTRL][NET] Data set in the outputCOMTransfer :: outputCOMTransfer->lenght = %d \n", outputCOMTransfer.length);
 
     mutex_unlock(&wait_mutex);
     printk(KERN_INFO "[CTRL][NET] Data from FPGA Received :: Unlock the mutex\n");
@@ -139,7 +139,7 @@ void charDeviceInit(void)
     mutex_init(&inputCOM_mutex);
 
     printk(KERN_ALERT "[INIT][NET] Lock on [C] Device Mutex\n");
-    mutex_init(&iceNET_mutex);
+    mutex_init(&outputCOM_mutex);
 
     printk(KERN_ALERT "[INIT][NET] Lock on Wait Mutex\n");
     mutex_init(&wait_mutex);
@@ -183,7 +183,7 @@ void charDeviceInit(void)
     init_charDevice_Data();
 
     //
-    // iceNET
+    // outputCOM
     //
     majorNumber[ICE_NET] = register_chrdev(0, DEVICE_NET, &fops[ICE_NET]);
     if (majorNumber[ICE_NET] < 0)
@@ -267,7 +267,7 @@ void charDeviceDestroy(void)
     printk(KERN_INFO "[DESTROY][COM] Char device destruction complete\n");
 
     //
-    // iceNET
+    // outputCOM
     //
     if(C_Device[ICE_NET]) 
     {
@@ -300,11 +300,11 @@ void charDeviceDestroy(void)
     }
     else
     {
-        printk(KERN_INFO "[DESTROY][NET] Canot unregister iceNET Device :: majorNumber[ICE_NET] is already 0 !\n");
+        printk(KERN_INFO "[DESTROY][NET] Canot unregister outputCOM Device :: majorNumber[ICE_NET] is already 0 !\n");
         printk(KERN_INFO "[DESTROY][NET] Device destroyed\n");
     }
 
-    mutex_destroy(&iceNET_mutex);
+    mutex_destroy(&outputCOM_mutex);
     printk(KERN_INFO "[DESTROY][NET] Net Mutex destroyed\n");
 
     mutex_destroy(&wait_mutex);
@@ -402,13 +402,13 @@ static int dev_close_com(struct inode *inodep, struct file *filep)
 /**
  * 
  * 
- * iceNET Interface
+ * outputCOM Interface
  * 
  * 
  */
 static int dev_open_net(struct inode *inodep, struct file *filep)
 {
-    if(!mutex_trylock(&iceNET_mutex))
+    if(!mutex_trylock(&outputCOM_mutex))
     {
         printk(KERN_ALERT "[CTRL][NET] Device in use by another process");
         return -EBUSY;
@@ -429,13 +429,13 @@ static ssize_t dev_read_net(struct file *filep, char *buffer, size_t len, loff_t
     mutex_lock(&wait_mutex);
 
     /* TODO :: TxData is Dummy 0xBB */
-    error_count = copy_to_user(buffer, (const void *)iceNETTransfer.RxData, iceNETTransfer.length);
+    error_count = copy_to_user(buffer, (const void *)outputCOMTransfer.RxData, outputCOMTransfer.length);
 
     if (error_count == 0)
     {
-        printk(KERN_INFO "[CTRL][COM] Sent %zu characters to user-space\n", iceNETTransfer.length);
+        printk(KERN_INFO "[CTRL][COM] Sent %zu characters to user-space\n", outputCOMTransfer.length);
         /* Length == Preamble + Null Terminator */
-        return iceNETTransfer.length; 
+        return outputCOMTransfer.length; 
     }
     else 
     {
@@ -451,22 +451,22 @@ static ssize_t dev_write_net(struct file *filep, const char __user *buffer, size
     size_t i;
 
     /* Copy RxData from user space to kernel space */
-    error_count = copy_from_user((void *)iceNETTransfer.RxData, buffer, len);
+    error_count = copy_from_user((void *)outputCOMTransfer.RxData, buffer, len);
     if (error_count != 0) 
     {
         /* Free allocated memory */
-        kfree((void *)iceNETTransfer.RxData);
+        kfree((void *)outputCOMTransfer.RxData);
         /* Copy failed */
         return -EFAULT;
     }
 
-    iceNETTransfer.RxData[len] = '\0';  /* Null terminate the char array */
-    iceNETTransfer.length = len;
+    outputCOMTransfer.RxData[len] = '\0';  /* Null terminate the char array */
+    outputCOMTransfer.length = len;
 
     // Print each character of the RxData array
-    for (i = 0; i < iceNETTransfer.length; i++) 
+    for (i = 0; i < outputCOMTransfer.length; i++) 
     {
-        printk(KERN_INFO "[CTRL][COM] Received Byte[%zu]: 0x%02x\n", i, (unsigned char)iceNETTransfer.RxData[i]);
+        printk(KERN_INFO "[CTRL][COM] Received Byte[%zu]: 0x%02x\n", i, (unsigned char)outputCOMTransfer.RxData[i]);
     }
 
     return 0;
@@ -475,7 +475,7 @@ static ssize_t dev_write_net(struct file *filep, const char __user *buffer, size
 static int dev_close_net(struct inode *inodep, struct file *filep)
 {
     printk(KERN_ALERT "[INIT][NET] Unlock [C] Device Mutex\n");
-    mutex_unlock(&iceNET_mutex);
+    mutex_unlock(&outputCOM_mutex);
     printk(KERN_INFO "[CTRL][NET] Device successfully closed\n");
     return 0;
 }

@@ -12,75 +12,75 @@
 #include <fcntl.h> // For open, O_RDWR, etc.
 #include <unistd.h>// For close, read, write, etc.
 
-#include "iceNET.h"
+#include "outputCOM.h"
 #include "types.h"
 
-iceNET::iceNET() :
+outputCOM::outputCOM() :
     m_file_descriptor(0), 
     m_killThread(false),
-    m_iceNETRx(new std::vector<char>(ICE_NET_BUFFER_SIZE)),
-    m_iceNETTx(new std::vector<char>(ICE_NET_BUFFER_SIZE))
+    m_outputCOMRx(new std::vector<char>(ICE_NET_BUFFER_SIZE)),
+    m_outputCOMTx(new std::vector<char>(ICE_NET_BUFFER_SIZE))
 {
-    std::cout << "[INFO] [CONSTRUCTOR] Instantiate iceNET" << std::endl;
+    std::cout << "[INFO] [CONSTRUCTOR] Instantiate outputCOM" << std::endl;
 
-    /* Initialize m_iceNETRx and m_iceNETTx with zeros */
-    std::fill(m_iceNETRx->begin(), m_iceNETRx->end(), 0);
-    std::fill(m_iceNETTx->begin(), m_iceNETTx->end(), 0);
+    /* Initialize m_outputCOMRx and m_outputCOMTx with zeros */
+    std::fill(m_outputCOMRx->begin(), m_outputCOMRx->end(), 0);
+    std::fill(m_outputCOMTx->begin(), m_outputCOMTx->end(), 0);
 }
 
-iceNET::~iceNET() 
+outputCOM::~outputCOM() 
 {
-    std::cout << "[INFO] [DESTRUCTOR] Destroy iceNET" << std::endl;
+    std::cout << "[INFO] [DESTRUCTOR] Destroy outputCOM" << std::endl;
 
     closeDEV();
 
-    if (m_iceNETThread.joinable()) 
+    if (m_outputCOMThread.joinable()) 
     {
-        m_iceNETThread.join();
+        m_outputCOMThread.join();
     }
 }
 
-int iceNET::openDEV() 
+int outputCOM::openDEV() 
 {
-    m_file_descriptor = open("/dev/iceNET", O_RDWR);
+    m_file_descriptor = open("/dev/outputCOM", O_RDWR);
 
     if(m_file_descriptor < 0)
     {
-        std::cout << "[ERNO] [iceNET] Failed to open Device" << std::endl;
+        std::cout << "[ERNO] [outputCOM] Failed to open Device" << std::endl;
         m_killThread = true;
         return ERROR;
     } 
     else 
     {
-        std::cout << "[INFO] [iceNET] Device opened successfuly" << std::endl;
+        std::cout << "[INFO] [outputCOM] Device opened successfuly" << std::endl;
         initThread();
     }
 
     return OK;
 }
 
-int iceNET::dataRX()
+int outputCOM::dataRX()
 {
     int ret;
 
-    ret = read(m_file_descriptor, m_iceNETRx->data(), ICE_NET_BUFFER_SIZE);
+    ret = read(m_file_descriptor, m_outputCOMRx->data(), ICE_NET_BUFFER_SIZE);
 
-    std::cout << "[INFO] [iceNET] Received " << ret << " Bytes of data: ";
+    std::cout << "[INFO] [outputCOM] Received " << ret << " Bytes of data: ";
     for (int i = 0; i < ret; ++i)
     {
-        std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>((*m_iceNETRx)[i]) << " ";
+        std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>((*m_outputCOMRx)[i]) << " ";
     }
     std::cout << std::endl;
 
     return OK;
 }
 
-int iceNET::dataTX()
+int outputCOM::dataTX()
 {
     return OK;
 }
 
-int iceNET::closeDEV() 
+int outputCOM::closeDEV() 
 {
     if (m_file_descriptor >= 0) 
     {
@@ -94,37 +94,37 @@ int iceNET::closeDEV()
     return OK;
 }
 
-void iceNET::initThread()
+void outputCOM::initThread()
 {
-    std::cout << "[INFO] [THREAD] Initialize iceNET" << std::endl;
-    m_iceNETThread = std::thread(&iceNET::iceNETThread, this);
+    std::cout << "[INFO] [THREAD] Initialize outputCOM" << std::endl;
+    m_outputCOMThread = std::thread(&outputCOM::outputCOMThread, this);
 }
 
-bool iceNET::isThreadKilled()
+bool outputCOM::isThreadKilled()
 {
     return m_killThread;
 }
 
-void iceNET::iceNETThread()
+void outputCOM::outputCOMThread()
 {
     while (!m_killThread)
     {
-        std::cout << "[INFO] [iceNET] Waiting for next Feedback message" << std::endl;
+        std::cout << "[INFO] [outputCOM] Waiting for next Feedback message" << std::endl;
         
         if(OK != dataTX())
         {
-            std::cout << "[ERNO] [iceNET] Cannot write into the console" << std::endl;
+            std::cout << "[ERNO] [outputCOM] Cannot write into the console" << std::endl;
         }
         else
         {
             if(OK != dataRX())
             {
-                std::cout << "[ERNO] [iceNET] Cannot read from the console" << std::endl;
+                std::cout << "[ERNO] [outputCOM] Cannot read from the console" << std::endl;
             }
             else
             {
-                m_StateMachineIstance->setStateMachineTx(m_iceNETRx);
-                m_StateMachineIstance->setStateMachine(iceNET_TRANSFER);
+                m_StateMachineIstance->setStateMachineTx(m_outputCOMRx);
+                m_StateMachineIstance->setStateMachine(outputCOM_TRANSFER);
                 /**
                  * 
                  * TODO
@@ -143,10 +143,10 @@ void iceNET::iceNETThread()
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
 
-    std::cout << "[INFO] [THREAD] Terminate iceNET" << std::endl;
+    std::cout << "[INFO] [THREAD] Terminate outputCOM" << std::endl;
 }
 
-void iceNET::setStateMachineIstance(stateMachine* instance)
+void outputCOM::setStateMachineIstance(stateMachine* instance)
 {
     m_StateMachineIstance = instance;
 }

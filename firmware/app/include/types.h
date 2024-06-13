@@ -17,5 +17,5 @@ typedef enum
 {
     IDLE = 0,
     inputCOM_TRANSFER,
-    iceNET_TRANSFER
+    outputCOM_TRANSFER
 } stateType;

@@ -29,7 +29,7 @@ class stateMachine
 
         inputCOM* m_inputCOMinstance;
 
-        bool m_iceNETfeedbackDataReady;
+        bool m_outputCOMfeedbackDataReady;
 
 	public:
 
