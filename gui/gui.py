@@ -11,6 +11,19 @@ def log_message(message):
     log_display.config(state=tk.DISABLED)
     log_display.see(tk.END)  # Scroll to the end of the Text widget
 
+def kill_application():
+        # Create a TCP socket
+        tcp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        
+        # Connect to the server
+        server_address = ip_data.get()
+        port = int(port_data.get())
+        tcp_socket.connect((server_address, port))
+        log_message("[iceNET] Killing Linux Application")
+
+        data = data = bytes([0xDE, 0xAD])
+        tcp_socket.sendall(data)
+
 def send_data():
     tcp_socket = None
     try:
@@ -71,6 +84,9 @@ quit_button.grid(row=0, column=0, pady=5, padx=5, sticky='w')
 
 send_button = tk.Button(root, text="OFFLOAD", command=send_data, width=14)
 send_button.grid(row=0, column=1, pady=5, padx=5, sticky='w')
+
+kill_button = tk.Button(root, text="KILL APP", command=kill_application, width=14)
+kill_button.grid(row=0, column=2, pady=5, padx=5, sticky='w')
 
 ip_label = tk.Label(root, text="Server IP Address")
 ip_label.grid(row=1, column=0, pady=5, padx=5, sticky='e')
