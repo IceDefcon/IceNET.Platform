@@ -16,14 +16,14 @@
 
 #include "NetworkTraffic.h"
 
-const size_t TCP_BUFFER_SIZE = 32;
+const size_t TCP_SERVER_SIZE = 32;
 
 class ServerTCP
 {
     private:
         int m_file_descriptor;
-        std::thread m_ServerTCPThread;
-        std::atomic<bool> m_killThread;
+        std::thread m_threadServerTCP;
+        std::atomic<bool> m_threadKill;
 
         int m_portNumber;
         int m_serverSocket;
@@ -35,10 +35,10 @@ class ServerTCP
         struct sockaddr_in m_clientAddress;
 
         /* For TCP server Traffic */
-        std::vector<char>* m_ServerTCPRx;
-        std::vector<char>* m_ServerTCPTx;
+        std::vector<char>* m_ServerRx;
+        std::vector<char>* m_ServerTx;
 
-        NetworkTraffic* m_NetworkTrafficIstance;
+        std::shared_ptr<NetworkTraffic> m_instanceNetworkTraffic;
 
     public:
         ServerTCP();
@@ -52,12 +52,12 @@ class ServerTCP
         void initThread();
         bool isThreadKilled();
 
-        void ServerTCPThread();
+        void threadServerTCP();
 
         int initServer();
         int tcpTX();
         int tcpRX();
         int tcpClose();
 
-        void setNetworkTrafficIstance(NetworkTraffic* instance);
+        void setInstance_NetworkTraffic(std::shared_ptr<NetworkTraffic> instance);
 };

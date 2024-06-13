@@ -20,15 +20,15 @@
 
 Kernel_IN::Kernel_IN() : 
     m_file_descriptor(0), 
-    m_killThread(false),
-    m_Kernel_INRx(new std::vector<char>(CHAR_DEVICE_SIZE)),
-    m_Kernel_INTx(new std::vector<char>(CHAR_DEVICE_SIZE)),
+    m_threadKill(false),
+    m_Rx_Kernel_IN(new std::vector<char>(CHAR_DEVICE_SIZE)),
+    m_Tx_Kernel_IN(new std::vector<char>(CHAR_DEVICE_SIZE)),
     m_consoleControl(new std::vector<char>(CHAR_CONSOLE_SIZE)),
     m_Kernel_INwait(true)
 {
-    // Initialize m_Kernel_INRx, m_Kernel_INTx, and m_consoleControl with zeros
-    std::fill(m_Kernel_INRx->begin(), m_Kernel_INRx->end(), 0);
-    std::fill(m_Kernel_INTx->begin(), m_Kernel_INTx->end(), 0);
+    // Initialize m_Rx_Kernel_IN, m_Tx_Kernel_IN, and m_consoleControl with zeros
+    std::fill(m_Rx_Kernel_IN->begin(), m_Rx_Kernel_IN->end(), 0);
+    std::fill(m_Tx_Kernel_IN->begin(), m_Tx_Kernel_IN->end(), 0);
     std::fill(m_consoleControl->begin(), m_consoleControl->end(), 0);
 
     Info("[CONSTRUCTOR] Instantiate Kernel_IN");
@@ -43,6 +43,10 @@ Kernel_IN::~Kernel_IN()
     }
 
     m_Kernel_INwait = false;
+
+    delete m_Rx_Kernel_IN;
+    delete m_Tx_Kernel_IN;
+    delete m_consoleControl;
 }
 
 int Kernel_IN::openDEV() 
@@ -51,13 +55,13 @@ int Kernel_IN::openDEV()
 
     if(m_file_descriptor < 0)
     {
-        Error("[Kernel_IN] Failed to open Device");
-        m_killThread = true;
+        Error("[IN] Failed to open Device");
+        m_threadKill = true;
         return ERROR;
     } 
     else 
     {
-        Info("[Kernel_IN] Device opened successfuly");
+        Info("[IN] Device opened successfuly");
         initThread();
     }
 
@@ -68,25 +72,25 @@ int Kernel_IN::dataRX()
 {
     int ret;
 
-    ret = read(m_file_descriptor, m_Kernel_INRx->data(), CHAR_DEVICE_SIZE);
+    ret = read(m_file_descriptor, m_Rx_Kernel_IN->data(), CHAR_DEVICE_SIZE);
     
     if (ret == -1)
     {
-        Error("[Kernel_IN] Cannot read from kernel space");
+        Error("[IN] Cannot read from kernel space");
         return ERROR;
     }
     else if (ret == 0)
     {
-        Error("[Kernel_IN] No data available");
+        Error("[IN] No data available");
         return ENODATA;
     }
     else
     {
         // Print received data for debugging
-        Read(m_Kernel_INRx->data());
+        Read(m_Rx_Kernel_IN->data());
 
         /* Clear char device Rx buffer */
-        m_Kernel_INRx->clear();
+        m_Rx_Kernel_IN->clear();
 
         return OK;
     }
@@ -104,7 +108,7 @@ int Kernel_IN::dataTX()
 
     if (std::strcmp(m_consoleControl->data(), "exit") == 0) 
     {
-        m_killThread = true;
+        m_threadKill = true;
         return ret;
     }
 
@@ -121,26 +125,26 @@ int Kernel_IN::dataTX()
      * Byte[3] :: Register Data
      * 
      */
-    (*m_Kernel_INTx)[0] = static_cast<char>(Compute::computeDeviceAddress(m_consoleControl->data()));
-    (*m_Kernel_INTx)[1] = static_cast<char>(Compute::computeRegisterAddress(m_consoleControl->data()));
-    (*m_Kernel_INTx)[2] = static_cast<char>(Compute::computeRegisterControl(m_consoleControl->data()));
+    (*m_Tx_Kernel_IN)[0] = static_cast<char>(Compute::computeDeviceAddress(m_consoleControl->data()));
+    (*m_Tx_Kernel_IN)[1] = static_cast<char>(Compute::computeRegisterAddress(m_consoleControl->data()));
+    (*m_Tx_Kernel_IN)[2] = static_cast<char>(Compute::computeRegisterControl(m_consoleControl->data()));
 
     /* If Write then compute RegisterData */
-    if((*m_Kernel_INTx)[2] == 0x01)
+    if((*m_Tx_Kernel_IN)[2] == 0x01)
     {
-        (*m_Kernel_INTx)[3] = static_cast<char>(Compute::computeRegisterData(m_consoleControl->data()));
+        (*m_Tx_Kernel_IN)[3] = static_cast<char>(Compute::computeRegisterData(m_consoleControl->data()));
 
-        if((*m_Kernel_INTx)[0] == 0xFF || (*m_Kernel_INTx)[1] == 0xFF || (*m_Kernel_INTx)[2] == 0xFF || (*m_Kernel_INTx)[3] == 0xFF) 
+        if((*m_Tx_Kernel_IN)[0] == 0xFF || (*m_Tx_Kernel_IN)[1] == 0xFF || (*m_Tx_Kernel_IN)[2] == 0xFF || (*m_Tx_Kernel_IN)[3] == 0xFF) 
         {
-            Error("[Kernel_IN] Bytes computation failure [WR]");
+            Error("[IN] Bytes computation failure [WR]");
             return ret;
         }
     }
     else
     {
-        if((*m_Kernel_INTx)[0] == 0xFF || (*m_Kernel_INTx)[1] == 0xFF || (*m_Kernel_INTx)[2] == 0xFF) 
+        if((*m_Tx_Kernel_IN)[0] == 0xFF || (*m_Tx_Kernel_IN)[1] == 0xFF || (*m_Tx_Kernel_IN)[2] == 0xFF) 
         {
-            Error("[Kernel_IN] Bytes computation failure [RD]");
+            Error("[IN] Bytes computation failure [RD]");
             return ret;
         }
         
@@ -152,13 +156,13 @@ int Kernel_IN::dataTX()
          * FIFO input/output geometry
          * 
          */
-        (*m_Kernel_INTx)[3] = 0x00;
+        (*m_Tx_Kernel_IN)[3] = 0x00;
     }
 
 #else
 
     /* Wait for data from TCP client */
-    Info("[Kernel_IN] Wait for the Kernel_IN Flag");
+    Info("[IN] Wait for the Kernel_IN Flag");
     while(true == m_Kernel_INwait)
     {
         std::this_thread::sleep_for(std::chrono::milliseconds(20));
@@ -167,11 +171,11 @@ int Kernel_IN::dataTX()
 
 #endif
 
-    ret = write(m_file_descriptor, m_Kernel_INTx->data(), 4);
+    ret = write(m_file_descriptor, m_Tx_Kernel_IN->data(), 4);
 
     if (ret == -1)
     {
-        Error("[Kernel_IN] Cannot write to kernel space");
+        Error("[IN] Cannot write to kernel space");
         return ERROR;
     }
 
@@ -189,12 +193,12 @@ int Kernel_IN::dataTX()
      * 
      */
     std::this_thread::sleep_for(std::chrono::milliseconds(20));
-    (*m_Kernel_INTx)[0] = 0x12; /* Custom Kernel Byte Map :: Check reciprocal in charDevice.c */
-    (*m_Kernel_INTx)[1] = 0x34; /* Custom Kernel Byte Map :: Check reciprocal in charDevice.c */
-    ret = write(m_file_descriptor, m_Kernel_INTx->data(), 2);
+    (*m_Tx_Kernel_IN)[0] = 0x12; /* Custom Kernel Byte Map :: Check reciprocal in charDevice.c */
+    (*m_Tx_Kernel_IN)[1] = 0x34; /* Custom Kernel Byte Map :: Check reciprocal in charDevice.c */
+    ret = write(m_file_descriptor, m_Tx_Kernel_IN->data(), 2);
 
     
-    m_Kernel_INTx->clear(); /* Clear charDevice Rx buffer */
+    m_Tx_Kernel_IN->clear(); /* Clear charDevice Rx buffer */
     m_consoleControl->clear(); /* Clear console control buffer */
 
     return OK;
@@ -208,7 +212,7 @@ int Kernel_IN::closeDEV()
         m_file_descriptor = -1; // Mark as closed
     }
 
-    m_killThread = true;
+    m_threadKill = true;
     
     return OK;
 }
@@ -221,16 +225,16 @@ void Kernel_IN::initThread()
 
 bool Kernel_IN::isThreadKilled()
 {
-	return m_killThread;
+	return m_threadKill;
 }
 
 void Kernel_IN::Kernel_INThread()
 {
-    while(!m_killThread) 
+    while(!m_threadKill) 
     {
         if(OK != dataTX())
         {
-            Error("[Kernel_IN] Cannot write into the console");
+            Error("[IN] Cannot write into the console");
         }
         else
         {
@@ -243,13 +247,13 @@ void Kernel_IN::Kernel_INThread()
 #if 0 /* No need for feedback here since we get it over Kernel_OUT */
             if(OK != dataRX())
             {
-                Error("[Kernel_IN] Cannot read from the console");
+                Error("[IN] Cannot read from the console");
             }
 #endif
             /* TODO :: Set the flag to indicate the data is ready */
 
             /* TODO :: Temporary */
-            m_killThread = true;
+            m_threadKill = true;
         }
 
         /* Reduce consumption of CPU resources */
@@ -259,9 +263,9 @@ void Kernel_IN::Kernel_INThread()
     Info("[THREAD] Terminate Kernel_IN");
 }
 
-void Kernel_IN::setKernel_INTx(std::vector<char>* DataRx)
+void Kernel_IN::setTx_Kernel_IN(std::vector<char>* DataRx)
 {
-    m_Kernel_INTx = DataRx;
-    Info("[Kernel_IN] Release Kernel_IN Flag");
+    m_Tx_Kernel_IN = DataRx;
+    Info("[IN] Release Kernel_IN Flag");
     m_Kernel_INwait = false;
 }

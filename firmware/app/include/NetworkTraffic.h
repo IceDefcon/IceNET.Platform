@@ -14,22 +14,22 @@
 #include "Types.h"
 #include "Kernel_IN.h"
 
+const size_t NETWORK_TRAFFIC_SIZE = 32;
+
 class NetworkTraffic
 {
 	private:
 
-		std::thread m_NetworkTrafficThread;
-		std::atomic<bool> m_killThread;
-		
+		std::thread m_threadNetworkTraffic;
+		std::atomic<bool> m_threadKill;
 		stateType m_currentState;
+        bool m_readyKernel_OUT;
 
         /* For data Traffic */
-        std::vector<char>* m_smRx;
-        std::vector<char>* m_smTx;
+        std::vector<char>* m_TrafficRx;
+        std::vector<char>* m_TrafficTx;
 
-        Kernel_IN* m_Kernel_INinstance;
-
-        bool m_Kernel_OUTfeedbackDataReady;
+        std::shared_ptr<Kernel_IN> m_instanceKernel_IN;
 
 	public:
 
@@ -44,10 +44,10 @@ class NetworkTraffic
         void initThread();
         bool isThreadKilled();
 
-		void NetworkTrafficThread();
-		void setNetworkTraffic(stateType newState);
+		void threadNetworkTraffic();
+		void setNetworkTrafficState(stateType newState);
 
-        void setKernel_INinstance(Kernel_IN* instance);
+        void setInstance_Kernel_IN(std::shared_ptr<Kernel_IN> instance);
 
 		void setNetworkTrafficRx(std::vector<char>* DataRx);
 		void setNetworkTrafficTx(std::vector<char>* DataTx);
