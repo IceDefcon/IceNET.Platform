@@ -16,6 +16,6 @@ enum Status
 typedef enum 
 {
     IDLE = 0,
-    iceCOM_TRANSFER,
+    inputCOM_TRANSFER,
     iceNET_TRANSFER
 } stateType;

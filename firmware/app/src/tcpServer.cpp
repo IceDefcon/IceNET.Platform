@@ -272,7 +272,7 @@ int tcpServer::tcpRX()
         }
 
         m_StateMachineIstance->setStateMachineRx(m_tcpServerRx);
-        m_StateMachineIstance->setStateMachine(iceCOM_TRANSFER);
+        m_StateMachineIstance->setStateMachine(inputCOM_TRANSFER);
     }
     
     /* Resize to actual bytes read */
