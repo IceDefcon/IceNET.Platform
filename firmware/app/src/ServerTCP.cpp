@@ -17,14 +17,15 @@
 
 ServerTCP::ServerTCP() :
     m_file_descriptor(0), 
-    m_killThread(false),
+    m_threadKill(false),
     m_portNumber(2555),
     m_serverSocket(-1),
     m_clientSocket(-1),
     m_bytesReceived(0),
     m_clientConnected(false),
-    m_ServerTCPRx(new std::vector<char>(TCP_BUFFER_SIZE)),
-    m_ServerTCPTx(new std::vector<char>(TCP_BUFFER_SIZE))
+    m_ServerRx(new std::vector<char>(TCP_SERVER_SIZE)),
+    m_ServerTx(new std::vector<char>(TCP_SERVER_SIZE)),
+    m_instanceNetworkTraffic(std::make_shared<NetworkTraffic>())
 {
     std::cout << "[INFO] [CONSTRUCTOR] Instantiate ServerTCP" << std::endl;
 
@@ -33,9 +34,9 @@ ServerTCP::ServerTCP() :
     m_serverAddress.sin_addr.s_addr = INADDR_ANY;
     m_serverAddress.sin_port = htons(m_portNumber);
 
-    /* Initialize m_ServerTCPRx and m_ServerTCPTx with zeros */
-    std::fill(m_ServerTCPRx->begin(), m_ServerTCPRx->end(), 0);
-    std::fill(m_ServerTCPTx->begin(), m_ServerTCPTx->end(), 0);
+    /* Initialize m_ServerRx and m_ServerTx with zeros */
+    std::fill(m_ServerRx->begin(), m_ServerRx->end(), 0);
+    std::fill(m_ServerTx->begin(), m_ServerTx->end(), 0);
 }
 
 ServerTCP::~ServerTCP() 
@@ -49,13 +50,15 @@ ServerTCP::~ServerTCP()
         close(m_serverSocket);
     }
 
-    if (m_ServerTCPThread.joinable()) 
+    if (m_threadServerTCP.joinable()) 
     {
-        m_ServerTCPThread.join();
+        m_threadServerTCP.join();
     }
 
-    delete m_ServerTCPRx;
-    delete m_ServerTCPTx;
+    m_instanceNetworkTraffic = nullptr;
+
+    // delete m_ServerRx;
+    // delete m_ServerTx;
 }
 
 int ServerTCP::openDEV() 
@@ -78,7 +81,7 @@ int ServerTCP::dataTX()
 int ServerTCP::closeDEV() 
 {
     /* TODO :: Temporarily here */
-    m_killThread = true;
+    m_threadKill = true;
 
     return OK;
 }
@@ -86,23 +89,23 @@ int ServerTCP::closeDEV()
 void ServerTCP::initThread()
 {
     std::cout << "[INFO] [THREAD] Initialize TCP Server" << std::endl;
-    m_ServerTCPThread = std::thread(&ServerTCP::ServerTCPThread, this);
+    m_threadServerTCP = std::thread(&ServerTCP::threadServerTCP, this);
 }
 
 bool ServerTCP::isThreadKilled()
 {
-    return m_killThread;
+    return m_threadKill;
 }
 
-void ServerTCP::ServerTCPThread()
+void ServerTCP::threadServerTCP()
 {
     initServer();
 
     socklen_t clientLength = sizeof(m_clientAddress);
 
-    while (!m_killThread)
+    while (!m_threadKill)
     {
-        std::cout << "[INFO] [TCP] ServerTCPThread ready for next TCP packet" << std::endl;
+        std::cout << "[INFO] [TCP] threadServerTCP ready for next TCP packet" << std::endl;
         if (false == m_clientConnected)
         {
             /* Wait for the TCP client connection */
@@ -129,7 +132,7 @@ void ServerTCP::ServerTCPThread()
             tcpClose();
 
             /* TODO :: Temporary */
-            m_killThread = true;
+            m_threadKill = true;
         }
         /* Reduce consumption of CPU resources */
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
@@ -210,25 +213,15 @@ int ServerTCP::tcpTX()
     }
     else
     {
-#if 0 /* Debug Message */
-        (*m_ServerTCPTx)[0] = 0x69; /* i */
-        (*m_ServerTCPTx)[1] = 0x63; /* c */
-        (*m_ServerTCPTx)[2] = 0x65; /* e */
-        (*m_ServerTCPTx)[3] = 0x4E; /* N */
-        (*m_ServerTCPTx)[4] = 0x45; /* E */
-        (*m_ServerTCPTx)[5] = 0x54; /* T */
-        (*m_ServerTCPTx)[6] = '\n'; /* Next line for the GUI console */
-#else
-        while(false == m_NetworkTrafficIstance->getFeedbackFlag())
+        while(false == m_instanceNetworkTraffic->getFeedbackFlag())
         {
             std::this_thread::sleep_for(std::chrono::milliseconds(10));
         }
 
-        m_ServerTCPTx = m_NetworkTrafficIstance->getNetworkTrafficTx();
-        m_NetworkTrafficIstance->resetFeedbackFlag();
-#endif
+        m_ServerTx = m_instanceNetworkTraffic->getNetworkTrafficTx();
+        m_instanceNetworkTraffic->resetFeedbackFlag();
 
-        ret = write(m_clientSocket, m_ServerTCPTx->data(), m_ServerTCPTx->size());
+        ret = write(m_clientSocket, m_ServerTx->data(), m_ServerTx->size());
     }
 
     return ret;
@@ -245,7 +238,7 @@ int ServerTCP::tcpRX()
         std::cout << "[INFO] [TCP] Client connected to server" << std::endl;
         m_clientConnected = true;
 
-        m_bytesReceived = recv(m_clientSocket, m_ServerTCPRx->data(), TCP_BUFFER_SIZE, 0);
+        m_bytesReceived = recv(m_clientSocket, m_ServerRx->data(), TCP_SERVER_SIZE, 0);
 
         /**
          * 
@@ -258,7 +251,7 @@ int ServerTCP::tcpRX()
             std::cout << "[INFO] [TCP] Received " << m_bytesReceived << " Bytes of data: ";
             for (int i = 0; i < m_bytesReceived; ++i)
             {
-                std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>((*m_ServerTCPRx)[i]) << " ";
+                std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>((*m_ServerRx)[i]) << " ";
             }
             std::cout << std::endl;
         }
@@ -271,12 +264,12 @@ int ServerTCP::tcpRX()
             std::cout << "[ERNO] [TCP] Error receiving data" << std::endl;
         }
 
-        m_NetworkTrafficIstance->setNetworkTrafficRx(m_ServerTCPRx);
-        m_NetworkTrafficIstance->setNetworkTraffic(Kernel_IN_TRANSFER);
+        m_instanceNetworkTraffic->setNetworkTrafficRx(m_ServerRx);
+        m_instanceNetworkTraffic->setNetworkTrafficState(Kernel_IN_TRANSFER);
     }
     
     /* Resize to actual bytes read */
-    // m_ServerTCPRx->resize(m_bytesRead);
+    // m_ServerRx->resize(m_bytesRead);
 
     return m_bytesReceived;
 }
@@ -293,7 +286,7 @@ int ServerTCP::tcpClose()
     return 0;
 }
 
-void ServerTCP::setNetworkTrafficIstance(NetworkTraffic* instance)
+void ServerTCP::setInstance_NetworkTraffic(std::shared_ptr<NetworkTraffic> instance)
 {
-    m_NetworkTrafficIstance = instance;
+    m_instanceNetworkTraffic = instance;
 }

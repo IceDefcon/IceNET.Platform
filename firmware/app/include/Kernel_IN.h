@@ -21,11 +21,11 @@ class Kernel_IN : public Compute
 private:
     int m_file_descriptor;
     std::thread m_Kernel_INThread;
-    std::atomic<bool> m_killThread;
+    std::atomic<bool> m_threadKill;
     
     /* For char Device Traffic */
-    std::vector<char>* m_Kernel_INRx;
-    std::vector<char>* m_Kernel_INTx;
+    std::vector<char>* m_Rx_Kernel_IN;
+    std::vector<char>* m_Tx_Kernel_IN;
     /* Console control buffer */
     std::vector<char>* m_consoleControl;
 
@@ -45,7 +45,7 @@ public:
 
     void Kernel_INThread();
 
-    void setKernel_INTx(std::vector<char>* DataRx);
+    void setTx_Kernel_IN(std::vector<char>* DataRx);
 
 
 };

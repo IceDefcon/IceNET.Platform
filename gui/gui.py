@@ -12,17 +12,17 @@ def log_message(message):
     log_display.see(tk.END)  # Scroll to the end of the Text widget
 
 def kill_application():
-        # Create a TCP socket
-        tcp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        
-        # Connect to the server
-        server_address = ip_data.get()
-        port = int(port_data.get())
-        tcp_socket.connect((server_address, port))
-        log_message("[outputCOM] Killing Linux Application")
+    # Create a TCP socket
+    tcp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    
+    # Connect to the server
+    server_address = ip_data.get()
+    port = int(port_data.get())
+    tcp_socket.connect((server_address, port))
+    log_message("[outputCOM] Killing Linux Application")
 
-        data = data = bytes([0xDE, 0xAD])
-        tcp_socket.sendall(data)
+    data = bytes([0xDE, 0xAD])
+    tcp_socket.sendall(data)
 
 def send_data():
     tcp_socket = None
@@ -66,11 +66,16 @@ def send_data():
             tcp_socket.close()
             log_message("[outputCOM] Server connection terminated")
 
-
 def quit_application():
     log_message("[outputCOM] Quitting application...")
     root.quit()
     root.destroy()
+
+def toggle_write_data_entry():
+    if write_var.get():
+        register_data.config(state=tk.NORMAL)
+    else:
+        register_data.config(state=tk.DISABLED)
 
 # Create the main application window
 root = tk.Tk()
@@ -117,10 +122,11 @@ register_data_label.grid(row=5, column=0, pady=5, padx=5, sticky='e')
 register_data = tk.Entry(root, width=16)
 register_data.grid(row=5, column=1, pady=5, padx=5, sticky='w')
 register_data.insert(0, "00")
+register_data.config(state=tk.DISABLED) # Initialize "Write Data" entry as disabled
 
 # Add a tick box (Checkbutton)
 write_var = tk.BooleanVar()
-write_box = tk.Checkbutton(root, text="Write", variable=write_var)
+write_box = tk.Checkbutton(root, text="Write", variable=write_var, command=toggle_write_data_entry)
 write_box.grid(row=5, column=2, pady=5, padx=5, sticky='w')
 
 log_display = tk.Text(root, width=100, height=12, state=tk.DISABLED)

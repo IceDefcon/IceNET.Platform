@@ -14,31 +14,31 @@
 
 int main() 
 {
-	/* Heap Allocation */ 
-    Kernel_IN* Kernel_INinstance = new Kernel_IN;
-    Kernel_OUT* Kernel_OUTinstance = new Kernel_OUT;
-    ServerTCP* ServerTCPinstance = new ServerTCP;
-    NetworkTraffic* NetworkTrafficinstance = new NetworkTraffic;
+	/* Smart pointers for auto Heap allocation and dealocation */
+    std::shared_ptr<Kernel_IN> instanceKernel_IN = std::make_shared<Kernel_IN>();
+    std::shared_ptr<Kernel_OUT> instanceKernel_OUT = std::make_shared<Kernel_OUT>();
+    std::shared_ptr<ServerTCP> instanceServerTCP = std::make_shared<ServerTCP>();
+    std::shared_ptr<NetworkTraffic> instanceNetworkTraffic = std::make_shared<NetworkTraffic>();
 
     /* Set Instances */
-    Kernel_OUTinstance->setNetworkTrafficIstance(NetworkTrafficinstance);
-    ServerTCPinstance->setNetworkTrafficIstance(NetworkTrafficinstance);
-    NetworkTrafficinstance->setKernel_INinstance(Kernel_INinstance);
+    instanceKernel_OUT->setInstance_NetworkTraffic(instanceNetworkTraffic);
+    instanceServerTCP->setInstance_NetworkTraffic(instanceNetworkTraffic);
+    instanceNetworkTraffic->setInstance_Kernel_IN(instanceKernel_IN);
 
     /* Initialize Interfaces */
-	Kernel_INinstance->openDEV();
-	Kernel_OUTinstance->openDEV();
-    ServerTCPinstance->openDEV();
-    NetworkTrafficinstance->openDEV();
+	instanceKernel_IN->openDEV();
+	instanceKernel_OUT->openDEV();
+    instanceServerTCP->openDEV();
+    instanceNetworkTraffic->openDEV();
 
 	while(true) /* Terminate Kernel comms and Clean Memory */
 	{
-	    if (Kernel_OUTinstance->isThreadKilled()) 
+	    if (instanceKernel_OUT->isThreadKilled()) 
 	    {
-	    	ServerTCPinstance->closeDEV();
-	    	Kernel_OUTinstance->closeDEV();
-	    	Kernel_INinstance->closeDEV();
-	    	NetworkTrafficinstance->closeDEV();
+	    	instanceServerTCP->closeDEV();
+	    	instanceKernel_OUT->closeDEV();
+	    	instanceKernel_IN->closeDEV();
+	    	instanceNetworkTraffic->closeDEV();
 	        break;
 	    }
 
@@ -46,10 +46,7 @@ int main()
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
 	}
 
-	delete NetworkTrafficinstance;
-	delete ServerTCPinstance;
-	delete Kernel_OUTinstance;
-	delete Kernel_INinstance;
-
+	/* shared_ptr in use :: No need for dealocation */
+	
 	return 0;
 }

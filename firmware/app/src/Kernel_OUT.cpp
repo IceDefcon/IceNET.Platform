@@ -17,9 +17,10 @@
 
 Kernel_OUT::Kernel_OUT() :
     m_file_descriptor(0), 
-    m_killThread(false),
-    m_Kernel_OUTRx(new std::vector<char>(ICE_NET_BUFFER_SIZE)),
-    m_Kernel_OUTTx(new std::vector<char>(ICE_NET_BUFFER_SIZE))
+    m_threadKill(false),
+    m_Kernel_OUTRx(new std::vector<char>(KERNEL_IN_SIZE)),
+    m_Kernel_OUTTx(new std::vector<char>(KERNEL_IN_SIZE)),
+    m_instanceNetworkTraffic(std::make_shared<NetworkTraffic>())
 {
     std::cout << "[INFO] [CONSTRUCTOR] Instantiate Kernel_OUT" << std::endl;
 
@@ -38,6 +39,11 @@ Kernel_OUT::~Kernel_OUT()
     {
         m_Kernel_OUTThread.join();
     }
+
+    m_instanceNetworkTraffic = nullptr;
+
+    delete m_Kernel_OUTRx;
+    delete m_Kernel_OUTTx;
 }
 
 int Kernel_OUT::openDEV() 
@@ -46,13 +52,13 @@ int Kernel_OUT::openDEV()
 
     if(m_file_descriptor < 0)
     {
-        std::cout << "[ERNO] [Kernel_OUT] Failed to open Device" << std::endl;
-        m_killThread = true;
+        std::cout << "[ERNO] [OUT] Failed to open Device" << std::endl;
+        m_threadKill = true;
         return ERROR;
     } 
     else 
     {
-        std::cout << "[INFO] [Kernel_OUT] Device opened successfuly" << std::endl;
+        std::cout << "[INFO] [OUT] Device opened successfuly" << std::endl;
         initThread();
     }
 
@@ -63,9 +69,9 @@ int Kernel_OUT::dataRX()
 {
     int ret;
 
-    ret = read(m_file_descriptor, m_Kernel_OUTRx->data(), ICE_NET_BUFFER_SIZE);
+    ret = read(m_file_descriptor, m_Kernel_OUTRx->data(), KERNEL_IN_SIZE);
 
-    std::cout << "[INFO] [Kernel_OUT] Received " << ret << " Bytes of data: ";
+    std::cout << "[INFO] [OUT] Received " << ret << " Bytes of data: ";
     for (int i = 0; i < ret; ++i)
     {
         std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>((*m_Kernel_OUTRx)[i]) << " ";
@@ -89,7 +95,7 @@ int Kernel_OUT::closeDEV()
     }
 
     /* TODO :: Temporarily here */
-    m_killThread = true;
+    m_threadKill = true;
 
     return OK;
 }
@@ -102,29 +108,29 @@ void Kernel_OUT::initThread()
 
 bool Kernel_OUT::isThreadKilled()
 {
-    return m_killThread;
+    return m_threadKill;
 }
 
 void Kernel_OUT::Kernel_OUTThread()
 {
-    while (!m_killThread)
+    while (!m_threadKill)
     {
-        std::cout << "[INFO] [Kernel_OUT] Waiting for next Feedback message" << std::endl;
+        std::cout << "[INFO] [OUT] Waiting for next Feedback message" << std::endl;
         
         if(OK != dataTX())
         {
-            std::cout << "[ERNO] [Kernel_OUT] Cannot write into the console" << std::endl;
+            std::cout << "[ERNO] [OUT] Cannot write into the console" << std::endl;
         }
         else
         {
             if(OK != dataRX())
             {
-                std::cout << "[ERNO] [Kernel_OUT] Cannot read from the console" << std::endl;
+                std::cout << "[ERNO] [OUT] Cannot read from the console" << std::endl;
             }
             else
             {
-                m_NetworkTrafficIstance->setNetworkTrafficTx(m_Kernel_OUTRx);
-                m_NetworkTrafficIstance->setNetworkTraffic(Kernel_OUT_TRANSFER);
+                m_instanceNetworkTraffic->setNetworkTrafficTx(m_Kernel_OUTRx);
+                m_instanceNetworkTraffic->setNetworkTrafficState(Kernel_OUT_TRANSFER);
                 /**
                  * 
                  * TODO
@@ -134,7 +140,7 @@ void Kernel_OUT::Kernel_OUTThread()
                  * thread
                  * 
                  */
-                m_killThread = true;
+                m_threadKill = true;
                 
             }
         }
@@ -146,7 +152,7 @@ void Kernel_OUT::Kernel_OUTThread()
     std::cout << "[INFO] [THREAD] Terminate Kernel_OUT" << std::endl;
 }
 
-void Kernel_OUT::setNetworkTrafficIstance(NetworkTraffic* instance)
+void Kernel_OUT::setInstance_NetworkTraffic(std::shared_ptr<NetworkTraffic> instance)
 {
-    m_NetworkTrafficIstance = instance;
+    m_instanceNetworkTraffic = instance;
 }

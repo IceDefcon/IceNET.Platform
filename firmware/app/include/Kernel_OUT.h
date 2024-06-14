@@ -16,14 +16,14 @@
 
 #include "NetworkTraffic.h"
 
-const size_t ICE_NET_BUFFER_SIZE = 32;
+const size_t KERNEL_IN_SIZE = 32;
 
 class Kernel_OUT
 {
     private:
         int m_file_descriptor;
         std::thread m_Kernel_OUTThread;
-        std::atomic<bool> m_killThread;
+        std::atomic<bool> m_threadKill;
 
         int m_portNumber;
         int m_serverSocket;
@@ -38,7 +38,7 @@ class Kernel_OUT
         std::vector<char>* m_Kernel_OUTRx;
         std::vector<char>* m_Kernel_OUTTx;
 
-        NetworkTraffic* m_NetworkTrafficIstance;
+        std::shared_ptr<NetworkTraffic> m_instanceNetworkTraffic;
 
     public:
         Kernel_OUT();
@@ -54,5 +54,5 @@ class Kernel_OUT
 
         void Kernel_OUTThread();
 
-        void setNetworkTrafficIstance(NetworkTraffic* instance);
+        void setInstance_NetworkTraffic(std::shared_ptr<NetworkTraffic> instance);
 };

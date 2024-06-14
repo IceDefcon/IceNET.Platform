@@ -12,19 +12,30 @@
 #include "NetworkTraffic.h"
 
 NetworkTraffic::NetworkTraffic() :
-    m_Kernel_INinstance(nullptr),
-    m_Kernel_OUTfeedbackDataReady(false)
+    m_threadKill(false),
+    m_readyKernel_OUT(false),
+    m_TrafficRx(new std::vector<char>(NETWORK_TRAFFIC_SIZE)),
+    m_TrafficTx(new std::vector<char>(NETWORK_TRAFFIC_SIZE)),
+    m_instanceKernel_IN(nullptr)
 {
     std::cout << "[INFO] [CONSTRUCTOR] Instantiate NetworkTraffic" << std::endl;
+
+    /* Initialize m_TrafficRx and m_TrafficTx with zeros */
+    std::fill(m_TrafficRx->begin(), m_TrafficRx->end(), 0);
+    std::fill(m_TrafficTx->begin(), m_TrafficTx->end(), 0);
 }
 
 NetworkTraffic::~NetworkTraffic()
 {
     std::cout << "[INFO] [DESTRUCTOR] Destroy NetworkTraffic" << std::endl;
-    if (m_NetworkTrafficThread.joinable()) 
+
+    if (m_threadNetworkTraffic.joinable()) 
     {
-        m_NetworkTrafficThread.join();
+        m_threadNetworkTraffic.join();
     }
+
+    // delete m_TrafficRx;
+    // delete m_TrafficTx;
 }
 
 int NetworkTraffic::openDEV()
@@ -46,7 +57,7 @@ int NetworkTraffic::dataRX()
 
 int NetworkTraffic::closeDEV()
 {
-    m_killThread = true;
+    m_threadKill = true;
 
 	return 0;
 }
@@ -55,7 +66,7 @@ int NetworkTraffic::closeDEV()
 void NetworkTraffic::initThread()
 {
     std::cout << "[INFO] [THREAD] Initialize State Machine" << std::endl;
-    m_NetworkTrafficThread = std::thread(&NetworkTraffic::NetworkTrafficThread, this);
+    m_threadNetworkTraffic = std::thread(&NetworkTraffic::threadNetworkTraffic, this);
 }
 
 
@@ -64,9 +75,9 @@ bool NetworkTraffic::isThreadKilled()
 	return false;
 }
 
-void NetworkTraffic::NetworkTrafficThread()
+void NetworkTraffic::threadNetworkTraffic()
 {
-    while(!m_killThread) 
+    while(!m_threadKill) 
     {
         switch(m_currentState)
         {
@@ -78,21 +89,21 @@ void NetworkTraffic::NetworkTrafficThread()
                 std::cout << "[INFO] [STM] Received 4 Bytes of data: ";
                 for (int i = 0; i < 4; ++i)
                 {
-                    std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>((*m_smRx)[i]) << " ";
+                    std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>((*m_TrafficRx)[i]) << " ";
                 }
                 std::cout << std::endl;
 
-                m_Kernel_INinstance->setKernel_INTx(m_smRx);
+                m_instanceKernel_IN->setTx_Kernel_IN(m_TrafficRx);
 
-                setNetworkTraffic(IDLE);
+                setNetworkTrafficState(IDLE);
                 break;
 
             case Kernel_OUT_TRANSFER:
                 std::cout << "[INFO] [STM] Kernel_OUT_TRANSFER mode" << std::endl;
-                m_Kernel_OUTfeedbackDataReady = true;
+                m_readyKernel_OUT = true;
                 /* TODO :: Temporary */
-                m_killThread = true;
-                setNetworkTraffic(IDLE);
+                m_threadKill = true;
+                setNetworkTrafficState(IDLE);
                 break;
 
             default:
@@ -107,37 +118,37 @@ void NetworkTraffic::NetworkTrafficThread()
     std::cout << "[INFO] [THREAD] Terminate State Machine" << std::endl;
 }
 
-void NetworkTraffic::setNetworkTraffic(stateType newState)
+void NetworkTraffic::setNetworkTrafficState(stateType newState)
 {
     m_currentState = newState;
 }
 
-void NetworkTraffic::setKernel_INinstance(Kernel_IN* instance)
+void NetworkTraffic::setInstance_Kernel_IN(std::shared_ptr<Kernel_IN> instance)
 {
-    m_Kernel_INinstance = instance;
+    m_instanceKernel_IN = instance;
 }
 
 void NetworkTraffic::setNetworkTrafficRx(std::vector<char>* DataRx)
 {
-    m_smRx = DataRx;
+    m_TrafficRx = DataRx;
 }
 
 void NetworkTraffic::setNetworkTrafficTx(std::vector<char>* DataTx)
 {
-    m_smTx = DataTx;
+    m_TrafficTx = DataTx;
 }
 
 std::vector<char>* NetworkTraffic::getNetworkTrafficTx()
 {
-    return m_smTx;
+    return m_TrafficTx;
 }
 
 void NetworkTraffic::resetFeedbackFlag()
 {
-    m_Kernel_OUTfeedbackDataReady = false;
+    m_readyKernel_OUT = false;
 }
 
 bool NetworkTraffic::getFeedbackFlag()
 {
-    return m_Kernel_OUTfeedbackDataReady;
+    return m_readyKernel_OUT;
 }
