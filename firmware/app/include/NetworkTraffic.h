@@ -26,8 +26,8 @@ class NetworkTraffic
         bool m_readyKernel_OUT;
 
         /* For data Traffic */
-        std::vector<char>* m_TrafficRx;
-        std::vector<char>* m_TrafficTx;
+        std::vector<char>* m_Rx_NetworkTraffic;
+        std::vector<char>* m_Tx_NetworkTraffic;
 
         std::shared_ptr<Kernel_IN> m_instanceKernel_IN;
 

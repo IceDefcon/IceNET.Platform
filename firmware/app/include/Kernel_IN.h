@@ -20,7 +20,7 @@ class Kernel_IN : public Compute
 {
 private:
     int m_file_descriptor;
-    std::thread m_Kernel_INThread;
+    std::thread m_threadKernel_IN;
     std::atomic<bool> m_threadKill;
     
     /* For char Device Traffic */
@@ -29,7 +29,7 @@ private:
     /* Console control buffer */
     std::vector<char>* m_consoleControl;
 
-    bool m_Kernel_INwait;
+    bool m_waitKernel_IN;
 
 public:
     Kernel_IN();

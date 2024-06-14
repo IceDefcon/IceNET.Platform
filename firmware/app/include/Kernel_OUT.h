@@ -22,7 +22,7 @@ class Kernel_OUT
 {
     private:
         int m_file_descriptor;
-        std::thread m_Kernel_OUTThread;
+        std::thread m_threadKernel_OUT;
         std::atomic<bool> m_threadKill;
 
         int m_portNumber;
@@ -35,8 +35,8 @@ class Kernel_OUT
         struct sockaddr_in m_clientAddress;
 
         /* For TCP server Traffic */
-        std::vector<char>* m_Kernel_OUTRx;
-        std::vector<char>* m_Kernel_OUTTx;
+        std::vector<char>* m_Rx_Kernel_OUT;
+        std::vector<char>* m_Tx_Kernel_OUT;
 
         std::shared_ptr<NetworkTraffic> m_instanceNetworkTraffic;
 

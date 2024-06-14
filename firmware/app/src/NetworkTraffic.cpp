@@ -14,15 +14,15 @@
 NetworkTraffic::NetworkTraffic() :
     m_threadKill(false),
     m_readyKernel_OUT(false),
-    m_TrafficRx(new std::vector<char>(NETWORK_TRAFFIC_SIZE)),
-    m_TrafficTx(new std::vector<char>(NETWORK_TRAFFIC_SIZE)),
+    m_Rx_NetworkTraffic(new std::vector<char>(NETWORK_TRAFFIC_SIZE)),
+    m_Tx_NetworkTraffic(new std::vector<char>(NETWORK_TRAFFIC_SIZE)),
     m_instanceKernel_IN(nullptr)
 {
     std::cout << "[INFO] [CONSTRUCTOR] Instantiate NetworkTraffic" << std::endl;
 
-    /* Initialize m_TrafficRx and m_TrafficTx with zeros */
-    std::fill(m_TrafficRx->begin(), m_TrafficRx->end(), 0);
-    std::fill(m_TrafficTx->begin(), m_TrafficTx->end(), 0);
+    /* Initialize m_Rx_NetworkTraffic and m_Tx_NetworkTraffic with zeros */
+    std::fill(m_Rx_NetworkTraffic->begin(), m_Rx_NetworkTraffic->end(), 0);
+    std::fill(m_Tx_NetworkTraffic->begin(), m_Tx_NetworkTraffic->end(), 0);
 }
 
 NetworkTraffic::~NetworkTraffic()
@@ -34,8 +34,8 @@ NetworkTraffic::~NetworkTraffic()
         m_threadNetworkTraffic.join();
     }
 
-    // delete m_TrafficRx;
-    // delete m_TrafficTx;
+    // delete m_Rx_NetworkTraffic;
+    // delete m_Tx_NetworkTraffic;
 }
 
 int NetworkTraffic::openDEV()
@@ -89,11 +89,11 @@ void NetworkTraffic::threadNetworkTraffic()
                 std::cout << "[INFO] [STM] Received 4 Bytes of data: ";
                 for (int i = 0; i < 4; ++i)
                 {
-                    std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>((*m_TrafficRx)[i]) << " ";
+                    std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>((*m_Rx_NetworkTraffic)[i]) << " ";
                 }
                 std::cout << std::endl;
 
-                m_instanceKernel_IN->setTx_Kernel_IN(m_TrafficRx);
+                m_instanceKernel_IN->setTx_Kernel_IN(m_Rx_NetworkTraffic);
 
                 setNetworkTrafficState(IDLE);
                 break;
@@ -130,17 +130,17 @@ void NetworkTraffic::setInstance_Kernel_IN(std::shared_ptr<Kernel_IN> instance)
 
 void NetworkTraffic::setNetworkTrafficRx(std::vector<char>* DataRx)
 {
-    m_TrafficRx = DataRx;
+    m_Rx_NetworkTraffic = DataRx;
 }
 
 void NetworkTraffic::setNetworkTrafficTx(std::vector<char>* DataTx)
 {
-    m_TrafficTx = DataTx;
+    m_Tx_NetworkTraffic = DataTx;
 }
 
 std::vector<char>* NetworkTraffic::getNetworkTrafficTx()
 {
-    return m_TrafficTx;
+    return m_Tx_NetworkTraffic;
 }
 
 void NetworkTraffic::resetFeedbackFlag()

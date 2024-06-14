@@ -24,7 +24,7 @@ Kernel_IN::Kernel_IN() :
     m_Rx_Kernel_IN(new std::vector<char>(CHAR_DEVICE_SIZE)),
     m_Tx_Kernel_IN(new std::vector<char>(CHAR_DEVICE_SIZE)),
     m_consoleControl(new std::vector<char>(CHAR_CONSOLE_SIZE)),
-    m_Kernel_INwait(true)
+    m_waitKernel_IN(true)
 {
     // Initialize m_Rx_Kernel_IN, m_Tx_Kernel_IN, and m_consoleControl with zeros
     std::fill(m_Rx_Kernel_IN->begin(), m_Rx_Kernel_IN->end(), 0);
@@ -37,12 +37,12 @@ Kernel_IN::Kernel_IN() :
 Kernel_IN::~Kernel_IN() 
 {
     Info("[DESTRUCTOR] Destroy Kernel_IN");
-    if (m_Kernel_INThread.joinable()) 
+    if (m_threadKernel_IN.joinable()) 
     {
-        m_Kernel_INThread.join();
+        m_threadKernel_IN.join();
     }
 
-    m_Kernel_INwait = false;
+    m_waitKernel_IN = false;
 
     delete m_Rx_Kernel_IN;
     delete m_Tx_Kernel_IN;
@@ -163,11 +163,11 @@ int Kernel_IN::dataTX()
 
     /* Wait for data from TCP client */
     Info("[IN] Wait for the Kernel_IN Flag");
-    while(true == m_Kernel_INwait)
+    while(true == m_waitKernel_IN)
     {
         std::this_thread::sleep_for(std::chrono::milliseconds(20));
     }
-    m_Kernel_INwait = true;
+    m_waitKernel_IN = true;
 
 #endif
 
@@ -220,7 +220,7 @@ int Kernel_IN::closeDEV()
 void Kernel_IN::initThread()
 {
     Info("[THREAD] Initialize Kernel_IN");
-    m_Kernel_INThread = std::thread(&Kernel_IN::Kernel_INThread, this);
+    m_threadKernel_IN = std::thread(&Kernel_IN::Kernel_INThread, this);
 }
 
 bool Kernel_IN::isThreadKilled()
@@ -267,5 +267,5 @@ void Kernel_IN::setTx_Kernel_IN(std::vector<char>* DataRx)
 {
     m_Tx_Kernel_IN = DataRx;
     Info("[IN] Release Kernel_IN Flag");
-    m_Kernel_INwait = false;
+    m_waitKernel_IN = false;
 }

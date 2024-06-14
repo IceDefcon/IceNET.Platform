@@ -18,15 +18,15 @@
 Kernel_OUT::Kernel_OUT() :
     m_file_descriptor(0), 
     m_threadKill(false),
-    m_Kernel_OUTRx(new std::vector<char>(KERNEL_IN_SIZE)),
-    m_Kernel_OUTTx(new std::vector<char>(KERNEL_IN_SIZE)),
+    m_Rx_Kernel_OUT(new std::vector<char>(KERNEL_IN_SIZE)),
+    m_Tx_Kernel_OUT(new std::vector<char>(KERNEL_IN_SIZE)),
     m_instanceNetworkTraffic(std::make_shared<NetworkTraffic>())
 {
     std::cout << "[INFO] [CONSTRUCTOR] Instantiate Kernel_OUT" << std::endl;
 
-    /* Initialize m_Kernel_OUTRx and m_Kernel_OUTTx with zeros */
-    std::fill(m_Kernel_OUTRx->begin(), m_Kernel_OUTRx->end(), 0);
-    std::fill(m_Kernel_OUTTx->begin(), m_Kernel_OUTTx->end(), 0);
+    /* Initialize m_Rx_Kernel_OUT and m_Tx_Kernel_OUT with zeros */
+    std::fill(m_Rx_Kernel_OUT->begin(), m_Rx_Kernel_OUT->end(), 0);
+    std::fill(m_Tx_Kernel_OUT->begin(), m_Tx_Kernel_OUT->end(), 0);
 }
 
 Kernel_OUT::~Kernel_OUT() 
@@ -35,15 +35,15 @@ Kernel_OUT::~Kernel_OUT()
 
     closeDEV();
 
-    if (m_Kernel_OUTThread.joinable()) 
+    if (m_threadKernel_OUT.joinable()) 
     {
-        m_Kernel_OUTThread.join();
+        m_threadKernel_OUT.join();
     }
 
     m_instanceNetworkTraffic = nullptr;
 
-    delete m_Kernel_OUTRx;
-    delete m_Kernel_OUTTx;
+    delete m_Rx_Kernel_OUT;
+    delete m_Tx_Kernel_OUT;
 }
 
 int Kernel_OUT::openDEV() 
@@ -69,12 +69,12 @@ int Kernel_OUT::dataRX()
 {
     int ret;
 
-    ret = read(m_file_descriptor, m_Kernel_OUTRx->data(), KERNEL_IN_SIZE);
+    ret = read(m_file_descriptor, m_Rx_Kernel_OUT->data(), KERNEL_IN_SIZE);
 
     std::cout << "[INFO] [OUT] Received " << ret << " Bytes of data: ";
     for (int i = 0; i < ret; ++i)
     {
-        std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>((*m_Kernel_OUTRx)[i]) << " ";
+        std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>((*m_Rx_Kernel_OUT)[i]) << " ";
     }
     std::cout << std::endl;
 
@@ -103,7 +103,7 @@ int Kernel_OUT::closeDEV()
 void Kernel_OUT::initThread()
 {
     std::cout << "[INFO] [THREAD] Initialize Kernel_OUT" << std::endl;
-    m_Kernel_OUTThread = std::thread(&Kernel_OUT::Kernel_OUTThread, this);
+    m_threadKernel_OUT = std::thread(&Kernel_OUT::Kernel_OUTThread, this);
 }
 
 bool Kernel_OUT::isThreadKilled()
@@ -129,7 +129,7 @@ void Kernel_OUT::Kernel_OUTThread()
             }
             else
             {
-                m_instanceNetworkTraffic->setNetworkTrafficTx(m_Kernel_OUTRx);
+                m_instanceNetworkTraffic->setNetworkTrafficTx(m_Rx_Kernel_OUT);
                 m_instanceNetworkTraffic->setNetworkTrafficState(Kernel_OUT_TRANSFER);
                 /**
                  * 
