@@ -14,7 +14,7 @@
 NetworkTraffic::NetworkTraffic() :
     m_threadKill(false),
     m_currentState(NetworkTraffic_IDLE),
-    m_readyKernel_OUT(false),
+    m_readyKernelOutput(false),
     m_Rx_NetworkTraffic(new std::vector<char>(NETWORK_TRAFFIC_SIZE)),
     m_Tx_NetworkTraffic(new std::vector<char>(NETWORK_TRAFFIC_SIZE))
 {
@@ -100,9 +100,9 @@ void NetworkTraffic::threadNetworkTraffic()
 
                 break;
 
-            case NetworkTraffic_Kernel_OUT:
-                std::cout << "[INFO] [STM] NetworkTraffic_Kernel_OUT mode" << std::endl;
-                m_readyKernel_OUT = true;
+            case NetworkTraffic_KernelOutput:
+                std::cout << "[INFO] [STM] NetworkTraffic_KernelOutput mode" << std::endl;
+                m_readyKernelOutput = true;
                 /* TODO :: Temporary */
                 m_threadKill = true;
                 setNetworkTrafficState(NetworkTraffic_IDLE);
@@ -147,10 +147,10 @@ std::vector<char>* NetworkTraffic::getNetworkTrafficTx()
 
 void NetworkTraffic::resetFeedbackFlag()
 {
-    m_readyKernel_OUT = false;
+    m_readyKernelOutput = false;
 }
 
 bool NetworkTraffic::getFeedbackFlag()
 {
-    return m_readyKernel_OUT;
+    return m_readyKernelOutput;
 }

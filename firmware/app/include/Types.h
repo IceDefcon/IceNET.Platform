@@ -22,7 +22,7 @@ typedef enum
 {
     NetworkTraffic_IDLE = 0,
     NetworkTraffic_KernelInput,
-    NetworkTraffic_Kernel_OUT
+    NetworkTraffic_KernelOutput
 } NetworkTraffic_stateType;
 
 typedef enum 

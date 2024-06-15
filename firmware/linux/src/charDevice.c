@@ -32,8 +32,8 @@
 #define  DEVICE_COM "KernelInput"
 #define  CLASS_COM  "KernelInput"
 
-#define  DEVICE_NET "Kernel_OUT"
-#define  CLASS_NET  "Kernel_OUT"
+#define  DEVICE_NET "KernelOutput"
+#define  CLASS_NET  "KernelOutput"
 
 static int majorNumber[2];
 static struct class*  C_Class[2]  = {NULL,NULL};

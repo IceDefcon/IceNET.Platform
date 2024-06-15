@@ -21,7 +21,7 @@ class NetworkTraffic
 		std::thread m_threadNetworkTraffic;
 		std::atomic<bool> m_threadKill;
 		NetworkTraffic_stateType m_currentState;
-        bool m_readyKernel_OUT;
+        bool m_readyKernelOutput;
 
         /* For data Traffic */
         std::vector<char>* m_Rx_NetworkTraffic;

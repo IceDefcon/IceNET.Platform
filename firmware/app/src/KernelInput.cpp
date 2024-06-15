@@ -260,7 +260,7 @@ void KernelInput::threadKernelInput()
              * about successfully transfered command 
              * 
              */
-#if 0 /* No need for feedback here since we get it over Kernel_OUT */
+#if 0 /* No need for feedback here since we get it over KernelOutput */
             if(OK != dataRX())
             {
                 Error("[IN] Cannot read from the console");
