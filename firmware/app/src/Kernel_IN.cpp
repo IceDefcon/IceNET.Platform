@@ -21,6 +21,7 @@
 Kernel_IN::Kernel_IN() : 
     m_file_descriptor(0), 
     m_threadKill(false),
+    m_currentState(Kernel_IN_IDLE),
     m_Rx_Kernel_IN(new std::vector<char>(CHAR_DEVICE_SIZE)),
     m_Tx_Kernel_IN(new std::vector<char>(CHAR_DEVICE_SIZE)),
     m_consoleControl(new std::vector<char>(CHAR_CONSOLE_SIZE)),
@@ -232,6 +233,20 @@ void Kernel_IN::threadKernel_IN()
 {
     while(!m_threadKill) 
     {
+        switch(m_currentState)
+        {
+            case Kernel_IN_IDLE:
+                break;
+
+            case Kernel_IN_TX:
+                std::cout << "[INFO] [Kernel_IN] Kernel_IN_TX mode" << std::endl;
+                break;
+
+            default:
+                std::cout << "[INFO] [Kernel_IN] Unknown mode" << std::endl;
+        }
+
+
         if(OK != dataTX())
         {
             Error("[IN] Cannot write into the console");
@@ -268,4 +283,9 @@ void Kernel_IN::setTx_Kernel_IN(std::vector<char>* DataRx)
     m_Tx_Kernel_IN = DataRx;
     Info("[IN] Release Kernel_IN Flag");
     m_waitKernel_IN = false;
+}
+
+void Kernel_IN::setKernel_INState(Kernel_IN_stateType newState)
+{
+    m_currentState = newState;
 }

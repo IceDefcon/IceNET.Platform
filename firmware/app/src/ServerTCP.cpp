@@ -111,8 +111,8 @@ void ServerTCP::threadServerTCP()
             {
                 std::cout << "[INFO] [TCP] Sending data to NetworkTraffic" << std::endl;
                 m_instanceNetworkTraffic->setNetworkTrafficRx(m_Rx_ServerTCP);
-                std::cout << "[INFO] [TCP] Set Kernel_IN_TRANSFER mode" << std::endl;
-                m_instanceNetworkTraffic->setNetworkTrafficState(Kernel_IN_TRANSFER);
+                std::cout << "[INFO] [TCP] Set NetworkTraffic_Kernel_IN mode" << std::endl;
+                m_instanceNetworkTraffic->setNetworkTrafficState(NetworkTraffic_Kernel_IN);
 
                 if (tcpTX() < 0)
                 {

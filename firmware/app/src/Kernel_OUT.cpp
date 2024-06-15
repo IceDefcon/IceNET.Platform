@@ -131,7 +131,7 @@ void Kernel_OUT::threadKernel_OUT()
             else
             {
                 m_instanceNetworkTraffic->setNetworkTrafficTx(m_Rx_Kernel_OUT);
-                m_instanceNetworkTraffic->setNetworkTrafficState(Kernel_OUT_TRANSFER);
+                m_instanceNetworkTraffic->setNetworkTrafficState(NetworkTraffic_Kernel_OUT);
                 /**
                  * 
                  * TODO
