@@ -54,5 +54,5 @@ class Kernel_OUT
 
         void threadKernel_OUT();
 
-        void setInstance_NetworkTraffic(std::shared_ptr<NetworkTraffic> instance);
+        void setInstance_NetworkTraffic(const std::shared_ptr<NetworkTraffic> instance);
 };

@@ -47,7 +47,7 @@ class NetworkTraffic
 		void threadNetworkTraffic();
 		void setNetworkTrafficState(NetworkTraffic_stateType newState);
 
-        void setInstance_Kernel_IN(std::shared_ptr<Kernel_IN> instance);
+        void setInstance_Kernel_IN(const std::shared_ptr<Kernel_IN> instance);
 
 		void setNetworkTrafficRx(std::vector<char>* DataRx);
 		void setNetworkTrafficTx(std::vector<char>* DataTx);

@@ -19,10 +19,9 @@ Kernel_OUT::Kernel_OUT() :
     m_file_descriptor(0), 
     m_threadKill(false),
     m_Rx_Kernel_OUT(new std::vector<char>(KERNEL_IN_SIZE)),
-    m_Tx_Kernel_OUT(new std::vector<char>(KERNEL_IN_SIZE)),
-    m_instanceNetworkTraffic(std::make_shared<NetworkTraffic>())
+    m_Tx_Kernel_OUT(new std::vector<char>(KERNEL_IN_SIZE))
 {
-    std::cout << "[INFO] [CONSTRUCTOR] Instantiate Kernel_OUT" << std::endl;
+    std::cout << "[INFO] [CONSTRUCTOR] " << this << " :: Instantiate Kernel_OUT" << std::endl;
 
     /* Initialize m_Rx_Kernel_OUT and m_Tx_Kernel_OUT with zeros */
     std::fill(m_Rx_Kernel_OUT->begin(), m_Rx_Kernel_OUT->end(), 0);
@@ -31,7 +30,7 @@ Kernel_OUT::Kernel_OUT() :
 
 Kernel_OUT::~Kernel_OUT() 
 {
-    std::cout << "[INFO] [DESTRUCTOR] Destroy Kernel_OUT" << std::endl;
+    std::cout << "[INFO] [DESTRUCTOR] " << this << " :: Destroy Kernel_OUT" << std::endl;
 
     closeDEV();
 
@@ -153,7 +152,7 @@ void Kernel_OUT::threadKernel_OUT()
     std::cout << "[INFO] [THREAD] Terminate Kernel_OUT" << std::endl;
 }
 
-void Kernel_OUT::setInstance_NetworkTraffic(std::shared_ptr<NetworkTraffic> instance)
+void Kernel_OUT::setInstance_NetworkTraffic(const std::shared_ptr<NetworkTraffic> instance)
 {
     m_instanceNetworkTraffic = instance;
 }

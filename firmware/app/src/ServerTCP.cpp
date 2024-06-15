@@ -23,10 +23,9 @@ ServerTCP::ServerTCP() :
     m_bytesReceived(0),
     m_clientConnected(false),
     m_Rx_ServerTCP(new std::vector<char>(TCP_SERVER_SIZE)),
-    m_Tx_ServerTCP(new std::vector<char>(TCP_SERVER_SIZE)),
-    m_instanceNetworkTraffic(std::make_shared<NetworkTraffic>())
+    m_Tx_ServerTCP(new std::vector<char>(TCP_SERVER_SIZE))
 {
-    std::cout << "[INFO] [CONSTRUCTOR] Instantiate ServerTCP" << std::endl;
+    std::cout << "[INFO] [CONSTRUCTOR] " << this << " :: Instantiate ServerTCP" << std::endl;
 
     memset(&m_serverAddress, 0, sizeof(m_serverAddress));
     m_serverAddress.sin_family = AF_INET;
@@ -40,7 +39,7 @@ ServerTCP::ServerTCP() :
 
 ServerTCP::~ServerTCP() 
 {
-    std::cout << "[INFO] [DESTRUCTOR] Destroy ServerTCP" << std::endl;
+    std::cout << "[INFO] [DESTRUCTOR] " << this << " :: Destroy ServerTCP" << std::endl;
 
     closeDEV();
 
@@ -282,7 +281,7 @@ int ServerTCP::tcpClose()
     return 0;
 }
 
-void ServerTCP::setInstance_NetworkTraffic(std::shared_ptr<NetworkTraffic> instance)
+void ServerTCP::setInstance_NetworkTraffic(const std::shared_ptr<NetworkTraffic> instance)
 {
     m_instanceNetworkTraffic = instance;
 }

@@ -16,10 +16,9 @@ NetworkTraffic::NetworkTraffic() :
     m_currentState(NetworkTraffic_IDLE),
     m_readyKernel_OUT(false),
     m_Rx_NetworkTraffic(new std::vector<char>(NETWORK_TRAFFIC_SIZE)),
-    m_Tx_NetworkTraffic(new std::vector<char>(NETWORK_TRAFFIC_SIZE)),
-    m_instanceKernel_IN(nullptr)
+    m_Tx_NetworkTraffic(new std::vector<char>(NETWORK_TRAFFIC_SIZE))
 {
-    std::cout << "[INFO] [CONSTRUCTOR] Instantiate NetworkTraffic" << std::endl;
+    std::cout << "[INFO] [CONSTRUCTOR] " << this << " :: Instantiate NetworkTraffic" << std::endl;
 
     /* Initialize m_Rx_NetworkTraffic and m_Tx_NetworkTraffic with zeros */
     std::fill(m_Rx_NetworkTraffic->begin(), m_Rx_NetworkTraffic->end(), 0);
@@ -28,7 +27,7 @@ NetworkTraffic::NetworkTraffic() :
 
 NetworkTraffic::~NetworkTraffic()
 {
-    std::cout << "[INFO] [DESTRUCTOR] Destroy NetworkTraffic" << std::endl;
+    std::cout << "[INFO] [DESTRUCTOR] " << this << " :: Destroy NetworkTraffic" << std::endl;
 
     if (m_threadNetworkTraffic.joinable()) 
     {
@@ -126,7 +125,7 @@ void NetworkTraffic::setNetworkTrafficState(NetworkTraffic_stateType newState)
     m_currentState = newState;
 }
 
-void NetworkTraffic::setInstance_Kernel_IN(std::shared_ptr<Kernel_IN> instance)
+void NetworkTraffic::setInstance_Kernel_IN(const std::shared_ptr<Kernel_IN> instance)
 {
     m_instanceKernel_IN = instance;
 }

@@ -32,12 +32,13 @@ Kernel_IN::Kernel_IN() :
     std::fill(m_Tx_Kernel_IN->begin(), m_Tx_Kernel_IN->end(), 0);
     std::fill(m_consoleControl->begin(), m_consoleControl->end(), 0);
 
-    Info("[CONSTRUCTOR] Instantiate Kernel_IN");
+    std::cout << "[INFO] [CONSTRUCTOR] " << this << " :: Instantiate Kernel_IN" << std::endl;
+
 }
 
 Kernel_IN::~Kernel_IN() 
 {
-    Info("[DESTRUCTOR] Destroy Kernel_IN");
+    std::cout << "[INFO] [DESTRUCTOR] " << this << " :: Destroy Kernel_IN" << std::endl;
     if (m_threadKernel_IN.joinable()) 
     {
         m_threadKernel_IN.join();

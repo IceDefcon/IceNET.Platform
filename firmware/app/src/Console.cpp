@@ -8,12 +8,12 @@
 
 Console::Console() : m_LogLevel (LevelTodo) 
 {
-	Console::Info("[CONSTRUCTOR] Instantiate Console");
+	std::cout << "[INFO] [CONSTRUCTOR] " << this << " :: Instantiate Console" << std::endl;
 }
 
 Console::~Console()
 {
-	Console::Info("[DESTRUCTOR] Destroy Console");
+	std::cout << "[INFO] [DESTRUCTOR] " << this << " :: Destroy Console" << std::endl;
 }
 
 void Console::SetLevel(LogLevel level)
