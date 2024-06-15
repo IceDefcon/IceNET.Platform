@@ -12,7 +12,7 @@
 #include "spiCtrl.h"
 #include "charDevice.h"
 #include "stateMachine.h"
-#include "Types.h"
+#include "types.h"
 
 ////////////////////////
 //                    //

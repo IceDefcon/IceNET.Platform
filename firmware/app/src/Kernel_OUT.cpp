@@ -103,7 +103,7 @@ int Kernel_OUT::closeDEV()
 void Kernel_OUT::initThread()
 {
     std::cout << "[INFO] [THREAD] Initialize Kernel_OUT" << std::endl;
-    m_threadKernel_OUT = std::thread(&Kernel_OUT::Kernel_OUTThread, this);
+    m_threadKernel_OUT = std::thread(&Kernel_OUT::threadKernel_OUT, this);
 }
 
 bool Kernel_OUT::isThreadKilled()
@@ -111,7 +111,7 @@ bool Kernel_OUT::isThreadKilled()
     return m_threadKill;
 }
 
-void Kernel_OUT::Kernel_OUTThread()
+void Kernel_OUT::threadKernel_OUT()
 {
     while (!m_threadKill)
     {

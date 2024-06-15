@@ -43,7 +43,7 @@ public:
     void initThread();
     bool isThreadKilled();
 
-    void Kernel_INThread();
+    void threadKernel_IN();
 
     void setTx_Kernel_IN(std::vector<char>* DataRx);
 

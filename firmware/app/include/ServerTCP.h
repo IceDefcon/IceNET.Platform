@@ -21,7 +21,6 @@ const size_t TCP_SERVER_SIZE = 32;
 class ServerTCP
 {
     private:
-        int m_file_descriptor;
         std::thread m_threadServerTCP;
         std::atomic<bool> m_threadKill;
 

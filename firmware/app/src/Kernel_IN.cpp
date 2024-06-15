@@ -220,7 +220,7 @@ int Kernel_IN::closeDEV()
 void Kernel_IN::initThread()
 {
     Info("[THREAD] Initialize Kernel_IN");
-    m_threadKernel_IN = std::thread(&Kernel_IN::Kernel_INThread, this);
+    m_threadKernel_IN = std::thread(&Kernel_IN::threadKernel_IN, this);
 }
 
 bool Kernel_IN::isThreadKilled()
@@ -228,7 +228,7 @@ bool Kernel_IN::isThreadKilled()
 	return m_threadKill;
 }
 
-void Kernel_IN::Kernel_INThread()
+void Kernel_IN::threadKernel_IN()
 {
     while(!m_threadKill) 
     {

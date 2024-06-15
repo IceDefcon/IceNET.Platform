@@ -52,7 +52,7 @@ class Kernel_OUT
         void initThread();
         bool isThreadKilled();
 
-        void Kernel_OUTThread();
+        void threadKernel_OUT();
 
         void setInstance_NetworkTraffic(std::shared_ptr<NetworkTraffic> instance);
 };

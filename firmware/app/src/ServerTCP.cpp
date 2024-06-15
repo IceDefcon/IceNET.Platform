@@ -16,7 +16,6 @@
 #include "Types.h"
 
 ServerTCP::ServerTCP() :
-    m_file_descriptor(0), 
     m_threadKill(false),
     m_portNumber(2555),
     m_serverSocket(-1),
