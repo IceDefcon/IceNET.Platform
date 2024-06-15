@@ -101,34 +101,35 @@ void ServerTCP::threadServerTCP()
 
     while (!m_threadKill)
     {
-        std::cout << "[INFO] [TCP] threadServerTCP ready for next TCP packet" << std::endl;
         if (false == m_clientConnected)
         {
+            std::cout << "[INFO] [TCP] threadServerTCP waiting for next TCP packet" << std::endl;
             /* Wait for the TCP client connection */
             m_clientSocket = accept(m_serverSocket, (struct sockaddr *)&m_clientAddress, &clientLength);
 
             if(tcpRX() > 0)
             {
-                /* TODO :: Set the flag to indicate data ready */
-            }
-            else
-            {
-                std::cout << "[INFO] [TCP] Nothing Received :: Cannot set TCP_TO_CHAR in State Machine" << std::endl;
-            }
+                std::cout << "[INFO] [TCP] Sending data to NetworkTraffic" << std::endl;
+                m_instanceNetworkTraffic->setNetworkTrafficRx(m_Rx_ServerTCP);
+                std::cout << "[INFO] [TCP] Set Kernel_IN_TRANSFER mode" << std::endl;
+                m_instanceNetworkTraffic->setNetworkTrafficState(Kernel_IN_TRANSFER);
 
-            if (tcpTX() < 0)
-            {
-                std::cout << "[ERNO] [TCP] Failed to send message" << std::endl;
+                if (tcpTX() < 0)
+                {
+                    std::cout << "[ERNO] [TCP] Failed to send message" << std::endl;
+                }
+                else
+                {
+                    std::cout << "[INFO] [TCP] Transfer complete" << std::endl;
+                }
             }
             else
             {
-                std::cout << "[INFO] [TCP] Transfer complete" << std::endl;
+                std::cout << "[INFO] [TCP] TODO :: Ready to Kill threadServerTCP" << std::endl;
+                // m_threadKill = true;
             }
 
             tcpClose();
-
-            /* TODO :: Temporary */
-            m_threadKill = true;
         }
         /* Reduce consumption of CPU resources */
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
@@ -236,32 +237,31 @@ int ServerTCP::tcpRX()
 
         m_bytesReceived = recv(m_clientSocket, m_Rx_ServerTCP->data(), TCP_SERVER_SIZE, 0);
 
-        /**
-         * 
-         * Here we need a signaling for application state machine
-         * to get data obtained from the TCP client
-         * 
-         */
-        if (m_bytesReceived > 0)
+        if((*m_Rx_ServerTCP)[0] == 0xDE && (*m_Rx_ServerTCP)[1] == 0xAD)
         {
-            std::cout << "[INFO] [TCP] Received " << m_bytesReceived << " Bytes of data: ";
-            for (int i = 0; i < m_bytesReceived; ++i)
-            {
-                std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>((*m_Rx_ServerTCP)[i]) << " ";
-            }
-            std::cout << std::endl;
-        }
-        else if (m_bytesReceived == 0)
-        {
-            std::cout << "[INFO] [TCP] Connection closed by client" << std::endl;
+            std::cout << "[INFO] [TCP] Kill SIGNAL Received" << std::endl;
+            return 0;
         }
         else
         {
-            std::cout << "[ERNO] [TCP] Error receiving data" << std::endl;
+            if (m_bytesReceived > 0)
+            {
+                std::cout << "[INFO] [TCP] Received " << m_bytesReceived << " Bytes of data: ";
+                for (int i = 0; i < m_bytesReceived; ++i)
+                {
+                    std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>((*m_Rx_ServerTCP)[i]) << " ";
+                }
+                std::cout << std::endl;
+            }
+            else if (m_bytesReceived == 0)
+            {
+                std::cout << "[INFO] [TCP] Connection closed by client" << std::endl;
+            }
+            else
+            {
+                std::cout << "[ERNO] [TCP] Error receiving data" << std::endl;
+            }
         }
-
-        m_instanceNetworkTraffic->setNetworkTrafficRx(m_Rx_ServerTCP);
-        m_instanceNetworkTraffic->setNetworkTrafficState(Kernel_IN_TRANSFER);
     }
     
     /* Resize to actual bytes read */
