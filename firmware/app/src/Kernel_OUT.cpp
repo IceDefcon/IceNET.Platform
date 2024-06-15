@@ -69,6 +69,7 @@ int Kernel_OUT::dataRX()
 {
     int ret;
 
+    std::cout << "[INFO] [OUT] Trying to read from Kernel" << std::endl;
     ret = read(m_file_descriptor, m_Rx_Kernel_OUT->data(), KERNEL_IN_SIZE);
 
     std::cout << "[INFO] [OUT] Received " << ret << " Bytes of data: ";

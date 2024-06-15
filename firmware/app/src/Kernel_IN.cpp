@@ -162,7 +162,7 @@ int Kernel_IN::dataTX()
 #else
 
     /* Wait for data from TCP client */
-    Info("[IN] Wait for the Kernel_IN Flag");
+    Info("[IN] Wait for clear the Kernel_IN Flag");
     while(true == m_waitKernel_IN)
     {
         std::this_thread::sleep_for(std::chrono::milliseconds(20));
