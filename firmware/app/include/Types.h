@@ -15,7 +15,13 @@ enum Status
 
 typedef enum 
 {
-    IDLE = 0,
-    Kernel_IN_TRANSFER,
-    Kernel_OUT_TRANSFER
-} stateType;
+    NetworkTraffic_IDLE = 0,
+    NetworkTraffic_Kernel_IN,
+    NetworkTraffic_Kernel_OUT
+} NetworkTraffic_stateType;
+
+typedef enum 
+{
+    Kernel_IN_IDLE = 0,
+    Kernel_IN_TX
+} Kernel_IN_stateType;

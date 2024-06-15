@@ -22,7 +22,7 @@ class NetworkTraffic
 
 		std::thread m_threadNetworkTraffic;
 		std::atomic<bool> m_threadKill;
-		stateType m_currentState;
+		NetworkTraffic_stateType m_currentState;
         bool m_readyKernel_OUT;
 
         /* For data Traffic */
@@ -45,9 +45,9 @@ class NetworkTraffic
         bool isThreadKilled();
 
 		void threadNetworkTraffic();
-		void setNetworkTrafficState(stateType newState);
+		void setNetworkTrafficState(NetworkTraffic_stateType newState);
 
-        void setInstance_Kernel_IN(std::shared_ptr<Kernel_IN> instance);
+        void setInstance_Kernel_IN(const std::shared_ptr<Kernel_IN> instance);
 
 		void setNetworkTrafficRx(std::vector<char>* DataRx);
 		void setNetworkTrafficTx(std::vector<char>* DataTx);

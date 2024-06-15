@@ -21,6 +21,7 @@
 Kernel_IN::Kernel_IN() : 
     m_file_descriptor(0), 
     m_threadKill(false),
+    m_currentState(Kernel_IN_IDLE),
     m_Rx_Kernel_IN(new std::vector<char>(CHAR_DEVICE_SIZE)),
     m_Tx_Kernel_IN(new std::vector<char>(CHAR_DEVICE_SIZE)),
     m_consoleControl(new std::vector<char>(CHAR_CONSOLE_SIZE)),
@@ -31,12 +32,13 @@ Kernel_IN::Kernel_IN() :
     std::fill(m_Tx_Kernel_IN->begin(), m_Tx_Kernel_IN->end(), 0);
     std::fill(m_consoleControl->begin(), m_consoleControl->end(), 0);
 
-    Info("[CONSTRUCTOR] Instantiate Kernel_IN");
+    std::cout << "[INFO] [CONSTRUCTOR] " << this << " :: Instantiate Kernel_IN" << std::endl;
+
 }
 
 Kernel_IN::~Kernel_IN() 
 {
-    Info("[DESTRUCTOR] Destroy Kernel_IN");
+    std::cout << "[INFO] [DESTRUCTOR] " << this << " :: Destroy Kernel_IN" << std::endl;
     if (m_threadKernel_IN.joinable()) 
     {
         m_threadKernel_IN.join();
@@ -162,7 +164,7 @@ int Kernel_IN::dataTX()
 #else
 
     /* Wait for data from TCP client */
-    Info("[IN] Wait for the Kernel_IN Flag");
+    Info("[IN] Wait for clear the Kernel_IN Flag");
     while(true == m_waitKernel_IN)
     {
         std::this_thread::sleep_for(std::chrono::milliseconds(20));
@@ -232,6 +234,20 @@ void Kernel_IN::threadKernel_IN()
 {
     while(!m_threadKill) 
     {
+        switch(m_currentState)
+        {
+            case Kernel_IN_IDLE:
+                break;
+
+            case Kernel_IN_TX:
+                std::cout << "[INFO] [Kernel_IN] Kernel_IN_TX mode" << std::endl;
+                break;
+
+            default:
+                std::cout << "[INFO] [Kernel_IN] Unknown mode" << std::endl;
+        }
+
+
         if(OK != dataTX())
         {
             Error("[IN] Cannot write into the console");
@@ -268,4 +284,9 @@ void Kernel_IN::setTx_Kernel_IN(std::vector<char>* DataRx)
     m_Tx_Kernel_IN = DataRx;
     Info("[IN] Release Kernel_IN Flag");
     m_waitKernel_IN = false;
+}
+
+void Kernel_IN::setKernel_INState(Kernel_IN_stateType newState)
+{
+    m_currentState = newState;
 }
