@@ -197,7 +197,7 @@ void transferFromCharDevice(struct work_struct *work)
     int ret;
     int i;
 
-    DataTransfer* fpgaData = get_Kernel_INTransfer();
+    DataTransfer* fpgaData = get_KernelInputTransfer();
 
     memset(&transfer, 0, sizeof(transfer));
     transfer.tx_buf = (void *)fpgaData->RxData;

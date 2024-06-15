@@ -40,8 +40,8 @@ static struct class*  C_Class[2]  = {NULL,NULL};
 static struct device* C_Device[2] = {NULL,NULL};
 static int numberOpens[2] = {0,0};
 
-static DEFINE_MUTEX(Kernel_IN_mutex);
-static DEFINE_MUTEX(Kernel_OUT_mutex);
+static DEFINE_MUTEX(KernelInput_mutex);
+static DEFINE_MUTEX(KernelOutput_mutex);
 static DEFINE_MUTEX(wait_mutex);
 
 static int dev_open_com(struct inode *inodep, struct file *filep);
@@ -54,8 +54,8 @@ static ssize_t dev_read_net(struct file *, char *, size_t, loff_t *);
 static ssize_t dev_write_net(struct file *, const char *, size_t, loff_t *);
 static int dev_close_net(struct inode *inodep, struct file *filep);
 
-static DataTransfer Kernel_INTransfer; 
-static DataTransfer Kernel_OUTTransfer; 
+static DataTransfer KernelInputTransfer; 
+static DataTransfer KernelOutputTransfer; 
 
 enum deviceTYPE
 {
@@ -100,9 +100,9 @@ static void init_charDevice_Data(void)
     TxData[0] = 0xBB; /* C Device Preamble */
     TxData[1] = '\0'; /* Null terminator */
 
-    Kernel_INTransfer.RxData = RxData;
-    Kernel_INTransfer.TxData = TxData; /* TODO :: TxData is Dummy 0xBB */
-    Kernel_INTransfer.length = 2;
+    KernelInputTransfer.RxData = RxData;
+    KernelInputTransfer.TxData = TxData; /* TODO :: TxData is Dummy 0xBB */
+    KernelInputTransfer.length = 2;
 
     /* Lock and wait until feedback transfer unlock it */
     mutex_lock(&wait_mutex);
@@ -110,24 +110,24 @@ static void init_charDevice_Data(void)
     printk(KERN_INFO "[INIT][COM] Initialize charDevice Data :: Lock the mutex\n");
 }
 
-/* GET Kernel_IN TRANSFER */ DataTransfer* get_Kernel_INTransfer(void) 
+/* GET KernelInput TRANSFER */ DataTransfer* get_KernelInputTransfer(void) 
 {
-    return &Kernel_INTransfer;
+    return &KernelInputTransfer;
 }
 
 /* SET FEEDBACK TRANSFER */ void set_fpgaFeedbackTransfer(const DataTransfer* transferData)
 {
     if (transferData != NULL)
     {
-        Kernel_OUTTransfer = *transferData;
+        KernelOutputTransfer = *transferData;
     }
     else
     {
         // Handle the error, e.g., log it or assert
     }
-    Kernel_OUTTransfer.length = 1;
-    printk(KERN_INFO "[CTRL][NET] Data set in the Kernel_OUTTransfer :: Kernel_OUTTransfer->RxData[0] = 0x%02x \n", Kernel_OUTTransfer.RxData[0]);
-    printk(KERN_INFO "[CTRL][NET] Data set in the Kernel_OUTTransfer :: Kernel_OUTTransfer->lenght = %d \n", Kernel_OUTTransfer.length);
+    KernelOutputTransfer.length = 1;
+    printk(KERN_INFO "[CTRL][NET] Data set in the KernelOutputTransfer :: KernelOutputTransfer->RxData[0] = 0x%02x \n", KernelOutputTransfer.RxData[0]);
+    printk(KERN_INFO "[CTRL][NET] Data set in the KernelOutputTransfer :: KernelOutputTransfer->lenght = %d \n", KernelOutputTransfer.length);
 
     mutex_unlock(&wait_mutex);
     printk(KERN_INFO "[CTRL][NET] Data from FPGA Received :: Unlock the mutex\n");
@@ -136,16 +136,16 @@ static void init_charDevice_Data(void)
 void charDeviceInit(void)
 {
     printk(KERN_ALERT "[INIT][COM] Lock on [C] Device Mutex\n");
-    mutex_init(&Kernel_IN_mutex);
+    mutex_init(&KernelInput_mutex);
 
     printk(KERN_ALERT "[INIT][NET] Lock on [C] Device Mutex\n");
-    mutex_init(&Kernel_OUT_mutex);
+    mutex_init(&KernelOutput_mutex);
 
     printk(KERN_ALERT "[INIT][NET] Lock on Wait Mutex\n");
     mutex_init(&wait_mutex);
 
     //
-    // Kernel_IN
+    // KernelInput
     //
     majorNumber[ICE_COM] = register_chrdev(0, DEVICE_COM, &fops[ICE_COM]);
     if (majorNumber[ICE_COM]<0)
@@ -183,7 +183,7 @@ void charDeviceInit(void)
     init_charDevice_Data();
 
     //
-    // Kernel_OUT
+    // KernelOutput
     //
     majorNumber[ICE_NET] = register_chrdev(0, DEVICE_NET, &fops[ICE_NET]);
     if (majorNumber[ICE_NET] < 0)
@@ -225,7 +225,7 @@ void charDeviceInit(void)
 void charDeviceDestroy(void)
 {
     //
-    // Kernel_IN
+    // KernelInput
     //
     if(C_Device[ICE_COM]) 
     {
@@ -258,16 +258,16 @@ void charDeviceDestroy(void)
     }
     else
     {
-        printk(KERN_INFO "[DESTROY][COM] Canot unregister Kernel_IN Device :: majorNumber[ICE_COM] is already 0 !\n");
+        printk(KERN_INFO "[DESTROY][COM] Canot unregister KernelInput Device :: majorNumber[ICE_COM] is already 0 !\n");
         printk(KERN_INFO "[DESTROY][COM] Device destroyed\n");
     }
 
-    mutex_destroy(&Kernel_IN_mutex);
+    mutex_destroy(&KernelInput_mutex);
     printk(KERN_INFO "[DESTROY][COM] Com Mutex destroyed\n");
     printk(KERN_INFO "[DESTROY][COM] Char device destruction complete\n");
 
     //
-    // Kernel_OUT
+    // KernelOutput
     //
     if(C_Device[ICE_NET]) 
     {
@@ -300,11 +300,11 @@ void charDeviceDestroy(void)
     }
     else
     {
-        printk(KERN_INFO "[DESTROY][NET] Canot unregister Kernel_OUT Device :: majorNumber[ICE_NET] is already 0 !\n");
+        printk(KERN_INFO "[DESTROY][NET] Canot unregister KernelOutput Device :: majorNumber[ICE_NET] is already 0 !\n");
         printk(KERN_INFO "[DESTROY][NET] Device destroyed\n");
     }
 
-    mutex_destroy(&Kernel_OUT_mutex);
+    mutex_destroy(&KernelOutput_mutex);
     printk(KERN_INFO "[DESTROY][NET] Net Mutex destroyed\n");
 
     mutex_destroy(&wait_mutex);
@@ -315,13 +315,13 @@ void charDeviceDestroy(void)
 /**
  * 
  * 
- * Kernel_IN Interface
+ * KernelInput Interface
  * 
  * 
  */
 static int dev_open_com(struct inode *inodep, struct file *filep)
 {
-    if(!mutex_trylock(&Kernel_IN_mutex))
+    if(!mutex_trylock(&KernelInput_mutex))
     {
         printk(KERN_ALERT "[CTRL][COM] Device in use by another process");
         return -EBUSY;
@@ -338,13 +338,13 @@ static ssize_t dev_read_com(struct file *filep, char *buffer, size_t len, loff_t
     int error_count = 0;
 
     /* TODO :: TxData is Dummy 0xBB */
-    error_count = copy_to_user(buffer, (const void *)Kernel_INTransfer.TxData, Kernel_INTransfer.length);
+    error_count = copy_to_user(buffer, (const void *)KernelInputTransfer.TxData, KernelInputTransfer.length);
 
     if (error_count == 0)
     {
-        printk(KERN_INFO "[CTRL][COM] Sent %zu characters to user-space\n", Kernel_INTransfer.length);
+        printk(KERN_INFO "[CTRL][COM] Sent %zu characters to user-space\n", KernelInputTransfer.length);
         /* Length == Preamble + Null Terminator */
-        return Kernel_INTransfer.length; 
+        return KernelInputTransfer.length; 
     }
     else 
     {
@@ -360,30 +360,30 @@ static ssize_t dev_write_com(struct file *filep, const char __user *buffer, size
     size_t i;
 
     /* Copy RxData from user space to kernel space */
-    error_count = copy_from_user((void *)Kernel_INTransfer.RxData, buffer, len);
+    error_count = copy_from_user((void *)KernelInputTransfer.RxData, buffer, len);
     if (error_count != 0) 
     {
         /* Free allocated memory */
-        kfree((void *)Kernel_INTransfer.RxData);
+        kfree((void *)KernelInputTransfer.RxData);
         /* Copy failed */
         return -EFAULT;
     }
 
     /* 20ms delayed :: Read Enable pulse to FIFO */
-    if (Kernel_INTransfer.RxData[0] == 0x12 && Kernel_INTransfer.RxData[1] == 0x34)
+    if (KernelInputTransfer.RxData[0] == 0x12 && KernelInputTransfer.RxData[1] == 0x34)
     {
         printk(KERN_INFO "[CTRL][COM] Generate FIFO rd_en from Kernel [long pulse] to be cut in FPGA\n");
         setStateMachine(INTERRUPT);
         return 0;
     }
 
-    Kernel_INTransfer.RxData[len] = '\0';  /* Null terminate the char array */
-    Kernel_INTransfer.length = len;
+    KernelInputTransfer.RxData[len] = '\0';  /* Null terminate the char array */
+    KernelInputTransfer.length = len;
 
     // Print each character of the RxData array
-    for (i = 0; i < Kernel_INTransfer.length; i++) 
+    for (i = 0; i < KernelInputTransfer.length; i++) 
     {
-        printk(KERN_INFO "[CTRL][COM] Received Byte[%zu]: 0x%02x\n", i, (unsigned char)Kernel_INTransfer.RxData[i]);
+        printk(KERN_INFO "[CTRL][COM] Received Byte[%zu]: 0x%02x\n", i, (unsigned char)KernelInputTransfer.RxData[i]);
     }
 
     setStateMachine(SPI);
@@ -394,7 +394,7 @@ static ssize_t dev_write_com(struct file *filep, const char __user *buffer, size
 static int dev_close_com(struct inode *inodep, struct file *filep)
 {
     printk(KERN_ALERT "[INIT][COM] Unlock [C] Device Mutex\n");
-    mutex_unlock(&Kernel_IN_mutex);
+    mutex_unlock(&KernelInput_mutex);
     printk(KERN_INFO "[CTRL][COM] Device successfully closed\n");
     return 0;
 }
@@ -402,13 +402,13 @@ static int dev_close_com(struct inode *inodep, struct file *filep)
 /**
  * 
  * 
- * Kernel_OUT Interface
+ * KernelOutput Interface
  * 
  * 
  */
 static int dev_open_net(struct inode *inodep, struct file *filep)
 {
-    if(!mutex_trylock(&Kernel_OUT_mutex))
+    if(!mutex_trylock(&KernelOutput_mutex))
     {
         printk(KERN_ALERT "[CTRL][NET] Device in use by another process");
         return -EBUSY;
@@ -429,13 +429,13 @@ static ssize_t dev_read_net(struct file *filep, char *buffer, size_t len, loff_t
     mutex_lock(&wait_mutex);
 
     /* TODO :: TxData is Dummy 0xBB */
-    error_count = copy_to_user(buffer, (const void *)Kernel_OUTTransfer.RxData, Kernel_OUTTransfer.length);
+    error_count = copy_to_user(buffer, (const void *)KernelOutputTransfer.RxData, KernelOutputTransfer.length);
 
     if (error_count == 0)
     {
-        printk(KERN_INFO "[CTRL][COM] Sent %zu characters to user-space\n", Kernel_OUTTransfer.length);
+        printk(KERN_INFO "[CTRL][COM] Sent %zu characters to user-space\n", KernelOutputTransfer.length);
         /* Length == Preamble + Null Terminator */
-        return Kernel_OUTTransfer.length; 
+        return KernelOutputTransfer.length; 
     }
     else 
     {
@@ -451,22 +451,22 @@ static ssize_t dev_write_net(struct file *filep, const char __user *buffer, size
     size_t i;
 
     /* Copy RxData from user space to kernel space */
-    error_count = copy_from_user((void *)Kernel_OUTTransfer.RxData, buffer, len);
+    error_count = copy_from_user((void *)KernelOutputTransfer.RxData, buffer, len);
     if (error_count != 0) 
     {
         /* Free allocated memory */
-        kfree((void *)Kernel_OUTTransfer.RxData);
+        kfree((void *)KernelOutputTransfer.RxData);
         /* Copy failed */
         return -EFAULT;
     }
 
-    Kernel_OUTTransfer.RxData[len] = '\0';  /* Null terminate the char array */
-    Kernel_OUTTransfer.length = len;
+    KernelOutputTransfer.RxData[len] = '\0';  /* Null terminate the char array */
+    KernelOutputTransfer.length = len;
 
     // Print each character of the RxData array
-    for (i = 0; i < Kernel_OUTTransfer.length; i++) 
+    for (i = 0; i < KernelOutputTransfer.length; i++) 
     {
-        printk(KERN_INFO "[CTRL][COM] Received Byte[%zu]: 0x%02x\n", i, (unsigned char)Kernel_OUTTransfer.RxData[i]);
+        printk(KERN_INFO "[CTRL][COM] Received Byte[%zu]: 0x%02x\n", i, (unsigned char)KernelOutputTransfer.RxData[i]);
     }
 
     return 0;
@@ -475,7 +475,7 @@ static ssize_t dev_write_net(struct file *filep, const char __user *buffer, size
 static int dev_close_net(struct inode *inodep, struct file *filep)
 {
     printk(KERN_ALERT "[INIT][NET] Unlock [C] Device Mutex\n");
-    mutex_unlock(&Kernel_OUT_mutex);
+    mutex_unlock(&KernelOutput_mutex);
     printk(KERN_INFO "[CTRL][NET] Device successfully closed\n");
     return 0;
 }

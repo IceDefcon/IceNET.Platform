@@ -20,7 +20,7 @@
 //                  //
 //////////////////////
 
-/* GET Kernel_IN TRANSFER */ DataTransfer* get_Kernel_INTransfer(void);
+/* GET Kernel_IN TRANSFER */ DataTransfer* get_KernelInputTransfer(void);
 /* SET FEEDBACK TRANSFER */ void set_fpgaFeedbackTransfer(const DataTransfer* transferData);
 
 void charDeviceInit(void);
