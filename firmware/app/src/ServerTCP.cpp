@@ -16,15 +16,14 @@
 #include "Types.h"
 
 ServerTCP::ServerTCP() :
-    m_file_descriptor(0), 
     m_threadKill(false),
     m_portNumber(2555),
     m_serverSocket(-1),
     m_clientSocket(-1),
     m_bytesReceived(0),
     m_clientConnected(false),
-    m_ServerRx(new std::vector<char>(TCP_SERVER_SIZE)),
-    m_ServerTx(new std::vector<char>(TCP_SERVER_SIZE)),
+    m_Rx_ServerTCP(new std::vector<char>(TCP_SERVER_SIZE)),
+    m_Tx_ServerTCP(new std::vector<char>(TCP_SERVER_SIZE)),
     m_instanceNetworkTraffic(std::make_shared<NetworkTraffic>())
 {
     std::cout << "[INFO] [CONSTRUCTOR] Instantiate ServerTCP" << std::endl;
@@ -34,9 +33,9 @@ ServerTCP::ServerTCP() :
     m_serverAddress.sin_addr.s_addr = INADDR_ANY;
     m_serverAddress.sin_port = htons(m_portNumber);
 
-    /* Initialize m_ServerRx and m_ServerTx with zeros */
-    std::fill(m_ServerRx->begin(), m_ServerRx->end(), 0);
-    std::fill(m_ServerTx->begin(), m_ServerTx->end(), 0);
+    /* Initialize m_Rx_ServerTCP and m_Tx_ServerTCP with zeros */
+    std::fill(m_Rx_ServerTCP->begin(), m_Rx_ServerTCP->end(), 0);
+    std::fill(m_Tx_ServerTCP->begin(), m_Tx_ServerTCP->end(), 0);
 }
 
 ServerTCP::~ServerTCP() 
@@ -56,9 +55,6 @@ ServerTCP::~ServerTCP()
     }
 
     m_instanceNetworkTraffic = nullptr;
-
-    // delete m_ServerRx;
-    // delete m_ServerTx;
 }
 
 int ServerTCP::openDEV() 
@@ -218,10 +214,10 @@ int ServerTCP::tcpTX()
             std::this_thread::sleep_for(std::chrono::milliseconds(10));
         }
 
-        m_ServerTx = m_instanceNetworkTraffic->getNetworkTrafficTx();
+        m_Tx_ServerTCP = m_instanceNetworkTraffic->getNetworkTrafficTx();
         m_instanceNetworkTraffic->resetFeedbackFlag();
 
-        ret = write(m_clientSocket, m_ServerTx->data(), m_ServerTx->size());
+        ret = write(m_clientSocket, m_Tx_ServerTCP->data(), m_Tx_ServerTCP->size());
     }
 
     return ret;
@@ -238,7 +234,7 @@ int ServerTCP::tcpRX()
         std::cout << "[INFO] [TCP] Client connected to server" << std::endl;
         m_clientConnected = true;
 
-        m_bytesReceived = recv(m_clientSocket, m_ServerRx->data(), TCP_SERVER_SIZE, 0);
+        m_bytesReceived = recv(m_clientSocket, m_Rx_ServerTCP->data(), TCP_SERVER_SIZE, 0);
 
         /**
          * 
@@ -251,7 +247,7 @@ int ServerTCP::tcpRX()
             std::cout << "[INFO] [TCP] Received " << m_bytesReceived << " Bytes of data: ";
             for (int i = 0; i < m_bytesReceived; ++i)
             {
-                std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>((*m_ServerRx)[i]) << " ";
+                std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>((*m_Rx_ServerTCP)[i]) << " ";
             }
             std::cout << std::endl;
         }
@@ -264,12 +260,12 @@ int ServerTCP::tcpRX()
             std::cout << "[ERNO] [TCP] Error receiving data" << std::endl;
         }
 
-        m_instanceNetworkTraffic->setNetworkTrafficRx(m_ServerRx);
+        m_instanceNetworkTraffic->setNetworkTrafficRx(m_Rx_ServerTCP);
         m_instanceNetworkTraffic->setNetworkTrafficState(Kernel_IN_TRANSFER);
     }
     
     /* Resize to actual bytes read */
-    // m_ServerRx->resize(m_bytesRead);
+    // m_Rx_ServerTCP->resize(m_bytesRead);
 
     return m_bytesReceived;
 }

@@ -17,7 +17,7 @@
 #include "stateMachine.h"
 #include "charDevice.h"
 #include "spiWork.h"
-#include "Types.h"
+#include "types.h"
 
 //////////////////////
 //                  //

@@ -8,7 +8,7 @@
 #ifndef CHAR_DEVICE_H
 #define CHAR_DEVICE_H
 
-#include "Types.h"
+#include "types.h"
 
 //////////////////////
 //                  //

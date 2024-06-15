@@ -21,7 +21,6 @@ const size_t TCP_SERVER_SIZE = 32;
 class ServerTCP
 {
     private:
-        int m_file_descriptor;
         std::thread m_threadServerTCP;
         std::atomic<bool> m_threadKill;
 
@@ -35,8 +34,8 @@ class ServerTCP
         struct sockaddr_in m_clientAddress;
 
         /* For TCP server Traffic */
-        std::vector<char>* m_ServerRx;
-        std::vector<char>* m_ServerTx;
+        std::vector<char>* m_Rx_ServerTCP;
+        std::vector<char>* m_Tx_ServerTCP;
 
         std::shared_ptr<NetworkTraffic> m_instanceNetworkTraffic;
 
