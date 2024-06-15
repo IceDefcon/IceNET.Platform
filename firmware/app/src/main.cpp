@@ -7,7 +7,7 @@
 #include <chrono> // delay
 #include <thread> // delay
 
-#include "Kernel_IN.h"
+#include "KernelInput.h"
 #include "Kernel_OUT.h"
 #include "ServerTCP.h"
 #include "NetworkTraffic.h"
@@ -17,17 +17,17 @@ int main()
     /* Smart pointers for auto Heap allocation and dealocation */
     auto instanceNetworkTraffic = std::make_shared<NetworkTraffic>();
 
-    auto instanceKernel_IN = std::make_shared<Kernel_IN>();
+    auto instanceKernelInput = std::make_shared<KernelInput>();
     auto instanceKernel_OUT = std::make_shared<Kernel_OUT>();
     auto instanceServerTCP = std::make_shared<ServerTCP>();
 
     /* Set Instances */
     instanceKernel_OUT->setInstance_NetworkTraffic(instanceNetworkTraffic);
     instanceServerTCP->setInstance_NetworkTraffic(instanceNetworkTraffic);
-    instanceNetworkTraffic->setInstance_Kernel_IN(instanceKernel_IN);
+    instanceNetworkTraffic->setInstance_KernelInput(instanceKernelInput);
 
     /* Initialize Interfaces */
-    instanceKernel_IN->openDEV();
+    instanceKernelInput->openDEV();
     instanceKernel_OUT->openDEV();
     instanceServerTCP->openDEV();
     instanceNetworkTraffic->openDEV();
@@ -38,7 +38,7 @@ int main()
         {
             instanceServerTCP->closeDEV();
             instanceKernel_OUT->closeDEV();
-            instanceKernel_IN->closeDEV();
+            instanceKernelInput->closeDEV();
             instanceNetworkTraffic->closeDEV();
             break;
         }

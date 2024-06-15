@@ -14,28 +14,25 @@
 #include "Compute.h"
 #include "Types.h"
 
-const size_t CHAR_DEVICE_SIZE = 32;
-const size_t CHAR_CONSOLE_SIZE = 32;
-
-class Kernel_IN : public Compute
+class KernelInput : public Compute
 {
 private:
     int m_file_descriptor;
-    std::thread m_threadKernel_IN;
+    std::thread m_threadKernelInput;
     std::atomic<bool> m_threadKill;
-    Kernel_IN_stateType m_currentState;
+    KernelInput_stateType m_currentState;
     
     /* For char Device Traffic */
-    std::vector<char>* m_Rx_Kernel_IN;
-    std::vector<char>* m_Tx_Kernel_IN;
+    std::vector<char>* m_Rx_KernelInput;
+    std::vector<char>* m_Tx_KernelInput;
     /* Console control buffer */
     std::vector<char>* m_consoleControl;
 
-    bool m_waitKernel_IN;
+    bool m_waitKernelInput;
 
 public:
-    Kernel_IN();
-    ~Kernel_IN();
+    KernelInput();
+    ~KernelInput();
 
     int openDEV();
     int dataTX();
@@ -45,9 +42,9 @@ public:
     void initThread();
     bool isThreadKilled();
 
-    void threadKernel_IN();
+    void threadKernelInput();
 
-    void setTx_Kernel_IN(std::vector<char>* DataRx);
+    void setTx_KernelInput(std::vector<char>* DataRx);
 
-    void setKernel_INState(Kernel_IN_stateType newState);
+    void setKernelInputState(KernelInput_stateType newState);
 };

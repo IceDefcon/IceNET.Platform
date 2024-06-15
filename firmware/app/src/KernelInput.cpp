@@ -16,44 +16,44 @@
 #include <vector>
 #include <iomanip>          // for std::hex and std::setfill
 
-#include "Kernel_IN.h"
+#include "KernelInput.h"
 
-Kernel_IN::Kernel_IN() : 
+KernelInput::KernelInput() : 
     m_file_descriptor(0), 
     m_threadKill(false),
-    m_currentState(Kernel_IN_IDLE),
-    m_Rx_Kernel_IN(new std::vector<char>(CHAR_DEVICE_SIZE)),
-    m_Tx_Kernel_IN(new std::vector<char>(CHAR_DEVICE_SIZE)),
+    m_currentState(KernelInput_IDLE),
+    m_Rx_KernelInput(new std::vector<char>(CHAR_DEVICE_SIZE)),
+    m_Tx_KernelInput(new std::vector<char>(CHAR_DEVICE_SIZE)),
     m_consoleControl(new std::vector<char>(CHAR_CONSOLE_SIZE)),
-    m_waitKernel_IN(true)
+    m_waitKernelInput(true)
 {
-    // Initialize m_Rx_Kernel_IN, m_Tx_Kernel_IN, and m_consoleControl with zeros
-    std::fill(m_Rx_Kernel_IN->begin(), m_Rx_Kernel_IN->end(), 0);
-    std::fill(m_Tx_Kernel_IN->begin(), m_Tx_Kernel_IN->end(), 0);
+    // Initialize m_Rx_KernelInput, m_Tx_KernelInput, and m_consoleControl with zeros
+    std::fill(m_Rx_KernelInput->begin(), m_Rx_KernelInput->end(), 0);
+    std::fill(m_Tx_KernelInput->begin(), m_Tx_KernelInput->end(), 0);
     std::fill(m_consoleControl->begin(), m_consoleControl->end(), 0);
 
-    std::cout << "[INFO] [CONSTRUCTOR] " << this << " :: Instantiate Kernel_IN" << std::endl;
+    std::cout << "[INFO] [CONSTRUCTOR] " << this << " :: Instantiate KernelInput" << std::endl;
 
 }
 
-Kernel_IN::~Kernel_IN() 
+KernelInput::~KernelInput() 
 {
-    std::cout << "[INFO] [DESTRUCTOR] " << this << " :: Destroy Kernel_IN" << std::endl;
-    if (m_threadKernel_IN.joinable()) 
+    std::cout << "[INFO] [DESTRUCTOR] " << this << " :: Destroy KernelInput" << std::endl;
+    if (m_threadKernelInput.joinable()) 
     {
-        m_threadKernel_IN.join();
+        m_threadKernelInput.join();
     }
 
-    m_waitKernel_IN = false;
+    m_waitKernelInput = false;
 
-    delete m_Rx_Kernel_IN;
-    delete m_Tx_Kernel_IN;
+    delete m_Rx_KernelInput;
+    delete m_Tx_KernelInput;
     delete m_consoleControl;
 }
 
-int Kernel_IN::openDEV() 
+int KernelInput::openDEV() 
 {
-    m_file_descriptor = open("/dev/Kernel_IN", O_RDWR);
+    m_file_descriptor = open("/dev/KernelInput", O_RDWR);
 
     if(m_file_descriptor < 0)
     {
@@ -70,11 +70,11 @@ int Kernel_IN::openDEV()
     return OK;
 }
 
-int Kernel_IN::dataRX()
+int KernelInput::dataRX()
 {
     int ret;
 
-    ret = read(m_file_descriptor, m_Rx_Kernel_IN->data(), CHAR_DEVICE_SIZE);
+    ret = read(m_file_descriptor, m_Rx_KernelInput->data(), CHAR_DEVICE_SIZE);
     
     if (ret == -1)
     {
@@ -89,16 +89,16 @@ int Kernel_IN::dataRX()
     else
     {
         // Print received data for debugging
-        Read(m_Rx_Kernel_IN->data());
+        Read(m_Rx_KernelInput->data());
 
         /* Clear char device Rx buffer */
-        m_Rx_Kernel_IN->clear();
+        m_Rx_KernelInput->clear();
 
         return OK;
     }
 }
 
-int Kernel_IN::dataTX()
+int KernelInput::dataTX()
 {
     int ret = -1;
 
@@ -127,16 +127,16 @@ int Kernel_IN::dataTX()
      * Byte[3] :: Register Data
      * 
      */
-    (*m_Tx_Kernel_IN)[0] = static_cast<char>(Compute::computeDeviceAddress(m_consoleControl->data()));
-    (*m_Tx_Kernel_IN)[1] = static_cast<char>(Compute::computeRegisterAddress(m_consoleControl->data()));
-    (*m_Tx_Kernel_IN)[2] = static_cast<char>(Compute::computeRegisterControl(m_consoleControl->data()));
+    (*m_Tx_KernelInput)[0] = static_cast<char>(Compute::computeDeviceAddress(m_consoleControl->data()));
+    (*m_Tx_KernelInput)[1] = static_cast<char>(Compute::computeRegisterAddress(m_consoleControl->data()));
+    (*m_Tx_KernelInput)[2] = static_cast<char>(Compute::computeRegisterControl(m_consoleControl->data()));
 
     /* If Write then compute RegisterData */
-    if((*m_Tx_Kernel_IN)[2] == 0x01)
+    if((*m_Tx_KernelInput)[2] == 0x01)
     {
-        (*m_Tx_Kernel_IN)[3] = static_cast<char>(Compute::computeRegisterData(m_consoleControl->data()));
+        (*m_Tx_KernelInput)[3] = static_cast<char>(Compute::computeRegisterData(m_consoleControl->data()));
 
-        if((*m_Tx_Kernel_IN)[0] == 0xFF || (*m_Tx_Kernel_IN)[1] == 0xFF || (*m_Tx_Kernel_IN)[2] == 0xFF || (*m_Tx_Kernel_IN)[3] == 0xFF) 
+        if((*m_Tx_KernelInput)[0] == 0xFF || (*m_Tx_KernelInput)[1] == 0xFF || (*m_Tx_KernelInput)[2] == 0xFF || (*m_Tx_KernelInput)[3] == 0xFF) 
         {
             Error("[IN] Bytes computation failure [WR]");
             return ret;
@@ -144,7 +144,7 @@ int Kernel_IN::dataTX()
     }
     else
     {
-        if((*m_Tx_Kernel_IN)[0] == 0xFF || (*m_Tx_Kernel_IN)[1] == 0xFF || (*m_Tx_Kernel_IN)[2] == 0xFF) 
+        if((*m_Tx_KernelInput)[0] == 0xFF || (*m_Tx_KernelInput)[1] == 0xFF || (*m_Tx_KernelInput)[2] == 0xFF) 
         {
             Error("[IN] Bytes computation failure [RD]");
             return ret;
@@ -158,22 +158,22 @@ int Kernel_IN::dataTX()
          * FIFO input/output geometry
          * 
          */
-        (*m_Tx_Kernel_IN)[3] = 0x00;
+        (*m_Tx_KernelInput)[3] = 0x00;
     }
 
 #else
 
     /* Wait for data from TCP client */
-    Info("[IN] Wait for clear the Kernel_IN Flag");
-    while(true == m_waitKernel_IN)
+    Info("[IN] Wait for clear the KernelInput Flag");
+    while(true == m_waitKernelInput)
     {
         std::this_thread::sleep_for(std::chrono::milliseconds(20));
     }
-    m_waitKernel_IN = true;
+    m_waitKernelInput = true;
 
 #endif
 
-    ret = write(m_file_descriptor, m_Tx_Kernel_IN->data(), 4);
+    ret = write(m_file_descriptor, m_Tx_KernelInput->data(), 4);
 
     if (ret == -1)
     {
@@ -195,18 +195,18 @@ int Kernel_IN::dataTX()
      * 
      */
     std::this_thread::sleep_for(std::chrono::milliseconds(20));
-    (*m_Tx_Kernel_IN)[0] = 0x12; /* Custom Kernel Byte Map :: Check reciprocal in charDevice.c */
-    (*m_Tx_Kernel_IN)[1] = 0x34; /* Custom Kernel Byte Map :: Check reciprocal in charDevice.c */
-    ret = write(m_file_descriptor, m_Tx_Kernel_IN->data(), 2);
+    (*m_Tx_KernelInput)[0] = 0x12; /* Custom Kernel Byte Map :: Check reciprocal in charDevice.c */
+    (*m_Tx_KernelInput)[1] = 0x34; /* Custom Kernel Byte Map :: Check reciprocal in charDevice.c */
+    ret = write(m_file_descriptor, m_Tx_KernelInput->data(), 2);
 
     
-    m_Tx_Kernel_IN->clear(); /* Clear charDevice Rx buffer */
+    m_Tx_KernelInput->clear(); /* Clear charDevice Rx buffer */
     m_consoleControl->clear(); /* Clear console control buffer */
 
     return OK;
 }
 
-int Kernel_IN::closeDEV() 
+int KernelInput::closeDEV() 
 {
     if (m_file_descriptor >= 0) 
     {
@@ -219,32 +219,32 @@ int Kernel_IN::closeDEV()
     return OK;
 }
 
-void Kernel_IN::initThread()
+void KernelInput::initThread()
 {
-    Info("[THREAD] Initialize Kernel_IN");
-    m_threadKernel_IN = std::thread(&Kernel_IN::threadKernel_IN, this);
+    Info("[THREAD] Initialize KernelInput");
+    m_threadKernelInput = std::thread(&KernelInput::threadKernelInput, this);
 }
 
-bool Kernel_IN::isThreadKilled()
+bool KernelInput::isThreadKilled()
 {
 	return m_threadKill;
 }
 
-void Kernel_IN::threadKernel_IN()
+void KernelInput::threadKernelInput()
 {
     while(!m_threadKill) 
     {
         switch(m_currentState)
         {
-            case Kernel_IN_IDLE:
+            case KernelInput_IDLE:
                 break;
 
-            case Kernel_IN_TX:
-                std::cout << "[INFO] [Kernel_IN] Kernel_IN_TX mode" << std::endl;
+            case KernelInput_TX:
+                std::cout << "[INFO] [KernelInput] KernelInput_TX mode" << std::endl;
                 break;
 
             default:
-                std::cout << "[INFO] [Kernel_IN] Unknown mode" << std::endl;
+                std::cout << "[INFO] [KernelInput] Unknown mode" << std::endl;
         }
 
 
@@ -276,17 +276,17 @@ void Kernel_IN::threadKernel_IN()
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
 
-    Info("[THREAD] Terminate Kernel_IN");
+    Info("[THREAD] Terminate KernelInput");
 }
 
-void Kernel_IN::setTx_Kernel_IN(std::vector<char>* DataRx)
+void KernelInput::setTx_KernelInput(std::vector<char>* DataRx)
 {
-    m_Tx_Kernel_IN = DataRx;
-    Info("[IN] Release Kernel_IN Flag");
-    m_waitKernel_IN = false;
+    m_Tx_KernelInput = DataRx;
+    Info("[IN] Release KernelInput Flag");
+    m_waitKernelInput = false;
 }
 
-void Kernel_IN::setKernel_INState(Kernel_IN_stateType newState)
+void KernelInput::setKernelInputState(KernelInput_stateType newState)
 {
     m_currentState = newState;
 }

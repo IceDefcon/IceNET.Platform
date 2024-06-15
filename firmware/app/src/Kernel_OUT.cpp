@@ -18,8 +18,8 @@
 Kernel_OUT::Kernel_OUT() :
     m_file_descriptor(0), 
     m_threadKill(false),
-    m_Rx_Kernel_OUT(new std::vector<char>(KERNEL_IN_SIZE)),
-    m_Tx_Kernel_OUT(new std::vector<char>(KERNEL_IN_SIZE))
+    m_Rx_Kernel_OUT(new std::vector<char>(CHAR_DEVICE_SIZE)),
+    m_Tx_Kernel_OUT(new std::vector<char>(CHAR_DEVICE_SIZE))
 {
     std::cout << "[INFO] [CONSTRUCTOR] " << this << " :: Instantiate Kernel_OUT" << std::endl;
 
@@ -69,7 +69,7 @@ int Kernel_OUT::dataRX()
     int ret;
 
     std::cout << "[INFO] [OUT] Trying to read from Kernel" << std::endl;
-    ret = read(m_file_descriptor, m_Rx_Kernel_OUT->data(), KERNEL_IN_SIZE);
+    ret = read(m_file_descriptor, m_Rx_Kernel_OUT->data(), CHAR_DEVICE_SIZE);
 
     std::cout << "[INFO] [OUT] Received " << ret << " Bytes of data: ";
     for (int i = 0; i < ret; ++i)

@@ -11,10 +11,8 @@
 #include <vector>
 #include <iostream>
 
+#include "KernelInput.h"
 #include "Types.h"
-#include "Kernel_IN.h"
-
-const size_t NETWORK_TRAFFIC_SIZE = 32;
 
 class NetworkTraffic
 {
@@ -29,7 +27,7 @@ class NetworkTraffic
         std::vector<char>* m_Rx_NetworkTraffic;
         std::vector<char>* m_Tx_NetworkTraffic;
 
-        std::shared_ptr<Kernel_IN> m_instanceKernel_IN;
+        std::shared_ptr<KernelInput> m_instanceKernelInput;
 
 	public:
 
@@ -47,7 +45,7 @@ class NetworkTraffic
 		void threadNetworkTraffic();
 		void setNetworkTrafficState(NetworkTraffic_stateType newState);
 
-        void setInstance_Kernel_IN(const std::shared_ptr<Kernel_IN> instance);
+        void setInstance_KernelInput(const std::shared_ptr<KernelInput> instance);
 
 		void setNetworkTrafficRx(std::vector<char>* DataRx);
 		void setNetworkTrafficTx(std::vector<char>* DataTx);

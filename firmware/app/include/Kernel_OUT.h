@@ -15,8 +15,7 @@
 #include <vector>
 
 #include "NetworkTraffic.h"
-
-const size_t KERNEL_IN_SIZE = 32;
+#include "Types.h"
 
 class Kernel_OUT
 {

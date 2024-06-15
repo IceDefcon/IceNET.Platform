@@ -29,8 +29,8 @@
 //                  //
 //////////////////////
 
-#define  DEVICE_COM "Kernel_IN"
-#define  CLASS_COM  "Kernel_IN"
+#define  DEVICE_COM "KernelInput"
+#define  CLASS_COM  "KernelInput"
 
 #define  DEVICE_NET "Kernel_OUT"
 #define  CLASS_NET  "Kernel_OUT"
