@@ -65,7 +65,7 @@ int NetworkTraffic::closeDEV()
 
 void NetworkTraffic::initThread()
 {
-    std::cout << "[INFO] [THREAD] Initialize State Machine" << std::endl;
+    std::cout << "[INFO] [NET] Initialize threadNetworkTraffic" << std::endl;
     m_threadNetworkTraffic = std::thread(&NetworkTraffic::threadNetworkTraffic, this);
 }
 
@@ -85,8 +85,8 @@ void NetworkTraffic::threadNetworkTraffic()
                 break;
 
             case NetworkTraffic_KernelInput:
-                std::cout << "[INFO] [STM] NetworkTraffic_KernelInput mode" << std::endl;
-                std::cout << "[INFO] [STM] Received 4 Bytes of data: ";
+                std::cout << "[INFO] [NET] NetworkTraffic_KernelInput mode" << std::endl;
+                std::cout << "[INFO] [NET] Received 4 Bytes of data: ";
                 for (int i = 0; i < 4; ++i)
                 {
                     std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>((*m_Rx_NetworkTraffic)[i]) << " ";
@@ -101,15 +101,21 @@ void NetworkTraffic::threadNetworkTraffic()
                 break;
 
             case NetworkTraffic_KernelOutput:
-                std::cout << "[INFO] [STM] NetworkTraffic_KernelOutput mode" << std::endl;
+                std::cout << "[INFO] [NET] NetworkTraffic_KernelOutput mode" << std::endl;
                 m_readyKernelOutput = true;
                 /* TODO :: Temporary */
                 m_threadKill = true;
                 setNetworkTrafficState(NetworkTraffic_IDLE);
                 break;
 
+            case NetworkTraffic_KILL:
+                std::cout << "[INFO] [NET] NetworkTraffic_KILL mode" << std::endl;
+                m_instanceKernelInput->setKernelInputState(KernelInput_KILL);
+                setNetworkTrafficState(NetworkTraffic_IDLE);
+                break;
+
             default:
-                std::cout << "[INFO] [STM] Unknown mode" << std::endl;
+                std::cout << "[INFO] [NET] Unknown mode" << std::endl;
         }
 
 
@@ -117,7 +123,7 @@ void NetworkTraffic::threadNetworkTraffic()
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
 
-    std::cout << "[INFO] [THREAD] Terminate State Machine" << std::endl;
+    std::cout << "[INFO] [NET] Terminate threadNetworkTraffic" << std::endl;
 }
 
 void NetworkTraffic::setNetworkTrafficState(NetworkTraffic_stateType newState)

@@ -41,8 +41,10 @@ ServerTCP::~ServerTCP()
 {
     std::cout << "[INFO] [DESTRUCTOR] " << this << " :: Destroy ServerTCP" << std::endl;
 
+    /* Kill the thread */
     closeDEV();
 
+    /* Unblock the accept function */
     if (m_serverSocket >= 0) 
     {
         close(m_serverSocket);
@@ -83,7 +85,7 @@ int ServerTCP::closeDEV()
 
 void ServerTCP::initThread()
 {
-    std::cout << "[INFO] [THREAD] Initialize TCP Server" << std::endl;
+    std::cout << "[INFO] [TCP] Initialize threadServerTCP" << std::endl;
     m_threadServerTCP = std::thread(&ServerTCP::threadServerTCP, this);
 }
 
@@ -125,7 +127,7 @@ void ServerTCP::threadServerTCP()
             else
             {
                 std::cout << "[INFO] [TCP] TODO :: Ready to Kill threadServerTCP" << std::endl;
-                // m_threadKill = true;
+                m_instanceNetworkTraffic->setNetworkTrafficState(NetworkTraffic_KILL);
             }
 
             tcpClose();
@@ -134,7 +136,7 @@ void ServerTCP::threadServerTCP()
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
 
-    std::cout << "[INFO] [THREAD] Terminate TCP Server" << std::endl;
+    std::cout << "[INFO] [TCP] Terminate threadServerTCP" << std::endl;
 }
 
 int ServerTCP::initServer() 

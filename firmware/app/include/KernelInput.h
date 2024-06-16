@@ -11,10 +11,10 @@
 #include <vector>
 #include <semaphore.h>
 
-#include "Compute.h"
+#include "Console.h"
 #include "Types.h"
 
-class KernelInput : public Compute
+class KernelInput : public Console
 {
 private:
     int m_file_descriptor;
@@ -25,8 +25,6 @@ private:
     /* For char Device Traffic */
     std::vector<char>* m_Rx_KernelInput;
     std::vector<char>* m_Tx_KernelInput;
-    /* Console control buffer */
-    std::vector<char>* m_consoleControl;
 
     bool m_waitKernelInput;
 
