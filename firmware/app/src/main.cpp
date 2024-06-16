@@ -7,8 +7,8 @@
 #include <chrono> // delay
 #include <thread> // delay
 
-#include "Kernel_IN.h"
-#include "Kernel_OUT.h"
+#include "KernelInput.h"
+#include "KernelOutput.h"
 #include "ServerTCP.h"
 #include "NetworkTraffic.h"
 
@@ -17,28 +17,28 @@ int main()
     /* Smart pointers for auto Heap allocation and dealocation */
     auto instanceNetworkTraffic = std::make_shared<NetworkTraffic>();
 
-    auto instanceKernel_IN = std::make_shared<Kernel_IN>();
-    auto instanceKernel_OUT = std::make_shared<Kernel_OUT>();
+    auto instanceKernelInput = std::make_shared<KernelInput>();
+    auto instanceKernelOutput = std::make_shared<KernelOutput>();
     auto instanceServerTCP = std::make_shared<ServerTCP>();
 
     /* Set Instances */
-    instanceKernel_OUT->setInstance_NetworkTraffic(instanceNetworkTraffic);
+    instanceKernelOutput->setInstance_NetworkTraffic(instanceNetworkTraffic);
     instanceServerTCP->setInstance_NetworkTraffic(instanceNetworkTraffic);
-    instanceNetworkTraffic->setInstance_Kernel_IN(instanceKernel_IN);
+    instanceNetworkTraffic->setInstance_KernelInput(instanceKernelInput);
 
     /* Initialize Interfaces */
-    instanceKernel_IN->openDEV();
-    instanceKernel_OUT->openDEV();
+    instanceKernelInput->openDEV();
+    instanceKernelOutput->openDEV();
     instanceServerTCP->openDEV();
     instanceNetworkTraffic->openDEV();
 
     while (true) /* Terminate Kernel comms and Clean Memory */
     {
-        if (instanceKernel_OUT->isThreadKilled()) 
+        if (instanceKernelOutput->isThreadKilled()) 
         {
             instanceServerTCP->closeDEV();
-            instanceKernel_OUT->closeDEV();
-            instanceKernel_IN->closeDEV();
+            instanceKernelOutput->closeDEV();
+            instanceKernelInput->closeDEV();
             instanceNetworkTraffic->closeDEV();
             break;
         }

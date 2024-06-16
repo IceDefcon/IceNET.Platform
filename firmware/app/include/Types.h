@@ -6,6 +6,10 @@
  */
 #pragma once
 
+const size_t CHAR_DEVICE_SIZE = 32;
+const size_t NETWORK_TRAFFIC_SIZE = 32;
+const size_t TCP_SERVER_SIZE = 32;
+
 enum Status
 {
 	OK,
@@ -16,12 +20,21 @@ enum Status
 typedef enum 
 {
     NetworkTraffic_IDLE = 0,
-    NetworkTraffic_Kernel_IN,
-    NetworkTraffic_Kernel_OUT
+    NetworkTraffic_KernelInput,
+    NetworkTraffic_KernelOutput,
+    NetworkTraffic_KILL
 } NetworkTraffic_stateType;
 
 typedef enum 
 {
-    Kernel_IN_IDLE = 0,
-    Kernel_IN_TX
-} Kernel_IN_stateType;
+    KernelInput_IDLE = 0,
+    KernelInput_TX,
+    KernelInput_KILL
+} KernelInput_stateType;
+
+typedef enum 
+{
+    KernelOutput_IDLE = 0,
+    KernelOutput_RX,
+    KernelOutput_KILL
+} KernelOutput_stateType;

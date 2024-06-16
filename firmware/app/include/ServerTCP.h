@@ -15,8 +15,7 @@
 #include <vector>
 
 #include "NetworkTraffic.h"
-
-const size_t TCP_SERVER_SIZE = 32;
+#include "Types.h"
 
 class ServerTCP
 {

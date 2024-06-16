@@ -15,15 +15,15 @@
 #include <vector>
 
 #include "NetworkTraffic.h"
+#include "Types.h"
 
-const size_t KERNEL_IN_SIZE = 32;
-
-class Kernel_OUT
+class KernelOutput
 {
     private:
         int m_file_descriptor;
-        std::thread m_threadKernel_OUT;
+        std::thread m_threadKernelOutput;
         std::atomic<bool> m_threadKill;
+        KernelOutput_stateType m_currentState;
 
         int m_portNumber;
         int m_serverSocket;
@@ -35,14 +35,14 @@ class Kernel_OUT
         struct sockaddr_in m_clientAddress;
 
         /* For TCP server Traffic */
-        std::vector<char>* m_Rx_Kernel_OUT;
-        std::vector<char>* m_Tx_Kernel_OUT;
+        std::vector<char>* m_Rx_KernelOutput;
+        std::vector<char>* m_Tx_KernelOutput;
 
         std::shared_ptr<NetworkTraffic> m_instanceNetworkTraffic;
 
     public:
-        Kernel_OUT();
-        ~Kernel_OUT();
+        KernelOutput();
+        ~KernelOutput();
 
         int openDEV();
         int dataTX();
@@ -52,7 +52,8 @@ class Kernel_OUT
         void initThread();
         bool isThreadKilled();
 
-        void threadKernel_OUT();
+        void threadKernelOutput();
 
         void setInstance_NetworkTraffic(const std::shared_ptr<NetworkTraffic> instance);
+        void setKernelOutputState(KernelOutput_stateType newState);
 };

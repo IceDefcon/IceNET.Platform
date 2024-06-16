@@ -14,7 +14,7 @@
 NetworkTraffic::NetworkTraffic() :
     m_threadKill(false),
     m_currentState(NetworkTraffic_IDLE),
-    m_readyKernel_OUT(false),
+    m_readyKernelOutput(false),
     m_Rx_NetworkTraffic(new std::vector<char>(NETWORK_TRAFFIC_SIZE)),
     m_Tx_NetworkTraffic(new std::vector<char>(NETWORK_TRAFFIC_SIZE))
 {
@@ -65,7 +65,7 @@ int NetworkTraffic::closeDEV()
 
 void NetworkTraffic::initThread()
 {
-    std::cout << "[INFO] [THREAD] Initialize State Machine" << std::endl;
+    std::cout << "[INFO] [NET] Initialize threadNetworkTraffic" << std::endl;
     m_threadNetworkTraffic = std::thread(&NetworkTraffic::threadNetworkTraffic, this);
 }
 
@@ -84,32 +84,38 @@ void NetworkTraffic::threadNetworkTraffic()
             case NetworkTraffic_IDLE:
                 break;
 
-            case NetworkTraffic_Kernel_IN:
-                std::cout << "[INFO] [STM] NetworkTraffic_Kernel_IN mode" << std::endl;
-                std::cout << "[INFO] [STM] Received 4 Bytes of data: ";
+            case NetworkTraffic_KernelInput:
+                std::cout << "[INFO] [NET] NetworkTraffic_KernelInput mode" << std::endl;
+                std::cout << "[INFO] [NET] Received 4 Bytes of data: ";
                 for (int i = 0; i < 4; ++i)
                 {
                     std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>((*m_Rx_NetworkTraffic)[i]) << " ";
                 }
                 std::cout << std::endl;
 
-                m_instanceKernel_IN->setTx_Kernel_IN(m_Rx_NetworkTraffic);
-                m_instanceKernel_IN->setKernel_INState(Kernel_IN_TX);
+                m_instanceKernelInput->setTx_KernelInput(m_Rx_NetworkTraffic);
+                m_instanceKernelInput->setKernelInputState(KernelInput_TX);
 
                 setNetworkTrafficState(NetworkTraffic_IDLE);
 
                 break;
 
-            case NetworkTraffic_Kernel_OUT:
-                std::cout << "[INFO] [STM] NetworkTraffic_Kernel_OUT mode" << std::endl;
-                m_readyKernel_OUT = true;
+            case NetworkTraffic_KernelOutput:
+                std::cout << "[INFO] [NET] NetworkTraffic_KernelOutput mode" << std::endl;
+                m_readyKernelOutput = true;
                 /* TODO :: Temporary */
                 m_threadKill = true;
                 setNetworkTrafficState(NetworkTraffic_IDLE);
                 break;
 
+            case NetworkTraffic_KILL:
+                std::cout << "[INFO] [NET] NetworkTraffic_KILL mode" << std::endl;
+                m_instanceKernelInput->setKernelInputState(KernelInput_KILL);
+                setNetworkTrafficState(NetworkTraffic_IDLE);
+                break;
+
             default:
-                std::cout << "[INFO] [STM] Unknown mode" << std::endl;
+                std::cout << "[INFO] [NET] Unknown mode" << std::endl;
         }
 
 
@@ -117,7 +123,7 @@ void NetworkTraffic::threadNetworkTraffic()
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
 
-    std::cout << "[INFO] [THREAD] Terminate State Machine" << std::endl;
+    std::cout << "[INFO] [NET] Terminate threadNetworkTraffic" << std::endl;
 }
 
 void NetworkTraffic::setNetworkTrafficState(NetworkTraffic_stateType newState)
@@ -125,9 +131,9 @@ void NetworkTraffic::setNetworkTrafficState(NetworkTraffic_stateType newState)
     m_currentState = newState;
 }
 
-void NetworkTraffic::setInstance_Kernel_IN(const std::shared_ptr<Kernel_IN> instance)
+void NetworkTraffic::setInstance_KernelInput(const std::shared_ptr<KernelInput> instance)
 {
-    m_instanceKernel_IN = instance;
+    m_instanceKernelInput = instance;
 }
 
 void NetworkTraffic::setNetworkTrafficRx(std::vector<char>* DataRx)
@@ -147,10 +153,10 @@ std::vector<char>* NetworkTraffic::getNetworkTrafficTx()
 
 void NetworkTraffic::resetFeedbackFlag()
 {
-    m_readyKernel_OUT = false;
+    m_readyKernelOutput = false;
 }
 
 bool NetworkTraffic::getFeedbackFlag()
 {
-    return m_readyKernel_OUT;
+    return m_readyKernelOutput;
 }
