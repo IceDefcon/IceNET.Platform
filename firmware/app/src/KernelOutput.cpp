@@ -79,7 +79,13 @@ int KernelOutput::dataRX()
     }
     std::cout << std::endl;
 
-    return OK;
+    if (m_Rx_KernelOutput->size() >= 2 && (*m_Rx_KernelOutput)[0] == 0xDE && (*m_Rx_KernelOutput)[1] == 0xAD)
+    {
+        std::cout << "[INFO] [ O ] Kill SIGNAL Received" << std::endl;
+        return 0;
+    }
+
+    return ret;
 }
 
 int KernelOutput::dataTX()
@@ -133,23 +139,14 @@ void KernelOutput::threadKernelOutput()
                 std::cout << "[INFO] [KernelInput] Unknown mode" << std::endl;
         }
 
-        if(OK != dataRX())
-        {
-            std::cout << "[ERNO] [ O ] Cannot read from the console" << std::endl;
-        }
-        else
+        if(dataRX() > 0)
         {
             m_instanceNetworkTraffic->setNetworkTrafficTx(m_Rx_KernelOutput);
             m_instanceNetworkTraffic->setNetworkTrafficState(NetworkTraffic_KernelOutput);
-            /**
-             * 
-             * TODO
-             * 
-             * Temporarily here to avoid 
-             * system freeze at TCP
-             * thread
-             * 
-             */
+        }
+        else
+        {
+            std::cout << "[INFO] [ O ] Killing Thread" << std::endl;
             m_threadKill = true;
         }
 

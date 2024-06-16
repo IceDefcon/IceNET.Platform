@@ -48,13 +48,7 @@ static stateType currentState = IDLE;
     return state;
 }
 
-/**
- * 
- * TODO :: Waiting for RTL to be continued
- * 
- * State machine is running but not configured
- * 
- */
+/* Kernel state machine */
 static int StateMachineThread(void *data)
 {
     stateType state;
@@ -91,9 +85,9 @@ static int StateMachineThread(void *data)
 
             case KILL_APPLICATION:
                 printk(KERN_INFO "[CTRL][STM] KILL_APPLICATION mode\n");
-                //
-                // Kill Queue
-                //
+                /* QUEUE :: Execution of killApplication */
+                queue_work(get_killApplication_wq(), get_killApplication_work());
+                printk(KERN_INFO "[CTRL][STM] Back to IDLE mode\n");
                 setStateMachine(IDLE);
                 break;
 

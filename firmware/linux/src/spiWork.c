@@ -21,9 +21,11 @@
 /* WORK QUEUE */ static struct workqueue_struct *transferFromCharDevice_wq;
 /* WORK QUEUE */ static struct workqueue_struct* interruptFromFpga_wq;
 /* WORK QUEUE */ static struct workqueue_struct* feedbackTransferFromFPGA_wq;
+/* WORK QUEUE */ static struct workqueue_struct* killApplication_wq;
 /* WORK */ static struct work_struct transferFromCharDevice_work;
 /* WORK */ static struct work_struct interruptFromFpga_work;
 /* WORK */ static struct work_struct feedbackTransferFromFPGA_work;
+/* WORK */ static struct work_struct killApplication_work;
 
 /* GET WORK QUEUE*/ struct workqueue_struct* get_transferFromCharDevice_wq(void) 
 {
@@ -37,6 +39,10 @@
 {
 	return feedbackTransferFromFPGA_wq;
 }
+/* GET WORK QUEUE */ struct workqueue_struct* get_killApplication_wq(void)
+{
+	return killApplication_wq;
+}
 /* GET WORK */ struct work_struct* get_transferFromCharDevice_work(void) 
 {
     return &transferFromCharDevice_work;
@@ -48,6 +54,10 @@
 /* GET WORK */ struct work_struct* get_feedbackTransferFromFPGA_work(void)
 {
 	return &feedbackTransferFromFPGA_work;
+}
+/* GET WORK */ struct work_struct* get_killApplication_work(void)
+{
+	return &killApplication_work;
 }
 
 static void interruptFromFpga_WorkInit(void)
@@ -92,6 +102,20 @@ static void feedbackTransferFromFPGA_WorkInit(void)
 	}
 }
 
+static void killApplication_WorkInit(void)
+{
+    INIT_WORK(get_killApplication_work(), killApplication);
+    killApplication_wq = create_singlethread_workqueue("killApplication_workqueue");
+    if (!killApplication_wq) 
+    {
+        printk(KERN_ERR "[INIT][WRK] Failed to initialise single thread workqueue for killApplication: -ENOMEM\n");
+    }
+    else
+    {
+        printk(KERN_ERR "[INIT][WRK] Created single thread workqueue for killApplication\n");
+    }
+}
+
 static void interruptFromFpga_WorkDestroy(void)
 {
     cancel_work_sync(get_interruptFromFpga_work());
@@ -125,11 +149,23 @@ static void feedbackTransferFromFPGA_WorkDestroy(void)
     }
 }
 
+static void killApplication_WorkDestroy(void)
+{
+    cancel_work_sync(get_killApplication_work());
+    if (killApplication_wq) 
+    {
+        flush_workqueue(killApplication_wq);
+        destroy_workqueue(killApplication_wq);
+        killApplication_wq = NULL;
+    }
+}
+
 void spiWorkInit(void)
 {
 	interruptFromFpga_WorkInit();
 	transferFromCharDevice_WorkInit();
 	feedbackTransferFromFPGA_WorkInit();
+	killApplication_WorkInit();
 }
 
 void spiWorkDestroy(void)
@@ -137,5 +173,6 @@ void spiWorkDestroy(void)
 	interruptFromFpga_WorkDestroy();
 	transferFromCharDevice_WorkDestroy();
 	feedbackTransferFromFPGA_WorkDestroy();
+	killApplication_WorkDestroy();
 	printk(KERN_ERR "[DESTROY][WRK] Destroy kernel workflow\n");
 }

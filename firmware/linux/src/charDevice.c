@@ -133,6 +133,20 @@ static void init_charDevice_Data(void)
     printk(KERN_INFO "[CTRL][NET] Data from FPGA Received :: Unlock the mutex\n");
 }
 
+/* SET KILL APPLICATION */ void set_killApplication(const DataTransfer* transferData)
+{
+    if (transferData != NULL)
+    {
+        KernelOutputTransfer = *transferData;
+    }
+    else
+    {
+        printk(KERN_INFO "[CTRL][NET] Kill SIGNAL Received :: Unlock the mutex\n");
+        // Handle the error, e.g., log it or assert
+    }
+    mutex_unlock(&wait_mutex);
+}
+
 void charDeviceInit(void)
 {
     printk(KERN_ALERT "[INIT][COM] Lock on [C] Device Mutex\n");
@@ -432,7 +446,7 @@ static ssize_t dev_read_kernel_output(struct file *filep, char *buffer, size_t l
 {
     int error_count = 0;
 
-    printk(KERN_INFO "[CTRL][SPI] Application is waiting for FPGA Data\n");
+    printk(KERN_INFO "[CTRL][SPI] Application is waiting for Data\n");
     printk(KERN_INFO "[CTRL][SPI] Kernel is waiting for mutex Unlock\n");
     mutex_lock(&wait_mutex);
 

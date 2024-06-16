@@ -181,7 +181,7 @@ void KernelInput::threadKernelInput()
                 }
                 else
                 {
-                    Error("[ I ] Data successfuly written into the Kernel Space");
+                    Info("[ I ] Data successfuly written into the Kernel Space");
                 }
 
                 setKernelInputState(KernelInput_IDLE);
@@ -194,6 +194,7 @@ void KernelInput::threadKernelInput()
                 write(m_file_descriptor, m_Tx_KernelInput->data(), 2);
                 m_Tx_KernelInput->clear();
                 setKernelInputState(KernelInput_IDLE);
+                m_threadKill = true;
                 break;
 
             default:
