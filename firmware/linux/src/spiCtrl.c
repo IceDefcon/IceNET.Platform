@@ -223,6 +223,11 @@ void transferFromCharDevice(struct work_struct *work)
         printk(KERN_INFO "[CTRL][SPI] Primary FPGA Transfer :: Byte[%d]: [Data]Kernel.TX[0x%02x] [Feedback]Fpga.RX[0x%02x]\n", i, fpgaData->RxData[i], spi_rx_at_transferFromCharDevice[i]);
     }
 
+    if(0x18 != spi_rx_at_transferFromCharDevice[0])
+    {
+        printk(KERN_ERR "[CTRL][SPI] No FPGA Preamble detected :: FPGA is Not Programed or Connected\n");
+        setStateMachine(FPGA_ERROR);
+    }
     /*!
      * 
      * Here we should process 
