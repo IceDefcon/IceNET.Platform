@@ -25,7 +25,8 @@ typedef enum
     IDLE = 0,
     SPI,
     INTERRUPT,
-    FEEDBACK
+    FEEDBACK,
+    KILL_APPLICATION
 } stateType;
 
 /* SET STATE */ void setStateMachine(stateType newState);

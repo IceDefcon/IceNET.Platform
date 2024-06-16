@@ -89,6 +89,14 @@ static int StateMachineThread(void *data)
                 setStateMachine(IDLE);
                 break;
 
+            case KILL_APPLICATION:
+                printk(KERN_INFO "[CTRL][STM] KILL_APPLICATION mode\n");
+                //
+                // Kill Queue
+                //
+                setStateMachine(IDLE);
+                break;
+
             default:
                 printk(KERN_INFO "[CTRL][STM] Unknown mode\n");
                 return EINVAL;

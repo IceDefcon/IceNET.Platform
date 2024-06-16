@@ -44,38 +44,38 @@ static DEFINE_MUTEX(KernelInput_mutex);
 static DEFINE_MUTEX(KernelOutput_mutex);
 static DEFINE_MUTEX(wait_mutex);
 
-static int dev_open_com(struct inode *inodep, struct file *filep);
-static ssize_t dev_read_com(struct file *, char *, size_t, loff_t *);
-static ssize_t dev_write_com(struct file *, const char *, size_t, loff_t *);
-static int dev_close_com(struct inode *inodep, struct file *filep);
+static int dev_open_kernel_input(struct inode *inodep, struct file *filep);
+static ssize_t dev_read_kernel_input(struct file *, char *, size_t, loff_t *);
+static ssize_t dev_write_kernel_input(struct file *, const char *, size_t, loff_t *);
+static int dev_close_kernel_input(struct inode *inodep, struct file *filep);
 
-static int dev_open_net(struct inode *inodep, struct file *filep);
-static ssize_t dev_read_net(struct file *, char *, size_t, loff_t *);
-static ssize_t dev_write_net(struct file *, const char *, size_t, loff_t *);
-static int dev_close_net(struct inode *inodep, struct file *filep);
+static int dev_open_kernel_output(struct inode *inodep, struct file *filep);
+static ssize_t dev_read_kernel_output(struct file *, char *, size_t, loff_t *);
+static ssize_t dev_write_kernel_output(struct file *, const char *, size_t, loff_t *);
+static int dev_close_kernel_output(struct inode *inodep, struct file *filep);
 
 static DataTransfer KernelInputTransfer; 
 static DataTransfer KernelOutputTransfer; 
 
 enum deviceTYPE
 {
-    ICE_COM,
-    ICE_NET
+    KERNEL_INPUT,
+    KERNEL_OUTPUT
 };
 
 static struct file_operations fops[2] =
 {
    {
-       .open = dev_open_com,
-       .read = dev_read_com,
-       .write = dev_write_com,
-       .release = dev_close_com,
+       .open = dev_open_kernel_input,
+       .read = dev_read_kernel_input,
+       .write = dev_write_kernel_input,
+       .release = dev_close_kernel_input,
    },
    {
-       .open = dev_open_net,
-       .read = dev_read_net,
-       .write = dev_write_net,
-       .release = dev_close_net,
+       .open = dev_open_kernel_output,
+       .read = dev_read_kernel_output,
+       .write = dev_write_kernel_output,
+       .release = dev_close_kernel_output,
    }
 };
 
@@ -147,32 +147,32 @@ void charDeviceInit(void)
     //
     // KernelInput
     //
-    majorNumber[ICE_COM] = register_chrdev(0, DEVICE_COM, &fops[ICE_COM]);
-    if (majorNumber[ICE_COM]<0)
+    majorNumber[KERNEL_INPUT] = register_chrdev(0, DEVICE_COM, &fops[KERNEL_INPUT]);
+    if (majorNumber[KERNEL_INPUT]<0)
     {
-        printk(KERN_ALERT "[INIT][COM] Failed to register major number: %d\n", majorNumber[ICE_COM]);
+        printk(KERN_ALERT "[INIT][COM] Failed to register major number: %d\n", majorNumber[KERNEL_INPUT]);
     }
     else
     {
-        printk(KERN_ALERT "[INIT][COM] Register major number for char Device: %d\n", majorNumber[ICE_COM]);
+        printk(KERN_ALERT "[INIT][COM] Register major number for char Device: %d\n", majorNumber[KERNEL_INPUT]);
     }
 
-    C_Class[ICE_COM] = class_create(THIS_MODULE, CLASS_COM);
-    if (IS_ERR(C_Class[ICE_COM]))
+    C_Class[KERNEL_INPUT] = class_create(THIS_MODULE, CLASS_COM);
+    if (IS_ERR(C_Class[KERNEL_INPUT]))
     {
-        unregister_chrdev(majorNumber[ICE_COM], DEVICE_COM);
-        printk(KERN_ALERT "[INIT][COM] Failed to register device class: %ld\n", PTR_ERR(C_Class[ICE_COM]));
+        unregister_chrdev(majorNumber[KERNEL_INPUT], DEVICE_COM);
+        printk(KERN_ALERT "[INIT][COM] Failed to register device class: %ld\n", PTR_ERR(C_Class[KERNEL_INPUT]));
     }
     else
     {
         printk(KERN_ALERT "[INIT][COM] Register device class\n");
     }
     
-    C_Device[ICE_COM] = device_create(C_Class[ICE_COM], NULL, MKDEV(majorNumber[ICE_COM], 0), NULL, DEVICE_COM);
-    if (IS_ERR(C_Device[ICE_COM]))
+    C_Device[KERNEL_INPUT] = device_create(C_Class[KERNEL_INPUT], NULL, MKDEV(majorNumber[KERNEL_INPUT], 0), NULL, DEVICE_COM);
+    if (IS_ERR(C_Device[KERNEL_INPUT]))
     {
-        class_destroy(C_Class[ICE_COM]);
-        unregister_chrdev(majorNumber[ICE_COM], DEVICE_COM);
+        class_destroy(C_Class[KERNEL_INPUT]);
+        unregister_chrdev(majorNumber[KERNEL_INPUT], DEVICE_COM);
         printk(KERN_ALERT "[INIT][COM] Failed to create the device\n");
     }
     else
@@ -185,32 +185,32 @@ void charDeviceInit(void)
     //
     // KernelOutput
     //
-    majorNumber[ICE_NET] = register_chrdev(0, DEVICE_NET, &fops[ICE_NET]);
-    if (majorNumber[ICE_NET] < 0)
+    majorNumber[KERNEL_OUTPUT] = register_chrdev(0, DEVICE_NET, &fops[KERNEL_OUTPUT]);
+    if (majorNumber[KERNEL_OUTPUT] < 0)
     {
-        printk(KERN_ALERT "[INIT][NET] Failed to register major number: %d\n", majorNumber[ICE_NET]);
+        printk(KERN_ALERT "[INIT][NET] Failed to register major number: %d\n", majorNumber[KERNEL_OUTPUT]);
     }
     else
     {
-        printk(KERN_ALERT "[INIT][NET] Register major number for char Device: %d\n", majorNumber[ICE_NET]);
+        printk(KERN_ALERT "[INIT][NET] Register major number for char Device: %d\n", majorNumber[KERNEL_OUTPUT]);
     }
 
-    C_Class[ICE_NET] = class_create(THIS_MODULE, CLASS_NET);
-    if (IS_ERR(C_Class[ICE_NET]))
+    C_Class[KERNEL_OUTPUT] = class_create(THIS_MODULE, CLASS_NET);
+    if (IS_ERR(C_Class[KERNEL_OUTPUT]))
     {
-        unregister_chrdev(majorNumber[ICE_NET], DEVICE_NET);
-        printk(KERN_ALERT "[INIT][NET] Failed to register device class: %ld\n", PTR_ERR(C_Class[ICE_NET]));
+        unregister_chrdev(majorNumber[KERNEL_OUTPUT], DEVICE_NET);
+        printk(KERN_ALERT "[INIT][NET] Failed to register device class: %ld\n", PTR_ERR(C_Class[KERNEL_OUTPUT]));
     }
     else
     {
         printk(KERN_ALERT "[INIT][NET] Register device class\n");
     }
     
-    C_Device[ICE_NET] = device_create(C_Class[ICE_NET], NULL, MKDEV(majorNumber[ICE_NET], 0), NULL, DEVICE_NET);
-    if (IS_ERR(C_Device[ICE_NET]))
+    C_Device[KERNEL_OUTPUT] = device_create(C_Class[KERNEL_OUTPUT], NULL, MKDEV(majorNumber[KERNEL_OUTPUT], 0), NULL, DEVICE_NET);
+    if (IS_ERR(C_Device[KERNEL_OUTPUT]))
     {
-        class_destroy(C_Class[ICE_NET]);
-        unregister_chrdev(majorNumber[ICE_NET], DEVICE_NET);
+        class_destroy(C_Class[KERNEL_OUTPUT]);
+        unregister_chrdev(majorNumber[KERNEL_OUTPUT], DEVICE_NET);
         printk(KERN_ALERT "[INIT][NET] Failed to create the device\n");
     }
     else
@@ -227,38 +227,38 @@ void charDeviceDestroy(void)
     //
     // KernelInput
     //
-    if(C_Device[ICE_COM]) 
+    if(C_Device[KERNEL_INPUT]) 
     {
-        device_destroy(C_Class[ICE_COM], MKDEV(majorNumber[ICE_COM], 0));
-        C_Device[ICE_COM] = NULL;
+        device_destroy(C_Class[KERNEL_INPUT], MKDEV(majorNumber[KERNEL_INPUT], 0));
+        C_Device[KERNEL_INPUT] = NULL;
         printk(KERN_INFO "[DESTROY][COM] Device destroyed\n");
     }
     else
     {
-        printk(KERN_INFO "[DESTROY][COM] Canot destroy C_Device[ICE_COM] :: It is already NULL !\n");
+        printk(KERN_INFO "[DESTROY][COM] Canot destroy C_Device[KERNEL_INPUT] :: It is already NULL !\n");
     }
 
-    if(C_Class[ICE_COM]) 
+    if(C_Class[KERNEL_INPUT]) 
     {
-        class_unregister(C_Class[ICE_COM]);
-        class_destroy(C_Class[ICE_COM]);
-        C_Class[ICE_COM] = NULL;
+        class_unregister(C_Class[KERNEL_INPUT]);
+        class_destroy(C_Class[KERNEL_INPUT]);
+        C_Class[KERNEL_INPUT] = NULL;
         printk(KERN_INFO "[DESTROY][COM] Class destroyed\n");
     }
     else
     {
-        printk(KERN_INFO "[DESTROY][COM] Canot destroy C_Class[ICE_COM] :: It is already NULL !\n");
+        printk(KERN_INFO "[DESTROY][COM] Canot destroy C_Class[KERNEL_INPUT] :: It is already NULL !\n");
     }
 
-    if(majorNumber[ICE_COM] != 0) 
+    if(majorNumber[KERNEL_INPUT] != 0) 
     {
-        unregister_chrdev(majorNumber[ICE_COM], DEVICE_COM);
-        majorNumber[ICE_COM] = 0;
+        unregister_chrdev(majorNumber[KERNEL_INPUT], DEVICE_COM);
+        majorNumber[KERNEL_INPUT] = 0;
         printk(KERN_INFO "[DESTROY][COM] Unregistered character device\n");
     }
     else
     {
-        printk(KERN_INFO "[DESTROY][COM] Canot unregister KernelInput Device :: majorNumber[ICE_COM] is already 0 !\n");
+        printk(KERN_INFO "[DESTROY][COM] Canot unregister KernelInput Device :: majorNumber[KERNEL_INPUT] is already 0 !\n");
         printk(KERN_INFO "[DESTROY][COM] Device destroyed\n");
     }
 
@@ -269,38 +269,38 @@ void charDeviceDestroy(void)
     //
     // KernelOutput
     //
-    if(C_Device[ICE_NET]) 
+    if(C_Device[KERNEL_OUTPUT]) 
     {
-        device_destroy(C_Class[ICE_NET], MKDEV(majorNumber[ICE_NET], 0));
-        C_Device[ICE_NET] = NULL;
+        device_destroy(C_Class[KERNEL_OUTPUT], MKDEV(majorNumber[KERNEL_OUTPUT], 0));
+        C_Device[KERNEL_OUTPUT] = NULL;
         printk(KERN_INFO "[DESTROY][NET] Device destroyed\n");
     }
     else
     {
-        printk(KERN_INFO "[DESTROY][NET] Canot destroy C_Device[ICE_NET] :: It is already NULL !\n");
+        printk(KERN_INFO "[DESTROY][NET] Canot destroy C_Device[KERNEL_OUTPUT] :: It is already NULL !\n");
     }
 
-    if(C_Class[ICE_NET]) 
+    if(C_Class[KERNEL_OUTPUT]) 
     {
-        class_unregister(C_Class[ICE_NET]);
-        class_destroy(C_Class[ICE_NET]);
-        C_Class[ICE_NET] = NULL;
+        class_unregister(C_Class[KERNEL_OUTPUT]);
+        class_destroy(C_Class[KERNEL_OUTPUT]);
+        C_Class[KERNEL_OUTPUT] = NULL;
         printk(KERN_INFO "[DESTROY][NET] Class destroyed\n");
     }
     else
     {
-        printk(KERN_INFO "[DESTROY][NET] Canot destroy C_Class[ICE_NET] :: It is already NULL !\n");
+        printk(KERN_INFO "[DESTROY][NET] Canot destroy C_Class[KERNEL_OUTPUT] :: It is already NULL !\n");
     }
 
-    if(majorNumber[ICE_NET] != 0) 
+    if(majorNumber[KERNEL_OUTPUT] != 0) 
     {
-        unregister_chrdev(majorNumber[ICE_NET], DEVICE_NET);
-        majorNumber[ICE_NET] = 0;
+        unregister_chrdev(majorNumber[KERNEL_OUTPUT], DEVICE_NET);
+        majorNumber[KERNEL_OUTPUT] = 0;
         printk(KERN_INFO "[DESTROY][NET] Unregistered character device\n");
     }
     else
     {
-        printk(KERN_INFO "[DESTROY][NET] Canot unregister KernelOutput Device :: majorNumber[ICE_NET] is already 0 !\n");
+        printk(KERN_INFO "[DESTROY][NET] Canot unregister KernelOutput Device :: majorNumber[KERNEL_OUTPUT] is already 0 !\n");
         printk(KERN_INFO "[DESTROY][NET] Device destroyed\n");
     }
 
@@ -319,7 +319,7 @@ void charDeviceDestroy(void)
  * 
  * 
  */
-static int dev_open_com(struct inode *inodep, struct file *filep)
+static int dev_open_kernel_input(struct inode *inodep, struct file *filep)
 {
     if(!mutex_trylock(&KernelInput_mutex))
     {
@@ -327,13 +327,13 @@ static int dev_open_com(struct inode *inodep, struct file *filep)
         return -EBUSY;
     }
 
-    numberOpens[ICE_COM]++;
-    printk(KERN_INFO "[CTRL][COM] Device has been opened %d time(s)\n", numberOpens[ICE_COM]);
+    numberOpens[KERNEL_INPUT]++;
+    printk(KERN_INFO "[CTRL][COM] Device has been opened %d time(s)\n", numberOpens[KERNEL_INPUT]);
 
     return 0;
 }
 
-static ssize_t dev_read_com(struct file *filep, char *buffer, size_t len, loff_t *offset)
+static ssize_t dev_read_kernel_input(struct file *filep, char *buffer, size_t len, loff_t *offset)
 {
     int error_count = 0;
 
@@ -354,7 +354,7 @@ static ssize_t dev_read_com(struct file *filep, char *buffer, size_t len, loff_t
     }
 }
 
-static ssize_t dev_write_com(struct file *filep, const char __user *buffer, size_t len, loff_t *offset)
+static ssize_t dev_write_kernel_input(struct file *filep, const char __user *buffer, size_t len, loff_t *offset)
 {
     int error_count = 0;
     size_t i;
@@ -367,6 +367,14 @@ static ssize_t dev_write_com(struct file *filep, const char __user *buffer, size
         kfree((void *)KernelInputTransfer.RxData);
         /* Copy failed */
         return -EFAULT;
+    }
+
+    /* Kill signal from Application */
+    if (KernelInputTransfer.RxData[0] == 0xDE && KernelInputTransfer.RxData[1] == 0xAD)
+    {
+        printk(KERN_INFO "[CTRL][COM] Kill SIGNAL received from Application\n");
+        setStateMachine(KILL_APPLICATION);
+        return 0;
     }
 
     /* 20ms delayed :: Read Enable pulse to FIFO */
@@ -391,7 +399,7 @@ static ssize_t dev_write_com(struct file *filep, const char __user *buffer, size
     return 0;
 }
 
-static int dev_close_com(struct inode *inodep, struct file *filep)
+static int dev_close_kernel_input(struct inode *inodep, struct file *filep)
 {
     printk(KERN_ALERT "[INIT][COM] Unlock [C] Device Mutex\n");
     mutex_unlock(&KernelInput_mutex);
@@ -406,7 +414,7 @@ static int dev_close_com(struct inode *inodep, struct file *filep)
  * 
  * 
  */
-static int dev_open_net(struct inode *inodep, struct file *filep)
+static int dev_open_kernel_output(struct inode *inodep, struct file *filep)
 {
     if(!mutex_trylock(&KernelOutput_mutex))
     {
@@ -414,13 +422,13 @@ static int dev_open_net(struct inode *inodep, struct file *filep)
         return -EBUSY;
     }
 
-    numberOpens[ICE_NET]++;
-    printk(KERN_INFO "[CTRL][NET] Device has been opened %d time(s)\n", numberOpens[ICE_NET]);
+    numberOpens[KERNEL_OUTPUT]++;
+    printk(KERN_INFO "[CTRL][NET] Device has been opened %d time(s)\n", numberOpens[KERNEL_OUTPUT]);
 
     return 0;
 }
 
-static ssize_t dev_read_net(struct file *filep, char *buffer, size_t len, loff_t *offset)
+static ssize_t dev_read_kernel_output(struct file *filep, char *buffer, size_t len, loff_t *offset)
 {
     int error_count = 0;
 
@@ -445,7 +453,7 @@ static ssize_t dev_read_net(struct file *filep, char *buffer, size_t len, loff_t
     }
 }
 
-static ssize_t dev_write_net(struct file *filep, const char __user *buffer, size_t len, loff_t *offset)
+static ssize_t dev_write_kernel_output(struct file *filep, const char __user *buffer, size_t len, loff_t *offset)
 {
     int error_count = 0;
     size_t i;
@@ -472,7 +480,7 @@ static ssize_t dev_write_net(struct file *filep, const char __user *buffer, size
     return 0;
 }
 
-static int dev_close_net(struct inode *inodep, struct file *filep)
+static int dev_close_kernel_output(struct inode *inodep, struct file *filep)
 {
     printk(KERN_ALERT "[INIT][NET] Unlock [C] Device Mutex\n");
     mutex_unlock(&KernelOutput_mutex);
