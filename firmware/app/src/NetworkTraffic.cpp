@@ -103,8 +103,6 @@ void NetworkTraffic::threadNetworkTraffic()
             case NetworkTraffic_KernelOutput:
                 std::cout << "[INFO] [NET] NetworkTraffic_KernelOutput mode" << std::endl;
                 m_readyKernelOutput = true;
-                /* TODO :: Temporary */
-                m_threadKill = true;
                 setNetworkTrafficState(NetworkTraffic_IDLE);
                 break;
 
@@ -112,6 +110,7 @@ void NetworkTraffic::threadNetworkTraffic()
                 std::cout << "[INFO] [NET] NetworkTraffic_KILL mode" << std::endl;
                 m_instanceKernelInput->setKernelInputState(KernelInput_KILL);
                 setNetworkTrafficState(NetworkTraffic_IDLE);
+                m_threadKill = true;
                 break;
 
             default:

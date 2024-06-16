@@ -48,13 +48,7 @@ static stateType currentState = IDLE;
     return state;
 }
 
-/**
- * 
- * TODO :: Waiting for RTL to be continued
- * 
- * State machine is running but not configured
- * 
- */
+/* Kernel state machine */
 static int StateMachineThread(void *data)
 {
     stateType state;
@@ -86,6 +80,14 @@ static int StateMachineThread(void *data)
                 printk(KERN_INFO "[CTRL][STM] FEEDBACK mode\n");
                 /* QUEUE :: Execution of feedbackTransferFromFPGA */
                 queue_work(get_feedbackTransferFromFPGA_wq(), get_feedbackTransferFromFPGA_work());
+                setStateMachine(IDLE);
+                break;
+
+            case KILL_APPLICATION:
+                printk(KERN_INFO "[CTRL][STM] KILL_APPLICATION mode\n");
+                /* QUEUE :: Execution of killApplication */
+                queue_work(get_killApplication_wq(), get_killApplication_work());
+                printk(KERN_INFO "[CTRL][STM] Back to IDLE mode\n");
                 setStateMachine(IDLE);
                 break;
 

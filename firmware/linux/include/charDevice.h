@@ -22,6 +22,7 @@
 
 /* GET Kernel_IN TRANSFER */ DataTransfer* get_KernelInputTransfer(void);
 /* SET FEEDBACK TRANSFER */ void set_fpgaFeedbackTransfer(const DataTransfer* transferData);
+/* SET KILL APPLICATION */ void set_killApplication(const DataTransfer* transferData);
 
 void charDeviceInit(void);
 void charDeviceDestroy(void);

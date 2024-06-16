@@ -244,6 +244,27 @@ void feedbackTransferFromFPGA(struct work_struct *work)
     set_fpgaFeedbackTransfer(&fpgaFeedbackTransfer);
 }
 
+void killApplication(struct work_struct *work)
+{
+    /* Feedback processing */
+    fpgaFeedbackTransfer.RxData = (char *)kmalloc(2 * sizeof(char), GFP_KERNEL);
+    if (!fpgaFeedbackTransfer.RxData) 
+    {
+        printk(KERN_ERR "[CTRL][SPI] Memory allocation failed for RxData\n");
+    }
+    else
+    {
+        printk(KERN_INFO "[CTRL][SPI] Memory allocated successfully");
+    }
+
+    fpgaFeedbackTransfer.RxData[0] = 0xDE;
+    fpgaFeedbackTransfer.RxData[1] = 0xAD;
+
+    fpgaFeedbackTransfer.length = 2;
+    printk(KERN_INFO "[CTRL][SPI] Debug :: 1");
+    set_killApplication(&fpgaFeedbackTransfer);
+}
+
 void spiDestroy(void)
 {
     spi_dev_put(spi_dev_primary);

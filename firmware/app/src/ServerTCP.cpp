@@ -128,6 +128,7 @@ void ServerTCP::threadServerTCP()
             {
                 std::cout << "[INFO] [TCP] TODO :: Ready to Kill threadServerTCP" << std::endl;
                 m_instanceNetworkTraffic->setNetworkTrafficState(NetworkTraffic_KILL);
+                m_threadKill = true;
             }
 
             tcpClose();
@@ -240,7 +241,7 @@ int ServerTCP::tcpRX()
 
         if((*m_Rx_ServerTCP)[0] == 0xDE && (*m_Rx_ServerTCP)[1] == 0xAD)
         {
-            std::cout << "[INFO] [TCP] Kill SIGNAL Received" << std::endl;
+            std::cout << "[INFO] [TCP] Kill SIGNAL Received :: Kill Thread" << std::endl;
             return 0;
         }
         else

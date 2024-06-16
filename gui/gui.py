@@ -19,7 +19,7 @@ def kill_application():
     server_address = ip_data.get()
     port = int(port_data.get())
     tcp_socket.connect((server_address, port))
-    log_message("[outputCOM] Killing Linux Application")
+    log_message("[iceNET] Killing Linux Application")
 
     data = bytes([0xDE, 0xAD])
     tcp_socket.sendall(data)
@@ -34,7 +34,7 @@ def send_data():
         server_address = ip_data.get()
         port = int(port_data.get())
         tcp_socket.connect((server_address, port))
-        log_message("[outputCOM] Server connection established")
+        log_message("[iceNET] Server connection established")
 
         address = int(device_address.get(), 16)  # Convert hex address to integer
         register = int(device_register.get(), 16)  # Convert hex register to integer
@@ -46,7 +46,7 @@ def send_data():
 
         # Send data over TCP
         tcp_socket.sendall(data)
-        log_message(f"[outputCOM] Client TX :: {data.hex()}")  # Log the hexadecimal representation of the data
+        log_message(f"[iceNET] Client TX :: {data.hex()}")  # Log the hexadecimal representation of the data
         
         # Receive feedback data from the server
         feedback_data = tcp_socket.recv(4)
@@ -54,20 +54,20 @@ def send_data():
         # Dont use decode function when non ASCII hex is send over TCP
         #
         # feedback_text = feedback_data.decode()
-        # log_message(f"[outputCOM] Client RX :: {feedback_text}")
-        log_message(f"[outputCOM] Client RX :: {feedback_data.hex()}")  # Log the hexadecimal representation of the received data
+        # log_message(f"[iceNET] Client RX :: {feedback_text}")
+        log_message(f"[iceNET] Client RX :: {feedback_data.hex()}")  # Log the hexadecimal representation of the received data
 
     except Exception as e:
-        log_message(f"[outputCOM] Error sending/receiving data over TCP: {e}")
+        log_message(f"[iceNET] Error sending/receiving data over TCP: {e}")
     
     finally:
         # Close the TCP connection
         if tcp_socket:
             tcp_socket.close()
-            log_message("[outputCOM] Server connection terminated")
+            log_message("[iceNET] Server connection terminated")
 
 def quit_application():
-    log_message("[outputCOM] Quitting application...")
+    log_message("[iceNET] Quitting application...")
     root.quit()
     root.destroy()
 
