@@ -120,17 +120,19 @@ static void init_charDevice_Data(void)
     if (transferData != NULL)
     {
         KernelOutputTransfer = *transferData;
+        KernelOutputTransfer.length = 1;
+        printk(KERN_INFO "[CTRL][NET] Data set in the KernelOutputTransfer :: KernelOutputTransfer->RxData[0] = 0x%02x \n", KernelOutputTransfer.RxData[0]);
+        printk(KERN_INFO "[CTRL][NET] Data set in the KernelOutputTransfer :: KernelOutputTransfer->lenght = %d \n", KernelOutputTransfer.length);
+        mutex_unlock(&wait_mutex);
+        printk(KERN_INFO "[CTRL][NET] Data Received from FPGA :: Unlock the mutex\n");
     }
     else
     {
-        // Handle the error, e.g., log it or assert
+        KernelOutputTransfer.length = 1;
+        KernelOutputTransfer.RxData[0] = 0xFF;
+        mutex_unlock(&wait_mutex);
+        printk(KERN_INFO "[CTRL][NET] No FPGA Data Received :: Unlock the mutex\n");
     }
-    KernelOutputTransfer.length = 1;
-    printk(KERN_INFO "[CTRL][NET] Data set in the KernelOutputTransfer :: KernelOutputTransfer->RxData[0] = 0x%02x \n", KernelOutputTransfer.RxData[0]);
-    printk(KERN_INFO "[CTRL][NET] Data set in the KernelOutputTransfer :: KernelOutputTransfer->lenght = %d \n", KernelOutputTransfer.length);
-
-    mutex_unlock(&wait_mutex);
-    printk(KERN_INFO "[CTRL][NET] Data from FPGA Received :: Unlock the mutex\n");
 }
 
 /* SET KILL APPLICATION */ void set_killApplication(const DataTransfer* transferData)

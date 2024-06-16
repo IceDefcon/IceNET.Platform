@@ -91,6 +91,13 @@ static int StateMachineThread(void *data)
                 setStateMachine(IDLE);
                 break;
 
+            case FPGA_ERROR:
+                printk(KERN_INFO "[CTRL][STM] FPGA_ERROR mode\n");
+                /* Fake transfer from FPGA to make everything running :: Execution of feedbackTransferFromFPGA*/
+                queue_work(get_feedbackTransferFromFPGA_wq(), get_feedbackTransferFromFPGA_work());
+                setStateMachine(IDLE);
+                break;
+
             default:
                 printk(KERN_INFO "[CTRL][STM] Unknown mode\n");
                 return EINVAL;

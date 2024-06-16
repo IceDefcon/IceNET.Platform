@@ -26,7 +26,8 @@ typedef enum
     SPI,
     INTERRUPT,
     FEEDBACK,
-    KILL_APPLICATION
+    KILL_APPLICATION,
+    FPGA_ERROR
 } stateType;
 
 /* SET STATE */ void setStateMachine(stateType newState);
