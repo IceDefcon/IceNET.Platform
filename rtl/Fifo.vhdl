@@ -1,7 +1,7 @@
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 
-entity fifo is
+entity Fifo is
 generic 
 (
     WIDTH   : integer := 8;
@@ -18,9 +18,9 @@ port
     full    : out std_logic;
     empty   : out std_logic
 );
-end fifo;
+end Fifo;
 
-architecture rtl of fifo is
+architecture rtl of Fifo is
 
 type mem_type is array (0 to DEPTH-1) of std_logic_vector(WIDTH-1 downto 0);
 signal memory : mem_type;
