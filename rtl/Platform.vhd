@@ -37,6 +37,9 @@ port
 	-- Interrupts 
     FPGA_INT : out std_logic;  -- PIN_A3 :: BBB P9_12 :: BLACK
     KERNEL_INT : in std_logic; -- PIN_A4 :: BBB P9_14 :: WHITE
+    -- PWM
+    PWM_SIGNAL : out std_logic; -- PIN_A20 :: Red
+    PWM_INTERRUPT : out std_logic; -- PIN_B20 :: Red
     -- Debug LED's
     LED_1 : out std_logic; -- PIN_U7
     LED_2 : out std_logic; -- PIN_U8
@@ -119,7 +122,7 @@ signal bypass_delay : std_logic_vector(27 downto 0) := (others => '0');
 signal bypass_start : std_logic := '0';
 signal bypass_stop : std_logic := '0';
 -- Pwm
-type PWM is 
+type PwmType is 
 (
     IDLE,
     INIT,
@@ -127,12 +130,12 @@ type PWM is
     PRODUCE,
     DONE
 );
-signal pwm_state: PWM := IDLE;
+signal pwm_state: PwmType := IDLE;
 signal pwm_base_pulse : std_logic := '0';
 signal pwm_pulse : std_logic := '0';
-signal pwm_width : std_logic_vector(15 downto 0) := (others => '0');
+signal pwm_width : std_logic_vector(16 downto 0) := (others => '0');
 signal pwm_base_timer : std_logic_vector(19 downto 0) := (others => '0');
-signal pwm_timer : std_logic_vector(15 downto 0) := (others => '0');
+signal pwm_timer : std_logic_vector(16 downto 0) := (others => '0');
 
 ----------------------------------------------------------------------------------------------------------------
 -- COMPONENTS DECLARATION
@@ -212,7 +215,7 @@ port
 );
 end component;
 
-component fifo
+component Fifo
 generic 
 (
     WIDTH   : integer := 8;
@@ -228,6 +231,16 @@ port
     data_out : out std_logic_vector(7 downto 0);
     full     : out std_logic;
     empty    : out std_logic
+);
+end component;
+
+component Pwm
+port
+(    
+    CLOCK_50MHz : in std_logic;
+
+    PWM_SIGNAL : out std_logic;
+    PWM_INTERRUPT : out std_logic
 );
 end component;
 
@@ -376,7 +389,7 @@ end process;
 -- Byte[n-1] Checksum :: chk = b[0] ^ b[1] ^ b[2] ^ ... b[n-1]
 --
 ---------------------------------------
-primary_fifo_module: fifo
+primary_fifo_module: Fifo
 generic map 
 (
     WIDTH => primary_fifo_WIDTH,
@@ -394,6 +407,16 @@ port map
     data_out => primary_fifo_data_out,
     full     => primary_fifo_full,
     empty    => primary_fifo_empty
+);
+
+primary_pwm_module: Pwm
+port map 
+(
+    -- IN
+    CLOCK_50MHz => CLOCK_50MHz,
+    -- OUT
+    PWM_SIGNAL => PWM_SIGNAL,
+    PWM_INTERRUPT => PWM_INTERRUPT
 );
 
 offload_process:
@@ -493,54 +516,6 @@ LED_8 <= offload_ctrl(0) and offload_ctrl(1) and offload_ctrl(2) and offload_ctr
 -- Controler for the gyroscope
 -----------------------------------------------
 --FPGA_INT <= interrupt_signal;
-
-pwm_process:
-process(CLOCK_50MHz)
-begin
-    if rising_edge(CLOCK_50MHz) then
-        if pwm_base_timer = "11110100001000111111" then
-            pwm_base_timer <= (others => '0');
-            pwm_base_pulse <= '1';
-        else
-            pwm_base_timer <= pwm_base_timer + '1';
-            pwm_base_pulse <= '0';
-        end if;
-
-        case pwm_state is
-            when IDLE =>
-                if pwm_base_pulse = '1' then
-                    pwm_state <= INIT;
-                else
-                    pwm_state <= IDLE;
-                end if;
-
-            when INIT =>
-                pwm_state <= CONFIG;
-
-            when CONFIG =>
-                pwm_width <= "0110000110101000"; -- [25000] Half :: for testing
-                pwm_state <= PRODUCE;
-
-            when PRODUCE =>
-                if pwm_timer = pwm_width then
-                    pwm_pulse <= '0';
-                    pwm_timer <= (others => '0');
-                    pwm_state <= DONE;
-                else
-                    pwm_pulse <= '1';
-                    pwm_timer <= pwm_timer + '1';
-                    pwm_state <= PRODUCE;
-                end if;
-
-            when DONE =>
-                pwm_state <= IDLE;
-
-            when others =>
-                pwm_state <= IDLE;
-
-        end case;
-    end if;
-end process;
 
 LED_7 <= pwm_pulse;
 
