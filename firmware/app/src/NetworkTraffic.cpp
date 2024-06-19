@@ -33,9 +33,6 @@ NetworkTraffic::~NetworkTraffic()
     {
         m_threadNetworkTraffic.join();
     }
-
-    // delete m_Rx_NetworkTraffic;
-    // delete m_Tx_NetworkTraffic;
 }
 
 int NetworkTraffic::openDEV()
@@ -102,6 +99,12 @@ void NetworkTraffic::threadNetworkTraffic()
 
             case NetworkTraffic_KernelOutput:
                 std::cout << "[INFO] [NET] NetworkTraffic_KernelOutput mode" << std::endl;
+                std::cout << "[INFO] [NET] Received 1 Byte of data: ";
+                for (int i = 0; i < 1; ++i)
+                {
+                    std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>((*m_Tx_NetworkTraffic)[i]) << " ";
+                }
+                std::cout << std::endl;
                 m_readyKernelOutput = true;
                 setNetworkTrafficState(NetworkTraffic_IDLE);
                 break;

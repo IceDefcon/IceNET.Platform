@@ -217,8 +217,16 @@ int ServerTCP::tcpTX()
             std::this_thread::sleep_for(std::chrono::milliseconds(10));
         }
 
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));
+
         m_Tx_ServerTCP = m_instanceNetworkTraffic->getNetworkTrafficTx();
         m_instanceNetworkTraffic->resetFeedbackFlag();
+        std::cout << "[INFO] [TCP] Received 1 Byte of data: ";
+        for (int i = 0; i < 1; ++i)
+        {
+            std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>((*m_Tx_ServerTCP)[i]) << " ";
+        }
+        std::cout << std::endl;
 
         ret = write(m_clientSocket, m_Tx_ServerTCP->data(), m_Tx_ServerTCP->size());
     }
