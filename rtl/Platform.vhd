@@ -39,7 +39,6 @@ port
     KERNEL_INT : in std_logic; -- PIN_A4 :: BBB P9_14 :: WHITE
     -- PWM
     PWM_SIGNAL : out std_logic; -- PIN_A20 :: Red
-    PWM_INTERRUPT : out std_logic; -- PIN_B20 :: Red
     -- Debug LED's
     LED_1 : out std_logic; -- PIN_U7
     LED_2 : out std_logic; -- PIN_U8
@@ -63,8 +62,9 @@ architecture rtl of Platform is
 -- Signals
 ----------------------------------------------------------------------------------------------------------------
 
--- SM Reset
+-- Buttons
 signal reset_button : std_logic := '0';
+signal pwm_button : std_logic := '0';
 -- Interrupt Pulse Generator
 signal interrupt_divider : integer := 2;
 signal interrupt_period : std_logic_vector(25 downto 0) := "10111110101111000001111111"; -- [50*10^6 - 1]
@@ -238,9 +238,9 @@ component Pwm
 port
 (    
     CLOCK_50MHz : in std_logic;
+    PWM_VECTOR : in std_logic_vector(7 downto 0);
 
-    PWM_SIGNAL : out std_logic;
-    PWM_INTERRUPT : out std_logic
+    PWM_SIGNAL : out std_logic
 );
 end component;
 
@@ -259,7 +259,7 @@ Debounce_module: Debounce port map
 	button_out_1 => reset_button,
 	button_out_2 => open,
 	button_out_3 => open,
-	button_out_4 => open
+	button_out_4 => pwm_button
 );
 
 primarySpiProcessing_module: SpiProcessing port map 
@@ -414,9 +414,9 @@ port map
 (
     -- IN
     CLOCK_50MHz => CLOCK_50MHz,
+    PWM_VECTOR => "01100100",
     -- OUT
-    PWM_SIGNAL => PWM_SIGNAL,
-    PWM_INTERRUPT => PWM_INTERRUPT
+    PWM_SIGNAL => PWM_SIGNAL
 );
 
 offload_process:
