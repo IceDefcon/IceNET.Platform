@@ -20,9 +20,16 @@
 //                  //
 //////////////////////
 
-/* GET Kernel_IN TRANSFER */ DataTransfer* get_KernelInputTransfer(void);
-/* SET FEEDBACK TRANSFER */ void set_fpgaFeedbackTransfer(const DataTransfer* transferData);
-/* SET KILL APPLICATION */ void set_killApplication(const DataTransfer* transferData);
+typedef enum
+{
+    KERNEL_INPUT,
+    KERNEL_OUTPUT,
+    KERNEL_FOPS_AMOUNT
+}deviceTYPE;
+
+/* GET */ DataTransfer* get_KernelInputTransfer(void);
+/* SET */ void set_fpgaFeedbackTransfer(const DataTransfer* transferData);
+/* SET */ void set_killApplication(const DataTransfer* transferData);
 
 void charDeviceInit(void);
 void charDeviceDestroy(void);

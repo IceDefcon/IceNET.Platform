@@ -44,33 +44,29 @@ static DEFINE_MUTEX(KernelInput_mutex);
 static DEFINE_MUTEX(KernelOutput_mutex);
 static DEFINE_MUTEX(wait_mutex);
 
-static int dev_open_kernel_input(struct inode *inodep, struct file *filep);
-static ssize_t dev_read_kernel_input(struct file *, char *, size_t, loff_t *);
-static ssize_t dev_write_kernel_input(struct file *, const char *, size_t, loff_t *);
-static int dev_close_kernel_input(struct inode *inodep, struct file *filep);
-
-static int dev_open_kernel_output(struct inode *inodep, struct file *filep);
-static ssize_t dev_read_kernel_output(struct file *, char *, size_t, loff_t *);
-static ssize_t dev_write_kernel_output(struct file *, const char *, size_t, loff_t *);
-static int dev_close_kernel_output(struct inode *inodep, struct file *filep);
+/* INPUT */ static int dev_open_kernel_input(struct inode *inodep, struct file *filep);
+/* INPUT */ static ssize_t dev_read_kernel_input(struct file *, char *, size_t, loff_t *);
+/* INPUT */ static ssize_t dev_write_kernel_input(struct file *, const char *, size_t, loff_t *);
+/* INPUT */ static int dev_close_kernel_input(struct inode *inodep, struct file *filep);
+/* OUTPUT */ static int dev_open_kernel_output(struct inode *inodep, struct file *filep);
+/* OUTPUT */ static ssize_t dev_read_kernel_output(struct file *, char *, size_t, loff_t *);
+/* OUTPUT */ static ssize_t dev_write_kernel_output(struct file *, const char *, size_t, loff_t *);
+/* OUTPUT */ static int dev_close_kernel_output(struct inode *inodep, struct file *filep);
 
 static DataTransfer KernelInputTransfer; 
 static DataTransfer KernelOutputTransfer; 
 
-enum deviceTYPE
+static struct file_operations fops[KERNEL_FOPS_AMOUNT] =
 {
-    KERNEL_INPUT,
-    KERNEL_OUTPUT
-};
-
-static struct file_operations fops[2] =
-{
+   [KERNEL_INPUT] =
    {
        .open = dev_open_kernel_input,
        .read = dev_read_kernel_input,
        .write = dev_write_kernel_input,
        .release = dev_close_kernel_input,
    },
+
+   [KERNEL_OUTPUT] =
    {
        .open = dev_open_kernel_output,
        .read = dev_read_kernel_output,
