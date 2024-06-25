@@ -36,6 +36,7 @@ typedef struct
 } stateMachineProcess;
 
 /* SET */ void setStateMachine(stateType newState);
+/* GET */ stateType getStateMachine(void);
 
 void stateMachineInit(void);
 void stateMachineDestroy(void);

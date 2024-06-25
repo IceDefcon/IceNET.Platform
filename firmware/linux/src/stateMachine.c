@@ -34,14 +34,14 @@ static stateMachineProcess Process =
     .state_mutex = __MUTEX_INITIALIZER(Process.state_mutex),
 };
 
-/* SET STATE */ void setStateMachine(stateType newState)
+/* SET */ void setStateMachine(stateType newState)
 {
     mutex_lock(&Process.state_mutex);
     Process.currentState = newState;
     mutex_unlock(&Process.state_mutex);
 }
 
-/* GET STATE */ stateType getStateMachine(void)
+/* GET */ stateType getStateMachine(void)
 {
     stateType state;
     mutex_lock(&Process.state_mutex);
@@ -101,8 +101,8 @@ static int StateMachineThread(void *data)
                 break;
 
             default:
-                printk(KERN_INFO "[CTRL][STM] Unknown mode\n");
-                return EINVAL;
+                printk(KERN_ERR "[CTRL][STM] Unknown mode\n");
+                return -EINVAL; // Proper error code
         }
 
         /**
@@ -131,9 +131,9 @@ void stateMachineInit(void)
     }
     else
     {
-        printk(KERN_ERR "[INIT][STM] Created kthread for StateMachineThread");
+        printk(KERN_INFO "[INIT][STM] Created kthread for StateMachineThread\n");
+        wake_up_process(Process.thread_handle);
     }
-    wake_up_process(Process.thread_handle);
 }
 
 void stateMachineDestroy(void)
