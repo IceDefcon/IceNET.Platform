@@ -4,6 +4,7 @@
 #
 import tkinter as tk
 import socket
+import time
 
 def log_message(message):
     log_display.config(state=tk.NORMAL)
@@ -49,7 +50,14 @@ def send_data():
         log_message(f"[iceNET] Client TX :: {data.hex()}")  # Log the hexadecimal representation of the data
         
         # Receive feedback data from the server
-        feedback_data = tcp_socket.recv(4)
+        while True:
+            feedback_data = tcp_socket.recv(4)
+            if feedback_data == b'\xFF':
+                time.sleep(0.1)
+                continue  # Read again if data is 0xFF
+            else:
+                break  # Exit loop if data is not 0xFF
+
         #
         # Dont use decode function when non ASCII hex is send over TCP
         #

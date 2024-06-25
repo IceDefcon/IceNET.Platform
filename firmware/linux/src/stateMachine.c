@@ -27,24 +27,26 @@
 //                     //
 /////////////////////////
 
-static DEFINE_MUTEX(state_mutex);
-
-static struct task_struct *thread_handle;
-static stateType currentState = IDLE;
-
-/* SET STATE */ void setStateMachine(stateType newState)
+static stateMachineProcess Process =
 {
-    mutex_lock(&state_mutex);
-    currentState = newState;
-    mutex_unlock(&state_mutex);
+    .currentState = IDLE,
+    .thread_handle = NULL,
+    .state_mutex = __MUTEX_INITIALIZER(Process.state_mutex),
+};
+
+/* SET */ void setStateMachine(stateType newState)
+{
+    mutex_lock(&Process.state_mutex);
+    Process.currentState = newState;
+    mutex_unlock(&Process.state_mutex);
 }
 
-/* GET STATE */ stateType getStateMachine(void)
+/* GET */ stateType getStateMachine(void)
 {
     stateType state;
-    mutex_lock(&state_mutex);
-    state = currentState;
-    mutex_unlock(&state_mutex);
+    mutex_lock(&Process.state_mutex);
+    state = Process.currentState;
+    mutex_unlock(&Process.state_mutex);
     return state;
 }
 
@@ -99,8 +101,8 @@ static int StateMachineThread(void *data)
                 break;
 
             default:
-                printk(KERN_INFO "[CTRL][STM] Unknown mode\n");
-                return EINVAL;
+                printk(KERN_ERR "[CTRL][STM] Unknown mode\n");
+                return -EINVAL; // Proper error code
         }
 
         /**
@@ -114,32 +116,32 @@ static int StateMachineThread(void *data)
 
     }
 
-    return SM_OK;
+    return 0;
 }
 
 void stateMachineInit(void)
 {
     setStateMachine(IDLE);
 
-    thread_handle = kthread_create(StateMachineThread, NULL, "SM thread handle");
+    Process.thread_handle = kthread_create(StateMachineThread, NULL, "SM thread handle");
     
-    if (IS_ERR(thread_handle)) 
+    if (IS_ERR(Process.thread_handle)) 
     {
-        printk(KERN_ERR "[INIT][STM] Failed to create kernel thread. Error code: %ld\n", PTR_ERR(thread_handle));
+        printk(KERN_ERR "[INIT][STM] Failed to create kernel thread. Error code: %ld\n", PTR_ERR(Process.thread_handle));
     }
     else
     {
-        printk(KERN_ERR "[INIT][STM] Created kthread for StateMachineThread");
+        printk(KERN_INFO "[INIT][STM] Created kthread for StateMachineThread\n");
+        wake_up_process(Process.thread_handle);
     }
-    wake_up_process(thread_handle);
 }
 
 void stateMachineDestroy(void)
 {
-    if (thread_handle) 
+    if (Process.thread_handle) 
     {
-        kthread_stop(thread_handle);
-        thread_handle = NULL;
+        kthread_stop(Process.thread_handle);
+        Process.thread_handle = NULL;
     }
     printk(KERN_INFO "[DESTROY][STM] Destroy State Machine kthread\n");
 }

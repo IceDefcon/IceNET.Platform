@@ -39,7 +39,6 @@ port
     KERNEL_INT : in std_logic; -- PIN_A4 :: BBB P9_14 :: WHITE
     -- PWM
     PWM_SIGNAL : out std_logic; -- PIN_A20 :: Red
-    PWM_INTERRUPT : out std_logic; -- PIN_B20 :: Red
     -- Debug LED's
     LED_1 : out std_logic; -- PIN_U7
     LED_2 : out std_logic; -- PIN_U8
@@ -63,7 +62,7 @@ architecture rtl of Platform is
 -- Signals
 ----------------------------------------------------------------------------------------------------------------
 
--- SM Reset
+-- Buttons
 signal reset_button : std_logic := '0';
 -- Interrupt Pulse Generator
 signal interrupt_divider : integer := 2;
@@ -97,7 +96,6 @@ signal kernel_interrupt : std_logic := '0';
 signal kernel_interrupt_stop : std_logic := '0';
 -- Offload
 signal offload_interrupt : std_logic := '0';
-signal offload_reset : std_logic := '0';
 signal offload_ready : std_logic := '0';
 signal offload_id : std_logic_vector(6 downto 0) := (others => '0');
 signal offload_register : std_logic_vector(7 downto 0) := (others => '0');
@@ -114,28 +112,6 @@ type STATE is
     READ_DATA
 );
 signal offload_state: STATE := IDLE;
--- Bypass test
-signal bypass_timer : std_logic_vector(7 downto 0) := (others => '0');
-signal bypass_count : std_logic_vector(4 downto 0) := (others => '0');
-signal bypass_clock : std_logic := '0';
-signal bypass_delay : std_logic_vector(27 downto 0) := (others => '0');
-signal bypass_start : std_logic := '0';
-signal bypass_stop : std_logic := '0';
--- Pwm
-type PwmType is 
-(
-    IDLE,
-    INIT,
-    CONFIG,
-    PRODUCE,
-    DONE
-);
-signal pwm_state: PwmType := IDLE;
-signal pwm_base_pulse : std_logic := '0';
-signal pwm_pulse : std_logic := '0';
-signal pwm_width : std_logic_vector(16 downto 0) := (others => '0');
-signal pwm_base_timer : std_logic_vector(19 downto 0) := (others => '0');
-signal pwm_timer : std_logic_vector(16 downto 0) := (others => '0');
 
 ----------------------------------------------------------------------------------------------------------------
 -- COMPONENTS DECLARATION
@@ -234,13 +210,30 @@ port
 );
 end component;
 
-component Pwm
+component OffloadController
 port
 (    
     CLOCK_50MHz : in std_logic;
 
-    PWM_SIGNAL : out std_logic;
-    PWM_INTERRUPT : out std_logic
+    OFFLOAD_INTERRUPT : in std_logic;
+    FIFO_DATA : in std_logic_vector(7 downto 0);
+    FIFO_READ_ENABLE : out std_logic;
+
+    OFFLOAD_READY : out std_logic;
+    OFFLOAD_ID : out std_logic_vector(6 downto 0);
+    OFFLOAD_REGISTER : out std_logic_vector(7 downto 0);
+    OFFLOAD_CTRL : out std_logic_vector(7 downto 0);
+    OFFLOAD_DATA : out std_logic_vector(7 downto 0)
+);
+end component;
+
+component Pwm
+port
+(    
+    CLOCK_50MHz : in std_logic;
+    PWM_VECTOR : in std_logic_vector(7 downto 0);
+
+    PWM_SIGNAL : out std_logic
 );
 end component;
 
@@ -349,10 +342,9 @@ I2cStateMachine_module: I2cStateMachine port map
 	LED_8 => open
 );
 
--- Convert KERNEL_INT into 20n pulse
-kernel_int_process:
-process(CLOCK_50MHz)
-begin
+fifo_pre_process:
+process(CLOCK_50MHz, primary_parallel_MOSI, primary_ready_MISO, kernel_interrupt)
+begin -- Convert KERNEL_INT into 20n pulse
     if rising_edge(CLOCK_50MHz) then
         if KERNEL_INT = '1' and kernel_interrupt_stop = '0' then
             kernel_interrupt <= '1';
@@ -362,13 +354,7 @@ begin
         else
             kernel_interrupt <= '0';
         end if;
-    end if;
-end process;
 
-primary_fifo_write_spi_process:
-process(CLOCK_50MHz, primary_parallel_MOSI, primary_ready_MISO, kernel_interrupt)
-begin
-    if rising_edge(CLOCK_50MHz) then
         primary_fifo_data_in <= primary_parallel_MOSI;
         primary_fifo_wr_en <= primary_ready_MISO;
         offload_interrupt <= kernel_interrupt;
@@ -409,114 +395,33 @@ port map
     empty    => primary_fifo_empty
 );
 
+OffloadController_module: OffloadController
+port map
+(    
+    CLOCK_50MHz => CLOCK_50MHz,
+
+    OFFLOAD_INTERRUPT => offload_interrupt,
+    FIFO_DATA => primary_fifo_data_out,
+    FIFO_READ_ENABLE => primary_fifo_rd_en,
+
+    OFFLOAD_READY => offload_ready,
+    OFFLOAD_ID => offload_id,
+    OFFLOAD_REGISTER => offload_register,
+    OFFLOAD_CTRL => offload_ctrl,
+    OFFLOAD_DATA => offload_data
+);
+
 primary_pwm_module: Pwm
 port map 
 (
     -- IN
     CLOCK_50MHz => CLOCK_50MHz,
+    PWM_VECTOR => "01100100",
     -- OUT
-    PWM_SIGNAL => PWM_SIGNAL,
-    PWM_INTERRUPT => PWM_INTERRUPT
+    PWM_SIGNAL => PWM_SIGNAL
 );
 
-offload_process:
-process (CLOCK_50MHz)
-begin
-    if rising_edge(CLOCK_50MHz) then
-        case offload_state is
-
-            when IDLE =>
-                offload_ready <= '0';
-                if offload_interrupt = '1' then
-                    offload_state <= DELAY_INIT;
-                else
-                    offload_state <= IDLE;
-                end if;
-
-            when DELAY_INIT =>
-                primary_fifo_rd_en <= '1';
-                offload_state <= DELAY_CONFIG;
-
-            when DELAY_CONFIG =>
-                primary_fifo_rd_en <= '1';
-                offload_state <= READ_ID;
-
-            When READ_ID =>
-                primary_fifo_rd_en <= '1';
-                offload_id <= primary_fifo_data_out(0) & primary_fifo_data_out(1) 
-                & primary_fifo_data_out(2) & primary_fifo_data_out(3) 
-                & primary_fifo_data_out(4) & primary_fifo_data_out(5) 
-                & primary_fifo_data_out(6); -- Device ID :: Reverse concatenation
-                offload_state <= READ_REGISTER;
-
-            When READ_REGISTER =>
-                primary_fifo_rd_en <= '1';
-                offload_register <= primary_fifo_data_out; -- Register
-                offload_state <= READ_CONTROL;
-
-            when READ_CONTROL =>
-                primary_fifo_rd_en <= '0';
-                offload_ctrl <= primary_fifo_data_out; -- Control
-                offload_state <= READ_DATA;
-
-            when READ_DATA =>
-                offload_data <= primary_fifo_data_out; -- Data
-                offload_ready <= '1';
-                offload_state <= IDLE;
-
-            when others =>
-                offload_state <= IDLE;
-
-        end case;
-    end if;
-end process;
-
--- To keep all the offload_ctrl bits visible in debug :: Not optimized by the HDL compiler
+-- To keep signals not optimized by the HDL compiler
 LED_8 <= offload_ctrl(0) and offload_ctrl(1) and offload_ctrl(2) and offload_ctrl(3) and offload_ctrl(4) and offload_ctrl(5) and offload_ctrl(6) and offload_ctrl(7);
-
---bypass_process:
---process (CLOCK_50MHz)
---begin
---    if rising_edge(CLOCK_50MHz) then
---        if bypass_stop = '0' then
-
---            if bypass_delay = "1011111010111100000111111111" then
---                bypass_start <= '1';
---            else
---                bypass_delay <= bypass_delay + '1';
---            end if;
-
---            if bypass_start = '1' then
---                if bypass_timer = "110001"  then
---                    bypass_clock <= not bypass_clock;
---                    bypass_timer <= (others => '0');
---                    if bypass_count = "10000" then
---                        bypass_stop <= '1';
---                    else
---                        bypass_count <= bypass_count + '1';
---                    end if;
---                else
---                    bypass_timer <= bypass_timer + '1';
---                end if;
-
---                BYPASS_SCLK <= bypass_clock;
---            end if;
---        end if;
---    end if;
---end process;
-
---BYPASS_CS <= PRIMARY_CS;
---PRIMARY_MISO <= BYPASS_MISO;
---BYPASS_MOSI <= PRIMARY_MOSI;
---BYPASS_SCLK <= PRIMARY_SCLK;
-
------------------------------------------------
--- Interrupt is pulled down
--- In order to adjust PID
--- Controler for the gyroscope
------------------------------------------------
---FPGA_INT <= interrupt_signal;
-
-LED_7 <= pwm_pulse;
 
 end rtl;

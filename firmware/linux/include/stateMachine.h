@@ -18,8 +18,6 @@
 //               //
 ///////////////////
 
-#define SM_OK 0
-
 typedef enum 
 {
     IDLE = 0,
@@ -30,7 +28,15 @@ typedef enum
     FPGA_ERROR
 } stateType;
 
-/* SET STATE */ void setStateMachine(stateType newState);
+typedef struct
+{
+    stateType currentState;
+    struct task_struct *thread_handle;
+    struct mutex state_mutex;
+} stateMachineProcess;
+
+/* SET */ void setStateMachine(stateType newState);
+/* GET */ stateType getStateMachine(void);
 
 void stateMachineInit(void);
 void stateMachineDestroy(void);

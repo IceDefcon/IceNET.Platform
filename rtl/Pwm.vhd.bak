@@ -31,6 +31,7 @@ signal pwm_width : std_logic_vector(16 downto 0) := (others => '0');
 signal pwm_base_timer : std_logic_vector(19 downto 0) := (others => '0');
 signal pwm_timer : std_logic_vector(16 downto 0) := (others => '0');
 
+variable pwm_integer : integer;
 constant multiplier : integer := 200;
 constant offset : integer := 50000;
 
@@ -38,7 +39,6 @@ begin
 
 pwm_process:
 process(CLOCK_50MHz)
-    variable pwm_integer : integer := 0;
 begin
     if rising_edge(CLOCK_50MHz) then
         if pwm_base_timer = "11110100001000111111" then -- 20ms PWM Period
@@ -58,13 +58,12 @@ begin
                 end if;
 
             when INIT =>
-                -- Calculate PWM width
                 -- 50000*20ns + (200*[0:250])*20ns = 2ms
                 -- 1ms        + [0:1]ms            = [1:2]ms
                 if to_integer(unsigned(PWM_VECTOR)) <= 250 then
-                    pwm_integer := offset + multiplier * to_integer(unsigned(PWM_VECTOR));
+                    pwm_integer = offset + multiplier * to_integer(unsigned(PWM_VECTOR));
                 else
-                    pwm_integer := offset + multiplier * 250; -- Max value
+                    pwm_integer = offset + multiplier * 250; -- Max value :: 0xFA
                 end if;
                 pwm_state <= CONFIG;
 
