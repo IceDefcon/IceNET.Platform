@@ -20,16 +20,31 @@
 //                  //
 //////////////////////
 
+#define  INPUT_DEVICE  "KernelInput"
+#define  INPUT_CLASS   "KernelInputClass"
+#define  OUTPUT_DEVICE "KernelOutput"
+#define  OUTPUT_CLASS  "KernelOutputClass"
+
+typedef struct
+{
+    int majorNumber;
+    struct class *deviceClass;
+    struct device *nodeDevice;
+    int openCount;
+    struct mutex io_mutex;
+    DataTransfer io_transfer;
+}charDeviceData;
+
 typedef enum
 {
-    KERNEL_INPUT,
-    KERNEL_OUTPUT,
-    KERNEL_FOPS_AMOUNT
-}deviceTYPE;
+    DEVICE_INPUT,
+    DEVICE_OUTPUT,
+    DEVICE_AMOUNT
+}deviceType;
 
-/* GET */ DataTransfer* get_KernelInputTransfer(void);
-/* SET */ void set_fpgaFeedbackTransfer(const DataTransfer* transferData);
-/* SET */ void set_killApplication(const DataTransfer* transferData);
+/* GET */ DataTransfer* getKernelInputTransfer(void);
+/* SET */ void setFpgaFeedbackTransfer(const DataTransfer* transferData);
+/* SET */ void setkillApplicationTransfer(const DataTransfer* transferData);
 
 void charDeviceInit(void);
 void charDeviceDestroy(void);

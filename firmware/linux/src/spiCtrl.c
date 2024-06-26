@@ -197,7 +197,7 @@ void transferFromCharDevice(struct work_struct *work)
     int ret;
     int i;
 
-    DataTransfer* fpgaData = get_KernelInputTransfer();
+    DataTransfer* fpgaData = getKernelInputTransfer();
 
     memset(&transfer, 0, sizeof(transfer));
     transfer.tx_buf = (void *)fpgaData->RxData;
@@ -246,7 +246,7 @@ void transferFromCharDevice(struct work_struct *work)
 
 void feedbackTransferFromFPGA(struct work_struct *work)
 {
-    set_fpgaFeedbackTransfer(&fpgaFeedbackTransfer);
+    setFpgaFeedbackTransfer(&fpgaFeedbackTransfer);
 }
 
 void killApplication(struct work_struct *work)
@@ -266,8 +266,7 @@ void killApplication(struct work_struct *work)
     fpgaFeedbackTransfer.RxData[1] = 0xAD;
 
     fpgaFeedbackTransfer.length = 2;
-    printk(KERN_INFO "[CTRL][SPI] Debug :: 1");
-    set_killApplication(&fpgaFeedbackTransfer);
+    setkillApplicationTransfer(&fpgaFeedbackTransfer);
 }
 
 void spiDestroy(void)
