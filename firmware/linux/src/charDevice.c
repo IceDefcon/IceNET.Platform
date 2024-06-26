@@ -63,31 +63,31 @@ static charDeviceData Device[DEVICE_AMOUNT] =
 
 static DEFINE_MUTEX(wait_mutex);
 
-/* INPUT */ static int dev_open_kernel_input(struct inode *inodep, struct file *filep);
-/* INPUT */ static ssize_t dev_read_kernel_input(struct file *, char *, size_t, loff_t *);
-/* INPUT */ static ssize_t dev_write_kernel_input(struct file *, const char *, size_t, loff_t *);
-/* INPUT */ static int dev_close_kernel_input(struct inode *inodep, struct file *filep);
-/* OUTPUT */ static int dev_open_kernel_output(struct inode *inodep, struct file *filep);
-/* OUTPUT */ static ssize_t dev_read_kernel_output(struct file *, char *, size_t, loff_t *);
-/* OUTPUT */ static ssize_t dev_write_kernel_output(struct file *, const char *, size_t, loff_t *);
-/* OUTPUT */ static int dev_close_kernel_output(struct inode *inodep, struct file *filep);
+/* INPUT */ static int inputOpen(struct inode *inodep, struct file *filep);
+/* INPUT */ static ssize_t inputRead(struct file *, char *, size_t, loff_t *);
+/* INPUT */ static ssize_t inputWrite(struct file *, const char *, size_t, loff_t *);
+/* INPUT */ static int inputClose(struct inode *inodep, struct file *filep);
+/* OUTPUT */ static int outputOpen(struct inode *inodep, struct file *filep);
+/* OUTPUT */ static ssize_t outputRead(struct file *, char *, size_t, loff_t *);
+/* OUTPUT */ static ssize_t outputWrite(struct file *, const char *, size_t, loff_t *);
+/* OUTPUT */ static int outputClose(struct inode *inodep, struct file *filep);
 
 static struct file_operations fops[DEVICE_AMOUNT] =
 {
    [DEVICE_INPUT] =
    {
-       .open = dev_open_kernel_input,
-       .read = dev_read_kernel_input,
-       .write = dev_write_kernel_input,
-       .release = dev_close_kernel_input,
+       .open = inputOpen,
+       .read = inputRead,
+       .write = inputWrite,
+       .release = inputClose,
    },
 
    [DEVICE_OUTPUT] =
    {
-       .open = dev_open_kernel_output,
-       .read = dev_read_kernel_output,
-       .write = dev_write_kernel_output,
-       .release = dev_close_kernel_output,
+       .open = outputOpen,
+       .read = outputRead,
+       .write = outputWrite,
+       .release = outputClose,
    }
 };
 
@@ -294,7 +294,7 @@ void charDeviceDestroy(void)
  * KernelInput Interface
  * 
  */
-static int dev_open_kernel_input(struct inode *inodep, struct file *filep)
+static int inputOpen(struct inode *inodep, struct file *filep)
 {
     if(!mutex_trylock(&Device[DEVICE_INPUT].io_mutex))
     {
@@ -308,7 +308,7 @@ static int dev_open_kernel_input(struct inode *inodep, struct file *filep)
     return 0;
 }
 
-static ssize_t dev_read_kernel_input(struct file *filep, char *buffer, size_t len, loff_t *offset)
+static ssize_t inputRead(struct file *filep, char *buffer, size_t len, loff_t *offset)
 {
     int error_count = 0;
 
@@ -329,7 +329,7 @@ static ssize_t dev_read_kernel_input(struct file *filep, char *buffer, size_t le
     }
 }
 
-static ssize_t dev_write_kernel_input(struct file *filep, const char __user *buffer, size_t len, loff_t *offset)
+static ssize_t inputWrite(struct file *filep, const char __user *buffer, size_t len, loff_t *offset)
 {
     int error_count = 0;
     size_t i;
@@ -374,7 +374,7 @@ static ssize_t dev_write_kernel_input(struct file *filep, const char __user *buf
     return 0;
 }
 
-static int dev_close_kernel_input(struct inode *inodep, struct file *filep)
+static int inputClose(struct inode *inodep, struct file *filep)
 {
     printk(KERN_ALERT "[INIT][COM] Unlock [C] Device Mutex\n");
     mutex_unlock(&Device[DEVICE_INPUT].io_mutex);
@@ -387,7 +387,7 @@ static int dev_close_kernel_input(struct inode *inodep, struct file *filep)
  * KernelOutput Interface
  * 
  */
-static int dev_open_kernel_output(struct inode *inodep, struct file *filep)
+static int outputOpen(struct inode *inodep, struct file *filep)
 {
     if(!mutex_trylock(&Device[DEVICE_OUTPUT].io_mutex))
     {
@@ -401,7 +401,7 @@ static int dev_open_kernel_output(struct inode *inodep, struct file *filep)
     return 0;
 }
 
-static ssize_t dev_read_kernel_output(struct file *filep, char *buffer, size_t len, loff_t *offset)
+static ssize_t outputRead(struct file *filep, char *buffer, size_t len, loff_t *offset)
 {
     int error_count = 0;
 
@@ -426,7 +426,7 @@ static ssize_t dev_read_kernel_output(struct file *filep, char *buffer, size_t l
     }
 }
 
-static ssize_t dev_write_kernel_output(struct file *filep, const char __user *buffer, size_t len, loff_t *offset)
+static ssize_t outputWrite(struct file *filep, const char __user *buffer, size_t len, loff_t *offset)
 {
     int error_count = 0;
     size_t i;
@@ -453,7 +453,7 @@ static ssize_t dev_write_kernel_output(struct file *filep, const char __user *bu
     return 0;
 }
 
-static int dev_close_kernel_output(struct inode *inodep, struct file *filep)
+static int outputClose(struct inode *inodep, struct file *filep)
 {
     printk(KERN_ALERT "[INIT][NET] Unlock [C] Device Mutex\n");
     mutex_unlock(&Device[DEVICE_OUTPUT].io_mutex);
