@@ -1,8 +1,8 @@
 /*!
- * 
+ *
  * Author: Ice.Marek
  * IceNET Technology 2024
- * 
+ *
  */
 
 #include <linux/module.h>
@@ -53,6 +53,7 @@ static charDeviceData Device[DEVICE_AMOUNT] =
         .nodeDevice = NULL,
         .openCount = 0,
         .io_mutex = __MUTEX_INITIALIZER(Device[DEVICE_OUTPUT].io_mutex),
+        .io_transfer =
         {
             .RxData = NULL,
             .TxData = NULL,
@@ -63,58 +64,63 @@ static charDeviceData Device[DEVICE_AMOUNT] =
 
 static DEFINE_MUTEX(wait_mutex);
 
-/* INPUT */ static int dev_open_kernel_input(struct inode *inodep, struct file *filep);
-/* INPUT */ static ssize_t dev_read_kernel_input(struct file *, char *, size_t, loff_t *);
-/* INPUT */ static ssize_t dev_write_kernel_input(struct file *, const char *, size_t, loff_t *);
-/* INPUT */ static int dev_close_kernel_input(struct inode *inodep, struct file *filep);
-/* OUTPUT */ static int dev_open_kernel_output(struct inode *inodep, struct file *filep);
-/* OUTPUT */ static ssize_t dev_read_kernel_output(struct file *, char *, size_t, loff_t *);
-/* OUTPUT */ static ssize_t dev_write_kernel_output(struct file *, const char *, size_t, loff_t *);
-/* OUTPUT */ static int dev_close_kernel_output(struct inode *inodep, struct file *filep);
+/* INPUT */ static int inputOpen(struct inode *inodep, struct file *filep);
+/* INPUT */ static ssize_t inputRead(struct file *, char *, size_t, loff_t *);
+/* INPUT */ static ssize_t inputWrite(struct file *, const char *, size_t, loff_t *);
+/* INPUT */ static int inputClose(struct inode *inodep, struct file *filep);
+/* OUTPUT */ static int outputOpen(struct inode *inodep, struct file *filep);
+/* OUTPUT */ static ssize_t outputRead(struct file *, char *, size_t, loff_t *);
+/* OUTPUT */ static ssize_t outputWrite(struct file *, const char *, size_t, loff_t *);
+/* OUTPUT */ static int outputClose(struct inode *inodep, struct file *filep);
 
 static struct file_operations fops[DEVICE_AMOUNT] =
 {
    [DEVICE_INPUT] =
    {
-       .open = dev_open_kernel_input,
-       .read = dev_read_kernel_input,
-       .write = dev_write_kernel_input,
-       .release = dev_close_kernel_input,
+       .open = inputOpen,
+       .read = NULL,
+       .write = inputWrite,
+       .release = inputClose,
    },
 
    [DEVICE_OUTPUT] =
    {
-       .open = dev_open_kernel_output,
-       .read = dev_read_kernel_output,
-       .write = dev_write_kernel_output,
-       .release = dev_close_kernel_output,
+       .open = outputOpen,
+       .read = outputRead,
+       .write = outputWrite,
+       .release = outputClose,
    }
 };
 
-static void init_charDevice_Data(void)
+static void charDeviceDataInit(void)
 {
-    char *RxData, *TxData;
+    char *inputRxData, *inputTxData;
+    char *outputRxData, *outputTxData;
 
-    /* Allocate memory for RxData */
-    RxData = kmalloc(1 + 1, GFP_KERNEL); /* Register + Null terminate */
-    if (!RxData) 
+    /* Allocate memory */
+    inputRxData = (char *)kmalloc(4 * sizeof(char), GFP_KERNEL);
+    inputTxData = (char *)kmalloc(4 * sizeof(char), GFP_KERNEL);
+    outputRxData = (char *)kmalloc(4 * sizeof(char), GFP_KERNEL);
+    outputTxData = (char *)kmalloc(4 * sizeof(char), GFP_KERNEL);
+
+    /* Check if memory allocation was successful */
+    if (!inputRxData || !inputTxData || !outputRxData || !outputTxData)
     {
-        printk(KERN_ALERT "[CTRL][COM] RxData :: Memory allocation failed ");
+        printk(KERN_ERR "[INIT][COM] Memory allocation failed\n");
+        kfree(inputRxData);
+        kfree(inputTxData);
+        kfree(outputRxData);
+        kfree(outputTxData);
+        return;
     }
 
-    /* Allocate memory for TxData */
-    TxData = kmalloc(1 + 1, GFP_KERNEL); /* Register + null terminate */
-    if (!TxData) 
-    {
-        printk(KERN_ALERT "[CTRL][COM] TxData :: Memory allocation failed ");
-    }
+    Device[DEVICE_INPUT].io_transfer.RxData = inputRxData;
+    Device[DEVICE_INPUT].io_transfer.TxData = inputTxData;
+    Device[DEVICE_INPUT].io_transfer.length = 4;
 
-    TxData[0] = 0xBB; /* Input nodeDevice Preamble */
-    TxData[1] = '\0'; /* Null terminator */
-
-    Device[DEVICE_INPUT].io_transfer.RxData = RxData;
-    Device[DEVICE_INPUT].io_transfer.TxData = TxData; /* TODO :: TxData is Dummy 0xBB */
-    Device[DEVICE_INPUT].io_transfer.length = 2;
+    Device[DEVICE_OUTPUT].io_transfer.RxData = outputRxData;
+    Device[DEVICE_OUTPUT].io_transfer.TxData = outputTxData;
+    Device[DEVICE_OUTPUT].io_transfer.length = 4;
 
     /* Lock and wait until feedback transfer unlock it */
     mutex_lock(&wait_mutex);
@@ -126,6 +132,8 @@ void charDeviceInit(void)
 {
     printk(KERN_ALERT "[INIT][NET] Lock on Wait Mutex\n");
     mutex_init(&wait_mutex);
+
+    charDeviceDataInit();
 
     //
     // KernelInput
@@ -150,7 +158,7 @@ void charDeviceInit(void)
     {
         printk(KERN_ALERT "[INIT][COM] Register device class\n");
     }
-    
+
     Device[DEVICE_INPUT].nodeDevice = device_create(Device[DEVICE_INPUT].deviceClass, NULL, MKDEV(Device[DEVICE_INPUT].majorNumber, 0), NULL, INPUT_DEVICE);
     if (IS_ERR(Device[DEVICE_INPUT].nodeDevice))
     {
@@ -162,9 +170,6 @@ void charDeviceInit(void)
     {
         printk(KERN_ALERT "[INIT][COM] Create char Device\n");
     }
-
-    init_charDevice_Data();
-
     //
     // KernelOutput
     //
@@ -188,7 +193,7 @@ void charDeviceInit(void)
     {
         printk(KERN_ALERT "[INIT][NET] Register device class\n");
     }
-    
+
     Device[DEVICE_OUTPUT].nodeDevice = device_create(Device[DEVICE_OUTPUT].deviceClass, NULL, MKDEV(Device[DEVICE_OUTPUT].majorNumber, 0), NULL, OUTPUT_DEVICE);
     if (IS_ERR(Device[DEVICE_OUTPUT].nodeDevice))
     {
@@ -200,9 +205,6 @@ void charDeviceInit(void)
     {
         printk(KERN_ALERT "[INIT][NET] Create char Device\n");
     }
-
-    /* TODO :: Need data architecture for NET communication */
-    // init_charDevice_Data();
 }
 
 void charDeviceDestroy(void)
@@ -290,11 +292,11 @@ void charDeviceDestroy(void)
 }
 
 /**
- * 
+ *
  * KernelInput Interface
- * 
+ *
  */
-static int dev_open_kernel_input(struct inode *inodep, struct file *filep)
+static int inputOpen(struct inode *inodep, struct file *filep)
 {
     if(!mutex_trylock(&Device[DEVICE_INPUT].io_mutex))
     {
@@ -308,11 +310,11 @@ static int dev_open_kernel_input(struct inode *inodep, struct file *filep)
     return 0;
 }
 
-static ssize_t dev_read_kernel_input(struct file *filep, char *buffer, size_t len, loff_t *offset)
+#if 0 /* Not in use */
+static ssize_t inputRead(struct file *filep, char *buffer, size_t len, loff_t *offset)
 {
     int error_count = 0;
 
-    /* TODO :: TxData is Dummy 0xBB */
     error_count = copy_to_user(buffer, (const void *)Device[DEVICE_INPUT].io_transfer.TxData, Device[DEVICE_INPUT].io_transfer.length);
 
     if (error_count == 0)
@@ -321,22 +323,23 @@ static ssize_t dev_read_kernel_input(struct file *filep, char *buffer, size_t le
         /* Length == Preamble + Null Terminator */
         return Device[DEVICE_INPUT].io_transfer.length;
     }
-    else 
+    else
     {
         printk(KERN_INFO "[CTRL][COM] Failed to send %d characters to user-space\n", error_count);
         /* Failed -- return a bad address message (i.e. -14) */
         return -EFAULT;
     }
 }
+#endif
 
-static ssize_t dev_write_kernel_input(struct file *filep, const char __user *buffer, size_t len, loff_t *offset)
+static ssize_t inputWrite(struct file *filep, const char __user *buffer, size_t len, loff_t *offset)
 {
     int error_count = 0;
     size_t i;
 
     /* Copy RxData from user space to kernel space */
     error_count = copy_from_user((void *)Device[DEVICE_INPUT].io_transfer.RxData, buffer, len);
-    if (error_count != 0) 
+    if (error_count != 0)
     {
         /* Free allocated memory */
         kfree((void *)Device[DEVICE_INPUT].io_transfer.RxData);
@@ -347,7 +350,7 @@ static ssize_t dev_write_kernel_input(struct file *filep, const char __user *buf
     /* Kill signal from Application */
     if (Device[DEVICE_INPUT].io_transfer.RxData[0] == 0xDE && Device[DEVICE_INPUT].io_transfer.RxData[1] == 0xAD)
     {
-        printk(KERN_INFO "[CTRL][COM] Kill SIGNAL received from Application\n");
+        printk(KERN_INFO "[CHAR][IWR] Kill SIGNAL received from Application\n");
         setStateMachine(KILL_APPLICATION);
         return 0;
     }
@@ -355,7 +358,7 @@ static ssize_t dev_write_kernel_input(struct file *filep, const char __user *buf
     /* 20ms delayed :: Read Enable pulse to FIFO */
     if (Device[DEVICE_INPUT].io_transfer.RxData[0] == 0x12 && Device[DEVICE_INPUT].io_transfer.RxData[1] == 0x34)
     {
-        printk(KERN_INFO "[CTRL][COM] Generate FIFO rd_en from Kernel [long pulse] to be cut in FPGA\n");
+        printk(KERN_INFO "[CHAR][IWR] Generate FIFO rd_en from Kernel [long pulse] to be cut in FPGA\n");
         setStateMachine(INTERRUPT);
         return 0;
     }
@@ -366,7 +369,7 @@ static ssize_t dev_write_kernel_input(struct file *filep, const char __user *buf
     // Print each character of the RxData array
     for (i = 0; i < Device[DEVICE_INPUT].io_transfer.length; i++)
     {
-        printk(KERN_INFO "[CTRL][COM] Received Byte[%zu]: 0x%02x\n", i, (unsigned char)Device[DEVICE_INPUT].io_transfer.RxData[i]);
+        printk(KERN_INFO "[CHAR][IWR] Received Byte[%zu]: 0x%02x\n", i, (unsigned char)Device[DEVICE_INPUT].io_transfer.RxData[i]);
     }
 
     setStateMachine(SPI);
@@ -374,7 +377,7 @@ static ssize_t dev_write_kernel_input(struct file *filep, const char __user *buf
     return 0;
 }
 
-static int dev_close_kernel_input(struct inode *inodep, struct file *filep)
+static int inputClose(struct inode *inodep, struct file *filep)
 {
     printk(KERN_ALERT "[INIT][COM] Unlock [C] Device Mutex\n");
     mutex_unlock(&Device[DEVICE_INPUT].io_mutex);
@@ -383,11 +386,11 @@ static int dev_close_kernel_input(struct inode *inodep, struct file *filep)
 }
 
 /**
- * 
+ *
  * KernelOutput Interface
- * 
+ *
  */
-static int dev_open_kernel_output(struct inode *inodep, struct file *filep)
+static int outputOpen(struct inode *inodep, struct file *filep)
 {
     if(!mutex_trylock(&Device[DEVICE_OUTPUT].io_mutex))
     {
@@ -401,7 +404,7 @@ static int dev_open_kernel_output(struct inode *inodep, struct file *filep)
     return 0;
 }
 
-static ssize_t dev_read_kernel_output(struct file *filep, char *buffer, size_t len, loff_t *offset)
+static ssize_t outputRead(struct file *filep, char *buffer, size_t len, loff_t *offset)
 {
     int error_count = 0;
 
@@ -409,7 +412,6 @@ static ssize_t dev_read_kernel_output(struct file *filep, char *buffer, size_t l
     printk(KERN_INFO "[CTRL][SPI] Kernel is waiting for mutex Unlock\n");
     mutex_lock(&wait_mutex);
 
-    /* TODO :: TxData is Dummy 0xBB */
     error_count = copy_to_user(buffer, (const void *)Device[DEVICE_OUTPUT].io_transfer.RxData, Device[DEVICE_OUTPUT].io_transfer.length);
 
     if (error_count == 0)
@@ -418,7 +420,7 @@ static ssize_t dev_read_kernel_output(struct file *filep, char *buffer, size_t l
         /* Length == Preamble + Null Terminator */
         return Device[DEVICE_OUTPUT].io_transfer.length;
     }
-    else 
+    else
     {
         printk(KERN_INFO "[CTRL][COM] Failed to send %d characters to user-space\n", error_count);
         /* Failed -- return a bad address message (i.e. -14) */
@@ -426,14 +428,14 @@ static ssize_t dev_read_kernel_output(struct file *filep, char *buffer, size_t l
     }
 }
 
-static ssize_t dev_write_kernel_output(struct file *filep, const char __user *buffer, size_t len, loff_t *offset)
+static ssize_t outputWrite(struct file *filep, const char __user *buffer, size_t len, loff_t *offset)
 {
     int error_count = 0;
     size_t i;
 
     /* Copy RxData from user space to kernel space */
     error_count = copy_from_user((void *)Device[DEVICE_OUTPUT].io_transfer.RxData, buffer, len);
-    if (error_count != 0) 
+    if (error_count != 0)
     {
         /* Free allocated memory */
         kfree((void *)Device[DEVICE_OUTPUT].io_transfer.RxData);
@@ -453,7 +455,7 @@ static ssize_t dev_write_kernel_output(struct file *filep, const char __user *bu
     return 0;
 }
 
-static int dev_close_kernel_output(struct inode *inodep, struct file *filep)
+static int outputClose(struct inode *inodep, struct file *filep)
 {
     printk(KERN_ALERT "[INIT][NET] Unlock [C] Device Mutex\n");
     mutex_unlock(&Device[DEVICE_OUTPUT].io_mutex);
