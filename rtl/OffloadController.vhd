@@ -58,6 +58,11 @@ begin
 
             when DELAY_CONFIG =>
                 FIFO_READ_ENABLE <= '1';
+                offload_state <= READ_CONTROL;
+
+            when READ_CONTROL =>
+                FIFO_READ_ENABLE <= '1';
+                OFFLOAD_CTRL <= FIFO_DATA; -- Control
                 offload_state <= READ_ID;
 
             When READ_ID =>
@@ -69,13 +74,8 @@ begin
                 offload_state <= READ_REGISTER;
 
             When READ_REGISTER =>
-                FIFO_READ_ENABLE <= '1';
-                OFFLOAD_REGISTER <= FIFO_DATA; -- Register
-                offload_state <= READ_CONTROL;
-
-            when READ_CONTROL =>
                 FIFO_READ_ENABLE <= '0';
-                OFFLOAD_CTRL <= FIFO_DATA; -- Control
+                OFFLOAD_REGISTER <= FIFO_DATA; -- Register
                 offload_state <= READ_DATA;
 
             when READ_DATA =>

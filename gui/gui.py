@@ -41,9 +41,9 @@ def send_data():
         register = int(device_register.get(), 16)  # Convert hex register to integer
         
         if write_var.get():
-            data = bytes([address, register, 0x01]) + bytes.fromhex(register_data.get())
+            data = bytes([0x01, address, register]) + bytes.fromhex(register_data.get())
         else:
-            data = bytes([address, register, 0x00, 0x00])
+            data = bytes([0x00, address, register, 0x00])
 
         # Send data over TCP
         tcp_socket.sendall(data)
