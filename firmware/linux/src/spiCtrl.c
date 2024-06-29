@@ -51,13 +51,6 @@ static volatile uint8_t spi_rx_at_interruptFromFpga[1];
 static volatile uint8_t spi_tx_at_transferFromCharDevice[] = {0xAA};
 static volatile uint8_t spi_rx_at_transferFromCharDevice[8];
 
-static DataTransfer fpgaFeedbackTransfer; 
-
-/* GET TRANSFER RX DATA */ DataTransfer* get_fpgaFeedbackTransfer(void) 
-{
-    return &fpgaFeedbackTransfer;
-}
-
 int spiInit(void)
 {
 
@@ -152,6 +145,7 @@ int spiInit(void)
 
 void interruptFromFpga(struct work_struct *work)
 {
+    DataTransfer* kernelOutptData;
     struct spi_message msg;
     struct spi_transfer transfer;
     int ret;
@@ -179,15 +173,11 @@ void interruptFromFpga(struct work_struct *work)
         printk(KERN_INFO "[CTRL][SPI] Secondary FPGA Transfer :: Byte[%d]: [Feedback]Kernel.TX[0x%02x] [Data]Fpga.RX[0x%02x]\n", i, spi_tx_at_interruptFromFpga[i], spi_rx_at_interruptFromFpga[i]);
     }
 
-    /* Feedback processing */
-    fpgaFeedbackTransfer.RxData = (char *)kmalloc(1 * sizeof(char), GFP_KERNEL);
-    if (!fpgaFeedbackTransfer.RxData) 
-    {
-        printk(KERN_ERR "[CTRL][SPI] Memory allocation failed for RxData\n");
-    }
-    fpgaFeedbackTransfer.RxData[0] = (char)spi_rx_at_interruptFromFpga[0];
-    spi_rx_at_interruptFromFpga[0] = 0x00;
-    setStateMachine(FEEDBACK);
+    kernelOutptData = getKernelOutputTransfer();
+    kernelOutptData->TxData[0] = (char)spi_rx_at_interruptFromFpga[0];
+    kernelOutptData->length = 1;
+    // setStateMachine(FEEDBACK);
+    unlockWaitMutex();
 }
 
 void transferFromCharDevice(struct work_struct *work)
@@ -197,12 +187,12 @@ void transferFromCharDevice(struct work_struct *work)
     int ret;
     int i;
 
-    DataTransfer* fpgaData = getKernelInputTransfer();
+    DataTransfer* kernelOutptData = getKernelInputTransfer();
 
     memset(&transfer, 0, sizeof(transfer));
-    transfer.tx_buf = (void *)fpgaData->RxData;
+    transfer.tx_buf = (void *)kernelOutptData->RxData;
     transfer.rx_buf = (void *)spi_rx_at_transferFromCharDevice;
-    transfer.len = fpgaData->length;
+    transfer.len = kernelOutptData->length;
 
     spi_message_init(&msg);
     spi_message_add_tail(&transfer, &msg);
@@ -218,17 +208,18 @@ void transferFromCharDevice(struct work_struct *work)
         printk(KERN_INFO "[CTRL][SPI] Primary FPGA Transfer :: Signaled by transferFromCharDevice over SPI.0");
     }
 
-    for (i = 0; i < fpgaData->length; ++i) 
+    for (i = 0; i < kernelOutptData->length; ++i)
     {
-        printk(KERN_INFO "[CTRL][SPI] Primary FPGA Transfer :: Byte[%d]: [Data]Kernel.TX[0x%02x] [Feedback]Fpga.RX[0x%02x]\n", i, fpgaData->RxData[i], spi_rx_at_transferFromCharDevice[i]);
+        printk(KERN_INFO "[CTRL][SPI] Primary FPGA Transfer :: Byte[%d]: [Data]Kernel.TX[0x%02x] [Feedback]Fpga.RX[0x%02x]\n", i, kernelOutptData->RxData[i], spi_rx_at_transferFromCharDevice[i]);
     }
 
     if(0x18 != spi_rx_at_transferFromCharDevice[0])
     {
         printk(KERN_ERR "[CTRL][SPI] No FPGA Preamble detected :: FPGA is Not Programed or Connected\n");
-        setStateMachine(FPGA_ERROR);
+        unlockWaitMutex();
     }
-    /*!
+
+    /**
      * 
      * Here we should process 
      * additional feedback 
@@ -238,35 +229,21 @@ void transferFromCharDevice(struct work_struct *work)
      * 
      */
 
-    for (i = 0; i < fpgaData->length; ++i) 
+    for (i = 0; i < kernelOutptData->length; ++i)
     {
         spi_rx_at_transferFromCharDevice[i] = 0x00;
     }
 }
 
-void feedbackTransferFromFPGA(struct work_struct *work)
-{
-    setFpgaFeedbackTransfer(&fpgaFeedbackTransfer);
-}
-
 void killApplication(struct work_struct *work)
 {
-    /* Feedback processing */
-    fpgaFeedbackTransfer.RxData = (char *)kmalloc(2 * sizeof(char), GFP_KERNEL);
-    if (!fpgaFeedbackTransfer.RxData) 
-    {
-        printk(KERN_ERR "[CTRL][SPI] Memory allocation failed for RxData\n");
-    }
-    else
-    {
-        printk(KERN_INFO "[CTRL][SPI] Memory allocated successfully");
-    }
+    DataTransfer* kernelOutptData;
+    kernelOutptData = getKernelOutputTransfer();
+    kernelOutptData->TxData[0] = 0xDE;
+    kernelOutptData->TxData[1] = 0xAD;
+    kernelOutptData->length = 2;
 
-    fpgaFeedbackTransfer.RxData[0] = 0xDE;
-    fpgaFeedbackTransfer.RxData[1] = 0xAD;
-
-    fpgaFeedbackTransfer.length = 2;
-    setkillApplicationTransfer(&fpgaFeedbackTransfer);
+    unlockWaitMutex();
 }
 
 void spiDestroy(void)

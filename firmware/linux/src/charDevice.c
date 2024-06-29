@@ -78,7 +78,7 @@ static struct file_operations fops[DEVICE_AMOUNT] =
    [DEVICE_INPUT] =
    {
        .open = inputOpen,
-       .read = NULL,
+       .read = inputRead,
        .write = inputWrite,
        .release = inputClose,
    },
@@ -98,10 +98,10 @@ static void charDeviceDataInit(void)
     char *outputRxData, *outputTxData;
 
     /* Allocate memory */
-    inputRxData = (char *)kmalloc(4 * sizeof(char), GFP_KERNEL);
-    inputTxData = (char *)kmalloc(4 * sizeof(char), GFP_KERNEL);
-    outputRxData = (char *)kmalloc(4 * sizeof(char), GFP_KERNEL);
-    outputTxData = (char *)kmalloc(4 * sizeof(char), GFP_KERNEL);
+    inputRxData = (char *)kmalloc(IO_BUFFER_SIZE * sizeof(char), GFP_KERNEL);
+    inputTxData = (char *)kmalloc(IO_BUFFER_SIZE * sizeof(char), GFP_KERNEL);
+    outputRxData = (char *)kmalloc(IO_BUFFER_SIZE * sizeof(char), GFP_KERNEL);
+    outputTxData = (char *)kmalloc(IO_BUFFER_SIZE * sizeof(char), GFP_KERNEL);
 
     /* Check if memory allocation was successful */
     if (!inputRxData || !inputTxData || !outputRxData || !outputTxData)
@@ -116,11 +116,11 @@ static void charDeviceDataInit(void)
 
     Device[DEVICE_INPUT].io_transfer.RxData = inputRxData;
     Device[DEVICE_INPUT].io_transfer.TxData = inputTxData;
-    Device[DEVICE_INPUT].io_transfer.length = 4;
+    Device[DEVICE_INPUT].io_transfer.length = IO_BUFFER_SIZE;
 
     Device[DEVICE_OUTPUT].io_transfer.RxData = outputRxData;
     Device[DEVICE_OUTPUT].io_transfer.TxData = outputTxData;
-    Device[DEVICE_OUTPUT].io_transfer.length = 4;
+    Device[DEVICE_OUTPUT].io_transfer.length = IO_BUFFER_SIZE;
 
     /* Lock and wait until feedback transfer unlock it */
     mutex_lock(&wait_mutex);
@@ -310,7 +310,6 @@ static int inputOpen(struct inode *inodep, struct file *filep)
     return 0;
 }
 
-#if 0 /* Not in use */
 static ssize_t inputRead(struct file *filep, char *buffer, size_t len, loff_t *offset)
 {
     int error_count = 0;
@@ -330,7 +329,6 @@ static ssize_t inputRead(struct file *filep, char *buffer, size_t len, loff_t *o
         return -EFAULT;
     }
 }
-#endif
 
 static ssize_t inputWrite(struct file *filep, const char __user *buffer, size_t len, loff_t *offset)
 {
@@ -412,7 +410,7 @@ static ssize_t outputRead(struct file *filep, char *buffer, size_t len, loff_t *
     printk(KERN_INFO "[CTRL][SPI] Kernel is waiting for mutex Unlock\n");
     mutex_lock(&wait_mutex);
 
-    error_count = copy_to_user(buffer, (const void *)Device[DEVICE_OUTPUT].io_transfer.RxData, Device[DEVICE_OUTPUT].io_transfer.length);
+    error_count = copy_to_user(buffer, (const void *)Device[DEVICE_OUTPUT].io_transfer.TxData, Device[DEVICE_OUTPUT].io_transfer.length);
 
     if (error_count == 0)
     {
@@ -468,35 +466,12 @@ static int outputClose(struct inode *inodep, struct file *filep)
     return &Device[DEVICE_INPUT].io_transfer;
 }
 
-/* SET */ void setFpgaFeedbackTransfer(const DataTransfer* transferData)
+/* GET */ DataTransfer* getKernelOutputTransfer(void)
 {
-    if (transferData != NULL)
-    {
-        Device[DEVICE_OUTPUT].io_transfer = *transferData;
-        Device[DEVICE_OUTPUT].io_transfer.length = 1;
-        printk(KERN_INFO "[CTRL][NET] Data set in the io_transfer[DEVICE_OUTPUT] :: RxData[0] = 0x%02x lenght = %d\n", Device[DEVICE_OUTPUT].io_transfer.RxData[0], Device[DEVICE_OUTPUT].io_transfer.length);
-        mutex_unlock(&wait_mutex);
-        printk(KERN_INFO "[CTRL][NET] Data Received from FPGA :: Unlock the mutex\n");
-    }
-    else
-    {
-        Device[DEVICE_OUTPUT].io_transfer.length = 1;
-        Device[DEVICE_OUTPUT].io_transfer.RxData[0] = 0xFF;
-        mutex_unlock(&wait_mutex);
-        printk(KERN_INFO "[CTRL][NET] No FPGA Data Received :: Unlock the mutex\n");
-    }
+    return &Device[DEVICE_OUTPUT].io_transfer;
 }
 
-/* SET */ void setkillApplicationTransfer(const DataTransfer* transferData)
+void unlockWaitMutex(void)
 {
-    if (transferData != NULL)
-    {
-        Device[DEVICE_OUTPUT].io_transfer = *transferData;
-    }
-    else
-    {
-        printk(KERN_INFO "[CTRL][NET] Kill SIGNAL Received :: Unlock the mutex\n");
-        // Handle the error, e.g., log it or assert
-    }
     mutex_unlock(&wait_mutex);
 }

@@ -25,6 +25,8 @@
 #define  OUTPUT_DEVICE "KernelOutput"
 #define  OUTPUT_CLASS  "KernelOutputClass"
 
+#define IO_BUFFER_SIZE 8
+
 typedef struct
 {
     int majorNumber;
@@ -43,9 +45,9 @@ typedef enum
 }deviceType;
 
 /* GET */ DataTransfer* getKernelInputTransfer(void);
-/* SET */ void setFpgaFeedbackTransfer(const DataTransfer* transferData);
-/* SET */ void setkillApplicationTransfer(const DataTransfer* transferData);
+/* GET */ DataTransfer* getKernelOutputTransfer(void);
 
+void unlockWaitMutex(void);
 void charDeviceInit(void);
 void charDeviceDestroy(void);
 

@@ -78,25 +78,11 @@ static int StateMachineThread(void *data)
                 setStateMachine(IDLE);
                 break;
 
-            case FEEDBACK:
-                printk(KERN_INFO "[CTRL][STM] FEEDBACK mode\n");
-                /* QUEUE :: Execution of feedbackTransferFromFPGA */
-                queue_work(get_feedbackTransferFromFPGA_wq(), get_feedbackTransferFromFPGA_work());
-                setStateMachine(IDLE);
-                break;
-
             case KILL_APPLICATION:
                 printk(KERN_INFO "[CTRL][STM] KILL_APPLICATION mode\n");
                 /* QUEUE :: Execution of killApplication */
                 queue_work(get_killApplication_wq(), get_killApplication_work());
                 printk(KERN_INFO "[CTRL][STM] Back to IDLE mode\n");
-                setStateMachine(IDLE);
-                break;
-
-            case FPGA_ERROR:
-                printk(KERN_INFO "[CTRL][STM] FPGA_ERROR mode\n");
-                /* Fake transfer from FPGA to make everything running :: Execution of feedbackTransferFromFPGA*/
-                queue_work(get_feedbackTransferFromFPGA_wq(), get_feedbackTransferFromFPGA_work());
                 setStateMachine(IDLE);
                 break;
 
