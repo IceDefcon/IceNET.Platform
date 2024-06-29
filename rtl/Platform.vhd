@@ -101,17 +101,6 @@ signal offload_id : std_logic_vector(6 downto 0) := (others => '0');
 signal offload_register : std_logic_vector(7 downto 0) := (others => '0');
 signal offload_ctrl : std_logic_vector(7 downto 0) := (others => '0');
 signal offload_data : std_logic_vector(7 downto 0) := (others => '0');
-type STATE is 
-(
-    IDLE,
-    DELAY_INIT,
-    DELAY_CONFIG,
-    READ_ID,
-    READ_REGISTER,
-    READ_CONTROL,
-    READ_DATA
-);
-signal offload_state: STATE := IDLE;
 
 ----------------------------------------------------------------------------------------------------------------
 -- COMPONENTS DECLARATION
@@ -265,8 +254,8 @@ primarySpiProcessing_module: SpiProcessing port map
     -- out
 	SPI_INT => primary_ready_MISO, -- Interrupt when data byte is ready [FIFO Read Enable]
     -- From Kernel to FIFO
-	SERIAL_MOSI => PRIMARY_MOSI, -- in :: Kernel Data input to Serialize
-	PARALLEL_MOSI => primary_parallel_MOSI, -- out :: Serialized Kernel Data to FIFO
+	SERIAL_MOSI => PRIMARY_MOSI, -- in :: Data from Kernel to Serialize
+	PARALLEL_MOSI => primary_parallel_MOSI, -- out :: Serialized Data from Kernel to FIFO
     -- Back to Kernel
 	PARALLEL_MISO => "00011000", -- in :: 0x18 Hard coded Feedback to Serialize
 	SERIAL_MISO => PRIMARY_MISO -- out :: 0x18 Serialized Hard coded Feedback to Kernel
@@ -284,8 +273,8 @@ secondarySpiProcessing_module: SpiProcessing port map
     SERIAL_MOSI => SECONDARY_MOSI, -- in Serialized Feedback from Kernel :: Set in Kernel to 0x81
     PARALLEL_MOSI => secondary_parallel_MOSI, -- out Parallel Feedback from Kernel :: Set in Kernel to 0x81
 
-    PARALLEL_MISO => secondary_parallel_MISO, -- in [Parallel Data] from i2c state machine
-    SERIAL_MISO => SECONDARY_MISO -- out [Parallel Data] from i2c state machine ---> Back to Kernel 
+    PARALLEL_MISO => secondary_parallel_MISO, -- in Parallel Data from i2c state machine
+    SERIAL_MISO => SECONDARY_MISO -- out Serialized Data from i2c state machine to Kernel
 );
 
 ------------------------------------------------------
@@ -307,39 +296,6 @@ Interrupt_module: InterruptPulse port map
 	interrupt_period => std_logic_vector(unsigned(interrupt_period) srl interrupt_divider),
 	interrupt_length => interrupt_length,
 	interrupt_signal => interrupt_signal
-);
-
-I2cStateMachine_module: I2cStateMachine port map 
-(
-	CLOCK => CLOCK_50MHz,
-	RESET => reset_button,
-
-    -- in
-    SPI_INT => offload_ready, -- i2c transfer ready to begin
-    -- in
-    KERNEL_INT => '0',
-    -- out
-    FPGA_INT => FPGA_INT, -- SM is ready for SPI.1 transfer :: 1000*20ns interrupt
-    FIFO_INT => open, -- TODO :: Store output data in secondary FIFO
-
-	I2C_SCK => I2C_SCK,
-	I2C_SDA => I2C_SDA,
-    -- in
-	OFFLOAD_ID => offload_id, -- Device ID :: BMI160@0x69=1001011 :: ADXL345@0x53=1100101 
-	OFFLOAD_REGISTER => offload_register, -- Device Register
-	OFFLOAD_COTROL => offload_ctrl(0), -- For now :: Read/Write
-    OFFLOAD_DATA => offload_data, -- Write Data
-    -- out
-	DATA => secondary_parallel_MISO,
-
-	LED_1 => LED_1,
-	LED_2 => LED_2,
-	LED_3 => LED_3,
-	LED_4 => LED_4,
-	LED_5 => LED_5,
-	LED_6 => open,
-	LED_7 => open,
-	LED_8 => open
 );
 
 fifo_pre_process:
@@ -376,12 +332,12 @@ end process;
 --
 ---------------------------------------
 primary_fifo_module: Fifo
-generic map 
+generic map
 (
     WIDTH => primary_fifo_WIDTH,
     DEPTH => primary_fifo_DEPTH
 )
-port map 
+port map
 (
     -- IN
     clk      => CLOCK_50MHz,
@@ -397,7 +353,7 @@ port map
 
 OffloadController_module: OffloadController
 port map
-(    
+(
     CLOCK_50MHz => CLOCK_50MHz,
 
     OFFLOAD_INTERRUPT => offload_interrupt,
@@ -409,6 +365,39 @@ port map
     OFFLOAD_REGISTER => offload_register,
     OFFLOAD_CTRL => offload_ctrl,
     OFFLOAD_DATA => offload_data
+);
+
+I2cStateMachine_module: I2cStateMachine port map
+(
+	CLOCK => CLOCK_50MHz,
+	RESET => reset_button,
+
+    -- in
+    SPI_INT => offload_ready, -- i2c transfer ready to begin
+    -- in
+    KERNEL_INT => '0',
+    -- out
+    FPGA_INT => FPGA_INT, -- SM is ready for SPI.1 transfer :: 1000*20ns interrupt
+    FIFO_INT => open, -- TODO :: Store output data in secondary FIFO
+
+	I2C_SCK => I2C_SCK,
+	I2C_SDA => I2C_SDA,
+    -- in
+	OFFLOAD_ID => offload_id, -- Device ID :: BMI160@0x69=1001011 :: ADXL345@0x53=1100101
+	OFFLOAD_REGISTER => offload_register, -- Device Register
+	OFFLOAD_COTROL => offload_ctrl(0), -- For now :: Read/Write
+    OFFLOAD_DATA => offload_data, -- Write Data
+    -- out
+	DATA => secondary_parallel_MISO,
+
+	LED_1 => LED_1,
+	LED_2 => LED_2,
+	LED_3 => LED_3,
+	LED_4 => LED_4,
+	LED_5 => LED_5,
+	LED_6 => open,
+	LED_7 => open,
+	LED_8 => open
 );
 
 primary_pwm_module: Pwm
