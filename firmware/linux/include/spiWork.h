@@ -20,13 +20,11 @@
 //                  //
 //////////////////////
 
-/* GET WORK QUEUE */ struct workqueue_struct* get_transferFromCharDevice_wq(void);
-/* GET WORK QUEUE */ struct workqueue_struct* get_interruptFromFpga_wq(void);
-/* GET WORK QUEUE */ struct workqueue_struct* get_feedbackTransferFromFPGA_wq(void);
+/* GET WORK QUEUE */ struct workqueue_struct* get_transferFpgaInput_wq(void);
+/* GET WORK QUEUE */ struct workqueue_struct* get_transferFpgaOutput_wq(void);
 /* GET WORK QUEUE */ struct workqueue_struct* get_killApplication_wq(void);
-/* GET WORK */ struct work_struct* get_transferFromCharDevice_work(void);
-/* GET WORK */ struct work_struct* get_interruptFromFpga_work(void);
-/* GET WORK */ struct work_struct* get_feedbackTransferFromFPGA_work(void);
+/* GET WORK */ struct work_struct* get_transferFpgaInput_work(void);
+/* GET WORK */ struct work_struct* get_transferFpgaOutput_work(void);
 /* GET WORK */ struct work_struct* get_killApplication_work(void);
 
 /* INIT */ void spiWorkInit(void);

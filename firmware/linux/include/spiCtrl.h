@@ -22,9 +22,9 @@
 //////////////////////
 
 /* SPI */ int spiInit(void);
-/* FPGA */ void interruptFromFpga(struct work_struct *work);
-/* KERNEL */ void transferFromCharDevice(struct work_struct *work);
-/* KERNEL */ void killApplication(struct work_struct *work);
+/* FPGA */ void transferFpgaInput(struct work_struct *work);
+/* FPGA */ void transferFpgaOutput(struct work_struct *work);
+/* KILL */ void killApplication(struct work_struct *work);
 /* SPI */ void spiDestroy(void);
 
 #endif // SPI_FPGA_H

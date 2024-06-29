@@ -42,14 +42,22 @@
  * 
  */
 
+typedef struct
+{
+    struct spi_device *primarySpi;
+    struct spi_device *secondarySpi;
+
+}spiCtrl;
+
+
 
 static struct spi_device *spi_dev_primary;
 static struct spi_device *spi_dev_secondary;
 
-static volatile uint8_t spi_tx_at_interruptFromFpga[] = {0x81};
-static volatile uint8_t spi_rx_at_interruptFromFpga[1];
-static volatile uint8_t spi_tx_at_transferFromCharDevice[] = {0xAA};
-static volatile uint8_t spi_rx_at_transferFromCharDevice[8];
+static volatile uint8_t spi_tx_at_transferFpgaInput[] = {0xAA};
+static volatile uint8_t spi_rx_at_transferFpgaInput[8];
+static volatile uint8_t spi_tx_at_transferFpgaOutput[] = {0x81};
+static volatile uint8_t spi_rx_at_transferFpgaOutput[1];
 
 int spiInit(void)
 {
@@ -143,7 +151,7 @@ int spiInit(void)
     return 0;
 }
 
-void interruptFromFpga(struct work_struct *work)
+void transferFpgaOutput(struct work_struct *work)
 {
     DataTransfer* kernelOutptData;
     struct spi_message msg;
@@ -152,9 +160,9 @@ void interruptFromFpga(struct work_struct *work)
     int i;
 
     memset(&transfer, 0, sizeof(transfer));
-    transfer.tx_buf = (void *)spi_tx_at_interruptFromFpga;
-    transfer.rx_buf = (void *)spi_rx_at_interruptFromFpga;
-    transfer.len = sizeof(spi_tx_at_interruptFromFpga);
+    transfer.tx_buf = (void *)spi_tx_at_transferFpgaOutput;
+    transfer.rx_buf = (void *)spi_rx_at_transferFpgaOutput;
+    transfer.len = sizeof(spi_tx_at_transferFpgaOutput);
 
     spi_message_init(&msg);
     spi_message_add_tail(&transfer, &msg);
@@ -166,21 +174,21 @@ void interruptFromFpga(struct work_struct *work)
     }
     else
     {
-        printk(KERN_INFO "[CTRL][SPI] Secondary FPGA Transfer :: Signaled by interruptFromFpga over SPI.1");
+        printk(KERN_INFO "[CTRL][SPI] Secondary FPGA Transfer :: Signaled by transferFpgaOutput over SPI.1");
     }
 
-    for (i = 0; i < sizeof(spi_rx_at_interruptFromFpga); ++i) {
-        printk(KERN_INFO "[CTRL][SPI] Secondary FPGA Transfer :: Byte[%d]: [Feedback]Kernel.TX[0x%02x] [Data]Fpga.RX[0x%02x]\n", i, spi_tx_at_interruptFromFpga[i], spi_rx_at_interruptFromFpga[i]);
+    for (i = 0; i < sizeof(spi_rx_at_transferFpgaOutput); ++i) {
+        printk(KERN_INFO "[CTRL][SPI] Secondary FPGA Transfer :: Byte[%d]: [Feedback]Kernel.TX[0x%02x] [Data]Fpga.RX[0x%02x]\n", i, spi_tx_at_transferFpgaOutput[i], spi_rx_at_transferFpgaOutput[i]);
     }
 
     kernelOutptData = getKernelOutputTransfer();
-    kernelOutptData->TxData[0] = (char)spi_rx_at_interruptFromFpga[0];
+    kernelOutptData->TxData[0] = (char)spi_rx_at_transferFpgaOutput[0];
     kernelOutptData->length = 1;
     // setStateMachine(FEEDBACK);
     unlockWaitMutex();
 }
 
-void transferFromCharDevice(struct work_struct *work)
+void transferFpgaInput(struct work_struct *work)
 {
     struct spi_message msg;
     struct spi_transfer transfer;
@@ -191,7 +199,7 @@ void transferFromCharDevice(struct work_struct *work)
 
     memset(&transfer, 0, sizeof(transfer));
     transfer.tx_buf = (void *)kernelOutptData->RxData;
-    transfer.rx_buf = (void *)spi_rx_at_transferFromCharDevice;
+    transfer.rx_buf = (void *)spi_rx_at_transferFpgaInput;
     transfer.len = kernelOutptData->length;
 
     spi_message_init(&msg);
@@ -205,15 +213,15 @@ void transferFromCharDevice(struct work_struct *work)
     }
     else
     {
-        printk(KERN_INFO "[CTRL][SPI] Primary FPGA Transfer :: Signaled by transferFromCharDevice over SPI.0");
+        printk(KERN_INFO "[CTRL][SPI] Primary FPGA Transfer :: Signaled by transferFpgaInput over SPI.0");
     }
 
     for (i = 0; i < kernelOutptData->length; ++i)
     {
-        printk(KERN_INFO "[CTRL][SPI] Primary FPGA Transfer :: Byte[%d]: [Data]Kernel.TX[0x%02x] [Feedback]Fpga.RX[0x%02x]\n", i, kernelOutptData->RxData[i], spi_rx_at_transferFromCharDevice[i]);
+        printk(KERN_INFO "[CTRL][SPI] Primary FPGA Transfer :: Byte[%d]: [Data]Kernel.TX[0x%02x] [Feedback]Fpga.RX[0x%02x]\n", i, kernelOutptData->RxData[i], spi_rx_at_transferFpgaInput[i]);
     }
 
-    if(0x18 != spi_rx_at_transferFromCharDevice[0])
+    if(0x18 != spi_rx_at_transferFpgaInput[0])
     {
         printk(KERN_ERR "[CTRL][SPI] No FPGA Preamble detected :: FPGA is Not Programed or Connected\n");
         unlockWaitMutex();
@@ -231,7 +239,7 @@ void transferFromCharDevice(struct work_struct *work)
 
     for (i = 0; i < kernelOutptData->length; ++i)
     {
-        spi_rx_at_transferFromCharDevice[i] = 0x00;
+        spi_rx_at_transferFpgaInput[i] = 0x00;
     }
 }
 

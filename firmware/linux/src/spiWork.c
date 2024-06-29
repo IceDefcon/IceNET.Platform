@@ -18,63 +18,63 @@
 //                  //
 //////////////////////
 
-/* WORK QUEUE */ static struct workqueue_struct *transferFromCharDevice_wq;
-/* WORK QUEUE */ static struct workqueue_struct* interruptFromFpga_wq;
+/* WORK QUEUE */ static struct workqueue_struct *transferFpgaInput_wq;
+/* WORK QUEUE */ static struct workqueue_struct* transferFpgaOutput_wq;
 /* WORK QUEUE */ static struct workqueue_struct* killApplication_wq;
-/* WORK */ static struct work_struct transferFromCharDevice_work;
-/* WORK */ static struct work_struct interruptFromFpga_work;
+/* WORK */ static struct work_struct transferFpgaInput_work;
+/* WORK */ static struct work_struct transferFpgaOutput_work;
 /* WORK */ static struct work_struct killApplication_work;
 
-/* GET WORK QUEUE*/ struct workqueue_struct* get_transferFromCharDevice_wq(void) 
+/* GET WORK QUEUE*/ struct workqueue_struct* get_transferFpgaInput_wq(void)
 {
-    return transferFromCharDevice_wq;
+    return transferFpgaInput_wq;
 }
-/* GET WORK QUEUE */ struct workqueue_struct* get_interruptFromFpga_wq(void)
+/* GET WORK QUEUE */ struct workqueue_struct* get_transferFpgaOutput_wq(void)
 {
-	return interruptFromFpga_wq;
+	return transferFpgaOutput_wq;
 }
 /* GET WORK QUEUE */ struct workqueue_struct* get_killApplication_wq(void)
 {
 	return killApplication_wq;
 }
-/* GET WORK */ struct work_struct* get_transferFromCharDevice_work(void) 
+/* GET WORK */ struct work_struct* get_transferFpgaInput_work(void)
 {
-    return &transferFromCharDevice_work;
+    return &transferFpgaInput_work;
 }
-/* GET WORK */ struct work_struct* get_interruptFromFpga_work(void)
+/* GET WORK */ struct work_struct* get_transferFpgaOutput_work(void)
 {
-	return &interruptFromFpga_work;
+	return &transferFpgaOutput_work;
 }
 /* GET WORK */ struct work_struct* get_killApplication_work(void)
 {
 	return &killApplication_work;
 }
 
-static void interruptFromFpga_WorkInit(void)
+static void transferFpgaOutput_WorkInit(void)
 {
-	INIT_WORK(get_interruptFromFpga_work(), interruptFromFpga);
-	interruptFromFpga_wq = create_singlethread_workqueue("interruptFromFpga_workqueue");
-	if (!interruptFromFpga_wq) 
+	INIT_WORK(get_transferFpgaOutput_work(), transferFpgaOutput);
+	transferFpgaOutput_wq = create_singlethread_workqueue("transferFpgaOutput_workqueue");
+	if (!transferFpgaOutput_wq)
 	{
-	    printk(KERN_ERR "[INIT][WRK] Failed to initialise single thread workqueue for interruptFromFpga: -ENOMEM\n");
+	    printk(KERN_ERR "[INIT][WRK] Failed to initialise single thread workqueue for transferFpgaOutput: -ENOMEM\n");
 	}
 	else
 	{
-	    printk(KERN_ERR "[INIT][WRK] Create single thread workqueue for interruptFromFpga\n");
+	    printk(KERN_ERR "[INIT][WRK] Create single thread workqueue for transferFpgaOutput\n");
 	}
 }
 
-static void transferFromCharDevice_WorkInit(void)
+static void transferFpgaInput_WorkInit(void)
 {
-	INIT_WORK(get_transferFromCharDevice_work(), transferFromCharDevice);
-	transferFromCharDevice_wq = create_singlethread_workqueue("transferFromCharDevice_workqueue");
-	if (!transferFromCharDevice_wq) 
+	INIT_WORK(get_transferFpgaInput_work(), transferFpgaInput);
+	transferFpgaInput_wq = create_singlethread_workqueue("transferFpgaInput_workqueue");
+	if (!transferFpgaInput_wq)
 	{
-	    printk(KERN_ERR "[INIT][WRK] Failed to initialise single thread workqueue for transferFromCharDevice: -ENOMEM\n");
+	    printk(KERN_ERR "[INIT][WRK] Failed to initialise single thread workqueue for transferFpgaInput: -ENOMEM\n");
 	}
 	else
 	{
-		printk(KERN_ERR "[INIT][WRK] Create single thread workqueue for transferFromCharDevice\n");
+		printk(KERN_ERR "[INIT][WRK] Create single thread workqueue for transferFpgaInput\n");
 	}
 }
 
@@ -92,25 +92,25 @@ static void killApplication_WorkInit(void)
     }
 }
 
-static void interruptFromFpga_WorkDestroy(void)
+static void transferFpgaOutput_WorkDestroy(void)
 {
-    cancel_work_sync(get_interruptFromFpga_work());
-    if (interruptFromFpga_wq) 
+    cancel_work_sync(get_transferFpgaOutput_work());
+    if (transferFpgaOutput_wq)
     {
-        flush_workqueue(interruptFromFpga_wq);
-        destroy_workqueue(interruptFromFpga_wq);
-        interruptFromFpga_wq = NULL;
+        flush_workqueue(transferFpgaOutput_wq);
+        destroy_workqueue(transferFpgaOutput_wq);
+        transferFpgaOutput_wq = NULL;
     }
 }
 
-static void transferFromCharDevice_WorkDestroy(void)
+static void transferFpgaInput_WorkDestroy(void)
 {
-    cancel_work_sync(get_transferFromCharDevice_work());
-    if (transferFromCharDevice_wq) 
+    cancel_work_sync(get_transferFpgaInput_work());
+    if (transferFpgaInput_wq)
     {
-        flush_workqueue(transferFromCharDevice_wq);
-        destroy_workqueue(transferFromCharDevice_wq);
-        transferFromCharDevice_wq = NULL;
+        flush_workqueue(transferFpgaInput_wq);
+        destroy_workqueue(transferFpgaInput_wq);
+        transferFpgaInput_wq = NULL;
     }
 }
 
@@ -127,15 +127,15 @@ static void killApplication_WorkDestroy(void)
 
 void spiWorkInit(void)
 {
-	interruptFromFpga_WorkInit();
-	transferFromCharDevice_WorkInit();
+	transferFpgaOutput_WorkInit();
+	transferFpgaInput_WorkInit();
 	killApplication_WorkInit();
 }
 
 void spiWorkDestroy(void)
 {
-	interruptFromFpga_WorkDestroy();
-	transferFromCharDevice_WorkDestroy();
+	transferFpgaOutput_WorkDestroy();
+	transferFpgaInput_WorkDestroy();
 	killApplication_WorkDestroy();
 	printk(KERN_ERR "[DESTROY][WRK] Destroy kernel workflow\n");
 }
