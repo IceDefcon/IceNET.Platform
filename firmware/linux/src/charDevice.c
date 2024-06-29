@@ -98,10 +98,10 @@ static void charDeviceDataInit(void)
     char *outputRxData, *outputTxData;
 
     /* Allocate memory */
-    inputRxData = (char *)kmalloc(4 * sizeof(char), GFP_KERNEL);
-    inputTxData = (char *)kmalloc(4 * sizeof(char), GFP_KERNEL);
-    outputRxData = (char *)kmalloc(4 * sizeof(char), GFP_KERNEL);
-    outputTxData = (char *)kmalloc(4 * sizeof(char), GFP_KERNEL);
+    inputRxData = (char *)kmalloc(IO_BUFFER_SIZE * sizeof(char), GFP_KERNEL);
+    inputTxData = (char *)kmalloc(IO_BUFFER_SIZE * sizeof(char), GFP_KERNEL);
+    outputRxData = (char *)kmalloc(IO_BUFFER_SIZE * sizeof(char), GFP_KERNEL);
+    outputTxData = (char *)kmalloc(IO_BUFFER_SIZE * sizeof(char), GFP_KERNEL);
 
     /* Check if memory allocation was successful */
     if (!inputRxData || !inputTxData || !outputRxData || !outputTxData)
@@ -116,11 +116,11 @@ static void charDeviceDataInit(void)
 
     Device[DEVICE_INPUT].io_transfer.RxData = inputRxData;
     Device[DEVICE_INPUT].io_transfer.TxData = inputTxData;
-    Device[DEVICE_INPUT].io_transfer.length = 4;
+    Device[DEVICE_INPUT].io_transfer.length = IO_BUFFER_SIZE;
 
     Device[DEVICE_OUTPUT].io_transfer.RxData = outputRxData;
     Device[DEVICE_OUTPUT].io_transfer.TxData = outputTxData;
-    Device[DEVICE_OUTPUT].io_transfer.length = 4;
+    Device[DEVICE_OUTPUT].io_transfer.length = IO_BUFFER_SIZE;
 
     /* Lock and wait until feedback transfer unlock it */
     mutex_lock(&wait_mutex);

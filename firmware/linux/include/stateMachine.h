@@ -23,9 +23,7 @@ typedef enum
     IDLE = 0,
     SPI,
     INTERRUPT,
-    FEEDBACK,
-    KILL_APPLICATION,
-    FPGA_ERROR
+    KILL_APPLICATION
 } stateType;
 
 typedef struct

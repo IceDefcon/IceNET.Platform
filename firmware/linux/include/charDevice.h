@@ -25,6 +25,8 @@
 #define  OUTPUT_DEVICE "KernelOutput"
 #define  OUTPUT_CLASS  "KernelOutputClass"
 
+#define IO_BUFFER_SIZE 8
+
 typedef struct
 {
     int majorNumber;

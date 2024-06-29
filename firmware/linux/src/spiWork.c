@@ -20,11 +20,9 @@
 
 /* WORK QUEUE */ static struct workqueue_struct *transferFromCharDevice_wq;
 /* WORK QUEUE */ static struct workqueue_struct* interruptFromFpga_wq;
-/* WORK QUEUE */ static struct workqueue_struct* feedbackTransferFromFPGA_wq;
 /* WORK QUEUE */ static struct workqueue_struct* killApplication_wq;
 /* WORK */ static struct work_struct transferFromCharDevice_work;
 /* WORK */ static struct work_struct interruptFromFpga_work;
-/* WORK */ static struct work_struct feedbackTransferFromFPGA_work;
 /* WORK */ static struct work_struct killApplication_work;
 
 /* GET WORK QUEUE*/ struct workqueue_struct* get_transferFromCharDevice_wq(void) 
@@ -34,10 +32,6 @@
 /* GET WORK QUEUE */ struct workqueue_struct* get_interruptFromFpga_wq(void)
 {
 	return interruptFromFpga_wq;
-}
-/* GET WORK QUEUE */ struct workqueue_struct* get_feedbackTransferFromFPGA_wq(void)
-{
-	return feedbackTransferFromFPGA_wq;
 }
 /* GET WORK QUEUE */ struct workqueue_struct* get_killApplication_wq(void)
 {
@@ -50,10 +44,6 @@
 /* GET WORK */ struct work_struct* get_interruptFromFpga_work(void)
 {
 	return &interruptFromFpga_work;
-}
-/* GET WORK */ struct work_struct* get_feedbackTransferFromFPGA_work(void)
-{
-	return &feedbackTransferFromFPGA_work;
 }
 /* GET WORK */ struct work_struct* get_killApplication_work(void)
 {
@@ -85,20 +75,6 @@ static void transferFromCharDevice_WorkInit(void)
 	else
 	{
 		printk(KERN_ERR "[INIT][WRK] Create single thread workqueue for transferFromCharDevice\n");
-	}
-}
-
-static void feedbackTransferFromFPGA_WorkInit(void)
-{
-	INIT_WORK(get_feedbackTransferFromFPGA_work(), feedbackTransferFromFPGA);
-	feedbackTransferFromFPGA_wq = create_singlethread_workqueue("feedbackTransferFromFPGA_workqueue");
-	if (!feedbackTransferFromFPGA_wq) 
-	{
-	    printk(KERN_ERR "[INIT][WRK] Failed to initialise single thread workqueue for feedbackTransferFromFPGA: -ENOMEM\n");
-	}
-	else
-	{
-		printk(KERN_ERR "[INIT][WRK] Create single thread workqueue for feedbackTransferFromFPGA\n");
 	}
 }
 
@@ -138,17 +114,6 @@ static void transferFromCharDevice_WorkDestroy(void)
     }
 }
 
-static void feedbackTransferFromFPGA_WorkDestroy(void)
-{
-    cancel_work_sync(get_feedbackTransferFromFPGA_work());
-    if (feedbackTransferFromFPGA_wq) 
-    {
-        flush_workqueue(feedbackTransferFromFPGA_wq);
-        destroy_workqueue(feedbackTransferFromFPGA_wq);
-        feedbackTransferFromFPGA_wq = NULL;
-    }
-}
-
 static void killApplication_WorkDestroy(void)
 {
     cancel_work_sync(get_killApplication_work());
@@ -164,7 +129,6 @@ void spiWorkInit(void)
 {
 	interruptFromFpga_WorkInit();
 	transferFromCharDevice_WorkInit();
-	feedbackTransferFromFPGA_WorkInit();
 	killApplication_WorkInit();
 }
 
@@ -172,7 +136,6 @@ void spiWorkDestroy(void)
 {
 	interruptFromFpga_WorkDestroy();
 	transferFromCharDevice_WorkDestroy();
-	feedbackTransferFromFPGA_WorkDestroy();
 	killApplication_WorkDestroy();
 	printk(KERN_ERR "[DESTROY][WRK] Destroy kernel workflow\n");
 }
