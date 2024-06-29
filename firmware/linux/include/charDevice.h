@@ -25,7 +25,7 @@
 #define  OUTPUT_DEVICE "KernelOutput"
 #define  OUTPUT_CLASS  "KernelOutputClass"
 
-#define IO_BUFFER_SIZE 8
+#define IO_BUFFER_SIZE TRANSFER_BUFFER_SIZE
 
 typedef struct
 {

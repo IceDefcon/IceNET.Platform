@@ -66,8 +66,8 @@ static int StateMachineThread(void *data)
 
             case SPI:
                 printk(KERN_INFO "[CTRL][STM] SPI mode\n");
-                /* QUEUE :: Execution of transferFromCharDevice */
-                queue_work(get_transferFromCharDevice_wq(), get_transferFromCharDevice_work());
+                /* QUEUE :: Execution of transferFpgaInput */
+                queue_work(get_transferFpgaInput_wq(), get_transferFpgaInput_work());
                 setStateMachine(IDLE);
                 break;
 

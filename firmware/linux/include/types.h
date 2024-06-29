@@ -21,6 +21,8 @@
 //                  //
 //////////////////////
 
+#define TRANSFER_BUFFER_SIZE 8
+
 typedef struct
 {
     volatile char *RxData;

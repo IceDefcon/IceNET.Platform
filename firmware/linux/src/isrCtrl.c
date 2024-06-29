@@ -23,15 +23,15 @@
 //                      //
 //////////////////////////
 
-static irqreturn_t interruptFromFpgaISR(int irq, void *data)
+static irqreturn_t transferFpgaOutputISR(int irq, void *data)
 {
     static int counter = 0;
 
     printk(KERN_INFO "[CTRL][ISR] Interrupt No[%d] received from FPGA @ Pin [%d]\n", counter, GPIO_FPGA_INTERRUPT);
     counter++;
 
-    /* QUEUE :: Execution of interruptFromFpga */
-    queue_work(get_interruptFromFpga_wq(), get_interruptFromFpga_work());
+    /* QUEUE :: Execution of transferFpgaOutput */
+    queue_work(get_transferFpgaOutput_wq(), get_transferFpgaOutput_work());
 
     return IRQ_HANDLED;
 }
@@ -65,7 +65,7 @@ static int interruptFromKernelInit(void)
     return result;
 }
 
-static int interruptFromFpgaInit(void)
+static int transferFpgaOutputInit(void)
 {
 
     int irq_kernel;
@@ -107,7 +107,7 @@ static int interruptFromFpgaInit(void)
         printk(KERN_ERR "[INIT][ISR] Setup GPIO Pin [%d] as interrupt\n", GPIO_FPGA_INTERRUPT);
     }
 
-    result = request_irq(irq_kernel, interruptFromFpgaISR, IRQF_TRIGGER_RISING, "Request IRQ", NULL);
+    result = request_irq(irq_kernel, transferFpgaOutputISR, IRQF_TRIGGER_RISING, "Request IRQ", NULL);
     if (result < 0) 
     {
         printk(KERN_ERR "[INIT][ISR] Failed to request IRQ number :: Pin [%d]\n", GPIO_FPGA_INTERRUPT);
@@ -116,13 +116,13 @@ static int interruptFromFpgaInit(void)
     }
     else
     {
-        printk(KERN_ERR "[INIT][ISR] Register interruptFromFpgaISR callback at Pin [%d] IRQ\n", GPIO_FPGA_INTERRUPT);
+        printk(KERN_ERR "[INIT][ISR] Register transferFpgaOutputISR callback at Pin [%d] IRQ\n", GPIO_FPGA_INTERRUPT);
     }
 
     return 0;
 }
 
-static void interruptFromFpgaDestroy(void)
+static void transferFpgaOutputDestroy(void)
 {
     int irq_kernel;
 
@@ -144,12 +144,12 @@ void isrSetGpio(unsigned int gpio, int value)
 void isrGpioInit(void)
 {
     (void)interruptFromKernelInit();
-    (void)interruptFromFpgaInit();
+    (void)transferFpgaOutputInit();
 }
 
 void isrGpioDestroy(void)
 {
-    interruptFromFpgaDestroy();
+    transferFpgaOutputDestroy();
     interruptFromKernelDestroy();
     printk(KERN_INFO "[DESTROY][ISR] Destroy IRQ for GPIO Pins\n");
 }
