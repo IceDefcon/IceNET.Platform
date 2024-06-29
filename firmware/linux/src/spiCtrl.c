@@ -179,14 +179,9 @@ void interruptFromFpga(struct work_struct *work)
         printk(KERN_INFO "[CTRL][SPI] Secondary FPGA Transfer :: Byte[%d]: [Feedback]Kernel.TX[0x%02x] [Data]Fpga.RX[0x%02x]\n", i, spi_tx_at_interruptFromFpga[i], spi_rx_at_interruptFromFpga[i]);
     }
 
-    /* Feedback processing */
-    fpgaFeedbackTransfer.RxData = (char *)kmalloc(1 * sizeof(char), GFP_KERNEL);
-    if (!fpgaFeedbackTransfer.RxData) 
-    {
-        printk(KERN_ERR "[CTRL][SPI] Memory allocation failed for RxData\n");
-    }
-    fpgaFeedbackTransfer.RxData[0] = (char)spi_rx_at_interruptFromFpga[0];
-    spi_rx_at_interruptFromFpga[0] = 0x00;
+    DataTransfer* kernelOutptData = getKernelOutputTransfer();
+    kernelOutptData->RxData[0] = (char)spi_rx_at_interruptFromFpga[0];
+    kernelOutptData->length = 1;
     setStateMachine(FEEDBACK);
 }
 

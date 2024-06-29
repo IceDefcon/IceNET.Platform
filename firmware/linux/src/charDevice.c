@@ -468,23 +468,14 @@ static int outputClose(struct inode *inodep, struct file *filep)
     return &Device[DEVICE_INPUT].io_transfer;
 }
 
+/* GET */ DataTransfer* getKernelOutputTransfer(void)
+{
+    return &Device[DEVICE_OUTPUT].io_transfer;
+}
+
 /* SET */ void setFpgaFeedbackTransfer(const DataTransfer* transferData)
 {
-    if (transferData != NULL)
-    {
-        Device[DEVICE_OUTPUT].io_transfer = *transferData;
-        Device[DEVICE_OUTPUT].io_transfer.length = 1;
-        printk(KERN_INFO "[CTRL][NET] Data set in the io_transfer[DEVICE_OUTPUT] :: RxData[0] = 0x%02x lenght = %d\n", Device[DEVICE_OUTPUT].io_transfer.RxData[0], Device[DEVICE_OUTPUT].io_transfer.length);
-        mutex_unlock(&wait_mutex);
-        printk(KERN_INFO "[CTRL][NET] Data Received from FPGA :: Unlock the mutex\n");
-    }
-    else
-    {
-        Device[DEVICE_OUTPUT].io_transfer.length = 1;
-        Device[DEVICE_OUTPUT].io_transfer.RxData[0] = 0xFF;
-        mutex_unlock(&wait_mutex);
-        printk(KERN_INFO "[CTRL][NET] No FPGA Data Received :: Unlock the mutex\n");
-    }
+    mutex_unlock(&wait_mutex);
 }
 
 /* SET */ void setkillApplicationTransfer(const DataTransfer* transferData)

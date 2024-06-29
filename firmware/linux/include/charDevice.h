@@ -43,6 +43,7 @@ typedef enum
 }deviceType;
 
 /* GET */ DataTransfer* getKernelInputTransfer(void);
+/* GET */ DataTransfer* getKernelOutputTransfer(void);
 /* SET */ void setFpgaFeedbackTransfer(const DataTransfer* transferData);
 /* SET */ void setkillApplicationTransfer(const DataTransfer* transferData);
 
