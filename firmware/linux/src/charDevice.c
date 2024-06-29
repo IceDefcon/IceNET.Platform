@@ -78,7 +78,7 @@ static struct file_operations fops[DEVICE_AMOUNT] =
    [DEVICE_INPUT] =
    {
        .open = inputOpen,
-       .read = NULL,
+       .read = inputRead,
        .write = inputWrite,
        .release = inputClose,
    },
@@ -310,7 +310,6 @@ static int inputOpen(struct inode *inodep, struct file *filep)
     return 0;
 }
 
-#if 0 /* Not in use */
 static ssize_t inputRead(struct file *filep, char *buffer, size_t len, loff_t *offset)
 {
     int error_count = 0;
@@ -330,7 +329,6 @@ static ssize_t inputRead(struct file *filep, char *buffer, size_t len, loff_t *o
         return -EFAULT;
     }
 }
-#endif
 
 static ssize_t inputWrite(struct file *filep, const char __user *buffer, size_t len, loff_t *offset)
 {
@@ -412,7 +410,7 @@ static ssize_t outputRead(struct file *filep, char *buffer, size_t len, loff_t *
     printk(KERN_INFO "[CTRL][SPI] Kernel is waiting for mutex Unlock\n");
     mutex_lock(&wait_mutex);
 
-    error_count = copy_to_user(buffer, (const void *)Device[DEVICE_OUTPUT].io_transfer.RxData, Device[DEVICE_OUTPUT].io_transfer.length);
+    error_count = copy_to_user(buffer, (const void *)Device[DEVICE_OUTPUT].io_transfer.TxData, Device[DEVICE_OUTPUT].io_transfer.length);
 
     if (error_count == 0)
     {
@@ -473,21 +471,7 @@ static int outputClose(struct inode *inodep, struct file *filep)
     return &Device[DEVICE_OUTPUT].io_transfer;
 }
 
-/* SET */ void setFpgaFeedbackTransfer(const DataTransfer* transferData)
+void unlockWaitMutex(void)
 {
-    mutex_unlock(&wait_mutex);
-}
-
-/* SET */ void setkillApplicationTransfer(const DataTransfer* transferData)
-{
-    if (transferData != NULL)
-    {
-        Device[DEVICE_OUTPUT].io_transfer = *transferData;
-    }
-    else
-    {
-        printk(KERN_INFO "[CTRL][NET] Kill SIGNAL Received :: Unlock the mutex\n");
-        // Handle the error, e.g., log it or assert
-    }
     mutex_unlock(&wait_mutex);
 }

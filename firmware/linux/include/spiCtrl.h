@@ -28,6 +28,4 @@
 /* KERNEL */ void killApplication(struct work_struct *work);
 /* SPI */ void spiDestroy(void);
 
-/* GET TRANSFER RX DATA */ DataTransfer* get_fpgaFeedbackTransfer(void);
-
 #endif // SPI_FPGA_H

@@ -44,9 +44,8 @@ typedef enum
 
 /* GET */ DataTransfer* getKernelInputTransfer(void);
 /* GET */ DataTransfer* getKernelOutputTransfer(void);
-/* SET */ void setFpgaFeedbackTransfer(const DataTransfer* transferData);
-/* SET */ void setkillApplicationTransfer(const DataTransfer* transferData);
 
+void unlockWaitMutex(void);
 void charDeviceInit(void);
 void charDeviceDestroy(void);
 
