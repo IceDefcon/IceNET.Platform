@@ -30,23 +30,23 @@
 static stateMachineProcess Process =
 {
     .currentState = IDLE,
-    .thread_handle = NULL,
-    .state_mutex = __MUTEX_INITIALIZER(Process.state_mutex),
+    .threadHandle = NULL,
+    .stateMutex = __MUTEX_INITIALIZER(Process.stateMutex),
 };
 
 /* SET */ void setStateMachine(stateType newState)
 {
-    mutex_lock(&Process.state_mutex);
+    mutex_lock(&Process.stateMutex);
     Process.currentState = newState;
-    mutex_unlock(&Process.state_mutex);
+    mutex_unlock(&Process.stateMutex);
 }
 
 /* GET */ stateType getStateMachine(void)
 {
     stateType state;
-    mutex_lock(&Process.state_mutex);
+    mutex_lock(&Process.stateMutex);
     state = Process.currentState;
-    mutex_unlock(&Process.state_mutex);
+    mutex_unlock(&Process.stateMutex);
     return state;
 }
 
@@ -109,25 +109,25 @@ void stateMachineInit(void)
 {
     setStateMachine(IDLE);
 
-    Process.thread_handle = kthread_create(StateMachineThread, NULL, "SM thread handle");
+    Process.threadHandle = kthread_create(StateMachineThread, NULL, "SM thread handle");
     
-    if (IS_ERR(Process.thread_handle)) 
+    if (IS_ERR(Process.threadHandle))
     {
-        printk(KERN_ERR "[INIT][STM] Failed to create kernel thread. Error code: %ld\n", PTR_ERR(Process.thread_handle));
+        printk(KERN_ERR "[INIT][STM] Failed to create kernel thread. Error code: %ld\n", PTR_ERR(Process.threadHandle));
     }
     else
     {
         printk(KERN_INFO "[INIT][STM] Created kthread for StateMachineThread\n");
-        wake_up_process(Process.thread_handle);
+        wake_up_process(Process.threadHandle);
     }
 }
 
 void stateMachineDestroy(void)
 {
-    if (Process.thread_handle) 
+    if (Process.threadHandle)
     {
-        kthread_stop(Process.thread_handle);
-        Process.thread_handle = NULL;
+        kthread_stop(Process.threadHandle);
+        Process.threadHandle = NULL;
     }
     printk(KERN_INFO "[DESTROY][STM] Destroy State Machine kthread\n");
 }

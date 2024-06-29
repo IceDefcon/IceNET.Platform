@@ -20,6 +20,20 @@
 //                  //
 //////////////////////
 
+typedef enum
+{
+	WORK_FPGA_INPUT,
+	WORK_FPGA_OUTPUT,
+	WORK_KILL_APPLICATION,
+	WORK_AMOUNT
+}workType;
+
+typedef struct
+{
+	struct workqueue_struct *workQueue;
+	struct work_struct *workUnit;
+}workTaskData;
+
 /* GET WORK QUEUE */ struct workqueue_struct* get_transferFpgaInput_wq(void);
 /* GET WORK QUEUE */ struct workqueue_struct* get_transferFpgaOutput_wq(void);
 /* GET WORK QUEUE */ struct workqueue_struct* get_killApplication_wq(void);

@@ -18,57 +18,67 @@
 //                  //
 //////////////////////
 
-/* WORK QUEUE */ static struct workqueue_struct *transferFpgaInput_wq;
-/* WORK QUEUE */ static struct workqueue_struct* transferFpgaOutput_wq;
-/* WORK QUEUE */ static struct workqueue_struct* killApplication_wq;
-/* WORK */ static struct work_struct transferFpgaInput_work;
-/* WORK */ static struct work_struct transferFpgaOutput_work;
-/* WORK */ static struct work_struct killApplication_work;
+static workTaskData workTask[WORK_AMOUNT] =
+{
+	[WORK_FPGA_INPUT] =
+	{
+		.workQueue = NULL,
+		.workUnit = NULL,
+	},
+
+	[WORK_FPGA_OUTPUT] =
+	{
+		.workQueue = NULL,
+		.workUnit = NULL,
+	},
+
+	[WORK_KILL_APPLICATION] =
+	{
+		.workQueue = NULL,
+		.workUnit = NULL,
+	},
+};
 
 /* GET WORK QUEUE*/ struct workqueue_struct* get_transferFpgaInput_wq(void)
 {
-    return transferFpgaInput_wq;
+    return workTask[WORK_FPGA_INPUT].workQueue;
 }
 /* GET WORK QUEUE */ struct workqueue_struct* get_transferFpgaOutput_wq(void)
 {
-	return transferFpgaOutput_wq;
+    return workTask[WORK_FPGA_OUTPUT].workQueue;
 }
 /* GET WORK QUEUE */ struct workqueue_struct* get_killApplication_wq(void)
 {
-	return killApplication_wq;
+    return workTask[WORK_KILL_APPLICATION].workQueue;
 }
 /* GET WORK */ struct work_struct* get_transferFpgaInput_work(void)
 {
-    return &transferFpgaInput_work;
+    return workTask[WORK_FPGA_INPUT].workUnit;
 }
 /* GET WORK */ struct work_struct* get_transferFpgaOutput_work(void)
 {
-	return &transferFpgaOutput_work;
+    return workTask[WORK_FPGA_OUTPUT].workUnit;
 }
 /* GET WORK */ struct work_struct* get_killApplication_work(void)
 {
-	return &killApplication_work;
-}
-
-static void transferFpgaOutput_WorkInit(void)
-{
-	INIT_WORK(get_transferFpgaOutput_work(), transferFpgaOutput);
-	transferFpgaOutput_wq = create_singlethread_workqueue("transferFpgaOutput_workqueue");
-	if (!transferFpgaOutput_wq)
-	{
-	    printk(KERN_ERR "[INIT][WRK] Failed to initialise single thread workqueue for transferFpgaOutput: -ENOMEM\n");
-	}
-	else
-	{
-	    printk(KERN_ERR "[INIT][WRK] Create single thread workqueue for transferFpgaOutput\n");
-	}
+    return workTask[WORK_KILL_APPLICATION].workUnit;
 }
 
 static void transferFpgaInput_WorkInit(void)
 {
-	INIT_WORK(get_transferFpgaInput_work(), transferFpgaInput);
-	transferFpgaInput_wq = create_singlethread_workqueue("transferFpgaInput_workqueue");
-	if (!transferFpgaInput_wq)
+    workTask[WORK_FPGA_INPUT].workUnit = kmalloc(sizeof(struct work_struct), GFP_KERNEL);
+    if (!workTask[WORK_FPGA_INPUT].workUnit)
+    {
+        printk(KERN_ERR "[INIT][WRK] Failed to allocate memory for transferFpgaInput work unit: -ENOMEM\n");
+    }
+	else
+	{
+		printk(KERN_ERR "[INIT][WRK] Memory allocate successfully for transferFpgaInput work unit\n");
+	}
+
+	INIT_WORK(workTask[WORK_FPGA_INPUT].workUnit, transferFpgaInput);
+	workTask[WORK_FPGA_INPUT].workQueue = create_singlethread_workqueue("transferFpgaInput_workqueue");
+	if (!workTask[WORK_FPGA_INPUT].workQueue)
 	{
 	    printk(KERN_ERR "[INIT][WRK] Failed to initialise single thread workqueue for transferFpgaInput: -ENOMEM\n");
 	}
@@ -78,64 +88,99 @@ static void transferFpgaInput_WorkInit(void)
 	}
 }
 
+static void transferFpgaOutput_WorkInit(void)
+{
+    workTask[WORK_FPGA_OUTPUT].workUnit = kmalloc(sizeof(struct work_struct), GFP_KERNEL);
+    if (!workTask[WORK_FPGA_OUTPUT].workUnit)
+    {
+        printk(KERN_ERR "[INIT][WRK] Failed to allocate memory for transferFpgaOutput work unit: -ENOMEM\n");
+    }
+	else
+	{
+		printk(KERN_ERR "[INIT][WRK] Memory allocate successfully for transferFpgaOutput work unit\n");
+	}
+
+	INIT_WORK(workTask[WORK_FPGA_OUTPUT].workUnit, transferFpgaOutput);
+	workTask[WORK_FPGA_OUTPUT].workQueue = create_singlethread_workqueue("transferFpgaInput_workqueue");
+	if (!workTask[WORK_FPGA_OUTPUT].workQueue)
+	{
+	    printk(KERN_ERR "[INIT][WRK] Failed to initialise single thread workqueue for transferFpgaOutput: -ENOMEM\n");
+	}
+	else
+	{
+		printk(KERN_ERR "[INIT][WRK] Create single thread workqueue for transferFpgaOutput\n");
+	}
+}
+
 static void killApplication_WorkInit(void)
 {
-    INIT_WORK(get_killApplication_work(), killApplication);
-    killApplication_wq = create_singlethread_workqueue("killApplication_workqueue");
-    if (!killApplication_wq) 
+    workTask[WORK_KILL_APPLICATION].workUnit = kmalloc(sizeof(struct work_struct), GFP_KERNEL);
+    if (!workTask[WORK_KILL_APPLICATION].workUnit)
     {
-        printk(KERN_ERR "[INIT][WRK] Failed to initialise single thread workqueue for killApplication: -ENOMEM\n");
+        printk(KERN_ERR "[INIT][WRK] Failed to allocate memory for killApplication work unit: -ENOMEM\n");
     }
-    else
+	else
+	{
+		printk(KERN_ERR "[INIT][WRK] Memory allocate successfully for killApplication work unit\n");
+	}
+
+	INIT_WORK(workTask[WORK_KILL_APPLICATION].workUnit, killApplication);
+	workTask[WORK_KILL_APPLICATION].workQueue = create_singlethread_workqueue("transferFpgaInput_workqueue");
+	if (!workTask[WORK_KILL_APPLICATION].workQueue)
+	{
+	    printk(KERN_ERR "[INIT][WRK] Failed to initialise single thread workqueue for killApplication: -ENOMEM\n");
+	}
+	else
+	{
+		printk(KERN_ERR "[INIT][WRK] Create single thread workqueue for killApplication\n");
+	}
+}
+
+static void transferFpgaInput_WorkDestroy(void)
+{
+    cancel_work_sync(workTask[WORK_FPGA_INPUT].workUnit);
+    if (workTask[WORK_FPGA_INPUT].workQueue)
     {
-        printk(KERN_ERR "[INIT][WRK] Created single thread workqueue for killApplication\n");
+        flush_workqueue(workTask[WORK_FPGA_INPUT].workQueue);
+        destroy_workqueue(workTask[WORK_FPGA_INPUT].workQueue);
+        workTask[WORK_FPGA_INPUT].workQueue = NULL;
     }
 }
 
 static void transferFpgaOutput_WorkDestroy(void)
 {
-    cancel_work_sync(get_transferFpgaOutput_work());
-    if (transferFpgaOutput_wq)
+    cancel_work_sync(workTask[WORK_FPGA_OUTPUT].workUnit);
+    if (workTask[WORK_FPGA_OUTPUT].workQueue)
     {
-        flush_workqueue(transferFpgaOutput_wq);
-        destroy_workqueue(transferFpgaOutput_wq);
-        transferFpgaOutput_wq = NULL;
-    }
-}
-
-static void transferFpgaInput_WorkDestroy(void)
-{
-    cancel_work_sync(get_transferFpgaInput_work());
-    if (transferFpgaInput_wq)
-    {
-        flush_workqueue(transferFpgaInput_wq);
-        destroy_workqueue(transferFpgaInput_wq);
-        transferFpgaInput_wq = NULL;
+        flush_workqueue(workTask[WORK_FPGA_OUTPUT].workQueue);
+        destroy_workqueue(workTask[WORK_FPGA_OUTPUT].workQueue);
+        workTask[WORK_FPGA_OUTPUT].workQueue = NULL;
     }
 }
 
 static void killApplication_WorkDestroy(void)
 {
-    cancel_work_sync(get_killApplication_work());
-    if (killApplication_wq) 
+    cancel_work_sync(workTask[WORK_KILL_APPLICATION].workUnit);
+    if (workTask[WORK_KILL_APPLICATION].workQueue)
     {
-        flush_workqueue(killApplication_wq);
-        destroy_workqueue(killApplication_wq);
-        killApplication_wq = NULL;
+        flush_workqueue(workTask[WORK_KILL_APPLICATION].workQueue);
+        destroy_workqueue(workTask[WORK_KILL_APPLICATION].workQueue);
+        workTask[WORK_KILL_APPLICATION].workQueue = NULL;
     }
 }
 
 void spiWorkInit(void)
 {
-	transferFpgaOutput_WorkInit();
 	transferFpgaInput_WorkInit();
+	transferFpgaOutput_WorkInit();
 	killApplication_WorkInit();
+	printk(KERN_ERR "[INIT][WRK] Kernel workflow Created\n");
 }
 
 void spiWorkDestroy(void)
 {
-	transferFpgaOutput_WorkDestroy();
 	transferFpgaInput_WorkDestroy();
+	transferFpgaOutput_WorkDestroy();
 	killApplication_WorkDestroy();
-	printk(KERN_ERR "[DESTROY][WRK] Destroy kernel workflow\n");
+	printk(KERN_ERR "[DESTROY][WRK] Kernel workflow destroyed\n");
 }
