@@ -29,8 +29,8 @@ typedef enum
 typedef struct
 {
     stateType currentState;
-    struct task_struct *thread_handle;
-    struct mutex state_mutex;
+    struct task_struct *threadHandle;
+    struct mutex stateMutex;
 } stateMachineProcess;
 
 /* SET */ void setStateMachine(stateType newState);

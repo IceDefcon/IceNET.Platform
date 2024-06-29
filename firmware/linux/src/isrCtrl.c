@@ -136,11 +136,6 @@ static void interruptFromKernelDestroy(void)
     gpio_free(GPIO_KERNEL_INTERRUPT);
 }
 
-void isrSetGpio(unsigned int gpio, int value)
-{
-    gpio_set_value(gpio, value);
-}
-
 void isrGpioInit(void)
 {
     (void)interruptFromKernelInit();

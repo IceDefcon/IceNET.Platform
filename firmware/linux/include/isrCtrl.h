@@ -22,7 +22,6 @@
 #define GPIO_KERNEL_INTERRUPT 50 // OUT :: P9_14
 #define GPIO_FPGA_INTERRUPT 60 // IN :: P9_12
 
-void isrSetGpio(unsigned int gpio, int value);
 void isrGpioInit(void);
 void isrGpioDestroy(void);
 
