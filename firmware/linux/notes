@@ -4,6 +4,19 @@
 2. Find parent process :: ps -p <PPID>
 3. kill -9 <PPID>
 
+/* Install headers */
+sudo apt-get install linux-headers-$(uname -r)
+
+/* Flash image to mmc */
+sudo dd if=bone-debian-10.3-iot-armhf-2020-04-06-4gb.img of=/dev/mmcblk1 bs=4M status=progress
+sync
+
+/* Fix ETH PHY */
+git clone https://github.com/bigjosh/bbbphyfix
+cd bbbphyfix
+./install
+sync
+
 /* I2C Address */
 ID = 0x68 when SA0 = GND
 ID = 0x69 when SA0 = Vdd

@@ -1,0 +1,19 @@
+connect
+targets -set -nocase -filter {name =~ "*PSU*"}
+mask_write 0xFFCA0038 0x1C0 0x1C0
+targets -set -nocase -filter {name =~ "*MicroBlaze PMU*"}
+dow pmufw.elf
+con
+after 500
+targets -set -nocase -filter {name =~ "*A53*#0"}
+rst -proc
+dow zynqmp_fsbl.elf
+con
+after 5000
+stop
+dow -data system.dtb 0x100000
+dow u-boot.elf
+dow bl31.elf
+con
+after 5000
+stop
