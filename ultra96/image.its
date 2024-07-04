@@ -30,7 +30,7 @@
         };
         ramdisk@0 {
             description = "ramdisk";
-            data = /incbin/("./rootfs.cpio.gz");
+            data = /incbin/("./ramdisk.cpio");
             type = "ramdisk";
             arch = "arm64";
             os = "linux";

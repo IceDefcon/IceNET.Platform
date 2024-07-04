@@ -1,0 +1,88 @@
+vivado -mode batch -source make_u96v2_sbc_base.tcl
+petalinux-create -t project --template zynqMP -n u96v2_CPU_petalinux
+petalinux-config --get-hw-description /home/ice/git/avnet/hdl/projects/u96v2_sbc_base_2020_2
+petalinux-build -x mrproper
+petalinux-build
+
+petalinux-create -t project -s u96v2_sbc_base_2020_2.bsp 
+petalinux-config --get-hw-description /home/ice/u96v2_sbc_base_2020_2/hardware/u96v2_sbc_base_2020_2/
+
+petalinux-config
+
+In Yocto settings:
+1. Add pre-mirror url
+	file:///ice/downloads_2020.2/
+2. local sstate feeds settings
+	/ice/sstate_aarch64_2020.2/aarch64/
+3. Fix them in the petalinuxbsp.conf file
+	 /home/ice/u96v2_sbc_base_2020_2/project-spec/meta-user/conf/petalinuxbsp.conf 
+
+DL_DIR = "/ice/downloads_2020.2/"
+SSTATE_DIR = "/ice/sstate_aarch64_2020.2/aarch64/"
+
+petalinux-build -x mrproper
+petalinux-build
+
+=======================================================================================
+
+/home/ice/ultra96v2_oob_2020_1/project-spec/meta-avnet
+
+petalinux-config -c rootfs
+petalinux-config -c kernel
+petalinux-config -c u-boot
+
+petalinux-build
+petalinux-build -c avnet-image-full
+petalinux-build -c usb-gadget-ethernet
+petalinux-build -c wilc3000-fw_15.3.1
+
+=======================================================================================
+
+petalinux-package --boot --fsbl zynqmp_fsbl.elf --fpga system.bit --pmufw pmufw.elf --atf bl31.elf --u-boot --force
+
+petalinux-package --boot --fsbl zynqmp_fsbl.elf --fpga system.bit --pmufw pmufw.elf --u-boot --force
+
+petalinux-package --boot --fsbl zynqmp_fsbl.elf --fpga system.bit --u-boot --force
+
+petalinux-package --boot --fsbl zynqmp_fsbl.elf --pmufw pmufw.elf --atf bl31.elf --u-boot --force
+
+=======================================================================================
+
+mkfs.vfat -F 32 /dev/sdb1
+sudo mkfs.ext4 /dev/sdb2
+
+=======================================================================================
+
+mkimage -f image.its image.ub
+
+=======================================================================================
+
+sudo mount -o loop rootfs.ext4 ext4/
+
+gunzip -c rootfs.cpio.gz | sh -c 'cd cpio/ && cpio -i'
+gunzip -c rootfs.cpio.gz | sh -c 'cd /mnt && mnt -i'
+
+sh -c 'cd cpio/ && find . | cpio -H newc -o' | gzip -9 > rootfs.cpio.new.gz
+
+=======================================================================================
+
+make ARCH=arm64 xilinx_zynqmp_defconfig
+make ARCH=arm64 menuconfig
+make ARCH=arm64
+
+=======================================================================================
+
+sudo dd if=rootfs.ext4 of=/dev/sdb2
+sudo dd if=/dev/sdb of=/sd.jtag.clean
+sync
+
+=======================================================================================
+
+fatls mmc 0:1
+fatload mmc 0:1 0x10000000 system.bit
+fpga load 0 0x10000000 ${filesize} 
+
+fatload mmc 0:1 0x10000000 image.ub
+bootm 0x10000000
+
+=======================================================================================
