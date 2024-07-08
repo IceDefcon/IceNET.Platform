@@ -82,7 +82,11 @@ fatls mmc 0:1
 fatload mmc 0:1 0x10000000 system.bit
 fpga load 0 0x10000000 ${filesize} 
 
-fatload mmc 0:1 0x10000000 image.ub
-bootm 0x10000000
+fatload mmc 0:1 0x01000000 image.ub
+bootm 0x01000000
 
+fatload mmc 0 0x2000000 image.ub
+bootm 0x2000000
+
+0x00200000
 =======================================================================================
