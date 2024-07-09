@@ -15,5 +15,3 @@ dow -data system.dtb 0x100000
 dow u-boot.elf
 dow bl31.elf
 con
-after 5000
-stop

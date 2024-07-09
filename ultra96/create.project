@@ -25,8 +25,6 @@ petalinux-build
 
 =======================================================================================
 
-/home/ice/ultra96v2_oob_2020_1/project-spec/meta-avnet
-
 petalinux-config -c rootfs
 petalinux-config -c kernel
 petalinux-config -c u-boot
@@ -54,12 +52,16 @@ sudo mkfs.ext4 /dev/sdb2
 =======================================================================================
 
 mkimage -f image.its image.ub
+dumpimage -l image.ub
 
 =======================================================================================
 
 sudo mount -o loop rootfs.ext4 ext4/
 
 gunzip -c rootfs.cpio.gz | sh -c 'cd cpio/ && cpio -i'
+
+/* mount ext4 partition + decompress cpio into /mnt */
+mount /dev/sdb2 /mnt/
 gunzip -c rootfs.cpio.gz | sh -c 'cd /mnt && mnt -i'
 
 sh -c 'cd cpio/ && find . | cpio -H newc -o' | gzip -9 > rootfs.cpio.new.gz
@@ -82,11 +84,10 @@ fatls mmc 0:1
 fatload mmc 0:1 0x10000000 system.bit
 fpga load 0 0x10000000 ${filesize} 
 
-fatload mmc 0:1 0x01000000 image.ub
-bootm 0x01000000
+fatload mmc 0 00080000 image.ub
+bootm 00080000
 
-fatload mmc 0 0x2000000 image.ub
-bootm 0x2000000
+fatload mmc 0 0x00200000 uImage
+bootm 0x00200000
 
-0x00200000
 =======================================================================================
