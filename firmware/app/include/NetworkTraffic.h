@@ -9,6 +9,7 @@
 #include <thread>
 #include <atomic>
 #include <vector>
+#include <memory>
 #include <iostream>
 
 #include "KernelInput.h"
