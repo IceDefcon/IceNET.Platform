@@ -28,6 +28,7 @@ petalinux-config -c kernel
 petalinux-config -c u-boot
 
 petalinux-build
+petalinux-build -c petalinux-image-full
 petalinux-build -c avnet-image-full
 petalinux-build -c usb-gadget-ethernet
 petalinux-build -c wilc3000-fw_15.3.1
@@ -38,11 +39,6 @@ petalinux-package --boot --fsbl zynqmp_fsbl.elf --fpga system.bit --pmufw pmufw.
 petalinux-package --boot --fsbl zynqmp_fsbl.elf --fpga system.bit --pmufw pmufw.elf --u-boot --force
 petalinux-package --boot --fsbl zynqmp_fsbl.elf --fpga system.bit --u-boot --force
 petalinux-package --boot --fsbl zynqmp_fsbl.elf --pmufw pmufw.elf --atf bl31.elf --u-boot --force
-
-=======================================================================================
-
-mkimage -f image.its image.ub
-dumpimage -l image.ub
 
 =======================================================================================
 
@@ -59,12 +55,6 @@ sh -c 'cd cpio/ && find . | cpio -H newc -o' | gzip -9 > rootfs.cpio.new.gz
 
 =======================================================================================
 
-make ARCH=arm64 xilinx_zynqmp_defconfig
-make ARCH=arm64 menuconfig
-make ARCH=arm64
-
-=======================================================================================
-
 sudo dd if=rootfs.ext4 of=/dev/sdb2 status=progress
 sync
 
@@ -77,8 +67,11 @@ fpga load 0 0x10000000 ${filesize}
 fatload mmc 0 0x80000 image.ub
 bootm 0x80000
 
-=======================================================================================
-
+//
+//
+// Prepare system
+//
+//
 
 1. Prepare two partitions and format them ex. 4G FAT32 (LBA) + 12G Ext4
 2. Format them
@@ -105,3 +98,59 @@ bootargs=console=ttyPS0,115200 clk_ignore_unused root=/dev/mmcblk0p2 rw rootwait
 saveenv
 
 7. plug SD and reboot
+
+//
+//
+// u-boot-xlnx
+//
+//
+
+1. install compiler:
+
+	sudo apt-get install gcc-aarch64-linux-gnu
+	sudo apt install gcc-aarch64-linux-gnu
+
+2. Export cross complier and CPU architecture
+
+	export CROSS_COMPILE=aarch64-linux-gnu-
+	export ARCH=aarch64
+
+3. Menuconfig
+
+	make distclean
+	make xilinx_zynqmp_virt_defconfig
+	make menuconfig
+	make
+
+//
+//
+// linux-xlnx
+//
+//
+
+	export CROSS_COMPILE=aarch64-linux-gnu-
+	export ARCH=aarch64
+
+	make ARCH=arm64 xilinx_zynqmp_defconfig
+	make ARCH=arm64 menuconfig
+	make ARCH=arm64
+
+//
+// Create image.ub
+//
+
+mkimage -f image.its image.ub
+dumpimage -l image.ub
+
+//
+// aarch64 + Downloads
+//
+/ice/petalinux/aarch64
+file:///ice/petalinux/downloads
+
+//
+// Create project
+//
+petalinux-create -t project --template zynqMP -n IceNetPlatform_petalinux
+petalinux-config --get-hw-description /home/ice/projects/IceNetPlatform/IceNetPlatform_wrapper.xsa
+petalinux-build -c petalinux-image-full
