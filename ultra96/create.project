@@ -6,16 +6,14 @@ petalinux-build
 
 petalinux-create -t project -s u96v2_sbc_base_2020_2.bsp 
 petalinux-config --get-hw-description /home/ice/u96v2_sbc_base_2020_2/hardware/u96v2_sbc_base_2020_2/
+petalinux-config --get-hw-description /home/ice/projects/u96v2_sbc_base_2022_2/hardware/u96v2_sbc_base_2022_2/u96v2_sbc_base.xsa
 
 petalinux-config
 
 In Yocto settings:
-1. Add pre-mirror url
-	file:///ice/downloads_2020.2/
-2. local sstate feeds settings
-	/ice/sstate_aarch64_2020.2/aarch64/
-3. Fix them in the petalinuxbsp.conf file
-	 /home/ice/u96v2_sbc_base_2020_2/project-spec/meta-user/conf/petalinuxbsp.conf 
+1. Add pre-mirror url :: file:///ice/downloads_2020.2/
+2. local sstate feeds settings :: /ice/sstate_aarch64_2020.2/aarch64/
+3. Fix them in the petalinuxbsp.conf file :: /home/ice/u96v2_sbc_base_2020_2/project-spec/meta-user/conf/petalinuxbsp.conf
 
 DL_DIR = "/ice/downloads_2020.2/"
 SSTATE_DIR = "/ice/sstate_aarch64_2020.2/aarch64/"
@@ -37,17 +35,9 @@ petalinux-build -c wilc3000-fw_15.3.1
 =======================================================================================
 
 petalinux-package --boot --fsbl zynqmp_fsbl.elf --fpga system.bit --pmufw pmufw.elf --atf bl31.elf --u-boot --force
-
 petalinux-package --boot --fsbl zynqmp_fsbl.elf --fpga system.bit --pmufw pmufw.elf --u-boot --force
-
 petalinux-package --boot --fsbl zynqmp_fsbl.elf --fpga system.bit --u-boot --force
-
 petalinux-package --boot --fsbl zynqmp_fsbl.elf --pmufw pmufw.elf --atf bl31.elf --u-boot --force
-
-=======================================================================================
-
-mkfs.vfat -F 32 /dev/sdb1
-sudo mkfs.ext4 /dev/sdb2
 
 =======================================================================================
 
@@ -62,7 +52,8 @@ gunzip -c rootfs.cpio.gz | sh -c 'cd cpio/ && cpio -i'
 
 /* mount ext4 partition + decompress cpio into /mnt */
 mount /dev/sdb2 /mnt/
-gunzip -c rootfs.cpio.gz | sh -c 'cd /mnt && mnt -i'
+gunzip -c rootfpetalinux-build -c avnet-image-full
+s.cpio.gz | sh -c 'cd /mnt && mnt -i'
 
 sh -c 'cd cpio/ && find . | cpio -H newc -o' | gzip -9 > rootfs.cpio.new.gz
 
@@ -74,8 +65,7 @@ make ARCH=arm64
 
 =======================================================================================
 
-sudo dd if=rootfs.ext4 of=/dev/sdb2
-sudo dd if=/dev/sdb of=/sd.jtag.clean
+sudo dd if=rootfs.ext4 of=/dev/sdb2 status=progress
 sync
 
 =======================================================================================
@@ -84,10 +74,34 @@ fatls mmc 0:1
 fatload mmc 0:1 0x10000000 system.bit
 fpga load 0 0x10000000 ${filesize} 
 
-fatload mmc 0 00080000 image.ub
-bootm 00080000
-
-fatload mmc 0 0x00200000 uImage
-bootm 0x00200000
+fatload mmc 0 0x80000 image.ub
+bootm 0x80000
 
 =======================================================================================
+
+
+1. Prepare two partitions and format them ex. 4G FAT32 (LBA) + 12G Ext4
+2. Format them
+
+	mkfs.vfat -F 32 /dev/sdb1
+	sudo mkfs.ext4 /dev/sdb2
+
+3. Create labels
+
+	e2label /dev/sdb2 rootfs
+	sudo fatlabel /dev/sdb1 BOOT
+
+4. Copy files to BOOT
+
+	cp BOOT.BIN image.ub boot.scr /media/ice/BOOT
+
+5. Extract rootfs on the /media/ice/roots
+
+	sudo tar xvfp rootfs.tar.gz -C /media/ice/rootfs
+
+6. Create bootargs original
+
+bootargs=console=ttyPS0,115200 clk_ignore_unused root=/dev/mmcblk0p2 rw rootwait
+saveenv
+
+7. plug SD and reboot
