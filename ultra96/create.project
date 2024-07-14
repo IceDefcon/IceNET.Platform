@@ -110,7 +110,7 @@ petalinux-build -c avnet-image-full
 
 3. Create labels
 
-	e2label /dev/sdb2 rootfs
+	sudo e2label /dev/sdb2 rootfs
 	sudo fatlabel /dev/sdb1 BOOT
 
 4. Copy files to BOOT
@@ -124,6 +124,8 @@ petalinux-build -c avnet-image-full
 6. Create bootargs original
 
 bootargs=console=ttyPS0,115200 clk_ignore_unused root=/dev/mmcblk0p2 rw rootwait
+setenv bootargs 'console=ttyPS0,115200 clk_ignore_unused root=/dev/mmcblk0p2 rw rootwait'
+
 saveenv
 
 7. plug SD and reboot
