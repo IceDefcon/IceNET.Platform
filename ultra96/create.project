@@ -1,3 +1,11 @@
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////
+////////////////////////////////
+////////////////
+////////
+////
+//
+
 vivado -mode batch -source make_u96v2_sbc_base.tcl
 petalinux-create -t project --template zynqMP -n u96v2_CPU_petalinux
 petalinux-config --get-hw-description /home/ice/git/avnet/hdl/projects/u96v2_sbc_base_2020_2
@@ -66,6 +74,27 @@ fpga load 0 0x10000000 ${filesize}
 
 fatload mmc 0 0x80000 image.ub
 bootm 0x80000
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////
+////////////////////////////////
+////////////////
+////////
+////
+//
+//
+// Create project ???
+//
+petalinux-create -t project --template zynqMP -n IceNetPlatform_petalinux
+petalinux-config --get-hw-description /home/ice/projects/IceNetPlatform/IceNetPlatform_wrapper.xsa
+petalinux-build -c petalinux-image-full
+
+//
+// Create project from BSP
+//
+petalinux-create -t project -s u96v2_sbc_base_2020_2.bsp
+petalinux-config --get-hw-description /home/ice/projects/u96v2_sbc_base_2022_2/hardware/u96v2_sbc_base_2022_2/u96v2_sbc_base.xsa
+petalinux-build -c avnet-image-full
 
 //
 //
@@ -148,9 +177,3 @@ dumpimage -l image.ub
 /ice/petalinux/aarch64
 file:///ice/petalinux/downloads
 
-//
-// Create project
-//
-petalinux-create -t project --template zynqMP -n IceNetPlatform_petalinux
-petalinux-config --get-hw-description /home/ice/projects/IceNetPlatform/IceNetPlatform_wrapper.xsa
-petalinux-build -c petalinux-image-full
