@@ -105,13 +105,13 @@ petalinux-build -c avnet-image-full
 1. Prepare two partitions and format them ex. 4G FAT32 (LBA) + 12G Ext4
 2. Format them
 
-	mkfs.vfat -F 32 /dev/sdb1
+	sudo mkfs.vfat -F 32 /dev/sdb1
 	sudo mkfs.ext4 /dev/sdb2
 
 3. Create labels
 
-	sudo e2label /dev/sdb2 rootfs
 	sudo fatlabel /dev/sdb1 BOOT
+	sudo e2label /dev/sdb2 rootfs
 
 4. Copy files to BOOT
 
@@ -123,10 +123,8 @@ petalinux-build -c avnet-image-full
 
 6. Create bootargs original
 
-bootargs=console=ttyPS0,115200 clk_ignore_unused root=/dev/mmcblk0p2 rw rootwait
-setenv bootargs 'console=ttyPS0,115200 clk_ignore_unused root=/dev/mmcblk0p2 rw rootwait'
-
-saveenv
+	setenv bootargs 'console=ttyPS0,115200 clk_ignore_unused root=/dev/mmcblk0p2 rw rootwait'
+	saveenv
 
 7. plug SD and reboot
 
@@ -176,6 +174,14 @@ dumpimage -l image.ub
 //
 // aarch64 + Downloads
 //
-/ice/petalinux/aarch64
 file:///ice/petalinux/downloads
+/ice/petalinux/aarch64
 
+//
+//
+//
+petalinux-create -t project --template zynqMP -n IceNetLinux
+petalinux-config --get-hw-description IceNetFPGA/IceNetCPU_wrapper.xsa
+petalinux-config --get-hw-description hardware/u96v2_sbc_base_2022_2/u96v2_sbc_base_wrapper.xsa
+petalinux-build -c avnet-image-full
+petalinux-package --boot --fsbl zynqmp_fsbl.elf --fpga system.bit --pmufw pmufw.elf --atf bl31.elf --u-boot --force
