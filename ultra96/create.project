@@ -183,5 +183,40 @@ file:///ice/petalinux/downloads
 petalinux-create -t project --template zynqMP -n IceNetLinux
 petalinux-config --get-hw-description IceNetFPGA/IceNetCPU_wrapper.xsa
 petalinux-config --get-hw-description hardware/u96v2_sbc_base_2022_2/u96v2_sbc_base_wrapper.xsa
+petalinux-build
 petalinux-build -c avnet-image-full
 petalinux-package --boot --fsbl zynqmp_fsbl.elf --fpga system.bit --pmufw pmufw.elf --atf bl31.elf --u-boot --force
+petalinux-package --boot --fsbl zynqmp_fsbl.elf --fpga system.bit --pmufw pmufw.elf --u-boot --force
+
+//
+//
+//
+petalinux-create -t project -s u96v2_sbc_base_2020_2.bsp
+
+
+//
+// Kernel
+//
+sudo apt-get install gcc-aarch64-linux-gnu
+export CROSS_COMPILE=aarch64-linux-gnu-
+
+make ARCH=arm64 xilinx_zynqmp_defconfig
+make ARCH=arm64 menuconfig
+make ARCH=arm64
+
+//
+// Device Tree :: SD
+//
+/include/ "system-conf.dtsi"
+/ {
+};
+/* SD0 only supports 3.3V, no level shifter */
+&sdhci0 {
+   no-1-8-v;
+   disable-wp;
+};
+
+//
+// Password 
+//
+root:passwd-expire;petalinux::passwd-expire;
