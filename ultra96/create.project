@@ -119,16 +119,16 @@ petalinux-build -c avnet-image-full
 
 5. Extract rootfs on the /media/ice/roots
 
-	sudo tar xvfp rootfs.tar.gz -C /media/ice/rootfs
+		sudo tar xvfp rootfs.tar.gz -C /media/ice/rootfs
 
-6. Create bootargs original
+	6. Create bootargs original
 
-	setenv bootargs 'console=ttyPS0,115200 clk_ignore_unused root=/dev/mmcblk0p2 rw rootwait'
-	saveenv
+		setenv bootargs 'console=ttyPS0,115200 clk_ignore_unused root=/dev/mmcblk0p2 rw rootwait'
+		saveenv
 
-7. plug SD and reboot
+	7. plug SD and reboot
 
-//
+	//B
 //
 // u-boot-xlnx
 //
