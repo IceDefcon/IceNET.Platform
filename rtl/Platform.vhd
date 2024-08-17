@@ -101,6 +101,9 @@ signal offload_id : std_logic_vector(6 downto 0) := (others => '0');
 signal offload_register : std_logic_vector(7 downto 0) := (others => '0');
 signal offload_ctrl : std_logic_vector(7 downto 0) := (others => '0');
 signal offload_data : std_logic_vector(7 downto 0) := (others => '0');
+-- PacketSwitch
+signal switch_i2c_ready : std_logic := '0';
+signal switch_pwm_ready : std_logic := '0';
 
 ----------------------------------------------------------------------------------------------------------------
 -- COMPONENTS DECLARATION
@@ -367,13 +370,30 @@ port map
     OFFLOAD_DATA => offload_data
 );
 
+PacketSwitch:
+process(CLOCK_50MHz)
+begin
+    if rising_edge(CLOCK_50MHz) then
+        if offload_ready = '1' then
+            if offload_ctrl(1) = '1' then
+                switch_pwm_ready <= '1';
+            else
+                switch_i2c_ready <= '1';
+            end if;
+        else
+            switch_i2c_ready <= '0';
+            switch_pwm_ready <= '0';
+        end if;
+    end if;
+end process;
+
 I2cStateMachine_module: I2cStateMachine port map
 (
 	CLOCK => CLOCK_50MHz,
 	RESET => reset_button,
 
     -- in
-    SPI_INT => offload_ready, -- i2c transfer ready to begin
+    SPI_INT => switch_i2c_ready, -- i2c transfer ready to begin
     -- in
     KERNEL_INT => '0',
     -- out

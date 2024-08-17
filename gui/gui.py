@@ -27,7 +27,7 @@ def kill_application():
     tcp_socket.sendall(data)
 
 def i2c_assembly():
-    header = 0x30 # 7 control bits + 1 R/W bit
+    header = 0x00 # 7 control bits + 1 R/W bit
     address = int(device_address.get(), 16)  # Convert hex address to integer
     register = int(device_register.get(), 16)  # Convert hex register to integer
 
@@ -39,12 +39,15 @@ def i2c_assembly():
     return data
 
 def pwm_assembly():
-    header = 0x70 # 7 control bits + 1 R/W bit
+    header = 0x02 # 7 control bits + 1 R/W bit
 
-    if pwm_speed > 0xFA:
-        pwm_speed = 0xFA
+    # Retrieve the value from the Entry widget and convert it to an integer
+    pwm_speed_value = int(pwm_speed.get(), 16)  # Assuming the input is in hexadecimal
 
-    data = bytes([header, pwm_speed, 0x00, 0x00])
+    if pwm_speed_value > 0xFA:
+        pwm_speed_value = 0xFA
+
+    data = bytes([header, pwm_speed_value, 0x00, 0x00])
 
     return data
 
