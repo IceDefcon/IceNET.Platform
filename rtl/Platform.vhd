@@ -157,7 +157,7 @@ port
     CLOCK : in std_logic;
     RESET : in std_logic;
 
-    SPI_INT : in std_logic;
+    OFFLOAD_INT : in std_logic;
     KERNEL_INT : in std_logic;
     FPGA_INT : out std_logic;
     FIFO_INT : out std_logic;
@@ -393,7 +393,7 @@ I2cStateMachine_module: I2cStateMachine port map
 	RESET => reset_button,
 
     -- in
-    SPI_INT => switch_i2c_ready, -- i2c transfer ready to begin
+    OFFLOAD_INT => switch_i2c_ready, -- i2c transfer ready to begin
     -- in
     KERNEL_INT => '0',
     -- out
