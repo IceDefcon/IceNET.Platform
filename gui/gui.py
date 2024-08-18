@@ -191,7 +191,16 @@ pwm_speed_label.grid(row=5, column=4, pady=5, padx=5, sticky='e')
 pwm_speed = tk.Entry(root, width=16)
 pwm_speed.grid(row=5, column=5, pady=5, padx=5, sticky='w')
 pwm_speed.insert(0, "00")
-
+#
+# tcp_execute
+#
+# 1 :: Field
+# 2 :: Up
+# 3 :: Down
+# 4 :: 0%
+# 5 :: 50%
+# 6 :: 100%
+#
 pwm_exe_button = tk.Button(root, text="EXE", command=lambda: tcp_execute(1))
 pwm_exe_button.grid(row=5, column=6, pady=5, padx=5, sticky='nsew')
 pwm_up_button = tk.Button(root, text=" ▲ ", command=lambda: tcp_execute(2))
