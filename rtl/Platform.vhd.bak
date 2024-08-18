@@ -104,9 +104,6 @@ signal offload_data : std_logic_vector(7 downto 0) := (others => '0');
 -- PacketSwitch
 signal switch_i2c_ready : std_logic := '0';
 signal switch_pwm_ready : std_logic := '0';
--- Feedback interrupts
-signal interrupt_i2c_feedback : std_logic := '0';
-signal interrupt_pwm_feedback : std_logic := '0';
 
 ----------------------------------------------------------------------------------------------------------------
 -- COMPONENTS DECLARATION
@@ -228,8 +225,6 @@ port
     CLOCK_50MHz : in std_logic;
 
     OFFLOAD_INT : in std_logic;
-    FPGA_INT : out std_logic;
-
     PWM_VECTOR : in std_logic_vector(7 downto 0);
 
     PWM_SIGNAL : out std_logic
@@ -404,7 +399,7 @@ I2cStateMachine_module: I2cStateMachine port map
     -- in
     KERNEL_INT => '0',
     -- out
-    FPGA_INT => interrupt_i2c_feedback, -- SM is ready for SPI.1 transfer :: 1000*20ns interrupt
+    FPGA_INT => FPGA_INT, -- SM is ready for SPI.1 transfer :: 1000*20ns interrupt
     FIFO_INT => open, -- TODO :: Store output data in secondary FIFO
 
 	I2C_SCK => I2C_SCK,
@@ -451,26 +446,12 @@ port map
     CLOCK_50MHz => CLOCK_50MHz,
 
     OFFLOAD_INT => switch_pwm_ready,
-    FPGA_INT => interrupt_pwm_feedback,
-
-    PWM_VECTOR => offload_data,
+    PWM_VECTOR => offload_id,
     -- OUT
     PWM_SIGNAL => PWM_SIGNAL
 );
 
 -- To keep signals not optimized by the HDL compiler
 LED_8 <= offload_ctrl(0) and offload_ctrl(1) and offload_ctrl(2) and offload_ctrl(3) and offload_ctrl(4) and offload_ctrl(5) and offload_ctrl(6) and offload_ctrl(7);
-
-return_interrupts_process:
-process(CLOCK_50MHz)
-begin
-    if rising_edge(CLOCK_50MHz) then
-        if interrupt_i2c_feedback = '1' or interrupt_pwm_feedback = '1' then
-            FPGA_INT <= '1';
-        else
-            FPGA_INT <= '0';
-        end if;
-    end if;
-end process;
 
 end rtl;

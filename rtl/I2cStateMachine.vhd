@@ -9,7 +9,7 @@ port
     CLOCK : in std_logic;
     RESET : in std_logic;
 
-    SPI_INT : in std_logic;
+    OFFLOAD_INT : in std_logic;
     KERNEL_INT : in std_logic;
     FPGA_INT : out std_logic; -- 1000*20ns interrupt back to Kernel
     FIFO_INT : out std_logic;
@@ -118,7 +118,7 @@ begin
             ----------------------------------------
             -- State Machine :: Reset
             ----------------------------------------
-            if RESET = '1' or SPI_INT = '1' then
+            if RESET = '1' or OFFLOAD_INT = '1' then
                 state_current <= INIT;
             else
                 ------------------------------------

@@ -47,7 +47,7 @@ def pwm_assembly():
     if pwm_speed_value > 0xFA:
         pwm_speed_value = 0xFA
 
-    data = bytes([header, pwm_speed_value, 0x00, 0x00])
+    data = bytes([header, 0x00, 0x00, pwm_speed_value])
 
     return data
 
