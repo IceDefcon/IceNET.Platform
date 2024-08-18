@@ -23,6 +23,12 @@
 	6. Order J-Link Cable :: SEGGER
 	7. Attach to CPU @ Ozone Debuger
 
+# TODO modules
+
+	1. Watchdog for FPGA interrupts
+	2. Checksum
+	3. UART Console
+	
 # Testing Module List
 
 	HC-12 - Radio Module 433MHz
