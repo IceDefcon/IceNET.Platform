@@ -32,7 +32,7 @@ signal pwm_state: PWM := IDLE;
 signal pwm_base_pulse : std_logic := '0';
 signal pwm_pulse : std_logic := '0';
 signal pwm_width : std_logic_vector(16 downto 0) := (others => '0');
-signal pwm_width_prev : std_logic_vector(16 downto 0) := (others => '0');
+signal pwm_width_prev : std_logic_vector(16 downto 0) := "11000011010100000"; -- 100k = 2ms
 signal pwm_base_timer : std_logic_vector(19 downto 0) := (others => '0');
 signal pwm_timer : std_logic_vector(16 downto 0) := (others => '0');
 signal pwm_config : std_logic := '0';

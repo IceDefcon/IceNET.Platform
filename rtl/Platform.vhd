@@ -468,7 +468,7 @@ begin
         if interrupt_i2c_feedback = '1' or interrupt_pwm_feedback = '1' then
             FPGA_INT <= '1';
         else
-            FPGA_INT <= '1';
+            FPGA_INT <= '0';
         end if;
     end if;
 end process;
