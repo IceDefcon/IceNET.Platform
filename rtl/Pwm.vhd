@@ -46,7 +46,7 @@ begin
 
 pwm_process:
 process(CLOCK_50MHz)
-    variable pwm_integer : integer := 0;
+    variable pwm_integer : integer := 50000;
 begin
     if rising_edge(CLOCK_50MHz) then
         if pwm_base_timer = "11110100001000111111" then -- 20ms PWM Period
