@@ -63,10 +63,22 @@ def tcp_execute(header):
         tcp_socket.connect((server_address, port))
         log_message("[iceNET] Server connection established")
 
-        if header == 3:
+        if header == 0:
             data = i2c_assembly()
-        elif header == 7:
+        elif header == 1:
             data = pwm_assembly()
+        elif header == 2: # STOP Button :: Speed 0%
+            data = bytes([0x02, 0x00, 0x00, 0x00])
+            pwm_speed.delete(0, 'end')  # Delete all existing content
+            pwm_speed.insert(0, "00")   # Insert "00" into the entry field
+        elif header == 3: # 10%
+            data = bytes([0x02, 0x00, 0x00, 0x20])
+            pwm_speed.delete(0, 'end')  # Delete all existing content
+            pwm_speed.insert(0, "20")   # Insert "00" into the entry field
+        elif header == 4: # 26%
+            data = bytes([0x02, 0x00, 0x00, 0x40])
+            pwm_speed.delete(0, 'end')  # Delete all existing content
+            pwm_speed.insert(0, "40")   # Insert "00" into the entry field
         else:
             log_message("[iceNET] Wrong Data Header")
 
@@ -145,12 +157,12 @@ separator2.grid(row=4, column=3, rowspan=4, sticky='ns')
 
 device_label = tk.Label(root, text="I2C Device ID")
 device_label.grid(row=5, column=0, pady=5, padx=5, sticky='e')
-i2c_exe_button = tk.Button(root, text="EXE", command=lambda: tcp_execute(3))
+i2c_exe_button = tk.Button(root, text="EXE", command=lambda: tcp_execute(0))
 i2c_exe_button.grid(row=5, column=2, pady=5, padx=5, sticky='nsew')
 device_address = tk.Entry(root, width=16)
 device_address.grid(row=5, column=1, pady=5, padx=5, sticky='w')
 device_address.insert(0, "69")
-pwm_speed_label = tk.Label(root, text="PWM Speed [%] Hex")
+pwm_speed_label = tk.Label(root, text="PWM Speed Hex")
 pwm_speed_label.grid(row=5, column=4, pady=5, padx=5, sticky='e')
 pwm_info_label1 = tk.Label(root, text="Range: 0x00 - 0xFA")
 pwm_info_label1.grid(row=6, column=4, pady=5, padx=5, sticky='e')
@@ -159,8 +171,14 @@ pwm_info_label2.grid(row=7, column=4, pady=5, padx=5, sticky='e')
 pwm_speed = tk.Entry(root, width=16)
 pwm_speed.grid(row=5, column=5, pady=5, padx=5, sticky='w')
 pwm_speed.insert(0, "00")
-pwm_exe_button = tk.Button(root, text="EXE", command=lambda: tcp_execute(7))
+pwm_exe_button = tk.Button(root, text="EXE", command=lambda: tcp_execute(1))
 pwm_exe_button.grid(row=5, column=6, pady=5, padx=5, sticky='nsew')
+pwm_stop_button = tk.Button(root, text="STOP", command=lambda: tcp_execute(2))
+pwm_stop_button.grid(row=5, column=7, pady=5, padx=5, sticky='nsew')
+pwm_10_button = tk.Button(root, text="10%", command=lambda: tcp_execute(3))
+pwm_10_button.grid(row=6, column=7, pady=5, padx=5, sticky='nsew')
+pwm_26_button = tk.Button(root, text="26%", command=lambda: tcp_execute(4))
+pwm_26_button.grid(row=7, column=7, pady=5, padx=5, sticky='nsew')
 
 device_register_label = tk.Label(root, text="Register Address")
 device_register_label.grid(row=6, column=0, pady=5, padx=5, sticky='e')
