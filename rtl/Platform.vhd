@@ -26,17 +26,17 @@ port
     SECONDARY_MISO : out std_logic; -- PIN_B6 :: BBB P9_29 :: BLUE   :: SPI1_D0
     SECONDARY_MOSI : in std_logic;  -- PIN_B7 :: BBB P9_30 :: YELOW  :: SPI1_D1
     SECONDARY_SCLK : in std_logic;  -- PIN_B8 :: BBB P9_31 :: GREEN  :: SPI1_SCLK
-    -- Bypass
+    -- Bypass :: Not in use for now
     BYPASS_CS : out std_logic;  -- PIN_A15 :: YELLOW :: CS      :: CS   :: P9_17
     BYPASS_MISO : in std_logic; -- PIN_A16 :: ORANGE :: SA0     :: SD0  :: P9_21
     BYPASS_MOSI : out std_logic;  -- PIN_A17 :: RED    :: SDX   :: SDA  :: P9_18
     BYPASS_SCLK : out std_logic;  -- PIN_A18 :: BROWN  :: SCX   :: SCL  :: P9_22
-    -- I2C BMI160
+    -- I2C BMI160 + ADXL345
     I2C_SDA : inout std_logic; -- PIN_A9  :: BBB P9_20 :: CPU.BLUE <> FPGA.BLUE <> GYRO.WHITE
     I2C_SCK : inout std_logic; -- PIN_A10 :: BBB P9_19 :: CPU.ORANGE <> FPGA.GREEN <> GYRO.PURPLE
 	-- Interrupts 
-    FPGA_INT : out std_logic;  -- PIN_A3 :: BBB P9_12 :: BLACK
-    KERNEL_INT : in std_logic; -- PIN_A4 :: BBB P9_14 :: WHITE
+    INT_FROM_FPGA : out std_logic;  -- PIN_A3 :: BBB P9_12 :: BLACK
+    INT_FROM_CPU : in std_logic; -- PIN_A4 :: BBB P9_14 :: WHITE
     -- PWM
     PWM_SIGNAL : out std_logic; -- PIN_A20 :: Orange
     -- Debug LED's
@@ -107,11 +107,17 @@ signal switch_pwm_ready : std_logic := '0';
 -- Feedback interrupts
 signal interrupt_i2c_feedback : std_logic := '0';
 signal interrupt_pwm_feedback : std_logic := '0';
+-- Debounce signals
+signal interrupt_from_cpu : std_logic := '0';
 
 ----------------------------------------------------------------------------------------------------------------
 -- COMPONENTS DECLARATION
 ----------------------------------------------------------------------------------------------------------------
 component Debounce
+generic 
+(
+    DELAY : integer := 500000
+);
 port
 (
 	clock : in  std_logic;
@@ -144,7 +150,7 @@ Port
 );
 end component;
 
-component InterruptPulse
+component InterruptController
 Port 
 (
     CLOCK : in  std_logic;
@@ -241,15 +247,20 @@ end component;
 ----------------------------------------------------------------------------------------------------------------
 begin
 
-Debounce_module: Debounce port map 
+Debounce_module: Debounce
+generic map
+(
+    DELAY => 500000
+)
+port map
 (
 	clock => CLOCK_50MHz,
 	button_in_1 => BUTTON_1,
-	button_in_2 => BUTTON_2,
+	button_in_2 => INT_FROM_CPU,
 	button_in_3 => BUTTON_3,
 	button_in_4 => BUTTON_4,
 	button_out_1 => reset_button,
-	button_out_2 => open,
+	button_out_2 => interrupt_from_cpu,
 	button_out_3 => open,
 	button_out_4 => open
 );
@@ -300,7 +311,7 @@ secondarySpiProcessing_module: SpiProcessing port map
 -- Interrupt length :: 0xF
 -- 16 * 20ns = 320 ns
 ------------------------------------------------------
-Interrupt_module: InterruptPulse port map 
+Interrupt_module: InterruptController port map 
 (
 	CLOCK => CLOCK_50MHz,
 	interrupt_period => std_logic_vector(unsigned(interrupt_period) srl interrupt_divider),
@@ -308,17 +319,21 @@ Interrupt_module: InterruptPulse port map
 	interrupt_signal => interrupt_signal
 );
 
+--
+-- Long interrupt signal from kernel
+-- To be cut in FPGA down to 20ns pulse
+--
 fifo_pre_process:
-process(CLOCK_50MHz, primary_parallel_MOSI, primary_ready_MISO, kernel_interrupt)
-begin -- Convert KERNEL_INT into 20n pulse
+process(CLOCK_50MHz, primary_parallel_MOSI, primary_ready_MISO, kernel_interrupt, interrupt_from_cpu)
+begin
     if rising_edge(CLOCK_50MHz) then
-        if KERNEL_INT = '1' and kernel_interrupt_stop = '0' then
+        if interrupt_from_cpu = '1' and kernel_interrupt_stop = '0' then
             kernel_interrupt <= '1';
             kernel_interrupt_stop <= '1';
-        elsif KERNEL_INT = '0' then
+        elsif interrupt_from_cpu = '0' then -- resest stop when debounced long interrupt from kernel goes down
             kernel_interrupt_stop <= '0';
         else
-            kernel_interrupt <= '0';
+            kernel_interrupt <= '0'; -- go down straight after 20ns
         end if;
 
         primary_fifo_data_in <= primary_parallel_MOSI;
@@ -333,12 +348,12 @@ end process;
 --
 -- Fifo to store bytes from Kernel SPI
 --
--- Byte[0] Ctrl Byte :: RW, MR, RC
--- Byte[1] Address of Device
--- Byte[2] Address of Register
--- Byte[3] Address of Register
--- ...
--- Byte[n-1] Checksum :: chk = b[0] ^ b[1] ^ b[2] ^ ... b[n-1]
+-- Byte[0] :: READ_CONTROL
+-- Byte[1] :: READ_ID
+-- Byte[2] :: READ_REGISTER
+-- Byte[3] :: READ_DATA
+-- 
+-- TODO :: CHECKSUM
 --
 ---------------------------------------
 primary_fifo_module: Fifo
@@ -451,7 +466,7 @@ port map
     CLOCK_50MHz => CLOCK_50MHz,
 
     OFFLOAD_INT => switch_pwm_ready,
-    FPGA_INT => interrupt_pwm_feedback,
+    INT_FROM_ => interrupt_pwm_feedback,
 
     PWM_VECTOR => offload_data,
     -- OUT
@@ -466,9 +481,9 @@ process(CLOCK_50MHz)
 begin
     if rising_edge(CLOCK_50MHz) then
         if interrupt_i2c_feedback = '1' or interrupt_pwm_feedback = '1' then
-            FPGA_INT <= '1';
+            INT_FROM_FPGA <= '1';
         else
-            FPGA_INT <= '0';
+            INT_FROM_FPGA <= '0';
         end if;
     end if;
 end process;
