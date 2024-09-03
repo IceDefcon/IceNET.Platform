@@ -157,7 +157,7 @@ quit_button.grid(row=0, column=0, pady=5, padx=5, sticky='w')
 kill_button = tk.Button(root, text="KILL APP", command=kill_application, width=14)
 kill_button.grid(row=0, column=1, pady=5, padx=5, sticky='w')
 
-cpu_label = tk.Label(root, text="CPU Control", font=large_font)
+cpu_label = tk.Label(root, text="Drone CPU Control", font=large_font)
 cpu_label.grid(row=0, column=5, pady=5, padx=5, sticky='e')
 
 ip_label = tk.Label(root, text="Server IP Address")
