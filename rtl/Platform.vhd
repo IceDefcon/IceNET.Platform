@@ -109,6 +109,9 @@ signal interrupt_i2c_feedback : std_logic := '0';
 signal interrupt_pwm_feedback : std_logic := '0';
 -- Debounce signals
 signal interrupt_from_cpu : std_logic := '0';
+-- Interrupts
+signal interrupt_feedback_signal : std_logic := '0';
+signal interrupt_feedback_count : std_logic_vector(7 downto 0) := (others => '0');
 
 ----------------------------------------------------------------------------------------------------------------
 -- COMPONENTS DECLARATION
@@ -466,12 +469,13 @@ port map
     CLOCK_50MHz => CLOCK_50MHz,
 
     OFFLOAD_INT => switch_pwm_ready,
-    INT_FROM_ => interrupt_pwm_feedback,
+    FPGA_INT => interrupt_pwm_feedback,
 
     PWM_VECTOR => offload_data,
     -- OUT
     PWM_SIGNAL => PWM_SIGNAL
 );
+
 
 -- To keep signals not optimized by the HDL compiler
 LED_8 <= offload_ctrl(0) and offload_ctrl(1) and offload_ctrl(2) and offload_ctrl(3) and offload_ctrl(4) and offload_ctrl(5) and offload_ctrl(6) and offload_ctrl(7);
@@ -481,9 +485,15 @@ process(CLOCK_50MHz)
 begin
     if rising_edge(CLOCK_50MHz) then
         if interrupt_i2c_feedback = '1' or interrupt_pwm_feedback = '1' then
-            INT_FROM_FPGA <= '1';
+            if interrupt_feedback_count = "11111010" then -- 250 * 20 = 5000ns = 5us interrupt pulse back to CPU
+                INT_FROM_FPGA <= '0';
+            else
+                INT_FROM_FPGA <= '1';
+                interrupt_feedback_count <= interrupt_feedback_count + '1';
+            end if;
         else
             INT_FROM_FPGA <= '0';
+            interrupt_feedback_count <= (others => '0');
         end if;
     end if;
 end process;
