@@ -6,6 +6,7 @@ import tkinter as tk
 import socket
 import time
 from tkinter import ttk
+from tkinter import font
 
 def log_message(message):
     log_display.config(state=tk.NORMAL)
@@ -147,11 +148,17 @@ root.title("TCP Client")
 # Set the window size
 root.geometry("1920x1080")
 
+# Large Font
+large_font = font.Font(family="Helvetica", size=16, weight="bold")
+
 quit_button = tk.Button(root, text="QUIT", command=quit_application, width=12)
 quit_button.grid(row=0, column=0, pady=5, padx=5, sticky='w')
 
 kill_button = tk.Button(root, text="KILL APP", command=kill_application, width=14)
 kill_button.grid(row=0, column=1, pady=5, padx=5, sticky='w')
+
+cpu_label = tk.Label(root, text="Drone CPU Control", font=large_font)
+cpu_label.grid(row=0, column=5, pady=5, padx=5, sticky='e')
 
 ip_label = tk.Label(root, text="Server IP Address")
 ip_label.grid(row=1, column=0, pady=5, padx=5, sticky='e')
@@ -171,11 +178,15 @@ separator1.grid(row=3, column=0, columnspan=100, sticky='ew')
 
 # Vertical Separators
 separator2 = ttk.Separator(root, orient='vertical')
-separator2.grid(row=4, column=3, rowspan=4, sticky='ns')
+separator2.grid(row=0, column=3, rowspan=4, sticky='ns')
 
 # Vertical Separators
 separator3 = ttk.Separator(root, orient='vertical')
-separator3.grid(row=4, column=7, rowspan=4, sticky='ns')
+separator3.grid(row=4, column=3, rowspan=4, sticky='ns')
+
+# Vertical Separators
+separator4 = ttk.Separator(root, orient='vertical')
+separator4.grid(row=4, column=7, rowspan=4, sticky='ns')
 
 device_label = tk.Label(root, text="I2C Device ID")
 device_label.grid(row=5, column=0, pady=5, padx=5, sticky='e')
@@ -191,7 +202,16 @@ pwm_speed_label.grid(row=5, column=4, pady=5, padx=5, sticky='e')
 pwm_speed = tk.Entry(root, width=16)
 pwm_speed.grid(row=5, column=5, pady=5, padx=5, sticky='w')
 pwm_speed.insert(0, "00")
-
+#
+# tcp_execute
+#
+# 1 :: Field
+# 2 :: Up
+# 3 :: Down
+# 4 :: 0%
+# 5 :: 50%
+# 6 :: 100%
+#
 pwm_exe_button = tk.Button(root, text="EXE", command=lambda: tcp_execute(1))
 pwm_exe_button.grid(row=5, column=6, pady=5, padx=5, sticky='nsew')
 pwm_up_button = tk.Button(root, text=" ▲ ", command=lambda: tcp_execute(2))
@@ -199,11 +219,11 @@ pwm_up_button.grid(row=6, column=6, pady=5, padx=5, sticky='nsew')
 pwm_down_button = tk.Button(root, text=" ▼ ", command=lambda: tcp_execute(3))
 pwm_down_button.grid(row=7, column=6, pady=5, padx=5, sticky='nsew')
 
-pwm_stop_button = tk.Button(root, text=" 0% ", command=lambda: tcp_execute(4))
+pwm_stop_button = tk.Button(root, text="0%", command=lambda: tcp_execute(4))
 pwm_stop_button.grid(row=5, column=8, pady=5, padx=5, sticky='nsew')
-pwm_50_button = tk.Button(root, text=" 50% ", command=lambda: tcp_execute(5))
+pwm_50_button = tk.Button(root, text="50%", command=lambda: tcp_execute(5))
 pwm_50_button.grid(row=6, column=8, pady=5, padx=5, sticky='nsew')
-pwm_100_button = tk.Button(root, text=" 100% ", command=lambda: tcp_execute(6))
+pwm_100_button = tk.Button(root, text="100%", command=lambda: tcp_execute(6))
 pwm_100_button.grid(row=7, column=8, pady=5, padx=5, sticky='nsew')
 
 device_register_label = tk.Label(root, text="Register Address")
