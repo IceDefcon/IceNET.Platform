@@ -116,22 +116,17 @@ signal interrupt_feedback_count : std_logic_vector(7 downto 0) := (others => '0'
 ----------------------------------------------------------------------------------------------------------------
 -- COMPONENTS DECLARATION
 ----------------------------------------------------------------------------------------------------------------
-component Debounce
+
+component DebounceController
 generic 
 (
-    DELAY : integer := 500000
+    PERIOD : integer := 50000 -- 50Mhz :: 50000*20ns = 1ms
 );
 port
 (
-	clock : in  std_logic;
-	button_in_1 : in  std_logic;
-	button_in_2 : in  std_logic;
-	button_in_3 : in  std_logic;
-	button_in_4 : in  std_logic;
-	button_out_1 : out std_logic;
-	button_out_2 : out std_logic;
-	button_out_3 : out std_logic;
-	button_out_4 : out std_logic
+    clock : in  std_logic;
+    button_in : in  std_logic;
+    button_out : out std_logic
 );
 end component;
 
@@ -153,7 +148,7 @@ Port
 );
 end component;
 
-component InterruptController
+component ImpulseGenerator
 Port 
 (
     CLOCK : in  std_logic;
@@ -250,22 +245,16 @@ end component;
 ----------------------------------------------------------------------------------------------------------------
 begin
 
-Debounce_module: Debounce
+DebounceController_module: DebounceController
 generic map
 (
-    DELAY => 500000
+    PERIOD => 50000 -- 50Mhz :: 50000*20ns = 1ms
 )
 port map
 (
-	clock => CLOCK_50MHz,
-	button_in_1 => BUTTON_1,
-	button_in_2 => INT_FROM_CPU,
-	button_in_3 => BUTTON_3,
-	button_in_4 => BUTTON_4,
-	button_out_1 => reset_button,
-	button_out_2 => interrupt_from_cpu,
-	button_out_3 => open,
-	button_out_4 => open
+    clock => CLOCK_50MHz,
+    button_in => BUTTON_1,
+    button_out => reset_button
 );
 
 primarySpiProcessing_module: SpiProcessing port map 
@@ -314,7 +303,7 @@ secondarySpiProcessing_module: SpiProcessing port map
 -- Interrupt length :: 0xF
 -- 16 * 20ns = 320 ns
 ------------------------------------------------------
-Interrupt_module: InterruptController port map 
+Interrupt_module: ImpulseGenerator port map 
 (
 	CLOCK => CLOCK_50MHz,
 	interrupt_period => std_logic_vector(unsigned(interrupt_period) srl interrupt_divider),
@@ -330,6 +319,11 @@ fifo_pre_process:
 process(CLOCK_50MHz, primary_parallel_MOSI, primary_ready_MISO, kernel_interrupt, interrupt_from_cpu)
 begin
     if rising_edge(CLOCK_50MHz) then
+
+        -- 1st
+        interrupt_from_cpu <= INT_FROM_CPU;
+
+        -- 2nd
         if interrupt_from_cpu = '1' and kernel_interrupt_stop = '0' then
             kernel_interrupt <= '1';
             kernel_interrupt_stop <= '1';
