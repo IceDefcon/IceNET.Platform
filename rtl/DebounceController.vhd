@@ -1,78 +1,102 @@
-library IEEE;
-use IEEE.std_logic_1164.all;
-use IEEE.numeric_std.all;
+library ieee;
+use ieee.numeric_std.all;
+use ieee.std_logic_1164.all;
+use ieee.std_logic_unsigned.all;
 
 entity DebounceController is
 generic 
 (
-    DELAY : integer := 500000 -- For 50Mhz :: 500,000 = 10ms :: 50,000 = 1ms
+    PERIOD : integer := 50000 -- 50Mhz :: 50000*20ns = 1ms
 );
 port 
 (    
     clock : in std_logic;
 
-    button_in : in std_logic
+    button_in : in std_logic;
     button_out : out std_logic
 );
 end DebounceController;
 
 architecture rtl of DebounceController is
 
-    signal count : integer := 0;
-    signal stable_count : std_logic_vector(15 downto 0) := (others => '0');
+    constant SM_OFFSET : integer := 3;
+    signal stable_count : integer := 0;
 
-    type PWM is 
+    type DEBOUNCE is
     (
         IDLE,
-        PERIOD,
+        WAITING,
         STABLE,
         DONE
     );
 
-    signal pwm_state: PWM := IDLE;
+    signal debounce_state: DEBOUNCE := IDLE;
 
     begin
 
-    process(clock)
+    process(clock, button_in, stable_count)
     begin
         if rising_edge(clock) then
 
-            case pwm_state is
+            case debounce_state is
 
                 when IDLE =>
-                    if button_in = '1' then
-                        pwm_state <= PERIOD;
+                    if button_in = '0' then
+                        button_out <= '0';
+                        debounce_state <= WAITING;
                     else
-                        pwm_state <= IDLE;
+                        button_out <= '0';
+                        debounce_state <= IDLE;
                     end if;
 
-                when PERIOD =>
-                    if stable_count < "1100001101010000" then
-                        if button_in = '1' then
-                            pwm_state <= PERIOD;
-                        elsif button_in = '0' then
-                            stable_count <= (others => '0');
-                            pwm_state <= PERIOD;
+                when WAITING =>
+                    if stable_count = (PERIOD - SM_OFFSET) then
+                        button_out <= '0';
+                        stable_count <= 0;
+                        debounce_state <= STABLE;
+                    else
+                        if button_in = '0' then
+                            button_out <= '0';
+                            stable_count <= stable_count + 1;
+                            debounce_state <= WAITING;
+                        else
+                            button_out <= '0';
+                            stable_count <= 0;
+                            debounce_state <= IDLE;
                         end if;
-                    else
-                        stable_count <= stable_count + '1';
-                        pwm_state <= STABLE;
                     end if;
-
 
                 when STABLE =>
-                    pwm_state <= DONE;
+                    if button_in = '0' then
+                        button_out <= '1';
+                        debounce_state <= STABLE;
+                    else
+                        button_out <= '1';
+                        debounce_state <= DONE;
+                    end if;
 
                 when DONE =>
-                    pwm_state <= IDLE;
+                    if stable_count = (PERIOD - SM_OFFSET) then
+                        button_out <= '1';
+                        stable_count <= 0;
+                        debounce_state <= IDLE;
+                    else
+                        if button_in = '1' then
+                            button_out <= '1';
+                            stable_count <= stable_count + 1;
+                            debounce_state <= DONE;
+                        else
+                            button_out <= '1';
+                            stable_count <= 0;
+                            debounce_state <= STABLE;
+                        end if;
+                    end if;
 
                 when others =>
-                    pwm_state <= IDLE;
+                    debounce_state <= IDLE;
 
             end case;
         end if;
     end process;
 
 end rtl;
-
-1100001101010000

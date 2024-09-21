@@ -135,6 +135,19 @@ port
 );
 end component;
 
+component DebounceController
+generic 
+(
+    PERIOD : integer := 50000 -- 50Mhz :: 50000*20ns = 1ms
+);
+port
+(
+    clock : in  std_logic;
+    button_in : in  std_logic;
+    button_out : out std_logic
+);
+end component;
+
 component SpiProcessing
 Port 
 (
@@ -153,7 +166,7 @@ Port
 );
 end component;
 
-component InterruptController
+component ImpulseGenerator
 Port 
 (
     CLOCK : in  std_logic;
@@ -253,7 +266,7 @@ begin
 Debounce_module: Debounce
 generic map
 (
-    DELAY => 500000
+    DELAY => 50000
 )
 port map
 (
@@ -266,6 +279,18 @@ port map
 	button_out_2 => interrupt_from_cpu,
 	button_out_3 => open,
 	button_out_4 => open
+);
+
+DebounceController_module: DebounceController
+generic map
+(
+    PERIOD => 50000 -- 50Mhz :: 50000*20ns = 1ms
+)
+port map
+(
+    clock => CLOCK_50MHz,
+    button_in => BUTTON_1,
+    button_out => open
 );
 
 primarySpiProcessing_module: SpiProcessing port map 
@@ -314,7 +339,7 @@ secondarySpiProcessing_module: SpiProcessing port map
 -- Interrupt length :: 0xF
 -- 16 * 20ns = 320 ns
 ------------------------------------------------------
-Interrupt_module: InterruptController port map 
+Interrupt_module: ImpulseGenerator port map 
 (
 	CLOCK => CLOCK_50MHz,
 	interrupt_period => std_logic_vector(unsigned(interrupt_period) srl interrupt_divider),

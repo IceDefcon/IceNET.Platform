@@ -78,7 +78,7 @@ type STATE is
     DONE
 );
 --State machine indicators
-signal state_current: STATE := IDLE;
+signal i2c_state: STATE := IDLE;
 -- Status Indicators
 signal isIDLE : std_logic := '0';
 signal isINIT : std_logic := '0';
@@ -110,7 +110,7 @@ begin
         if system_start = '0' then
             if system_timer = smStartDelay then
                 system_start <= '1';
-                state_current <= IDLE;
+                i2c_state <= IDLE;
             else
                 system_timer <= system_timer + '1';
             end if;
@@ -119,12 +119,12 @@ begin
             -- State Machine :: Reset
             ----------------------------------------
             if RESET = '1' or OFFLOAD_INT = '1' then
-                state_current <= INIT;
+                i2c_state <= INIT;
             else
                 ------------------------------------
                 -- State Machine :: IDLE
                 ------------------------------------
-                if state_current = IDLE then
+                if i2c_state = IDLE then
                     isIDLE <= '1';
                     isINIT <= '0';
                     isCONFIG <= '0';
@@ -136,9 +136,9 @@ begin
                 ------------------------------------
                 -- State Machine :: INIT
                 ------------------------------------
-                if state_current = INIT then
+                if i2c_state = INIT then
                     if init_timer = smStateDelay then -- delay for the reset to stabilise
-                        state_current <= CONFIG;
+                        i2c_state <= CONFIG;
                     else
                         init_timer <= init_timer + '1';
                     end if;
@@ -151,12 +151,12 @@ begin
                 ------------------------------------
                 -- State Machine :: CONFIG
                 ------------------------------------
-                if state_current = CONFIG then
+                if i2c_state = CONFIG then
                     if config_timer = smStateDelay then
                         if OFFLOAD_COTROL = '0' then
-                            state_current <= RD;
+                            i2c_state <= RD;
                         else
-                            state_current <= WR;
+                            i2c_state <= WR;
                         end if;
                         rw <= '0';
                         sck_timer <= "11111001"; -- Reset timer so SCK is inverted @ 1st clock cycle
@@ -175,9 +175,9 @@ begin
                 ------------------------------------
                 -- State Machine :: RD
                 ------------------------------------
-                if state_current = RD then
+                if i2c_state = RD then
                     if send_timer = smStateDelay then
-                        state_current <= DONE;
+                        i2c_state <= DONE;
                     else
                         if status_timer = "1111111111111111" then -- Length :: 25k clock cycles :: -----===[ RESET ]===----
                         else
@@ -471,9 +471,9 @@ begin
                 ------------------------------------
                 -- State Machine :: WR
                 ------------------------------------
-                if state_current = WR then
+                if i2c_state = WR then
                     if send_timer = smStateDelay then
-                        state_current <= DONE;
+                        i2c_state <= DONE;
                     else
                         if status_timer = "1111111111111111" then -- Length :: 25k clock cycles :: -----===[ RESET ]===----
                         else
@@ -692,7 +692,7 @@ begin
                 ------------------------------------
                 -- State Machine :: DONE
                 ------------------------------------
-                if state_current = DONE then
+                if i2c_state = DONE then
                     if done_timer = smStateDelay then
                         -- Reset Timers
                         status_timer <= (others => '0');
@@ -706,7 +706,7 @@ begin
                         status_sck <= "0000";
                         status_sda <= "0000";
                         -- Switch to IDLE
-                        state_current <= IDLE;
+                        i2c_state <= IDLE;
                         -- Rest fifo interrupt flag
                         fifo_flag <= '0';
                     else
