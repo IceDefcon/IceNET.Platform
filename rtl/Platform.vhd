@@ -197,33 +197,16 @@ port
 );
 end component;
 
-component Fifo
-generic 
-(
-    WIDTH   : integer := 8;
-    DEPTH   : integer := 16
-);
-port 
-(
-    CLOCK_50MHz : in  std_logic;
-    RESET : in  std_logic;
-    -- In
-    data_in  : in  std_logic_vector(7 downto 0);
-    wr_en    : in  std_logic;
-    rd_en    : in  std_logic;
-    -- Out
-    data_out : out std_logic_vector(7 downto 0);
-    full     : out std_logic;
-    empty    : out std_logic
-);
-end component;
-
-component FifoStateMachine
+--
+-- Fifo cannot be state machine
+-- controlled due to continuous
+-- read procedure during offload
+--
+component FifoCtrl
 generic
 (
     WIDTH : integer := 8;
-    DEPTH : integer := 16;
-    SM_OFFSET : integer := 2
+    DEPTH : integer := 16
 );
 port
 (
@@ -373,8 +356,6 @@ end process;
 
 ---------------------------------------
 --
--- TODO
---
 -- Fifo to store bytes from Kernel SPI
 --
 -- Byte[0] :: READ_CONTROL
@@ -385,32 +366,11 @@ end process;
 -- TODO :: CHECKSUM
 --
 ---------------------------------------
-primary_fifo_module: Fifo
+Fifo_Controller: FifoCtrl
 generic map
 (
     WIDTH => FIFO_WIDTH,
     DEPTH => FIFO_DEPTH
-)
-port map
-(
-    CLOCK_50MHz => CLOCK_50MHz,
-    RESET => '0',
-    -- IN
-    data_in  => primary_fifo_data_in,
-    wr_en    => primary_fifo_wr_en,
-    rd_en    => primary_fifo_rd_en,
-    -- OUT
-    data_out => open,
-    full     => open,
-    empty    => open
-);
-
-prototype_fifo_module: FifoStateMachine
-generic map
-(
-    WIDTH => FIFO_WIDTH,
-    DEPTH => FIFO_DEPTH,
-    SM_OFFSET => 2
 )
 port map
 (
