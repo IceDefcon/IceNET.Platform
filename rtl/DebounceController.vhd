@@ -6,7 +6,8 @@ use ieee.std_logic_unsigned.all;
 entity DebounceController is
 generic 
 (
-    PERIOD : integer := 50000 -- 50Mhz :: 50000*20ns = 1ms
+    PERIOD : integer := 50000; -- 50Mhz :: 50000*20ns = 1ms
+    SM_OFFSET : integer := 3
 );
 port 
 (    
@@ -19,7 +20,6 @@ end DebounceController;
 
 architecture rtl of DebounceController is
 
-    constant SM_OFFSET : integer := 3;
     signal stable_count : integer := 0;
 
     type DEBOUNCE is
