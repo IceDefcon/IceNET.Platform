@@ -3,7 +3,11 @@ use IEEE.std_logic_1164.all;
 use IEEE.std_logic_unsigned.all;
 use IEEE.numeric_std.all;
 
-entity Pwm is
+entity PwmCtrl is
+generic
+(
+    BASE_PERIOD_MS : integer := 20
+);
 port
 (    
     CLOCK_50MHz : in std_logic;
@@ -15,11 +19,13 @@ port
 
     PWM_SIGNAL : out std_logic
 );
-end Pwm;
+end PwmCtrl;
 
-architecture rtl of Pwm is
+architecture rtl of PwmCtrl is
 
--- Pwm
+-- Default base period :: 20 * 50000clk * 20ns = 20ms
+signal defeult_period : integer := BASE_PERIOD_MS*50000 - 1;
+
 type PWM is 
 (
     IDLE,
@@ -37,10 +43,10 @@ signal pwm_base_timer : std_logic_vector(19 downto 0) := (others => '0');
 signal pwm_timer : std_logic_vector(16 downto 0) := (others => '0');
 signal pwm_config : std_logic := '0';
 signal pwm_ready : std_logic := '0';
-signal pwm_data : std_logic_vector(7 downto 0) := (others => '0');
+signal pwm_data_vector : std_logic_vector(7 downto 0) := (others => '0');
 
-constant multiplier : integer := 200;
-constant offset : integer := 50000;
+constant MULTIPLIER : integer := 200; -- 200*20ns = 4us Resolution :: 1ms/4us = 250 steps
+constant MIN_OFFSET : integer := 50000; -- Minimum 1ms
 
 begin
 
@@ -49,7 +55,7 @@ process(CLOCK_50MHz)
     variable pwm_integer : integer := 50000;
 begin
     if rising_edge(CLOCK_50MHz) then
-        if pwm_base_timer = "11110100001000111111" then -- 20ms PWM Period
+        if pwm_base_timer = std_logic_vector(to_unsigned(defeult_period, 20)) then -- 20ms PWM Period
             pwm_base_timer <= (others => '0');
             pwm_base_pulse <= '1';
         else
@@ -57,12 +63,13 @@ begin
             pwm_base_pulse <= '0';
         end if;
 
-        -- Check if data is ready and store data
+        -- Check if new data vector is ready to store
         if OFFLOAD_INT = '1' then
             pwm_ready <= '1';
-            pwm_data <= PWM_VECTOR;
+            pwm_data_vector <= PWM_VECTOR;
         end if;
 
+        -- PWM 20ms sync
         case pwm_state is
             when IDLE =>
                 if pwm_base_pulse = '1' then
@@ -77,13 +84,13 @@ begin
                     -- Calculate PWM width
                     -- 50000*20ns + (200*[0:250])*20ns = 2ms
                     -- 1ms        + [0:1]ms            = [1:2]ms
-                    if to_integer(unsigned(pwm_data)) <= 250 then
-                        pwm_integer := offset + multiplier * to_integer(unsigned(pwm_data));
+                    if to_integer(unsigned(pwm_data_vector)) <= 250 then
+                        pwm_integer := MIN_OFFSET + MULTIPLIER * to_integer(unsigned(pwm_data_vector));
                     else
-                        pwm_integer := offset + multiplier * 250; -- Max value
+                        pwm_integer := MIN_OFFSET + MULTIPLIER * 250; -- Max value
                     end if;
                     pwm_ready <= '0';
-                    FPGA_INT <= '1';
+                    FPGA_INT <= '1'; -- Return signal to Kernel to unblock SM
                 end if;
                 pwm_state <= CONFIG;
 

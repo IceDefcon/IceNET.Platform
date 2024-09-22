@@ -240,7 +240,11 @@ port
 );
 end component;
 
-component Pwm
+component PwmCtrl
+generic
+(
+    BASE_PERIOD_MS : integer := 20
+);
 port
 (    
     CLOCK_50MHz : in std_logic;
@@ -471,7 +475,11 @@ I2cStateMachine_module: I2cStateMachine port map
 -- width = 50000 + 250*200 = 100000
 -- 100000*10^-9 = 2ms
 --
-primary_pwm_module: Pwm
+primary_pwm_module: PwmCtrl
+generic map
+(
+    BASE_PERIOD_MS => 20  -- 20ms Base Period
+)
 port map 
 (
     -- IN
