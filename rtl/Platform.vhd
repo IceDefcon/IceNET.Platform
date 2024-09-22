@@ -39,6 +39,8 @@ port
     INT_FROM_CPU : in std_logic; -- PIN_A4 :: BBB P9_14 :: WHITE
     -- PWM
     PWM_SIGNAL : out std_logic; -- PIN_A20 :: Orange
+    -- Watchdog signal
+    WATCHDOG_INTERRUPT : out std_logic; -- PIN_B20
     -- Debug LED's
     LED_1 : out std_logic; -- PIN_U7
     LED_2 : out std_logic; -- PIN_U8
@@ -64,11 +66,6 @@ architecture rtl of Platform is
 
 -- Buttons
 signal reset_button : std_logic := '0';
--- Interrupt Pulse Generator
-signal interrupt_divider : integer := 2;
-signal interrupt_period : std_logic_vector(25 downto 0) := "10111110101111000001111111"; -- [50*10^6 - 1]
-signal interrupt_length : std_logic_vector(3 downto 0) := "1111";
-signal interrupt_signal : std_logic := '0';
 -- Spi.0 Primary
 signal primary_ready_MISO : std_logic := '0';
 signal primary_parallel_MOSI : std_logic_vector(7 downto 0) := "00100100"; -- 0x42
@@ -155,13 +152,16 @@ Port
 );
 end component;
 
-component ImpulseGenerator
+component InterruptGenerator
+generic
+(
+    PERIOD_MS : integer := 1000;
+    PULSE_LENGTH : integer := 50
+);
 Port 
 (
-    CLOCK : in  std_logic;
-    interrupt_period : in  std_logic_vector(25 downto 0);
-    interrupt_length : in  std_logic_vector(3 downto 0);
-    interrupt_signal : out std_logic
+    CLOCK_50MHz : in  std_logic;
+    INTERRUPT_SIGNAL : out std_logic
 );
 end component;
 
@@ -309,25 +309,16 @@ secondarySpiProcessing_module: SpiProcessing port map
     SERIAL_MISO => SECONDARY_MISO -- out Serialized Data from i2c state machine to Kernel
 );
 
-------------------------------------------------------
--- Interrupt pulse :: 0x2FAF07F/50 MHz
--- (49999999 + 1)/50000000 Hz = 1 sec
---
--- Divide 0 :: 50000000 >> 0 :: 50000000*20ns = 1000ms
--- Divide 1 :: 50000000 >> 1 :: 25000000*20ns = 500ms
--- Divide 2 :: 50000000 >> 2 :: 12500000*20ns = 250ms
--- Divide 3 :: 50000000 >> 3 :: 6250000*20ns = 125ms
--- Divide 4 :: 50000000 >> 4 :: 3125000*20ns = 62.5ms
---
--- Interrupt length :: 0xF
--- 16 * 20ns = 320 ns
-------------------------------------------------------
-Interrupt_module: ImpulseGenerator port map 
+InterruptGenerator_module: InterruptGenerator
+generic map
 (
-	CLOCK => CLOCK_50MHz,
-	interrupt_period => std_logic_vector(unsigned(interrupt_period) srl interrupt_divider),
-	interrupt_length => interrupt_length,
-	interrupt_signal => interrupt_signal
+    PERIOD_MS => 1000,
+    PULSE_LENGTH => 50 -- 50 * 20ns = 100ns Interrupt Pulse
+)
+port map
+(
+	CLOCK_50MHz => CLOCK_50MHz,
+	INTERRUPT_SIGNAL => WATCHDOG_INTERRUPT
 );
 
 --
