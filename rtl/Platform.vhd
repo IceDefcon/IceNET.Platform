@@ -83,8 +83,8 @@ signal mag_y_7_0 : std_logic_vector(7 downto 0):= (others => '0');
 signal mag_x_15_8 : std_logic_vector(7 downto 0):= (others => '0');
 signal mag_x_7_0 : std_logic_vector(7 downto 0):= (others => '0');
 -- FIFO
-constant primary_fifo_WIDTH : integer := 8;
-constant primary_fifo_DEPTH : integer := 16;
+constant FIFO_WIDTH : integer := 8;
+constant FIFO_DEPTH : integer := 16;
 signal primary_fifo_data_in : std_logic_vector(7 downto 0) := (others => '0');
 signal primary_fifo_wr_en : std_logic := '0';
 signal primary_fifo_rd_en : std_logic := '0';
@@ -113,6 +113,12 @@ signal interrupt_from_cpu : std_logic := '0';
 signal interrupt_feedback_signal : std_logic := '0';
 signal interrupt_feedback_count : std_logic_vector(7 downto 0) := (others => '0');
 
+-- Test FIFO signals
+signal test_fifo_data_out : std_logic_vector(7 downto 0) := (others => '0');
+signal test_fifo_full : std_logic := '0';
+signal test_fifo_empty : std_logic := '0';
+
+
 ----------------------------------------------------------------------------------------------------------------
 -- COMPONENTS DECLARATION
 ----------------------------------------------------------------------------------------------------------------
@@ -120,7 +126,8 @@ signal interrupt_feedback_count : std_logic_vector(7 downto 0) := (others => '0'
 component DebounceController
 generic 
 (
-    PERIOD : integer := 50000 -- 50Mhz :: 50000*20ns = 1ms
+    PERIOD : integer := 50000; -- 50Mhz :: 50000*20ns = 1ms
+    SM_OFFSET : integer := 3
 );
 port
 (
@@ -198,14 +205,38 @@ generic
 );
 port 
 (
-    clk      : in  std_logic;
-    reset    : in  std_logic;
+    CLOCK_50MHz : in  std_logic;
+    RESET : in  std_logic;
+    -- In
     data_in  : in  std_logic_vector(7 downto 0);
     wr_en    : in  std_logic;
     rd_en    : in  std_logic;
+    -- Out
     data_out : out std_logic_vector(7 downto 0);
     full     : out std_logic;
     empty    : out std_logic
+);
+end component;
+
+component FifoStateMachine
+generic
+(
+    WIDTH : integer := 8;
+    DEPTH : integer := 16;
+    SM_OFFSET : integer := 2
+);
+port
+(
+    CLOCK_50MHz : in  std_logic;
+    RESET : in  std_logic;
+    -- In
+    DATA_IN : in  std_logic_vector(7 downto 0);
+    WRITE_EN : in  std_logic;
+    READ_EN : in  std_logic;
+    -- Out
+    DATA_OUT : out std_logic_vector(7 downto 0);
+    FULL : out std_logic;
+    EMPTY : out std_logic
 );
 end component;
 
@@ -248,7 +279,8 @@ begin
 DebounceController_module: DebounceController
 generic map
 (
-    PERIOD => 50000 -- 50Mhz :: 50000*20ns = 1ms
+    PERIOD => 50000, -- 50Mhz :: 50000*20ns = 1ms
+    SM_OFFSET => 3
 )
 port map
 (
@@ -356,21 +388,42 @@ end process;
 primary_fifo_module: Fifo
 generic map
 (
-    WIDTH => primary_fifo_WIDTH,
-    DEPTH => primary_fifo_DEPTH
+    WIDTH => FIFO_WIDTH,
+    DEPTH => FIFO_DEPTH
 )
 port map
 (
+    CLOCK_50MHz => CLOCK_50MHz,
+    RESET => '0',
     -- IN
-    clk      => CLOCK_50MHz,
-    reset    => '0',
     data_in  => primary_fifo_data_in,
     wr_en    => primary_fifo_wr_en,
     rd_en    => primary_fifo_rd_en,
     -- OUT
-    data_out => primary_fifo_data_out,
-    full     => primary_fifo_full,
-    empty    => primary_fifo_empty
+    data_out => open,
+    full     => open,
+    empty    => open
+);
+
+prototype_fifo_module: FifoStateMachine
+generic map
+(
+    WIDTH => FIFO_WIDTH,
+    DEPTH => FIFO_DEPTH,
+    SM_OFFSET => 2
+)
+port map
+(
+    CLOCK_50MHz => CLOCK_50MHz,
+    RESET => '0',
+    -- IN
+    DATA_IN  => primary_fifo_data_in,
+    WRITE_EN => primary_fifo_wr_en,
+    READ_EN => primary_fifo_rd_en,
+    -- OUT
+    DATA_OUT => primary_fifo_data_out,
+    FULL => primary_fifo_full,
+    EMPTY => primary_fifo_empty
 );
 
 OffloadController_module: OffloadController
@@ -440,6 +493,8 @@ I2cStateMachine_module: I2cStateMachine port map
 );
 
 --
+-- TODO :: Need Refactoring and Parametrization !!!
+--
 -- Hex range 0x00 ---> 0xFA
 -- Dec range 0 ---> 250
 --
@@ -473,6 +528,8 @@ port map
 
 -- To keep signals not optimized by the HDL compiler
 LED_8 <= offload_ctrl(0) and offload_ctrl(1) and offload_ctrl(2) and offload_ctrl(3) and offload_ctrl(4) and offload_ctrl(5) and offload_ctrl(6) and offload_ctrl(7);
+LED_7 <= test_fifo_data_out(0) and test_fifo_data_out(1) and test_fifo_data_out(2) and test_fifo_data_out(3) and test_fifo_data_out(4) and test_fifo_data_out(5) and test_fifo_data_out(6) and test_fifo_data_out(7);
+LED_6 <= test_fifo_full and test_fifo_empty;
 
 return_interrupts_process:
 process(CLOCK_50MHz)

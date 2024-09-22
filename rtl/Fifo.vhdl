@@ -9,11 +9,13 @@ generic
 );
 port 
 (
-    clk     : in  std_logic;
-    reset   : in  std_logic;
+    CLOCK_50MHz : in  std_logic;
+    RESET : in  std_logic;
+    -- In
     data_in : in  std_logic_vector(WIDTH-1 downto 0);
     wr_en   : in  std_logic;
     rd_en   : in  std_logic;
+    -- Out
     data_out: out std_logic_vector(WIDTH-1 downto 0);
     full    : out std_logic;
     empty   : out std_logic
@@ -33,13 +35,13 @@ signal prev : std_logic_vector(WIDTH-1 downto 0) := (others => '0');
 
 begin
 
-    process(clk, reset)
+    process(CLOCK_50MHz, RESET)
     begin
-        if reset = '1' then
+        if RESET = '1' then
             wr_ptr <= 0;
             rd_ptr <= 0;
             count  <= 0;
-        elsif rising_edge(clk) then
+        elsif rising_edge(CLOCK_50MHz) then
             if wr_en = '1' and count < DEPTH then
                 memory(wr_ptr) <= data_in;
                 wr_ptr <= (wr_ptr + 1) mod DEPTH;

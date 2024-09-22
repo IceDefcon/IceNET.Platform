@@ -26,6 +26,7 @@ type STATE is
     IDLE,
     DELAY_INIT,
     DELAY_CONFIG,
+    DELAY_OFFSET,
     READ_ID,
     READ_REGISTER,
     READ_CONTROL,
