@@ -40,7 +40,7 @@ port
     -- PWM
     PWM_SIGNAL : out std_logic; -- PIN_A20 :: Orange
     -- Watchdog signal
-    WATCHDOG_INTERRUPT : out std_logic; -- PIN_B20
+    WATCHDOG_INTERRUPT : out std_logic; -- PIN_B20 :: Red
     -- Debug LED's
     LED_1 : out std_logic; -- PIN_U7
     LED_2 : out std_logic; -- PIN_U8
