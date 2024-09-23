@@ -23,6 +23,20 @@
 //                      //
 //////////////////////////
 
+/* ISR */
+static irqreturn_t watchdogISR(int irq, void *data)
+{
+    static int counter = 0;
+
+    printk(KERN_INFO "[CTRL][ISR] Watchdog Interrupt No[%d] received from FPGA @ Pin [%d]\n", counter, GPIO_WATCHDOG_INTERRUPT);
+    counter++;
+
+    /* QUEUE :: Execution of transferFpgaOutput */
+    // queue_work(get_transferFpgaOutput_wq(), get_transferFpgaOutput_work());
+
+    return IRQ_HANDLED;
+}
+
 static irqreturn_t transferFpgaOutputISR(int irq, void *data)
 {
     static int counter = 0;
@@ -36,12 +50,70 @@ static irqreturn_t transferFpgaOutputISR(int irq, void *data)
     return IRQ_HANDLED;
 }
 
+/* INIT */
+static int watchdogInit(void)
+{
+
+    int irq_kernel;
+    int result;
+
+    result = gpio_request(GPIO_WATCHDOG_INTERRUPT, "   Request");
+    if (result < 0)
+    {
+        printk(KERN_ERR "[INIT][ISR] Failed GPIO Request :: Pin [%d]\n", GPIO_WATCHDOG_INTERRUPT);
+        return result;
+    }
+    else
+    {
+        printk(KERN_ERR "[INIT][ISR] Setup GPIO Pin [%d] Request\n", GPIO_WATCHDOG_INTERRUPT);
+    }
+
+    result = gpio_direction_input(GPIO_WATCHDOG_INTERRUPT);
+    if (result < 0)
+    {
+        printk(KERN_ERR "[INIT][ISR] Failed to set GPIO direction :: Pin [%d]\n", GPIO_WATCHDOG_INTERRUPT);
+        gpio_free(GPIO_WATCHDOG_INTERRUPT);
+        return result;
+    }
+    else
+    {
+        printk(KERN_ERR "[INIT][ISR] Setup GPIO Pin [%d] as input\n", GPIO_WATCHDOG_INTERRUPT);
+    }
+
+
+    irq_kernel = gpio_to_irq(GPIO_WATCHDOG_INTERRUPT);
+    if (irq_kernel < 0)
+    {
+        printk(KERN_ERR "[INIT][ISR] Failed to get IRQ number :: Pin [%d]\n", GPIO_WATCHDOG_INTERRUPT);
+        gpio_free(GPIO_WATCHDOG_INTERRUPT);
+        return irq_kernel;
+    }
+    else
+    {
+        printk(KERN_ERR "[INIT][ISR] Setup GPIO Pin [%d] as interrupt\n", GPIO_WATCHDOG_INTERRUPT);
+    }
+
+    result = request_irq(irq_kernel, watchdogISR, IRQF_TRIGGER_RISING, "Request IRQ", NULL);
+    if (result < 0)
+    {
+        printk(KERN_ERR "[INIT][ISR] Failed to request IRQ number :: Pin [%d]\n", GPIO_WATCHDOG_INTERRUPT);
+        gpio_free(GPIO_WATCHDOG_INTERRUPT);
+        return result;
+    }
+    else
+    {
+        printk(KERN_ERR "[INIT][ISR] Register watchdogISR callback at Pin [%d] IRQ\n", GPIO_WATCHDOG_INTERRUPT);
+    }
+
+    return 0;
+}
+
 static int interruptFromKernelInit(void)
 {
     int result;
 
     result = gpio_request(GPIO_KERNEL_INTERRUPT, "   Response");
-    if (result < 0) 
+    if (result < 0)
     {
         printk(KERN_ERR "[INIT][ISR] Failed GPIO Request :: Pin [%d]\n", GPIO_KERNEL_INTERRUPT);
     }
@@ -52,7 +124,7 @@ static int interruptFromKernelInit(void)
 
     // Set GPIO pin as an output
     result = gpio_direction_output(GPIO_KERNEL_INTERRUPT, 0); // Write low (0) to sink current to ground
-    if (result < 0) 
+    if (result < 0)
     {
         printk(KERN_ERR "[INIT][ISR] Failed to set GPIO direction :: Pin [%d]\n", GPIO_KERNEL_INTERRUPT);
         gpio_free(GPIO_KERNEL_INTERRUPT);
@@ -72,7 +144,7 @@ static int transferFpgaOutputInit(void)
     int result;
 
     result = gpio_request(GPIO_FPGA_INTERRUPT, "   Request");
-    if (result < 0) 
+    if (result < 0)
     {
         printk(KERN_ERR "[INIT][ISR] Failed GPIO Request :: Pin [%d]\n", GPIO_FPGA_INTERRUPT);
         return result;
@@ -83,7 +155,7 @@ static int transferFpgaOutputInit(void)
     }
 
     result = gpio_direction_input(GPIO_FPGA_INTERRUPT);
-    if (result < 0) 
+    if (result < 0)
     {
         printk(KERN_ERR "[INIT][ISR] Failed to set GPIO direction :: Pin [%d]\n", GPIO_FPGA_INTERRUPT);
         gpio_free(GPIO_FPGA_INTERRUPT);
@@ -96,7 +168,7 @@ static int transferFpgaOutputInit(void)
 
 
     irq_kernel = gpio_to_irq(GPIO_FPGA_INTERRUPT);
-    if (irq_kernel < 0) 
+    if (irq_kernel < 0)
     {
         printk(KERN_ERR "[INIT][ISR] Failed to get IRQ number :: Pin [%d]\n", GPIO_FPGA_INTERRUPT);
         gpio_free(GPIO_FPGA_INTERRUPT);
@@ -108,7 +180,7 @@ static int transferFpgaOutputInit(void)
     }
 
     result = request_irq(irq_kernel, transferFpgaOutputISR, IRQF_TRIGGER_RISING, "Request IRQ", NULL);
-    if (result < 0) 
+    if (result < 0)
     {
         printk(KERN_ERR "[INIT][ISR] Failed to request IRQ number :: Pin [%d]\n", GPIO_FPGA_INTERRUPT);
         gpio_free(GPIO_FPGA_INTERRUPT);
@@ -122,6 +194,7 @@ static int transferFpgaOutputInit(void)
     return 0;
 }
 
+/* DESTROY */
 static void transferFpgaOutputDestroy(void)
 {
     int irq_kernel;
@@ -138,13 +211,24 @@ static void interruptFromKernelDestroy(void)
 
 void isrGpioInit(void)
 {
+    (void)watchdogInit();
     (void)interruptFromKernelInit();
     (void)transferFpgaOutputInit();
+}
+
+static void watchdogDestroy(void)
+{
+    int irq_kernel;
+
+    irq_kernel = gpio_to_irq(GPIO_WATCHDOG_INTERRUPT);
+    free_irq(irq_kernel, NULL);
+    gpio_free(GPIO_WATCHDOG_INTERRUPT);
 }
 
 void isrGpioDestroy(void)
 {
     transferFpgaOutputDestroy();
     interruptFromKernelDestroy();
+    watchdogDestroy();
     printk(KERN_INFO "[DESTROY][ISR] Destroy IRQ for GPIO Pins\n");
 }
