@@ -12,6 +12,7 @@
 
 #include "isrCtrl.h"
 #include "spiWork.h"
+#include "watchdog.h"
 
 //////////////////////////
 //                      //
@@ -26,13 +27,10 @@
 /* ISR */
 static irqreturn_t watchdogISR(int irq, void *data)
 {
-    static int counter = 0;
+    watchdogProcess* tmpProcess = watchdog_getProcess();
 
-    printk(KERN_INFO "[CTRL][ISR] Watchdog Interrupt No[%d] received from FPGA @ Pin [%d]\n", counter, GPIO_WATCHDOG_INTERRUPT);
-    counter++;
-
-    /* QUEUE :: Execution of transferFpgaOutput */
-    // queue_work(get_transferFpgaOutput_wq(), get_transferFpgaOutput_work());
+    printk(KERN_INFO "[CTRL][ISR] Watchdog 0x%x received from FPGA @ Pin [%d]\n", tmpProcess->indicator, GPIO_WATCHDOG_INTERRUPT);
+    tmpProcess->indicator++;
 
     return IRQ_HANDLED;
 }

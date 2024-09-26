@@ -110,10 +110,11 @@
         <trigger_in_editor/>
         <trigger_out_editor/>
       </presentation>
-      <trigger CRC="7021DE56" attribute_mem_mode="false" gap_record="true" global_temp="1" is_expanded="true" name="trigger: 2024/06/06 23:16:17  #0" position="pre" power_up_trigger_mode="false" record_data_gap="true" segment_size="8192" storage_mode="off" storage_qualifier_disabled="no" storage_qualifier_port_is_pin="true" storage_qualifier_port_name="auto_stp_external_storage_qualifier" storage_qualifier_port_tap_mode="classic" trigger_type="circular">
+      <trigger CRC="7021DE56" attribute_mem_mode="false" gap_record="true" global_temp="1" is_expanded="true" name="trigger: 2024/06/06 23:16:17  #0" position="pre" power_up_trigger_mode="false" record_data_gap="true" segment_size="8192" storage_mode="off" storage_qualifier_disabled="no" storage_qualifier_port_is_pin="false" storage_qualifier_port_name="auto_stp_external_storage_qualifier" storage_qualifier_port_tap_mode="classic" trigger_type="circular">
         <power_up_trigger position="pre" storage_qualifier_disabled="no"/>
         <events use_custom_flow_control="no">
-          <level editor="basic_or" enabled="yes" name="condition1" type="advanced"><power_up enabled="yes">
+          <level editor="basic_or" enabled="yes" name="condition1" type="advanced">
+            <power_up enabled="yes">
               <power_up_expression><![CDATA[alt_reduction(alt_true, {((mbpm('X', 'I2cStateMachine:I2cStateMachine_module|FIFO_INT') && variable(1))), ((mbpm('X', 'I2cStateMachine:I2cStateMachine_module|FPGA_INT') && variable(1))), ((mbpm('X', 'I2cStateMachine:I2cStateMachine_module|I2C_SCK') && variable(1))), ((mbpm('X', 'I2cStateMachine:I2cStateMachine_module|I2C_SDA') && variable(1))), (alt_reduction(alt_false, {(mbpm('X', 'I2cStateMachine:I2cStateMachine_module|status_sck[0]') && variable(1)), (mbpm('X', 'I2cStateMachine:I2cStateMachine_module|status_sck[1]') && variable(1)), (mbpm('X', 'I2cStateMachine:I2cStateMachine_module|status_sck[2]') && variable(1)), (mbpm('X', 'I2cStateMachine:I2cStateMachine_module|status_sck[3]') && variable(1))})), (alt_reduction(alt_false, {(mbpm('X', 'I2cStateMachine:I2cStateMachine_module|status_sda[0]') && variable(1)), (mbpm('X', 'I2cStateMachine:I2cStateMachine_module|status_sda[1]') && variable(1)), (mbpm('X', 'I2cStateMachine:I2cStateMachine_module|status_sda[2]') && variable(1)), (mbpm('X', 'I2cStateMachine:I2cStateMachine_module|status_sda[3]') && variable(1))}))})]]>
               </power_up_expression>
             </power_up><expression><![CDATA[alt_reduction(alt_or, {((mbpm('X', 'I2cStateMachine:I2cStateMachine_module|FIFO_INT') && variable(0))), ((mbpm('X', 'I2cStateMachine:I2cStateMachine_module|FPGA_INT') && variable(0))), ((mbpm('X', 'I2cStateMachine:I2cStateMachine_module|I2C_SCK') && variable(0))), ((mbpm('F', 'I2cStateMachine:I2cStateMachine_module|I2C_SDA') && variable(1))), (alt_reduction(alt_false, {(mbpm('X', 'I2cStateMachine:I2cStateMachine_module|status_sck[0]') && variable(0)), (mbpm('X', 'I2cStateMachine:I2cStateMachine_module|status_sck[1]') && variable(0)), (mbpm('X', 'I2cStateMachine:I2cStateMachine_module|status_sck[2]') && variable(0)), (mbpm('X', 'I2cStateMachine:I2cStateMachine_module|status_sck[3]') && variable(0))})), (alt_reduction(alt_false, {(mbpm('X', 'I2cStateMachine:I2cStateMachine_module|status_sda[0]') && variable(0)), (mbpm('X', 'I2cStateMachine:I2cStateMachine_module|status_sda[1]') && variable(0)), (mbpm('X', 'I2cStateMachine:I2cStateMachine_module|status_sda[2]') && variable(0)), (mbpm('X', 'I2cStateMachine:I2cStateMachine_module|status_sda[3]') && variable(0))}))})]]>
@@ -171,7 +172,7 @@
     <single attribute="jtag widget visible" value="1"/>
     <single attribute="lock mode" value="0"/>
     <multi attribute="column width" size="23" value="34,34,400,74,68,78,95,96,98,98,88,88,110,101,101,101,101,101,101,101,101,41,132"/>
-    <multi attribute="frame size" size="2" value="1920,1043"/>
+    <multi attribute="frame size" size="2" value="1848,1043"/>
     <multi attribute="jtag widget size" size="2" value="328,129"/>
   </global_info>
 </session>
