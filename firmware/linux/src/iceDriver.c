@@ -11,6 +11,7 @@
 // #include "networkStack.h"
 #include "stateMachine.h"
 #include "charDevice.h"
+#include "watchdog.h"
 #include "spiWork.h"
 #include "spiCtrl.h"
 #include "isrCtrl.h"
@@ -33,6 +34,8 @@ static int __init fpga_driver_init(void)
     printk(KERN_INFO "[BEGIN] IceNET CPU & FPGA Platform\n");
     printk(KERN_INFO "----------------------------------\n");
 
+    /* Initialise kthread Watchdog */
+    watchdogInit();
     /* Initialise kthread State Machine */
     stateMachineInit();
     /* Initialise charDevice */

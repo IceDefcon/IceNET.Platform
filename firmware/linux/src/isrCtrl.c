@@ -12,6 +12,7 @@
 
 #include "isrCtrl.h"
 #include "spiWork.h"
+#include "watchdog.h"
 
 //////////////////////////
 //                      //
@@ -26,13 +27,11 @@
 /* ISR */
 static irqreturn_t watchdogISR(int irq, void *data)
 {
-    static int counter = 0;
+    watchdogProcess* tmpProcess = watchdog_getProcess();
 
-    printk(KERN_INFO "[CTRL][ISR] Watchdog Interrupt No[%d] received from FPGA @ Pin [%d]\n", counter, GPIO_WATCHDOG_INTERRUPT);
-    counter++;
-
-    /* QUEUE :: Execution of transferFpgaOutput */
-    // queue_work(get_transferFpgaOutput_wq(), get_transferFpgaOutput_work());
+    watchdog_lockWatchdogMutex();
+    tmpProcess->indicator++;
+    watchdog_unlockWatchdogMutex();
 
     return IRQ_HANDLED;
 }
@@ -51,7 +50,7 @@ static irqreturn_t transferFpgaOutputISR(int irq, void *data)
 }
 
 /* INIT */
-static int watchdogInit(void)
+static int interruptWatchdogInit(void)
 {
 
     int irq_kernel;
@@ -211,12 +210,12 @@ static void interruptFromKernelDestroy(void)
 
 void isrGpioInit(void)
 {
-    (void)watchdogInit();
+    (void)interruptWatchdogInit();
     (void)interruptFromKernelInit();
     (void)transferFpgaOutputInit();
 }
 
-static void watchdogDestroy(void)
+static void interruptWatchdogDestroy(void)
 {
     int irq_kernel;
 
@@ -229,6 +228,6 @@ void isrGpioDestroy(void)
 {
     transferFpgaOutputDestroy();
     interruptFromKernelDestroy();
-    watchdogDestroy();
+    interruptWatchdogDestroy();
     printk(KERN_INFO "[DESTROY][ISR] Destroy IRQ for GPIO Pins\n");
 }
