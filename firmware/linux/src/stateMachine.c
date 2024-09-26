@@ -109,7 +109,7 @@ void stateMachineInit(void)
 {
     setStateMachine(IDLE);
 
-    Process.threadHandle = kthread_create(StateMachineThread, NULL, "IceNetThreadn");
+    Process.threadHandle = kthread_create(StateMachineThread, NULL, "IceNetThread");
     
     if (IS_ERR(Process.threadHandle))
     {

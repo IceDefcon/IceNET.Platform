@@ -18,7 +18,11 @@ typedef struct
     struct mutex watchdogMutex;
 } watchdogProcess;
 
+void watchdog_lockWatchdogMutex(void);
+void watchdog_unlockWatchdogMutex(void);
 watchdogProcess* watchdog_getProcess(void);
 
+void watchdogInit(void);
+void watchdogDestroy(void);
 
 #endif // WATCHDOG_H
