@@ -86,7 +86,13 @@ port
     SECONDARY_MOSI : in std_logic;  -- PIN_A13 :: P9_30 :: SPI1_D1
     SECONDARY_SCLK : in std_logic;  -- PIN_B10 :: P9_31 :: SPI1_SCLK
     -- Watchdog signal
-    WATCHDOG_INTERRUPT : out std_logic -- PIN_B5
+    WATCHDOG_INTERRUPT : out std_logic; -- PIN_B5
+
+    UART_BBB_TX : in std_logic;  -- PIN_A16 :: P9_24
+    UART_BBB_RX : out std_logic; -- PIN_A15 :: P9_26
+
+    UART_x86_TX : out std_logic; -- PIN_N19 :: FTDI Rx
+    UART_x86_RX : in std_logic   -- PIN_M19 :: FTDI Tx
 );
 end Platform;
 
@@ -290,6 +296,19 @@ port
 );
 end component;
 
+component uartDriver
+port
+(
+    CLOCK_50MHz : in std_logic;
+
+    UART_BBB_TX : in std_logic;
+    UART_BBB_RX : out std_logic;
+
+    UART_x86_TX : out std_logic;
+    UART_x86_RX : in std_logic
+);
+end component;
+
 ----------------------------------------------------------------------------------------------------------------
 -- MAIN ROUTINE
 ----------------------------------------------------------------------------------------------------------------
@@ -427,6 +446,18 @@ port map
     OFFLOAD_REGISTER => offload_register,
     OFFLOAD_CTRL => offload_ctrl,
     OFFLOAD_DATA => offload_data
+);
+
+uartDriver_module: uartDriver
+port map
+(
+    CLOCK_50MHz => CLOCK_50MHz,
+
+    UART_BBB_TX => UART_BBB_TX,
+    UART_BBB_RX => UART_BBB_RX,
+
+    UART_x86_TX => UART_x86_TX,
+    UART_x86_RX => UART_x86_RX
 );
 
 PacketSwitch:

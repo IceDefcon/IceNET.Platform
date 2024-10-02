@@ -10,6 +10,7 @@
 /* Move tcp server to applicaton */
 // #include "networkStack.h"
 #include "stateMachine.h"
+#include "uartConsole.h"
 #include "charDevice.h"
 #include "watchdog.h"
 #include "spiWork.h"
@@ -34,6 +35,8 @@ static int __init fpga_driver_init(void)
     printk(KERN_INFO "[BEGIN] IceNET CPU & FPGA Platform\n");
     printk(KERN_INFO "----------------------------------\n");
 
+    /* Initialise UART Console */
+    uartConsoleInit();
     /* Initialise kthread Watchdog */
     watchdogInit();
     /* Initialise kthread State Machine */
@@ -46,6 +49,7 @@ static int __init fpga_driver_init(void)
     spiWorkInit();
     /* Initialise gpio ISR */
     isrGpioInit();
+
 
     printk(KERN_INFO "----------------------------------\n");
     printk(KERN_INFO "[READY] Driver loaded successfuly \n");
@@ -69,6 +73,7 @@ static void __exit fpga_driver_exit(void)
     spiDestroy();
     charDeviceDestroy();
     stateMachineDestroy();
+    uartConsoleDestroy();
 
     printk(KERN_INFO "[TERMINATE] Driver terminated successfully\n");
 }
