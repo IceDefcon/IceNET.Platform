@@ -19,9 +19,9 @@
 //                      //
 //////////////////////////
 
-#define GPIO_KERNEL_INTERRUPT 50 // OUT :: P9_14
-#define GPIO_FPGA_INTERRUPT 60 // IN :: P9_12
-#define GPIO_WATCHDOG_INTERRUPT 66 // IN :: P8_7
+#define GPIO_KERNEL_INTERRUPT 48 	// OUT :: P9_15 :: PIN_B20
+#define GPIO_FPGA_INTERRUPT 49 		// IN  :: P9_23 ::
+#define GPIO_WATCHDOG_INTERRUPT 20 	// IN  :: P9_41
 
 void isrGpioInit(void);
 void isrGpioDestroy(void);

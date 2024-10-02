@@ -16,31 +16,6 @@ port
 (
 	-- FPGA Reference Clock
     CLOCK_50MHz : in std_logic; -- PIN_T2
-    -- BBB SPI0
-    PRIMARY_CS : in std_logic;    -- PIN_A5   :: BBB P9_17 :: PULPLE :: SPI0_CS0
-    PRIMARY_MISO : out std_logic; -- PIN_A6   :: BBB P9_21 :: BROWN  :: SPI0_D0
-    PRIMARY_MOSI : in std_logic;  -- PIN_A7   :: BBB P9_18 :: BLUE   :: SPI0_D1
-    PRIMARY_SCLK : in std_logic;  -- PIN_A8   :: BBB P9_22 :: BLACK  :: SPI0_SCLK
-    -- BBB SPI1
-    SECONDARY_CS : in std_logic;    -- PIN_B5 :: BBB P9_28 :: ORANGE :: SPI1_CS0
-    SECONDARY_MISO : out std_logic; -- PIN_B6 :: BBB P9_29 :: BLUE   :: SPI1_D0
-    SECONDARY_MOSI : in std_logic;  -- PIN_B7 :: BBB P9_30 :: YELOW  :: SPI1_D1
-    SECONDARY_SCLK : in std_logic;  -- PIN_B8 :: BBB P9_31 :: GREEN  :: SPI1_SCLK
-    -- Bypass :: Not in use for now
-    BYPASS_CS : out std_logic;  -- PIN_A15 :: YELLOW :: CS      :: CS   :: P9_17
-    BYPASS_MISO : in std_logic; -- PIN_A16 :: ORANGE :: SA0     :: SD0  :: P9_21
-    BYPASS_MOSI : out std_logic;  -- PIN_A17 :: RED    :: SDX   :: SDA  :: P9_18
-    BYPASS_SCLK : out std_logic;  -- PIN_A18 :: BROWN  :: SCX   :: SCL  :: P9_22
-    -- I2C BMI160 + ADXL345
-    I2C_SDA : inout std_logic; -- PIN_A9  :: BBB P9_20 :: CPU.BLUE <> FPGA.BLUE <> GYRO.WHITE
-    I2C_SCK : inout std_logic; -- PIN_A10 :: BBB P9_19 :: CPU.ORANGE <> FPGA.GREEN <> GYRO.PURPLE
-	-- Interrupts 
-    INT_FROM_FPGA : out std_logic;  -- PIN_A3 :: BBB P9_12 :: BLACK
-    INT_FROM_CPU : in std_logic; -- PIN_A4 :: BBB P9_14 :: WHITE
-    -- PWM
-    PWM_SIGNAL : out std_logic; -- PIN_A20 :: Orange
-    -- Watchdog signal
-    WATCHDOG_INTERRUPT : out std_logic; -- PIN_B20 :: Red
     -- Debug LED's
     LED_1 : out std_logic; -- PIN_U7
     LED_2 : out std_logic; -- PIN_U8
@@ -51,10 +26,67 @@ port
     LED_7 : out std_logic; -- PIN_M8
     LED_8 : out std_logic; -- PIN_N8
     -- Debug Buttons
-    BUTTON_1 : in std_logic; -- PIN_H20  :: Reset
-    BUTTON_2 : in std_logic; -- PIN_K19  :: Doesnt Work :: Incorrect Schematic or Broken Button
+    BUTTON_1 : in std_logic; -- PIN_H20
+    BUTTON_2 : in std_logic; -- PIN_K19
     BUTTON_3 : in std_logic; -- PIN_J18
-    BUTTON_4 : in std_logic  -- PIN_K18
+    BUTTON_4 : in std_logic; -- PIN_K18
+
+    ---------------------------------------------------------------------------------------------------
+    --
+    -- Line 0
+    --
+    ---------------------------------------------------------------------------------------------------
+    -- Interrupts
+    INT_FROM_CPU : in std_logic; -- PIN_B20 :: P9_15
+    INT_FROM_FPGA : out std_logic;  -- PIN_B16 :: P9_23
+
+    -- PIN_A5  :: P9_42
+    -- PIN_A6  :: P9_40
+    -- PIN_A7  :: P9_38
+    -- PIN_A8  :: P9_36
+    -- PIN_A9  :: P9_34
+    -- PIN_A10 :: P9_32
+    -- PIN_A13 :: P9_30 :: SPI1_D1
+    -- PIN_A14 :: P9_28 :: SPI1_CS0
+    -- PIN_A15 :: P9_26
+    -- PIN_A16 :: P9_24
+    -- PIN_A17 :: P9_22 :: SPI0_SCLK
+    -- PIN_A18 :: P9_20
+    -- PIN_A19 :: P9_18 :: SPI0_D1
+    -- PIN_A20 :: P9_16
+
+    -- PIN_B5  :: P9_41
+    -- PIN_B6  :: P9_39
+    -- PIN_B7  :: P9_37
+    -- PIN_B8  :: P9_35
+    -- PIN_B9  :: P9_33
+    -- PIN_B10  :: P9_31 :: SPI1_SCLK
+    -- PIN_B13  :: P9_29 :: SPI1_D0
+    -- PIN_B14 :: P9_27
+    -- PIN_B15 :: P9_25
+    -- PIN_B16 :: P9_23
+    -- PIN_B17 :: P9_21 :: SPI0_D0
+    -- PIN_B18 :: P9_19
+    -- PIN_B19 :: P9_17 :: SPI0_CS0
+    -- PIN_B20 :: P9_15
+
+    -- BBB SPI0
+    PRIMARY_CS : in std_logic;    -- PIN_B19 :: P9_17 :: SPI0_CS0
+    PRIMARY_MISO : out std_logic; -- PIN_B17 :: P9_21 :: SPI0_D0
+    PRIMARY_MOSI : in std_logic;  -- PIN_A19 :: P9_18 :: SPI0_D1
+    PRIMARY_SCLK : in std_logic;  -- PIN_A17 :: P9_22 :: SPI0_SCLK
+    -- I2C BMI160 + ADXL345
+    I2C_SDA : inout std_logic; -- PIN_AB13
+    I2C_SCK : inout std_logic; -- PIN_AA13
+    -- PWM
+    PWM_SIGNAL : out std_logic; -- PIN_R1
+    -- BBB SPI1
+    SECONDARY_CS : in std_logic;    -- PIN_A14 :: P9_28 :: SPI1_CS0
+    SECONDARY_MISO : out std_logic; -- PIN_B13 :: P9_29 :: SPI1_D0
+    SECONDARY_MOSI : in std_logic;  -- PIN_A13 :: P9_30 :: SPI1_D1
+    SECONDARY_SCLK : in std_logic;  -- PIN_B10 :: P9_31 :: SPI1_SCLK
+    -- Watchdog signal
+    WATCHDOG_INTERRUPT : out std_logic -- PIN_B5
 );
 end Platform;
 
