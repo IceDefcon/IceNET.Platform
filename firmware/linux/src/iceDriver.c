@@ -10,12 +10,12 @@
 /* Move tcp server to applicaton */
 // #include "networkStack.h"
 #include "stateMachine.h"
-#include "uartConsole.h"
 #include "charDevice.h"
 #include "watchdog.h"
 #include "spiWork.h"
 #include "spiCtrl.h"
 #include "isrCtrl.h"
+#include "console.h"
 
 MODULE_VERSION("1.0");
 MODULE_LICENSE("GPL");
@@ -36,7 +36,7 @@ static int __init fpga_driver_init(void)
     printk(KERN_INFO "----------------------------------\n");
 
     /* Initialise UART Console */
-    uartConsoleInit();
+    consoleInit();
     /* Initialise kthread Watchdog */
     watchdogInit();
     /* Initialise kthread State Machine */
@@ -73,7 +73,8 @@ static void __exit fpga_driver_exit(void)
     spiDestroy();
     charDeviceDestroy();
     stateMachineDestroy();
-    uartConsoleDestroy();
+    watchdogDestroy();
+    consoleDestroy();
 
     printk(KERN_INFO "[TERMINATE] Driver terminated successfully\n");
 }

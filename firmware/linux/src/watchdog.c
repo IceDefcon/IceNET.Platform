@@ -63,7 +63,7 @@ static int watchdogThread(void *data)
 
 void watchdogInit(void)
 {
-    Process.threadHandle = kthread_create(watchdogThread, NULL, "watchdogThread");
+    Process.threadHandle = kthread_create(watchdogThread, NULL, "iceWatchdog");
 
     if (IS_ERR(Process.threadHandle))
     {
