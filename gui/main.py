@@ -1,29 +1,28 @@
-#
 # Author: Ice.Marek
 # IceNET Technology 2024
-#
+
 import tkinter as tk
-import socket
-import time
 from tkinter import ttk
 from tkinter import font
+import socket
+import time
+import threading
+import serial
+import serial.tools.list_ports
 
 def log_message(message):
-    log_display.config(state=tk.NORMAL)
-    log_display.insert(tk.END, message + "\n")
-    log_display.config(state=tk.DISABLED)
-    log_display.see(tk.END)  # Scroll to the end of the Text widget
+    tcp_display.config(state=tk.NORMAL)
+    tcp_display.insert(tk.END, message + "\n")
+    tcp_display.config(state=tk.DISABLED)
+    tcp_display.see(tk.END)
 
 def kill_application():
     # Create a TCP socket
     tcp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-    # Connect to the server
     server_address = ip_data.get()
     port = int(port_data.get())
     tcp_socket.connect((server_address, port))
     log_message("[iceNET] Killing Linux Application")
-
     data = bytes([0xDE, 0xAD])
     tcp_socket.sendall(data)
 
@@ -144,8 +143,6 @@ def toggle_write_data_entry():
 # Create the main application window
 root = tk.Tk()
 root.title("TCP Client")
-
-# Set the window size
 root.geometry("1920x1080")
 
 # Large Font
@@ -242,8 +239,80 @@ write_var = tk.BooleanVar() # Add a tick box (Checkbutton)
 write_box = tk.Checkbutton(root, text="Write", variable=write_var, command=toggle_write_data_entry)
 write_box.grid(row=7, column=2, pady=5, padx=5, sticky='w')
 
-log_display = tk.Text(root, width=100, height=12, state=tk.DISABLED)
-log_display.grid(row=8, column=0, columnspan=100, pady=5, padx=5, sticky='w')
+tcp_display = tk.Text(root, width=150, height=12, state=tk.DISABLED)
+tcp_display.grid(row=8, column=0, columnspan=100, pady=5, padx=5, sticky='w')
 
-# Start the GUI event loop
+################################################################################################################################################
+# UART
+################################################################################################################################################
+
+def get_uart_ports():
+    """Get a list of available UART ports."""
+    ports = serial.tools.list_ports.comports()
+    return [port.device for port in ports]
+
+# Add the global variable at the top of your code
+serial_port = None
+
+def serial_connect():
+    """Connect to the selected UART port."""
+    global serial_port
+    selected_port = uart_combobox.get()
+
+    try:
+        serial_port = serial.Serial(selected_port, baudrate=921600, timeout=1)  # Adjust as needed
+        threading.Thread(target=read_uart, daemon=True).start()  # Start reading in a new thread
+        log_message(f"Connected to {selected_port}")
+    except Exception as e:
+        log_message(f"Error connecting to {selected_port}: {e}")
+
+def serial_disconnect():
+    """Disconnect from the UART port."""
+    global serial_port
+    if serial_port and serial_port.is_open:
+        serial_port.close()
+        log_message(f"Disconnected from {serial_port.name}")
+        serial_port = None  # Reset the global variable
+
+def read_uart():
+    """Continuously read data from the UART port and display it."""
+    global serial_port  # Use the global serial port variable
+    if serial_port is None:
+        return  # Exit if not connected
+
+    try:
+        while True:
+            if serial_port.in_waiting > 0:
+                data = serial_port.read(serial_port.in_waiting).decode('utf-8', errors='ignore')  # Read available data
+                log_uart_data(data)  # Call to update the display
+    except Exception as e:
+        log_message(f"Error reading from UART: {e}")
+
+def log_uart_data(data):
+    """Log the UART data to the display."""
+    uart_display.config(state=tk.NORMAL)
+    uart_display.insert(tk.END, data)  # Insert new data at the end
+    uart_display.config(state=tk.DISABLED)
+    uart_display.see(tk.END)  # Scroll to the end
+
+# Create and place the CONNECT button
+uart_open = tk.Button(root, text="OPEN", command=serial_connect)
+uart_open.grid(row=9, column=0, pady=5, padx=5, sticky='nsew')
+
+# Create and place the CLOSE button
+uart_close = tk.Button(root, text="CLOSE", command=serial_disconnect)
+uart_close.grid(row=9, column=2, pady=5, padx=5, sticky='nsew')  # Correct the column index to 2
+
+# Get available UART ports
+uart_ports = get_uart_ports()
+
+# Create and place the dropdown menu
+uart_combobox = ttk.Combobox(root, values=uart_ports)
+uart_combobox.grid(row=9, column=1, pady=5, padx=5, sticky='nsew')
+
+# Create and place the UART display
+uart_display = tk.Text(root, width=150, height=12, state=tk.DISABLED)
+uart_display.grid(row=10, column=0, columnspan=100, pady=5, padx=5, sticky='w')
+
+# Start the Tkinter main loop
 root.mainloop()

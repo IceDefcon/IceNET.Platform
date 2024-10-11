@@ -35,8 +35,6 @@ static int __init fpga_driver_init(void)
     printk(KERN_INFO "[BEGIN] IceNET CPU & FPGA Platform\n");
     printk(KERN_INFO "----------------------------------\n");
 
-    /* Initialise UART Console */
-    consoleInit();
     /* Initialise kthread Watchdog */
     watchdogInit();
     /* Initialise kthread State Machine */
@@ -49,7 +47,8 @@ static int __init fpga_driver_init(void)
     spiWorkInit();
     /* Initialise gpio ISR */
     isrGpioInit();
-
+    /* Initialise UART Console */
+    consoleInit();
 
     printk(KERN_INFO "----------------------------------\n");
     printk(KERN_INFO "[READY] Driver loaded successfuly \n");
@@ -68,13 +67,13 @@ static int __init fpga_driver_init(void)
 static void __exit fpga_driver_exit(void)
 {
     /* Destroy everything */
+    consoleDestroy();
     isrGpioDestroy();
     spiWorkDestroy();
     spiDestroy();
     charDeviceDestroy();
     stateMachineDestroy();
     watchdogDestroy();
-    consoleDestroy();
 
     printk(KERN_INFO "[TERMINATE] Driver terminated successfully\n");
 }

@@ -60,8 +60,8 @@ port
     -- PIN_B7  :: P9_37
     -- PIN_B8  :: P9_35
     -- PIN_B9  :: P9_33
-    -- PIN_B10  :: P9_31 :: SPI1_SCLK
-    -- PIN_B13  :: P9_29 :: SPI1_D0
+    -- PIN_B10 :: P9_31 :: SPI1_SCLK
+    -- PIN_B13 :: P9_29 :: SPI1_D0
     -- PIN_B14 :: P9_27
     -- PIN_B15 :: P9_25
     -- PIN_B16 :: P9_23

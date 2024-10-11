@@ -129,7 +129,7 @@ static ssize_t uart_write(const char *buf, size_t len)
     oldfs = get_fs();
     set_fs(KERNEL_DS);  // Change address limit for kernel space write
 
-    ret = vfs_write(process.uartFile, buf, len, &process.uartFile->f_pos);  // Write to UART
+    ret = vfs_write(process.uartFile, buf, len, &process.uartFile->f_pos);
 
     set_fs(oldfs);  // Restore address limit
 
