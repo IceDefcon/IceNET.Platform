@@ -109,14 +109,58 @@ static ssize_t uart_write(const char *buf, size_t len)
 
     set_fs(oldfs);  // Restore address limit
 
-    if (ret < 0) {
+    if (ret < 0)
+    {
         printk(KERN_ERR "UART write failed: %d\n", ret);  // Changed %ld to %d
-    } else {
+    }
+    else
+    {
         printk(KERN_INFO "Sent to UART: %s\n", buf);
     }
 
     return ret;
 }
+
+static ssize_t uart_write(const char *buf, size_t len)
+{
+    mm_segment_t oldfs;
+    ssize_t ret;
+    int retries = 3;
+
+    if (!uart_filp)
+    {
+        printk(KERN_ERR "UART device is not open!\n");
+        return -ENODEV;
+    }
+
+    oldfs = get_fs();
+    set_fs(KERNEL_DS);
+
+    while (retries--)
+    {
+        ret = vfs_write(uart_filp, buf, len, &uart_filp->f_pos);
+        if (ret != -EAGAIN)
+        {
+            break;
+        }
+        printk(KERN_INFO "UART write failed, number of retries left: %d\n", retries);
+        msleep(10);  // Delay before retrying
+    }
+
+    set_fs(oldfs);
+
+    if (ret < 0)
+    {
+        printk(KERN_ERR "UART write failed: %zd\n", ret);
+    }
+    else
+    {
+        printk(KERN_INFO "Sent to UART: %s\n", buf);
+    }
+
+    return ret;
+}
+
 
 static int __init uart_module_init(void)
 {
@@ -124,9 +168,13 @@ static int __init uart_module_init(void)
 
     // Open the UART device
     ret = uart_open();
-    if (ret < 0) {
+    if (ret < 0)
+    {
         return ret;
     }
+
+    // Add a delay to ensure UART is ready
+    msleep(100);  // Sleep for 100ms
 
     // Write some data to UART
     uart_write("Hello, UART!\n", 13);

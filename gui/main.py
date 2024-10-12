@@ -1,57 +1,100 @@
-#
 # Author: Ice.Marek
 # IceNET Technology 2024
-#
+
 import tkinter as tk
-import socket
-import time
 from tkinter import ttk
 from tkinter import font
 
-def log_message(message):
-    log_display.config(state=tk.NORMAL)
-    log_display.insert(tk.END, message + "\n")
-    log_display.config(state=tk.DISABLED)
-    log_display.see(tk.END)  # Scroll to the end of the Text widget
+import socket
+import time
+import threading
+import serial
+import serial.tools.list_ports
+
+from uart import UartManager
+from tcp import TcpManager
+
+################################################################################################################################################
+# MAIN
+################################################################################################################################################
+
+def quit_application():
+    log_message("[iceNET] Quitting application...")
+    root.quit()
+    root.destroy()
 
 def kill_application():
     # Create a TCP socket
     tcp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-    # Connect to the server
     server_address = ip_data.get()
     port = int(port_data.get())
     tcp_socket.connect((server_address, port))
     log_message("[iceNET] Killing Linux Application")
-
     data = bytes([0xDE, 0xAD])
     tcp_socket.sendall(data)
+
+def log_message(message):
+    tcp_display.config(state=tk.NORMAL)
+    tcp_display.insert(tk.END, message + "\n")
+    tcp_display.config(state=tk.DISABLED)
+    tcp_display.see(tk.END)
+
+# Create the main application window
+root = tk.Tk()
+root.title("TCP Client")
+root.geometry("1920x1080")
+
+# Large Font
+large_font = font.Font(family="Helvetica", size=16, weight="bold")
+
+quit_button = tk.Button(root, text="QUIT", command=quit_application, width=12)
+quit_button.grid(row=0, column=0, pady=5, padx=5, sticky='w')
+
+kill_button = tk.Button(root, text="KILL APP", command=kill_application, width=14)
+kill_button.grid(row=0, column=1, pady=5, padx=5, sticky='w')
+
+cpu_label = tk.Label(root, text="Drone CPU Control", font=large_font)
+cpu_label.grid(row=0, column=5, pady=5, padx=5, sticky='e')
+
+################################################################################################################################################
+# SEPARATORS
+################################################################################################################################################
+
+# Horizontal separator
+separator1 = ttk.Separator(root, orient='horizontal')
+separator1.grid(row=3, column=0, columnspan=100, sticky='ew')
+
+# Vertical Separators
+separator2 = ttk.Separator(root, orient='vertical')
+separator2.grid(row=0, column=3, rowspan=8, sticky='ns')
+
+# Vertical Separators
+separator3 = ttk.Separator(root, orient='vertical')
+separator3.grid(row=0, column=7, rowspan=8, sticky='ns')
+
+################################################################################################################################################
+# TCP
+################################################################################################################################################
 
 def i2c_assembly():
     header = 0x00 # 7 control bits + 1 R/W bit
     address = int(device_address.get(), 16)  # Convert hex address to integer
     register = int(device_register.get(), 16)  # Convert hex register to integer
-
     if write_var.get():
         data = bytes([header + 0x01, address, register]) + bytes.fromhex(register_data.get())
     else:
         data = bytes([header + 0x00, address, register, 0x00])
-
     return data
 
 def pwm_assembly():
     header = 0x02 # 7 control bits + 1 R/W bit
-
     # Retrieve the value from the Entry widget and convert it to an integer
     pwm_speed_value = int(pwm_speed.get(), 16)  # Assuming the input is in hexadecimal
-
     if pwm_speed_value > 0xFA:
         pwm_speed_value = 0xFA
         pwm_speed.delete(0, 'end')
         pwm_speed.insert(0, "FA")
-
     data = bytes([header, 0x00, 0x00, pwm_speed_value])
-
     return data
 
 def tcp_execute(header):
@@ -130,35 +173,11 @@ def tcp_execute(header):
             tcp_socket.close()
             log_message("[iceNET] Server connection terminated")
 
-def quit_application():
-    log_message("[iceNET] Quitting application...")
-    root.quit()
-    root.destroy()
-
 def toggle_write_data_entry():
     if write_var.get():
         register_data.config(state=tk.NORMAL)
     else:
         register_data.config(state=tk.DISABLED)
-
-# Create the main application window
-root = tk.Tk()
-root.title("TCP Client")
-
-# Set the window size
-root.geometry("1920x1080")
-
-# Large Font
-large_font = font.Font(family="Helvetica", size=16, weight="bold")
-
-quit_button = tk.Button(root, text="QUIT", command=quit_application, width=12)
-quit_button.grid(row=0, column=0, pady=5, padx=5, sticky='w')
-
-kill_button = tk.Button(root, text="KILL APP", command=kill_application, width=14)
-kill_button.grid(row=0, column=1, pady=5, padx=5, sticky='w')
-
-cpu_label = tk.Label(root, text="Drone CPU Control", font=large_font)
-cpu_label.grid(row=0, column=5, pady=5, padx=5, sticky='e')
 
 ip_label = tk.Label(root, text="Server IP Address")
 ip_label.grid(row=1, column=0, pady=5, padx=5, sticky='e')
@@ -171,22 +190,6 @@ port_label.grid(row=2, column=0, pady=5, padx=5, sticky='e')
 port_data = tk.Entry(root, width=16)
 port_data.grid(row=2, column=1, pady=5, padx=5, sticky='w')
 port_data.insert(0, "2555")
-
-# Horizontal separator
-separator1 = ttk.Separator(root, orient='horizontal')
-separator1.grid(row=3, column=0, columnspan=100, sticky='ew')
-
-# Vertical Separators
-separator2 = ttk.Separator(root, orient='vertical')
-separator2.grid(row=0, column=3, rowspan=4, sticky='ns')
-
-# Vertical Separators
-separator3 = ttk.Separator(root, orient='vertical')
-separator3.grid(row=4, column=3, rowspan=4, sticky='ns')
-
-# Vertical Separators
-separator4 = ttk.Separator(root, orient='vertical')
-separator4.grid(row=4, column=7, rowspan=4, sticky='ns')
 
 device_label = tk.Label(root, text="I2C Device ID")
 device_label.grid(row=5, column=0, pady=5, padx=5, sticky='e')
@@ -242,8 +245,13 @@ write_var = tk.BooleanVar() # Add a tick box (Checkbutton)
 write_box = tk.Checkbutton(root, text="Write", variable=write_var, command=toggle_write_data_entry)
 write_box.grid(row=7, column=2, pady=5, padx=5, sticky='w')
 
-log_display = tk.Text(root, width=100, height=12, state=tk.DISABLED)
-log_display.grid(row=8, column=0, columnspan=100, pady=5, padx=5, sticky='w')
+tcp_display = tk.Text(root, width=150, height=12, state=tk.DISABLED)
+tcp_display.grid(row=8, column=0, columnspan=100, pady=5, padx=5, sticky='w')
 
-# Start the GUI event loop
+################################################################################################################################################
+# UART
+################################################################################################################################################
+uart_manager = UartManager(root, log_message)
+
+# Start the Tkinter main loop
 root.mainloop()

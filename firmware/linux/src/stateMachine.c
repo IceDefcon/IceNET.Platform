@@ -51,7 +51,7 @@ static stateMachineProcess Process =
 }
 
 /* Kernel state machine */
-static int StateMachineThread(void *data)
+static int stateMachineThread(void *data)
 {
     stateType state;
     
@@ -109,7 +109,7 @@ void stateMachineInit(void)
 {
     setStateMachine(IDLE);
 
-    Process.threadHandle = kthread_create(StateMachineThread, NULL, "IceNetThread");
+    Process.threadHandle = kthread_create(stateMachineThread, NULL, "iceStateMachine");
     
     if (IS_ERR(Process.threadHandle))
     {
@@ -117,7 +117,7 @@ void stateMachineInit(void)
     }
     else
     {
-        printk(KERN_INFO "[INIT][STM] Created kthread for StateMachineThread\n");
+        printk(KERN_INFO "[INIT][STM] Created kthread for stateMachineThread\n");
         wake_up_process(Process.threadHandle);
     }
 }
