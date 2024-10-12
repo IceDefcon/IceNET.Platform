@@ -16,4 +16,5 @@ class TcpManager:
         self.root = root
         self.log_function = log_function
 
-
+        self.ip_label = tk.Label(self.root, text="Server IP Address")
+        self.ip_label.grid(row=1, column=0, pady=5, padx=5, sticky='e')

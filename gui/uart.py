@@ -18,28 +18,26 @@ class UartManager:
         self.log_message = log_function  # Store the log function
 
         # Create and place the dropdown menu
-        self.uart_combobox = ttk.Combobox(root, values=self.get_uart_ports())
+        self.uart_combobox = ttk.Combobox(self.root, values=self.get_uart_ports())
         self.uart_combobox.grid(row=9, column=1, pady=5, padx=5, sticky='nsew')
 
-        # Create and place the CONNECT button
-        uart_open = tk.Button(root, text="OPEN", command=self.serial_connect)
-        uart_open.grid(row=9, column=0, pady=5, padx=5, sticky='nsew')
+        # Create and place the CONNECT button as an instance attribute
+        self.uart_open = tk.Button(self.root, text="OPEN", command=self.serial_connect)
+        self.uart_open.grid(row=9, column=0, pady=5, padx=5, sticky='nsew')
 
-        # Create and place the CLOSE button
-        uart_close = tk.Button(root, text="CLOSE", command=self.serial_disconnect)
-        uart_close.grid(row=9, column=2, pady=5, padx=5, sticky='nsew')
+        # Create and place the CLOSE button as an instance attribute
+        self.uart_close = tk.Button(self.root, text="CLOSE", command=self.serial_disconnect)
+        self.uart_close.grid(row=9, column=2, pady=5, padx=5, sticky='nsew')
 
-        # Create and place the UART display
-        self.uart_display = tk.Text(root, width=150, height=12, state=tk.DISABLED)
+        # Create and place the UART display as an instance attribute
+        self.uart_display = tk.Text(self.root, width=150, height=12, state=tk.DISABLED)
         self.uart_display.grid(row=10, column=0, columnspan=100, pady=5, padx=5, sticky='w')
 
     def get_uart_ports(self):
-        """Get a list of available UART ports."""
         ports = serial.tools.list_ports.comports()
         return [port.device for port in ports]
 
     def serial_connect(self):
-        """Connect to the selected UART port."""
         selected_port = self.uart_combobox.get()
 
         try:
@@ -50,22 +48,20 @@ class UartManager:
             self.log_message(f"Error connecting to {selected_port}: {e}")
 
     def serial_disconnect(self):
-        """Disconnect from the UART port."""
         if self.serial_port and self.serial_port.is_open:
             self.serial_port.close()
             self.log_message(f"Disconnected from {self.serial_port.name}")
-            self.serial_port = None  # Reset the variable
+            self.serial_port = None
 
     def read_uart(self):
-        """Continuously read data from the UART port and display it."""
         if self.serial_port is None:
-            return  # Exit if not connected
+            return
 
         try:
             while True:
                 if self.serial_port.in_waiting > 0:
                     data = self.serial_port.read(self.serial_port.in_waiting).decode('utf-8', errors='ignore')  # Read available data
-                    self.log_uart_data(data)  # Call to update the display
+                    self.log_uart_data(data)
         except Exception as e:
             self.log_message(f"Error reading from UART: {e}")
 

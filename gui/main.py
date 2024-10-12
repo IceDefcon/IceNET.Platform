@@ -179,8 +179,7 @@ def toggle_write_data_entry():
     else:
         register_data.config(state=tk.DISABLED)
 
-ip_label = tk.Label(root, text="Server IP Address")
-ip_label.grid(row=1, column=0, pady=5, padx=5, sticky='e')
+
 ip_data = tk.Entry(root, width=16)
 ip_data.grid(row=1, column=1, pady=5, padx=5, sticky='w')
 ip_data.insert(0, "10.0.0.2")
@@ -247,6 +246,11 @@ write_box.grid(row=7, column=2, pady=5, padx=5, sticky='w')
 
 tcp_display = tk.Text(root, width=150, height=12, state=tk.DISABLED)
 tcp_display.grid(row=8, column=0, columnspan=100, pady=5, padx=5, sticky='w')
+
+################################################################################################################################################
+# UART
+################################################################################################################################################
+tcp_manager = TcpManager(root, log_message)
 
 ################################################################################################################################################
 # UART
