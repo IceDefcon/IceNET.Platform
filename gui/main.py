@@ -4,17 +4,24 @@
 import tkinter as tk
 from tkinter import ttk
 from tkinter import font
+
 import socket
 import time
 import threading
 import serial
 import serial.tools.list_ports
 
-def log_message(message):
-    tcp_display.config(state=tk.NORMAL)
-    tcp_display.insert(tk.END, message + "\n")
-    tcp_display.config(state=tk.DISABLED)
-    tcp_display.see(tk.END)
+from uart import UartManager
+from tcp import TcpManager
+
+################################################################################################################################################
+# MAIN
+################################################################################################################################################
+
+def quit_application():
+    log_message("[iceNET] Quitting application...")
+    root.quit()
+    root.destroy()
 
 def kill_application():
     # Create a TCP socket
@@ -26,31 +33,68 @@ def kill_application():
     data = bytes([0xDE, 0xAD])
     tcp_socket.sendall(data)
 
+def log_message(message):
+    tcp_display.config(state=tk.NORMAL)
+    tcp_display.insert(tk.END, message + "\n")
+    tcp_display.config(state=tk.DISABLED)
+    tcp_display.see(tk.END)
+
+# Create the main application window
+root = tk.Tk()
+root.title("TCP Client")
+root.geometry("1920x1080")
+
+# Large Font
+large_font = font.Font(family="Helvetica", size=16, weight="bold")
+
+quit_button = tk.Button(root, text="QUIT", command=quit_application, width=12)
+quit_button.grid(row=0, column=0, pady=5, padx=5, sticky='w')
+
+kill_button = tk.Button(root, text="KILL APP", command=kill_application, width=14)
+kill_button.grid(row=0, column=1, pady=5, padx=5, sticky='w')
+
+cpu_label = tk.Label(root, text="Drone CPU Control", font=large_font)
+cpu_label.grid(row=0, column=5, pady=5, padx=5, sticky='e')
+
+################################################################################################################################################
+# SEPARATORS
+################################################################################################################################################
+
+# Horizontal separator
+separator1 = ttk.Separator(root, orient='horizontal')
+separator1.grid(row=3, column=0, columnspan=100, sticky='ew')
+
+# Vertical Separators
+separator2 = ttk.Separator(root, orient='vertical')
+separator2.grid(row=0, column=3, rowspan=8, sticky='ns')
+
+# Vertical Separators
+separator3 = ttk.Separator(root, orient='vertical')
+separator3.grid(row=0, column=7, rowspan=8, sticky='ns')
+
+################################################################################################################################################
+# TCP
+################################################################################################################################################
+
 def i2c_assembly():
     header = 0x00 # 7 control bits + 1 R/W bit
     address = int(device_address.get(), 16)  # Convert hex address to integer
     register = int(device_register.get(), 16)  # Convert hex register to integer
-
     if write_var.get():
         data = bytes([header + 0x01, address, register]) + bytes.fromhex(register_data.get())
     else:
         data = bytes([header + 0x00, address, register, 0x00])
-
     return data
 
 def pwm_assembly():
     header = 0x02 # 7 control bits + 1 R/W bit
-
     # Retrieve the value from the Entry widget and convert it to an integer
     pwm_speed_value = int(pwm_speed.get(), 16)  # Assuming the input is in hexadecimal
-
     if pwm_speed_value > 0xFA:
         pwm_speed_value = 0xFA
         pwm_speed.delete(0, 'end')
         pwm_speed.insert(0, "FA")
-
     data = bytes([header, 0x00, 0x00, pwm_speed_value])
-
     return data
 
 def tcp_execute(header):
@@ -129,33 +173,11 @@ def tcp_execute(header):
             tcp_socket.close()
             log_message("[iceNET] Server connection terminated")
 
-def quit_application():
-    log_message("[iceNET] Quitting application...")
-    root.quit()
-    root.destroy()
-
 def toggle_write_data_entry():
     if write_var.get():
         register_data.config(state=tk.NORMAL)
     else:
         register_data.config(state=tk.DISABLED)
-
-# Create the main application window
-root = tk.Tk()
-root.title("TCP Client")
-root.geometry("1920x1080")
-
-# Large Font
-large_font = font.Font(family="Helvetica", size=16, weight="bold")
-
-quit_button = tk.Button(root, text="QUIT", command=quit_application, width=12)
-quit_button.grid(row=0, column=0, pady=5, padx=5, sticky='w')
-
-kill_button = tk.Button(root, text="KILL APP", command=kill_application, width=14)
-kill_button.grid(row=0, column=1, pady=5, padx=5, sticky='w')
-
-cpu_label = tk.Label(root, text="Drone CPU Control", font=large_font)
-cpu_label.grid(row=0, column=5, pady=5, padx=5, sticky='e')
 
 ip_label = tk.Label(root, text="Server IP Address")
 ip_label.grid(row=1, column=0, pady=5, padx=5, sticky='e')
@@ -168,22 +190,6 @@ port_label.grid(row=2, column=0, pady=5, padx=5, sticky='e')
 port_data = tk.Entry(root, width=16)
 port_data.grid(row=2, column=1, pady=5, padx=5, sticky='w')
 port_data.insert(0, "2555")
-
-# Horizontal separator
-separator1 = ttk.Separator(root, orient='horizontal')
-separator1.grid(row=3, column=0, columnspan=100, sticky='ew')
-
-# Vertical Separators
-separator2 = ttk.Separator(root, orient='vertical')
-separator2.grid(row=0, column=3, rowspan=4, sticky='ns')
-
-# Vertical Separators
-separator3 = ttk.Separator(root, orient='vertical')
-separator3.grid(row=4, column=3, rowspan=4, sticky='ns')
-
-# Vertical Separators
-separator4 = ttk.Separator(root, orient='vertical')
-separator4.grid(row=4, column=7, rowspan=4, sticky='ns')
 
 device_label = tk.Label(root, text="I2C Device ID")
 device_label.grid(row=5, column=0, pady=5, padx=5, sticky='e')
@@ -245,74 +251,7 @@ tcp_display.grid(row=8, column=0, columnspan=100, pady=5, padx=5, sticky='w')
 ################################################################################################################################################
 # UART
 ################################################################################################################################################
-
-def get_uart_ports():
-    """Get a list of available UART ports."""
-    ports = serial.tools.list_ports.comports()
-    return [port.device for port in ports]
-
-# Add the global variable at the top of your code
-serial_port = None
-
-def serial_connect():
-    """Connect to the selected UART port."""
-    global serial_port
-    selected_port = uart_combobox.get()
-
-    try:
-        serial_port = serial.Serial(selected_port, baudrate=921600, timeout=1)  # Adjust as needed
-        threading.Thread(target=read_uart, daemon=True).start()  # Start reading in a new thread
-        log_message(f"Connected to {selected_port}")
-    except Exception as e:
-        log_message(f"Error connecting to {selected_port}: {e}")
-
-def serial_disconnect():
-    """Disconnect from the UART port."""
-    global serial_port
-    if serial_port and serial_port.is_open:
-        serial_port.close()
-        log_message(f"Disconnected from {serial_port.name}")
-        serial_port = None  # Reset the global variable
-
-def read_uart():
-    """Continuously read data from the UART port and display it."""
-    global serial_port  # Use the global serial port variable
-    if serial_port is None:
-        return  # Exit if not connected
-
-    try:
-        while True:
-            if serial_port.in_waiting > 0:
-                data = serial_port.read(serial_port.in_waiting).decode('utf-8', errors='ignore')  # Read available data
-                log_uart_data(data)  # Call to update the display
-    except Exception as e:
-        log_message(f"Error reading from UART: {e}")
-
-def log_uart_data(data):
-    """Log the UART data to the display."""
-    uart_display.config(state=tk.NORMAL)
-    uart_display.insert(tk.END, data)  # Insert new data at the end
-    uart_display.config(state=tk.DISABLED)
-    uart_display.see(tk.END)  # Scroll to the end
-
-# Create and place the CONNECT button
-uart_open = tk.Button(root, text="OPEN", command=serial_connect)
-uart_open.grid(row=9, column=0, pady=5, padx=5, sticky='nsew')
-
-# Create and place the CLOSE button
-uart_close = tk.Button(root, text="CLOSE", command=serial_disconnect)
-uart_close.grid(row=9, column=2, pady=5, padx=5, sticky='nsew')  # Correct the column index to 2
-
-# Get available UART ports
-uart_ports = get_uart_ports()
-
-# Create and place the dropdown menu
-uart_combobox = ttk.Combobox(root, values=uart_ports)
-uart_combobox.grid(row=9, column=1, pady=5, padx=5, sticky='nsew')
-
-# Create and place the UART display
-uart_display = tk.Text(root, width=150, height=12, state=tk.DISABLED)
-uart_display.grid(row=10, column=0, columnspan=100, pady=5, padx=5, sticky='w')
+uart_manager = UartManager(root, log_message)
 
 # Start the Tkinter main loop
 root.mainloop()
