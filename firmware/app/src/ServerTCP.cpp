@@ -108,27 +108,44 @@ void ServerTCP::threadServerTCP()
             /* Wait for the TCP client connection */
             m_clientSocket = accept(m_serverSocket, (struct sockaddr *)&m_clientAddress, &clientLength);
 
-            if(tcpRX() > 0)
+            if (m_clientSocket < 0)
             {
-                std::cout << "[INFO] [TCP] Sending data to NetworkTraffic" << std::endl;
-                m_instanceNetworkTraffic->setNetworkTrafficRx(m_Rx_ServerTCP);
-                std::cout << "[INFO] [TCP] Set NetworkTraffic_KernelInput mode" << std::endl;
-                m_instanceNetworkTraffic->setNetworkTrafficState(NetworkTraffic_KernelInput);
-
-                if (tcpTX() < 0)
+                if (errno == EAGAIN || errno == EWOULDBLOCK)
                 {
-                    std::cout << "[ERNO] [TCP] Failed to send message" << std::endl;
+                    std::cout << "[INFO] [TCP] Timeout occured [5s] :: Let us try Again !!!" << std::endl;
+                    continue; // Re-check m_threadKill condition
                 }
                 else
                 {
-                    std::cout << "[INFO] [TCP] Transfer complete" << std::endl;
+                    std::cerr << "[ERROR] [TCP] accept failed: " << strerror(errno) << std::endl;
                 }
             }
             else
             {
-                std::cout << "[INFO] [TCP] TODO :: Ready to Kill threadServerTCP" << std::endl;
-                m_instanceNetworkTraffic->setNetworkTrafficState(NetworkTraffic_KILL);
-                m_threadKill = true;
+                std::cout << "[INFO] [TCP] Client connected!" << std::endl;
+
+                if(tcpRX() > 0)
+                {
+                    std::cout << "[INFO] [TCP] Sending data to NetworkTraffic" << std::endl;
+                    m_instanceNetworkTraffic->setNetworkTrafficRx(m_Rx_ServerTCP);
+                    std::cout << "[INFO] [TCP] Set NetworkTraffic_KernelInput mode" << std::endl;
+                    m_instanceNetworkTraffic->setNetworkTrafficState(NetworkTraffic_KernelInput);
+
+                    if (tcpTX() < 0)
+                    {
+                        std::cout << "[ERNO] [TCP] Failed to send message" << std::endl;
+                    }
+                    else
+                    {
+                        std::cout << "[INFO] [TCP] Transfer complete" << std::endl;
+                    }
+                }
+                else
+                {
+                    std::cout << "[INFO] [TCP] TODO :: Ready to Kill threadServerTCP" << std::endl;
+                    m_instanceNetworkTraffic->setNetworkTrafficState(NetworkTraffic_KILL);
+                    m_threadKill = true;
+                }
             }
 
             tcpClose();
@@ -158,10 +175,16 @@ int ServerTCP::initServer()
      * even if it's in the TIME_WAIT state
      * 
      */
-    int option = 1;
+    // int option = 1;
     int ret = -1;
 
-    ret = setsockopt(m_serverSocket, SOL_SOCKET, SO_REUSEADDR, &option, sizeof(option));
+    // Set socket timeout options
+    struct timeval tv;
+    tv.tv_sec = 5;  // 5 seconds timeout
+    tv.tv_usec = 0;
+
+    // ret = setsockopt(m_serverSocket, SOL_SOCKET, SO_REUSEADDR, &option, sizeof(option));
+    ret = setsockopt(m_serverSocket, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof(tv));
     if (ret < 0) 
     {
         std::cout << "[ERNO] [TCP] Error setting socket options" << std::endl;
