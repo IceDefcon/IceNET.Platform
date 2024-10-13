@@ -1,0 +1,19 @@
+sudo apt-get install iproute2 gcc g++ net-tools libncurses5-dev zlib1g:i386 libssl-dev flex bison libselinux1 xterm autoconf libtool texinfo zlib1g-dev gcc-multilib build-essential screen pax gawk python3 python3-pexpect python3-pip python3-git python3-jinja2 xz-utils debianutils iputils-ping libegl1-mesa libsdl1.2-dev pylint3 cpio
+
+sudo apt-get install -y gawk gcc git make net-tools libncurses5-dev tftpd zlib1g-dev libssl-dev flex bison libselinux1 gnupg wget diffstat chrpath socat xterm autoconf libtool tar unzip texinfo zlib1g-dev gcc-multilib build-essential libsdl1.2-dev libglib2.0-dev zlib1g:i386 screen pax gzip libtinfo5 libncurses5
+
+sudo apt update
+sudo apt install libtinfo-dev
+sudo ln -s /lib/x86_64-linux-gnu/libtinfo.so.6 /lib/x86_64-linux-gnu/libtinfo.so.5
+sudo apt-get install libtinfo5
+
+sudo apt install libtinfo5 libncurses5
+
+sudo gedit lsb-release
+DISTRIB_ID=Ubuntu
+DISTRIB_RELEASE=18.04.4
+DISTRIB_CODENAME=bionic
+DISTRIB_DESCRIPTION="Ubuntu 18.04.4 LTS"
+
+sudo ln -s bash /bin/sh.bash
+sudo mv /bin/sh.bash /bin/sh

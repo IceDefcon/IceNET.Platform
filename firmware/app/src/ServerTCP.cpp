@@ -216,7 +216,7 @@ int ServerTCP::initServer()
      * 
      * backlog parameter = 5 
      * 
-     * Maximum number of 
+     * Maximum number of
      * pending connections
      * 
      */

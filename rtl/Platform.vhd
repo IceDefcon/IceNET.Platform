@@ -142,6 +142,9 @@ signal switch_pwm_ready : std_logic := '0';
 -- Feedback interrupts
 signal interrupt_i2c_feedback : std_logic := '0';
 signal interrupt_pwm_feedback : std_logic := '0';
+-- Feedback data
+signal data_i2c_feedback : std_logic_vector(7 downto 0) := (others => '0');
+signal data_pwm_feedback : std_logic_vector(7 downto 0) := "11111010";
 -- Debounce signals
 signal interrupt_from_cpu : std_logic := '0';
 -- Interrupts
@@ -498,7 +501,7 @@ I2cStateMachine_module: I2cStateMachine port map
 	OFFLOAD_COTROL => offload_ctrl(0), -- For now :: Read/Write
     OFFLOAD_DATA => offload_data, -- Write Data
     -- out
-	DATA => secondary_parallel_MISO,
+	DATA => data_i2c_feedback,
 
 	LED_1 => LED_1,
 	LED_2 => LED_2,
@@ -567,6 +570,18 @@ begin
         else
             INT_FROM_FPGA <= '0';
             interrupt_feedback_count <= (others => '0');
+        end if;
+    end if;
+end process;
+
+return_data_process:
+process(CLOCK_50MHz)
+begin
+    if rising_edge(CLOCK_50MHz) then
+        if interrupt_i2c_feedback = '1'  then
+            secondary_parallel_MISO <= data_i2c_feedback;
+        elsif interrupt_pwm_feedback = '1' then
+            secondary_parallel_MISO <= data_pwm_feedback;
         end if;
     end if;
 end process;
