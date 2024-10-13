@@ -41,9 +41,9 @@ class TcpManager:
         self.write_box.grid(row=7, column=2, pady=5, padx=5, sticky='w')
         # PWM
         self.pwm_speed_label = tk.Label(root, text="PWM Speed Hex")
-        self.pwm_speed_label.grid(row=5, column=4, pady=5, padx=5, sticky='e')
+        self.pwm_speed_label.grid(row=5, column=4, pady=5, padx=5, sticky='nsew')
         self.pwm_speed = tk.Entry(self.root, width=16)
-        self.pwm_speed.grid(row=5, column=5, pady=5, padx=5, sticky='w')
+        self.pwm_speed.grid(row=5, column=5, pady=5, padx=5, sticky='nsew')
         self.pwm_speed.insert(0, "00")
         ##################
         # tcp_execute    #
