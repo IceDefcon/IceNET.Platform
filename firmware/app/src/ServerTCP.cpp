@@ -17,6 +17,7 @@
 
 ServerTCP::ServerTCP() :
     m_threadKill(false),
+    m_timeoutCount(0),
     m_portNumber(2555),
     m_serverSocket(-1),
     m_clientSocket(-1),
@@ -104,31 +105,48 @@ void ServerTCP::threadServerTCP()
     {
         if (false == m_clientConnected)
         {
-            std::cout << "[INFO] [TCP] threadServerTCP waiting for next TCP packet" << std::endl;
+            std::cout << "[INFO] [TCP] threadServerTCP waiting for next TCP packet [" << m_timeoutCount << "]" << std::endl;
             /* Wait for the TCP client connection */
             m_clientSocket = accept(m_serverSocket, (struct sockaddr *)&m_clientAddress, &clientLength);
 
-            if(tcpRX() > 0)
+            if (m_clientSocket < 0)
             {
-                std::cout << "[INFO] [TCP] Sending data to NetworkTraffic" << std::endl;
-                m_instanceNetworkTraffic->setNetworkTrafficRx(m_Rx_ServerTCP);
-                std::cout << "[INFO] [TCP] Set NetworkTraffic_KernelInput mode" << std::endl;
-                m_instanceNetworkTraffic->setNetworkTrafficState(NetworkTraffic_KernelInput);
-
-                if (tcpTX() < 0)
+                if (errno == EAGAIN || errno == EWOULDBLOCK)
                 {
-                    std::cout << "[ERNO] [TCP] Failed to send message" << std::endl;
+                    m_timeoutCount++;
+                    continue; // Re-check m_threadKill condition
                 }
                 else
                 {
-                    std::cout << "[INFO] [TCP] Transfer complete" << std::endl;
+                    std::cerr << "[ERROR] [TCP] accept failed: " << strerror(errno) << std::endl;
                 }
             }
             else
             {
-                std::cout << "[INFO] [TCP] TODO :: Ready to Kill threadServerTCP" << std::endl;
-                m_instanceNetworkTraffic->setNetworkTrafficState(NetworkTraffic_KILL);
-                m_threadKill = true;
+                if(tcpRX() > 0)
+                {
+                    std::cout << "[INFO] [TCP] Sending data to NetworkTraffic" << std::endl;
+                    m_instanceNetworkTraffic->setNetworkTrafficRx(m_Rx_ServerTCP);
+                    std::cout << "[INFO] [TCP] Set NetworkTraffic_KernelInput mode" << std::endl;
+                    m_instanceNetworkTraffic->setNetworkTrafficState(NetworkTraffic_KernelInput);
+
+                    if (tcpTX() < 0)
+                    {
+                        std::cout << "[ERNO] [TCP] Failed to send message" << std::endl;
+                    }
+                    else
+                    {
+                        std::cout << "[INFO] [TCP] Transfer complete" << std::endl;
+                    }
+
+                    m_timeoutCount = 0;
+                }
+                else
+                {
+                    std::cout << "[INFO] [TCP] TODO :: Ready to Kill threadServerTCP" << std::endl;
+                    m_instanceNetworkTraffic->setNetworkTrafficState(NetworkTraffic_KILL);
+                    m_threadKill = true;
+                }
             }
 
             tcpClose();
@@ -158,17 +176,30 @@ int ServerTCP::initServer()
      * even if it's in the TIME_WAIT state
      * 
      */
-    int option = 1;
     int ret = -1;
-
+    int option = 1;
     ret = setsockopt(m_serverSocket, SOL_SOCKET, SO_REUSEADDR, &option, sizeof(option));
-    if (ret < 0) 
+    if (ret < 0)
     {
-        std::cout << "[ERNO] [TCP] Error setting socket options" << std::endl;
+        std::cout << "[ERNO] [TCP] setsockopt :: SO_REUSEADDR Failed" << std::endl;
     }
     else
     {
-        std::cout << "[INFO] [TCP] Socket option set correctly" << std::endl;
+        std::cout << "[INFO] [TCP] setsockopt :: SO_REUSEADDR Set correctly" << std::endl;
+    }
+
+    /* Set socket timeout options */
+    struct timeval tv;
+    tv.tv_sec = 5;  /* 5 seconds timeout */
+    tv.tv_usec = 0;
+    ret = setsockopt(m_serverSocket, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof(tv));
+    if (ret < 0) 
+    {
+        std::cout << "[ERNO] [TCP] setsockopt :: SO_RCVTIMEO Failed" << std::endl;
+    }
+    else
+    {
+        std::cout << "[INFO] [TCP] setsockopt :: SO_RCVTIMEO Set correctly" << std::endl;
     }
 
     ret = bind(m_serverSocket, (struct sockaddr *)&m_serverAddress, sizeof(m_serverAddress));
