@@ -1,0 +1,12 @@
+
+//
+// Check GPIO
+//
+cat /sys/class/gpio/gpiochip507/label
+a0000000.gpio
+
+//
+// Enable GPIO
+//
+echo -n 507 > /sys/class/gpio/export 
+
