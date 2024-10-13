@@ -46,7 +46,7 @@ static int uart_set_baud_rate(struct tty_struct *tty, int baud_rate)
     // Apply the new settings to the tty
     tty_set_termios(tty, termios);
 
-    printk(KERN_INFO "Baud rate set to %d.\n", baud_rate);
+    printk(KERN_INFO "[INIT][CON] Baud rate set to %d.\n", baud_rate);
     return 0;
 }
 
