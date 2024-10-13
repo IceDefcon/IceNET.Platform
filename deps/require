@@ -1,8 +1,0 @@
-0. uEnv.txt
-
-1. In order to make the project use ttyS1 UART @ baudrate 921600
-
-	We need to set it before we load the module via bashrc
-	stty -F /dev/ttyS1 921600
-
-2.
