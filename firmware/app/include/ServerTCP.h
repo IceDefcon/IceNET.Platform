@@ -23,6 +23,7 @@ class ServerTCP
         std::thread m_threadServerTCP;
         std::atomic<bool> m_threadKill;
 
+        int m_timeoutCount;
         int m_portNumber;
         int m_serverSocket;
         int m_clientSocket;
