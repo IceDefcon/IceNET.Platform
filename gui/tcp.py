@@ -12,11 +12,27 @@ import serial
 import serial.tools.list_ports
 
 class TcpManager:
-    def __init__(self, root, log_function, tcp_ip, tcp_port):
+    def __init__(self, root):
         self.root = root
-        self.log_function = log_function
-        self.tcp_ip = tcp_ip.get()
-        self.tcp_port = int(tcp_port.get())
+        # IP and Port
+        self.tcp_ip_label = tk.Label(self.root, text="Server IP Address")
+        self.tcp_ip_label.grid(row=1, column=0, pady=5, padx=5, sticky='e')
+        self.tcp_ip = tk.Entry(self.root, width=16)
+        self.tcp_ip.grid(row=1, column=1, pady=5, padx=5, sticky='w')
+        self.tcp_ip.insert(0, "10.0.0.2")
+        self.tcp_port_label = tk.Label(self.root, text="Server Port")
+        self.tcp_port_label.grid(row=2, column=0, pady=5, padx=5, sticky='e')
+        self.tcp_port = tk.Entry(self.root, width=16)
+        self.tcp_port.grid(row=2, column=1, pady=5, padx=5, sticky='w')
+        self.tcp_port.insert(0, "2555")
+        self.tcp_socket = None
+        # Connection
+        self.connect_button = tk.Button(self.root, text="CONNECT", command=self.connect_to_server, width=13)
+        self.connect_button.grid(row=0, column=0, pady=5, padx=5, sticky='w')
+        self.disconnect_button = tk.Button(self.root, text="DISCONNECT", command=self.disconnect_from_server, width=13)
+        self.disconnect_button.grid(row=0, column=1, pady=5, padx=5, sticky='w')
+        self.disconnect_button = tk.Button(self.root, text="KILL", command=self.kill_application)
+        self.disconnect_button.grid(row=0, column=2, pady=5, padx=5, sticky='nsew')
         # I2C
         self.device_label = tk.Label(self.root, text="I2C Device ID")
         self.device_label.grid(row=5, column=0, pady=5, padx=5, sticky='e')
@@ -62,13 +78,47 @@ class TcpManager:
         self.pwm_up_button.grid(row=6, column=6, pady=5, padx=5, sticky='nsew')
         self.pwm_down_button = tk.Button(self.root, text=" ▼ ", command=lambda: self.tcp_execute(3))
         self.pwm_down_button.grid(row=7, column=6, pady=5, padx=5, sticky='nsew')
-
         self.pwm_stop_button = tk.Button(self.root, text="0%", command=lambda: self.tcp_execute(4))
         self.pwm_stop_button.grid(row=5, column=8, pady=5, padx=5, sticky='nsew')
         self.pwm_50_button = tk.Button(self.root, text="50%", command=lambda: self.tcp_execute(5))
         self.pwm_50_button.grid(row=6, column=8, pady=5, padx=5, sticky='nsew')
         self.pwm_100_button = tk.Button(self.root, text="100%", command=lambda: self.tcp_execute(6))
         self.pwm_100_button.grid(row=7, column=8, pady=5, padx=5, sticky='nsew')
+
+        # Console
+        self.tcp_display = tk.Text(self.root, width=150, height=12, state=tk.DISABLED)
+        self.tcp_display.grid(row=8, column=0, columnspan=100, pady=5, padx=5, sticky='w')
+
+    # Connect
+    def connect_to_server(self):
+        try:
+            # Retrieve IP and Port
+            server_address = self.tcp_ip.get()
+            port = int(self.tcp_port.get())
+            # Create and connect the TCP socket
+            self.tcp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.tcp_socket.connect((server_address, port))
+            self.tcp_console("[iceNET] Server connection established")
+
+        except Exception as e:
+            self.tcp_console(f"[iceNET] Cannot establish TCP connection :: Server is Down: {e}")
+
+    # Disconnect
+    def disconnect_from_server(self):
+        try:
+            self.tcp_socket.close()
+            self.tcp_console("[iceNET] Connection terminated")
+        except Exception as e:
+            self.tcp_console(f"[iceNET] Server is Down: {e}")
+
+    # Debug Kill
+    def kill_application(self):
+        try:
+            data = bytes([0xDE, 0xAD])
+            self.tcp_socket.sendall(data)
+            self.tcp_console("[iceNET] Kill Linux Application")
+        except Exception as e:
+            self.tcp_console(f"[iceNET] Connection not established: {e}")
 
     # Write Button
     def toggle_write_data_entry(self):
@@ -98,17 +148,17 @@ class TcpManager:
         return data
 
     def tcp_execute(self, header):
-        tcp_socket = None
+        # tcp_socket = None
         try:
-            # Retrieve IP and Port values from Entry widgets
-            server_address = self.tcp_ip
-            port = self.tcp_port
+            # # Retrieve IP and Port values from Entry widgets
+            # server_address = self.tcp_ip.get()
+            # port = int(self.tcp_port.get())
 
-            # Create and connect the TCP socket
-            tcp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            # # Create and connect the TCP socket
+            # tcp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-            tcp_socket.connect((server_address, port))
-            self.log_function("[iceNET] Server connection established")
+            # tcp_socket.connect((server_address, port))
+            # self.tcp_console("[iceNET] Server connection established")
 
             # Determine data to send based on header
             if header == 0:
@@ -140,29 +190,37 @@ class TcpManager:
                 self.pwm_speed.delete(0, 'end')
                 self.pwm_speed.insert(0, "FA")
             else:
-                self.log_function("[iceNET] Wrong Data Header")
+                self.tcp_console("[iceNET] Wrong Data Header")
                 return
 
             # Send and log data
-            tcp_socket.sendall(data)
-            self.log_function(f"[iceNET] Client TX :: {data.hex()}")
+            self.tcp_socket.sendall(data)
+            self.tcp_console(f"[iceNET] Client TX :: {data.hex()}")
 
             # Receive feedback
             while True:
-                feedback_data = tcp_socket.recv(4)
-                if feedback_data == b'\xFF':
-                    time.sleep(0.1)
-                    continue  # Retry if feedback is 0xFF
+                feedback_data = self.tcp_socket.recv(4)
+
+                # Check for invalid feedback: either 0xFF or 0x00000000
+                if feedback_data == b'\xFF' or feedback_data == b'\x00\x00\x00\x00':
+                    # time.sleep(0.1)
+                    continue  # Retry if feedback is invalid
                 else:
                     break  # Exit loop on valid feedback
 
-            self.log_function(f"[iceNET] Client RX :: {feedback_data.hex()}")
+            self.tcp_console(f"[iceNET] Client RX :: {feedback_data.hex()}")
 
         except Exception as e:
-            self.log_function(f"[iceNET] Error sending/receiving data over TCP: {e}")
+            self.tcp_console(f"[iceNET] Error sending/receiving data over TCP: {e}")
 
-        finally:
-            # Close the TCP connection
-            if tcp_socket:
-                tcp_socket.close()
-                self.log_function("[iceNET] Server connection terminated")
+        # finally:
+        #     # Close the TCP connection
+        #     if tcp_socket:
+        #         tcp_socket.close()
+        #         self.tcp_console("[iceNET] Server connection terminated")
+
+    def tcp_console(self, message):
+        self.tcp_display.config(state=tk.NORMAL)
+        self.tcp_display.insert(tk.END, message + "\n")
+        self.tcp_display.config(state=tk.DISABLED)
+        self.tcp_display.see(tk.END)

@@ -103,9 +103,18 @@ void ServerTCP::threadServerTCP()
 
     while (!m_threadKill)
     {
+        /**
+         *
+         * TODO
+         *
+         * State Machine would be
+         * more suitable for
+         * this process
+         *
+         */
         if (false == m_clientConnected)
         {
-            std::cout << "[INFO] [TCP] threadServerTCP waiting for next TCP packet [" << m_timeoutCount << "]" << std::endl;
+            std::cout << "[INFO] [TCP] threadServerTCP waiting for the TCP Client... [" << m_timeoutCount << "]" << std::endl;
             /* Wait for the TCP client connection */
             m_clientSocket = accept(m_serverSocket, (struct sockaddr *)&m_clientAddress, &clientLength);
 
@@ -114,7 +123,7 @@ void ServerTCP::threadServerTCP()
                 if (errno == EAGAIN || errno == EWOULDBLOCK)
                 {
                     m_timeoutCount++;
-                    continue; // Re-check m_threadKill condition
+                    continue; /* Continue waiting for the client */
                 }
                 else
                 {
@@ -123,34 +132,49 @@ void ServerTCP::threadServerTCP()
             }
             else
             {
-                if(tcpRX() > 0)
+                std::cout << "[INFO] [TCP] threadServerTCP client connected" << std::endl;
+                m_clientConnected = true;
+                m_timeoutCount = 0;
+            }
+        }
+        else
+        {
+            int ret = tcpRX();
+
+            if(ret > 0)
+            {
+                std::cout << "[INFO] [TCP] Sending data to NetworkTraffic" << std::endl;
+                m_instanceNetworkTraffic->setNetworkTrafficRx(m_Rx_ServerTCP);
+                std::cout << "[INFO] [TCP] Set NetworkTraffic_KernelInput mode" << std::endl;
+                m_instanceNetworkTraffic->setNetworkTrafficState(NetworkTraffic_KernelInput);
+
+                if (tcpTX() < 0)
                 {
-                    std::cout << "[INFO] [TCP] Sending data to NetworkTraffic" << std::endl;
-                    m_instanceNetworkTraffic->setNetworkTrafficRx(m_Rx_ServerTCP);
-                    std::cout << "[INFO] [TCP] Set NetworkTraffic_KernelInput mode" << std::endl;
-                    m_instanceNetworkTraffic->setNetworkTrafficState(NetworkTraffic_KernelInput);
-
-                    if (tcpTX() < 0)
-                    {
-                        std::cout << "[ERNO] [TCP] Failed to send message" << std::endl;
-                    }
-                    else
-                    {
-                        std::cout << "[INFO] [TCP] Transfer complete" << std::endl;
-                    }
-
-                    m_timeoutCount = 0;
+                    std::cout << "[ERNO] [TCP] Failed to send message" << std::endl;
                 }
                 else
                 {
-                    std::cout << "[INFO] [TCP] TODO :: Ready to Kill threadServerTCP" << std::endl;
-                    m_instanceNetworkTraffic->setNetworkTrafficState(NetworkTraffic_KILL);
-                    m_threadKill = true;
+                    std::cout << "[INFO] [TCP] Transfer complete" << std::endl;
                 }
             }
-
-            tcpClose();
+            else if(ret == -5)
+            {
+                tcpClose();
+                std::cout << "[INFO] [TCP] Ready to Kill threadServerTCP" << std::endl;
+                m_instanceNetworkTraffic->setNetworkTrafficState(NetworkTraffic_KILL);
+                m_threadKill = true;
+            }
+            else if(ret == 0)
+            {
+                std::cout << "[INFO] [TCP] Client disconnected from server" << std::endl;
+                m_clientConnected = false;
+            }
+            else
+            {
+                /* TODO :: Client connected but nothing receiver */
+            }
         }
+
         /* Reduce consumption of CPU resources */
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
@@ -273,15 +297,12 @@ int ServerTCP::tcpRX()
     }
     else
     {
-        std::cout << "[INFO] [TCP] Client connected to server" << std::endl;
-        m_clientConnected = true;
-
         m_bytesReceived = recv(m_clientSocket, m_Rx_ServerTCP->data(), TCP_SERVER_SIZE, 0);
 
         if((*m_Rx_ServerTCP)[0] == 0xDE && (*m_Rx_ServerTCP)[1] == 0xAD)
         {
-            std::cout << "[INFO] [TCP] Kill SIGNAL Received :: Kill Thread" << std::endl;
-            return 0;
+            std::cout << "[INFO] [TCP] 0xDEAD Received" << std::endl;
+            return -5;
         }
         else
         {
@@ -300,12 +321,12 @@ int ServerTCP::tcpRX()
             }
             else
             {
-                std::cout << "[ERNO] [TCP] Error receiving data" << std::endl;
+                std::cout << "[INFO] [TCP] Nothing received, listening..." << std::endl;
             }
         }
     }
     
-    /* Resize to actual bytes read */
+    /* TODO :: Resize to actual bytes read */
     // m_Rx_ServerTCP->resize(m_bytesRead);
 
     return m_bytesReceived;
