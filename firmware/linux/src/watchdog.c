@@ -12,6 +12,7 @@
 #include <linux/kthread.h>      // For kthread functions
 #include <linux/delay.h>        // For msleep
 #include "watchdog.h"
+#include "console.h"
 
 static watchdogProcess Process =
 {
@@ -38,12 +39,18 @@ void watchdog_unlockWatchdogMutex(void)
 /* Kernel state machine */
 static int watchdogThread(void *data)
 {
+    int len;
+    char message[64];
 	static char prevIndicator = 0;
 
     while (!kthread_should_stop())
     {
 		mutex_lock(&Process.watchdogMutex);
     	printk(KERN_INFO "[CTRL][WDG] Watchdog Live [%x|%x]\n", prevIndicator, Process.indicator);
+
+        memset(message, 0, sizeof(message));
+        len = snprintf(message, sizeof(message), "[CTRL][WDG] Watchdog Live [%x|%x]\r\n", prevIndicator, Process.indicator);
+        uart_write(message, len);
    		prevIndicator = Process.indicator;
 		mutex_unlock(&Process.watchdogMutex);
 

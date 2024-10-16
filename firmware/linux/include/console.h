@@ -29,6 +29,7 @@ typedef struct
     struct mutex stateMutex;
 } consoleProcess;
 
+ssize_t uart_write(const char *buf, size_t len);
 void consoleInit(void);
 void consoleDestroy(void);
 

@@ -9,10 +9,9 @@ import serial.tools.list_ports
 import threading
 
 class UartManager:
-    def __init__(self, root, log_function):
+    def __init__(self, root):
         self.root = root
         self.serial_port = None
-        self.log_message = log_function  # Store the log function
 
         self.refresh_button = tk.Button(self.root, text="REFRESH", command=self.refresh_uart_ports)
         self.refresh_button.grid(row=9, column=0, pady=5, padx=5, sticky='nsew')
@@ -99,7 +98,6 @@ class UartManager:
             self.log_message("No UART connection established.")
 
     def uart_console(self, data):
-        """Log the UART data to the display."""
         self.uart_display.config(state=tk.NORMAL)
         self.uart_display.insert(tk.END, data)
         self.uart_display.config(state=tk.DISABLED)

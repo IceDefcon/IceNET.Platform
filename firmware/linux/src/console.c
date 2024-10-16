@@ -115,7 +115,7 @@ static void uart_close(void)
     }
 }
 
-static ssize_t uart_write(const char *buf, size_t len)
+ssize_t uart_write(const char *buf, size_t len)
 {
     mm_segment_t oldfs;
     ssize_t ret;
@@ -153,13 +153,13 @@ static int consoleThread(void *data)
         memset(message, 0, sizeof(message));
 
         /* Get the current time */
-        ktime_get_real_ts64(&ts);
+        // ktime_get_real_ts64(&ts);
 
         /* Create the message with the current timestamp */
-        len = snprintf(message, sizeof(message), "---==[ %lld.%09ld :: 0x%x ]==---\r\n", (long long)ts.tv_sec, ts.tv_nsec, ++count);
+        // len = snprintf(message, sizeof(message), "---==[ %lld.%09ld :: 0x%x ]==---\r\n", (long long)ts.tv_sec, ts.tv_nsec, ++count);
 
         /* Send the message over UART */
-        uart_write(message, len);
+        // uart_write(message, len);
 
         /**
          *
