@@ -53,14 +53,14 @@ class UartManager:
         try:
             self.serial_port = serial.Serial(selected_port, baudrate=921600, timeout=1)
             threading.Thread(target=self.read_uart, daemon=True).start()
-            self.log_message(f"Connected to {selected_port}")
+            self.uart_console(f"Connected to {selected_port}\r\n")
         except Exception as e:
-            self.log_message(f"Error connecting to {selected_port}: {e}")
+            self.uart_console(f"Error connecting to {selected_port}: {e}\r\n")
 
     def serial_disconnect(self):
         if self.serial_port and self.serial_port.is_open:
             self.serial_port.close()
-            self.log_message(f"Disconnected from {self.serial_port.name}")
+            self.uart_console(f"Disconnected from {self.serial_port.name}\r\n")
             self.serial_port = None
 
     def read_uart(self):
@@ -73,7 +73,7 @@ class UartManager:
                     data = self.serial_port.read(self.serial_port.in_waiting).decode('utf-8', errors='ignore')
                     self.uart_console(data)
         except Exception as e:
-            self.log_message(f"Error reading from UART: {e}")
+            self.uart_console(f"Error reading from UART: {e}\r\n")
 
     def refresh_uart_ports(self):
         self.uart_combobox['values'] = self.get_uart_ports()
@@ -90,12 +90,12 @@ class UartManager:
             message = self.message_entry.get()
             if message:
                 self.serial_port.write(message.encode('utf-8'))  # Send message over UART
-                self.log_message(f"Sent: {message}")
+                self.uart_console(f"Sent: {message}\r\n")
                 self.message_entry.delete(0, tk.END)  # Clear the entry box after sending
             else:
-                self.log_message("Message cannot be empty.")
+                self.uart_console("Message cannot be empty.\r\n")
         else:
-            self.log_message("No UART connection established.")
+            self.uart_console("No UART connection established.\r\n")
 
     def uart_console(self, data):
         self.uart_display.config(state=tk.NORMAL)
