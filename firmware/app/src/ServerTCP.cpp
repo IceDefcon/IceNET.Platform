@@ -132,7 +132,7 @@ void ServerTCP::threadServerTCP()
             }
             else
             {
-                std::cout << "[INFO] [TCP] threadServerTCP client connected" << std::endl;
+                std::cout << "[INFO] [TCP] threadServerTCP client connection established" << std::endl;
                 m_clientConnected = true;
                 m_timeoutCount = 0;
             }

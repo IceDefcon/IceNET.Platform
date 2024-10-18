@@ -40,16 +40,24 @@ void watchdog_unlockWatchdogMutex(void)
 static int watchdogThread(void *data)
 {
     int len;
-    char message[64];
+    char message[128];
 	static char prevIndicator = 0;
 
     while (!kthread_should_stop())
     {
 		mutex_lock(&Process.watchdogMutex);
-    	printk(KERN_INFO "[CTRL][WDG] Watchdog Live [%x|%x]\n", prevIndicator, Process.indicator);
-
         memset(message, 0, sizeof(message));
-        len = snprintf(message, sizeof(message), "[CTRL][WDG] Watchdog Live [%x|%x]\r\n", prevIndicator, Process.indicator);
+        if(prevIndicator != Process.indicator)
+        {
+            printk(KERN_INFO "[CTRL][WDG] Watchdog Live [%x|%x]\n", prevIndicator, Process.indicator);
+            len = snprintf(message, sizeof(message), "[CTRL][WDG] Watchdog Live [%x|%x]\n", prevIndicator, Process.indicator);
+        }
+        else
+        {
+            printk(KERN_INFO "[CTRL][WDG] Watchdog Dead [%x|%x] ERROR: Please check if FPGA binary is loaded\n", prevIndicator, Process.indicator);
+            /* TODO :: This message is never send to x86 since FPGA is not configured with the binary */
+            len = snprintf(message, sizeof(message), "[CTRL][WDG] Watchdog Dead [%x|%x] ERROR: Please check if FPGA binary is loaded\n", prevIndicator, Process.indicator);
+        }
         uart_write(message, len);
    		prevIndicator = Process.indicator;
 		mutex_unlock(&Process.watchdogMutex);

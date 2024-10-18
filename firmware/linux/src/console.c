@@ -143,22 +143,18 @@ ssize_t uart_write(const char *buf, size_t len)
 
 static int consoleThread(void *data)
 {
-    int len;
-    char message[64];
-    struct timespec64 ts;
-    static char count = 0;
+    /* TODO :: To be considered later */
+    // int len;
+    // struct timespec64 ts;
+    // static char count = 0;
+    // char message[128];
 
     while (!kthread_should_stop())
     {
-        memset(message, 0, sizeof(message));
-
-        /* Get the current time */
+        /* TODO :: To be considered later */
+        // memset(message, 0, sizeof(message));
         // ktime_get_real_ts64(&ts);
-
-        /* Create the message with the current timestamp */
         // len = snprintf(message, sizeof(message), "---==[ %lld.%09ld :: 0x%x ]==---\r\n", (long long)ts.tv_sec, ts.tv_nsec, ++count);
-
-        /* Send the message over UART */
         // uart_write(message, len);
 
         /**
