@@ -23,7 +23,6 @@ class KernelOutput
         int m_file_descriptor;
         std::thread m_threadKernelOutput;
         std::atomic<bool> m_threadKill;
-        KernelOutput_stateType m_currentState;
 
         int m_portNumber;
         int m_serverSocket;
@@ -55,5 +54,4 @@ class KernelOutput
         void threadKernelOutput();
 
         void setInstance_NetworkTraffic(const std::shared_ptr<NetworkTraffic> instance);
-        void setKernelOutputState(KernelOutput_stateType newState);
 };
