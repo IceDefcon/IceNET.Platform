@@ -13,7 +13,9 @@
 
 typedef struct
 {
-    char indicator;
+    bool initFlag;
+    char indicatorCurrent;
+    char indicatorPrevious;
     struct task_struct *threadHandle;
     struct mutex watchdogMutex;
 } watchdogProcess;

@@ -18,44 +18,9 @@ from tcp import TcpManager
 # MAIN
 ################################################################################################################################################
 
-# def quit_application():
-#     tcp_console("[iceNET] Quitting application...")
-#     root.quit()
-#     root.destroy()
-
-# def kill_application():
-#     # Create a TCP socket
-#     tcp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-#     server_address = ip_data.get()
-#     port = int(port_data.get())
-#     tcp_socket.connect((server_address, port))
-#     tcp_console("[iceNET] Killing Linux Application")
-#     data = bytes([0xDE, 0xAD])
-#     tcp_socket.sendall(data)
-
-# Create the main application window
 root = tk.Tk()
 root.title("TCP Client")
-# Adjust the window size depending on the widgets used
-root.update_idletasks()
-
-# Quit and Kill
-# quit_button = tk.Button(root, text="QUIT", command=quit_application, width=12)
-# quit_button.grid(row=0, column=0, pady=5, padx=5, sticky='w')
-# kill_button = tk.Button(root, text="KILL APP", command=kill_application, width=14)
-# kill_button.grid(row=0, column=1, pady=5, padx=5, sticky='w')
-
-# # IP and Port
-# ip_label = tk.Label(root, text="Server IP Address")
-# ip_label.grid(row=1, column=0, pady=5, padx=5, sticky='e')
-# ip_data = tk.Entry(root, width=16)
-# ip_data.grid(row=1, column=1, pady=5, padx=5, sticky='w')
-# ip_data.insert(0, "10.0.0.2")
-# port_label = tk.Label(root, text="Server Port")
-# port_label.grid(row=2, column=0, pady=5, padx=5, sticky='e')
-# port_data = tk.Entry(root, width=16)
-# port_data.grid(row=2, column=1, pady=5, padx=5, sticky='w')
-# port_data.insert(0, "2555")
+root.update_idletasks() # Adjust the window size depending on the widgets used
 
 ################################################################################################################################################
 # SEPARATORS

@@ -90,6 +90,12 @@ int KernelOutput::dataRX()
 
 int KernelOutput::dataTX()
 {
+    /**
+     * One way communication Here
+     *
+     * Tx is not Active in fops
+     * in the KernelOutput module
+     */
     return OK;
 }
 
@@ -123,8 +129,6 @@ void KernelOutput::threadKernelOutput()
     while (!m_threadKill)
     {
         std::cout << "[INFO] [ O ] Waiting for next Feedback message" << std::endl;
-        
-
 
         switch(m_currentState)
         {

@@ -5,4 +5,40 @@
 	We need to set it before we load the module via bashrc
 	stty -F /dev/ttyS1 921600
 
-2.
+2. For ssh we need to set up :: /etc/network/interfaces
+
+	# interfaces(5) file used by ifup(8) and ifdown(8)
+	# Include files from /etc/network/interfaces.d:
+	source /etc/network/interfaces.d/*
+
+	# Configure eth0 interface
+	auto eth0
+	iface eth0 inet static
+	    address 10.0.0.2
+	    netmask 255.255.255.0
+	    gateway 10.0.0.1
+
+	    # DNS servers
+	    dns-nameservers 8.8.8.8 8.8.4.4
+
+3. Obviousy we need latest kerel
+
+	Currently used :: From latest image for microSD
+	image :: AM335x 11.7 2023-09-02 4GB microSD IoT
+	kernel :: 5.10.168-ti-r71
+
+4. Set overlays for UART, SPI, etc :: /boot/uEnv.txt
+
+	uname_r=5.10.168-ti-r71
+
+	enable_uboot_overlays=1
+
+	uboot_overlay_addr3=/lib/firmware/BB-UART1-00A0.dtbo
+	uboot_overlay_addr4=/lib/firmware/BB-SPIDEV0-00A0.dtbo
+	uboot_overlay_addr5=/lib/firmware/BB-SPIDEV1-00A0.dtbo
+	uboot_overlay_pru=/lib/firmware/AM335X-PRU-RPROC-4-19-TI-00A0.dtbo
+
+	enable_uboot_cape_universal=1
+
+	console=ttyS0,115200n8
+	cmdline=coherent_pool=1M net.ifnames=0 lpj=1990656 rng_core.default_quality=100 quiet
