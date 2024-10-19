@@ -69,30 +69,13 @@ int KernelInput::openDEV()
 
 int KernelInput::dataRX()
 {
-    int ret;
-
-    ret = read(m_file_descriptor, m_Rx_KernelInput->data(), CHAR_DEVICE_SIZE);
-    
-    if (ret == -1)
-    {
-        Error("[ I ] Cannot read from kernel space");
-        return ERROR;
-    }
-    else if (ret == 0)
-    {
-        Error("[ I ] No data available");
-        return ENODATA;
-    }
-    else
-    {
-        // Print received data for debugging
-        Read(m_Rx_KernelInput->data());
-
-        /* Clear char device Rx buffer */
-        m_Rx_KernelInput->clear();
-
-        return OK;
-    }
+    /**
+     * One way communication Here
+     *
+     * Rx is not Active in fops
+     * in the KernelInput module
+     */
+    return OK;
 }
 
 int KernelInput::dataTX()

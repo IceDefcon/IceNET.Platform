@@ -24,6 +24,8 @@
 #define  INPUT_CLASS   "KernelInputClass"
 #define  OUTPUT_DEVICE "KernelOutput"
 #define  OUTPUT_CLASS  "KernelOutputClass"
+#define  WATCHDOG_DEVICE "Watchdog"
+#define  WATCHDOG_CLASS  "WatchdogClass"
 
 #define IO_BUFFER_SIZE TRANSFER_BUFFER_SIZE
 
@@ -41,11 +43,13 @@ typedef enum
 {
     DEVICE_INPUT,
     DEVICE_OUTPUT,
+    DEVICE_WATCHDOG,
     DEVICE_AMOUNT
 }deviceType;
 
 /* GET */ DataTransfer* getKernelInputTransfer(void);
 /* GET */ DataTransfer* getKernelOutputTransfer(void);
+/* GET */ DataTransfer* getWatchdogTransfer(void);
 
 void unlockWaitMutex(void);
 void charDeviceInit(void);
