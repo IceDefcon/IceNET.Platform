@@ -11,8 +11,10 @@
 #include <linux/sched.h>       // For struct task_struct
 #include <linux/kthread.h>      // For kthread functions
 #include <linux/delay.h>        // For msleep
+#include "charDevice.h"
 #include "watchdog.h"
 #include "console.h"
+#include "types.h"
 
 static watchdogProcess Process =
 {
@@ -43,10 +45,22 @@ static int watchdogThread(void *data)
 {
     int len;
     char message[128];
+    DataTransfer* watchdogData;
 
     while (!kthread_should_stop())
     {
 		mutex_lock(&Process.watchdogMutex);
+
+        watchdogData = getWatchdogTransfer();
+        watchdogData->TxData[0] = Process.indicatorPrevious;
+        watchdogData->TxData[1] = Process.indicatorCurrent;
+        watchdogData->length = 2;
+        unlockWatchdogMutex();
+        if(Process.indicatorPrevious == Process.indicatorCurrent)
+        {
+            unlockWaitMutex();
+        }
+
         memset(message, 0, sizeof(message));
         if(Process.indicatorPrevious != Process.indicatorCurrent)
         {

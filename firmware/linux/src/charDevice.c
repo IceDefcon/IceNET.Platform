@@ -78,6 +78,7 @@ static charDeviceData Device[DEVICE_AMOUNT] =
 };
 
 static DEFINE_MUTEX(wait_mutex);
+static DEFINE_MUTEX(watchdog_mutex);
 
 /* INPUT */ static int inputOpen(struct inode *inodep, struct file *filep);
 /* INPUT */ static ssize_t inputRead(struct file *, char *, size_t, loff_t *);
@@ -161,13 +162,16 @@ static void charDeviceDataInit(void)
     /* Lock and wait until feedback transfer unlock it */
     printk(KERN_INFO "[INIT][COM] Lock on Wait mutex\n");
     mutex_lock(&wait_mutex);
-
+    printk(KERN_INFO "[INIT][COM] Lock on Watchdog mutex\n");
+    mutex_lock(&watchdog_mutex);
 }
 
 void charDeviceInit(void)
 {
     printk(KERN_ALERT "[INIT][NET] Initialize Wait Mutex\n");
     mutex_init(&wait_mutex);
+    printk(KERN_ALERT "[INIT][NET] Initialize Watchdog Mutex\n");
+    mutex_init(&watchdog_mutex);
 
     printk(KERN_INFO "[INIT][COM] Initialize charDevice Data\n");
     charDeviceDataInit();
@@ -397,6 +401,8 @@ void charDeviceDestroy(void)
 
     mutex_destroy(&wait_mutex);
     printk(KERN_INFO "[DESTROY][NET] Wait Mutex destroyed\n");
+    mutex_destroy(&watchdog_mutex);
+    printk(KERN_INFO "[DESTROY][NET] Watchdog Mutex destroyed\n");
     printk(KERN_INFO "[DESTROY][NET] Char device destruction complete\n");
 }
 
@@ -501,7 +507,7 @@ static ssize_t outputRead(struct file *filep, char *buffer, size_t len, loff_t *
 {
     int error_count = 0;
 
-    printk(KERN_INFO "[CTRL][SPI] Kernel is waiting for mutex Unlock\n");
+    printk(KERN_INFO "[CTRL][SPI] Kernel is waiting for Wait mutex Unlock\n");
     mutex_lock(&wait_mutex);
 
     error_count = copy_to_user(buffer, (const void *)Device[DEVICE_OUTPUT].io_transfer.TxData, Device[DEVICE_OUTPUT].io_transfer.length);
@@ -544,14 +550,42 @@ static int outputClose(struct inode *inodep, struct file *filep)
  */
 static int watchdogOpen(struct inode *inodep, struct file *filep)
 {
+    if(!mutex_trylock(&Device[DEVICE_WATCHDOG].io_mutex))
+    {
+        printk(KERN_ALERT "[CTRL][NET] Device in use by another process");
+        return -EBUSY;
+    }
+
+    Device[DEVICE_WATCHDOG].openCount++;
+    printk(KERN_INFO "[CTRL][NET] Device has been opened %d time(s)\n", Device[DEVICE_WATCHDOG].openCount);
+
     return 0;
 }
 
 static ssize_t watchdogRead(struct file *filep, char *buffer, size_t len, loff_t *offset)
 {
-    return 0;
+    int error_count = 0;
+
+    printk(KERN_INFO "[CTRL][SPI] Kernel is waiting for Watchdog mutex Unlock\n");
+    mutex_lock(&watchdog_mutex);
+
+    error_count = copy_to_user(buffer, (const void *)Device[DEVICE_WATCHDOG].io_transfer.TxData, Device[DEVICE_WATCHDOG].io_transfer.length);
+
+    if (error_count == 0)
+    {
+        printk(KERN_INFO "[CTRL][COM] Sent %zu characters to user-space\n", Device[DEVICE_WATCHDOG].io_transfer.length);
+        /* Length == Preamble + Null Terminator */
+        return Device[DEVICE_WATCHDOG].io_transfer.length;
+    }
+    else
+    {
+        printk(KERN_INFO "[CTRL][COM] Failed to send %d characters to user-space\n", error_count);
+        /* Failed -- return a bad address message (i.e. -14) */
+        return -EFAULT;
+    }
 }
 
+/* Dummy :: Not used for WATCHDOG Device */
 static ssize_t watchdogWrite(struct file *filep, const char __user *buffer, size_t len, loff_t *offset)
 {
     return 0;
@@ -559,6 +593,9 @@ static ssize_t watchdogWrite(struct file *filep, const char __user *buffer, size
 
 static int watchdogClose(struct inode *inodep, struct file *filep)
 {
+    printk(KERN_ALERT "[INIT][NET] Unlock [C] Device Mutex\n");
+    mutex_unlock(&Device[DEVICE_WATCHDOG].io_mutex);
+    printk(KERN_INFO "[CTRL][NET] Device successfully closed\n");
     return 0;
 }
 
@@ -581,4 +618,9 @@ static int watchdogClose(struct inode *inodep, struct file *filep)
 void unlockWaitMutex(void)
 {
     mutex_unlock(&wait_mutex);
+}
+
+void unlockWatchdogMutex(void)
+{
+    mutex_unlock(&watchdog_mutex);
 }

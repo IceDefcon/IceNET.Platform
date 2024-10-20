@@ -52,6 +52,8 @@ typedef enum
 /* GET */ DataTransfer* getWatchdogTransfer(void);
 
 void unlockWaitMutex(void);
+void unlockWatchdogMutex(void);
+
 void charDeviceInit(void);
 void charDeviceDestroy(void);
 
