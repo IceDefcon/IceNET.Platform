@@ -46,7 +46,7 @@ static int watchdogThread(void *data)
     int len;
     char message[128];
     DataTransfer* watchdogData;
-    msleep(5000); /* Wait for the 1st watchdog to receive */
+    msleep(500); /* Wait for the 1st watchdog to receive */
 
     while (!kthread_should_stop())
     {
@@ -96,7 +96,7 @@ static int watchdogThread(void *data)
          * busy waiting
          *
          */
-        msleep(5000); /* Release 90% of CPU resources */
+        msleep(500); /* Release 90% of CPU resources */
 
     }
 
