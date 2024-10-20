@@ -23,7 +23,7 @@
 //                  //
 //                  //
 //                  //
-//   [ x ] Device   //
+//   [ C ] Device   //
 //                  //
 //                  //
 //                  //
@@ -566,14 +566,12 @@ static ssize_t watchdogRead(struct file *filep, char *buffer, size_t len, loff_t
 {
     int error_count = 0;
 
-    printk(KERN_INFO "[CTRL][SPI] Kernel is waiting for Watchdog mutex Unlock\n");
     mutex_lock(&watchdog_mutex);
 
     error_count = copy_to_user(buffer, (const void *)Device[DEVICE_WATCHDOG].io_transfer.TxData, Device[DEVICE_WATCHDOG].io_transfer.length);
 
     if (error_count == 0)
     {
-        printk(KERN_INFO "[CTRL][COM] Sent %zu characters to user-space\n", Device[DEVICE_WATCHDOG].io_transfer.length);
         /* Length == Preamble + Null Terminator */
         return Device[DEVICE_WATCHDOG].io_transfer.length;
     }

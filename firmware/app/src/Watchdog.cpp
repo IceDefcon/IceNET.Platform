@@ -66,24 +66,12 @@ int Watchdog::dataRX()
 {
     int ret;
 
-    std::cout << "[INFO] [WDG] Trying to read from Kernel" << std::endl;
     ret = read(m_file_descriptor, m_Rx_Watchdog->data(), CHAR_DEVICE_SIZE);
-
-    std::cout << "[INFO] [WDG] Received " << ret << " Bytes of data: ";
-    for (int i = 0; i < ret; ++i)
-    {
-        std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>((*m_Rx_Watchdog)[i]) << " ";
-    }
-    std::cout << std::endl;
 
     if (m_Rx_Watchdog->size() >= 2 && (*m_Rx_Watchdog)[0] == (*m_Rx_Watchdog)[1])
     {
         std::cout << "[ERNO] [WDG] [0] Kill the App :: No FPGA Signal" << std::endl;
         return 0;
-    }
-    else
-    {
-        std::cout << "[INFO] [WDG] [0] Kick the App" << std::endl;
     }
 
     return ret;
@@ -136,13 +124,7 @@ void Watchdog::threadWatchdog()
          * in state machine to initiate read operation
          * as this is happenig when FPGA data is reveived
          */
-        std::cout << "[INFO] [WDG] Waiting for next Feedback message" << std::endl;
-
-        if(dataRX() > 0)
-        {
-            std::cout << "[INFO] [WDG] [1] Kick the App" << std::endl;
-        }
-        else
+        if(dataRX() <= 0)
         {
             std::cout << "[ERNO] [WDG] [1] Kill the App :: No FPGA Signal" << std::endl;
             m_threadKill = true;

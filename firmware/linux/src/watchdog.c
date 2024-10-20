@@ -46,6 +46,7 @@ static int watchdogThread(void *data)
     int len;
     char message[128];
     DataTransfer* watchdogData;
+    msleep(5000); /* Wait for the 1st watchdog to receive */
 
     while (!kthread_should_stop())
     {
