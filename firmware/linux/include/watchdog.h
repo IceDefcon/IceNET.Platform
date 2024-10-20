@@ -13,7 +13,7 @@
 
 typedef struct
 {
-    bool initFlag;
+    bool indicatorFPGA;
     char indicatorCurrent;
     char indicatorPrevious;
     struct task_struct *threadHandle;

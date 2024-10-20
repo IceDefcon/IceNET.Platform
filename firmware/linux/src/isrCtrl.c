@@ -30,7 +30,14 @@ static irqreturn_t watchdogISR(int irq, void *data)
     watchdogProcess* tmpProcess = watchdog_getProcess();
 
     watchdog_lockWatchdogMutex();
-    tmpProcess->indicatorCurrent++;
+    if(tmpProcess->indicatorCurrent == 0xFA)
+    {
+        tmpProcess->indicatorCurrent = 0x00;
+    }
+    else
+    {
+        tmpProcess->indicatorCurrent++;
+    }
     watchdog_unlockWatchdogMutex();
 
     return IRQ_HANDLED;

@@ -137,7 +137,7 @@ static void charDeviceDataInit(void)
     /* Check if memory allocation was successful */
     if (!inputRxData || !inputTxData || !outputRxData || !outputTxData)
     {
-        printk(KERN_ERR "[INIT][COM] Memory allocation failed\n");
+        printk(KERN_ERR "[INIT][ C ] Memory allocation failed\n");
         kfree(inputRxData);
         kfree(inputTxData);
         kfree(outputRxData);
@@ -145,6 +145,10 @@ static void charDeviceDataInit(void)
         kfree(watchdogRxData);
         kfree(watchdogTxData);
         return;
+    }
+    else
+    {
+        printk(KERN_INFO "[INIT][ C ] Memory allocated succesfully for all char devices\n");
     }
 
     Device[DEVICE_INPUT].io_transfer.RxData = inputRxData;
@@ -159,21 +163,21 @@ static void charDeviceDataInit(void)
     Device[DEVICE_WATCHDOG].io_transfer.TxData = watchdogTxData;
     Device[DEVICE_WATCHDOG].io_transfer.length = IO_BUFFER_SIZE;
 
+
     /* Lock and wait until feedback transfer unlock it */
-    printk(KERN_INFO "[INIT][COM] Lock on Wait mutex\n");
+    printk(KERN_INFO "[INIT][ C ] Lock on Wait mutex\n");
     mutex_lock(&wait_mutex);
-    printk(KERN_INFO "[INIT][COM] Lock on Watchdog mutex\n");
+    printk(KERN_INFO "[INIT][ C ] Lock on Watchdog mutex\n");
     mutex_lock(&watchdog_mutex);
 }
 
 void charDeviceInit(void)
 {
-    printk(KERN_ALERT "[INIT][NET] Initialize Wait Mutex\n");
+    printk(KERN_ALERT "[INIT][ C ] Initialize Wait Mutex\n");
     mutex_init(&wait_mutex);
-    printk(KERN_ALERT "[INIT][NET] Initialize Watchdog Mutex\n");
+    printk(KERN_ALERT "[INIT][ C ] Initialize Watchdog Mutex\n");
     mutex_init(&watchdog_mutex);
 
-    printk(KERN_INFO "[INIT][COM] Initialize charDevice Data\n");
     charDeviceDataInit();
 
     //
@@ -182,22 +186,22 @@ void charDeviceInit(void)
     Device[DEVICE_INPUT].majorNumber = register_chrdev(0, INPUT_DEVICE, &fops[DEVICE_INPUT]);
     if (Device[DEVICE_INPUT].majorNumber<0)
     {
-        printk(KERN_ALERT "[INIT][COM] Failed to register major number: %d\n", Device[DEVICE_INPUT].majorNumber);
+        printk(KERN_ALERT "[INIT][ C ] Failed to register major number for %s :: %d\n", INPUT_DEVICE, Device[DEVICE_INPUT].majorNumber);
     }
     else
     {
-        printk(KERN_ALERT "[INIT][COM] Register major number for char Device: %d\n", Device[DEVICE_INPUT].majorNumber);
+        printk(KERN_ALERT "[INIT][ C ] Register major number for %s :: %d\n", INPUT_DEVICE, Device[DEVICE_INPUT].majorNumber);
     }
 
     Device[DEVICE_INPUT].deviceClass = class_create(THIS_MODULE, INPUT_CLASS);
     if (IS_ERR(Device[DEVICE_INPUT].deviceClass))
     {
         unregister_chrdev(Device[DEVICE_INPUT].majorNumber, INPUT_DEVICE);
-        printk(KERN_ALERT "[INIT][COM] Failed to register device class: %ld\n", PTR_ERR(Device[DEVICE_INPUT].deviceClass));
+        printk(KERN_ALERT "[INIT][ C ] Failed to register device class for %s :: %ld\n", INPUT_DEVICE, PTR_ERR(Device[DEVICE_INPUT].deviceClass));
     }
     else
     {
-        printk(KERN_ALERT "[INIT][COM] Register device class\n");
+        printk(KERN_ALERT "[INIT][ C ] Register device class for %s\n", INPUT_DEVICE);
     }
 
     Device[DEVICE_INPUT].nodeDevice = device_create(Device[DEVICE_INPUT].deviceClass, NULL, MKDEV(Device[DEVICE_INPUT].majorNumber, 0), NULL, INPUT_DEVICE);
@@ -205,11 +209,11 @@ void charDeviceInit(void)
     {
         class_destroy(Device[DEVICE_INPUT].deviceClass);
         unregister_chrdev(Device[DEVICE_INPUT].majorNumber, INPUT_DEVICE);
-        printk(KERN_ALERT "[INIT][COM] Failed to create the device\n");
+        printk(KERN_ALERT "[INIT][ C ] Failed to create the device for %s\n", INPUT_DEVICE);
     }
     else
     {
-        printk(KERN_ALERT "[INIT][COM] Create char Device\n");
+        printk(KERN_ALERT "[INIT][ C ] Succesfully created char Device for %s\n", INPUT_DEVICE);
     }
     //
     // KernelOutput
@@ -217,22 +221,22 @@ void charDeviceInit(void)
     Device[DEVICE_OUTPUT].majorNumber = register_chrdev(0, OUTPUT_DEVICE, &fops[DEVICE_OUTPUT]);
     if (Device[DEVICE_OUTPUT].majorNumber < 0)
     {
-        printk(KERN_ALERT "[INIT][NET] Failed to register major number: %d\n", Device[DEVICE_OUTPUT].majorNumber);
+        printk(KERN_ALERT "[INIT][ C ] Failed to register major number for %s :: %d\n", OUTPUT_DEVICE, Device[DEVICE_OUTPUT].majorNumber);
     }
     else
     {
-        printk(KERN_ALERT "[INIT][NET] Register major number for char Device: %d\n", Device[DEVICE_OUTPUT].majorNumber);
+        printk(KERN_ALERT "[INIT][ C ] Register major number for %s :: %d\n", OUTPUT_DEVICE, Device[DEVICE_OUTPUT].majorNumber);
     }
 
     Device[DEVICE_OUTPUT].deviceClass = class_create(THIS_MODULE, OUTPUT_CLASS);
     if (IS_ERR(Device[DEVICE_OUTPUT].deviceClass))
     {
         unregister_chrdev(Device[DEVICE_OUTPUT].majorNumber, OUTPUT_DEVICE);
-        printk(KERN_ALERT "[INIT][NET] Failed to register device class: %ld\n", PTR_ERR(Device[DEVICE_OUTPUT].deviceClass));
+        printk(KERN_ALERT "[INIT][ C ] Failed to register device class for %s :: %ld\n", OUTPUT_DEVICE, PTR_ERR(Device[DEVICE_OUTPUT].deviceClass));
     }
     else
     {
-        printk(KERN_ALERT "[INIT][NET] Register device class\n");
+        printk(KERN_ALERT "[INIT][ C ] Register device class for %s\n", OUTPUT_DEVICE);
     }
 
     Device[DEVICE_OUTPUT].nodeDevice = device_create(Device[DEVICE_OUTPUT].deviceClass, NULL, MKDEV(Device[DEVICE_OUTPUT].majorNumber, 0), NULL, OUTPUT_DEVICE);
@@ -240,11 +244,11 @@ void charDeviceInit(void)
     {
         class_destroy(Device[DEVICE_OUTPUT].deviceClass);
         unregister_chrdev(Device[DEVICE_OUTPUT].majorNumber, OUTPUT_DEVICE);
-        printk(KERN_ALERT "[INIT][NET] Failed to create the device\n");
+        printk(KERN_ALERT "[INIT][ C ] Failed to create the device for %s\n", OUTPUT_DEVICE);
     }
     else
     {
-        printk(KERN_ALERT "[INIT][NET] Create char Device\n");
+        printk(KERN_ALERT "[INIT][ C ] Succesfully created char Device for %s\n", OUTPUT_DEVICE);
     }
     //
     // Watchdog
@@ -252,22 +256,22 @@ void charDeviceInit(void)
     Device[DEVICE_WATCHDOG].majorNumber = register_chrdev(0, WATCHDOG_DEVICE, &fops[DEVICE_WATCHDOG]);
     if (Device[DEVICE_WATCHDOG].majorNumber < 0)
     {
-        printk(KERN_ALERT "[INIT][NET] Failed to register major number: %d\n", Device[DEVICE_WATCHDOG].majorNumber);
+        printk(KERN_ALERT "[INIT][ C ] Failed to register major number for %s :: %d\n", WATCHDOG_DEVICE, Device[DEVICE_WATCHDOG].majorNumber);
     }
     else
     {
-        printk(KERN_ALERT "[INIT][NET] Register major number for char Device: %d\n", Device[DEVICE_WATCHDOG].majorNumber);
+        printk(KERN_ALERT "[INIT][ C ] Register major number for %s :: %d\n", WATCHDOG_DEVICE, Device[DEVICE_WATCHDOG].majorNumber);
     }
 
     Device[DEVICE_WATCHDOG].deviceClass = class_create(THIS_MODULE, WATCHDOG_CLASS);
     if (IS_ERR(Device[DEVICE_WATCHDOG].deviceClass))
     {
         unregister_chrdev(Device[DEVICE_WATCHDOG].majorNumber, WATCHDOG_DEVICE);
-        printk(KERN_ALERT "[INIT][NET] Failed to register device class: %ld\n", PTR_ERR(Device[DEVICE_WATCHDOG].deviceClass));
+        printk(KERN_ALERT "[INIT][ C ] Failed to register device class for %s :: %ld\n", WATCHDOG_DEVICE, PTR_ERR(Device[DEVICE_WATCHDOG].deviceClass));
     }
     else
     {
-        printk(KERN_ALERT "[INIT][NET] Register device class\n");
+        printk(KERN_ALERT "[INIT][ C ] Register device class for %s\n", WATCHDOG_DEVICE);
     }
 
     Device[DEVICE_WATCHDOG].nodeDevice = device_create(Device[DEVICE_WATCHDOG].deviceClass, NULL, MKDEV(Device[DEVICE_WATCHDOG].majorNumber, 0), NULL, WATCHDOG_DEVICE);
@@ -275,11 +279,11 @@ void charDeviceInit(void)
     {
         class_destroy(Device[DEVICE_WATCHDOG].deviceClass);
         unregister_chrdev(Device[DEVICE_WATCHDOG].majorNumber, WATCHDOG_DEVICE);
-        printk(KERN_ALERT "[INIT][NET] Failed to create the device\n");
+        printk(KERN_ALERT "[INIT][ C ] Failed to create the device for %s\n", WATCHDOG_DEVICE);
     }
     else
     {
-        printk(KERN_ALERT "[INIT][NET] Create char Device\n");
+        printk(KERN_ALERT "[INIT][ C ] Succesfully created char Device for %s\n", WATCHDOG_DEVICE);
     }
 }
 
@@ -292,11 +296,11 @@ void charDeviceDestroy(void)
     {
         device_destroy(Device[DEVICE_INPUT].deviceClass, MKDEV(Device[DEVICE_INPUT].majorNumber, 0));
         Device[DEVICE_INPUT].nodeDevice = NULL;
-        printk(KERN_INFO "[DESTROY][COM] Device destroyed\n");
+        printk(KERN_ALERT "[DESTROY][ C ] %s Device destroyed\n", INPUT_DEVICE);
     }
     else
     {
-        printk(KERN_INFO "[DESTROY][COM] Canot destroy nodeDevice :: It is already NULL !\n");
+        printk(KERN_ALERT "[DESTROY][ C ] Cannot destroy %s\n", INPUT_DEVICE);
     }
 
     if(Device[DEVICE_INPUT].deviceClass)
@@ -304,25 +308,24 @@ void charDeviceDestroy(void)
         class_unregister(Device[DEVICE_INPUT].deviceClass);
         class_destroy(Device[DEVICE_INPUT].deviceClass);
         Device[DEVICE_INPUT].deviceClass = NULL;
-        printk(KERN_INFO "[DESTROY][COM] Class destroyed\n");
+        printk(KERN_ALERT "[DESTROY][ C ] %s Class destroyed\n", INPUT_DEVICE);
     }
     else
     {
-        printk(KERN_INFO "[DESTROY][COM] Canot destroy deviceClass :: It is already NULL !\n");
+        printk(KERN_ALERT "[DESTROY][ C ] Cannot destroy %s Class\n", INPUT_DEVICE);
     }
 
     if(Device[DEVICE_INPUT].majorNumber != 0)
     {
         unregister_chrdev(Device[DEVICE_INPUT].majorNumber, INPUT_DEVICE);
         Device[DEVICE_INPUT].majorNumber = 0;
-        printk(KERN_INFO "[DESTROY][COM] Unregistered character device\n");
+        printk(KERN_ALERT "[DESTROY][ C ] Unregistered %s device\n", INPUT_DEVICE);
     }
     else
     {
-        printk(KERN_INFO "[DESTROY][COM] Canot unregister KernelInput Device :: majorNumber is already 0 !\n");
-        printk(KERN_INFO "[DESTROY][COM] Device destroyed\n");
+        printk(KERN_ALERT "[DESTROY][ C ] Cannot unregister %s Device\n", INPUT_DEVICE);
     }
-    printk(KERN_INFO "[DESTROY][COM] Char device destruction complete\n");
+    printk(KERN_ALERT "[DESTROY][ C ] %s device destruction complete\n", INPUT_DEVICE);
 
     //
     // KernelOutput
@@ -331,11 +334,11 @@ void charDeviceDestroy(void)
     {
         device_destroy(Device[DEVICE_OUTPUT].deviceClass, MKDEV(Device[DEVICE_OUTPUT].majorNumber, 0));
         Device[DEVICE_OUTPUT].nodeDevice = NULL;
-        printk(KERN_INFO "[DESTROY][NET] Device destroyed\n");
+        printk(KERN_ALERT "[DESTROY][ C ] %s Device destroyed\n", OUTPUT_DEVICE);
     }
     else
     {
-        printk(KERN_INFO "[DESTROY][NET] Canot destroy nodeDevice :: It is already NULL !\n");
+        printk(KERN_ALERT "[DESTROY][ C ] Cannot destroy %s\n", OUTPUT_DEVICE);
     }
 
     if(Device[DEVICE_OUTPUT].deviceClass)
@@ -343,24 +346,26 @@ void charDeviceDestroy(void)
         class_unregister(Device[DEVICE_OUTPUT].deviceClass);
         class_destroy(Device[DEVICE_OUTPUT].deviceClass);
         Device[DEVICE_OUTPUT].deviceClass = NULL;
-        printk(KERN_INFO "[DESTROY][NET] Class destroyed\n");
+        printk(KERN_ALERT "[DESTROY][ C ] %s Class destroyed\n", OUTPUT_DEVICE);
     }
     else
     {
-        printk(KERN_INFO "[DESTROY][NET] Canot destroy deviceClass :: It is already NULL !\n");
+        printk(KERN_ALERT "[DESTROY][ C ] Cannot destroy %s Class\n", OUTPUT_DEVICE);
     }
 
     if(Device[DEVICE_OUTPUT].majorNumber != 0)
     {
         unregister_chrdev(Device[DEVICE_OUTPUT].majorNumber, OUTPUT_DEVICE);
         Device[DEVICE_OUTPUT].majorNumber = 0;
-        printk(KERN_INFO "[DESTROY][NET] Unregistered character device\n");
+        printk(KERN_ALERT "[DESTROY][ C ] Unregistered %s device\n", OUTPUT_DEVICE);
     }
     else
     {
-        printk(KERN_INFO "[DESTROY][NET] Canot unregister KernelOutput Device :: majorNumber is already 0 !\n");
-        printk(KERN_INFO "[DESTROY][NET] Device destroyed\n");
+        printk(KERN_ALERT "[DESTROY][ C ] Cannot unregister %s Device\n", OUTPUT_DEVICE);
+
     }
+    printk(KERN_ALERT "[DESTROY][ C ] %s device destruction complete\n", OUTPUT_DEVICE);
+
     //
     // Watchdog
     //
@@ -368,11 +373,11 @@ void charDeviceDestroy(void)
     {
         device_destroy(Device[DEVICE_WATCHDOG].deviceClass, MKDEV(Device[DEVICE_WATCHDOG].majorNumber, 0));
         Device[DEVICE_WATCHDOG].nodeDevice = NULL;
-        printk(KERN_INFO "[DESTROY][NET] Device destroyed\n");
+        printk(KERN_ALERT "[DESTROY][ C ] %s Device destroyed\n", WATCHDOG_DEVICE);
     }
     else
     {
-        printk(KERN_INFO "[DESTROY][NET] Canot destroy nodeDevice :: It is already NULL !\n");
+        printk(KERN_ALERT "[DESTROY][ C ] Cannot destroy %s\n", WATCHDOG_DEVICE);
     }
 
     if(Device[DEVICE_WATCHDOG].deviceClass)
@@ -380,30 +385,30 @@ void charDeviceDestroy(void)
         class_unregister(Device[DEVICE_WATCHDOG].deviceClass);
         class_destroy(Device[DEVICE_WATCHDOG].deviceClass);
         Device[DEVICE_WATCHDOG].deviceClass = NULL;
-        printk(KERN_INFO "[DESTROY][NET] Class destroyed\n");
+        printk(KERN_ALERT "[DESTROY][ C ] %s Class destroyed\n", WATCHDOG_DEVICE);
     }
     else
     {
-        printk(KERN_INFO "[DESTROY][NET] Canot destroy deviceClass :: It is already NULL !\n");
+        printk(KERN_ALERT "[DESTROY][ C ] Cannot destroy %s Class\n", WATCHDOG_DEVICE);
     }
 
     if(Device[DEVICE_WATCHDOG].majorNumber != 0)
     {
         unregister_chrdev(Device[DEVICE_WATCHDOG].majorNumber, WATCHDOG_DEVICE);
         Device[DEVICE_WATCHDOG].majorNumber = 0;
-        printk(KERN_INFO "[DESTROY][NET] Unregistered character device\n");
+        printk(KERN_ALERT "[DESTROY][ C ] Unregistered %s device\n", WATCHDOG_DEVICE);
     }
     else
     {
-        printk(KERN_INFO "[DESTROY][NET] Canot unregister Watchdog Device :: majorNumber is already 0 !\n");
-        printk(KERN_INFO "[DESTROY][NET] Device destroyed\n");
+        printk(KERN_ALERT "[DESTROY][ C ] Cannot unregister %s Device\n", WATCHDOG_DEVICE);
     }
+        printk(KERN_ALERT "[DESTROY][ C ] %s device destruction complete\n", WATCHDOG_DEVICE);
 
     mutex_destroy(&wait_mutex);
-    printk(KERN_INFO "[DESTROY][NET] Wait Mutex destroyed\n");
+    printk(KERN_INFO "[DESTROY][ C ] Wait Mutex destroyed\n");
     mutex_destroy(&watchdog_mutex);
-    printk(KERN_INFO "[DESTROY][NET] Watchdog Mutex destroyed\n");
-    printk(KERN_INFO "[DESTROY][NET] Char device destruction complete\n");
+    printk(KERN_INFO "[DESTROY][ C ] Watchdog Mutex destroyed\n");
+    printk(KERN_INFO "[DESTROY][ C ] All char devices destruction complete\n");
 }
 
 /**
@@ -552,12 +557,12 @@ static int watchdogOpen(struct inode *inodep, struct file *filep)
 {
     if(!mutex_trylock(&Device[DEVICE_WATCHDOG].io_mutex))
     {
-        printk(KERN_ALERT "[CTRL][NET] Device in use by another process");
+        printk(KERN_ALERT "[CTRL][WDG] Device in use by another process");
         return -EBUSY;
     }
 
     Device[DEVICE_WATCHDOG].openCount++;
-    printk(KERN_INFO "[CTRL][NET] Device has been opened %d time(s)\n", Device[DEVICE_WATCHDOG].openCount);
+    printk(KERN_INFO "[CTRL][WDG] Device has been opened %d time(s)\n", Device[DEVICE_WATCHDOG].openCount);
 
     return 0;
 }
@@ -577,7 +582,7 @@ static ssize_t watchdogRead(struct file *filep, char *buffer, size_t len, loff_t
     }
     else
     {
-        printk(KERN_INFO "[CTRL][COM] Failed to send %d characters to user-space\n", error_count);
+        printk(KERN_INFO "[CTRL][WDG] Failed to send %d characters to user-space\n", error_count);
         /* Failed -- return a bad address message (i.e. -14) */
         return -EFAULT;
     }
@@ -591,9 +596,9 @@ static ssize_t watchdogWrite(struct file *filep, const char __user *buffer, size
 
 static int watchdogClose(struct inode *inodep, struct file *filep)
 {
-    printk(KERN_ALERT "[INIT][NET] Unlock [C] Device Mutex\n");
+    printk(KERN_ALERT "[INIT][WDG] Unlock [C] Device Mutex\n");
     mutex_unlock(&Device[DEVICE_WATCHDOG].io_mutex);
-    printk(KERN_INFO "[CTRL][NET] Device successfully closed\n");
+    printk(KERN_INFO "[CTRL][WDG] Device successfully closed\n");
     return 0;
 }
 

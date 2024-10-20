@@ -18,7 +18,7 @@
 
 static watchdogProcess Process =
 {
-    .initFlag = false,
+    .indicatorFPGA = false,
     .indicatorCurrent = 0x00,
     .indicatorPrevious = 0x00,
     .threadHandle = NULL,
@@ -43,10 +43,8 @@ void watchdog_unlockWatchdogMutex(void)
 /* Kernel state machine */
 static int watchdogThread(void *data)
 {
-    int len;
-    char message[128];
     DataTransfer* watchdogData;
-    msleep(500); /* Wait for the 1st watchdog to receive */
+    msleep(500); /* Wait for the watchdog capture from FPGA */
 
     while (!kthread_should_stop())
     {
@@ -62,30 +60,21 @@ static int watchdogThread(void *data)
             unlockWaitMutex();
         }
 
-        memset(message, 0, sizeof(message));
         if(Process.indicatorPrevious != Process.indicatorCurrent)
         {
-            printk(KERN_INFO "[CTRL][WDG] Watchdog Live [%x|%x]\n", Process.indicatorPrevious, Process.indicatorCurrent);
-            len = snprintf(message, sizeof(message), "[CTRL][WDG] Watchdog Live [%x|%x]\n", Process.indicatorPrevious, Process.indicatorCurrent);
+            if(Process.indicatorFPGA == false)
+            {
+                printk(KERN_INFO "[CTRL][WDG] Watchdog Live [%x|%x]\n", Process.indicatorPrevious, Process.indicatorCurrent);
+                Process.indicatorFPGA = true;
+            }
         }
         else
         {
-            /**
-             * Current design make 1st interation to take 5s
-             * So 1s watchdog should update indicator on next interration
-             * Giving valid information about Live/Dead Watchdog signal
-             **/
-            if(Process.initFlag == true)
-            {
-                /* This message dont have to be send over UART since FPGA is Dead and not looping trough UART signal to FTDI */
-                printk(KERN_INFO "[CTRL][WDG] Watchdog Dead [%x|%x] ERROR: Please check if FPGA binary is loaded\n", Process.indicatorPrevious, Process.indicatorCurrent);
-            }
-            else
-            {
-                Process.initFlag = true;
-            }
+            printk(KERN_INFO "[CTRL][WDG] Watchdog Dead [%x|%x] ERROR: Please check if FPGA binary is loaded\n", Process.indicatorPrevious, Process.indicatorCurrent);
+            Process.indicatorFPGA = false;
         }
-        uart_write(message, len);
+
+        /* Update indicator and unlock Watchdog Mutex */
    		Process.indicatorPrevious = Process.indicatorCurrent;
 		mutex_unlock(&Process.watchdogMutex);
 
