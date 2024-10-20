@@ -241,6 +241,7 @@ void killApplication(struct work_struct *work)
     kernelOutptData->length = 2;
 
     unlockWaitMutex();
+    unlockWatchdogMutex();
 }
 
 void spiDestroy(void)

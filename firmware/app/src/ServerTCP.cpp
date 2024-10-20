@@ -261,6 +261,14 @@ int ServerTCP::tcpTX()
 {
     ssize_t ret = -1;
 
+    /**
+     * As in kernelOutput we have here
+     * lack of synchronisation due to
+     * the trigger that is happemning
+     * on the client side :: GUI
+     *
+     * Therefore :: No need for State Machine
+     */
     if (!m_clientConnected) 
     {
         std::cerr << "[ERNO] [TCP] No client connected" << std::endl;

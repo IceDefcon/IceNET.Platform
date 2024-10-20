@@ -363,10 +363,11 @@ secondarySpiProcessing_module: SpiProcessing port map
     SERIAL_MISO => SECONDARY_MISO -- out Serialized Data from i2c state machine to Kernel
 );
 
+-- Watchdog interrupt signal
 InterruptGenerator_module: InterruptGenerator
 generic map
 (
-    PERIOD_MS => 1000,
+    PERIOD_MS => 100,
     PULSE_LENGTH => 50 -- 50 * 20ns = 100ns Interrupt Pulse
 )
 port map

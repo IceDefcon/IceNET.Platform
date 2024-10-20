@@ -18,7 +18,6 @@
 KernelOutput::KernelOutput() :
     m_file_descriptor(0), 
     m_threadKill(false),
-    m_currentState(KernelOutput_IDLE),
     m_Rx_KernelOutput(new std::vector<char>(CHAR_DEVICE_SIZE)),
     m_Tx_KernelOutput(new std::vector<char>(CHAR_DEVICE_SIZE))
 {
@@ -128,20 +127,14 @@ void KernelOutput::threadKernelOutput()
 {
     while (!m_threadKill)
     {
+        /**
+         * There is no need for state machine
+         * as it is hard to synchronise kernel space
+         * with user space, not able to change state
+         * in state machine to initiate read operation
+         * as this is happenig when FPGA data is reveived
+         */
         std::cout << "[INFO] [ O ] Waiting for next Feedback message" << std::endl;
-
-        switch(m_currentState)
-        {
-            case KernelOutput_IDLE:
-                break;
-
-            case KernelOutput_RX:
-                std::cout << "[INFO] [KernelInput] KernelOutput_RX mode" << std::endl;
-                break;
-
-            default:
-                std::cout << "[INFO] [KernelInput] Unknown mode" << std::endl;
-        }
 
         if(dataRX() > 0)
         {
@@ -164,10 +157,4 @@ void KernelOutput::threadKernelOutput()
 void KernelOutput::setInstance_NetworkTraffic(const std::shared_ptr<NetworkTraffic> instance)
 {
     m_instanceNetworkTraffic = instance;
-}
-
-
-void KernelOutput::setKernelOutputState(KernelOutput_stateType newState)
-{
-    m_currentState = newState;
 }

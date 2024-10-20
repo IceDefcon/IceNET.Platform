@@ -31,10 +31,3 @@ typedef enum
     KernelInput_TX,
     KernelInput_KILL
 } KernelInput_stateType;
-
-typedef enum 
-{
-    KernelOutput_IDLE = 0,
-    KernelOutput_RX,
-    KernelOutput_KILL
-} KernelOutput_stateType;

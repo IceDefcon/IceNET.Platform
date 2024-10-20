@@ -17,11 +17,11 @@
 #include "NetworkTraffic.h"
 #include "Types.h"
 
-class KernelOutput
+class Watchdog
 {
     private:
         int m_file_descriptor;
-        std::thread m_threadKernelOutput;
+        std::thread m_threadWatchdog;
         std::atomic<bool> m_threadKill;
 
         int m_portNumber;
@@ -34,14 +34,14 @@ class KernelOutput
         struct sockaddr_in m_clientAddress;
 
         /* For TCP server Traffic */
-        std::vector<char>* m_Rx_KernelOutput;
-        std::vector<char>* m_Tx_KernelOutput;
+        std::vector<char>* m_Rx_Watchdog;
+        std::vector<char>* m_Tx_Watchdog;
 
         std::shared_ptr<NetworkTraffic> m_instanceNetworkTraffic;
 
     public:
-        KernelOutput();
-        ~KernelOutput();
+        Watchdog();
+        ~Watchdog();
 
         int openDEV();
         int dataTX();
@@ -51,7 +51,5 @@ class KernelOutput
         void initThread();
         bool isThreadKilled();
 
-        void threadKernelOutput();
-
-        void setInstance_NetworkTraffic(const std::shared_ptr<NetworkTraffic> instance);
+        void threadWatchdog();
 };

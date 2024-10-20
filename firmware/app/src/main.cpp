@@ -7,6 +7,7 @@
 #include <chrono> // delay
 #include <thread> // delay
 
+#include "Watchdog.h"
 #include "KernelInput.h"
 #include "KernelOutput.h"
 #include "ServerTCP.h"
@@ -16,7 +17,7 @@ int main()
 {
     /* Smart pointers for auto Heap allocation and dealocation */
     auto instanceNetworkTraffic = std::make_shared<NetworkTraffic>();
-
+    auto instanceWatchdog = std::make_shared<Watchdog>();
     auto instanceKernelInput = std::make_shared<KernelInput>();
     auto instanceKernelOutput = std::make_shared<KernelOutput>();
     auto instanceServerTCP = std::make_shared<ServerTCP>();
@@ -27,6 +28,7 @@ int main()
     instanceNetworkTraffic->setInstance_KernelInput(instanceKernelInput);
 
     /* Initialize Interfaces */
+    instanceWatchdog->openDEV();
     instanceKernelInput->openDEV();
     instanceKernelOutput->openDEV();
     instanceServerTCP->openDEV();
@@ -34,8 +36,9 @@ int main()
 
     while (true) /* Terminate Kernel comms and Clean Memory */
     {
-        if (instanceKernelOutput->isThreadKilled()) 
+        if (instanceKernelOutput->isThreadKilled() || instanceWatchdog->isThreadKilled())
         {
+            instanceWatchdog->closeDEV();
             instanceServerTCP->closeDEV();
             instanceKernelOutput->closeDEV();
             instanceKernelInput->closeDEV();
