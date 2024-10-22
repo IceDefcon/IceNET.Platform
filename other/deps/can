@@ -1,0 +1,29 @@
+For:
+
+	dtb_overlay=/lib/firmware/BB-CAN0-00A0.dtbo
+
+	config-pin P9_19 can
+	config-pin P9_20 can
+
+And:
+
+	dtb_overlay=/lib/firmware/BB-CAN1-00A0.dtbo
+	
+	config-pin P9_24 can
+	config-pin P9_26 can
+
+
+
+
+sudo modprobe can
+sudo modprobe can-dev
+sudo modprobe can-raw
+sudo modprobe can-bcm
+
+config-pin P9_19 can
+config-pin P9_20 can
+
+sudo ip link set can0 up type can bitrate 500000
+sudo ip link set can0 up
+
+candump can0

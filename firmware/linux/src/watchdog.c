@@ -64,7 +64,7 @@ static int watchdogThread(void *data)
         {
             if(Process.indicatorFPGA == false)
             {
-                printk(KERN_INFO "[CTRL][WDG] Watchdog Live [%x|%x]\n", Process.indicatorPrevious, Process.indicatorCurrent);
+                printk(KERN_INFO "[CTRL][WDG] Watchdog Live [%x|%x] Start kicking the Thread\n", Process.indicatorPrevious, Process.indicatorCurrent);
                 Process.indicatorFPGA = true;
             }
         }
