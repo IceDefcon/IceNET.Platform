@@ -1,0 +1,11 @@
+//
+// .Xauthority :: X11 store authrisation for X Window system
+//
+cp /home/ice/.Xauthority /root/
+export DISPLAY=:10.0
+./quartus
+
+//
+// Enable audio :: from non user 
+//
+pulseaudio --start
