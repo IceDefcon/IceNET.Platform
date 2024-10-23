@@ -27,16 +27,17 @@ root.update_idletasks() # Adjust the window size depending on the widgets used
 ################################################################################################################################################
 
 # Horizontal separator
-separator1 = ttk.Separator(root, orient='horizontal')
-separator1.grid(row=3, column=0, columnspan=100, sticky='ew')
+vertical1 = ttk.Separator(root, orient='vertical')
+vertical1.grid(row=0, column=3, rowspan=8, sticky='nsew')
+vertical2 = ttk.Separator(root, orient='vertical')
+vertical2.grid(row=0, column=7, rowspan=8, sticky='nsew')
 
-# Vertical Separators
-separator2 = ttk.Separator(root, orient='vertical')
-separator2.grid(row=0, column=3, rowspan=8, sticky='ns')
-
-# Vertical Separators
-separator3 = ttk.Separator(root, orient='vertical')
-separator3.grid(row=0, column=7, rowspan=8, sticky='ns')
+horizontal1 = ttk.Separator(root, orient='horizontal')
+horizontal1.grid(row=3, column=0, columnspan=3, sticky='nsew')
+horizontal2 = ttk.Separator(root, orient='horizontal')
+horizontal2.grid(row=3, column=3, columnspan=3, sticky='nsew')
+horizontal3 = ttk.Separator(root, orient='horizontal')
+horizontal3.grid(row=3, column=6, columnspan=93, sticky='nsew')
 
 ################################################################################################################################################
 # TCP
@@ -46,7 +47,7 @@ tcp_manager = TcpManager(root)
 ################################################################################################################################################
 # UART
 ################################################################################################################################################
-uart_manager = UartManager(root)
+# uart_manager = UartManager(root)
 
 # Start the Tkinter main loop
 root.mainloop()
