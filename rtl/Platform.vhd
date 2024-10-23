@@ -78,6 +78,18 @@ port
     -- I2C BMI160 + ADXL345
     I2C_SDA : inout std_logic; -- PIN_AB13
     I2C_SCK : inout std_logic; -- PIN_AA13
+    -- Current Debug SPI Driver
+    NRF905_TX_EN : out std_logic; -- PIN_F1
+    NRF905_TRX_CE : out std_logic; -- PIN_H2
+    NRF905_PWR_UP : out std_logic; -- PIN_H1
+    NRF905_uCLK : in std_logic; -- PIN_J2
+    NRF905_CD : in std_logic; -- PIN_J1
+    NRF905_AM : in std_logic; -- PIN_M2
+    NRF905_DR : in std_logic; -- PIN_M1
+    NRF905_MISO : in std_logic; -- PIN_N2
+    NRF905_MOSI : out std_logic; -- PIN_N1
+    NRF905_SCK : out std_logic; -- PIN_P2
+    NRF905_CSN : out std_logic; -- PIN_P1
     -- PWM
     PWM_SIGNAL : out std_logic; -- PIN_R1
     -- BBB SPI1
@@ -352,22 +364,22 @@ port map
     button_out => reset_button
 );
 
-primarySpiProcessing_module: SpiProcessing port map 
-(
-	CLOCK => CLOCK_50MHz,
+--primarySpiProcessing_module: SpiProcessing port map 
+--(
+--	CLOCK => CLOCK_50MHz,
 
-	CS => PRIMARY_CS,
-	SCLK => PRIMARY_SCLK, -- Kernel Master always initialise SPI transfer
+--	CS => PRIMARY_CS,
+--	SCLK => PRIMARY_SCLK, -- Kernel Master always initialise SPI transfer
 
-    -- out
-	SPI_INT => primary_ready_MISO, -- Interrupt when data byte is ready [FIFO Read Enable]
-    -- From Kernel to FIFO
-	SERIAL_MOSI => PRIMARY_MOSI, -- in :: Data from Kernel to Serialize
-	PARALLEL_MOSI => primary_parallel_MOSI, -- out :: Serialized Data from Kernel to FIFO
-    -- Back to Kernel
-	PARALLEL_MISO => "00011000", -- in :: 0x18 Hard coded Feedback to Serialize
-	SERIAL_MISO => PRIMARY_MISO -- out :: 0x18 Serialized Hard coded Feedback to Kernel
-);
+--    -- out
+--	SPI_INT => primary_ready_MISO, -- Interrupt when data byte is ready [FIFO Read Enable]
+--    -- From Kernel to FIFO
+--	SERIAL_MOSI => PRIMARY_MOSI, -- in :: Data from Kernel to Serialize
+--	PARALLEL_MOSI => primary_parallel_MOSI, -- out :: Serialized Data from Kernel to FIFO
+--    -- Back to Kernel
+--	PARALLEL_MISO => "00011000", -- in :: 0x18 Hard coded Feedback to Serialize
+--	SERIAL_MISO => PRIMARY_MISO -- out :: 0x18 Serialized Hard coded Feedback to Kernel
+--);
 
 secondarySpiProcessing_module: SpiProcessing port map 
 (
@@ -620,5 +632,20 @@ begin
         end if;
     end if;
 end process;
+
+looptrough_spi_process:
+process(CLOCK_50MHz)
+begin
+    if rising_edge(CLOCK_50MHz) then
+        NRF905_CSN <= PRIMARY_CS;
+        PRIMARY_MISO <= NRF905_MISO;
+        NRF905_MOSI <= PRIMARY_MOSI;
+        NRF905_SCK <= PRIMARY_SCLK;
+    end if;
+end process;
+
+NRF905_PWR_UP <= '1';
+NRF905_TRX_CE <= '0';
+NRF905_TX_EN <= 'Z';
 
 end rtl;
