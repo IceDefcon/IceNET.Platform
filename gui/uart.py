@@ -13,12 +13,15 @@ class UartManager:
         self.root = root
         self.serial_port = None
 
-        self.refresh_button = tk.Button(self.root, text="REFRESH", command=self.refresh_uart_ports)
-        self.refresh_button.grid(row=9, column=0, pady=5, padx=5, sticky='nsew')
-
+        self.uart_open = tk.Button(self.root, text="OPEN", command=self.serial_connect)
+        self.uart_open.grid(row=9, column=0, pady=5, padx=5, sticky='nsew')
+        self.uart_close = tk.Button(self.root, text="CLOSE", command=self.serial_disconnect)
+        self.uart_close.grid(row=9, column=1, pady=5, padx=5, sticky='nsew')
         # Initialize the UART Combobox with available ports
         self.uart_combobox = ttk.Combobox(self.root, values=self.get_uart_ports(), width=14)
-        self.uart_combobox.grid(row=9, column=1, pady=5, padx=5, sticky='nsew')
+        self.uart_combobox.grid(row=9, column=2, pady=5, padx=5, sticky='nsew')
+        self.refresh_button = tk.Button(self.root, text="REFRESH", command=self.refresh_uart_ports)
+        self.refresh_button.grid(row=9, column=3, pady=5, padx=5, sticky='nsew')
 
         # Set the default value for the combobox if available
         available_ports = self.get_uart_ports()
@@ -28,11 +31,6 @@ class UartManager:
             self.uart_combobox.set(available_ports[0])  # Set to first available port
         else:
             self.uart_combobox.set('')  # No ports available
-
-        self.uart_open = tk.Button(self.root, text="OPEN", command=self.serial_connect)
-        self.uart_open.grid(row=9, column=2, pady=5, padx=5, sticky='nsew')
-        self.uart_close = tk.Button(self.root, text="CLOSE", command=self.serial_disconnect)
-        self.uart_close.grid(row=9, column=3, pady=5, padx=5, sticky='nsew')
 
         # Create a message entry box
         self.message_entry = tk.Entry(self.root, width=50)

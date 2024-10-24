@@ -23,30 +23,30 @@ root.title("iceNET Platform")
 root.update_idletasks() # Adjust the window size depending on the widgets used
 
 ################################################################################################################################################
-# SEPARATORS
+# MAIN
 ################################################################################################################################################
 
-# Horizontal separator
-separator1 = ttk.Separator(root, orient='horizontal')
-separator1.grid(row=3, column=0, columnspan=100, sticky='ew')
+# Create the Notebook (tab interface)
+notebook = ttk.Notebook(root)
+notebook.grid(row=0, column=0, sticky='nsew')
 
-# Vertical Separators
-separator2 = ttk.Separator(root, orient='vertical')
-separator2.grid(row=0, column=3, rowspan=8, sticky='ns')
+# Create frames for UART and TCP tabs
+uart_tab = ttk.Frame(notebook)
+tcp_tab = ttk.Frame(notebook)
 
-# Vertical Separators
-separator3 = ttk.Separator(root, orient='vertical')
-separator3.grid(row=0, column=7, rowspan=8, sticky='ns')
+# Add the tabs to the notebook
+notebook.add(tcp_tab, text="TCP")
+notebook.add(uart_tab, text="UART")
 
 ################################################################################################################################################
 # TCP
 ################################################################################################################################################
-tcp_manager = TcpManager(root)
+tcp_manager = TcpManager(tcp_tab)
 
 ################################################################################################################################################
 # UART
 ################################################################################################################################################
-uart_manager = UartManager(root)
+uart_manager = UartManager(uart_tab)
 
 # Start the Tkinter main loop
 root.mainloop()
