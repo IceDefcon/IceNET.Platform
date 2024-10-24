@@ -26,6 +26,17 @@ class TcpManager:
         self.tcp_port.grid(row=2, column=1, pady=5, padx=5, sticky='w')
         self.tcp_port.insert(0, "2555")
         self.tcp_socket = None
+        # SEPARATORS
+        self.vertical1 = ttk.Separator(self.root, orient='vertical')
+        self.vertical1.grid(row=0, column=3, rowspan=8, sticky='nsew')
+        self.vertical2 = ttk.Separator(self.root, orient='vertical')
+        self.vertical2.grid(row=0, column=7, rowspan=8, sticky='nsew')
+        self.horizontal1 = ttk.Separator(self.root, orient='horizontal')
+        self.horizontal1.grid(row=3, column=0, columnspan=3, sticky='nsew')
+        self.horizontal2 = ttk.Separator(self.root, orient='horizontal')
+        self.horizontal2.grid(row=3, column=3, columnspan=3, sticky='nsew')
+        self.horizontal3 = ttk.Separator(self.root, orient='horizontal')
+        self.horizontal3.grid(row=3, column=6, columnspan=93, sticky='nsew')
         # Connection
         self.connect_button = tk.Button(self.root, text="CONNECT", command=self.connect_to_server)
         self.connect_button.grid(row=0, column=0, pady=5, padx=5, sticky='e')
