@@ -72,7 +72,7 @@ class TcpManager:
         self.device_address = tk.Entry(self.root, width=14)
         self.device_address.grid(row=5, column=1, pady=5, padx=5, sticky='w')
         self.device_address.insert(0, "69")
-        self.i2c_exe_button = tk.Button(self.root, text="EXE", command=lambda: self.tcp_execute(0))
+        self.i2c_exe_button = tk.Button(self.root, text="EXE", command=lambda: self.tcp_execute(7))
         self.i2c_exe_button.grid(row=5, column=2, pady=5, padx=5, sticky='w')
         self.device_register_label = tk.Label(self.root, text="Register Address")
         self.device_register_label.grid(row=6, column=0, pady=5, padx=5, sticky='e')
@@ -130,17 +130,20 @@ class TcpManager:
             port = int(self.tcp_port.get())
             # Create and connect the TCP socket
             self.tcp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.tcp_socket.settimeout(1.0)
             self.tcp_socket.connect((server_address, port))
             self.tcp_console("[iceNET] Server connection established")
 
         except Exception as e:
-            self.tcp_console(f"[iceNET] Cannot establish TCP connection :: Server is Down: {e}")
+            self.tcp_console(f"[iceNET] Server is Down: {e}")
+            self.tcp_socket = None
 
     # Disconnect
     def disconnect_from_server(self):
         try:
             self.tcp_socket.close()
             self.tcp_console("[iceNET] Connection terminated")
+            self.tcp_socket = None
         except Exception as e:
             self.tcp_console(f"[iceNET] Server is Down: {e}")
 
@@ -151,7 +154,7 @@ class TcpManager:
             self.tcp_socket.sendall(data)
             self.tcp_console("[iceNET] Kill Linux Application")
         except Exception as e:
-            self.tcp_console(f"[iceNET] Connection not established: {e}")
+            self.tcp_console(f"[iceNET] Server is Down: {e}")
 
     # Write Button
     def toggle_write_data_entry(self):
@@ -180,50 +183,44 @@ class TcpManager:
         data = bytes([header, 0x00, 0x00, pwm_speed_value])
         return data
 
-    def tcp_execute(self, header):
-        # tcp_socket = None
+    def spi_assembly(self):
+        data = bytes([0x00, 0x00, 0x00, 0x00])
+        return data
+
+    def tcp_execute(self, comand):
         try:
-            # # Retrieve IP and Port values from Entry widgets
-            # server_address = self.tcp_ip.get()
-            # port = int(self.tcp_port.get())
-
-            # # Create and connect the TCP socket
-            # tcp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-            # tcp_socket.connect((server_address, port))
-            # self.tcp_console("[iceNET] Server connection established")
-
-            # Determine data to send based on header
-            if header == 0:
+            if comand == 0:
                 data = self.i2c_assembly()
-            elif header == 1:
+            elif comand == 1:
                 data = self.pwm_assembly()
-            elif header == 2:  # UP
+            elif comand == 2:  # UP
                 current = int(self.pwm_speed.get(), 16) + 0x08
                 current = min(current, 0xFA)
                 data = bytes([0x02, 0x00, 0x00, current])
                 self.pwm_speed.delete(0, 'end')
                 self.pwm_speed.insert(0, f"{current:02X}")
-            elif header == 3:  # DOWN
+            elif comand == 3:  # DOWN
                 current = int(self.pwm_speed.get(), 16) - 0x08
                 current = max(current, 0x00)
                 data = bytes([0x02, 0x00, 0x00, current])
                 self.pwm_speed.delete(0, 'end')
                 self.pwm_speed.insert(0, f"{current:02X}")
-            elif header == 4:  # STOP (Speed 0%)
+            elif comand == 4:  # STOP (Speed 0%)
                 data = bytes([0x02, 0x00, 0x00, 0x00])
                 self.pwm_speed.delete(0, 'end')
                 self.pwm_speed.insert(0, "00")
-            elif header == 5:  # 50%
+            elif comand == 5:  # 50%
                 data = bytes([0x02, 0x00, 0x00, 0x7D])
                 self.pwm_speed.delete(0, 'end')
                 self.pwm_speed.insert(0, "7D")
-            elif header == 6:  # 100%
+            elif comand == 6:  # 100%
                 data = bytes([0x02, 0x00, 0x00, 0xFA])
                 self.pwm_speed.delete(0, 'end')
                 self.pwm_speed.insert(0, "FA")
+            elif comand == 7:  # 100%
+                data = self.spi_assembly()
             else:
-                self.tcp_console("[iceNET] Wrong Data Header")
+                self.tcp_console("[iceNET] Unknown comand")
                 return
 
             # Send and log data
