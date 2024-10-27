@@ -147,6 +147,7 @@ class TcpManager:
             self.tcp_socket = None
         except Exception as e:
             self.tcp_console(f"[iceNET] Server is Down: {e}")
+            self.tcp_socket = None
 
     # Debug Kill
     def kill_application(self):
@@ -156,6 +157,7 @@ class TcpManager:
             self.tcp_console("[iceNET] Kill Linux Application")
         except Exception as e:
             self.tcp_console(f"[iceNET] Server is Down: {e}")
+            self.tcp_socket = None
 
     # Write i2c Button
     def i2c_toggle_write_data_entry(self):
@@ -198,6 +200,15 @@ class TcpManager:
         self.pwm_speed.insert(0, f"{value:02X}")
         return data
 
+    def pwm_getset(self, value):
+        header = 0x02
+        current = int(self.pwm_speed.get(), 16) + value
+        current = min(current, 0xFA)
+        data = bytes([header, 0x00, 0x00, current])
+        self.pwm_speed.delete(0, 'end')
+        self.pwm_speed.insert(0, f"{current:02X}")
+        return data
+
     def spi_assembly(self):
         data = bytes([0x00, 0x00, 0x00, 0x00])
         return data
@@ -209,19 +220,9 @@ class TcpManager:
             elif comand == 1:
                 data = self.pwm_assembly()
             elif comand == 2:  # UP
-                header = 0x02
-                current = int(self.pwm_speed.get(), 16) + 0x08
-                current = min(current, 0xFA)
-                data = bytes([header, 0x00, 0x00, current])
-                self.pwm_speed.delete(0, 'end')
-                self.pwm_speed.insert(0, f"{current:02X}")
+                data = self.pwm_getset(0x08)
             elif comand == 3:  # DOWN
-                header = 0x02
-                current = int(self.pwm_speed.get(), 16) - 0x08
-                current = max(current, 0x00)
-                data = bytes([header, 0x00, 0x00, current])
-                self.pwm_speed.delete(0, 'end')
-                self.pwm_speed.insert(0, f"{current:02X}")
+                data = self.pwm_getset(-0x08)
             elif comand == 4:
                 data = self.pwm_set(0x00) # STOP (Speed 0%)
             elif comand == 5:
@@ -255,6 +256,7 @@ class TcpManager:
 
         except Exception as e:
             self.tcp_console(f"[iceNET] Error sending/receiving data over TCP: {e}")
+            self.tcp_socket = None
 
         finally:
             if self.tcp_socket != None:
