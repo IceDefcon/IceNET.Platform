@@ -66,6 +66,7 @@ static workTaskData workTask[WORK_AMOUNT] =
 
 static void transferFpgaInput_WorkInit(void)
 {
+    printk(KERN_ERR "[INIT][WRK] transferFpgaInput :: Init work unit\n");
     workTask[WORK_FPGA_INPUT].workUnit = kmalloc(sizeof(struct work_struct), GFP_KERNEL);
     if (!workTask[WORK_FPGA_INPUT].workUnit)
     {
@@ -73,7 +74,7 @@ static void transferFpgaInput_WorkInit(void)
     }
 	else
 	{
-		printk(KERN_ERR "[INIT][WRK] Memory allocate successfully for transferFpgaInput work unit\n");
+		printk(KERN_ERR "[INIT][WRK] transferFpgaInput :: Memory allocattion successfully\n");
 	}
 
 	INIT_WORK(workTask[WORK_FPGA_INPUT].workUnit, transferFpgaInput);
@@ -84,12 +85,13 @@ static void transferFpgaInput_WorkInit(void)
 	}
 	else
 	{
-		printk(KERN_ERR "[INIT][WRK] Create single thread workqueue for transferFpgaInput\n");
+		printk(KERN_ERR "[INIT][WRK] transferFpgaInput :: Single thread workqueue created successfully\n");
 	}
 }
 
 static void transferFpgaOutput_WorkInit(void)
 {
+    printk(KERN_ERR "[INIT][WRK] transferFpgaOutput :: Init work unit\n");
     workTask[WORK_FPGA_OUTPUT].workUnit = kmalloc(sizeof(struct work_struct), GFP_KERNEL);
     if (!workTask[WORK_FPGA_OUTPUT].workUnit)
     {
@@ -97,7 +99,7 @@ static void transferFpgaOutput_WorkInit(void)
     }
 	else
 	{
-		printk(KERN_ERR "[INIT][WRK] Memory allocate successfully for transferFpgaOutput work unit\n");
+		printk(KERN_ERR "[INIT][WRK] transferFpgaOutput :: Memory allocattion successfully\n");
 	}
 
 	INIT_WORK(workTask[WORK_FPGA_OUTPUT].workUnit, transferFpgaOutput);
@@ -108,12 +110,13 @@ static void transferFpgaOutput_WorkInit(void)
 	}
 	else
 	{
-		printk(KERN_ERR "[INIT][WRK] Create single thread workqueue for transferFpgaOutput\n");
+		printk(KERN_ERR "[INIT][WRK] transferFpgaOutput :: Single thread workqueue created successfully\n");
 	}
 }
 
 static void killApplication_WorkInit(void)
 {
+    printk(KERN_ERR "[INIT][WRK] killApplication :: Init work unit\n");
     workTask[WORK_KILL_APPLICATION].workUnit = kmalloc(sizeof(struct work_struct), GFP_KERNEL);
     if (!workTask[WORK_KILL_APPLICATION].workUnit)
     {
@@ -121,7 +124,7 @@ static void killApplication_WorkInit(void)
     }
 	else
 	{
-		printk(KERN_ERR "[INIT][WRK] Memory allocate successfully for killApplication work unit\n");
+		printk(KERN_ERR "[INIT][WRK] killApplication :: Memory allocattion successfully\n");
 	}
 
 	INIT_WORK(workTask[WORK_KILL_APPLICATION].workUnit, killApplication);
@@ -132,7 +135,7 @@ static void killApplication_WorkInit(void)
 	}
 	else
 	{
-		printk(KERN_ERR "[INIT][WRK] Create single thread workqueue for killApplication\n");
+		printk(KERN_ERR "[INIT][WRK] killApplication :: Single thread workqueue created successfully\n");
 	}
 }
 
@@ -145,6 +148,7 @@ static void transferFpgaInput_WorkDestroy(void)
         destroy_workqueue(workTask[WORK_FPGA_INPUT].workQueue);
         workTask[WORK_FPGA_INPUT].workQueue = NULL;
     }
+    printk(KERN_ERR "[DESTROY][WRK] Work unit :: transferFpgaInput\n");
 }
 
 static void transferFpgaOutput_WorkDestroy(void)
@@ -156,6 +160,7 @@ static void transferFpgaOutput_WorkDestroy(void)
         destroy_workqueue(workTask[WORK_FPGA_OUTPUT].workQueue);
         workTask[WORK_FPGA_OUTPUT].workQueue = NULL;
     }
+    printk(KERN_ERR "[DESTROY][WRK] Work unit :: transferFpgaOutput\n");
 }
 
 static void killApplication_WorkDestroy(void)
@@ -167,6 +172,7 @@ static void killApplication_WorkDestroy(void)
         destroy_workqueue(workTask[WORK_KILL_APPLICATION].workQueue);
         workTask[WORK_KILL_APPLICATION].workQueue = NULL;
     }
+    printk(KERN_ERR "[DESTROY][WRK] Work unit :: killApplication\n");
 }
 
 void spiWorkInit(void)

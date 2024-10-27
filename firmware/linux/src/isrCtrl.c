@@ -83,7 +83,7 @@ static int interruptWatchdogInit(void)
     }
     else
     {
-        printk(KERN_ERR "[INIT][ISR] Setup GPIO Pin [%d] as input\n", GPIO_WATCHDOG_INTERRUPT);
+        printk(KERN_ERR "[INIT][ISR] Setup GPIO Pin [%d] Input\n", GPIO_WATCHDOG_INTERRUPT);
     }
 
 
@@ -96,7 +96,7 @@ static int interruptWatchdogInit(void)
     }
     else
     {
-        printk(KERN_ERR "[INIT][ISR] Setup GPIO Pin [%d] as interrupt\n", GPIO_WATCHDOG_INTERRUPT);
+        printk(KERN_ERR "[INIT][ISR] Setup GPIO Pin [%d] Interrupt\n", GPIO_WATCHDOG_INTERRUPT);
     }
 
     result = request_irq(irq_kernel, watchdogISR, IRQF_TRIGGER_RISING, "Request IRQ", NULL);
@@ -137,7 +137,7 @@ static int interruptFromKernelInit(void)
     }
     else
     {
-        printk(KERN_ERR "[INIT][ISR] Setup GPIO Pin [%d] as output\n", GPIO_KERNEL_INTERRUPT);
+        printk(KERN_ERR "[INIT][ISR] Setup GPIO Pin [%d] Output\n", GPIO_KERNEL_INTERRUPT);
     }
 
     return result;
@@ -169,7 +169,7 @@ static int transferFpgaOutputInit(void)
     }
     else
     {
-        printk(KERN_ERR "[INIT][ISR] Setup GPIO Pin [%d] as input\n", GPIO_FPGA_INTERRUPT);
+        printk(KERN_ERR "[INIT][ISR] Setup GPIO Pin [%d] Input\n", GPIO_FPGA_INTERRUPT);
     }
 
 
@@ -182,7 +182,7 @@ static int transferFpgaOutputInit(void)
     }
     else
     {
-        printk(KERN_ERR "[INIT][ISR] Setup GPIO Pin [%d] as interrupt\n", GPIO_FPGA_INTERRUPT);
+        printk(KERN_ERR "[INIT][ISR] Setup GPIO Pin [%d] Interrupt\n", GPIO_FPGA_INTERRUPT);
     }
 
     result = request_irq(irq_kernel, transferFpgaOutputISR, IRQF_TRIGGER_RISING, "Request IRQ", NULL);
