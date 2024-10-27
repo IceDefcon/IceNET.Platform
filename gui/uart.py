@@ -17,11 +17,10 @@ class UartManager:
         self.uart_open.grid(row=9, column=0, pady=5, padx=5, sticky='nsew')
         self.uart_close = tk.Button(self.root, text="CLOSE", command=self.serial_disconnect)
         self.uart_close.grid(row=9, column=1, pady=5, padx=5, sticky='nsew')
-        # Initialize the UART Combobox with available ports
         self.uart_combobox = ttk.Combobox(self.root, values=self.get_uart_ports(), width=14)
         self.uart_combobox.grid(row=9, column=2, pady=5, padx=5, sticky='nsew')
-        self.refresh_button = tk.Button(self.root, text="REFRESH", command=self.refresh_uart_ports)
-        self.refresh_button.grid(row=9, column=3, pady=5, padx=5, sticky='nsew')
+        self.uart_refresh = tk.Button(self.root, text="REFRESH", command=self.refresh_uart_ports)
+        self.uart_refresh.grid(row=9, column=3, pady=5, padx=5, sticky='nsew')
 
         # Set the default value for the combobox if available
         available_ports = self.get_uart_ports()
