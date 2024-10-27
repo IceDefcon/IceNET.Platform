@@ -157,9 +157,16 @@ class TcpManager:
         except Exception as e:
             self.tcp_console(f"[iceNET] Server is Down: {e}")
 
-    # Write Button
+    # Write i2c Button
     def i2c_toggle_write_data_entry(self):
         if self.i2c_write_var.get():
+            self.register_data.config(state=tk.NORMAL)
+        else:
+            self.register_data.config(state=tk.DISABLED)
+
+    # Write spi Button
+    def spi_toggle_write_data_entry(self):
+        if self.spi_write_var.get():
             self.register_data.config(state=tk.NORMAL)
         else:
             self.register_data.config(state=tk.DISABLED)
@@ -174,13 +181,6 @@ class TcpManager:
             data = bytes([header + 0x00, address, register, 0x00])
         return data
 
-    # Write Button
-    def spi_toggle_write_data_entry(self):
-        if self.spi_write_var.get():
-            self.register_data.config(state=tk.NORMAL)
-        else:
-            self.register_data.config(state=tk.DISABLED)
-
     def pwm_assembly(self):
         header = 0x02
         pwm_speed_value = int(self.pwm_speed.get(), 16)  # Assuming input is in hexadecimal
@@ -189,6 +189,13 @@ class TcpManager:
             self.pwm_speed.delete(0, 'end')
             self.pwm_speed.insert(0, "FA")
         data = bytes([header, 0x00, 0x00, pwm_speed_value])
+        return data
+
+    def pwm_set(self, value):
+        header = 0x02
+        data = bytes([header, 0x00, 0x00, value])
+        self.pwm_speed.delete(0, 'end')
+        self.pwm_speed.insert(0, f"{value:02X}")
         return data
 
     def spi_assembly(self):
@@ -215,22 +222,13 @@ class TcpManager:
                 data = bytes([header, 0x00, 0x00, current])
                 self.pwm_speed.delete(0, 'end')
                 self.pwm_speed.insert(0, f"{current:02X}")
-            elif comand == 4:  # STOP (Speed 0%)
-                header = 0x02
-                data = bytes([header, 0x00, 0x00, 0x00])
-                self.pwm_speed.delete(0, 'end')
-                self.pwm_speed.insert(0, "00")
-            elif comand == 5:  # 50%
-                header = 0x02
-                data = bytes([header, 0x00, 0x00, 0x7D])
-                self.pwm_speed.delete(0, 'end')
-                self.pwm_speed.insert(0, "7D")
-            elif comand == 6:  # 100%
-                header = 0x02
-                data = bytes([header, 0x00, 0x00, 0xFA])
-                self.pwm_speed.delete(0, 'end')
-                self.pwm_speed.insert(0, "FA")
-            elif comand == 7:  # 100%
+            elif comand == 4:
+                data = self.pwm_set(0x00) # STOP (Speed 0%)
+            elif comand == 5:
+                data = self.pwm_set(0x7D) # 50%
+            elif comand == 6:
+                data = self.pwm_set(0xFA) # 100%
+            elif comand == 7:
                 data = self.spi_assembly()
             else:
                 header = 0x05
@@ -259,7 +257,8 @@ class TcpManager:
             self.tcp_console(f"[iceNET] Error sending/receiving data over TCP: {e}")
 
         finally:
-            self.tcp_console("[iceNET] Transfer complete")
+            if self.tcp_socket != None:
+                self.tcp_console("[iceNET] Transfer complete")
 
     def tcp_console(self, message):
         self.tcp_display.config(state=tk.NORMAL)

@@ -155,6 +155,7 @@ void ServerTCP::threadServerTCP()
                 else
                 {
                     std::cout << "[INFO] [TCP] Transfer complete" << std::endl;
+                    m_timeoutCount = 0;
                 }
             }
             else if(ret == -5)
@@ -168,6 +169,7 @@ void ServerTCP::threadServerTCP()
             {
                 std::cout << "[INFO] [TCP] Client disconnected from server" << std::endl;
                 m_clientConnected = false;
+                m_timeoutCount = 0;
             }
             else
             {
@@ -214,7 +216,7 @@ int ServerTCP::initServer()
 
     /* Set socket timeout options */
     struct timeval tv;
-    tv.tv_sec = 5;  /* 5 seconds timeout */
+    tv.tv_sec = 1;  /* 5 seconds timeout */
     tv.tv_usec = 0;
     ret = setsockopt(m_serverSocket, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof(tv));
     if (ret < 0) 
@@ -329,7 +331,8 @@ int ServerTCP::tcpRX()
             }
             else
             {
-                std::cout << "[INFO] [TCP] Nothing received, listening..." << std::endl;
+                std::cout << "[INFO] [TCP] Nothing received, listening... [" << m_timeoutCount << "]" << std::endl;
+                m_timeoutCount++;
             }
         }
     }
@@ -347,6 +350,7 @@ int ServerTCP::tcpClose()
         close(m_clientSocket);
         m_clientSocket = -1;
         m_clientConnected = false;
+        m_timeoutCount = 0;
     }
 
     return 0;

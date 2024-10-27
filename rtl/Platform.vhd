@@ -165,7 +165,7 @@ signal interrupt_i2c_feedback : std_logic := '0';
 signal interrupt_pwm_feedback : std_logic := '0';
 -- Feedback data
 signal data_i2c_feedback : std_logic_vector(7 downto 0) := (others => '0');
-signal data_pwm_feedback : std_logic_vector(7 downto 0) := "11111010";
+signal data_pwm_feedback : std_logic_vector(7 downto 0) := "11111101";
 -- Debounce signals
 signal interrupt_from_cpu : std_logic := '0';
 -- Interrupts
