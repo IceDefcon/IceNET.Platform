@@ -13,7 +13,7 @@
 	Cortex A8 :: Kernel space for FPGA driver
 	x86 :: Network Stack Comms
 
-# TODO List
+# TODO Debug
 
 	1. Solder wires
 	2. Order FTR-110-03-G-D-06 :: JTAG Pin Header
@@ -23,13 +23,18 @@
 	6. Order J-Link Cable :: SEGGER
 	7. Attach to CPU @ Ozone Debuger
 
-# TODO modules
+# TODO Software
 
-	1. Watchdog for FPGA interrupts
-	2. Checksum
-	3. UART Console
-	
-# Testing Module List
+	1. 8 byte transfer mode tor the Platform IO over SPI
+	2. I2C burst mode
+	3. SPI Dma controller transfers
+	4. SPI Driver in FPGA with burst mode
+	5. UART driver in FPGA
+	6. CAN driver in FPGA
+	7. Checksum for SPI Kerent<->FPGA communication
+	8. UART Console (DMA controller buffer)
+
+# Testing Hardware Modules
 
 	HC-12 - Radio Module 433MHz
 	RTC DS1307 - Real time clock

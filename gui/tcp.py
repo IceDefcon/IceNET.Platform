@@ -183,16 +183,6 @@ class TcpManager:
             data = bytes([header + 0x00, address, register, 0x00])
         return data
 
-    def pwm_assembly(self):
-        header = 0x02
-        pwm_speed_value = int(self.pwm_speed.get(), 16)  # Assuming input is in hexadecimal
-        if pwm_speed_value > 0xFA:
-            pwm_speed_value = 0xFA
-            self.pwm_speed.delete(0, 'end')
-            self.pwm_speed.insert(0, "FA")
-        data = bytes([header, 0x00, 0x00, pwm_speed_value])
-        return data
-
     def pwm_set(self, value):
         header = 0x02
         data = bytes([header, 0x00, 0x00, value])
@@ -210,7 +200,7 @@ class TcpManager:
         return data
 
     def spi_assembly(self):
-        data = bytes([0x00, 0x00, 0x00, 0x00])
+        data = bytes([0x04, 0x00, 0x00, 0x00])
         return data
 
     def tcp_execute(self, comand):
@@ -218,7 +208,7 @@ class TcpManager:
             if comand == 0:
                 data = self.i2c_assembly()
             elif comand == 1:
-                data = self.pwm_assembly()
+                data = self.pwm_getset(0x00)
             elif comand == 2:  # UP
                 data = self.pwm_getset(0x08)
             elif comand == 3:  # DOWN
