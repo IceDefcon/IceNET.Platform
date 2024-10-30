@@ -602,20 +602,9 @@ static int watchdogClose(struct inode *inodep, struct file *filep)
     return 0;
 }
 
-
-/* GET */ DataTransfer* getKernelInputTransfer(void)
+/* GET */ DataTransfer* getCharDeviceTransfer(charDeviceType charDevice)
 {
-    return &Device[DEVICE_INPUT].io_transfer;
-}
-
-/* GET */ DataTransfer* getKernelOutputTransfer(void)
-{
-    return &Device[DEVICE_OUTPUT].io_transfer;
-}
-
-/* GET */ DataTransfer* getWatchdogTransfer(void)
-{
-    return &Device[DEVICE_WATCHDOG].io_transfer;
+    return &Device[charDevice].io_transfer;
 }
 
 void unlockWaitMutex(void)

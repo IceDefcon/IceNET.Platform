@@ -19,7 +19,7 @@ class TcpManager:
         self.tcp_ip_label.grid(row=1, column=0, pady=5, padx=5, sticky='e')
         self.tcp_ip = tk.Entry(self.root, width=14)
         self.tcp_ip.grid(row=1, column=1, pady=5, padx=5, sticky='w')
-        self.tcp_ip.insert(0, "10.0.0.2")
+        self.tcp_ip.insert(0, "192.168.8.153")
         self.tcp_port_label = tk.Label(self.root, text="Server Port")
         self.tcp_port_label.grid(row=2, column=0, pady=5, padx=5, sticky='e')
         self.tcp_port = tk.Entry(self.root, width=14)

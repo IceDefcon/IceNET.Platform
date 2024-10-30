@@ -56,6 +56,14 @@ typedef struct
     uint8_t spiLength;
 }spiDeviceData;
 
+typedef struct
+{
+    struct spi_message spiMessage;
+    struct spi_transfer spiTransfer;
+    dma_addr_t tx_dma;
+    dma_addr_t rx_dma;
+}spiDmaData;
+
 /* SPI */ int spiInit(void);
 /* FPGA */ void transferFpgaInput(struct work_struct *work);
 /* FPGA */ void transferFpgaOutput(struct work_struct *work);

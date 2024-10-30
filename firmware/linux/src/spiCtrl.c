@@ -46,7 +46,28 @@ static spiDeviceData Device[SPI_AMOUNT] =
     },
 };
 
-int spiBusInit(int bus, spiDeviceType device)
+static spiDmaData Dma[SPI_AMOUNT] =
+{
+    /* Input */
+    [SPI_PRIMARY] =
+    {
+        .spiMessage = {},
+        .spiTransfer = {0},
+        .tx_dma = 0,
+        .rx_dma = 0
+    },
+
+    /* Input */
+    [SPI_SECONDARY] =
+    {
+        .spiMessage = {},
+        .spiTransfer = {0},
+        .tx_dma = 0,
+        .rx_dma = 0
+    },
+};
+
+static int spiBusInit(int bus, spiDeviceType device)
 {
     struct spi_master *pMaster;
     int ret;
@@ -99,54 +120,56 @@ int spiBusInit(int bus, spiDeviceType device)
     return ret;
 }
 
-
-int spiInit(void)
+static int spiDmaInit(spiDeviceType spiDeviceEnum, charDeviceType charDeviceEnum)
 {
-    (void)spiBusInit(0, SPI_PRIMARY);
-    (void)spiBusInit(1, SPI_SECONDARY);
+    DataTransfer* pCharDeviceTransfer = getCharDeviceTransfer(charDeviceEnum);
+
+    /* Allocate DMA buffers */
+    Dma[spiDeviceEnum].tx_dma = dma_map_single(Device[spiDeviceEnum].spiDevice->controller->dev.parent, (void *)pCharDeviceTransfer->RxData, Device[spiDeviceEnum].spiLength, DMA_TO_DEVICE);
+    Dma[spiDeviceEnum].rx_dma = dma_map_single(Device[spiDeviceEnum].spiDevice->controller->dev.parent, (void *)Device[spiDeviceEnum].spiRx, Device[spiDeviceEnum].spiLength, DMA_FROM_DEVICE);
+
+    if(dma_mapping_error(Device[spiDeviceEnum].spiDevice->controller->dev.parent, Dma[spiDeviceEnum].tx_dma) ||
+        dma_mapping_error(Device[spiDeviceEnum].spiDevice->controller->dev.parent, Dma[spiDeviceEnum].rx_dma))
+    {
+        printk(KERN_ERR "[INIT][SPI] DMA mapping failed for SPI %d\n", spiDeviceEnum);
+        return -1;
+    }
+    else
+    {
+        printk(KERN_ERR "[INIT][SPI] DMA mapping successful for SPI %d\n", spiDeviceEnum);
+    }
+
+    memset(&Dma[spiDeviceEnum].spiTransfer, 0, sizeof(Dma[spiDeviceEnum].spiTransfer));
+    Dma[spiDeviceEnum].spiTransfer.tx_dma = Dma[spiDeviceEnum].tx_dma;
+    Dma[spiDeviceEnum].spiTransfer.rx_dma = Dma[spiDeviceEnum].rx_dma;
+    Dma[spiDeviceEnum].spiTransfer.len = Device[spiDeviceEnum].spiLength;
+    Dma[spiDeviceEnum].spiTransfer.tx_buf = (void *)pCharDeviceTransfer->RxData;  /* Assign DMA buffer to tx_buf */
+    Dma[spiDeviceEnum].spiTransfer.rx_buf = (void *)Device[spiDeviceEnum].spiRx;  /* Assign DMA buffer to rx_buf */
+    Dma[spiDeviceEnum].spiTransfer.cs_change = 1;
+    Dma[spiDeviceEnum].spiTransfer.speed_hz = Device[spiDeviceEnum].spiDevice->max_speed_hz;
+
+    spi_message_init(&Dma[spiDeviceEnum].spiMessage);
+    spi_message_add_tail(&Dma[spiDeviceEnum].spiTransfer, &Dma[spiDeviceEnum].spiMessage);
+
+    return 0;
+}
+
+static int spiDmaDestroy(spiDeviceType spiDeviceEnum)
+{
+    /* Unmap DMA buffers */
+    dma_unmap_single(Device[spiDeviceEnum].spiDevice->controller->dev.parent, Dma[spiDeviceEnum].tx_dma, Device[spiDeviceEnum].spiLength, DMA_TO_DEVICE);
+    dma_unmap_single(Device[spiDeviceEnum].spiDevice->controller->dev.parent, Dma[spiDeviceEnum].rx_dma, Device[spiDeviceEnum].spiLength, DMA_FROM_DEVICE);
 
     return 0;
 }
 
 void transferFpgaInput(struct work_struct *work)
 {
-    struct spi_message msg;
-    struct spi_transfer transfer;
-    dma_addr_t tx_dma, rx_dma;
     int ret;
     int i;
 
-    DataTransfer* kernelOutptData = getKernelInputTransfer();
-
-    /* Allocate DMA buffers */
-    tx_dma = dma_map_single(Device[SPI_PRIMARY].spiDevice->controller->dev.parent, (void *)kernelOutptData->RxData, Device[SPI_PRIMARY].spiLength, DMA_TO_DEVICE);
-    rx_dma = dma_map_single(Device[SPI_PRIMARY].spiDevice->controller->dev.parent, (void *)Device[SPI_PRIMARY].spiRx, Device[SPI_PRIMARY].spiLength, DMA_FROM_DEVICE);
-
-    if (dma_mapping_error(Device[SPI_PRIMARY].spiDevice->controller->dev.parent, tx_dma) ||
-        dma_mapping_error(Device[SPI_PRIMARY].spiDevice->controller->dev.parent, rx_dma))
-    {
-        printk(KERN_ERR "[CTRL][SPI] DMA mapping failed\n");
-        return;
-    }
-
-    memset(&transfer, 0, sizeof(transfer));
-    transfer.tx_dma = tx_dma;
-    transfer.rx_dma = rx_dma;
-    transfer.len = Device[SPI_PRIMARY].spiLength;
-    transfer.tx_buf = (void *)kernelOutptData->RxData;  /* Assign DMA buffer to tx_buf */
-    transfer.rx_buf = (void *)Device[SPI_PRIMARY].spiRx;  /* Assign DMA buffer to rx_buf */
-    transfer.cs_change = 1;
-    transfer.speed_hz = Device[SPI_PRIMARY].spiDevice->max_speed_hz;
-
-    spi_message_init(&msg);
-    spi_message_add_tail(&transfer, &msg);
-
     /* Initate DMA Controller to perform SPI transfer */
-    ret = spi_sync(Device[SPI_PRIMARY].spiDevice, &msg);
-
-    /* Unmap DMA buffers */
-    dma_unmap_single(Device[SPI_PRIMARY].spiDevice->controller->dev.parent, tx_dma, Device[SPI_PRIMARY].spiLength, DMA_TO_DEVICE);
-    dma_unmap_single(Device[SPI_PRIMARY].spiDevice->controller->dev.parent, rx_dma, Device[SPI_PRIMARY].spiLength, DMA_FROM_DEVICE);
+    ret = spi_sync(Device[SPI_PRIMARY].spiDevice, &Dma[SPI_PRIMARY].spiMessage);
 
     if (ret < 0)
     {
@@ -160,7 +183,7 @@ void transferFpgaInput(struct work_struct *work)
 
     for (i = 0; i < Device[SPI_PRIMARY].spiLength; ++i)
     {
-        printk(KERN_INFO "[CTRL][SPI] Primary FPGA Transfer :: Byte[%d]: [Data] Tx[0x%02x] [Feedback] Rx[0x%02x]\n", i, kernelOutptData->RxData[i], Device[SPI_PRIMARY].spiRx[i]);
+        printk(KERN_INFO "[CTRL][SPI] Primary FPGA Transfer :: Byte[%d]: [Data] Tx[0x%02x] [Feedback] Rx[0x%02x]\n", i, Device[SPI_PRIMARY].spiRx[i], Device[SPI_PRIMARY].spiRx[i]);
     }
 
     if(0x18 != Device[SPI_PRIMARY].spiRx[0])
@@ -185,7 +208,7 @@ void transferFpgaOutput(struct work_struct *work)
     int ret;
     int i;
 
-    DataTransfer* kernelOutptData = getKernelOutputTransfer();
+    DataTransfer* kernelOutptData = getCharDeviceTransfer(DEVICE_OUTPUT);
 
     /* Allocate DMA buffers */
     tx_dma = dma_map_single(Device[SPI_SECONDARY].spiDevice->controller->dev.parent, (void *)Device[SPI_SECONDARY].spiTx, Device[SPI_SECONDARY].spiLength, DMA_TO_DEVICE);
@@ -247,7 +270,7 @@ void transferFpgaOutput(struct work_struct *work)
 
 void killApplication(struct work_struct *work)
 {
-    DataTransfer* kernelOutptData = getKernelOutputTransfer();
+    DataTransfer* kernelOutptData = getCharDeviceTransfer(DEVICE_OUTPUT);
 
     kernelOutptData->TxData[0] = 0xDE;
     kernelOutptData->TxData[1] = 0xAD;
@@ -257,8 +280,20 @@ void killApplication(struct work_struct *work)
     unlockWatchdogMutex();
 }
 
+int spiInit(void)
+{
+    (void)spiBusInit(0, SPI_PRIMARY);
+    (void)spiBusInit(1, SPI_SECONDARY);
+
+    spiDmaInit(SPI_PRIMARY, DEVICE_INPUT);
+
+    return 0;
+}
+
 void spiDestroy(void)
 {
+    spiDmaDestroy(SPI_PRIMARY);
+
     spi_dev_put(Device[SPI_PRIMARY].spiDevice);
     spi_dev_put(Device[SPI_SECONDARY].spiDevice);
     printk(KERN_INFO "[DESTROY][SPI] Destroy SPI Devices\n");

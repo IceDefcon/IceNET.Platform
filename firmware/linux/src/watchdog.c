@@ -50,7 +50,7 @@ static int watchdogThread(void *data)
     {
 		mutex_lock(&Process.watchdogMutex);
 
-        watchdogData = getWatchdogTransfer();
+        watchdogData = getCharDeviceTransfer(DEVICE_WATCHDOG);
         watchdogData->TxData[0] = Process.indicatorPrevious;
         watchdogData->TxData[1] = Process.indicatorCurrent;
         watchdogData->length = 2;
