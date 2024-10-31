@@ -43,6 +43,13 @@
 
 typedef enum
 {
+    BUS_0,
+    BUS_1,
+    BUS_AMOUNT
+}spiBusType;
+
+typedef enum
+{
     SPI_PRIMARY,
     SPI_SECONDARY,
     SPI_AMOUNT
@@ -55,6 +62,14 @@ typedef struct
     volatile uint8_t spiRx[SPI_BUFFER_SIZE];
     uint8_t spiLength;
 }spiDeviceData;
+
+typedef struct
+{
+    struct spi_message spiMessage;
+    struct spi_transfer spiTransfer;
+    dma_addr_t tx_dma;
+    dma_addr_t rx_dma;
+}spiDmaData;
 
 /* SPI */ int spiInit(void);
 /* FPGA */ void transferFpgaInput(struct work_struct *work);

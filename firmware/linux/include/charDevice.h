@@ -45,11 +45,9 @@ typedef enum
     DEVICE_OUTPUT,
     DEVICE_WATCHDOG,
     DEVICE_AMOUNT
-}deviceType;
+}charDeviceType;
 
-/* GET */ DataTransfer* getKernelInputTransfer(void);
-/* GET */ DataTransfer* getKernelOutputTransfer(void);
-/* GET */ DataTransfer* getWatchdogTransfer(void);
+/* GET */ DataTransfer* getCharDeviceTransfer(charDeviceType charDevice);
 
 void unlockWaitMutex(void);
 void unlockWatchdogMutex(void);

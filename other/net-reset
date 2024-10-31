@@ -1,0 +1,3 @@
+sudo ip addr add 10.0.0.1/24 dev enx00e04c62d741
+sudo ip route add default via 10.0.0.1 dev enx00e04c62d741
+sudo ip link set enx00e04c62d741 up

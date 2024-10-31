@@ -1,95 +1,148 @@
+/*!
+ *
+ * Author: Ice.Marek
+ * IceNET Technology 2024
+ *
+ */
+
 #include <linux/module.h>
+#include <linux/kernel.h>
 #include <linux/spi/spi.h>
-#include <linux/dma-mapping.h>
-#include <linux/platform_device.h>
-#include <linux/delay.h>
+#include <linux/init.h>
+#include <linux/workqueue.h>
+#include <linux/slab.h>  // For kmalloc and kfree
 
-#define DRIVER_NAME "spi_dma_example"
+////////////////////////
+//                    //
+//                    //
+//                    //
+//   [SPI] Control    //
+//                    //
+//                    //
+//                    //
+////////////////////////
 
-static struct spi_device *spi_device;
+static struct spi_device *spi_device_primary = NULL;
+static u8 spi_rx_buf[4] = {0};
+static u8 spi_tx_buf[4] = {0x00, 0x69, 0x00, 0x00};
+static const int spi_length = 4;
 
-static int spi_dma_transfer(struct spi_device *spi, u8 *tx_buf, u8 *rx_buf, size_t len)
+int spiInit(void)
 {
-    struct spi_transfer t = {
-        .tx_buf = tx_buf,
-        .rx_buf = rx_buf,
-        .len = len,
-        .speed_hz = spi->max_speed_hz,
-        .cs_change = 1,
-        .dma_tx = DMA_MAPPING_ERROR,
-        .dma_rx = DMA_MAPPING_ERROR,
-    };
-    struct spi_message m;
-
-    spi_message_init(&m);
-    spi_message_add_tail(&t, &m);
-
-    // Initiate the SPI DMA transfer
-    int ret = spi_sync(spi, &m);
-    if (ret)
-        pr_err("SPI DMA transfer failed: %d\n", ret);
-
-    return ret;
-}
-
-static int __init spi_dma_example_init(void)
-{
-    struct spi_master *master;
-    int bus_num = 1;  // SPI0 is typically mapped to bus number 1
+    struct spi_master *spi_master_primary;
     int ret;
 
-    // Get the SPI master corresponding to the bus number
-    master = spi_busnum_to_master(bus_num);
-    if (!master) {
-        pr_err("SPI master not found.\n");
+    spi_master_primary = spi_busnum_to_master(0);
+    if (!spi_master_primary)
+    {
+        printk(KERN_ERR "[INIT][SPI] SPI Master at BUS 0 not found!\n");
         return -ENODEV;
     }
+    else
+    {
+        printk(KERN_ERR "[INIT][SPI] SPI Master at BUS 0 Registered\n");
+    }
 
-    // Allocate and set up the SPI device structure
-    spi_device = spi_alloc_device(master);
-    if (!spi_device) {
-        put_device(&master->dev);
-        pr_err("Failed to allocate SPI device.\n");
+    spi_device_primary = spi_alloc_device(spi_master_primary);
+    if (!spi_device_primary)
+    {
+        printk(KERN_ERR "[INIT][SPI] SPI0 Failed to Allocate!\n");
         return -ENOMEM;
     }
-
-    spi_device->chip_select = 0; // Use CS0
-    spi_device->max_speed_hz = 24000000; // Max SPI speed
-    spi_device->mode = SPI_MODE_0;
-    spi_device->bits_per_word = 8;
-
-    // Register the SPI device with the SPI core
-    ret = spi_add_device(spi_device);
-    if (ret) {
-        spi_dev_put(spi_device);
-        pr_err("Failed to add SPI device.\n");
-        return ret;
+    else
+    {
+        printk(KERN_ERR "[INIT][SPI] SPI0 Allocated\n");
     }
 
-    pr_info("SPI DMA Example: Device registered successfully.\n");
+    /*!
+     * The mode is set to 1 to pass the
+     * High clock control signal to FPGA
+     *
+     * Only required when talking to FPGA
+     */
+    spi_device_primary->chip_select = 0;
+    spi_device_primary->mode = SPI_MODE_1; /* For Kernel <=> FPGA Communication */
+    spi_device_primary->bits_per_word = 8;
+    spi_device_primary->max_speed_hz = 1000000;
 
-    // Example data to send and receive
-    u8 tx_buf[16] = {0xDE, 0xAD, 0xBE, 0xEF, 0x12, 0x34, 0x56, 0x78,
-                     0x9A, 0xBC, 0xDE, 0xF0, 0x11, 0x22, 0x33, 0x44};
-    u8 rx_buf[16] = {0};
-
-    // Perform a DMA SPI transfer
-    spi_dma_transfer(spi_device, tx_buf, rx_buf, sizeof(tx_buf));
+    ret = spi_setup(spi_device_primary);
+    if (ret < 0)
+    {
+        printk(KERN_ERR "[INIT][SPI] SPI0 device Failed to setup! ret[%d]\n", ret);
+        spi_dev_put(spi_device_primary);
+        return ret;
+    }
+    else
+    {
+        printk(KERN_ERR "[INIT][SPI] SPI0 device setup\n");
+    }
 
     return 0;
 }
 
-static void __exit spi_dma_example_exit(void)
+void spiDestroy(void)
 {
-    if (spi_device) {
-        spi_unregister_device(spi_device);
-    }
-    pr_info("SPI DMA Example: Device unregistered.\n");
+    spi_dev_put(spi_device_primary);
+    printk(KERN_INFO "[DESTROY][SPI] Destroy SPI Devices\n");
 }
 
-module_init(spi_dma_example_init);
-module_exit(spi_dma_example_exit);
+static int __init spi_module_init(void)
+{
+    struct spi_message msg;
+    struct spi_transfer transfer;
+    int ret;
+    int i;
+
+    printk(KERN_INFO "[SPI MODULE] Initializing SPI Kernel Module\n");
+    ret = spiInit();
+    if (ret < 0) {
+        return ret;
+    }
+
+    /* Perform SPI transfer during initialization as a test */
+    memset(&transfer, 0, sizeof(transfer));
+    transfer.tx_buf = (void *)spi_tx_buf;
+    transfer.rx_buf = (void *)spi_rx_buf;
+    transfer.len = spi_length;
+
+    spi_message_init(&msg);
+    spi_message_add_tail(&transfer, &msg);
+
+    ret = spi_sync(spi_device_primary, &msg);
+    if (ret < 0)
+    {
+        printk(KERN_ERR "[CTRL][SPI] SPI transfer failed during initialization: %d\n", ret);
+        return ret;
+    }
+    else
+    {
+        printk(KERN_INFO "[CTRL][SPI] Primary FPGA Transfer completed during initialization\n");
+    }
+
+    for (i = 0; i < spi_length; ++i)
+    {
+        printk(KERN_INFO "[CTRL][SPI] Primary FPGA Transfer :: Byte[%d]: [Tx 0x%02x] [Rx 0x%02x]\n", i, spi_tx_buf[i], spi_rx_buf[i]);
+    }
+
+    /* Clear the buffers */
+    for (i = 0; i < spi_length; ++i)
+    {
+        spi_rx_buf[i] = 0x00;
+        spi_tx_buf[i] = 0x00;
+    }
+
+    return 0;
+}
+
+static void __exit spi_module_exit(void)
+{
+    printk(KERN_INFO "[SPI MODULE] Exiting SPI Kernel Module\n");
+    spiDestroy();
+}
+
+module_init(spi_module_init);
+module_exit(spi_module_exit);
 
 MODULE_LICENSE("GPL");
-MODULE_AUTHOR("ChatGPT");
-MODULE_DESCRIPTION("BeagleBone Black SPI0 DMA Example Kernel Module");
+MODULE_AUTHOR("Ice.Marek");
+MODULE_DESCRIPTION("SPI Kernel Module for Primary FPGA Communication");
