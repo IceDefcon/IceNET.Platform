@@ -43,6 +43,13 @@
 
 typedef enum
 {
+    BUS_0,
+    BUS_1,
+    BUS_AMOUNT
+}spiBusType;
+
+typedef enum
+{
     SPI_PRIMARY,
     SPI_SECONDARY,
     SPI_AMOUNT
