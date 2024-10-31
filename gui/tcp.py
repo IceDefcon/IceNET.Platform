@@ -152,7 +152,7 @@ class TcpManager:
     # Debug Kill
     def kill_application(self):
         try:
-            data = bytes([0xDE, 0xAD])
+            data = bytes([0xDE, 0xAD, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00])
             self.tcp_socket.sendall(data)
             self.tcp_console("[iceNET] Kill Linux Application")
         except Exception as e:
@@ -162,30 +162,30 @@ class TcpManager:
     # Write i2c Button
     def i2c_toggle_write_data_entry(self):
         if self.i2c_write_var.get():
-            self.register_data.config(state=tk.NORMAL)
+            self.i2c_register_data.config(state=tk.NORMAL)
         else:
-            self.register_data.config(state=tk.DISABLED)
+            self.i2c_register_data.config(state=tk.DISABLED)
 
     # Write spi Button
     def spi_toggle_write_data_entry(self):
         if self.spi_write_var.get():
-            self.register_data.config(state=tk.NORMAL)
+            self.spi_register_data.config(state=tk.NORMAL)
         else:
-            self.register_data.config(state=tk.DISABLED)
+            self.spi_register_data.config(state=tk.DISABLED)
 
     def i2c_assembly(self):
         header = 0x00 # 7 control bits + 1 R/W bit
         address = int(self.i2c_device_address.get(), 16)  # Convert hex address to integer
         register = int(self.i2c_device_register.get(), 16)  # Convert hex register to integer
         if self.i2c_write_var.get():
-            data = bytes([header + 0x01, address, register]) + bytes.fromhex(self.register_data.get())
+            data = bytes([header + 0x01, address, register]) + bytes.fromhex(self.i2c_register_data.get()) + bytes([0x00, 0x00, 0x00, 0x00])
         else:
-            data = bytes([header + 0x00, address, register, 0x00])
+            data = bytes([header + 0x00, address, register, 0x00, 0x00, 0x00, 0x00, 0x00])
         return data
 
     def pwm_set(self, value):
         header = 0x02
-        data = bytes([header, 0x00, 0x00, value])
+        data = bytes([header, 0x00, 0x00, value, 0x00, 0x00, 0x00, 0x00])
         self.pwm_speed.delete(0, 'end')
         self.pwm_speed.insert(0, f"{value:02X}")
         return data
@@ -194,13 +194,13 @@ class TcpManager:
         header = 0x02
         current = int(self.pwm_speed.get(), 16) + value
         current = min(current, 0xFA)
-        data = bytes([header, 0x00, 0x00, current])
+        data = bytes([header, 0x00, 0x00, current, 0x00, 0x00, 0x00, 0x00])
         self.pwm_speed.delete(0, 'end')
         self.pwm_speed.insert(0, f"{current:02X}")
         return data
 
     def spi_assembly(self):
-        data = bytes([0x04, 0x00, 0x00, 0x00])
+        data = bytes([0x04, 0x00, 0x00]) + bytes.fromhex(self.spi_register_data.get()) + bytes([0x00, 0x00, 0x00])
         return data
 
     def tcp_execute(self, comand):
@@ -223,7 +223,7 @@ class TcpManager:
                 data = self.spi_assembly()
             else:
                 header = 0x05
-                data = bytes([header, 0x00, 0x00, 0xF0])
+                data = bytes([header, 0x00, 0x00, 0xF0, 0x00, 0x00, 0x00, 0x00])
                 self.tcp_console("[iceNET] Unknown comand")
                 return
 
@@ -233,10 +233,10 @@ class TcpManager:
 
             # Receive feedback
             while True:
-                feedback_data = self.tcp_socket.recv(4)
+                feedback_data = self.tcp_socket.recv(8)
 
-                # Check for invalid feedback: either 0xFF or 0x00000000
-                if feedback_data == b'\xFF' or feedback_data == b'\x00\x00\x00\x00':
+                # Check for invalid feedback: either 0xFF or 0x0000000000000000
+                if feedback_data == b'\xFF' or feedback_data == b'\x00\x00\x00\x00\x00\x00\x00\x00':
                     # time.sleep(0.1)
                     continue  # Retry if feedback is invalid
                 else:

@@ -83,8 +83,8 @@ void NetworkTraffic::threadNetworkTraffic()
 
             case NetworkTraffic_KernelInput:
                 std::cout << "[INFO] [NET] NetworkTraffic_KernelInput mode" << std::endl;
-                std::cout << "[INFO] [NET] Received 4 Bytes of data: ";
-                for (int i = 0; i < 4; ++i)
+                std::cout << "[INFO] [NET] Received 8 Bytes of data: ";
+                for (int i = 0; i < 8; ++i)
                 {
                     std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>((*m_Rx_NetworkTraffic)[i]) << " ";
                 }
@@ -99,8 +99,8 @@ void NetworkTraffic::threadNetworkTraffic()
 
             case NetworkTraffic_KernelOutput:
                 std::cout << "[INFO] [NET] NetworkTraffic_KernelOutput mode" << std::endl;
-                std::cout << "[INFO] [NET] Received 1 Byte of data: ";
-                for (int i = 0; i < 1; ++i)
+                std::cout << "[INFO] [NET] Received 8 Byte of data: ";
+                for (int i = 0; i < 8; ++i)
                 {
                     std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>((*m_Tx_NetworkTraffic)[i]) << " ";
                 }
