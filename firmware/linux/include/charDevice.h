@@ -36,7 +36,8 @@ typedef struct
     struct class *deviceClass;
     struct device *nodeDevice;
     int openCount;
-    struct mutex io_mutex;
+    struct mutex device_mutex;
+    struct mutex read_Mutex;
     DataTransfer io_transfer;
     struct file_operations fops;
 }charDeviceData;
@@ -49,12 +50,20 @@ typedef enum
     DEVICE_AMOUNT
 }charDeviceType;
 
+typedef enum
+{
+    MUTEX_CTRL_INIT,
+    MUTEX_CTRL_LOCK,
+    MUTEX_CTRL_UNLOCK,
+    MUTEX_CTRL_DESTROY,
+    MUTEX_CTRL_AMOUNT
+} MutexCtrlType;
+
+/* GET */ charDeviceData* getCharDevice(void);
 /* GET */ DataTransfer* getCharDeviceTransfer(charDeviceType charDevice);
+/* CTRL */ void charDeviceMutexCtrl(charDeviceType charDevice, MutexCtrlType mutexCtrl);
 
-void unlockWaitMutex(void);
-void unlockWatchdogMutex(void);
-
-void charDeviceInit(void);
-void charDeviceDestroy(void);
+/* INIT */ void charDeviceInit(void);
+/* EXIT */ void charDeviceDestroy(void);
 
 #endif // CHAR_DEVICE_H

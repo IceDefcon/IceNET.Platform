@@ -25,7 +25,7 @@
 
 # TODO Software
 
-	1. 8 byte transfer mode tor the Platform IO over SPI
+	1. 8 byte transfer mode for the Platform IO over SPI
 	2. I2C burst mode
 	3. SPI Driver in FPGA with burst mode
 	4. UART driver in FPGA

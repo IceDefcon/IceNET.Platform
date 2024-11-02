@@ -54,10 +54,10 @@ static int watchdogThread(void *data)
         watchdogData->TxData[0] = Process.indicatorPrevious;
         watchdogData->TxData[1] = Process.indicatorCurrent;
         watchdogData->length = 2;
-        unlockWatchdogMutex();
+        charDeviceMutexCtrl(DEVICE_WATCHDOG, MUTEX_CTRL_UNLOCK);
         if(Process.indicatorPrevious == Process.indicatorCurrent)
         {
-            unlockWaitMutex();
+            charDeviceMutexCtrl(DEVICE_OUTPUT, MUTEX_CTRL_UNLOCK);
         }
 
         if(Process.indicatorPrevious != Process.indicatorCurrent)
