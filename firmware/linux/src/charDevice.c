@@ -31,6 +31,8 @@
 static DEFINE_MUTEX(wait_mutex);
 static DEFINE_MUTEX(watchdog_mutex);
 
+
+
 /* INPUT */ static int inputOpen(struct inode *inodep, struct file *filep);
 /* INPUT */ static ssize_t inputRead(struct file *, char *, size_t, loff_t *);
 /* INPUT */ static ssize_t inputWrite(struct file *, const char *, size_t, loff_t *);
@@ -52,7 +54,8 @@ static charDeviceData Device[DEVICE_AMOUNT] =
         .deviceClass = NULL,
         .nodeDevice = NULL,
         .openCount = 0,
-        .io_mutex = __MUTEX_INITIALIZER(Device[DEVICE_INPUT].io_mutex),
+        .device_mutex = __MUTEX_INITIALIZER(Device[DEVICE_INPUT].device_mutex),
+        .read_Mutex = __MUTEX_INITIALIZER(Device[DEVICE_INPUT].read_Mutex),
 
         .io_transfer =
         {
@@ -76,7 +79,8 @@ static charDeviceData Device[DEVICE_AMOUNT] =
         .deviceClass = NULL,
         .nodeDevice = NULL,
         .openCount = 0,
-        .io_mutex = __MUTEX_INITIALIZER(Device[DEVICE_OUTPUT].io_mutex),
+        .device_mutex = __MUTEX_INITIALIZER(Device[DEVICE_OUTPUT].device_mutex),
+        .read_Mutex = __MUTEX_INITIALIZER(Device[DEVICE_OUTPUT].read_Mutex),
 
         .io_transfer =
         {
@@ -100,7 +104,8 @@ static charDeviceData Device[DEVICE_AMOUNT] =
         .deviceClass = NULL,
         .nodeDevice = NULL,
         .openCount = 0,
-        .io_mutex = __MUTEX_INITIALIZER(Device[DEVICE_WATCHDOG].io_mutex),
+        .device_mutex = __MUTEX_INITIALIZER(Device[DEVICE_WATCHDOG].device_mutex),
+        .read_Mutex = __MUTEX_INITIALIZER(Device[DEVICE_WATCHDOG].read_Mutex),
 
         .io_transfer =
         {
@@ -118,6 +123,42 @@ static charDeviceData Device[DEVICE_AMOUNT] =
         }
     },
 };
+
+/* CTRL */ void charDeviceMutexCtrl(charDeviceType charDevice, MutexCtrlType mutexCtrl)
+{
+    switch(mutexCtrl)
+    {
+        case MUTEX_CTRL_INIT:
+        {
+            mutex_init(&Device[charDevice].read_Mutex);
+            break;
+        };
+
+        case MUTEX_CTRL_LOCK:
+        {
+            mutex_lock(&Device[charDevice].read_Mutex);
+            break;
+        };
+
+        case MUTEX_CTRL_UNLOCK:
+        {
+            mutex_unlock(&Device[charDevice].read_Mutex);
+            break;
+        };
+
+        case MUTEX_CTRL_DESTROY:
+        {
+            mutex_destroy(&Device[charDevice].read_Mutex);
+            break;
+        };
+
+        default:
+        {
+            printk(KERN_ALERT "[CTRL][ C ] Unknown mutex control operation: %d", mutexCtrl);
+            break;
+        }
+    }
+}
 
 static void charDeviceDataInit(void)
 {
@@ -163,19 +204,17 @@ static void charDeviceDataInit(void)
     Device[DEVICE_WATCHDOG].io_transfer.length = IO_BUFFER_SIZE;
 
 
-    /* Lock and wait until feedback transfer unlock it */
-    printk(KERN_INFO "[INIT][ C ] Lock on Wait mutex\n");
-    mutex_lock(&wait_mutex);
-    printk(KERN_INFO "[INIT][ C ] Lock on Watchdog mutex\n");
-    mutex_lock(&watchdog_mutex);
+    /* Lock and OUTPUT until feedback transfer unlock it */
+    printk(KERN_INFO "[INIT][ C ] Lock on OUTPUT and WATCHDOG mutex\n");
+    charDeviceMutexCtrl(DEVICE_OUTPUT, MUTEX_CTRL_LOCK);
+    charDeviceMutexCtrl(DEVICE_WATCHDOG, MUTEX_CTRL_LOCK);
 }
 
 void charDeviceInit(void)
 {
-    printk(KERN_ALERT "[INIT][ C ] Initialize Wait Mutex\n");
-    mutex_init(&wait_mutex);
-    printk(KERN_ALERT "[INIT][ C ] Initialize Watchdog Mutex\n");
-    mutex_init(&watchdog_mutex);
+    printk(KERN_ALERT "[INIT][ C ] Initialize OUTPUT and WATCHDOG Mutex\n");
+    charDeviceMutexCtrl(DEVICE_OUTPUT, MUTEX_CTRL_INIT);
+    charDeviceMutexCtrl(DEVICE_WATCHDOG, MUTEX_CTRL_INIT);
 
     charDeviceDataInit();
 
@@ -401,13 +440,12 @@ void charDeviceDestroy(void)
     {
         printk(KERN_ALERT "[DESTROY][ C ] Cannot unregister %s Device\n", WATCHDOG_DEVICE);
     }
-        printk(KERN_ALERT "[DESTROY][ C ] %s device destruction complete\n", WATCHDOG_DEVICE);
+    printk(KERN_ALERT "[DESTROY][ C ] %s device destruction complete\n", WATCHDOG_DEVICE);
 
-    mutex_destroy(&wait_mutex);
-    printk(KERN_INFO "[DESTROY][ C ] Wait Mutex destroyed\n");
-    mutex_destroy(&watchdog_mutex);
-    printk(KERN_INFO "[DESTROY][ C ] Watchdog Mutex destroyed\n");
-    printk(KERN_INFO "[DESTROY][ C ] All char devices destruction complete\n");
+    charDeviceMutexCtrl(DEVICE_OUTPUT, MUTEX_CTRL_LOCK);
+    charDeviceMutexCtrl(DEVICE_WATCHDOG, MUTEX_CTRL_LOCK);
+
+    printk(KERN_INFO "[DESTROY][ C ] OUTPUT and WATCHDOG Mutex destroyed\n");
 }
 
 /**
@@ -417,7 +455,7 @@ void charDeviceDestroy(void)
  */
 static int inputOpen(struct inode *inodep, struct file *filep)
 {
-    if(!mutex_trylock(&Device[DEVICE_INPUT].io_mutex))
+    if(!mutex_trylock(&Device[DEVICE_INPUT].device_mutex))
     {
         printk(KERN_ALERT "[CTRL][ C ] Device in use by another process");
         return -EBUSY;
@@ -487,7 +525,7 @@ static ssize_t inputWrite(struct file *filep, const char __user *buffer, size_t 
 static int inputClose(struct inode *inodep, struct file *filep)
 {
     printk(KERN_ALERT "[CTRL][ C ] Unlock [C] Device Mutex\n");
-    mutex_unlock(&Device[DEVICE_INPUT].io_mutex);
+    mutex_unlock(&Device[DEVICE_INPUT].device_mutex);
     printk(KERN_INFO "[CTRL][ C ] Device successfully closed\n");
     return 0;
 }
@@ -499,7 +537,7 @@ static int inputClose(struct inode *inodep, struct file *filep)
  */
 static int outputOpen(struct inode *inodep, struct file *filep)
 {
-    if(!mutex_trylock(&Device[DEVICE_OUTPUT].io_mutex))
+    if(!mutex_trylock(&Device[DEVICE_OUTPUT].device_mutex))
     {
         printk(KERN_ALERT "[CTRL][ C ] Device in use by another process");
         return -EBUSY;
@@ -518,7 +556,7 @@ static ssize_t outputRead(struct file *filep, char *buffer, size_t len, loff_t *
     size_t i;
 
     printk(KERN_INFO "[CTRL][ C ] Kernel is waiting for Wait mutex Unlock\n");
-    mutex_lock(&wait_mutex);
+    charDeviceMutexCtrl(DEVICE_OUTPUT, MUTEX_CTRL_LOCK);
 
     error_count = copy_to_user(buffer, (const void *)Device[DEVICE_OUTPUT].io_transfer.TxData, Device[DEVICE_OUTPUT].io_transfer.length);
 
@@ -556,14 +594,14 @@ static ssize_t outputWrite(struct file *filep, const char __user *buffer, size_t
 static int outputClose(struct inode *inodep, struct file *filep)
 {
     printk(KERN_ALERT "[CTRL][ C ] Unlock [C] Device Mutex\n");
-    mutex_unlock(&Device[DEVICE_OUTPUT].io_mutex);
+    mutex_unlock(&Device[DEVICE_OUTPUT].device_mutex);
     printk(KERN_INFO "[CTRL][ C ] Device successfully closed\n");
     return 0;
 }
 
 static int watchdogOpen(struct inode *inodep, struct file *filep)
 {
-    if(!mutex_trylock(&Device[DEVICE_WATCHDOG].io_mutex))
+    if(!mutex_trylock(&Device[DEVICE_WATCHDOG].device_mutex))
     {
         printk(KERN_ALERT "[CTRL][ C ] Device in use by another process");
         return -EBUSY;
@@ -579,7 +617,7 @@ static ssize_t watchdogRead(struct file *filep, char *buffer, size_t len, loff_t
 {
     int error_count = 0;
 
-    mutex_lock(&watchdog_mutex);
+    charDeviceMutexCtrl(DEVICE_WATCHDOG, MUTEX_CTRL_LOCK);
 
     error_count = copy_to_user(buffer, (const void *)Device[DEVICE_WATCHDOG].io_transfer.TxData, Device[DEVICE_WATCHDOG].io_transfer.length);
 
@@ -605,7 +643,7 @@ static ssize_t watchdogWrite(struct file *filep, const char __user *buffer, size
 static int watchdogClose(struct inode *inodep, struct file *filep)
 {
     printk(KERN_ALERT "[INIT][ C ] Unlock [C] Device Mutex\n");
-    mutex_unlock(&Device[DEVICE_WATCHDOG].io_mutex);
+    mutex_unlock(&Device[DEVICE_WATCHDOG].device_mutex);
     printk(KERN_INFO "[CTRL][ C ] Device successfully closed\n");
     return 0;
 }
@@ -613,14 +651,4 @@ static int watchdogClose(struct inode *inodep, struct file *filep)
 /* GET */ DataTransfer* getCharDeviceTransfer(charDeviceType charDevice)
 {
     return &Device[charDevice].io_transfer;
-}
-
-void unlockWaitMutex(void)
-{
-    mutex_unlock(&wait_mutex);
-}
-
-void unlockWatchdogMutex(void)
-{
-    mutex_unlock(&watchdog_mutex);
 }

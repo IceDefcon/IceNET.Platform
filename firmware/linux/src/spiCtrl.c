@@ -202,7 +202,7 @@ void transferFpgaInput(struct work_struct *work)
     if(0x18 != rx_buf[0])
     {
         printk(KERN_ERR "[CTRL][SPI] No FPGA Preamble detected :: FPGA is Not Programed or Connected\n");
-        unlockWaitMutex();
+        charDeviceMutexCtrl(DEVICE_OUTPUT, MUTEX_CTRL_UNLOCK);
     }
 
     /* Clear the buffers */
@@ -241,8 +241,8 @@ void transferFpgaOutput(struct work_struct *work)
         printk(KERN_INFO "[CTRL][SPI] Secondary FPGA Transfer :: Byte[%d]: [Feedback] Tx[0x%02x] [Data] Rx[0x%02x]\n", i, tx_buf[i], rx_buf[i]);
     }
 
-    /* Unlock Wait mutex for Kernel Output Device to process */
-    unlockWaitMutex();
+    /* Unlock OUTPUT mutex for Kernel Output Device to process */
+    charDeviceMutexCtrl(DEVICE_OUTPUT, MUTEX_CTRL_UNLOCK);
 
     /* Clear the buffers */
     for (i = 0; i < Device[SPI_SECONDARY].spiLength; ++i)
@@ -260,8 +260,8 @@ void killApplication(struct work_struct *work)
     kernelOutptData->TxData[1] = 0xAD;
     kernelOutptData->length = 2;
 
-    unlockWaitMutex();
-    unlockWatchdogMutex();
+    charDeviceMutexCtrl(DEVICE_OUTPUT, MUTEX_CTRL_UNLOCK);
+    charDeviceMutexCtrl(DEVICE_WATCHDOG, MUTEX_CTRL_UNLOCK);
 }
 
 int spiInit(void)
