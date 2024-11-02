@@ -59,6 +59,7 @@ typedef enum
     MUTEX_CTRL_AMOUNT
 } MutexCtrlType;
 
+/* GET */ charDeviceData* getCharDevice(void);
 /* GET */ DataTransfer* getCharDeviceTransfer(charDeviceType charDevice);
 /* CTRL */ void charDeviceMutexCtrl(charDeviceType charDevice, MutexCtrlType mutexCtrl);
 
