@@ -16,7 +16,9 @@ NetworkTraffic::NetworkTraffic() :
     m_currentState(NetworkTraffic_IDLE),
     m_readyKernelOutput(false),
     m_Rx_NetworkTraffic(new std::vector<char>(NETWORK_TRAFFIC_SIZE)),
-    m_Tx_NetworkTraffic(new std::vector<char>(NETWORK_TRAFFIC_SIZE))
+    m_Tx_NetworkTraffic(new std::vector<char>(NETWORK_TRAFFIC_SIZE)),
+    m_Rx_bytesReceived(0),
+    m_Tx_bytesReceived(0)
 {
     std::cout << "[INFO] [CONSTRUCTOR] " << this << " :: Instantiate NetworkTraffic" << std::endl;
 
@@ -90,7 +92,7 @@ void NetworkTraffic::threadNetworkTraffic()
                 }
                 std::cout << std::endl;
 
-                m_instanceKernelInput->setTx_KernelInput(m_Rx_NetworkTraffic);
+                m_instanceKernelInput->setTx_KernelInput(m_Rx_NetworkTraffic, m_Rx_bytesReceived);
                 m_instanceKernelInput->setKernelInputState(KernelInput_TX);
 
                 setNetworkTrafficState(NetworkTraffic_IDLE);
@@ -99,8 +101,8 @@ void NetworkTraffic::threadNetworkTraffic()
 
             case NetworkTraffic_KernelOutput:
                 std::cout << "[INFO] [NET] NetworkTraffic_KernelOutput mode" << std::endl;
-                std::cout << "[INFO] [NET] Received 8 Byte of data: ";
-                for (int i = 0; i < 8; ++i)
+                std::cout << "[INFO] [NET] Received " << m_Rx_bytesReceived << " Byte of data: ";
+                for (int i = 0; i < m_Rx_bytesReceived; ++i)
                 {
                     std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>((*m_Tx_NetworkTraffic)[i]) << " ";
                 }
@@ -138,9 +140,10 @@ void NetworkTraffic::setInstance_KernelInput(const std::shared_ptr<KernelInput> 
     m_instanceKernelInput = instance;
 }
 
-void NetworkTraffic::setNetworkTrafficRx(std::vector<char>* DataRx)
+void NetworkTraffic::setNetworkTrafficRx(std::vector<char>* DataRx, int bytesReceived)
 {
     m_Rx_NetworkTraffic = DataRx;
+    m_Rx_bytesReceived = bytesReceived;
 }
 
 void NetworkTraffic::setNetworkTrafficTx(std::vector<char>* DataTx)

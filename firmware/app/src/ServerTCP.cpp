@@ -21,10 +21,11 @@ ServerTCP::ServerTCP() :
     m_portNumber(2555),
     m_serverSocket(-1),
     m_clientSocket(-1),
-    m_bytesReceived(0),
     m_clientConnected(false),
     m_Rx_ServerTCP(new std::vector<char>(TCP_SERVER_SIZE)),
-    m_Tx_ServerTCP(new std::vector<char>(TCP_SERVER_SIZE))
+    m_Tx_ServerTCP(new std::vector<char>(TCP_SERVER_SIZE)),
+    m_Rx_bytesReceived(0),
+    m_Tx_bytesReceived(0)
 {
     std::cout << "[INFO] [CONSTRUCTOR] " << this << " :: Instantiate ServerTCP" << std::endl;
 
@@ -144,7 +145,7 @@ void ServerTCP::threadServerTCP()
             if(ret > 0)
             {
                 std::cout << "[INFO] [TCP] Sending data to NetworkTraffic" << std::endl;
-                m_instanceNetworkTraffic->setNetworkTrafficRx(m_Rx_ServerTCP);
+                m_instanceNetworkTraffic->setNetworkTrafficRx(m_Rx_ServerTCP, m_Rx_bytesReceived);
                 std::cout << "[INFO] [TCP] Set NetworkTraffic_KernelInput mode" << std::endl;
                 m_instanceNetworkTraffic->setNetworkTrafficState(NetworkTraffic_KernelInput);
 
@@ -307,7 +308,7 @@ int ServerTCP::tcpRX()
     }
     else
     {
-        m_bytesReceived = recv(m_clientSocket, m_Rx_ServerTCP->data(), TCP_SERVER_SIZE, 0);
+        m_Rx_bytesReceived = recv(m_clientSocket, m_Rx_ServerTCP->data(), TCP_SERVER_SIZE, 0);
 
         if((*m_Rx_ServerTCP)[0] == 0xDE && (*m_Rx_ServerTCP)[1] == 0xAD)
         {
@@ -316,16 +317,16 @@ int ServerTCP::tcpRX()
         }
         else
         {
-            if (m_bytesReceived > 0)
+            if (m_Rx_bytesReceived > 0)
             {
-                std::cout << "[INFO] [TCP] Received " << m_bytesReceived << " Bytes of data: ";
-                for (int i = 0; i < m_bytesReceived; ++i)
+                std::cout << "[INFO] [TCP] Received " << m_Rx_bytesReceived << " Bytes of data: ";
+                for (int i = 0; i < m_Rx_bytesReceived; ++i)
                 {
                     std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>((*m_Rx_ServerTCP)[i]) << " ";
                 }
                 std::cout << std::endl;
             }
-            else if (m_bytesReceived == 0)
+            else if (m_Rx_bytesReceived == 0)
             {
                 std::cout << "[INFO] [TCP] Connection closed by client" << std::endl;
             }
@@ -340,7 +341,7 @@ int ServerTCP::tcpRX()
     /* TODO :: Resize to actual bytes read */
     // m_Rx_ServerTCP->resize(m_bytesRead);
 
-    return m_bytesReceived;
+    return m_Rx_bytesReceived;
 }
 
 int ServerTCP::tcpClose() 

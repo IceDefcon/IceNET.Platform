@@ -27,7 +27,6 @@ class ServerTCP
         int m_portNumber;
         int m_serverSocket;
         int m_clientSocket;
-        int m_bytesReceived;
         bool m_clientConnected;
 
         struct sockaddr_in m_serverAddress;
@@ -36,6 +35,8 @@ class ServerTCP
         /* For TCP server Traffic */
         std::vector<char>* m_Rx_ServerTCP;
         std::vector<char>* m_Tx_ServerTCP;
+        int m_Rx_bytesReceived;
+        int m_Tx_bytesReceived;
 
         std::shared_ptr<NetworkTraffic> m_instanceNetworkTraffic;
 
