@@ -25,6 +25,8 @@ private:
     /* For char Device Traffic */
     std::vector<char>* m_Rx_KernelInput;
     std::vector<char>* m_Tx_KernelInput;
+    int m_Rx_bytesReceived;
+    int m_Tx_bytesReceived;
 
     bool m_waitKernelInput;
 
@@ -42,7 +44,7 @@ public:
 
     void threadKernelInput();
 
-    void setTx_KernelInput(std::vector<char>* DataRx);
+    void setTx_KernelInput(std::vector<char>* DataRx, int byteReceived);
 
     void setKernelInputState(KernelInput_stateType newState);
 };

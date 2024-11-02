@@ -5,8 +5,8 @@
  * 
  */
 
-#ifndef SPI_TYPES_H
-#define SPI_TYPES_H
+#ifndef TYPES_H
+#define TYPES_H
 
 #include <stdbool.h>
 #include <stddef.h> /* size_t */
@@ -30,4 +30,4 @@ typedef struct
     size_t length;
 } DataTransfer;
 
-#endif // SPI_TYPES_H
+#endif // TYPES_H

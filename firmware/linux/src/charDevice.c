@@ -12,7 +12,6 @@
 #include <linux/slab.h> 	// Include for kmalloc/kfree functions
 #include <linux/mutex.h>    // Include for mutex opearations
 #include <linux/device.h>   // Include for class_create
-#include <linux/fs.h>       // Include for file_operations struct
 
 #include "stateMachine.h"
 #include "charDevice.h"
@@ -28,54 +27,6 @@
 //                  //
 //                  //
 //////////////////////
-
-static charDeviceData Device[DEVICE_AMOUNT] =
-{
-    [DEVICE_INPUT] =
-    {
-        .majorNumber = 0,
-        .deviceClass = NULL,
-        .nodeDevice = NULL,
-        .openCount = 0,
-        .io_mutex = __MUTEX_INITIALIZER(Device[DEVICE_INPUT].io_mutex),
-        .io_transfer =
-        {
-            .RxData = NULL,
-            .TxData = NULL,
-            .length = 0,
-        }
-    },
-
-    [DEVICE_OUTPUT] =
-    {
-        .majorNumber = 0,
-        .deviceClass = NULL,
-        .nodeDevice = NULL,
-        .openCount = 0,
-        .io_mutex = __MUTEX_INITIALIZER(Device[DEVICE_OUTPUT].io_mutex),
-        .io_transfer =
-        {
-            .RxData = NULL,
-            .TxData = NULL,
-            .length = 0,
-        }
-    },
-
-    [DEVICE_WATCHDOG] =
-    {
-        .majorNumber = 0,
-        .deviceClass = NULL,
-        .nodeDevice = NULL,
-        .openCount = 0,
-        .io_mutex = __MUTEX_INITIALIZER(Device[DEVICE_WATCHDOG].io_mutex),
-        .io_transfer =
-        {
-            .RxData = NULL,
-            .TxData = NULL,
-            .length = 0,
-        }
-    },
-};
 
 static DEFINE_MUTEX(wait_mutex);
 static DEFINE_MUTEX(watchdog_mutex);
@@ -93,31 +44,79 @@ static DEFINE_MUTEX(watchdog_mutex);
 /* WATCHDOG */ static ssize_t watchdogWrite(struct file *, const char *, size_t, loff_t *);
 /* WATCHDOG */ static int watchdogClose(struct inode *inodep, struct file *filep);
 
-static struct file_operations fops[DEVICE_AMOUNT] =
+static charDeviceData Device[DEVICE_AMOUNT] =
 {
-   [DEVICE_INPUT] =
-   {
-        .open = inputOpen,
-        .read = inputRead, /* Dummy :: Not used for INPUT Device */
-        .write = inputWrite,
-        .release = inputClose,
-   },
+    [DEVICE_INPUT] =
+    {
+        .majorNumber = 0,
+        .deviceClass = NULL,
+        .nodeDevice = NULL,
+        .openCount = 0,
+        .io_mutex = __MUTEX_INITIALIZER(Device[DEVICE_INPUT].io_mutex),
 
-   [DEVICE_OUTPUT] =
-   {
-        .open = outputOpen,
-        .read = outputRead,
-        .write = outputWrite, /* Dummy :: Not used for OUTPUT Device */
-        .release = outputClose,
-   },
+        .io_transfer =
+        {
+            .RxData = NULL,
+            .TxData = NULL,
+            .length = 0,
+        },
 
-   [DEVICE_WATCHDOG] =
-   {
-        .open = watchdogOpen,
-        .read = watchdogRead,
-        .write = watchdogWrite,
-        .release = watchdogClose,
-   }
+        .fops =
+        {
+            .open = inputOpen,
+            .read = inputRead, /* Dummy :: Not used for INPUT Device */
+            .write = inputWrite,
+            .release = inputClose,
+        }
+    },
+
+    [DEVICE_OUTPUT] =
+    {
+        .majorNumber = 0,
+        .deviceClass = NULL,
+        .nodeDevice = NULL,
+        .openCount = 0,
+        .io_mutex = __MUTEX_INITIALIZER(Device[DEVICE_OUTPUT].io_mutex),
+
+        .io_transfer =
+        {
+            .RxData = NULL,
+            .TxData = NULL,
+            .length = 0,
+        },
+
+        .fops =
+        {
+            .open = outputOpen,
+            .read = outputRead,
+            .write = outputWrite, /* Dummy :: Not used for OUTPUT Device */
+            .release = outputClose,
+        }
+    },
+
+    [DEVICE_WATCHDOG] =
+    {
+        .majorNumber = 0,
+        .deviceClass = NULL,
+        .nodeDevice = NULL,
+        .openCount = 0,
+        .io_mutex = __MUTEX_INITIALIZER(Device[DEVICE_WATCHDOG].io_mutex),
+
+        .io_transfer =
+        {
+            .RxData = NULL,
+            .TxData = NULL,
+            .length = 0,
+        },
+
+        .fops =
+        {
+            .open = watchdogOpen,
+            .read = watchdogRead,
+            .write = watchdogWrite,
+            .release = watchdogClose,
+        }
+    },
 };
 
 static void charDeviceDataInit(void)
@@ -183,7 +182,7 @@ void charDeviceInit(void)
     //
     // KernelInput
     //
-    Device[DEVICE_INPUT].majorNumber = register_chrdev(0, INPUT_DEVICE, &fops[DEVICE_INPUT]);
+    Device[DEVICE_INPUT].majorNumber = register_chrdev(0, INPUT_DEVICE, &Device[DEVICE_INPUT].fops);
     if (Device[DEVICE_INPUT].majorNumber<0)
     {
         printk(KERN_ALERT "[INIT][ C ] Failed to register major number for %s :: %d\n", INPUT_DEVICE, Device[DEVICE_INPUT].majorNumber);
@@ -218,7 +217,7 @@ void charDeviceInit(void)
     //
     // KernelOutput
     //
-    Device[DEVICE_OUTPUT].majorNumber = register_chrdev(0, OUTPUT_DEVICE, &fops[DEVICE_OUTPUT]);
+    Device[DEVICE_OUTPUT].majorNumber = register_chrdev(0, OUTPUT_DEVICE, &Device[DEVICE_OUTPUT].fops);
     if (Device[DEVICE_OUTPUT].majorNumber < 0)
     {
         printk(KERN_ALERT "[INIT][ C ] Failed to register major number for %s :: %d\n", OUTPUT_DEVICE, Device[DEVICE_OUTPUT].majorNumber);
@@ -253,7 +252,7 @@ void charDeviceInit(void)
     //
     // Watchdog
     //
-    Device[DEVICE_WATCHDOG].majorNumber = register_chrdev(0, WATCHDOG_DEVICE, &fops[DEVICE_WATCHDOG]);
+    Device[DEVICE_WATCHDOG].majorNumber = register_chrdev(0, WATCHDOG_DEVICE, &Device[DEVICE_WATCHDOG].fops);
     if (Device[DEVICE_WATCHDOG].majorNumber < 0)
     {
         printk(KERN_ALERT "[INIT][ C ] Failed to register major number for %s :: %d\n", WATCHDOG_DEVICE, Device[DEVICE_WATCHDOG].majorNumber);
@@ -420,25 +419,30 @@ static int inputOpen(struct inode *inodep, struct file *filep)
 {
     if(!mutex_trylock(&Device[DEVICE_INPUT].io_mutex))
     {
-        printk(KERN_ALERT "[CTRL][COM] Device in use by another process");
+        printk(KERN_ALERT "[CTRL][ C ] Device in use by another process");
         return -EBUSY;
     }
 
     Device[DEVICE_INPUT].openCount++;
-    printk(KERN_INFO "[CTRL][COM] Device has been opened %d time(s)\n", Device[DEVICE_INPUT].openCount);
+    printk(KERN_INFO "[CTRL][ C ] Device has been opened %d time(s)\n", Device[DEVICE_INPUT].openCount);
 
     return 0;
 }
 
-/* Dummy :: Not used for INPUT Device */
 static ssize_t inputRead(struct file *filep, char *buffer, size_t len, loff_t *offset)
 {
+    /**
+     * Dummy
+     *
+     * Not used for INPUT Device
+     */
     return 0;
 }
 
 static ssize_t inputWrite(struct file *filep, const char __user *buffer, size_t len, loff_t *offset)
 {
     int error_count = 0;
+    int ret = 0;
     size_t i;
 
     /* Copy RxData from user space to kernel space */
@@ -448,44 +452,43 @@ static ssize_t inputWrite(struct file *filep, const char __user *buffer, size_t 
         /* Free allocated memory */
         kfree((void *)Device[DEVICE_INPUT].io_transfer.RxData);
         /* Copy failed */
-        return -EFAULT;
+        ret = -EFAULT;
     }
 
-    /* Kill signal from Application */
     if (Device[DEVICE_INPUT].io_transfer.RxData[0] == 0xDE && Device[DEVICE_INPUT].io_transfer.RxData[1] == 0xAD)
     {
-        printk(KERN_INFO "[CHAR][IWR] Kill SIGNAL received from Application\n");
+        /* Kill signal from Application */
+        printk(KERN_INFO "[CTRL][ C ] Kill SIGNAL received from Application\n");
         setStateMachine(KILL_APPLICATION);
-        return 0;
     }
-
-    /* 20ms delayed :: Read Enable pulse to FIFO */
-    if (Device[DEVICE_INPUT].io_transfer.RxData[0] == 0x12 && Device[DEVICE_INPUT].io_transfer.RxData[1] == 0x34)
+    else if (Device[DEVICE_INPUT].io_transfer.RxData[0] == 0x12 && Device[DEVICE_INPUT].io_transfer.RxData[1] == 0x34)
     {
-        printk(KERN_INFO "[CHAR][IWR] Generate FIFO rd_en from Kernel [long pulse] to be cut in FPGA\n");
+        /* 20ms delayed :: Read Enable pulse to FIFO */
+        printk(KERN_INFO "[CTRL][ C ] Generate FIFO rd_en from Kernel [long pulse] to be cut in FPGA\n");
         setStateMachine(INTERRUPT);
-        return 0;
     }
-
-    Device[DEVICE_INPUT].io_transfer.RxData[len] = '\0';  /* Null terminate the char array */
-    Device[DEVICE_INPUT].io_transfer.length = len;
-
-    // Print each character of the RxData array
-    for (i = 0; i < Device[DEVICE_INPUT].io_transfer.length; i++)
+    else
     {
-        printk(KERN_INFO "[CHAR][IWR] Received Byte[%zu]: 0x%02x\n", i, (unsigned char)Device[DEVICE_INPUT].io_transfer.RxData[i]);
+        Device[DEVICE_INPUT].io_transfer.RxData[len] = '\0';  /* Null terminate the char array */
+        Device[DEVICE_INPUT].io_transfer.length = len;
+
+        // Print each character of the RxData array
+        for (i = 0; i < Device[DEVICE_INPUT].io_transfer.length; i++)
+        {
+            printk(KERN_INFO "[CTRL][ C ] Received Byte[%zu]: 0x%02x\n", i, (unsigned char)Device[DEVICE_INPUT].io_transfer.RxData[i]);
+        }
+
+        setStateMachine(SPI);
     }
 
-    setStateMachine(SPI);
-
-    return 0;
+    return ret;
 }
 
 static int inputClose(struct inode *inodep, struct file *filep)
 {
-    printk(KERN_ALERT "[INIT][COM] Unlock [C] Device Mutex\n");
+    printk(KERN_ALERT "[CTRL][ C ] Unlock [C] Device Mutex\n");
     mutex_unlock(&Device[DEVICE_INPUT].io_mutex);
-    printk(KERN_INFO "[CTRL][COM] Device successfully closed\n");
+    printk(KERN_INFO "[CTRL][ C ] Device successfully closed\n");
     return 0;
 }
 
@@ -498,12 +501,12 @@ static int outputOpen(struct inode *inodep, struct file *filep)
 {
     if(!mutex_trylock(&Device[DEVICE_OUTPUT].io_mutex))
     {
-        printk(KERN_ALERT "[CTRL][NET] Device in use by another process");
+        printk(KERN_ALERT "[CTRL][ C ] Device in use by another process");
         return -EBUSY;
     }
 
     Device[DEVICE_OUTPUT].openCount++;
-    printk(KERN_INFO "[CTRL][NET] Device has been opened %d time(s)\n", Device[DEVICE_OUTPUT].openCount);
+    printk(KERN_INFO "[CTRL][ C ] Device has been opened %d time(s)\n", Device[DEVICE_OUTPUT].openCount);
 
     return 0;
 }
@@ -511,58 +514,63 @@ static int outputOpen(struct inode *inodep, struct file *filep)
 static ssize_t outputRead(struct file *filep, char *buffer, size_t len, loff_t *offset)
 {
     int error_count = 0;
+    int ret = 0;
+    size_t i;
 
-    printk(KERN_INFO "[CTRL][SPI] Kernel is waiting for Wait mutex Unlock\n");
+    printk(KERN_INFO "[CTRL][ C ] Kernel is waiting for Wait mutex Unlock\n");
     mutex_lock(&wait_mutex);
 
     error_count = copy_to_user(buffer, (const void *)Device[DEVICE_OUTPUT].io_transfer.TxData, Device[DEVICE_OUTPUT].io_transfer.length);
 
     if (error_count == 0)
     {
-        printk(KERN_INFO "[CTRL][COM] Sent %zu characters to user-space\n", Device[DEVICE_OUTPUT].io_transfer.length);
-        /* Length == Preamble + Null Terminator */
-        return Device[DEVICE_OUTPUT].io_transfer.length;
+        printk(KERN_INFO "[CTRL][ C ] Sent %zu characters to user-space\n", Device[DEVICE_OUTPUT].io_transfer.length);
+        ret = Device[DEVICE_OUTPUT].io_transfer.length;
     }
     else
     {
-        printk(KERN_INFO "[CTRL][COM] Failed to send %d characters to user-space\n", error_count);
-        /* Failed -- return a bad address message (i.e. -14) */
-        return -EFAULT;
+        printk(KERN_INFO "[CTRL][ C ] Failed to send %d characters to user-space\n", error_count);
+        ret = -EFAULT; /* Failed -- return a bad address message (i.e. -14) */
     }
+
+    for (i = 0; i < Device[DEVICE_OUTPUT].io_transfer.length; ++i)
+    {
+        Device[DEVICE_OUTPUT].io_transfer.TxData[i] = 0x00;
+    }
+    /* TODO :: Must be considered */
+    Device[DEVICE_OUTPUT].io_transfer.length = 1;
+
+    return ret;
 }
 
-/* Dummy :: Not used for OUTPUT Device */
 static ssize_t outputWrite(struct file *filep, const char __user *buffer, size_t len, loff_t *offset)
 {
+    /**
+     * Dummy
+     *
+     * Not used for OUTPUT Device
+     */
     return 0;
 }
 
 static int outputClose(struct inode *inodep, struct file *filep)
 {
-    printk(KERN_ALERT "[INIT][NET] Unlock [C] Device Mutex\n");
+    printk(KERN_ALERT "[CTRL][ C ] Unlock [C] Device Mutex\n");
     mutex_unlock(&Device[DEVICE_OUTPUT].io_mutex);
-    printk(KERN_INFO "[CTRL][NET] Device successfully closed\n");
+    printk(KERN_INFO "[CTRL][ C ] Device successfully closed\n");
     return 0;
 }
 
-/**
- *
- * TODO
- *
- * Must design the
- * body of the function
- *
- */
 static int watchdogOpen(struct inode *inodep, struct file *filep)
 {
     if(!mutex_trylock(&Device[DEVICE_WATCHDOG].io_mutex))
     {
-        printk(KERN_ALERT "[CTRL][WDG] Device in use by another process");
+        printk(KERN_ALERT "[CTRL][ C ] Device in use by another process");
         return -EBUSY;
     }
 
     Device[DEVICE_WATCHDOG].openCount++;
-    printk(KERN_INFO "[CTRL][WDG] Device has been opened %d time(s)\n", Device[DEVICE_WATCHDOG].openCount);
+    printk(KERN_INFO "[CTRL][ C ] Device has been opened %d time(s)\n", Device[DEVICE_WATCHDOG].openCount);
 
     return 0;
 }
@@ -582,7 +590,7 @@ static ssize_t watchdogRead(struct file *filep, char *buffer, size_t len, loff_t
     }
     else
     {
-        printk(KERN_INFO "[CTRL][WDG] Failed to send %d characters to user-space\n", error_count);
+        printk(KERN_INFO "[CTRL][ C ] Failed to send %d characters to user-space\n", error_count);
         /* Failed -- return a bad address message (i.e. -14) */
         return -EFAULT;
     }
@@ -596,9 +604,9 @@ static ssize_t watchdogWrite(struct file *filep, const char __user *buffer, size
 
 static int watchdogClose(struct inode *inodep, struct file *filep)
 {
-    printk(KERN_ALERT "[INIT][WDG] Unlock [C] Device Mutex\n");
+    printk(KERN_ALERT "[INIT][ C ] Unlock [C] Device Mutex\n");
     mutex_unlock(&Device[DEVICE_WATCHDOG].io_mutex);
-    printk(KERN_INFO "[CTRL][WDG] Device successfully closed\n");
+    printk(KERN_INFO "[CTRL][ C ] Device successfully closed\n");
     return 0;
 }
 

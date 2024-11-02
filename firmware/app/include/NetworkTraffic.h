@@ -28,6 +28,9 @@ class NetworkTraffic
         std::vector<char>* m_Rx_NetworkTraffic;
         std::vector<char>* m_Tx_NetworkTraffic;
 
+        int m_Rx_bytesReceived;
+        int m_Tx_bytesReceived;
+
         std::shared_ptr<KernelInput> m_instanceKernelInput;
 
 	public:
@@ -48,7 +51,7 @@ class NetworkTraffic
 
         void setInstance_KernelInput(const std::shared_ptr<KernelInput> instance);
 
-		void setNetworkTrafficRx(std::vector<char>* DataRx);
+        void setNetworkTrafficRx(std::vector<char>* DataRx, int bytesReceived);
 		void setNetworkTrafficTx(std::vector<char>* DataTx);
 		std::vector<char>* getNetworkTrafficTx();
 		void resetFeedbackFlag();

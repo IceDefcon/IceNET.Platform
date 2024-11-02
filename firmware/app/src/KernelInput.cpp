@@ -24,6 +24,8 @@ KernelInput::KernelInput() :
     m_currentState(KernelInput_IDLE),
     m_Rx_KernelInput(new std::vector<char>(CHAR_DEVICE_SIZE)),
     m_Tx_KernelInput(new std::vector<char>(CHAR_DEVICE_SIZE)),
+    m_Rx_bytesReceived(0),
+    m_Tx_bytesReceived(0),
     m_waitKernelInput(true)
 {
     // Initialize m_Rx_KernelInput and m_Tx_KernelInput with zeros
@@ -90,7 +92,8 @@ int KernelInput::dataTX()
     }
     m_waitKernelInput = true;
 
-    ret = write(m_file_descriptor, m_Tx_KernelInput->data(), 4);
+    /* TODO :: Must align received data with what is processed in Kernel */
+    ret = write(m_file_descriptor, m_Tx_KernelInput->data(), m_Rx_bytesReceived);
 
     if (ret == -1)
     {
@@ -191,9 +194,10 @@ void KernelInput::threadKernelInput()
     Info("[ I ] Terminate threadKernelInput");
 }
 
-void KernelInput::setTx_KernelInput(std::vector<char>* DataRx)
+void KernelInput::setTx_KernelInput(std::vector<char>* DataRx, int byteReceived)
 {
     m_Tx_KernelInput = DataRx;
+    m_Rx_bytesReceived = byteReceived;
     Info("[ I ] Release waitKernelInput flag");
     m_waitKernelInput = false;
 }

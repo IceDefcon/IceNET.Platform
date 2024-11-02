@@ -27,12 +27,11 @@
 
 	1. 8 byte transfer mode tor the Platform IO over SPI
 	2. I2C burst mode
-	3. SPI Dma controller transfers
-	4. SPI Driver in FPGA with burst mode
-	5. UART driver in FPGA
-	6. CAN driver in FPGA
-	7. Checksum for SPI Kerent<->FPGA communication
-	8. UART Console (DMA controller buffer)
+	3. SPI Driver in FPGA with burst mode
+	4. UART driver in FPGA
+	5. CAN driver in FPGA
+	6. Checksum for SPI Kerent<->FPGA communication
+	7. UART Console (DMA controller buffer)
 
 # Testing Hardware Modules
 

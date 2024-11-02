@@ -8,6 +8,7 @@
 #ifndef CHAR_DEVICE_H
 #define CHAR_DEVICE_H
 
+#include <linux/fs.h>       // Include for file_operations struct
 #include "types.h"
 
 //////////////////////
@@ -37,6 +38,7 @@ typedef struct
     int openCount;
     struct mutex io_mutex;
     DataTransfer io_transfer;
+    struct file_operations fops;
 }charDeviceData;
 
 typedef enum
