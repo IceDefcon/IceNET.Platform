@@ -126,7 +126,7 @@ void Watchdog::threadWatchdog()
          */
         if(dataRX() <= 0)
         {
-            std::cout << "[ERNO] [WDG] [1] Kill the App :: No FPGA Signal" << std::endl;
+            std::cout << "[ERNO] [WDG] [1] Kill the App :: On Demand" << std::endl;
             m_threadKill = true;
         }
 

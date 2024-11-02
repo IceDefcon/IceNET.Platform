@@ -537,6 +537,8 @@ static ssize_t outputRead(struct file *filep, char *buffer, size_t len, loff_t *
     {
         Device[DEVICE_OUTPUT].io_transfer.TxData[i] = 0x00;
     }
+    /* TODO :: Must be considered */
+    Device[DEVICE_OUTPUT].io_transfer.length = 1;
 
     return ret;
 }
