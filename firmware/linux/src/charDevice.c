@@ -429,15 +429,20 @@ static int inputOpen(struct inode *inodep, struct file *filep)
     return 0;
 }
 
-/* Dummy :: Not used for INPUT Device */
 static ssize_t inputRead(struct file *filep, char *buffer, size_t len, loff_t *offset)
 {
+    /**
+     * Dummy
+     *
+     * Not used for INPUT Device
+     */
     return 0;
 }
 
 static ssize_t inputWrite(struct file *filep, const char __user *buffer, size_t len, loff_t *offset)
 {
     int error_count = 0;
+    int ret = 0;
     size_t i;
 
     /* Copy RxData from user space to kernel space */
@@ -447,37 +452,36 @@ static ssize_t inputWrite(struct file *filep, const char __user *buffer, size_t 
         /* Free allocated memory */
         kfree((void *)Device[DEVICE_INPUT].io_transfer.RxData);
         /* Copy failed */
-        return -EFAULT;
+        ret = -EFAULT;
     }
 
-    /* Kill signal from Application */
     if (Device[DEVICE_INPUT].io_transfer.RxData[0] == 0xDE && Device[DEVICE_INPUT].io_transfer.RxData[1] == 0xAD)
     {
+        /* Kill signal from Application */
         printk(KERN_INFO "[CTRL][ C ] Kill SIGNAL received from Application\n");
         setStateMachine(KILL_APPLICATION);
-        return 0;
     }
-
-    /* 20ms delayed :: Read Enable pulse to FIFO */
-    if (Device[DEVICE_INPUT].io_transfer.RxData[0] == 0x12 && Device[DEVICE_INPUT].io_transfer.RxData[1] == 0x34)
+    else if (Device[DEVICE_INPUT].io_transfer.RxData[0] == 0x12 && Device[DEVICE_INPUT].io_transfer.RxData[1] == 0x34)
     {
+        /* 20ms delayed :: Read Enable pulse to FIFO */
         printk(KERN_INFO "[CTRL][ C ] Generate FIFO rd_en from Kernel [long pulse] to be cut in FPGA\n");
         setStateMachine(INTERRUPT);
-        return 0;
     }
-
-    Device[DEVICE_INPUT].io_transfer.RxData[len] = '\0';  /* Null terminate the char array */
-    Device[DEVICE_INPUT].io_transfer.length = len;
-
-    // Print each character of the RxData array
-    for (i = 0; i < Device[DEVICE_INPUT].io_transfer.length; i++)
+    else
     {
-        printk(KERN_INFO "[CTRL][ C ] Received Byte[%zu]: 0x%02x\n", i, (unsigned char)Device[DEVICE_INPUT].io_transfer.RxData[i]);
+        Device[DEVICE_INPUT].io_transfer.RxData[len] = '\0';  /* Null terminate the char array */
+        Device[DEVICE_INPUT].io_transfer.length = len;
+
+        // Print each character of the RxData array
+        for (i = 0; i < Device[DEVICE_INPUT].io_transfer.length; i++)
+        {
+            printk(KERN_INFO "[CTRL][ C ] Received Byte[%zu]: 0x%02x\n", i, (unsigned char)Device[DEVICE_INPUT].io_transfer.RxData[i]);
+        }
+
+        setStateMachine(SPI);
     }
 
-    setStateMachine(SPI);
-
-    return 0;
+    return ret;
 }
 
 static int inputClose(struct inode *inodep, struct file *filep)
@@ -510,6 +514,8 @@ static int outputOpen(struct inode *inodep, struct file *filep)
 static ssize_t outputRead(struct file *filep, char *buffer, size_t len, loff_t *offset)
 {
     int error_count = 0;
+    int ret = 0;
+    size_t i;
 
     printk(KERN_INFO "[CTRL][ C ] Kernel is waiting for Wait mutex Unlock\n");
     mutex_lock(&wait_mutex);
@@ -519,20 +525,29 @@ static ssize_t outputRead(struct file *filep, char *buffer, size_t len, loff_t *
     if (error_count == 0)
     {
         printk(KERN_INFO "[CTRL][ C ] Sent %zu characters to user-space\n", Device[DEVICE_OUTPUT].io_transfer.length);
-        /* Length == Preamble + Null Terminator */
-        return Device[DEVICE_OUTPUT].io_transfer.length;
+        ret = Device[DEVICE_OUTPUT].io_transfer.length;
     }
     else
     {
         printk(KERN_INFO "[CTRL][ C ] Failed to send %d characters to user-space\n", error_count);
-        /* Failed -- return a bad address message (i.e. -14) */
-        return -EFAULT;
+        ret = -EFAULT; /* Failed -- return a bad address message (i.e. -14) */
     }
+
+    for (i = 0; i < Device[DEVICE_OUTPUT].io_transfer.length; ++i)
+    {
+        Device[DEVICE_OUTPUT].io_transfer.TxData[i] = 0x00;
+    }
+
+    return ret;
 }
 
-/* Dummy :: Not used for OUTPUT Device */
 static ssize_t outputWrite(struct file *filep, const char __user *buffer, size_t len, loff_t *offset)
 {
+    /**
+     * Dummy
+     *
+     * Not used for OUTPUT Device
+     */
     return 0;
 }
 
@@ -544,14 +559,6 @@ static int outputClose(struct inode *inodep, struct file *filep)
     return 0;
 }
 
-/**
- *
- * TODO
- *
- * Must design the
- * body of the function
- *
- */
 static int watchdogOpen(struct inode *inodep, struct file *filep)
 {
     if(!mutex_trylock(&Device[DEVICE_WATCHDOG].io_mutex))
