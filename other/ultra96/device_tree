@@ -1,4 +1,12 @@
+//
+// Decode DeviceTreeSource from the Blob
+//
 dtc -I dtb -O dts -o system.dts system.dtb
+//
+// Code the Blob from DeveiceTreeSource
+dtc -I dts -O dtb -o system.dtb system.dts
+
+
 
 //
 // Info
@@ -19,3 +27,8 @@ dtc -I dtb -O dts -o system.dts system.dtb
 
 
 
+//
+// When some modification to the device tree is made in petalinux
+// we need to build only device tree
+
+petalinux-build -c device-tree
