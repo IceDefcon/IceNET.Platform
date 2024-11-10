@@ -3,7 +3,7 @@ use IEEE.std_logic_1164.all;
 use IEEE.std_logic_unsigned.all;
 use IEEE.numeric_std.all;
 
-entity PwmCtrl is
+entity PwmController is
 generic
 (
     BASE_PERIOD_MS : integer := 20
@@ -19,9 +19,9 @@ port
 
     PWM_SIGNAL : out std_logic
 );
-end PwmCtrl;
+end PwmController;
 
-architecture rtl of PwmCtrl is
+architecture rtl of PwmController is
 
 -- Default base period :: 20 * 50000clk * 20ns = 20ms
 signal defeult_period : integer := BASE_PERIOD_MS*50000 - 1;

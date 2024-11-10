@@ -1,7 +1,7 @@
 library ieee;
 use ieee.std_logic_1164.all;
 
-entity uartDriver is
+entity UartController is
 port
 (
     CLOCK_50MHz : in std_logic;
@@ -12,9 +12,9 @@ port
     UART_x86_TX : out std_logic;
     UART_x86_RX : in std_logic
 );
-end entity;
+end UartController;
 
-architecture rtl of uartDriver is
+architecture rtl of UartController is
 
 begin
 

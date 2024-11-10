@@ -1,7 +1,7 @@
 library ieee;
 use ieee.std_logic_1164.all;
 
-entity canDriver is
+entity CanController is
 port
 (
     CLOCK_50MHz : in std_logic;
@@ -12,9 +12,9 @@ port
     CAN_MPP_TX : out std_logic;
     CAN_MPP_RX : in std_logic
 );
-end entity;
+end CanController;
 
-architecture rtl of canDriver is
+architecture rtl of CanController is
 
 begin
 
