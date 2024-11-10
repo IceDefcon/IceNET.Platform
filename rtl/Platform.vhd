@@ -172,12 +172,6 @@ signal interrupt_from_cpu : std_logic := '0';
 signal interrupt_feedback_signal : std_logic := '0';
 signal interrupt_feedback_count : std_logic_vector(7 downto 0) := (others => '0');
 
--- Test FIFO signals
-signal test_fifo_data_out : std_logic_vector(7 downto 0) := (others => '0');
-signal test_fifo_full : std_logic := '0';
-signal test_fifo_empty : std_logic := '0';
-
-
 ----------------------------------------------------------------------------------------------------------------
 -- COMPONENTS DECLARATION
 ----------------------------------------------------------------------------------------------------------------
@@ -196,7 +190,7 @@ port
 );
 end component;
 
-component SpiProcessing
+component SpiConverter
 Port 
 (
     CLOCK : in  std_logic;
@@ -227,7 +221,7 @@ Port
 );
 end component;
 
-component I2cStateMachine
+component I2cController
 port
 (    
     CLOCK : in std_logic;
@@ -246,16 +240,7 @@ port
     OFFLOAD_COTROL : in std_logic;
     OFFLOAD_DATA : in std_logic_vector(7 downto 0);
 
-    DATA : out std_logic_vector(7 downto 0);
-
-    LED_1 : out std_logic;
-    LED_2 : out std_logic;
-    LED_3 : out std_logic;
-    LED_4 : out std_logic;
-    LED_5 : out std_logic;
-    LED_6 : out std_logic;
-    LED_7 : out std_logic;
-    LED_8 : out std_logic
+    DATA : out std_logic_vector(7 downto 0)
 );
 end component;
 
@@ -264,7 +249,7 @@ end component;
 -- controlled due to continuous
 -- read procedure during offload
 --
-component FifoCtrl
+component FifoController
 generic
 (
     WIDTH : integer := 8;
@@ -302,7 +287,7 @@ port
 );
 end component;
 
-component PwmCtrl
+component PwmController
 generic
 (
     BASE_PERIOD_MS : integer := 20
@@ -320,7 +305,7 @@ port
 );
 end component;
 
-component uartDriver
+component UartController
 port
 (
     CLOCK_50MHz : in std_logic;
@@ -333,7 +318,7 @@ port
 );
 end component;
 
-component canDriver
+component CanController
 port
 (
     CLOCK_50MHz : in std_logic;
@@ -364,7 +349,7 @@ port map
     button_out => reset_button
 );
 
-primarySpiProcessing_module: SpiProcessing port map 
+primarySpiConverter_module: SpiConverter port map 
 (
 	CLOCK => CLOCK_50MHz,
 
@@ -381,7 +366,7 @@ primarySpiProcessing_module: SpiProcessing port map
 	SERIAL_MISO => PRIMARY_MISO -- out :: 0x18 Serialized Hard coded Feedback to Kernel
 );
 
-secondarySpiProcessing_module: SpiProcessing port map 
+secondarySpiConverter_module: SpiConverter port map 
 (
     CLOCK => CLOCK_50MHz,
 
@@ -450,7 +435,7 @@ end process;
 -- TODO :: CHECKSUM
 --
 ---------------------------------------
-Fifo_Controller: FifoCtrl
+FifoController_module: FifoController
 generic map
 (
     WIDTH => FIFO_WIDTH,
@@ -486,7 +471,7 @@ port map
     OFFLOAD_DATA => offload_data
 );
 
-uartDriver_module: uartDriver
+UartController_module: UartController
 port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
@@ -498,7 +483,7 @@ port map
     UART_x86_RX => UART_x86_RX
 );
 
-canDriver_module: canDriver
+CanController_module: CanController
 port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
@@ -527,7 +512,7 @@ begin
     end if;
 end process;
 
-I2cStateMachine_module: I2cStateMachine port map
+I2cController_module: I2cController port map
 (
 	CLOCK => CLOCK_50MHz,
 	RESET => reset_button,
@@ -548,16 +533,7 @@ I2cStateMachine_module: I2cStateMachine port map
 	OFFLOAD_COTROL => offload_ctrl(0), -- For now :: Read/Write
     OFFLOAD_DATA => offload_data, -- Write Data
     -- out
-	DATA => data_i2c_feedback,
-
-	LED_1 => LED_1,
-	LED_2 => LED_2,
-	LED_3 => LED_3,
-	LED_4 => LED_4,
-	LED_5 => LED_5,
-	LED_6 => open,
-	LED_7 => open,
-	LED_8 => open
+	DATA => data_i2c_feedback
 );
 
 --
@@ -579,7 +555,7 @@ I2cStateMachine_module: I2cStateMachine port map
 -- width = 50000 + 250*200 = 100000
 -- 100000*10^-9 = 2ms
 --
-primary_pwm_module: PwmCtrl
+PwmController_module: PwmController
 generic map
 (
     BASE_PERIOD_MS => 20  -- 20ms Base Period
@@ -596,12 +572,6 @@ port map
     -- OUT
     PWM_SIGNAL => PWM_SIGNAL
 );
-
-
--- To keep signals not optimized by the HDL compiler
-LED_8 <= offload_ctrl(0) and offload_ctrl(1) and offload_ctrl(2) and offload_ctrl(3) and offload_ctrl(4) and offload_ctrl(5) and offload_ctrl(6) and offload_ctrl(7);
-LED_7 <= test_fifo_data_out(0) and test_fifo_data_out(1) and test_fifo_data_out(2) and test_fifo_data_out(3) and test_fifo_data_out(4) and test_fifo_data_out(5) and test_fifo_data_out(6) and test_fifo_data_out(7);
-LED_6 <= test_fifo_full and test_fifo_empty;
 
 return_interrupts_process:
 process(CLOCK_50MHz)

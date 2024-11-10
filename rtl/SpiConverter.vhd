@@ -3,7 +3,7 @@ use ieee.numeric_std.all;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.all;
 
-entity SpiProcessing is
+entity SpiConverter is
 Port (
     CLOCK : in std_logic;
     
@@ -18,9 +18,9 @@ Port (
     PARALLEL_MISO : in std_logic_vector(7 downto 0);
     SERIAL_MISO : out std_logic
 );
-end entity SpiProcessing;
+end entity SpiConverter;
 
-architecture rtl of SpiProcessing is
+architecture rtl of SpiConverter is
 
 signal pipe_1 : std_logic := '0';
 signal pipe_2 : std_logic := '0';

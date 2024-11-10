@@ -3,7 +3,7 @@ use ieee.numeric_std.all;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.all;
 
-entity I2cStateMachine is
+entity I2cController is
 port
 (    
     CLOCK : in std_logic;
@@ -22,20 +22,11 @@ port
     OFFLOAD_COTROL : in std_logic;
     OFFLOAD_DATA : in std_logic_vector(7 downto 0);
 
-    DATA : out std_logic_vector(7 downto 0);
-
-    LED_1 : out std_logic;
-    LED_2 : out std_logic;
-    LED_3 : out std_logic;
-    LED_4 : out std_logic;
-    LED_5 : out std_logic;
-    LED_6 : out std_logic;
-    LED_7 : out std_logic;
-    LED_8 : out std_logic
+    DATA : out std_logic_vector(7 downto 0)
 );
-end I2cStateMachine;
+end I2cController;
 
-architecture rtl of I2cStateMachine is
+architecture rtl of I2cController is
 
 ----------------------------------------------------------------------------------------------------------------
 -- Signals
@@ -79,12 +70,6 @@ type STATE is
 );
 --State machine indicators
 signal i2c_state: STATE := IDLE;
--- Status Indicators
-signal isIDLE : std_logic := '0';
-signal isINIT : std_logic := '0';
-signal isCONFIG : std_logic := '0';
-signal isDEVICE : std_logic := '0';
-signal isDONE : std_logic := '0';
 -- fifo interrupt
 signal fifo_interrupt : std_logic := '0';
 signal fifo_flag : std_logic := '0';
@@ -125,11 +110,6 @@ begin
                 -- State Machine :: IDLE
                 ------------------------------------
                 if i2c_state = IDLE then
-                    isIDLE <= '1';
-                    isINIT <= '0';
-                    isCONFIG <= '0';
-                    isDEVICE <= '0';
-                    isDONE <= '0';
                     I2C_SCK <= 'Z';
                     I2C_SDA <= 'Z';
                 end if;
@@ -142,11 +122,6 @@ begin
                     else
                         init_timer <= init_timer + '1';
                     end if;
-                    isIDLE <= '0';
-                    isINIT <= '1';
-                    isCONFIG <= '0';
-                    isDEVICE <= '0';
-                    isDONE <= '0';
                 end if;
                 ------------------------------------
                 -- State Machine :: CONFIG
@@ -165,12 +140,6 @@ begin
                     else    
                         config_timer <= config_timer + '1';
                     end if;
-
-                    isIDLE <= '0';
-                    isINIT <= '0';
-                    isCONFIG <= '1';
-                    isDEVICE <= '0';
-                    isDONE <= '0';
                 end if;
                 ------------------------------------
                 -- State Machine :: RD
@@ -461,12 +430,6 @@ begin
                         end if;
                         send_timer <= send_timer + '1';
                     end if;
-
-                    isIDLE <= '0';
-                    isINIT <= '0';
-                    isCONFIG <= '0';
-                    isDEVICE <= '1';
-                    isDONE <= '0';
                 end if;
                 ------------------------------------
                 -- State Machine :: WR
@@ -682,12 +645,6 @@ begin
                         end if;
                         send_timer <= send_timer + '1';
                     end if;
-
-                    isIDLE <= '0';
-                    isINIT <= '0';
-                    isCONFIG <= '0';
-                    isDEVICE <= '1';
-                    isDONE <= '0';
                 end if;
                 ------------------------------------
                 -- State Machine :: DONE
@@ -712,26 +669,7 @@ begin
                     else
                         done_timer <= done_timer + '1';
                     end if;
-                    
-                    isIDLE <= '0';
-                    isINIT <= '0';
-                    isCONFIG <= '0';
-                    isDEVICE <= '0';
-                    isDONE <= '1';
                 end if;
-
-                ------------------------------------
-                -- State Machine :: Status
-                ------------------------------------
-                LED_1 <= isIDLE;
-                LED_2 <= isINIT;
-                LED_3 <= isCONFIG;
-                LED_4 <= isDEVICE;
-                LED_5 <= isDONE;
-                --LED_6 <= '1';
-                --LED_7 <= '1';
-                --LED_8 <= '1';
-
             end if;
         end if;
     end if;
