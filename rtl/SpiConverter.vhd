@@ -10,23 +10,22 @@ Port (
     CS : in std_logic;
     SCLK : in std_logic;
 
-    SPI_INT : out std_logic;
-
     SERIAL_MOSI : in std_logic;
     PARALLEL_MOSI : out std_logic_vector(7 downto 0);
-
     PARALLEL_MISO : in std_logic_vector(7 downto 0);
-    SERIAL_MISO : out std_logic
+    SERIAL_MISO : out std_logic;
+
+    CONVERSION_COMPLETE : out std_logic
 );
 end entity SpiConverter;
 
 architecture rtl of SpiConverter is
 
-signal pipe_1 : std_logic := '0';
-signal pipe_2 : std_logic := '0';
-signal count_bit : std_logic_vector(3 downto 0) := (others => '0');
+signal sclk_hi : std_logic := '0';
+signal sclk_lo : std_logic := '0';
+signal spi_bit_count : std_logic_vector(3 downto 0) := (others => '0');
 signal index : integer range 0 to 15 := 0;
-signal spi_ready : std_logic := '0';
+signal spi_conversion_complete : std_logic := '0';
 signal synced_parallel_mosi : std_logic_vector(7 downto 0);
 
 begin
@@ -37,39 +36,39 @@ begin
 
         if CS = '0' then
 
-            index <= to_integer(unsigned(count_bit));
+            index <= to_integer(unsigned(spi_bit_count));
 
-            if spi_ready = '1' then -- Interrupt bit for 20ns only
-                spi_ready <= '0'; -- Then pull Low
+            if spi_conversion_complete = '1' then -- Interrupt bit for 20ns only
+                spi_conversion_complete <= '0'; -- Then pull Low
             end if;
 
             if SCLK = '1' then
-                pipe_1 <= '1';
-            elsif SCLK = '0' and pipe_1 = '1' then
-                pipe_2 <= '1';
+                sclk_hi <= '1';
+            elsif SCLK = '0' and sclk_hi = '1' then
+                sclk_lo <= '1';
             end if;
 
-            if pipe_1 = '1' then
+            if sclk_hi = '1' then
                 SERIAL_MISO <= PARALLEL_MISO((7 - index));
             end if;
 
-            if pipe_1 = '1' and pipe_2 = '1' then
+            if sclk_hi = '1' and sclk_lo = '1' then
                 synced_parallel_mosi(7 - index) <= SERIAL_MOSI;
 
-                pipe_1 <= '0';
-                pipe_2 <= '0';
-                count_bit <= count_bit + '1';
+                sclk_hi <= '0';
+                sclk_lo <= '0';
+                spi_bit_count <= spi_bit_count + '1';
             end if;
 
-            if count_bit = "1000" then
-                spi_ready <= '1'; -- Generate interrupt for I2C state machine
-                count_bit <= (others => '0');
+            if spi_bit_count = "1000" then
+                spi_conversion_complete <= '1'; -- Generate interrupt for I2C state machine
+                spi_bit_count <= (others => '0');
                 PARALLEL_MOSI <= synced_parallel_mosi;
             end if;
         end if;
     end if;    
 end process;
 
-SPI_INT <= spi_ready;
+CONVERSION_COMPLETE <= spi_conversion_complete;
 
 end architecture rtl;
