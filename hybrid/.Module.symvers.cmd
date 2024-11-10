@@ -1,0 +1,1 @@
+cmd_/ice/code.lab/IceNET/IceNET.Platform/hybrid/Module.symvers := sed 's/\.ko$$/\.o/' /ice/code.lab/IceNET/IceNET.Platform/hybrid/modules.order | scripts/mod/modpost    -o /ice/code.lab/IceNET/IceNET.Platform/hybrid/Module.symvers -e    -w -T -

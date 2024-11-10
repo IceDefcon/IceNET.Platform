@@ -1,13 +1,13 @@
 obj-m += iceNET.o
 
 ARCH := arm64
-CROSS_COMPILE := /usr/bin/aarch64-linux-gnu-
+CROSS_COMPILE := aarch64-linux-gnu-
+KDIR := /ice/petalinux/linux-xlnx
+INCLUDE := /ice/petalinux/linux-xlnx-headers
 
 all:
-	# Make sure this line is indented with a tab, not spaces
-	make -C /lib/modules/$(shell uname -r)/build M=$(PWD) ARCH=$(ARCH) CROSS_COMPILE=$(CROSS_COMPILE) modules
+	make -C $(KDIR) $(INCLUDE) M=$(PWD) ARCH=$(ARCH) CROSS_COMPILE=$(CROSS_COMPILE) modules
 
 clean:
-	# Make sure this line is indented with a tab, not spaces
-	make -C /lib/modules/$(shell uname -r)/build M=$(PWD) ARCH=$(ARCH) CROSS_COMPILE=$(CROSS_COMPILE) clean
+	make -C $(KDIR) $(INCLUDE) M=$(PWD) ARCH=$(ARCH) CROSS_COMPILE=$(CROSS_COMPILE) clean
 
