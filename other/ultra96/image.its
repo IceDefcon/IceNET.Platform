@@ -1,57 +1,58 @@
 /dts-v1/;
 
 / {
-    description = "Kernel fitImage for PetaLinux/5.15.36+gitAUTOINC+19984dd147/u96v2-sbc";
+    description = "FIT Image for Ultra96 with Kernel, DTB, and Root Filesystem";
     #address-cells = <1>;
 
     images {
-        kernel {
+        kernel@1 {
             description = "Linux kernel";
             data = /incbin/("Image.gz");
             type = "kernel";
             arch = "arm64";
             os = "linux";
             compression = "gzip";
-            load = <0x80000>;
-            entry = <0x80000>;
-            hash {
+            load = <0x00200000>;
+            entry = <0x00200000>;
+            hash@1 {
                 algo = "sha256";
             };
         };
-        fdtb {
-            description = "Flattened Device Tree blob";
+
+        fdt@1 {
+            description = "Device Tree Blob";
             data = /incbin/("system.dtb");
             type = "flat_dt";
             arch = "arm64";
             compression = "none";
-            hash {
-                algo = "sha1";
+            hash@1 {
+                algo = "sha256";
             };
         };
-        ramdisk {
-            description = "avnet-image-full";
-            data = /incbin/("rootfs.cpio.gz");
+
+        ramdisk@1 {
+            description = "Root Filesystem";
+            data = /incbin/("rootfs.cpio.gz.u-boot");
             type = "ramdisk";
             arch = "arm64";
             os = "linux";
             compression = "gzip";
-            hash {
+            hash@1 {
                 algo = "sha256";
             };
         };
     };
 
     configurations {
-        default = "conf";
+        default = "config@1";
 
-        conf {
-            description = "Linux kernel, FDT blob, ramdisk";
-            kernel = "kernel";
-            fdtb = "fdtb";
-            ramdisk = "ramdisk";
-            hash {
+        config@1 {
+            description = "Configuration with kernel, DTB, and root filesystem";
+            kernel = "kernel@1";
+            fdt = "fdt@1";
+            ramdisk = "ramdisk@1";
+            hash@1 {
                 algo = "sha256";
-                value = <0x0>;
             };
         };
     };

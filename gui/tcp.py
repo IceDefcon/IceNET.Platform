@@ -200,7 +200,7 @@ class TcpManager:
         return data
 
     def spi_assembly(self):
-        data = bytes([0x04, 0x00, 0x00]) + bytes.fromhex(self.spi_register_data.get()) + bytes([0x00, 0x00, 0x00])
+        data = bytes([0x04, 0x00, 0x00]) + bytes.fromhex(self.spi_register_data.get()) + bytes([0x00, 0x00, 0x00, 0x00])
         return data
 
     def tcp_execute(self, comand):
