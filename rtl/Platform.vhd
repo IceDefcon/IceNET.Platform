@@ -126,11 +126,10 @@ architecture rtl of Platform is
 -- Buttons
 signal reset_button : std_logic := '0';
 -- Spi.0 Primary
-signal primary_ready_MISO : std_logic := '0';
-signal primary_parallel_MOSI : std_logic_vector(7 downto 0) := "00100100"; -- 0x42
+signal primary_conversion_complete : std_logic := '0';
+signal primary_parallel_MOSI : std_logic_vector(7 downto 0) := (others => '0');
 -- Spi.1 Secondary
-signal secondary_parallel_MISO : std_logic_vector(7 downto 0) := "00011110"; -- 0xE1
-signal secondary_parallel_MOSI : std_logic_vector(7 downto 0) := "00011110"; -- 0xE1
+signal secondary_parallel_MISO : std_logic_vector(7 downto 0) := (others => '0');
 -- BMI160 Gyroscope registers
 signal mag_z_15_8 : std_logic_vector(7 downto 0):= (others => '0');
 signal mag_z_7_0 : std_logic_vector(7 downto 0):= (others => '0');
@@ -198,13 +197,12 @@ Port
     CS : in std_logic;
     SCLK : in std_logic;
 
-    SPI_INT : out std_logic;
-
     SERIAL_MOSI : in std_logic;
     PARALLEL_MOSI : out std_logic_vector(7 downto 0);
-
     PARALLEL_MISO : in std_logic_vector(7 downto 0);
-    SERIAL_MISO : out std_logic
+    SERIAL_MISO : out std_logic;
+
+    CONVERSION_COMPLETE : out std_logic
 );
 end component;
 
@@ -356,14 +354,12 @@ primarySpiConverter_module: SpiConverter port map
 	CS => PRIMARY_CS,
 	SCLK => PRIMARY_SCLK, -- Kernel Master always initialise SPI transfer
 
-    -- out
-	SPI_INT => primary_ready_MISO, -- Interrupt when data byte is ready [FIFO Read Enable]
-    -- From Kernel to FIFO
 	SERIAL_MOSI => PRIMARY_MOSI, -- in :: Data from Kernel to Serialize
 	PARALLEL_MOSI => primary_parallel_MOSI, -- out :: Serialized Data from Kernel to FIFO
-    -- Back to Kernel
 	PARALLEL_MISO => "00011000", -- in :: 0x18 Hard coded Feedback to Serialize
-	SERIAL_MISO => PRIMARY_MISO -- out :: 0x18 Serialized Hard coded Feedback to Kernel
+	SERIAL_MISO => PRIMARY_MISO, -- out :: 0x18 Serialized Hard coded Feedback to Kernel
+
+    CONVERSION_COMPLETE => primary_conversion_complete -- Out :: Data byte is ready [FIFO Write Enable]
 );
 
 secondarySpiConverter_module: SpiConverter port map 
@@ -373,13 +369,12 @@ secondarySpiConverter_module: SpiConverter port map
     CS => SECONDARY_CS,
     SCLK => SECONDARY_SCLK, -- Kernel Master always initialise SPI transfer
 
-    SPI_INT => open, -- out :: Parallel ready interrupt :: Not in use !
+    SERIAL_MOSI => SECONDARY_MOSI, -- in :: Serialized Feedback from Kernel :: Set in Kernel to 0x81
+    PARALLEL_MOSI => open, -- out :: Not in use !
+    PARALLEL_MISO => secondary_parallel_MISO, -- in :: Parallel Data from the packet switch
+    SERIAL_MISO => SECONDARY_MISO, -- out :: Serialized Data from the packet switch
 
-    SERIAL_MOSI => SECONDARY_MOSI, -- in Serialized Feedback from Kernel :: Set in Kernel to 0x81
-    PARALLEL_MOSI => secondary_parallel_MOSI, -- out Parallel Feedback from Kernel :: Set in Kernel to 0x81
-
-    PARALLEL_MISO => secondary_parallel_MISO, -- in Parallel Data from i2c state machine
-    SERIAL_MISO => SECONDARY_MISO -- out Serialized Data from i2c state machine to Kernel
+    CONVERSION_COMPLETE => open -- out :: Not in use !
 );
 
 -- Watchdog interrupt signal
@@ -400,7 +395,7 @@ port map
 -- To be cut in FPGA down to 20ns pulse
 --
 fifo_pre_process:
-process(CLOCK_50MHz, primary_parallel_MOSI, primary_ready_MISO, kernel_interrupt, interrupt_from_cpu)
+process(CLOCK_50MHz, primary_parallel_MOSI, primary_conversion_complete, kernel_interrupt, interrupt_from_cpu)
 begin
     if rising_edge(CLOCK_50MHz) then
 
@@ -418,7 +413,7 @@ begin
         end if;
 
         primary_fifo_data_in <= primary_parallel_MOSI;
-        primary_fifo_wr_en <= primary_ready_MISO;
+        primary_fifo_wr_en <= primary_conversion_complete;
         offload_interrupt <= kernel_interrupt;
     end if;
 end process;
