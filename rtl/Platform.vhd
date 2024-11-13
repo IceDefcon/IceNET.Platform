@@ -3,14 +3,37 @@ use ieee.numeric_std.all;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.all;
 
-----------------------------------------
+---------------------------------------------------------------------------
 -- Author: Ice.Marek
 -- IceNET Technology 2024
 --
 -- FPGA Chip
 -- Cyclone IV
 -- EP4CE15F23C8
-----------------------------------------
+---------------------------------------------------------------------------
+--
+-- Pinout Communication
+-- CPU <--> FPGA
+--
+---------------------------------------------------------------------------
+-- PIN_A4  :: P9_11                   | PIN_B4  :: P9_12                  |
+-- PIN_C3  :: P9_13                   | PIN_C4  :: P9_14                  |
+-- PIN_A5  :: P9_15 :: INT_FROM_CPU   | PIN_B5  :: P9_16                  |
+-- PIN_A6  :: P9_17 :: SPI0_CS0       | PIN_B6  :: P9_18 :: SPI0_D1       |
+-- PIN_A7  :: P9_19 :: CAN_BBB_RX     | PIN_B7  :: P9_20 :: CAN_BBB_TX    |
+-- PIN_A8  :: P9_21 :: SPI0_D0        | PIN_B8  :: P9_22 :: SPI0_SCLK     |
+-- PIN_A9  :: P9_23 :: INT_FROM_FPGA  | PIN_B9  :: P9_24 :: UART_BBB_TX   |
+-- PIN_A10 :: P9_25                   | PIN_B10 :: P9_26 :: UART_BBB_RX   |
+-- PIN_A13 :: P9_27                   | PIN_B13 :: P9_28 :: SPI1_CS0      |
+-- PIN_A14 :: P9_29 :: SPI1_D0        | PIN_B14 :: P9_30 :: SPI1_D1       |
+-- PIN_A15 :: P9_31 :: SPI1_SCLK      | PIN_B15 :: P9_32                  |
+-- PIN_A16 :: P9_33                   | PIN_B16 :: P9_34                  |
+-- PIN_A17 :: P9_35                   | PIN_B17 :: P9_36                  |
+-- PIN_A18 :: P9_37                   | PIN_B18 :: P9_38                  |
+-- PIN_A19 :: P9_39                   | PIN_B19 :: P9_40                  |
+-- PIN_A20 :: P9_41                   | PIN_B20 :: P9_42                  |
+---------------------------------------------------------------------------
+
 entity Platform is
 port
 (
@@ -37,71 +60,41 @@ port
     --
     ---------------------------------------------------------------------------------------------------
     -- Interrupts
-    INT_FROM_CPU : in std_logic; -- PIN_B20 :: P9_15
-    INT_FROM_FPGA : out std_logic;  -- PIN_B16 :: P9_23
-
-    -- PIN_A5  :: P9_42
-    -- PIN_A6  :: P9_40
-    -- PIN_A7  :: P9_38
-    -- PIN_A8  :: P9_36
-    -- PIN_A9  :: P9_34
-    -- PIN_A10 :: P9_32
-    -- PIN_A13 :: P9_30 :: SPI1_D1
-    -- PIN_A14 :: P9_28 :: SPI1_CS0
-    -- PIN_A15 :: P9_26
-    -- PIN_A16 :: P9_24
-    -- PIN_A17 :: P9_22 :: SPI0_SCLK
-    -- PIN_A18 :: P9_20
-    -- PIN_A19 :: P9_18 :: SPI0_D1
-    -- PIN_A20 :: P9_16
-
-    -- PIN_B5  :: P9_41
-    -- PIN_B6  :: P9_39
-    -- PIN_B7  :: P9_37
-    -- PIN_B8  :: P9_35
-    -- PIN_B9  :: P9_33
-    -- PIN_B10 :: P9_31 :: SPI1_SCLK
-    -- PIN_B13 :: P9_29 :: SPI1_D0
-    -- PIN_B14 :: P9_27
-    -- PIN_B15 :: P9_25
-    -- PIN_B16 :: P9_23
-    -- PIN_B17 :: P9_21 :: SPI0_D0
-    -- PIN_B18 :: P9_19
-    -- PIN_B19 :: P9_17 :: SPI0_CS0
-    -- PIN_B20 :: P9_15
+    INT_FROM_CPU : in std_logic;    -- PIN_A5 :: P9_15
+    INT_FROM_FPGA : out std_logic;  -- PIN_A9 :: P9_23
 
     -- BBB SPI0
-    PRIMARY_CS : in std_logic;    -- PIN_B19 :: P9_17 :: SPI0_CS0
-    PRIMARY_MISO : out std_logic; -- PIN_B17 :: P9_21 :: SPI0_D0
-    PRIMARY_MOSI : in std_logic;  -- PIN_A19 :: P9_18 :: SPI0_D1
-    PRIMARY_SCLK : in std_logic;  -- PIN_A17 :: P9_22 :: SPI0_SCLK
+    PRIMARY_CS : in std_logic;    -- PIN_A6 :: P9_17 :: SPI0_CS0
+    PRIMARY_MISO : out std_logic; -- PIN_A8 :: P9_21 :: SPI0_D0
+    PRIMARY_MOSI : in std_logic;  -- PIN_B6 :: P9_18 :: SPI0_D1
+    PRIMARY_SCLK : in std_logic;  -- PIN_B8 :: P9_22 :: SPI0_SCLK
     -- I2C BMI160 + ADXL345
     I2C_SDA : inout std_logic; -- PIN_AB13
     I2C_SCK : inout std_logic; -- PIN_AA13
     -- Current Debug SPI Driver
-    NRF905_TX_EN : out std_logic; -- PIN_F1
-    NRF905_TRX_CE : out std_logic; -- PIN_H2
-    NRF905_PWR_UP : out std_logic; -- PIN_H1
-    NRF905_uCLK : in std_logic; -- PIN_J2
-    NRF905_CD : in std_logic; -- PIN_J1
-    NRF905_AM : in std_logic; -- PIN_M2
-    NRF905_DR : in std_logic; -- PIN_M1
-    NRF905_MISO : in std_logic; -- PIN_N2
-    NRF905_MOSI : out std_logic; -- PIN_N1
-    NRF905_SCK : out std_logic; -- PIN_P2
-    NRF905_CSN : out std_logic; -- PIN_P1
+    NRF905_TX_EN : out std_logic;   -- PIN_F1
+    NRF905_TRX_CE : out std_logic;  -- PIN_H2
+    NRF905_PWR_UP : out std_logic;  -- PIN_H1
+    NRF905_uCLK : in std_logic;     -- PIN_J2
+    NRF905_CD : in std_logic;       -- PIN_J1
+    NRF905_AM : in std_logic;       -- PIN_M2
+    NRF905_DR : in std_logic;       -- PIN_M1
+    NRF905_MISO : in std_logic;     -- PIN_N2
+    NRF905_MOSI : out std_logic;    -- PIN_N1
+    NRF905_SCK : out std_logic;     -- PIN_P2
+    NRF905_CSN : out std_logic;     -- PIN_P1
     -- PWM
     PWM_SIGNAL : out std_logic; -- PIN_R1
     -- BBB SPI1
-    SECONDARY_CS : in std_logic;    -- PIN_A14 :: P9_28 :: SPI1_CS0
-    SECONDARY_MISO : out std_logic; -- PIN_B13 :: P9_29 :: SPI1_D0
-    SECONDARY_MOSI : in std_logic;  -- PIN_A13 :: P9_30 :: SPI1_D1
-    SECONDARY_SCLK : in std_logic;  -- PIN_B10 :: P9_31 :: SPI1_SCLK
+    SECONDARY_CS : in std_logic;    -- PIN_B13 :: P9_28 :: SPI1_CS0
+    SECONDARY_MISO : out std_logic; -- PIN_A14 :: P9_29 :: SPI1_D0
+    SECONDARY_MOSI : in std_logic;  -- PIN_B14 :: P9_30 :: SPI1_D1
+    SECONDARY_SCLK : in std_logic;  -- PIN_A15 :: P9_31 :: SPI1_SCLK
     -- Watchdog signal
     WATCHDOG_INTERRUPT : out std_logic; -- PIN_B5
 
-    UART_BBB_TX : in std_logic;  -- PIN_A16 :: P9_24
-    UART_BBB_RX : out std_logic; -- PIN_A15 :: P9_26
+    UART_BBB_TX : in std_logic;  -- PIN_B9 :: P9_24
+    UART_BBB_RX : out std_logic; -- PIN_B10 :: P9_26
     UART_x86_TX : out std_logic; -- PIN_N19 :: FTDI Rx
     UART_x86_RX : in std_logic;  -- PIN_M19 :: FTDI Tx
 
@@ -110,8 +103,8 @@ port
     --
     -- Chip CAN_H :: Blue  ---> MPP :: CAN_P :: Yellow
     -- Chip CAN_L :: White ---> MPP :: CAN_N :: Blue
-    CAN_BBB_TX : in std_logic;  -- PIN_A18 :: P9_20
-    CAN_BBB_RX : out std_logic; -- PIN_B18 :: P9_19
+    CAN_BBB_TX : in std_logic;  -- PIN_B7 :: P9_20
+    CAN_BBB_RX : out std_logic; -- PIN_A7 :: P9_19
     CAN_MPP_TX : out std_logic; -- PIN_N20 :: MPP Tx
     CAN_MPP_RX : in std_logic   -- PIN_M20 :: MPP Rx
 );
