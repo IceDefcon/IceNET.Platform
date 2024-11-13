@@ -15,24 +15,24 @@ use ieee.std_logic_unsigned.all;
 -- Pinout Communication
 -- CPU <--> FPGA
 --
----------------------------------------------------------------------------
--- PIN_A4  :: P9_11                   | PIN_B4  :: P9_12                  |
--- PIN_C3  :: P9_13                   | PIN_C4  :: P9_14                  |
--- PIN_A5  :: P9_15 :: INT_FROM_CPU   | PIN_B5  :: P9_16                  |
--- PIN_A6  :: P9_17 :: SPI0_CS0       | PIN_B6  :: P9_18 :: SPI0_D1       |
--- PIN_A7  :: P9_19 :: CAN_BBB_RX     | PIN_B7  :: P9_20 :: CAN_BBB_TX    |
--- PIN_A8  :: P9_21 :: SPI0_D0        | PIN_B8  :: P9_22 :: SPI0_SCLK     |
--- PIN_A9  :: P9_23 :: INT_FROM_FPGA  | PIN_B9  :: P9_24 :: UART_BBB_TX   |
--- PIN_A10 :: P9_25                   | PIN_B10 :: P9_26 :: UART_BBB_RX   |
--- PIN_A13 :: P9_27                   | PIN_B13 :: P9_28 :: SPI1_CS0      |
--- PIN_A14 :: P9_29 :: SPI1_D0        | PIN_B14 :: P9_30 :: SPI1_D1       |
--- PIN_A15 :: P9_31 :: SPI1_SCLK      | PIN_B15 :: P9_32                  |
--- PIN_A16 :: P9_33                   | PIN_B16 :: P9_34                  |
--- PIN_A17 :: P9_35                   | PIN_B17 :: P9_36                  |
--- PIN_A18 :: P9_37                   | PIN_B18 :: P9_38                  |
--- PIN_A19 :: P9_39                   | PIN_B19 :: P9_40                  |
--- PIN_A20 :: P9_41                   | PIN_B20 :: P9_42                  |
----------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+-- PIN_A4  :: P9_11 :: UNUSED_01            | PIN_B4  :: P9_12 :: UNUSED_02     |
+-- PIN_C3  :: P9_13 :: UNUSED_03            | PIN_C4  :: P9_14 :: UNUSED_04     |
+-- PIN_A5  :: P9_15 :: INT_FROM_CPU         | PIN_B5  :: P9_16 :: UNUSED_06     |
+-- PIN_A6  :: P9_17 :: SPI0_CS0             | PIN_B6  :: P9_18 :: SPI0_D1       |
+-- PIN_A7  :: P9_19 :: CAN_BBB_RX           | PIN_B7  :: P9_20 :: CAN_BBB_TX    |
+-- PIN_A8  :: P9_21 :: SPI0_D0              | PIN_B8  :: P9_22 :: SPI0_SCLK     |
+-- PIN_A9  :: P9_23 :: INT_FROM_FPGA        | PIN_B9  :: P9_24 :: UART_BBB_TX   |
+-- PIN_A10 :: P9_25 :: UNUSED_15            | PIN_B10 :: P9_26 :: UART_BBB_RX   |
+-- PIN_A13 :: P9_27 :: UNUSED_17            | PIN_B13 :: P9_28 :: SPI1_CS0      |
+-- PIN_A14 :: P9_29 :: SPI1_D0              | PIN_B14 :: P9_30 :: SPI1_D1       |
+-- PIN_A15 :: P9_31 :: SPI1_SCLK            | PIN_B15 :: P9_32 :: UNUSED_22     |
+-- PIN_A16 :: P9_33 :: UNUSED_23            | PIN_B16 :: P9_34 :: UNUSED_24     |
+-- PIN_A17 :: P9_35 :: UNUSED_25            | PIN_B17 :: P9_36 :: UNUSED_26     |
+-- PIN_A18 :: P9_37 :: UNUSED_27            | PIN_B18 :: P9_38 :: UNUSED_28     |
+-- PIN_A19 :: P9_39 :: UNUSED_29            | PIN_B19 :: P9_40 :: UNUSED_30     |
+-- PIN_A20 :: P9_41 :: WATCHDOG_INTERRUPT   | PIN_B20 :: P9_42 :: UNUSED_32     |
+---------------------------------------------------------------------------------
 
 entity Platform is
 port
@@ -97,7 +97,6 @@ port
     UART_BBB_RX : out std_logic; -- PIN_B10 :: P9_26
     UART_x86_TX : out std_logic; -- PIN_N19 :: FTDI Rx
     UART_x86_RX : in std_logic;  -- PIN_M19 :: FTDI Tx
-
     --
     -- BBB to MPP
     --
@@ -106,7 +105,27 @@ port
     CAN_BBB_TX : in std_logic;  -- PIN_B7 :: P9_20
     CAN_BBB_RX : out std_logic; -- PIN_A7 :: P9_19
     CAN_MPP_TX : out std_logic; -- PIN_N20 :: MPP Tx
-    CAN_MPP_RX : in std_logic   -- PIN_M20 :: MPP Rx
+    CAN_MPP_RX : in std_logic;  -- PIN_M20 :: MPP Rx
+    --
+    -- Tri-state Unused Pins :: For the PCB Safety
+    --
+    UNUSED_01 : inout std_logic; -- PIN_A4
+    UNUSED_02 : inout std_logic; -- PIN_B4
+    UNUSED_03 : inout std_logic; -- PIN_C3
+    UNUSED_04 : inout std_logic; -- PIN_C4
+    UNUSED_06 : inout std_logic; -- PIN_B5
+    UNUSED_15 : inout std_logic; -- PIN_A10
+    UNUSED_17 : inout std_logic; -- PIN_A13
+    UNUSED_22 : inout std_logic; -- PIN_B15 :: VDD_ADC :: Not Connected
+    UNUSED_23 : inout std_logic; -- PIN_A16
+    UNUSED_24 : inout std_logic; -- PIN_B16 :: GND_ADC :: Not Connected
+    UNUSED_25 : inout std_logic; -- PIN_A17
+    UNUSED_26 : inout std_logic; -- PIN_B17
+    UNUSED_27 : inout std_logic; -- PIN_A18
+    UNUSED_28 : inout std_logic; -- PIN_B18
+    UNUSED_29 : inout std_logic; -- PIN_A19
+    UNUSED_30 : inout std_logic; -- PIN_B19
+    UNUSED_32 : inout std_logic -- PIN_B20
 );
 end Platform;
 
@@ -326,6 +345,28 @@ end component;
 -- MAIN ROUTINE
 ----------------------------------------------------------------------------------------------------------------
 begin
+
+----------------------------------------------------------
+-- Tri-state Unused Pins :: For the PCB Safety
+----------------------------------------------------------
+UNUSED_01 <= 'Z';
+UNUSED_02 <= 'Z';
+UNUSED_03 <= 'Z';
+UNUSED_04 <= 'Z';
+UNUSED_06 <= 'Z';
+UNUSED_15 <= 'Z';
+UNUSED_17 <= 'Z';
+UNUSED_22 <= 'Z';
+UNUSED_23 <= 'Z';
+UNUSED_24 <= 'Z';
+UNUSED_25 <= 'Z';
+UNUSED_26 <= 'Z';
+UNUSED_27 <= 'Z';
+UNUSED_28 <= 'Z';
+UNUSED_29 <= 'Z';
+UNUSED_30 <= 'Z';
+UNUSED_32 <= 'Z';
+----------------------------------------------------------
 
 DebounceController_module: DebounceController
 generic map
