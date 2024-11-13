@@ -310,9 +310,10 @@ void charDeviceDestroy(void)
     }
     printk(KERN_ALERT "[DESTROY][ C ] %s device destruction complete\n", WATCHDOG_DEVICE);
 
-    charDeviceMutexCtrl(DEVICE_OUTPUT, MUTEX_CTRL_LOCK);
-    charDeviceMutexCtrl(DEVICE_WATCHDOG, MUTEX_CTRL_LOCK);
+    charDeviceMutexCtrl(DEVICE_INPUT, MUTEX_CTRL_DESTROY);
+    charDeviceMutexCtrl(DEVICE_OUTPUT, MUTEX_CTRL_DESTROY);
+    charDeviceMutexCtrl(DEVICE_WATCHDOG, MUTEX_CTRL_DESTROY);
 
-    printk(KERN_INFO "[DESTROY][ C ] OUTPUT and WATCHDOG Mutex destroyed\n");
+    printk(KERN_INFO "[DESTROY][ C ] All Mutex destroyed\n");
 }
 

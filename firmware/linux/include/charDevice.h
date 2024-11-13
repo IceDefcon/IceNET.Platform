@@ -38,6 +38,7 @@ typedef struct
     int openCount;
     struct mutex device_mutex;
     struct mutex read_Mutex;
+    int tryLock;
     DataTransfer io_transfer;
     struct file_operations fops;
 }charDeviceData;

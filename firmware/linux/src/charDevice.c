@@ -51,6 +51,7 @@ static charDeviceData Device[DEVICE_AMOUNT] =
         .openCount = 0,
         .device_mutex = __MUTEX_INITIALIZER(Device[DEVICE_INPUT].device_mutex),
         .read_Mutex = __MUTEX_INITIALIZER(Device[DEVICE_INPUT].read_Mutex),
+        .tryLock = 0,
 
         .io_transfer =
         {
@@ -76,6 +77,7 @@ static charDeviceData Device[DEVICE_AMOUNT] =
         .openCount = 0,
         .device_mutex = __MUTEX_INITIALIZER(Device[DEVICE_OUTPUT].device_mutex),
         .read_Mutex = __MUTEX_INITIALIZER(Device[DEVICE_OUTPUT].read_Mutex),
+        .tryLock = 0,
 
         .io_transfer =
         {
@@ -101,6 +103,7 @@ static charDeviceData Device[DEVICE_AMOUNT] =
         .openCount = 0,
         .device_mutex = __MUTEX_INITIALIZER(Device[DEVICE_WATCHDOG].device_mutex),
         .read_Mutex = __MUTEX_INITIALIZER(Device[DEVICE_WATCHDOG].read_Mutex),
+        .tryLock = 0,
 
         .io_transfer =
         {
@@ -137,7 +140,7 @@ static charDeviceData Device[DEVICE_AMOUNT] =
 
         case MUTEX_CTRL_TRYLOCK:
         {
-            mutex_trylock(&Device[charDevice].read_Mutex);
+            Device[charDevice].tryLock = mutex_trylock(&Device[charDevice].read_Mutex);
             break;
         };
 
@@ -149,7 +152,15 @@ static charDeviceData Device[DEVICE_AMOUNT] =
 
         case MUTEX_CTRL_DESTROY:
         {
+            Device[charDevice].tryLock = mutex_trylock(&Device[charDevice].read_Mutex);
+
+            if (Device[charDevice].tryLock  == 0)
+            {
+                mutex_unlock(&Device[charDevice].read_Mutex);
+            }
+
             mutex_destroy(&Device[charDevice].read_Mutex);
+
             break;
         };
 
@@ -164,7 +175,9 @@ static charDeviceData Device[DEVICE_AMOUNT] =
 /* KernelInput Interface */
 static int inputOpen(struct inode *inodep, struct file *filep)
 {
-    if(!mutex_trylock(&Device[DEVICE_INPUT].device_mutex))
+    charDeviceMutexCtrl(DEVICE_INPUT, MUTEX_CTRL_TRYLOCK);
+
+    if(!Device[DEVICE_INPUT].tryLock)
     {
         printk(KERN_ALERT "[CTRL][ C ] Device in use by another process");
         return -EBUSY;
@@ -242,7 +255,9 @@ static int inputClose(struct inode *inodep, struct file *filep)
 /* KernelOutput Interface */
 static int outputOpen(struct inode *inodep, struct file *filep)
 {
-    if(!mutex_trylock(&Device[DEVICE_OUTPUT].device_mutex))
+    charDeviceMutexCtrl(DEVICE_OUTPUT, MUTEX_CTRL_TRYLOCK);
+
+    if(!Device[DEVICE_OUTPUT].tryLock)
     {
         printk(KERN_ALERT "[CTRL][ C ] Device in use by another process");
         return -EBUSY;
@@ -306,7 +321,9 @@ static int outputClose(struct inode *inodep, struct file *filep)
 
 static int watchdogOpen(struct inode *inodep, struct file *filep)
 {
-    if(!mutex_trylock(&Device[DEVICE_WATCHDOG].device_mutex))
+    charDeviceMutexCtrl(DEVICE_WATCHDOG, MUTEX_CTRL_TRYLOCK);
+
+    if(!Device[DEVICE_WATCHDOG].tryLock)
     {
         printk(KERN_ALERT "[CTRL][ C ] Device in use by another process");
         return -EBUSY;
