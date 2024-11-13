@@ -91,7 +91,7 @@ port
     SECONDARY_MOSI : in std_logic;  -- PIN_B14 :: P9_30 :: SPI1_D1
     SECONDARY_SCLK : in std_logic;  -- PIN_A15 :: P9_31 :: SPI1_SCLK
     -- Watchdog signal
-    WATCHDOG_INTERRUPT : out std_logic; -- PIN_B5
+    WATCHDOG_INTERRUPT : out std_logic; -- PIN_A20 :: P9_41
 
     UART_BBB_TX : in std_logic;  -- PIN_B9 :: P9_24
     UART_BBB_RX : out std_logic; -- PIN_B10 :: P9_26
