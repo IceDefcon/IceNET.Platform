@@ -442,5 +442,39 @@ set_global_assignment -name SIGNALTAP_FILE ../IceNET/IceNET.Platform/rtl/tap/Int
 set_global_assignment -name SIGNALTAP_FILE ../IceNET/IceNET.Platform/rtl/tap/uartDriver.stp
 set_global_assignment -name SIGNALTAP_FILE ../IceNET/IceNET.Platform/rtl/tap/canDriver.stp
 set_global_assignment -name SIGNALTAP_FILE ../IceNET/IceNET.Platform/rtl/tap/spiLooptrough.stp
-set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
+set_location_assignment PIN_A4 -to UNUSED_01
+set_location_assignment PIN_B4 -to UNUSED_02
+set_location_assignment PIN_C3 -to UNUSED_03
+set_location_assignment PIN_C4 -to UNUSED_04
+set_location_assignment PIN_B5 -to UNUSED_06
+set_location_assignment PIN_A10 -to UNUSED_15
+set_location_assignment PIN_A13 -to UNUSED_17
+set_location_assignment PIN_B15 -to UNUSED_22
+set_location_assignment PIN_A16 -to UNUSED_23
+set_location_assignment PIN_B16 -to UNUSED_24
+set_location_assignment PIN_A17 -to UNUSED_25
+set_location_assignment PIN_B17 -to UNUSED_26
+set_location_assignment PIN_A18 -to UNUSED_27
+set_location_assignment PIN_B18 -to UNUSED_28
+set_location_assignment PIN_A19 -to UNUSED_29
+set_location_assignment PIN_B19 -to UNUSED_30
+set_location_assignment PIN_B20 -to UNUSED_32
+set_instance_assignment -name IO_STANDARD "3.3-V LVCMOS" -to UNUSED_01
+set_instance_assignment -name IO_STANDARD "3.3-V LVCMOS" -to UNUSED_02
+set_instance_assignment -name IO_STANDARD "3.3-V LVCMOS" -to UNUSED_03
+set_instance_assignment -name IO_STANDARD "3.3-V LVCMOS" -to UNUSED_04
+set_instance_assignment -name IO_STANDARD "3.3-V LVCMOS" -to UNUSED_06
+set_instance_assignment -name IO_STANDARD "3.3-V LVCMOS" -to UNUSED_15
+set_instance_assignment -name IO_STANDARD "3.3-V LVCMOS" -to UNUSED_17
+set_instance_assignment -name IO_STANDARD "3.3-V LVCMOS" -to UNUSED_22
+set_instance_assignment -name IO_STANDARD "3.3-V LVCMOS" -to UNUSED_23
+set_instance_assignment -name IO_STANDARD "3.3-V LVCMOS" -to UNUSED_24
+set_instance_assignment -name IO_STANDARD "3.3-V LVCMOS" -to UNUSED_25
+set_instance_assignment -name IO_STANDARD "3.3-V LVCMOS" -to UNUSED_26
+set_instance_assignment -name IO_STANDARD "3.3-V LVCMOS" -to UNUSED_27
+set_instance_assignment -name IO_STANDARD "3.3-V LVCMOS" -to UNUSED_28
+set_instance_assignment -name IO_STANDARD "3.3-V LVCMOS" -to UNUSED_29
+set_instance_assignment -name IO_STANDARD "3.3-V LVCMOS" -to UNUSED_30
+set_instance_assignment -name IO_STANDARD "3.3-V LVCMOS" -to UNUSED_32
 set_global_assignment -name SLD_FILE db/fifoCtrl_auto_stripped.stp
+set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

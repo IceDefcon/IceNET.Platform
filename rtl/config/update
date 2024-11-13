@@ -1,0 +1,2 @@
+cp ../../../../workspace.Quartus/Platform.qsf .
+cp ../../../../workspace.Quartus/Platform.qpf .
