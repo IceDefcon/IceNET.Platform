@@ -70,17 +70,12 @@ static void charDeviceDataInit(void)
     getCharDevice()[DEVICE_WATCHDOG].io_transfer.RxData = watchdogRxData;
     getCharDevice()[DEVICE_WATCHDOG].io_transfer.TxData = watchdogTxData;
     getCharDevice()[DEVICE_WATCHDOG].io_transfer.length = IO_BUFFER_SIZE;
-
-
-    /* Lock and OUTPUT until feedback transfer unlock it */
-    printk(KERN_INFO "[INIT][ C ] Lock on OUTPUT and WATCHDOG mutex\n");
-    charDeviceMutexCtrl(DEVICE_OUTPUT, MUTEX_CTRL_LOCK);
-    charDeviceMutexCtrl(DEVICE_WATCHDOG, MUTEX_CTRL_LOCK);
 }
 
 void charDeviceInit(void)
 {
-    printk(KERN_ALERT "[INIT][ C ] Initialize OUTPUT and WATCHDOG Mutex\n");
+    printk(KERN_ALERT "[INIT][ C ] Initialize INPUT, OUTPUT and WATCHDOG Mutex\n");
+    charDeviceMutexCtrl(DEVICE_INPUT, MUTEX_CTRL_INIT);
     charDeviceMutexCtrl(DEVICE_OUTPUT, MUTEX_CTRL_INIT);
     charDeviceMutexCtrl(DEVICE_WATCHDOG, MUTEX_CTRL_INIT);
 
@@ -314,6 +309,6 @@ void charDeviceDestroy(void)
     charDeviceMutexCtrl(DEVICE_OUTPUT, MUTEX_CTRL_DESTROY);
     charDeviceMutexCtrl(DEVICE_WATCHDOG, MUTEX_CTRL_DESTROY);
 
-    printk(KERN_INFO "[DESTROY][ C ] All Mutex destroyed\n");
+    printk(KERN_INFO "[DESTROY][ C ] INPUT, OUTPUT and WATCHDOG Mutexes destroyed\n");
 }
 
