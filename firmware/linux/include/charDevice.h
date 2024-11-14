@@ -25,8 +25,8 @@
 #define  INPUT_CLASS   "KernelInputClass"
 #define  OUTPUT_DEVICE "KernelOutput"
 #define  OUTPUT_CLASS  "KernelOutputClass"
-#define  WATCHDOG_DEVICE "Watchdog"
-#define  WATCHDOG_CLASS  "WatchdogClass"
+#define  WATCHDOG_DEVICE "FpgaWatchdog"
+#define  WATCHDOG_CLASS  "FpgaWatchdogClass"
 
 #define IO_BUFFER_SIZE TRANSFER_BUFFER_SIZE
 
@@ -38,6 +38,7 @@ typedef struct
     int openCount;
     struct mutex device_mutex;
     struct mutex read_Mutex;
+    int tryLock;
     DataTransfer io_transfer;
     struct file_operations fops;
 }charDeviceData;
@@ -54,6 +55,7 @@ typedef enum
 {
     MUTEX_CTRL_INIT,
     MUTEX_CTRL_LOCK,
+    MUTEX_CTRL_TRYLOCK,
     MUTEX_CTRL_UNLOCK,
     MUTEX_CTRL_DESTROY,
     MUTEX_CTRL_AMOUNT
@@ -67,3 +69,122 @@ typedef enum
 /* EXIT */ void charDeviceDestroy(void);
 
 #endif // CHAR_DEVICE_H
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// INPUT Mutex
+//
+// No additional Lock/Unlock operations
+//
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+//
+//
+//           inputOpen
+//               |
+//               |
+//               |
+//               V
+//            tryLock -----------> ERROR
+//               |         NO
+//               |
+//               | YES
+//               |
+//               |
+//               V
+//              Lock ---------------------------> inputClose -----------> Unlock -----------> Destroy
+//
+//
+//
+//
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// OUTPUT Mutex
+//
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+//
+//
+//           outputOpen
+//               |
+//               |
+//               |
+//               V
+//            tryLock -----------> ERROR
+//               |         NO
+//               |
+//               | YES
+//               |
+//               |
+//               V
+//              Lock ---------------------------> outputClose ---------> Unlock -----------> Destroy
+//               Λ                      |
+//               |                      |
+//               |                      |
+//               |                      |         [Preamble Error]
+//               |                      |-------> transferFpgaInput -----> Unlock -------------------->|
+//               |                      |                                                              |
+//               |                      |                                                              |
+//               |                      |                                                              |
+//               |                      |          [0xDE, 0xAD]                                        |
+//               |                      |-------> killApplication ---------> Unlock ----------->|      |
+//               |                      |                                                       |      |
+//               |                      |                                                       |      |
+//               |                      |                                                       |      |
+//               |                      |       [Indicator Error]                               |      |
+//               |                      |-------> watchdogThread -----------> Unlock --->|      |      |
+//               |                      |                                                |      |      |
+//               |                      |                                                |      |      |
+//               |                      |                                                |      |      |
+//               |                      |           [Dma Transfer]                       |      |      |
+//               |       ---=[ Run ]=---|-------> transferFpgaOutput ---------> Unlock   |      |      |
+//               |                                                                |      |      |      |
+//               |                                                                |      |      |      |
+//               |                                                                |      |      |      |
+//               |                                                                |      |      |      |
+//               |                      Waiting for Unlock                        V      V      V      V
+//           outputRead <-------------------------------------------------------------------------------------------------
+//
+//
+//
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// WATCHDOG Mutex
+//
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+//
+//
+//           watchdogOpen
+//               |
+//               |
+//               |
+//               V
+//            tryLock -----------> ERROR
+//               |         NO
+//               |
+//               | YES
+//               |
+//               |
+//               V
+//              Lock ---------------------------> watchdogClose -----------> Unlock -----------> Destroy
+//               Λ                      |
+//               |                      |
+//               |                      |
+//               |                      |         [0xDE, 0xAD]
+//               |                      |-------> killApplication -----------> Unlock -------------->|
+//               |                      |                                                            |
+//               |                      |                                                            |
+//               |                      |                                                            |
+//               |                      |         [Every 500ms]                                      |
+//               |       ---=[ Run ]=---|-------> watchdogThread -------------> Unlock               |
+//               |                                                                |                  |
+//               |                                                                |                  |
+//               |                                                                |                  |
+//               |                                                                |                  |
+//               |                      Waiting for Unlock                        V                  V
+//           watchdogRead <---------------------------------------------------------------------------
+//
+//
+//
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

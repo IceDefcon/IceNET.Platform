@@ -199,9 +199,10 @@ void transferFpgaInput(struct work_struct *work)
         printk(KERN_INFO "[CTRL][SPI] Primary FPGA Transfer :: Dma Buffer[%d]: [Data] Tx[0x%02x] [Feedback] Rx[0x%02x]\n", i, tx_buf[i], rx_buf[i]);
     }
 
+    /* No feedback preamble received :: FPGA not running properly */
     if(0x18 != rx_buf[0])
     {
-        printk(KERN_ERR "[CTRL][SPI] No FPGA Preamble detected :: FPGA is Not Programed or Connected\n");
+        printk(KERN_ERR "[CTRL][SPI] No FPGA Preamble detected :: FPGA is Not Programed, Connected or Running properly\n");
         charDeviceMutexCtrl(DEVICE_OUTPUT, MUTEX_CTRL_UNLOCK);
     }
 

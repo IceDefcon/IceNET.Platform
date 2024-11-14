@@ -70,17 +70,12 @@ static void charDeviceDataInit(void)
     getCharDevice()[DEVICE_WATCHDOG].io_transfer.RxData = watchdogRxData;
     getCharDevice()[DEVICE_WATCHDOG].io_transfer.TxData = watchdogTxData;
     getCharDevice()[DEVICE_WATCHDOG].io_transfer.length = IO_BUFFER_SIZE;
-
-
-    /* Lock and OUTPUT until feedback transfer unlock it */
-    printk(KERN_INFO "[INIT][ C ] Lock on OUTPUT and WATCHDOG mutex\n");
-    charDeviceMutexCtrl(DEVICE_OUTPUT, MUTEX_CTRL_LOCK);
-    charDeviceMutexCtrl(DEVICE_WATCHDOG, MUTEX_CTRL_LOCK);
 }
 
 void charDeviceInit(void)
 {
-    printk(KERN_ALERT "[INIT][ C ] Initialize OUTPUT and WATCHDOG Mutex\n");
+    printk(KERN_ALERT "[INIT][ C ] Initialize Kernel Mutexes\n");
+    charDeviceMutexCtrl(DEVICE_INPUT, MUTEX_CTRL_INIT);
     charDeviceMutexCtrl(DEVICE_OUTPUT, MUTEX_CTRL_INIT);
     charDeviceMutexCtrl(DEVICE_WATCHDOG, MUTEX_CTRL_INIT);
 
@@ -310,9 +305,10 @@ void charDeviceDestroy(void)
     }
     printk(KERN_ALERT "[DESTROY][ C ] %s device destruction complete\n", WATCHDOG_DEVICE);
 
-    charDeviceMutexCtrl(DEVICE_OUTPUT, MUTEX_CTRL_LOCK);
-    charDeviceMutexCtrl(DEVICE_WATCHDOG, MUTEX_CTRL_LOCK);
+    charDeviceMutexCtrl(DEVICE_INPUT, MUTEX_CTRL_DESTROY);
+    charDeviceMutexCtrl(DEVICE_OUTPUT, MUTEX_CTRL_DESTROY);
+    charDeviceMutexCtrl(DEVICE_WATCHDOG, MUTEX_CTRL_DESTROY);
 
-    printk(KERN_INFO "[DESTROY][ C ] OUTPUT and WATCHDOG Mutex destroyed\n");
+    printk(KERN_INFO "[DESTROY][ C ] Kernel Mutexes destroyed\n");
 }
 
