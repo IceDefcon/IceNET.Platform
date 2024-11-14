@@ -74,7 +74,7 @@ static void charDeviceDataInit(void)
 
 void charDeviceInit(void)
 {
-    printk(KERN_ALERT "[INIT][ C ] Initialize INPUT, OUTPUT and WATCHDOG Mutex\n");
+    printk(KERN_ALERT "[INIT][ C ] Initialize Kernel Mutexes\n");
     charDeviceMutexCtrl(DEVICE_INPUT, MUTEX_CTRL_INIT);
     charDeviceMutexCtrl(DEVICE_OUTPUT, MUTEX_CTRL_INIT);
     charDeviceMutexCtrl(DEVICE_WATCHDOG, MUTEX_CTRL_INIT);
@@ -309,6 +309,6 @@ void charDeviceDestroy(void)
     charDeviceMutexCtrl(DEVICE_OUTPUT, MUTEX_CTRL_DESTROY);
     charDeviceMutexCtrl(DEVICE_WATCHDOG, MUTEX_CTRL_DESTROY);
 
-    printk(KERN_INFO "[DESTROY][ C ] INPUT, OUTPUT and WATCHDOG Mutexes destroyed\n");
+    printk(KERN_INFO "[DESTROY][ C ] Kernel Mutexes destroyed\n");
 }
 

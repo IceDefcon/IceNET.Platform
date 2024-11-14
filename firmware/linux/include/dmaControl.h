@@ -22,7 +22,7 @@ typedef enum
 {
     DMA_IN,
     DMA_OUT,
-    DMA_OPS
+    DMA_AMOUNT
 }dmaControlType;
 
 #endif // DMA_CONTROL_H

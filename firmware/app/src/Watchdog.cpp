@@ -45,7 +45,7 @@ Watchdog::~Watchdog()
 
 int Watchdog::openDEV()
 {
-    m_file_descriptor = open("/dev/Watchdog", O_RDWR);
+    m_file_descriptor = open("/dev/FpgaWatchdog", O_RDWR);
 
     if(m_file_descriptor < 0)
     {
