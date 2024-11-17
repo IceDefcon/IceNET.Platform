@@ -1,4 +1,4 @@
-obj-m := spiDma.o
+obj-m := iceBlock.o
 
 KDIR := /lib/modules/$(shell uname -r)/build
 
