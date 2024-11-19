@@ -49,14 +49,15 @@ static blk_status_t kernelBlock_request(struct blk_mq_hw_ctx *hctx,
     unsigned int size;
     char *data_ptr = (char *)bio_data(bio); // Pointer to the bio data
 
-printk(KERN_INFO "kernelBlock_driver: Received I/O request - bio: %p, sector: %llu, size: %u\n",
-       bio, bio->bi_iter.bi_sector, bio->bi_iter.bi_size);
+    printk(KERN_INFO "kernelBlock_driver: Received I/O request - bio: %p, sector: %llu, size: %u\n",
+           bio, bio->bi_iter.bi_sector, bio->bi_iter.bi_size);
 
     offset = bio->bi_iter.bi_sector * KERNELBLOCK_SECTOR_SIZE;
     size = bio->bi_iter.bi_size;
 
     printk(KERN_INFO "kernelBlock_driver: Checking I/O bounds, offset: %lu, size: %u\n", offset, size);
 
+    // Check if the requested I/O operation is beyond the device size
     if (offset + size > DEVICE_SIZE) {
         printk(KERN_ERR "kernelBlock_driver: I/O beyond device size\n");
         bio->bi_status = BLK_STS_IOERR;
@@ -64,46 +65,42 @@ printk(KERN_INFO "kernelBlock_driver: Received I/O request - bio: %p, sector: %l
         return BLK_STS_IOERR;
     }
 
-    // Print the data being written or read
-    printk(KERN_INFO "kernelBlock_driver: Processing I/O request\n");
-    printk(KERN_INFO "Offset: %lu, Size: %u\n", offset, size);
-
-    // Print data being written to the device (for WRITE operations)
+    // Handle WRITE operations
     if (bio_data_dir(bio) == WRITE) {
         printk(KERN_INFO "Writing to device at offset: %lu, size: %u\n", offset, size);
         printk(KERN_INFO "Data to write: ");
-        for (i = 0; i < size && i < 64; i++) {
+        for (i = 0; i < size; i++) {
             printk(KERN_CONT "%02X ", (unsigned char)data_ptr[i]);
+            if (i == 63) break; // Limit print size to 64 bytes
         }
         printk(KERN_CONT "\n");
 
         // Perform the write operation
-        for (i = 0; i < size; i++) {
-            kblock_dev.data[offset + i] = data_ptr[i];
-        }
+        memcpy(&kblock_dev.data[offset], data_ptr, size);
     }
-    // Print data being read from the device (for READ operations)
+    // Handle READ operations
     else {
         printk(KERN_INFO "Reading from device at offset: %lu, size: %u\n", offset, size);
         printk(KERN_INFO "Data read: ");
-        for (i = 0; i < size && i < 64; i++) {
+        for (i = 0; i < size; i++) {
             printk(KERN_CONT "%02X ", (unsigned char)kblock_dev.data[offset + i]);
+            if (i == 63) break; // Limit print size to 64 bytes
         }
         printk(KERN_CONT "\n");
 
         // Perform the read operation
-        for (i = 0; i < size; i++) {
-            data_ptr[i] = kblock_dev.data[offset + i];
-        }
+        memcpy(data_ptr, &kblock_dev.data[offset], size);
     }
 
     printk(KERN_INFO "kernelBlock_driver: Completing I/O request (bio: %p) at offset: %lu\n", bio, offset);
+
+    // Ensure to end the request after completion (whether successful or error)
     bio_endio(bio);
+
     printk(KERN_INFO "kernelBlock_driver: I/O request completed with status: %d\n", BLK_STS_OK);
 
     return BLK_STS_OK;
 }
-
 
 // Open operation
 static int kernelBlock_open(struct block_device *bdev, fmode_t mode)
@@ -211,13 +208,10 @@ static void __exit kernelBlock_exit(void)
     printk(KERN_INFO "kernelBlock_driver: Debug 1 - Queue quiesced, Pending requests: %d\n", kblock_dev.queue->nr_pending);
 
     // Wait for all pending requests to finish before proceeding
-    // This ensures that no requests are still being processed when we try to remove the module
     while (kblock_dev.queue->nr_pending > 0) {
         printk(KERN_INFO "kernelBlock_driver: Waiting for pending requests to finish... Pending: %d\n", kblock_dev.queue->nr_pending);
 
         // Wait for the requests to finish
-        // Instead of using msleep, use the proper wait function to block until the requests are done
-        // We also want to avoid blocking for too long, so a timeout can be considered
         if (wait_event_timeout(kblock_dev.queue->mq_freeze_wq,
                               percpu_ref_is_zero(&kblock_dev.queue->q_usage_counter),
                               msecs_to_jiffies(5000))) { // 5-second timeout
@@ -262,6 +256,7 @@ static void __exit kernelBlock_exit(void)
 
     printk(KERN_INFO "kernelBlock_driver: Debug 8 - Module unloaded successfully\n");
 }
+
 
 module_init(kernelBlock_init);
 module_exit(kernelBlock_exit);
