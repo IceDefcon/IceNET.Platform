@@ -23,25 +23,23 @@ struct kernel_block_device {
 
 static struct kernel_block_device kblock_dev;
 
-// Forward declarations
 static blk_status_t kernelBlock_request(struct blk_mq_hw_ctx *hctx, const struct blk_mq_queue_data *bd);
 static int kernelBlock_open(struct block_device *bdev, fmode_t mode);
 static void kernelBlock_release(struct gendisk *gd, fmode_t mode);
 
-// Block device operations
-static const struct block_device_operations kernelBlock_ops = {
+static const struct block_device_operations kernelBlock_ops =
+{
     .owner = THIS_MODULE,
     .open = kernelBlock_open,
     .release = kernelBlock_release,
 };
 
-// Multi-queue operations
-static const struct blk_mq_ops kernelBlock_mq_ops = {
+static const struct blk_mq_ops kernelBlock_mq_ops =
+{
     .queue_rq = kernelBlock_request,
 };
 
-static blk_status_t kernelBlock_request(struct blk_mq_hw_ctx *hctx,
-                                        const struct blk_mq_queue_data *bd)
+static blk_status_t kernelBlock_request(struct blk_mq_hw_ctx *hctx, const struct blk_mq_queue_data *bd)
 {
     struct bio *bio = bd->rq->bio;
     unsigned long offset;
@@ -49,73 +47,73 @@ static blk_status_t kernelBlock_request(struct blk_mq_hw_ctx *hctx,
     unsigned int size;
     char *data_ptr = (char *)bio_data(bio); // Pointer to the bio data
 
-    printk(KERN_INFO "kernelBlock_driver: Received I/O request - bio: %p, sector: %llu, size: %u\n",
-           bio, bio->bi_iter.bi_sector, bio->bi_iter.bi_size);
+    printk(KERN_INFO "kernelBlock_driver: Received I/O request - bio: %p, sector: %llu, size: %u\n", bio, bio->bi_iter.bi_sector, bio->bi_iter.bi_size);
 
     offset = bio->bi_iter.bi_sector * KERNELBLOCK_SECTOR_SIZE;
     size = bio->bi_iter.bi_size;
 
     printk(KERN_INFO "kernelBlock_driver: Checking I/O bounds, offset: %lu, size: %u\n", offset, size);
 
-    // Check if the requested I/O operation is beyond the device size
-    if (offset + size > DEVICE_SIZE) {
+    if (offset + size > DEVICE_SIZE) /* Check if the requested I/O operation is beyond the device size */
+    {
         printk(KERN_ERR "kernelBlock_driver: I/O beyond device size\n");
         bio->bi_status = BLK_STS_IOERR;
         bio_endio(bio);
         return BLK_STS_IOERR;
     }
 
-    // Handle WRITE operations
-    if (bio_data_dir(bio) == WRITE) {
+    if (bio_data_dir(bio) == WRITE)
+    {
         printk(KERN_INFO "Writing to device at offset: %lu, size: %u\n", offset, size);
         printk(KERN_INFO "Data to write: ");
-        for (i = 0; i < size; i++) {
+        for (i = 0; i < size; i++)
+        {
             printk(KERN_CONT "%02X ", (unsigned char)data_ptr[i]);
-            if (i == 63) break; // Limit print size to 64 bytes
+            if (i == 63) break; /* Limit print size to 64 bytes */
         }
         printk(KERN_CONT "\n");
 
-        // Perform the write operation
-        memcpy(&kblock_dev.data[offset], data_ptr, size);
+        memcpy(&kblock_dev.data[offset], data_ptr, size); /* Perform the write operation */
     }
-    // Handle READ operations
-    else {
+    else if (bio_data_dir(bio) == READ)
+    {
         printk(KERN_INFO "Reading from device at offset: %lu, size: %u\n", offset, size);
         printk(KERN_INFO "Data read: ");
-        for (i = 0; i < size; i++) {
+        for (i = 0; i < size; i++)
+        {
             printk(KERN_CONT "%02X ", (unsigned char)kblock_dev.data[offset + i]);
-            if (i == 63) break; // Limit print size to 64 bytes
+            if (i == 63) break; /* Limit print size to 64 bytes */
         }
         printk(KERN_CONT "\n");
 
-        // Perform the read operation
-        memcpy(data_ptr, &kblock_dev.data[offset], size);
+        memcpy(data_ptr, &kblock_dev.data[offset], size); /* Perform the read operation */
+    }
+    else
+    {
+        printk(KERN_ERR "Unsupported bio_data_dir operation: %d\n", bio_data_dir(bio));
+        return -EOPNOTSUPP; /* Operation not supported */
     }
 
     printk(KERN_INFO "kernelBlock_driver: Completing I/O request (bio: %p) at offset: %lu\n", bio, offset);
 
-    // Ensure to end the request after completion (whether successful or error)
-    bio_endio(bio);
+    bio_endio(bio); /* Ensure to end the request after completion (whether successful or error) */
 
     printk(KERN_INFO "kernelBlock_driver: I/O request completed with status: %d\n", BLK_STS_OK);
 
     return BLK_STS_OK;
 }
 
-// Open operation
 static int kernelBlock_open(struct block_device *bdev, fmode_t mode)
 {
     printk(KERN_INFO "kernelBlock_driver: Device opened\n");
     return 0;
 }
 
-// Release operation
 static void kernelBlock_release(struct gendisk *gd, fmode_t mode)
 {
     printk(KERN_INFO "kernelBlock_driver: Device released\n");
 }
 
-// Initialization function
 static int __init kernelBlock_init(void)
 {
     int ret;
@@ -125,7 +123,8 @@ static int __init kernelBlock_init(void)
     // Allocate device data
     printk(KERN_INFO "kernelBlock_driver: Allocating memory for device data\n");
     kblock_dev.data = kmalloc(DEVICE_SIZE, GFP_KERNEL);
-    if (!kblock_dev.data) {
+    if (!kblock_dev.data)
+    {
         printk(KERN_ERR "kernelBlock_driver: Memory allocation failed\n");
         return -ENOMEM;
     }
@@ -135,7 +134,8 @@ static int __init kernelBlock_init(void)
     // Register block device
     printk(KERN_INFO "kernelBlock_driver: Registering block device\n");
     ret = register_blkdev(0, DEVICE_NAME);
-    if (ret < 0) {
+    if (ret < 0)
+    {
         printk(KERN_ERR "kernelBlock_driver: Failed to register block device\n");
         kfree(kblock_dev.data);
         return ret;
@@ -153,7 +153,8 @@ static int __init kernelBlock_init(void)
     kblock_dev.tag_set.nr_hw_queues = 1;
 
     ret = blk_mq_alloc_tag_set(&kblock_dev.tag_set);
-    if (ret) {
+    if (ret)
+    {
         printk(KERN_ERR "kernelBlock_driver: Failed to allocate tag set\n");
         unregister_blkdev(kblock_dev.major_num, DEVICE_NAME);
         kfree(kblock_dev.data);
@@ -162,7 +163,8 @@ static int __init kernelBlock_init(void)
     printk(KERN_INFO "kernelBlock_driver: Tag set allocated\n");
 
     kblock_dev.queue = blk_mq_init_queue(&kblock_dev.tag_set);
-    if (IS_ERR(kblock_dev.queue)) {
+    if (IS_ERR(kblock_dev.queue))
+    {
         ret = PTR_ERR(kblock_dev.queue);
         printk(KERN_ERR "kernelBlock_driver: Failed to initialize request queue\n");
         blk_mq_free_tag_set(&kblock_dev.tag_set);
@@ -175,7 +177,8 @@ static int __init kernelBlock_init(void)
     // Allocate and configure gendisk
     printk(KERN_INFO "kernelBlock_driver: Allocating gendisk\n");
     kblock_dev.gd = alloc_disk(1);
-    if (!kblock_dev.gd) {
+    if (!kblock_dev.gd)
+    {
         blk_cleanup_queue(kblock_dev.queue);
         blk_mq_free_tag_set(&kblock_dev.tag_set);
         unregister_blkdev(kblock_dev.major_num, DEVICE_NAME);
@@ -208,13 +211,13 @@ static void __exit kernelBlock_exit(void)
     printk(KERN_INFO "kernelBlock_driver: Debug 1 - Queue quiesced, Pending requests: %d\n", kblock_dev.queue->nr_pending);
 
     // Wait for all pending requests to finish before proceeding
-    while (kblock_dev.queue->nr_pending > 0) {
+    while (kblock_dev.queue->nr_pending > 0)
+    {
         printk(KERN_INFO "kernelBlock_driver: Waiting for pending requests to finish... Pending: %d\n", kblock_dev.queue->nr_pending);
 
         // Wait for the requests to finish
-        if (wait_event_timeout(kblock_dev.queue->mq_freeze_wq,
-                              percpu_ref_is_zero(&kblock_dev.queue->q_usage_counter),
-                              msecs_to_jiffies(5000))) { // 5-second timeout
+        if (wait_event_timeout(kblock_dev.queue->mq_freeze_wq, percpu_ref_is_zero(&kblock_dev.queue->q_usage_counter), msecs_to_jiffies(5000)))
+        {
             break;  // If the queue becomes idle, we break out of the loop
         }
 
@@ -222,7 +225,8 @@ static void __exit kernelBlock_exit(void)
     }
 
     // Check if the queue is now idle or if we timed out
-    if (kblock_dev.queue->nr_pending > 0) {
+    if (kblock_dev.queue->nr_pending > 0)
+    {
         printk(KERN_WARNING "kernelBlock_driver: Still have pending requests, forcing cleanup...\n");
         // Handle the situation where there are still pending requests after the timeout
         // Consider canceling or aborting requests if needed, depending on your driver logic
@@ -231,7 +235,8 @@ static void __exit kernelBlock_exit(void)
     // Debug info after waiting for I/O to finish
     printk(KERN_INFO "kernelBlock_driver: Debug 2 - Removing gendisk\n");
 
-    if (kblock_dev.gd) {
+    if (kblock_dev.gd)
+    {
         del_gendisk(kblock_dev.gd);
         printk(KERN_INFO "kernelBlock_driver: Debug 3 - gendisk removed\n");
         put_disk(kblock_dev.gd);
@@ -250,13 +255,13 @@ static void __exit kernelBlock_exit(void)
 
     // Free the device data
     printk(KERN_INFO "kernelBlock_driver: Debug 7 - Freeing device data\n");
-    if (kblock_dev.data) {
+    if (kblock_dev.data)
+    {
         kfree(kblock_dev.data);
     }
 
     printk(KERN_INFO "kernelBlock_driver: Debug 8 - Module unloaded successfully\n");
 }
-
 
 module_init(kernelBlock_init);
 module_exit(kernelBlock_exit);
