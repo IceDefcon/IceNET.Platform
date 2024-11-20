@@ -25,7 +25,7 @@
 
 6. Mount SD card to PC :: e.g  /mnt/bbb
 
-    TODO
+    mount /dev/sd?? /mnt/bbb
 
 7. Copy the image
 
