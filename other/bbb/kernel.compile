@@ -32,11 +32,11 @@
 
     sudo cp arch/arm/boot/zImage /media/ice/rootfs/boot/vmlinuz-5.10.168-ti-r79
 
-8. Install modules to the BBB SD card
+9. Install modules to the BBB SD card
 
     sudo make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- INSTALL_MOD_STRIP=1 INSTALL_MOD_PATH=/media/ice/rootfs modules_install
 
-9. Insert the SD card to BBB board, start the system and type the command in BBB terminal
+10. Insert the SD card to BBB board, start the system and type the command in BBB terminal
 
-    debian@beaglebone:~$ uname -a
-    ????
+    root@BeagleBone:/home/debian/IceNET.Platform/firmware/linux# uname -a
+    Linux BeagleBone 5.10.168 #2 SMP PREEMPT Wed Nov 20 19:42:32 CET 2024 armv7l GNU/Linux
