@@ -1,0 +1,42 @@
+1. Clone kernel source
+
+    git clone git://github.com/beagleboard/linux.git
+    cd linux/
+
+2. Check your kernel
+
+    root@BeagleBone:/home/debian/IceNET.Platform/firmware/linux# uname -a
+    Linux BeagleBone 5.10.168-ti-r79 #1bullseye SMP PREEMPT Mon Jul 22 17:49:20 UTC 2024 armv7l GNU/Linux
+
+3. Checkout
+
+    git checkout 5.10.168-ti-r79
+
+4. Install gcc-arm-linux-gnueabihf and u-boot tools
+
+    apt install gcc-arm-linux-gnueabihf
+    apt install u-boot-tools
+
+5. Compile Kernel
+
+    make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- bb.org_defconfig
+    make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- menuconfig
+    make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- LOADADDR=0x80000000 uImage dtbs
+
+6. Compile modules
+
+    make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- modules
+
+7. Mount SD card to PC :: My Ubuntu make automount  /media/ice/rootfs
+8. Copy the image
+
+    sudo cp arch/arm/boot/zImage /media/ice/rootfs/boot/vmlinuz-5.10.168-ti-r79
+
+9. Install modules to the BBB SD card
+
+    sudo make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- INSTALL_MOD_STRIP=1 INSTALL_MOD_PATH=/media/ice/rootfs modules_install
+
+10. Insert the SD card to BBB board, start the system and type the command in BBB terminal
+
+    root@BeagleBone:/home/debian/IceNET.Platform/firmware/linux# uname -a
+    Linux BeagleBone 5.10.168 #2 SMP PREEMPT Wed Nov 20 19:42:32 CET 2024 armv7l GNU/Linux

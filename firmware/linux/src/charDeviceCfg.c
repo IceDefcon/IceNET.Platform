@@ -206,7 +206,6 @@ void charDeviceDestroy(void)
 
     if(getCharDevice()[DEVICE_INPUT].deviceClass)
     {
-        class_unregister(getCharDevice()[DEVICE_INPUT].deviceClass);
         class_destroy(getCharDevice()[DEVICE_INPUT].deviceClass);
         getCharDevice()[DEVICE_INPUT].deviceClass = NULL;
         printk(KERN_ALERT "[DESTROY][ C ] %s Class destroyed\n", INPUT_DEVICE);
@@ -244,7 +243,6 @@ void charDeviceDestroy(void)
 
     if(getCharDevice()[DEVICE_OUTPUT].deviceClass)
     {
-        class_unregister(getCharDevice()[DEVICE_OUTPUT].deviceClass);
         class_destroy(getCharDevice()[DEVICE_OUTPUT].deviceClass);
         getCharDevice()[DEVICE_OUTPUT].deviceClass = NULL;
         printk(KERN_ALERT "[DESTROY][ C ] %s Class destroyed\n", OUTPUT_DEVICE);
@@ -283,7 +281,6 @@ void charDeviceDestroy(void)
 
     if(getCharDevice()[DEVICE_WATCHDOG].deviceClass)
     {
-        class_unregister(getCharDevice()[DEVICE_WATCHDOG].deviceClass);
         class_destroy(getCharDevice()[DEVICE_WATCHDOG].deviceClass);
         getCharDevice()[DEVICE_WATCHDOG].deviceClass = NULL;
         printk(KERN_ALERT "[DESTROY][ C ] %s Class destroyed\n", WATCHDOG_DEVICE);
