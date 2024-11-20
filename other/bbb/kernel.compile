@@ -17,23 +17,24 @@
     apt install gcc-arm-linux-gnueabihf
     apt install u-boot-tools
 
-5. Compile
+5. Compile Kernel
 
     make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- bb.org_defconfig
     make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- menuconfig
     make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- LOADADDR=0x80000000 uImage dtbs
 
-6. Mount SD card to PC :: e.g  /mnt/bbb
+6. Compile modules
 
-    mount /dev/sd?? /mnt/bbb
+    make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- modules
 
-7. Copy the image
+7. Mount SD card to PC :: My Ubuntu make automount  /media/ice/rootfs
+8. Copy the image
 
-    sudo cp zImage /mnt/bbb/boot/vmlinuz-5.10.168-ti-r79
+    sudo cp arch/arm/boot/zImage /media/ice/rootfs/boot/vmlinuz-5.10.168-ti-r79
 
 8. Install modules to the BBB SD card
 
-    sudo make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- INSTALL_MOD_STRIP=1 INSTALL_MOD_PATH=/mnt/bbb modules_install
+    sudo make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- INSTALL_MOD_STRIP=1 INSTALL_MOD_PATH=/media/ice/rootfs modules_install
 
 9. Insert the SD card to BBB board, start the system and type the command in BBB terminal
 
