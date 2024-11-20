@@ -2,6 +2,7 @@
 #include <fcntl.h>      // For open, O_RDWR
 #include <unistd.h>     // For close, sleep, write
 #include <errno.h>      // For errno (optional)
+#include <string.h>     // For strlen
 
 #define DEVICE_PATH "/dev/KernelBlock"  // The block device path
 #define DATA "0123456789ABCDEF"         // The data to send
