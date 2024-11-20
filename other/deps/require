@@ -27,7 +27,17 @@
 	image :: AM335x 11.7 2023-09-02 4GB microSD IoT
 	kernel :: 5.10.168-ti-r71
 
-4. Set overlays for UART, SPI, etc :: /boot/uEnv.txt
+4. Update kernel to r79
+
+	git clone https://github.com/RobertCNelson/boot-scripts
+	cd boot-scripts/tools/
+	./update_kernel.sh
+
+5. Install Kernel Headers
+
+	sudo apt install linux-headers-$(uname -r)
+
+5. Set overlays for UART, SPI, etc :: /boot/uEnv.txt
 
 	uname_r=5.10.168-ti-r71
 
