@@ -16,6 +16,7 @@
 #include "spiCtrl.h"
 #include "isrCtrl.h"
 #include "console.h"
+#include "ramDisk.h"
 
 MODULE_VERSION("1.0");
 MODULE_LICENSE("GPL");
@@ -37,6 +38,8 @@ static int __init fpga_driver_init(void)
 
     /* Initialise kthread State Machine */
     stateMachineInit();
+    /* Initialise ramDisk */
+    ramDiskInit();
     /* Initialise charDevice */
     charDeviceInit();
     /* Initialise SPI */
@@ -73,6 +76,7 @@ static void __exit fpga_driver_exit(void)
     spiWorkDestroy();
     spiDestroy();
     charDeviceDestroy();
+    ramDiskDestroy();
     stateMachineDestroy();
 
     printk(KERN_INFO "[TERMINATE] Driver terminated successfully\n");

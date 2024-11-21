@@ -1,4 +1,4 @@
-obj-m := iceBlock.o
+obj-m := blockRamDevice.o
 
 KDIR := /lib/modules/$(shell uname -r)/build
 

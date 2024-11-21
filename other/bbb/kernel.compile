@@ -27,6 +27,8 @@
 
     make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- modules
 
+    make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- M=$(pwd)/drivers/block modules
+
 7. Mount SD card to PC :: My Ubuntu make automount  /media/ice/rootfs
 8. Copy the image
 
@@ -35,6 +37,8 @@
 9. Install modules to the BBB SD card
 
     sudo make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- INSTALL_MOD_STRIP=1 INSTALL_MOD_PATH=/media/ice/rootfs modules_install
+
+    sudo make M=$(pwd)/drivers/block ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- INSTALL_MOD_STRIP=1 INSTALL_MOD_PATH=/media/ice/rootfs modules_install
 
 10. Insert the SD card to BBB board, start the system and type the command in BBB terminal
 
