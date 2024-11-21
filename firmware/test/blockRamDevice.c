@@ -490,7 +490,7 @@ static inline void brd_check_and_reset_par(void)
     }
 }
 
-static int __init iceRam_init(void)
+static int __init blockRamDevice_init(void)
 {
     struct brd_device *brd, *next;
     int i;
@@ -550,7 +550,7 @@ out_free:
     return -ENOMEM;
 }
 
-static void __exit iceRam_exit(void)
+static void __exit blockRamDevice_exit(void)
 {
     struct brd_device *brd, *next;
 
@@ -563,6 +563,6 @@ static void __exit iceRam_exit(void)
     pr_info("brd: module unloaded\n");
 }
 
-module_init(iceRam_init);
-module_exit(iceRam_exit);
+module_init(blockRamDevice_init);
+module_exit(blockRamDevice_exit);
 
