@@ -47,12 +47,45 @@ static ramDiskDevice Device[DEVICE_RAM_DISK_AMOUNT] =
 
 void ramDiskInit(void)
 {
-    printk(KERN_ALERT "[INIT][RAM] Succesfully created %s\n", RAM_0_DEVICE);
-    printk(KERN_ALERT "[INIT][RAM] Succesfully created %s\n", RAM_1_DEVICE);
+    struct brd_device *blockRamDisk;
+    struct brd_device *blockRamDiskNext;
+
+    /* Register Kernel Block Device with Major Number 1 :: For Ram0 and Ram1 Disks */
+    if (register_blkdev(RAMDISK_MAJOR, KERNEL_BLOCK_DEVICE))
+    {
+        printk(KERN_ALERT "[INIT][RAM] Unable to register %s\n", KERNEL_BLOCK_DEVICE);
+        // return -EIO; /* TODO :: This should be here */
+    }
+    else
+    {
+        printk(KERN_ALERT "[INIT][RAM] Register %s\n", KERNEL_BLOCK_DEVICE);
+    }
+
+    // brd_check_and_reset_par(); /* TODO :: No check and reset at this time */
+
+    for (i = 0; i < DEVICE_RAM_DISK_AMOUNT; i++)
+    {
+        blockRamDisk = brd_alloc(i);
+        if (!blockRamDisk)
+        {
+            goto out_free;
+        }
+        list_add_tail(&blockRamDisk->brd_list, &brd_devices);
+    }
+
+out_free:
+    list_for_each_entry_safe(blockRamDisk, blockRamDiskNext, &brd_devices, brd_list) {
+        list_del(&blockRamDisk->brd_list);
+        brd_free(blockRamDisk);
+    }
+    unregister_blkdev(RAMDISK_MAJOR, "ramdisk");
+
+    pr_info("brd: module NOT loaded !!!\n");
+    return -ENOMEM;
 }
 
 void ramDiskDestroy(void)
 {
-    printk(KERN_ALERT "[DESTROY][RAM] %s Destruction complete\n", RAM_0_DEVICE);
-    printk(KERN_ALERT "[DESTROY][RAM] %s Destruction complete\n", RAM_1_DEVICE);
+    unregister_blkdev(RAMDISK_MAJOR, KERNEL_BLOCK_DEVICE);
+    printk(KERN_ALERT "[DESTROY][RAM] %s Destroyed\n", KERNEL_BLOCK_DEVICE);
 }

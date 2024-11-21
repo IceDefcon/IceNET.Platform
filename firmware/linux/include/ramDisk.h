@@ -18,6 +18,7 @@
 //                     //
 /////////////////////////
 
+#define  KERNEL_BLOCK_DEVICE "KernelBlock"
 #define  RAM_0_DEVICE "KernelRam0"
 #define  RAM_1_DEVICE "KernelRam1"
 
