@@ -32,6 +32,8 @@ MODULE_DESCRIPTION("FPGA Comms Driver");
 //////////////////////////
 static int __init fpga_driver_init(void)
 {
+    int ret = 0;
+
     printk(KERN_INFO "----------------------------------\n");
     printk(KERN_INFO "[BEGIN] IceNET CPU & FPGA Platform\n");
     printk(KERN_INFO "----------------------------------\n");
@@ -39,7 +41,7 @@ static int __init fpga_driver_init(void)
     /* Initialise kthread State Machine */
     stateMachineInit();
     /* Initialise ramDisk */
-    ramDiskInit();
+    ret = ramDiskInit();
     /* Initialise charDevice */
     charDeviceInit();
     /* Initialise SPI */
@@ -57,7 +59,7 @@ static int __init fpga_driver_init(void)
     printk(KERN_INFO "[READY] Driver loaded successfuly \n");
     printk(KERN_INFO "----------------------------------\n");
 
-    return 0;
+    return ret;
 }
 
 //////////////////////////
