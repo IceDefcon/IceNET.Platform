@@ -1,42 +1,53 @@
-#include <stdio.h>      // For printf, perror
-#include <fcntl.h>      // For open, O_RDWR
-#include <unistd.h>     // For close, sleep, write
-#include <errno.h>      // For errno (optional)
-#include <string.h>     // For strlen
+#include <fcntl.h>
+#include <unistd.h>
+#include <stdio.h>
+#include <string.h>
+#include <errno.h>
+#include <stdlib.h>
 
-#define DEVICE_PATH "/dev/KernelBlock"  // The block device path
-#define DATA "0123456789ABCDEF"         // The data to send
+#define DEVICE_PATH "/dev/iceRam0" // Adjust based on your ramdisk naming
 
-int main()
-{
-    // Open the block device
-    int dev_fd = open(DEVICE_PATH, O_RDWR);
-    if (dev_fd < 0)
-    {
+int main() {
+    const char *data = "Hello, RAM Disk!";
+    const size_t data_size = strlen(data);
+    char read_buf[128] = {0};
+
+    // Open the block device for writing
+    int fd = open(DEVICE_PATH, O_RDWR);
+    if (fd < 0) {
         perror("Failed to open block device");
-        return 1;
+        return EXIT_FAILURE;
     }
 
-    // Prepare the data to write
-    char *buffer = DATA;
-    ssize_t bytes_written;
-    size_t data_len = strlen(DATA);  // Length of the string
-
-    // Write the data to the block device
-    bytes_written = write(dev_fd, buffer, data_len);
-    if (bytes_written < 0)
-    {
+#if 1 // Write data to the block device
+    ssize_t written = write(fd, data, data_size);
+    if (written < 0) {
         perror("Failed to write to block device");
-        close(dev_fd);
-        return 1;
+        close(fd);
+        return EXIT_FAILURE;
     }
-    printf("Wrote %zd bytes to the device: %s\n", bytes_written, buffer);
+    printf("Written to device: %s\n", data);
+#endif
 
-    printf("Data successfully written to the device\n");
+#if 0 // Seek back to the beginning of the device
+    if (lseek(fd, 0, SEEK_SET) < 0) {
+        perror("Failed to seek in block device");
+        close(fd);
+        return EXIT_FAILURE;
+    }
+#endif
 
-    // Close the block device
-    close(dev_fd);
-    printf("Device closed.\n");
+#if 0 // Read data back from the block device
+    ssize_t read_bytes = read(fd, read_buf, sizeof(read_buf) - 1);
+    if (read_bytes < 0) {
+        perror("Failed to read from block device");
+        close(fd);
+        return EXIT_FAILURE;
+    }
+    printf("Read from device: %s\n", read_buf);
+#endif
 
-    return 0;
+    // Clean up
+    close(fd);
+    return EXIT_SUCCESS;
 }
