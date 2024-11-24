@@ -46,12 +46,12 @@ static DEFINE_MUTEX(brd_devices_mutex);
 
 struct blockRamDisk
 {
-    int brd_number;
-    struct request_queue *brd_queue;
-    struct gendisk *brd_disk;
-    struct list_head brd_list;
-    spinlock_t brd_lock;
-    struct radix_tree_root brd_pages;
+    int Number;
+    struct request_queue *Queue;
+    struct gendisk *Disk;
+    struct list_head List;
+    spinlock_t Lock;
+    struct radix_tree_root Pages;
 };
 
 int ramDiskInit(void);

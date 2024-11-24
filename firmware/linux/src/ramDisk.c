@@ -9,17 +9,28 @@
 static int max_part = 1;
 unsigned long RAM_DISK_SIZE = 512;
 
+static blk_qc_t SubmitBio(struct bio *bio);
+static int RwPage(struct block_device *bdev, sector_t sector, struct page *page, unsigned int op);
+
+static const struct block_device_operations fops =
+{
+    .owner = THIS_MODULE,
+    .submit_bio = SubmitBio,
+    .rw_page = RwPage,
+};
+
 /*
- * Look up and return a brd's page for a given sector.
+ * Look up and return a ramDisk's page for a given sector.
  */
-static struct page *brd_lookup_page(struct blockRamDisk *brd, sector_t sector)
+static struct page *LookupPage(struct blockRamDisk *ramDisk, sector_t sector)
 {
     pgoff_t idx;
     struct page *page;
 
+    pr_info("[CTRL][RAM] LookupPage\n");
     /*
      * The page lifetime is protected by the fact that we have opened the
-     * device node -- brd pages will never be deleted under us, so we
+     * device node -- ramDisk pages will never be deleted under us, so we
      * don't need any further locking or refcounting.
      *
      * This is strictly true for the radix-tree nodes as well (ie. we
@@ -30,7 +41,7 @@ static struct page *brd_lookup_page(struct blockRamDisk *brd, sector_t sector)
      */
     rcu_read_lock();
     idx = sector >> PAGE_SECTORS_SHIFT; /* sector to page index */
-    page = radix_tree_lookup(&brd->brd_pages, idx);
+    page = radix_tree_lookup(&ramDisk->Pages, idx);
     rcu_read_unlock();
 
     BUG_ON(page && page->index != idx);
@@ -39,17 +50,19 @@ static struct page *brd_lookup_page(struct blockRamDisk *brd, sector_t sector)
 }
 
 /*
- * Look up and return a brd's page for a given sector.
+ * Look up and return a ramDisk's page for a given sector.
  * If one does not exist, allocate an empty page, and insert that. Then
  * return it.
  */
-static struct page *brd_insert_page(struct blockRamDisk *brd, sector_t sector)
+static struct page *InsertPage(struct blockRamDisk *ramDisk, sector_t sector)
 {
     pgoff_t idx;
     struct page *page;
     gfp_t gfp_flags;
 
-    page = brd_lookup_page(brd, sector);
+    pr_info("[CTRL][RAM] InsertPage\n");
+
+    page = LookupPage(ramDisk, sector);
     if (page)
         return page;
 
@@ -67,16 +80,16 @@ static struct page *brd_insert_page(struct blockRamDisk *brd, sector_t sector)
         return NULL;
     }
 
-    spin_lock(&brd->brd_lock);
+    spin_lock(&ramDisk->Lock);
     idx = sector >> PAGE_SECTORS_SHIFT;
     page->index = idx;
-    if (radix_tree_insert(&brd->brd_pages, idx, page)) {
+    if (radix_tree_insert(&ramDisk->Pages, idx, page)) {
         __free_page(page);
-        page = radix_tree_lookup(&brd->brd_pages, idx);
+        page = radix_tree_lookup(&ramDisk->Pages, idx);
         BUG_ON(!page);
         BUG_ON(page->index != idx);
     }
-    spin_unlock(&brd->brd_lock);
+    spin_unlock(&ramDisk->Lock);
 
     radix_tree_preload_end();
 
@@ -87,16 +100,18 @@ static struct page *brd_insert_page(struct blockRamDisk *brd, sector_t sector)
  * Free all backing store pages and radix tree. This must only be called when
  * there are no other users of the device.
  */
-static void brd_free_pages(struct blockRamDisk *brd)
+static void FreePages(struct blockRamDisk *ramDisk)
 {
     unsigned long pos = 0;
     struct page *pages[FREE_BATCH];
     int nr_pages;
 
+    pr_info("[CTRL][RAM] FreePages\n");
+
     do {
         int i;
 
-        nr_pages = radix_tree_gang_lookup(&brd->brd_pages,
+        nr_pages = radix_tree_gang_lookup(&ramDisk->Pages,
                 (void **)pages, pos, FREE_BATCH);
 
         for (i = 0; i < nr_pages; i++) {
@@ -104,7 +119,7 @@ static void brd_free_pages(struct blockRamDisk *brd)
 
             BUG_ON(pages[i]->index < pos);
             pos = pages[i]->index;
-            ret = radix_tree_delete(&brd->brd_pages, pos);
+            ret = radix_tree_delete(&ramDisk->Pages, pos);
             BUG_ON(!ret || ret != pages[i]);
             __free_page(pages[i]);
         }
@@ -126,28 +141,30 @@ static void brd_free_pages(struct blockRamDisk *brd)
 }
 
 /*
- * copy_to_brd_setup must be called before copy_to_brd. It may sleep.
+ * CopyToRamDiskSetup must be called before CopyToRamDisk. It may sleep.
  */
-static int copy_to_brd_setup(struct blockRamDisk *brd, sector_t sector, size_t n)
+static int CopyToRamDiskSetup(struct blockRamDisk *ramDisk, sector_t sector, size_t n)
 {
     unsigned int offset = (sector & (PAGE_SECTORS-1)) << SECTOR_SHIFT;
     size_t copy;
 
+    pr_info("[CTRL][RAM] CopyToRamDiskSetup\n");
+
     copy = min_t(size_t, n, PAGE_SIZE - offset);
-    if (!brd_insert_page(brd, sector))
+    if (!InsertPage(ramDisk, sector))
         return -ENOSPC;
     if (copy < n) {
         sector += copy >> SECTOR_SHIFT;
-        if (!brd_insert_page(brd, sector))
+        if (!InsertPage(ramDisk, sector))
             return -ENOSPC;
     }
     return 0;
 }
 
 /*
- * Copy n bytes from src to the brd starting at sector. Does not sleep.
+ * Copy n bytes from src to the ramDisk starting at sector. Does not sleep.
  */
-static void copy_to_brd(struct blockRamDisk *brd, const void *src,
+static void CopyToRamDisk(struct blockRamDisk *ramDisk, const void *src,
             sector_t sector, size_t n)
 {
     struct page *page;
@@ -155,8 +172,10 @@ static void copy_to_brd(struct blockRamDisk *brd, const void *src,
     unsigned int offset = (sector & (PAGE_SECTORS-1)) << SECTOR_SHIFT;
     size_t copy;
 
+    pr_info("[CTRL][RAM] CopyToRamDisk\n");
+
     copy = min_t(size_t, n, PAGE_SIZE - offset);
-    page = brd_lookup_page(brd, sector);
+    page = LookupPage(ramDisk, sector);
     BUG_ON(!page);
 
     dst = kmap_atomic(page);
@@ -167,7 +186,7 @@ static void copy_to_brd(struct blockRamDisk *brd, const void *src,
         src += copy;
         sector += copy >> SECTOR_SHIFT;
         copy = n - copy;
-        page = brd_lookup_page(brd, sector);
+        page = LookupPage(ramDisk, sector);
         BUG_ON(!page);
 
         dst = kmap_atomic(page);
@@ -177,9 +196,9 @@ static void copy_to_brd(struct blockRamDisk *brd, const void *src,
 }
 
 /*
- * Copy n bytes to dst from the brd starting at sector. Does not sleep.
+ * Copy n bytes to dst from the ramDisk starting at sector. Does not sleep.
  */
-static void copy_from_brd(void *dst, struct blockRamDisk *brd,
+static void CopyFromRamDisk(void *dst, struct blockRamDisk *ramDisk,
             sector_t sector, size_t n)
 {
     struct page *page;
@@ -187,8 +206,10 @@ static void copy_from_brd(void *dst, struct blockRamDisk *brd,
     unsigned int offset = (sector & (PAGE_SECTORS-1)) << SECTOR_SHIFT;
     size_t copy;
 
+    pr_info("[CTRL][RAM] CopyFromRamDisk\n");
+
     copy = min_t(size_t, n, PAGE_SIZE - offset);
-    page = brd_lookup_page(brd, sector);
+    page = LookupPage(ramDisk, sector);
     if (page) {
         src = kmap_atomic(page);
         memcpy(dst, src + offset, copy);
@@ -200,7 +221,7 @@ static void copy_from_brd(void *dst, struct blockRamDisk *brd,
         dst += copy;
         sector += copy >> SECTOR_SHIFT;
         copy = n - copy;
-        page = brd_lookup_page(brd, sector);
+        page = LookupPage(ramDisk, sector);
         if (page) {
             src = kmap_atomic(page);
             memcpy(dst, src, copy);
@@ -213,26 +234,28 @@ static void copy_from_brd(void *dst, struct blockRamDisk *brd,
 /*
  * Process a single bvec of a bio.
  */
-static int brd_do_bvec(struct blockRamDisk *brd, struct page *page,
+static int DoBioVector(struct blockRamDisk *ramDisk, struct page *page,
             unsigned int len, unsigned int off, unsigned int op,
             sector_t sector)
 {
     void *mem;
     int err = 0;
 
+    pr_info("[CTRL][RAM] DoBioVector\n");
+
     if (op_is_write(op)) {
-        err = copy_to_brd_setup(brd, sector, len);
+        err = CopyToRamDiskSetup(ramDisk, sector, len);
         if (err)
             goto out;
     }
 
     mem = kmap_atomic(page);
     if (!op_is_write(op)) {
-        copy_from_brd(mem + off, brd, sector, len);
+        CopyFromRamDisk(mem + off, ramDisk, sector, len);
         flush_dcache_page(page);
     } else {
         flush_dcache_page(page);
-        copy_to_brd(brd, mem + off, sector, len);
+        CopyToRamDisk(ramDisk, mem + off, sector, len);
     }
     kunmap_atomic(mem);
 
@@ -240,12 +263,14 @@ out:
     return err;
 }
 
-static blk_qc_t brd_submit_bio(struct bio *bio)
+static blk_qc_t SubmitBio(struct bio *bio)
 {
-    struct blockRamDisk *brd = bio->bi_disk->private_data;
+    struct blockRamDisk *ramDisk = bio->bi_disk->private_data;
     struct bio_vec bvec;
     sector_t sector;
     struct bvec_iter iter;
+
+    pr_info("[CTRL][RAM] SubmitBio\n");
 
     sector = bio->bi_iter.bi_sector;
     if (bio_end_sector(bio) > get_capacity(bio->bi_disk))
@@ -259,7 +284,7 @@ static blk_qc_t brd_submit_bio(struct bio *bio)
         WARN_ON_ONCE((bvec.bv_offset & (SECTOR_SIZE - 1)) ||
                 (len & (SECTOR_SIZE - 1)));
 
-        err = brd_do_bvec(brd, bvec.bv_page, len, bvec.bv_offset,
+        err = DoBioVector(ramDisk, bvec.bv_page, len, bvec.bv_offset,
                   bio_op(bio), sector);
         if (err)
             goto io_error;
@@ -273,39 +298,38 @@ io_error:
     return BLK_QC_T_NONE;
 }
 
-static int brd_rw_page(struct block_device *bdev, sector_t sector,
-               struct page *page, unsigned int op)
+static int RwPage(struct block_device *bdev, sector_t sector, struct page *page, unsigned int op)
 {
-    struct blockRamDisk *brd = bdev->bd_disk->private_data;
+    struct blockRamDisk *ramDisk = bdev->bd_disk->private_data;
     int err;
+
+    pr_info("[CTRL][RAM] RwPage\n");
 
     if (PageTransHuge(page))
         return -ENOTSUPP;
-    err = brd_do_bvec(brd, page, PAGE_SIZE, 0, op, sector);
+    err = DoBioVector(ramDisk, page, PAGE_SIZE, 0, op, sector);
     page_endio(page, op_is_write(op), err);
     return err;
 }
 
-static const struct block_device_operations brd_fops = {
-    .owner =        THIS_MODULE,
-    .submit_bio =       brd_submit_bio,
-    .rw_page =      brd_rw_page,
-};
 
-static struct blockRamDisk *brd_alloc(int i)
+
+static struct blockRamDisk *Allocation(int i)
 {
-    struct blockRamDisk *brd;
+    struct blockRamDisk *ramDisk;
     struct gendisk *disk;
 
-    brd = kzalloc(sizeof(*brd), GFP_KERNEL);
-    if (!brd)
-        goto out;
-    brd->brd_number     = i;
-    spin_lock_init(&brd->brd_lock);
-    INIT_RADIX_TREE(&brd->brd_pages, GFP_ATOMIC);
+    pr_info("[CTRL][RAM] Allocation\n");
 
-    brd->brd_queue = blk_alloc_queue(NUMA_NO_NODE);
-    if (!brd->brd_queue)
+    ramDisk = kzalloc(sizeof(*ramDisk), GFP_KERNEL);
+    if (!ramDisk)
+        goto out;
+    ramDisk->Number     = i;
+    spin_lock_init(&ramDisk->Lock);
+    INIT_RADIX_TREE(&ramDisk->Pages, GFP_ATOMIC);
+
+    ramDisk->Queue = blk_alloc_queue(NUMA_NO_NODE);
+    if (!ramDisk->Queue)
         goto out_free_dev;
 
     /* This is so fdisk will align partitions on 4k, because of
@@ -314,77 +338,85 @@ static struct blockRamDisk *brd_alloc(int i)
      *  otherwise fdisk will align on 1M. Regardless this call
      *  is harmless)
      */
-    blk_queue_physical_block_size(brd->brd_queue, PAGE_SIZE);
-    disk = brd->brd_disk = alloc_disk(max_part);
+    blk_queue_physical_block_size(ramDisk->Queue, PAGE_SIZE);
+    disk = ramDisk->Disk = alloc_disk(max_part);
     if (!disk)
         goto out_free_queue;
     disk->major = RAMDISK_MAJOR;
     disk->first_minor   = i * max_part;
-    disk->fops = &brd_fops;
-    disk->private_data  = brd;
+    disk->fops = &fops;
+    disk->private_data  = ramDisk;
     disk->flags = GENHD_FL_EXT_DEVT;
     sprintf(disk->disk_name, "iceRam%d", i);
     set_capacity(disk, RAM_DISK_SIZE * 2);
 
     /* Tell the block layer that this is not a rotational device */
-    blk_queue_flag_set(QUEUE_FLAG_NONROT, brd->brd_queue);
-    blk_queue_flag_clear(QUEUE_FLAG_ADD_RANDOM, brd->brd_queue);
+    blk_queue_flag_set(QUEUE_FLAG_NONROT, ramDisk->Queue);
+    blk_queue_flag_clear(QUEUE_FLAG_ADD_RANDOM, ramDisk->Queue);
 
-    return brd;
+    return ramDisk;
 
 out_free_queue:
-    blk_cleanup_queue(brd->brd_queue);
+    blk_cleanup_queue(ramDisk->Queue);
 out_free_dev:
-    kfree(brd);
+    kfree(ramDisk);
 out:
     return NULL;
 }
 
-static void brd_free(struct blockRamDisk *brd)
+static void Free(struct blockRamDisk *ramDisk)
 {
-    put_disk(brd->brd_disk);
-    blk_cleanup_queue(brd->brd_queue);
-    brd_free_pages(brd);
-    kfree(brd);
+    pr_info("[CTRL][RAM] Free\n");
+
+    put_disk(ramDisk->Disk);
+    blk_cleanup_queue(ramDisk->Queue);
+    FreePages(ramDisk);
+    kfree(ramDisk);
 }
 
-static struct blockRamDisk *brd_init_one(int i, bool *new)
+static struct blockRamDisk *InitOne(int i, bool *new)
 {
-    struct blockRamDisk *brd;
+    struct blockRamDisk *ramDisk;
+
+    pr_info("[CTRL][RAM] InitOne\n");
 
     *new = false;
-    list_for_each_entry(brd, &brd_devices, brd_list) {
-        if (brd->brd_number == i)
+    list_for_each_entry(ramDisk, &brd_devices, List) {
+        if (ramDisk->Number == i)
             goto out;
     }
 
-    brd = brd_alloc(i);
-    if (brd) {
-        brd->brd_disk->queue = brd->brd_queue;
-        add_disk(brd->brd_disk);
-        list_add_tail(&brd->brd_list, &brd_devices);
+    ramDisk = Allocation(i);
+    if (ramDisk) {
+        ramDisk->Disk->queue = ramDisk->Queue;
+        add_disk(ramDisk->Disk);
+        list_add_tail(&ramDisk->List, &brd_devices);
     }
     *new = true;
 out:
-    return brd;
+    return ramDisk;
 }
 
-static void brd_del_one(struct blockRamDisk *brd)
+static void DelOne(struct blockRamDisk *ramDisk)
 {
-    list_del(&brd->brd_list);
-    del_gendisk(brd->brd_disk);
-    brd_free(brd);
+    pr_info("[CTRL][RAM] DelOne\n");
+
+    list_del(&ramDisk->List);
+    del_gendisk(ramDisk->Disk);
+    Free(ramDisk);
 }
 
-static struct kobject *brd_probe(dev_t dev, int *part, void *data)
+static struct kobject *Probe(dev_t dev, int *part, void *data)
 {
-    struct blockRamDisk *brd;
+    struct blockRamDisk *ramDisk;
     struct kobject *kobj;
     bool new;
 
+    pr_info("[CTRL][RAM] Probe\n");
+
     mutex_lock(&brd_devices_mutex);
-    brd = brd_init_one(MINOR(dev) / max_part, &new);
-    kobj = brd ? get_disk_and_module(brd->brd_disk) : NULL;
+    ramDisk = InitOne(MINOR(dev) / max_part, &new);
+    kobj = ramDisk ? get_disk_and_module(ramDisk->Disk) : NULL;
     mutex_unlock(&brd_devices_mutex);
 
     if (new)
@@ -393,8 +425,10 @@ static struct kobject *brd_probe(dev_t dev, int *part, void *data)
     return kobj;
 }
 
-static inline void brd_check_and_reset_par(void)
+static inline void CheckAndResetPartition(void)
 {
+    pr_info("[CTRL][RAM] CheckAndResetPartition\n");
+
     if (unlikely(!max_part))
         max_part = 1;
 
@@ -406,7 +440,7 @@ static inline void brd_check_and_reset_par(void)
         max_part = 1UL << fls(max_part);
 
     if (max_part > DISK_MAX_PARTS) {
-        pr_info("brd: max_part can't be larger than %d, reset max_part = %d.\n",
+        pr_info("[ERROR][RAM] max_part can't be larger than %d, reset max_part = %d.\n",
             DISK_MAX_PARTS, DISK_MAX_PARTS);
         max_part = DISK_MAX_PARTS;
     }
@@ -414,8 +448,10 @@ static inline void brd_check_and_reset_par(void)
 
 int ramDiskInit(void)
 {
-    struct blockRamDisk *brd, *next;
+    struct blockRamDisk *ramDisk, *ramDiskNext;
     int i;
+
+    pr_info("[CTRL][RAM] ramDiskInit\n");
 
     /*
      * brd module now has a feature to instantiate underlying device
@@ -423,7 +459,7 @@ int ramDiskInit(void)
      *
      * (1) if KERNEL_RAM_DISK_AMOUNT is specified, create that many upfront. else
      *     it defaults to CONFIG_BLK_DEV_RAM_COUNT
-     * (2) User can further extend brd devices by create dev node themselves
+     * (2) User can further extend ramDisk devices by create dev node themselves
      *     and have kernel automatically instantiate actual device
      *     on-demand. Example:
      *      mknod /path/devnod_name b 1 X   # 1 is the rd major
@@ -435,49 +471,51 @@ int ramDiskInit(void)
     if (register_blkdev(RAMDISK_MAJOR, KERNEL_BLOCK_DEVICE))
         return -EIO;
 
-    brd_check_and_reset_par();
+    CheckAndResetPartition();
 
     for (i = 0; i < KERNEL_RAM_DISK_AMOUNT; i++) {
-        brd = brd_alloc(i);
-        if (!brd)
+        ramDisk = Allocation(i);
+        if (!ramDisk)
             goto out_free;
-        list_add_tail(&brd->brd_list, &brd_devices);
+        list_add_tail(&ramDisk->List, &brd_devices);
     }
 
     /* point of no return */
 
-    list_for_each_entry(brd, &brd_devices, brd_list) {
+    list_for_each_entry(ramDisk, &brd_devices, List) {
         /*
          * associate with queue just before adding disk for
          * avoiding to mess up failure path
          */
-        brd->brd_disk->queue = brd->brd_queue;
-        add_disk(brd->brd_disk);
+        ramDisk->Disk->queue = ramDisk->Queue;
+        add_disk(ramDisk->Disk);
     }
 
     blk_register_region(MKDEV(RAMDISK_MAJOR, 0), 1UL << MINORBITS,
-                  THIS_MODULE, brd_probe, NULL, NULL);
+                  THIS_MODULE, Probe, NULL, NULL);
 
     pr_info("[INIT][RAM] Ram Disk & Partitions Loaded\n");
     return 0;
 
 out_free:
-    list_for_each_entry_safe(brd, next, &brd_devices, brd_list) {
-        list_del(&brd->brd_list);
-        brd_free(brd);
+    list_for_each_entry_safe(ramDisk, ramDiskNext, &brd_devices, List) {
+        list_del(&ramDisk->List);
+        Free(ramDisk);
     }
     unregister_blkdev(RAMDISK_MAJOR, KERNEL_BLOCK_DEVICE);
 
-    pr_info("brd: module NOT loaded !!!\n");
+    pr_info("[ERROR][RAM] module NOT loaded !!!\n");
     return -ENOMEM;
 }
 
 void ramDiskDestroy(void)
 {
-    struct blockRamDisk *brd, *next;
+    struct blockRamDisk *ramDisk, *ramDiskNext;
 
-    list_for_each_entry_safe(brd, next, &brd_devices, brd_list)
-        brd_del_one(brd);
+    pr_info("[CTRL][RAM] ramDiskDestroy\n");
+
+    list_for_each_entry_safe(ramDisk, ramDiskNext, &brd_devices, List)
+        DelOne(ramDisk);
 
     blk_unregister_region(MKDEV(RAMDISK_MAJOR, 0), 1UL << MINORBITS);
     unregister_blkdev(RAMDISK_MAJOR, KERNEL_BLOCK_DEVICE);
