@@ -8,30 +8,6 @@
 
 static int max_part = 1;
 
-/**
- *
- * Page size: 4096 bytes (from PAGE_SHIFT = 12)
- * Sector size: 512 bytes (from SECTOR_SHIFT = 9)
- * Sectors per page: 8 sectors (from PAGE_SECTORS_SHIFT = 3)
- * Free batch size: 16 pages (from FREE_BATCH = 16)
- *
- * There are 8 sectors 512 bytes each in one page giving 4096 byts per page
- *
- * RAM has 512 sectors whci gives 64 pages
- *
- * Total size 64 * 8 * 512 byts = 256KB per iceRam
- *
- */
-
-unsigned long RAM_DISK_SIZE = 512;
-#define  KERNEL_RAM_DISK_AMOUNT 16
-
-#define PAGE_SHIFT          12 /* Standard page size is 4 KB (2^12 = 4096 bytes) */
-#define SECTOR_SHIFT        9  /* Standard sector size is 512 bytes (2^9 = 512 bytes) */
-#define PAGE_SECTORS_SHIFT  3  /* (PAGE_SHIFT - SECTOR_SHIFT) = 12 - 9 = 3 */
-#define PAGE_SECTORS        8  /* 1 << PAGE_SECTORS_SHIFT = 1 << 3 = 8 sectors per page */
-#define FREE_BATCH          16 /* Adjust as needed for batch operations */
-
 static blk_qc_t BioRequest(struct bio *bio); /* Indicates a bio request (read or write) has been submitted to the block device */
 static int RwPage(struct block_device *bdev, sector_t sector, struct page *page, unsigned int op);
 
@@ -362,8 +338,6 @@ static int RwPage(struct block_device *bdev, sector_t sector, struct page *page,
 
     return err;
 }
-
-
 
 static struct blockRamDisk *Allocation(int i)
 {
