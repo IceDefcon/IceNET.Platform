@@ -34,12 +34,6 @@
 /////////////////////////
 
 #define  KERNEL_BLOCK_DEVICE "iceNetBlock"
-#define  KERNEL_RAM_DISK_AMOUNT 2
-
-#define PAGE_SECTORS_SHIFT  (PAGE_SHIFT - SECTOR_SHIFT)
-#define PAGE_SECTORS        (1 << PAGE_SECTORS_SHIFT)
-
-#define FREE_BATCH 16
 
 static LIST_HEAD(brd_devices);
 static DEFINE_MUTEX(brd_devices_mutex);
