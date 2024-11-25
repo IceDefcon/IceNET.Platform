@@ -7,15 +7,14 @@
 #include "ramDisk.h"
 
 static int max_part = 1;
-unsigned long RAM_DISK_SIZE = 512;
 
-static blk_qc_t SubmitBio(struct bio *bio);
+static blk_qc_t BioRequest(struct bio *bio); /* Indicates a bio request (read or write) has been submitted to the block device */
 static int RwPage(struct block_device *bdev, sector_t sector, struct page *page, unsigned int op);
 
 static const struct block_device_operations fops =
 {
     .owner = THIS_MODULE,
-    .submit_bio = SubmitBio,
+    .submit_bio = BioRequest,
     .rw_page = RwPage,
 };
 
@@ -73,9 +72,12 @@ static struct page *InsertPage(struct blockRamDisk *ramDisk, sector_t sector)
     gfp_flags = GFP_NOIO | __GFP_ZERO | __GFP_HIGHMEM;
     page = alloc_page(gfp_flags);
     if (!page)
+    {
         return NULL;
+    }
 
-    if (radix_tree_preload(GFP_NOIO)) {
+    if (radix_tree_preload(GFP_NOIO))
+    {
         __free_page(page);
         return NULL;
     }
@@ -83,7 +85,8 @@ static struct page *InsertPage(struct blockRamDisk *ramDisk, sector_t sector)
     spin_lock(&ramDisk->Lock);
     idx = sector >> PAGE_SECTORS_SHIFT;
     page->index = idx;
-    if (radix_tree_insert(&ramDisk->Pages, idx, page)) {
+    if (radix_tree_insert(&ramDisk->Pages, idx, page))
+    {
         __free_page(page);
         page = radix_tree_lookup(&ramDisk->Pages, idx);
         BUG_ON(!page);
@@ -108,13 +111,15 @@ static void FreePages(struct blockRamDisk *ramDisk)
 
     pr_info("[CTRL][RAM] FreePages\n");
 
-    do {
+    do
+    {
         int i;
 
         nr_pages = radix_tree_gang_lookup(&ramDisk->Pages,
                 (void **)pages, pos, FREE_BATCH);
 
-        for (i = 0; i < nr_pages; i++) {
+        for (i = 0; i < nr_pages; i++)
+        {
             void *ret;
 
             BUG_ON(pages[i]->index < pos);
@@ -152,20 +157,24 @@ static int CopyToRamDiskSetup(struct blockRamDisk *ramDisk, sector_t sector, siz
 
     copy = min_t(size_t, n, PAGE_SIZE - offset);
     if (!InsertPage(ramDisk, sector))
+    {
         return -ENOSPC;
-    if (copy < n) {
+    }
+
+    if (copy < n)
+    {
         sector += copy >> SECTOR_SHIFT;
         if (!InsertPage(ramDisk, sector))
             return -ENOSPC;
     }
+
     return 0;
 }
 
 /*
  * Copy n bytes from src to the ramDisk starting at sector. Does not sleep.
  */
-static void CopyToRamDisk(struct blockRamDisk *ramDisk, const void *src,
-            sector_t sector, size_t n)
+static void CopyToRamDisk(struct blockRamDisk *ramDisk, const void *src, sector_t sector, size_t n)
 {
     struct page *page;
     void *dst;
@@ -182,7 +191,8 @@ static void CopyToRamDisk(struct blockRamDisk *ramDisk, const void *src,
     memcpy(dst + offset, src, copy);
     kunmap_atomic(dst);
 
-    if (copy < n) {
+    if (copy < n)
+    {
         src += copy;
         sector += copy >> SECTOR_SHIFT;
         copy = n - copy;
@@ -198,8 +208,7 @@ static void CopyToRamDisk(struct blockRamDisk *ramDisk, const void *src,
 /*
  * Copy n bytes to dst from the ramDisk starting at sector. Does not sleep.
  */
-static void CopyFromRamDisk(void *dst, struct blockRamDisk *ramDisk,
-            sector_t sector, size_t n)
+static void CopyFromRamDisk(void *dst, struct blockRamDisk *ramDisk, sector_t sector, size_t n)
 {
     struct page *page;
     void *src;
@@ -210,50 +219,60 @@ static void CopyFromRamDisk(void *dst, struct blockRamDisk *ramDisk,
 
     copy = min_t(size_t, n, PAGE_SIZE - offset);
     page = LookupPage(ramDisk, sector);
-    if (page) {
+    if (page)
+    {
         src = kmap_atomic(page);
         memcpy(dst, src + offset, copy);
         kunmap_atomic(src);
-    } else
+    }
+    else
+    {
         memset(dst, 0, copy);
+    }
 
-    if (copy < n) {
+    if (copy < n)
+    {
         dst += copy;
         sector += copy >> SECTOR_SHIFT;
         copy = n - copy;
         page = LookupPage(ramDisk, sector);
-        if (page) {
+        if (page)
+        {
             src = kmap_atomic(page);
             memcpy(dst, src, copy);
             kunmap_atomic(src);
-        } else
+        }
+        else
+        {
             memset(dst, 0, copy);
+        }
     }
 }
 
-/*
- * Process a single bvec of a bio.
- */
-static int DoBioVector(struct blockRamDisk *ramDisk, struct page *page,
-            unsigned int len, unsigned int off, unsigned int op,
-            sector_t sector)
+static int CheckReadOrWrite(struct blockRamDisk *ramDisk, struct page *page, unsigned int len, unsigned int off, unsigned int op, sector_t sector)
 {
     void *mem;
     int err = 0;
 
-    pr_info("[CTRL][RAM] DoBioVector\n");
+    pr_info("[CTRL][RAM] CheckReadOrWrite\n");
 
-    if (op_is_write(op)) {
+    if (op_is_write(op))
+    {
         err = CopyToRamDiskSetup(ramDisk, sector, len);
         if (err)
+        {
             goto out;
+        }
     }
 
     mem = kmap_atomic(page);
-    if (!op_is_write(op)) {
+    if (!op_is_write(op))
+    {
         CopyFromRamDisk(mem + off, ramDisk, sector, len);
         flush_dcache_page(page);
-    } else {
+    }
+    else
+    {
         flush_dcache_page(page);
         CopyToRamDisk(ramDisk, mem + off, sector, len);
     }
@@ -263,36 +282,40 @@ out:
     return err;
 }
 
-static blk_qc_t SubmitBio(struct bio *bio)
+static blk_qc_t BioRequest(struct bio *bio)
 {
     struct blockRamDisk *ramDisk = bio->bi_disk->private_data;
     struct bio_vec bvec;
     sector_t sector;
     struct bvec_iter iter;
 
-    pr_info("[CTRL][RAM] SubmitBio\n");
+    pr_info("[CTRL][RAM] BioRequest\n");
 
     sector = bio->bi_iter.bi_sector;
     if (bio_end_sector(bio) > get_capacity(bio->bi_disk))
         goto io_error;
 
-    bio_for_each_segment(bvec, bio, iter) {
+    bio_for_each_segment(bvec, bio, iter)
+    {
         unsigned int len = bvec.bv_len;
         int err;
 
         /* Don't support un-aligned buffer */
-        WARN_ON_ONCE((bvec.bv_offset & (SECTOR_SIZE - 1)) ||
-                (len & (SECTOR_SIZE - 1)));
+        WARN_ON_ONCE((bvec.bv_offset & (SECTOR_SIZE - 1)) || (len & (SECTOR_SIZE - 1)));
 
-        err = DoBioVector(ramDisk, bvec.bv_page, len, bvec.bv_offset,
-                  bio_op(bio), sector);
+        err = CheckReadOrWrite(ramDisk, bvec.bv_page, len, bvec.bv_offset, bio_op(bio), sector);
+
         if (err)
+        {
             goto io_error;
+        }
+
         sector += len >> SECTOR_SHIFT;
     }
 
     bio_endio(bio);
     return BLK_QC_T_NONE;
+
 io_error:
     bio_io_error(bio);
     return BLK_QC_T_NONE;
@@ -306,13 +329,15 @@ static int RwPage(struct block_device *bdev, sector_t sector, struct page *page,
     pr_info("[CTRL][RAM] RwPage\n");
 
     if (PageTransHuge(page))
+    {
         return -ENOTSUPP;
-    err = DoBioVector(ramDisk, page, PAGE_SIZE, 0, op, sector);
+    }
+
+    err = CheckReadOrWrite(ramDisk, page, PAGE_SIZE, 0, op, sector);
     page_endio(page, op_is_write(op), err);
+
     return err;
 }
-
-
 
 static struct blockRamDisk *Allocation(int i)
 {
@@ -323,14 +348,19 @@ static struct blockRamDisk *Allocation(int i)
 
     ramDisk = kzalloc(sizeof(*ramDisk), GFP_KERNEL);
     if (!ramDisk)
+    {
         goto out;
+    }
+
     ramDisk->Number     = i;
     spin_lock_init(&ramDisk->Lock);
     INIT_RADIX_TREE(&ramDisk->Pages, GFP_ATOMIC);
 
     ramDisk->Queue = blk_alloc_queue(NUMA_NO_NODE);
     if (!ramDisk->Queue)
+    {
         goto out_free_dev;
+    }
 
     /* This is so fdisk will align partitions on 4k, because of
      * direct_access API needing 4k alignment, returning a PFN
@@ -341,7 +371,10 @@ static struct blockRamDisk *Allocation(int i)
     blk_queue_physical_block_size(ramDisk->Queue, PAGE_SIZE);
     disk = ramDisk->Disk = alloc_disk(max_part);
     if (!disk)
+    {
         goto out_free_queue;
+    }
+
     disk->major = RAMDISK_MAJOR;
     disk->first_minor   = i * max_part;
     disk->fops = &fops;
@@ -381,18 +414,23 @@ static struct blockRamDisk *InitOne(int i, bool *new)
     pr_info("[CTRL][RAM] InitOne\n");
 
     *new = false;
-    list_for_each_entry(ramDisk, &brd_devices, List) {
+    list_for_each_entry(ramDisk, &brd_devices, List)
+    {
         if (ramDisk->Number == i)
+        {
             goto out;
+        }
     }
 
     ramDisk = Allocation(i);
-    if (ramDisk) {
+    if (ramDisk)
+    {
         ramDisk->Disk->queue = ramDisk->Queue;
         add_disk(ramDisk->Disk);
         list_add_tail(&ramDisk->List, &brd_devices);
     }
     *new = true;
+
 out:
     return ramDisk;
 }
@@ -420,7 +458,9 @@ static struct kobject *Probe(dev_t dev, int *part, void *data)
     mutex_unlock(&brd_devices_mutex);
 
     if (new)
+    {
         *part = 0;
+    }
 
     return kobj;
 }
@@ -430,18 +470,22 @@ static inline void CheckAndResetPartition(void)
     pr_info("[CTRL][RAM] CheckAndResetPartition\n");
 
     if (unlikely(!max_part))
+    {
         max_part = 1;
+    }
 
     /*
      * make sure 'max_part' can be divided exactly by (1U << MINORBITS),
      * otherwise, it is possiable to get same dev_t when adding partitions.
      */
     if ((1U << MINORBITS) % max_part != 0)
+    {
         max_part = 1UL << fls(max_part);
+    }
 
-    if (max_part > DISK_MAX_PARTS) {
-        pr_info("[ERROR][RAM] max_part can't be larger than %d, reset max_part = %d.\n",
-            DISK_MAX_PARTS, DISK_MAX_PARTS);
+    if (max_part > DISK_MAX_PARTS)
+    {
+        pr_info("[ERROR][RAM] max_part can't be larger than %d, reset max_part = %d.\n", DISK_MAX_PARTS, DISK_MAX_PARTS);
         max_part = DISK_MAX_PARTS;
     }
 }
@@ -473,16 +517,20 @@ int ramDiskInit(void)
 
     CheckAndResetPartition();
 
-    for (i = 0; i < KERNEL_RAM_DISK_AMOUNT; i++) {
+    for (i = 0; i < KERNEL_RAM_DISK_AMOUNT; i++)
+    {
         ramDisk = Allocation(i);
         if (!ramDisk)
+        {
             goto out_free;
+        }
         list_add_tail(&ramDisk->List, &brd_devices);
     }
 
     /* point of no return */
 
-    list_for_each_entry(ramDisk, &brd_devices, List) {
+    list_for_each_entry(ramDisk, &brd_devices, List)
+    {
         /*
          * associate with queue just before adding disk for
          * avoiding to mess up failure path
@@ -491,14 +539,14 @@ int ramDiskInit(void)
         add_disk(ramDisk->Disk);
     }
 
-    blk_register_region(MKDEV(RAMDISK_MAJOR, 0), 1UL << MINORBITS,
-                  THIS_MODULE, Probe, NULL, NULL);
+    blk_register_region(MKDEV(RAMDISK_MAJOR, 0), 1UL << MINORBITS, THIS_MODULE, Probe, NULL, NULL);
 
     pr_info("[INIT][RAM] Ram Disk & Partitions Loaded\n");
     return 0;
 
 out_free:
-    list_for_each_entry_safe(ramDisk, ramDiskNext, &brd_devices, List) {
+    list_for_each_entry_safe(ramDisk, ramDiskNext, &brd_devices, List)
+    {
         list_del(&ramDisk->List);
         Free(ramDisk);
     }
@@ -515,7 +563,9 @@ void ramDiskDestroy(void)
     pr_info("[CTRL][RAM] ramDiskDestroy\n");
 
     list_for_each_entry_safe(ramDisk, ramDiskNext, &brd_devices, List)
+    {
         DelOne(ramDisk);
+    }
 
     blk_unregister_region(MKDEV(RAMDISK_MAJOR, 0), 1UL << MINORBITS);
     unregister_blkdev(RAMDISK_MAJOR, KERNEL_BLOCK_DEVICE);
