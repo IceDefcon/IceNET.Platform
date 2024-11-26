@@ -8,7 +8,7 @@
     "sync_down_on_open": true,
     "sync_same_age": true,
     
-    "host": "10.0.0.2",
+    "host": "192.168.7.2",
     "user": "debian",
     "password": "ice",
     // "port": "7822",
