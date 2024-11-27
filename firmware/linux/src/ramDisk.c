@@ -26,7 +26,6 @@ static struct page *LookupPage(struct blockRamDisk *ramDisk, sector_t sector)
     pgoff_t idx;
     struct page *page;
 
-    pr_info("[CTRL][RAM] LookupPage\n");
     /*
      * The page lifetime is protected by the fact that we have opened the
      * device node -- ramDisk pages will never be deleted under us, so we
@@ -58,8 +57,6 @@ static struct page *InsertPage(struct blockRamDisk *ramDisk, sector_t sector)
     pgoff_t idx;
     struct page *page;
     gfp_t gfp_flags;
-
-    pr_info("[CTRL][RAM] InsertPage\n");
 
     page = LookupPage(ramDisk, sector);
     if (page)
@@ -109,8 +106,6 @@ static void FreePages(struct blockRamDisk *ramDisk)
     struct page *pages[FREE_BATCH];
     int nr_pages;
 
-    pr_info("[CTRL][RAM] FreePages\n");
-
     do
     {
         int i;
@@ -153,7 +148,7 @@ static int CopyToRamDiskSetup(struct blockRamDisk *ramDisk, sector_t sector, siz
     unsigned int offset = (sector & (PAGE_SECTORS-1)) << SECTOR_SHIFT;
     size_t copy;
 
-    pr_info("[CTRL][RAM] CopyToRamDiskSetup\n");
+    pr_info("[CTRL][RAM] [%d] CopyToRamDiskSetup\n", ramDisk->Number);
 
     copy = min_t(size_t, n, PAGE_SIZE - offset);
     if (!InsertPage(ramDisk, sector))
@@ -181,7 +176,7 @@ static void CopyToRamDisk(struct blockRamDisk *ramDisk, const void *src, sector_
     unsigned int offset = (sector & (PAGE_SECTORS-1)) << SECTOR_SHIFT;
     size_t copy;
 
-    pr_info("[CTRL][RAM] CopyToRamDisk\n");
+    pr_info("[CTRL][RAM] [%d] CopyToRamDisk\n", ramDisk->Number);
 
     copy = min_t(size_t, n, PAGE_SIZE - offset);
     page = LookupPage(ramDisk, sector);
@@ -215,7 +210,7 @@ static void CopyFromRamDisk(void *dst, struct blockRamDisk *ramDisk, sector_t se
     unsigned int offset = (sector & (PAGE_SECTORS-1)) << SECTOR_SHIFT;
     size_t copy;
 
-    pr_info("[CTRL][RAM] CopyFromRamDisk\n");
+    pr_info("[CTRL][RAM] [%d] CopyFromRamDisk\n", ramDisk->Number);
 
     copy = min_t(size_t, n, PAGE_SIZE - offset);
     page = LookupPage(ramDisk, sector);
@@ -254,8 +249,6 @@ static int CheckReadOrWrite(struct blockRamDisk *ramDisk, struct page *page, uns
     void *mem;
     int err = 0;
 
-    pr_info("[CTRL][RAM] CheckReadOrWrite\n");
-
     if (op_is_write(op))
     {
         err = CopyToRamDiskSetup(ramDisk, sector, len);
@@ -289,7 +282,7 @@ static blk_qc_t BioRequest(struct bio *bio)
     sector_t sector;
     struct bvec_iter iter;
 
-    pr_info("[CTRL][RAM] BioRequest\n");
+    pr_info("[CTRL][RAM] [%d] BioRequest\n", ramDisk->Number);
 
     sector = bio->bi_iter.bi_sector;
     if (bio_end_sector(bio) > get_capacity(bio->bi_disk))
@@ -326,8 +319,6 @@ static int RwPage(struct block_device *bdev, sector_t sector, struct page *page,
     struct blockRamDisk *ramDisk = bdev->bd_disk->private_data;
     int err;
 
-    pr_info("[CTRL][RAM] RwPage\n");
-
     if (PageTransHuge(page))
     {
         return -ENOTSUPP;
@@ -339,12 +330,12 @@ static int RwPage(struct block_device *bdev, sector_t sector, struct page *page,
     return err;
 }
 
-static struct blockRamDisk *Allocation(int i)
+static struct blockRamDisk *DiskAllocation(int i)
 {
     struct blockRamDisk *ramDisk;
     struct gendisk *disk;
 
-    pr_info("[CTRL][RAM] Allocation\n");
+    pr_info("[INIT][RAM] DiskAllocation[%d]\n", i);
 
     ramDisk = kzalloc(sizeof(*ramDisk), GFP_KERNEL);
     if (!ramDisk)
@@ -380,7 +371,7 @@ static struct blockRamDisk *Allocation(int i)
     disk->fops = &fops;
     disk->private_data  = ramDisk;
     disk->flags = GENHD_FL_EXT_DEVT;
-    sprintf(disk->disk_name, "iceRam%d", i);
+    sprintf(disk->disk_name, "IceNETDisk%d", i);
     set_capacity(disk, RAM_DISK_SIZE * 2);
 
     /* Tell the block layer that this is not a rotational device */
@@ -399,19 +390,17 @@ out:
 
 static void Free(struct blockRamDisk *ramDisk)
 {
-    pr_info("[CTRL][RAM] Free\n");
-
     put_disk(ramDisk->Disk);
     blk_cleanup_queue(ramDisk->Queue);
     FreePages(ramDisk);
     kfree(ramDisk);
 }
 
-static struct blockRamDisk *InitOne(int i, bool *new)
+static struct blockRamDisk *DiskAdd(int i, bool *new)
 {
     struct blockRamDisk *ramDisk;
 
-    pr_info("[CTRL][RAM] InitOne\n");
+    pr_info("[INIT][RAM] DiskAdd[%d]\n", i);
 
     *new = false;
     list_for_each_entry(ramDisk, &brd_devices, List)
@@ -422,7 +411,7 @@ static struct blockRamDisk *InitOne(int i, bool *new)
         }
     }
 
-    ramDisk = Allocation(i);
+    ramDisk = DiskAllocation(i);
     if (ramDisk)
     {
         ramDisk->Disk->queue = ramDisk->Queue;
@@ -435,9 +424,9 @@ out:
     return ramDisk;
 }
 
-static void DelOne(struct blockRamDisk *ramDisk)
+static void DiskRemove(struct blockRamDisk *ramDisk)
 {
-    pr_info("[CTRL][RAM] DelOne\n");
+    pr_info("[DESTROY][RAM] DiskRemove[%d]\n", ramDisk->Number);
 
     list_del(&ramDisk->List);
     del_gendisk(ramDisk->Disk);
@@ -453,7 +442,7 @@ static struct kobject *Probe(dev_t dev, int *part, void *data)
     pr_info("[CTRL][RAM] Probe\n");
 
     mutex_lock(&brd_devices_mutex);
-    ramDisk = InitOne(MINOR(dev) / max_part, &new);
+    ramDisk = DiskAdd(MINOR(dev) / max_part, &new);
     kobj = ramDisk ? get_disk_and_module(ramDisk->Disk) : NULL;
     mutex_unlock(&brd_devices_mutex);
 
@@ -467,7 +456,7 @@ static struct kobject *Probe(dev_t dev, int *part, void *data)
 
 static inline void CheckAndResetPartition(void)
 {
-    pr_info("[CTRL][RAM] CheckAndResetPartition\n");
+    pr_info("[INIT][RAM] CheckAndResetPartition\n");
 
     if (unlikely(!max_part))
     {
@@ -495,7 +484,7 @@ int ramDiskInit(void)
     struct blockRamDisk *ramDisk, *ramDiskNext;
     int i;
 
-    pr_info("[CTRL][RAM] ramDiskInit\n");
+    pr_info("[INIT][RAM] ramDiskInit\n");
 
     /*
      * brd module now has a feature to instantiate underlying device
@@ -519,7 +508,7 @@ int ramDiskInit(void)
 
     for (i = 0; i < KERNEL_RAM_DISK_AMOUNT; i++)
     {
-        ramDisk = Allocation(i);
+        ramDisk = DiskAllocation(i);
         if (!ramDisk)
         {
             goto out_free;
@@ -553,6 +542,7 @@ out_free:
     unregister_blkdev(RAMDISK_MAJOR, KERNEL_BLOCK_DEVICE);
 
     pr_info("[ERROR][RAM] module NOT loaded !!!\n");
+
     return -ENOMEM;
 }
 
@@ -560,11 +550,11 @@ void ramDiskDestroy(void)
 {
     struct blockRamDisk *ramDisk, *ramDiskNext;
 
-    pr_info("[CTRL][RAM] ramDiskDestroy\n");
+    pr_info("[DESTROY][RAM] ramDiskDestroy\n");
 
     list_for_each_entry_safe(ramDisk, ramDiskNext, &brd_devices, List)
     {
-        DelOne(ramDisk);
+        DiskRemove(ramDisk);
     }
 
     blk_unregister_region(MKDEV(RAMDISK_MAJOR, 0), 1UL << MINORBITS);

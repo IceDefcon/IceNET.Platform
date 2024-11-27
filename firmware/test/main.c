@@ -5,7 +5,7 @@
 #include <errno.h>
 #include <stdlib.h>
 
-#define DEVICE_PATH "/dev/iceRam0" // Adjust based on your ramdisk naming
+#define DEVICE_PATH "/dev/IceNETDisk0" // Adjust based on your ramdisk naming
 
 int main() {
     const char *data = "Hello, RAM Disk!";

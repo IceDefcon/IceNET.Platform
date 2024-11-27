@@ -174,24 +174,26 @@ class TcpManager:
             self.spi_register_data.config(state=tk.DISABLED)
 
     def i2c_assembly(self):
-        header = 0x00 # 7 control bits + 1 R/W bit
+        header = 0x00 # 0000 0000 Read
         address = int(self.i2c_device_address.get(), 16)  # Convert hex address to integer
         register = int(self.i2c_device_register.get(), 16)  # Convert hex register to integer
         if self.i2c_write_var.get():
+            # 0000 0000 :: Read
             data = bytes([header + 0x01, address, register]) + bytes.fromhex(self.i2c_register_data.get()) + bytes([0x00, 0x00, 0x00, 0x00])
         else:
+            # 0000 0001 :: Write
             data = bytes([header + 0x00, address, register, 0x00, 0x00, 0x00, 0x00, 0x00])
         return data
 
     def pwm_set(self, value):
-        header = 0x02
+        header = 0x02 # 0000 0010
         data = bytes([header, 0x00, 0x00, value, 0x00, 0x00, 0x00, 0x00])
         self.pwm_speed.delete(0, 'end')
         self.pwm_speed.insert(0, f"{value:02X}")
         return data
 
     def pwm_getset(self, value):
-        header = 0x02
+        header = 0x02 # 0000 0010
         current = int(self.pwm_speed.get(), 16) + value
         current = min(current, 0xFA)
         data = bytes([header, 0x00, 0x00, current, 0x00, 0x00, 0x00, 0x00])
@@ -200,7 +202,8 @@ class TcpManager:
         return data
 
     def spi_assembly(self):
-        data = bytes([0x04, 0x00, 0x00]) + bytes.fromhex(self.spi_register_data.get()) + bytes([0x00, 0x00, 0x00, 0x00])
+        header = 0x04 # 0000 0100
+        data = bytes([header, 0x00, 0x00]) + bytes.fromhex(self.spi_register_data.get()) + bytes([0x00, 0x00, 0x00, 0x00])
         return data
 
     def tcp_execute(self, comand):
