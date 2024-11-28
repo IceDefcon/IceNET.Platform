@@ -6,9 +6,9 @@
  */
 #pragma once
 
-const size_t CHAR_DEVICE_SIZE = 32;
-const size_t NETWORK_TRAFFIC_SIZE = 32;
-const size_t TCP_SERVER_SIZE = 32;
+const size_t CHAR_DEVICE_SIZE = 8;
+const size_t NETWORK_TRAFFIC_SIZE = 8;
+const size_t TCP_SERVER_SIZE = 8;
 
 enum Status
 {

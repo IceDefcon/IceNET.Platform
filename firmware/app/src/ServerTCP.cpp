@@ -289,14 +289,25 @@ int ServerTCP::tcpTX()
 
         m_Tx_ServerTCP = m_instanceNetworkTraffic->getNetworkTrafficTx();
         m_instanceNetworkTraffic->resetFeedbackFlag();
-        std::cout << "[INFO] [TCP] Received 1 Byte of data: ";
-        for (int i = 0; i < 1; ++i)
+        std::cout << "[INFO] [TCP] Received " << m_Tx_ServerTCP->size() << " Bytes of data: ";
+        for (int i = 0; i < (int)m_Tx_ServerTCP->size(); ++i)
         {
             std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>((*m_Tx_ServerTCP)[i]) << " ";
         }
         std::cout << std::endl;
 
+        /**
+         * 
+         * This one here is to keep 
+         * the things running in the GUI
+         * as the transfer is check against
+         * 0x0000000000000000 so we add 0xEE
+         * 
+         */
+
+        (*m_Tx_ServerTCP)[7] = 0xEE;
         ret = write(m_clientSocket, m_Tx_ServerTCP->data(), m_Tx_ServerTCP->size());
+        (*m_Tx_ServerTCP)[7] = 0x00; /* Now clear me !! */
     }
 
     return ret;
