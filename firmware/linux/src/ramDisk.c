@@ -478,6 +478,45 @@ static inline void CheckAndResetPartition(void)
     }
 }
 
+int read_from_ice_disk(sector_t sector, void *buffer, size_t size)
+{
+    struct block_device *bdev;
+    struct page *page;
+    void *page_data;
+    int ret;
+
+    // Open the IceNETDisk0 block device
+    bdev = blkdev_get_by_path("/dev/IceNETDisk0", FMODE_READ, NULL);
+    if (IS_ERR(bdev)) {
+        pr_err("Failed to open IceNETDisk0\n");
+        return PTR_ERR(bdev);
+    }
+
+    // Allocate a page to read the data
+    page = alloc_page(GFP_KERNEL);
+    if (!page) {
+        blkdev_put(bdev, FMODE_READ);
+        return -ENOMEM;
+    }
+
+    // Read data using RwPage
+    ret = RwPage(bdev, sector, page, REQ_OP_READ);
+    if (ret) {
+        pr_err("Failed to read data: %d\n", ret);
+        goto out_free;
+    }
+
+    // Copy the data to the user-provided buffer
+    page_data = kmap_atomic(page);
+    memcpy(buffer, page_data, min_t(size_t, size, PAGE_SIZE));
+    kunmap_atomic(page_data);
+
+out_free:
+    __free_page(page);
+    blkdev_put(bdev, FMODE_READ);
+    return ret;
+}
+
 int ramDiskInit(void)
 {
     struct blockRamDisk *ramDisk, *ramDiskNext;

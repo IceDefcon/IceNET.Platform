@@ -71,6 +71,7 @@ struct blockRamDisk
     struct radix_tree_root Pages;
 };
 
+int read_from_ice_disk(sector_t sector, void *buffer, size_t size);
 int ramDiskInit(void);
 void ramDiskDestroy(void);
 
