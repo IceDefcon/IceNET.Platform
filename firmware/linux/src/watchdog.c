@@ -50,6 +50,9 @@ static int watchdogThread(void *data)
     {
 		mutex_lock(&Process.watchdogMutex);
 
+#if 0 /* Hack :: If Fpga is not flashed */
+        Process.indicatorCurrent++;
+#endif
         watchdogData = getCharDeviceTransfer(DEVICE_WATCHDOG);
         watchdogData->TxData[0] = Process.indicatorPrevious;
         watchdogData->TxData[1] = Process.indicatorCurrent;

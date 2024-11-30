@@ -58,7 +58,6 @@
 #define PAGE_SECTORS            8  /* 1 << PAGE_SECTORS_SHIFT = 1 << 3 = 8 sectors per page */
 #define FREE_BATCH              16 /* Adjust as needed for batch operations */
 
-static LIST_HEAD(brd_devices);
 static DEFINE_MUTEX(brd_devices_mutex);
 
 struct blockRamDisk

@@ -31,7 +31,7 @@ OperationType* createOperation(char devId, char ctrl, char ops)
         return NULL;
     } 
 
-    op->header = 0x7E;          /* Write config ID */
+    op->header = 0x1E;          /* Write config ID */
     op->size = (char)totalSize; /* Bytes to send to FPGA */
     op->ctrl = ctrl;            /* 0:i2c 1:Write */
     op->devId = devId;          /* BMI160 Id */
@@ -62,10 +62,10 @@ int main()
      * This is size specific piece of code
      * For size 2 we have 2x Regs +2x Data
      */
-    reg[0]  = 0x7F;    /* CMD */
-    reg[1]  = 0x40;    /* ACC_CONF */
-
+    reg[0]  = 0x7E;    /* CMD */
     data[0] = 0x11;    /* Set PMU mode of accelerometer to normal */
+
+    reg[1]  = 0x40;    /* ACC_CONF */
     data[1] = 0x2C;    /* acc_bwp = 0x2 normal mode + acc_od = 0xC 1600Hz r*/
 
     // Open the block device for writing
@@ -87,6 +87,26 @@ int main()
         return EXIT_FAILURE;
     }
     printf("Write %ld Bytes to ramDisk\n", bytes);
+
+#if 0 // Seek back to the beginning of the device
+    if (lseek(fd, 0, SEEK_SET) < 0) 
+    {
+        perror("Failed to seek in block device");
+        close(fd);
+        return EXIT_FAILURE;
+    }
+#endif
+
+#if 0 // Read ramData back from the block device
+    ssize_t read_bytes = read(fd, read_buf, sizeof(read_buf) - 1);
+    if (read_bytes < 0) 
+    {
+        perror("Failed to read from block device");
+        close(fd);
+        return EXIT_FAILURE;
+    }
+    printf("Read from device: %s\n", read_buf);
+#endif
 
     close(fd);
     free(op);

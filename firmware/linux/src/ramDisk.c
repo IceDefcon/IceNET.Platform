@@ -18,6 +18,12 @@ static const struct block_device_operations fops =
     .rw_page = RwPage,
 };
 
+static struct list_head iceDevices = 
+{
+    &(iceDevices), /* next */
+    &(iceDevices)  /* prev */
+};
+
 /*
  * Look up and return a ramDisk's page for a given sector.
  */
@@ -160,7 +166,9 @@ static int CopyToRamDiskSetup(struct blockRamDisk *ramDisk, sector_t sector, siz
     {
         sector += copy >> SECTOR_SHIFT;
         if (!InsertPage(ramDisk, sector))
+        {
             return -ENOSPC;
+        }
     }
 
     return 0;
@@ -171,6 +179,7 @@ static int CopyToRamDiskSetup(struct blockRamDisk *ramDisk, sector_t sector, siz
  */
 static void CopyToRamDisk(struct blockRamDisk *ramDisk, const void *src, sector_t sector, size_t n)
 {
+    char *temp_buff;
     struct page *page;
     void *dst;
     unsigned int offset = (sector & (PAGE_SECTORS-1)) << SECTOR_SHIFT;
@@ -198,6 +207,10 @@ static void CopyToRamDisk(struct blockRamDisk *ramDisk, const void *src, sector_
         memcpy(dst, src, copy);
         kunmap_atomic(dst);
     }
+
+    // read_from_ice_disk(1, temp_buff, 10);
+
+    // pr_info("Read from device: %s\n", temp_buff);
 }
 
 /*
@@ -402,7 +415,7 @@ static struct blockRamDisk *DiskAdd(int i, bool *new)
     pr_info("[INIT][RAM] Disk[%d] :: Add\n", i);
 
     *new = false;
-    list_for_each_entry(ramDisk, &brd_devices, List)
+    list_for_each_entry(ramDisk, &iceDevices, List)
     {
         if (ramDisk->Number == i)
         {
@@ -415,7 +428,7 @@ static struct blockRamDisk *DiskAdd(int i, bool *new)
     {
         ramDisk->Disk->queue = ramDisk->Queue;
         add_disk(ramDisk->Disk);
-        list_add_tail(&ramDisk->List, &brd_devices);
+        list_add_tail(&ramDisk->List, &iceDevices);
     }
     *new = true;
 
@@ -487,21 +500,24 @@ int read_from_ice_disk(sector_t sector, void *buffer, size_t size)
 
     // Open the IceNETDisk0 block device
     bdev = blkdev_get_by_path("/dev/IceNETDisk0", FMODE_READ, NULL);
-    if (IS_ERR(bdev)) {
+    if (IS_ERR(bdev)) 
+    {
         pr_err("Failed to open IceNETDisk0\n");
         return PTR_ERR(bdev);
     }
 
     // Allocate a page to read the data
     page = alloc_page(GFP_KERNEL);
-    if (!page) {
+    if (!page) 
+    {
         blkdev_put(bdev, FMODE_READ);
         return -ENOMEM;
     }
 
     // Read data using RwPage
     ret = RwPage(bdev, sector, page, REQ_OP_READ);
-    if (ret) {
+    if (ret) 
+    {
         pr_err("Failed to read data: %d\n", ret);
         goto out_free;
     }
@@ -551,12 +567,12 @@ int ramDiskInit(void)
         {
             goto out_free;
         }
-        list_add_tail(&ramDisk->List, &brd_devices);
+        list_add_tail(&ramDisk->List, &iceDevices);
     }
 
     /* point of no return */
 
-    list_for_each_entry(ramDisk, &brd_devices, List)
+    list_for_each_entry(ramDisk, &iceDevices, List)
     {
         /*
          * associate with queue just before adding disk for
@@ -573,7 +589,7 @@ int ramDiskInit(void)
     return 0;
 
 out_free:
-    list_for_each_entry_safe(ramDisk, ramDiskNext, &brd_devices, List)
+    list_for_each_entry_safe(ramDisk, ramDiskNext, &iceDevices, List)
     {
         list_del(&ramDisk->List);
         Free(ramDisk);
@@ -589,7 +605,7 @@ void ramDiskDestroy(void)
 {
     struct blockRamDisk *ramDisk, *ramDiskNext;
 
-    list_for_each_entry_safe(ramDisk, ramDiskNext, &brd_devices, List)
+    list_for_each_entry_safe(ramDisk, ramDiskNext, &iceDevices, List)
     {
         DiskRemove(ramDisk);
     }
