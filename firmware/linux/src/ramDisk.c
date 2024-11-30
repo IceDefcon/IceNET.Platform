@@ -174,48 +174,57 @@ static int CopyToRamDiskSetup(struct blockRamDisk *ramDisk, sector_t sector, siz
     return 0;
 }
 
-/*
- * Copy n bytes from src to the ramDisk starting at sector. Does not sleep.
- */
 static void CopyToRamDisk(struct blockRamDisk *ramDisk, const void *src, sector_t sector, size_t n)
 {
-    char *temp_buff;
+    int i = 0;
+    char temp_buff[16];
+
     struct page *page;
     void *dst;
-    unsigned int offset = (sector & (PAGE_SECTORS-1)) << SECTOR_SHIFT;
+    unsigned int offset = (sector & (PAGE_SECTORS - 1)) << SECTOR_SHIFT;
     size_t copy;
 
     pr_info("[CTRL][RAM] Disk[%d] :: Copy to RamDisk\n", ramDisk->Number);
 
     copy = min_t(size_t, n, PAGE_SIZE - offset);
     page = LookupPage(ramDisk, sector);
-    BUG_ON(!page);
+    if (!page) {
+        pr_err("Failed to lookup page for sector %llu\n", sector);
+        return;
+    }
 
     dst = kmap_atomic(page);
     memcpy(dst + offset, src, copy);
     kunmap_atomic(dst);
 
-    if (copy < n)
-    {
-        src += copy;
+    if (copy < n) {
+        src = (const char *)src + copy;
         sector += copy >> SECTOR_SHIFT;
         copy = n - copy;
         page = LookupPage(ramDisk, sector);
-        BUG_ON(!page);
+        if (!page) {
+            pr_err("Failed to lookup page for next sector %llu\n", sector);
+            return;
+        }
 
         dst = kmap_atomic(page);
         memcpy(dst, src, copy);
         kunmap_atomic(dst);
     }
 
-    // read_from_ice_disk(1, temp_buff, 10);
-
-    // pr_info("Read from device: %s\n", temp_buff);
+    if (read_from_ice_disk(sector, temp_buff, 16) == 0) 
+    {
+        for (i = 0; i < 16; i++) 
+        {
+            pr_info("Byte %d: 0x%02x\n", i, temp_buff[i]);
+        }
+    } 
+    else 
+    {
+        pr_err("Failed to read from IceDisk\n");
+    }
 }
 
-/*
- * Copy n bytes to dst from the ramDisk starting at sector. Does not sleep.
- */
 static void CopyFromRamDisk(void *dst, struct blockRamDisk *ramDisk, sector_t sector, size_t n)
 {
     struct page *page;
@@ -496,9 +505,8 @@ int read_from_ice_disk(sector_t sector, void *buffer, size_t size)
     struct block_device *bdev;
     struct page *page;
     void *page_data;
-    int ret;
+    int ret = 0;
 
-    // Open the IceNETDisk0 block device
     bdev = blkdev_get_by_path("/dev/IceNETDisk0", FMODE_READ, NULL);
     if (IS_ERR(bdev)) 
     {
@@ -506,7 +514,6 @@ int read_from_ice_disk(sector_t sector, void *buffer, size_t size)
         return PTR_ERR(bdev);
     }
 
-    // Allocate a page to read the data
     page = alloc_page(GFP_KERNEL);
     if (!page) 
     {
@@ -514,15 +521,13 @@ int read_from_ice_disk(sector_t sector, void *buffer, size_t size)
         return -ENOMEM;
     }
 
-    // Read data using RwPage
     ret = RwPage(bdev, sector, page, REQ_OP_READ);
     if (ret) 
     {
-        pr_err("Failed to read data: %d\n", ret);
+        pr_err("Failed to read data from sector %llu: %d\n", sector, ret);
         goto out_free;
     }
 
-    // Copy the data to the user-provided buffer
     page_data = kmap_atomic(page);
     memcpy(buffer, page_data, min_t(size_t, size, PAGE_SIZE));
     kunmap_atomic(page_data);
