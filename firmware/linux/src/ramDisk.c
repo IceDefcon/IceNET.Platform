@@ -176,9 +176,6 @@ static int CopyToRamDiskSetup(struct blockRamDisk *ramDisk, sector_t sector, siz
 
 static void CopyToRamDisk(struct blockRamDisk *ramDisk, const void *src, sector_t sector, size_t n)
 {
-    int i = 0;
-    char temp_buff[16];
-
     struct page *page;
     void *dst;
     unsigned int offset = (sector & (PAGE_SECTORS - 1)) << SECTOR_SHIFT;
@@ -210,18 +207,6 @@ static void CopyToRamDisk(struct blockRamDisk *ramDisk, const void *src, sector_
         dst = kmap_atomic(page);
         memcpy(dst, src, copy);
         kunmap_atomic(dst);
-    }
-
-    if (read_from_ice_disk(sector, temp_buff, 16) == 0) 
-    {
-        for (i = 0; i < 16; i++) 
-        {
-            pr_info("Byte %d: 0x%02x\n", i, temp_buff[i]);
-        }
-    } 
-    else 
-    {
-        pr_err("Failed to read from IceDisk\n");
     }
 }
 
