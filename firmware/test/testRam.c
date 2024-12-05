@@ -7,16 +7,6 @@
 
 #define DEVICE_PATH "/dev/IceNETDisk0" // Adjust based on your ramdisk naming
 
-//
-// 0x40
-//
-// For Normal mode
-//
-// acc_us = 0b0 (undersampling disabled)
-// acc_bwp = 0b010 (normal mode)
-// acc_odr = 0b1100 (1600Hz)
-//
-
 typedef struct 
 {
     char header;    /* Unique ID of operation */
@@ -28,7 +18,6 @@ typedef struct
     char payload[]; /* Combined register addresses and write data */
 } OperationType;
 
-
 OperationType* createOperation(char devId, char ctrl, char ops) 
 {
     char regSize = ops;
@@ -37,13 +26,12 @@ OperationType* createOperation(char devId, char ctrl, char ops)
 
     // Allocate memory
     OperationType* op = (OperationType*)malloc(totalSize);
-    
     if (!op)
     {
         return NULL;
     } 
 
-    op->header = 0x7E;          /* Write config ID */
+    op->header = 0x1E;          /* Write config ID */
     op->size = (char)totalSize; /* Bytes to send to FPGA */
     op->ctrl = ctrl;            /* 0:i2c 1:Write */
     op->devId = devId;          /* BMI160 Id */
@@ -56,13 +44,11 @@ OperationType* createOperation(char devId, char ctrl, char ops)
     return op;
 }
 
-
 int main() 
 {
-    size_t ops = 2;
+    char ops = 2; /* Set up 2 registers only */
 
-    OperationType* op = createOperation(0x69, 0x01, 0x02);
-    
+    OperationType* op = createOperation(0x69, 0x01, ops);
     if (!op) 
     {
         perror("Failed to allocate operation");
@@ -76,34 +62,31 @@ int main()
      * This is size specific piece of code
      * For size 2 we have 2x Regs +2x Data
      */
-    *reg[0] = 0x40;
-    *data[0] = 0x2C;
+    reg[0]  = 0x7E;    /* CMD */
+    data[0] = 0x11;    /* Set PMU mode of accelerometer to normal */
 
-    *reg[1] = 0x40;
-    *data[1] = 0x2C;
-
-    const char *data = "Hello, RAM Disk!";
-    const size_t data_size = strlen(data);
-    char read_buf[128] = {0};
+    reg[1]  = 0x40;    /* ACC_CONF */
+    data[1] = 0x2C;    /* acc_bwp = 0x2 normal mode + acc_od = 0xC 1600Hz r*/
 
     // Open the block device for writing
     int fd = open(DEVICE_PATH, O_RDWR);
     if (fd < 0) 
     {
         perror("Failed to open block device");
+        free(op);
         return EXIT_FAILURE;
     }
 
-#if 1 // Write data to the block device
-    ssize_t written = write(fd, data, data_size);
-    if (written < 0) 
+    // Write the OperationType structure to the block device
+    ssize_t bytes = write(fd, op, op->size);
+    if (bytes < 0) 
     {
         perror("Failed to write to block device");
         close(fd);
+        free(op);
         return EXIT_FAILURE;
     }
-    printf("Written to device: %s\n", data);
-#endif
+    printf("Write %ld Bytes to ramDisk\n", bytes);
 
 #if 0 // Seek back to the beginning of the device
     if (lseek(fd, 0, SEEK_SET) < 0) 
@@ -114,7 +97,7 @@ int main()
     }
 #endif
 
-#if 0 // Read data back from the block device
+#if 0 // Read ramData back from the block device
     ssize_t read_bytes = read(fd, read_buf, sizeof(read_buf) - 1);
     if (read_bytes < 0) 
     {
@@ -125,7 +108,7 @@ int main()
     printf("Read from device: %s\n", read_buf);
 #endif
 
-    // Clean up
     close(fd);
+    free(op);
     return EXIT_SUCCESS;
 }

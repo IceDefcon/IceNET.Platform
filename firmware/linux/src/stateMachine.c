@@ -16,6 +16,7 @@
 #include "isrCtrl.h"
 #include "spiCtrl.h"
 #include "spiWork.h"
+#include "ramDisk.h"
 
 /////////////////////////
 //                     //
@@ -53,6 +54,8 @@ static stateMachineProcess Process =
 /* Kernel state machine */
 static int stateMachineThread(void *data)
 {
+    int i = 0;
+    char temp_buff[16];
     stateType state;
     
     while (!kthread_should_stop()) 
@@ -76,6 +79,18 @@ static int stateMachineThread(void *data)
                 gpio_set_value(GPIO_KERNEL_INTERRUPT, 1);
                 gpio_set_value(GPIO_KERNEL_INTERRUPT, 0);
                 setStateMachine(IDLE);
+
+                if (read_from_ice_disk(0, temp_buff, 16) == 0) 
+                {
+                    for (i = 0; i < 16; i++) 
+                    {
+                        pr_info("Byte %d: 0x%02x\n", i, temp_buff[i]);
+                    }
+                } 
+                else 
+                {
+                    pr_err("Failed to read from IceDisk\n");
+                }
                 break;
 
             case KILL_APPLICATION:

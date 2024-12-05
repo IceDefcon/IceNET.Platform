@@ -18,6 +18,12 @@ static const struct block_device_operations fops =
     .rw_page = RwPage,
 };
 
+static struct list_head iceDevices = 
+{
+    &(iceDevices), /* next */
+    &(iceDevices)  /* prev */
+};
+
 /*
  * Look up and return a ramDisk's page for a given sector.
  */
@@ -160,39 +166,43 @@ static int CopyToRamDiskSetup(struct blockRamDisk *ramDisk, sector_t sector, siz
     {
         sector += copy >> SECTOR_SHIFT;
         if (!InsertPage(ramDisk, sector))
+        {
             return -ENOSPC;
+        }
     }
 
     return 0;
 }
 
-/*
- * Copy n bytes from src to the ramDisk starting at sector. Does not sleep.
- */
 static void CopyToRamDisk(struct blockRamDisk *ramDisk, const void *src, sector_t sector, size_t n)
 {
     struct page *page;
     void *dst;
-    unsigned int offset = (sector & (PAGE_SECTORS-1)) << SECTOR_SHIFT;
+    unsigned int offset = (sector & (PAGE_SECTORS - 1)) << SECTOR_SHIFT;
     size_t copy;
 
     pr_info("[CTRL][RAM] Disk[%d] :: Copy to RamDisk\n", ramDisk->Number);
 
     copy = min_t(size_t, n, PAGE_SIZE - offset);
     page = LookupPage(ramDisk, sector);
-    BUG_ON(!page);
+    if (!page) {
+        pr_err("Failed to lookup page for sector %llu\n", sector);
+        return;
+    }
 
     dst = kmap_atomic(page);
     memcpy(dst + offset, src, copy);
     kunmap_atomic(dst);
 
-    if (copy < n)
-    {
-        src += copy;
+    if (copy < n) {
+        src = (const char *)src + copy;
         sector += copy >> SECTOR_SHIFT;
         copy = n - copy;
         page = LookupPage(ramDisk, sector);
-        BUG_ON(!page);
+        if (!page) {
+            pr_err("Failed to lookup page for next sector %llu\n", sector);
+            return;
+        }
 
         dst = kmap_atomic(page);
         memcpy(dst, src, copy);
@@ -200,9 +210,6 @@ static void CopyToRamDisk(struct blockRamDisk *ramDisk, const void *src, sector_
     }
 }
 
-/*
- * Copy n bytes to dst from the ramDisk starting at sector. Does not sleep.
- */
 static void CopyFromRamDisk(void *dst, struct blockRamDisk *ramDisk, sector_t sector, size_t n)
 {
     struct page *page;
@@ -402,7 +409,7 @@ static struct blockRamDisk *DiskAdd(int i, bool *new)
     pr_info("[INIT][RAM] Disk[%d] :: Add\n", i);
 
     *new = false;
-    list_for_each_entry(ramDisk, &brd_devices, List)
+    list_for_each_entry(ramDisk, &iceDevices, List)
     {
         if (ramDisk->Number == i)
         {
@@ -415,7 +422,7 @@ static struct blockRamDisk *DiskAdd(int i, bool *new)
     {
         ramDisk->Disk->queue = ramDisk->Queue;
         add_disk(ramDisk->Disk);
-        list_add_tail(&ramDisk->List, &brd_devices);
+        list_add_tail(&ramDisk->List, &iceDevices);
     }
     *new = true;
 
@@ -478,6 +485,44 @@ static inline void CheckAndResetPartition(void)
     }
 }
 
+int read_from_ice_disk(sector_t sector, void *buffer, size_t size)
+{
+    struct block_device *bdev;
+    struct page *page;
+    void *page_data;
+    int ret = 0;
+
+    bdev = blkdev_get_by_path("/dev/IceNETDisk0", FMODE_READ, NULL);
+    if (IS_ERR(bdev)) 
+    {
+        pr_err("Failed to open IceNETDisk0\n");
+        return PTR_ERR(bdev);
+    }
+
+    page = alloc_page(GFP_KERNEL);
+    if (!page) 
+    {
+        blkdev_put(bdev, FMODE_READ);
+        return -ENOMEM;
+    }
+
+    ret = RwPage(bdev, sector, page, REQ_OP_READ);
+    if (ret) 
+    {
+        pr_err("Failed to read data from sector %llu: %d\n", sector, ret);
+        goto out_free;
+    }
+
+    page_data = kmap_atomic(page);
+    memcpy(buffer, page_data, min_t(size_t, size, PAGE_SIZE));
+    kunmap_atomic(page_data);
+
+out_free:
+    __free_page(page);
+    blkdev_put(bdev, FMODE_READ);
+    return ret;
+}
+
 int ramDiskInit(void)
 {
     struct blockRamDisk *ramDisk, *ramDiskNext;
@@ -512,12 +557,12 @@ int ramDiskInit(void)
         {
             goto out_free;
         }
-        list_add_tail(&ramDisk->List, &brd_devices);
+        list_add_tail(&ramDisk->List, &iceDevices);
     }
 
     /* point of no return */
 
-    list_for_each_entry(ramDisk, &brd_devices, List)
+    list_for_each_entry(ramDisk, &iceDevices, List)
     {
         /*
          * associate with queue just before adding disk for
@@ -534,7 +579,7 @@ int ramDiskInit(void)
     return 0;
 
 out_free:
-    list_for_each_entry_safe(ramDisk, ramDiskNext, &brd_devices, List)
+    list_for_each_entry_safe(ramDisk, ramDiskNext, &iceDevices, List)
     {
         list_del(&ramDisk->List);
         Free(ramDisk);
@@ -550,7 +595,7 @@ void ramDiskDestroy(void)
 {
     struct blockRamDisk *ramDisk, *ramDiskNext;
 
-    list_for_each_entry_safe(ramDisk, ramDiskNext, &brd_devices, List)
+    list_for_each_entry_safe(ramDisk, ramDiskNext, &iceDevices, List)
     {
         DiskRemove(ramDisk);
     }
