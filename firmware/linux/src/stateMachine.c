@@ -55,7 +55,9 @@ static stateMachineProcess Process =
 static int stateMachineThread(void *data)
 {
     int i = 0;
-    char temp_buff[16];
+    char temp_buff_A[16];
+    char temp_buff_B[16];
+    char temp_buff_C[16];
     stateType state;
     
     while (!kthread_should_stop()) 
@@ -80,11 +82,35 @@ static int stateMachineThread(void *data)
                 gpio_set_value(GPIO_KERNEL_INTERRUPT, 0);
                 setStateMachine(IDLE);
 
-                if (read_from_ice_disk(0, temp_buff, 16) == 0) 
+                if (read_from_ice_disk(0, temp_buff_A, 16) == 0) 
                 {
                     for (i = 0; i < 16; i++) 
                     {
-                        pr_info("Byte %d: 0x%02x\n", i, temp_buff[i]);
+                        pr_info("Byte %d: 0x%02x\n", i, temp_buff_A[i]);
+                    }
+                } 
+                else 
+                {
+                    pr_err("Failed to read from IceDisk\n");
+                }
+
+                if (read_from_ice_disk(1, temp_buff_B, 16) == 0) 
+                {
+                    for (i = 0; i < 16; i++) 
+                    {
+                        pr_info("Byte %d: 0x%02x\n", i, temp_buff_B[i]);
+                    }
+                } 
+                else 
+                {
+                    pr_err("Failed to read from IceDisk\n");
+                }
+
+                if (read_from_ice_disk(2, temp_buff_C, 16) == 0) 
+                {
+                    for (i = 0; i < 16; i++) 
+                    {
+                        pr_info("Byte %d: 0x%02x\n", i, temp_buff_C[i]);
                     }
                 } 
                 else 
