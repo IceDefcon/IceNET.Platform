@@ -485,42 +485,49 @@ static inline void CheckAndResetPartition(void)
     }
 }
 
-int read_from_ice_disk(sector_t sector, void *buffer, size_t size)
+void *ramDiskGetPointer(sector_t sector)
 {
     struct block_device *bdev;
     struct page *page;
     void *page_data;
-    int ret = 0;
+    int ret;
 
     bdev = blkdev_get_by_path("/dev/IceNETDisk0", FMODE_READ, NULL);
     if (IS_ERR(bdev)) 
     {
         pr_err("Failed to open IceNETDisk0\n");
-        return PTR_ERR(bdev);
+        return NULL;
     }
 
     page = alloc_page(GFP_KERNEL);
     if (!page) 
     {
         blkdev_put(bdev, FMODE_READ);
-        return -ENOMEM;
+        return NULL;
     }
 
     ret = RwPage(bdev, sector, page, REQ_OP_READ);
     if (ret) 
     {
         pr_err("Failed to read data from sector %llu: %d\n", sector, ret);
-        goto out_free;
+        __free_page(page);
+        blkdev_put(bdev, FMODE_READ);
+        return NULL;
     }
 
     page_data = kmap_atomic(page);
-    memcpy(buffer, page_data, min_t(size_t, size, PAGE_SIZE));
-    kunmap_atomic(page_data);
-
-out_free:
-    __free_page(page);
+    // Keep the page mapped; return the pointer for direct access.
     blkdev_put(bdev, FMODE_READ);
-    return ret;
+    return page_data;
+}
+
+void ramDiskReleasePointer(void *page_data)
+{
+    // Unmap and free the page when done.
+    if (page_data) 
+    {
+        kunmap_atomic(page_data);
+    }
 }
 
 int ramDiskInit(void)

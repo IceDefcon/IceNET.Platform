@@ -22,6 +22,9 @@
 #include <linux/slab.h>
 #include <linux/backing-dev.h>
 #include <linux/uaccess.h>
+#include <linux/mm.h>
+#include <linux/page-flags.h>
+#include <linux/kernel.h>
 
 /////////////////////////
 //                     //
@@ -70,7 +73,9 @@ struct blockRamDisk
     struct radix_tree_root Pages;
 };
 
-int read_from_ice_disk(sector_t sector, void *buffer, size_t size);
+void *ramDiskGetPointer(sector_t sector);
+void ramDiskReleasePointer(void *page_data);
+
 int ramDiskInit(void);
 void ramDiskDestroy(void);
 
