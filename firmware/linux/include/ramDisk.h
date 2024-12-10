@@ -45,9 +45,9 @@
  * Sectors per page: 8 sectors (from PAGE_SECTORS_SHIFT = 3)
  * Free batch size: 16 pages (from FREE_BATCH = 16)
  *
- * There are 8 sectors 512 bytes each in one page giving 4096 byts per page
+ * There are 8 sectors 512 bytes each in one page giving 4096 bytes per page
  *
- * One ramDevice have 32 sectors which gives 4 pages ---> 16KB Each
+ * One ramDevice have 32 sectors which gives 4 pages ---> 16KB per ramDisk
  *
  * Total size of used RAM :: 2 devices * 16KB each = gives 32B
  *
