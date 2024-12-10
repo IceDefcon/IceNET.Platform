@@ -64,6 +64,7 @@ int main()
 
     // Allocate memory for the first sector
     char first_sector[1] = {2};
+    char forth_sector[4] = {0x00, 0x69, 0x00, 0x00};
 
     // [1] Sector
     OperationType* dev_0_op = createOperation(0x69, 0x01, ops);
@@ -156,6 +157,21 @@ int main()
         return EXIT_FAILURE;
     }
     printf("Write %ld Bytes to ramDisk to Sector 2\n", bytes);
+
+    // Seek to sector 2 (sector_offset = 2)
+    lseek(fd, SECTOR_SIZE * 3, SEEK_SET);
+
+    // Write to sector 2
+    bytes = write(fd, forth_sector, sizeof(forth_sector));
+    if (bytes < 0) 
+    {
+        perror("Failed to write to sector 3");
+        close(fd);
+        free(dev_0_op);
+        free(dev_1_op);
+        return EXIT_FAILURE;
+    }
+    printf("Write %ld Bytes to ramDisk to Sector 3\n", bytes);
 
     close(fd);
     free(dev_0_op);
