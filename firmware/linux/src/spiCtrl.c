@@ -14,8 +14,8 @@
 #include "dmaControl.h"
 #include "charDevice.h"
 #include "stateMachine.h"
-#include "ramDisk.h"
 #include "types.h"
+#include "ramAxis.h"
 
 ////////////////////////
 //                    //
@@ -179,20 +179,11 @@ void transferFpgaInput(struct work_struct *work)
     int ret;
     int i;
 
-    void *data = ramDiskGetPointer(3);
-    if (!data) 
-    {
-        pr_err("Failed to get pointer to sector data\n");
-        ret = -1;
-    }
-
-    // Access the data directly via the pointer.
-    pr_info("Data in sector 3: %02x %02x %02x %02x\n", 
-            ((char *)data)[0], ((char *)data)[1], 
-            ((char *)data)[2], ((char *)data)[3]);
-
-    // Release the pointer when done.
-    ramDiskReleasePointer(data);
+#if 0 /* Prototype config */
+    ramAxisInit();
+    testPrint();
+    ramAxisDestroy();
+#endif
 
     /* Initate DMA Controller to perform SPI transfer */
     ret = spi_sync(Device[SPI_PRIMARY].spiDevice, &Device[SPI_PRIMARY].Dma.spiMessage);
