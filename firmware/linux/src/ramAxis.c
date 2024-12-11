@@ -35,11 +35,12 @@ void ramAxisInit(void)
     for (i = 0; i < SECTOR_AMOUNT; ++i) 
     {
         ramAxis[i].sectorAddress = ramDiskGetPointer(i);
-        if (!ramAxis[i].sectorAddress) {
-            pr_err("Failed to get pointer to sector %d\n", i);
+        if (!ramAxis[i].sectorAddress) 
+        {
+            pr_err("[ERNO][RAM] Failed to get pointer to sector %d\n", i);
             return;
         }
-        pr_info("Sector[%d] Pointer: %p\n", i, ramAxis[i].sectorAddress);
+        pr_info("[CTRL][RAM] Sector[%d] Pointer: %p\n", i, ramAxis[i].sectorAddress);
     }
 }
 
@@ -57,13 +58,13 @@ void testPrint(void)
 
     if (!ramAxis[SECTOR_TEST].sectorAddress) 
     {
-        pr_err("Sector TEST address is NULL\n");
+        pr_err("[ERNO][RAM] Sector TEST address is NULL\n");
         return;
     }
 
     for (i = 0; i < 4; ++i)
     {
-	    pr_info("Data in sector 3: %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x\n", 
+	    pr_info("[CTRL][RAM] Data in sector 3: %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x\n", 
 	            ((char *)ramAxis[i].sectorAddress)[0], 
 	            ((char *)ramAxis[i].sectorAddress)[1], 
 	            ((char *)ramAxis[i].sectorAddress)[2], 
