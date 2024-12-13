@@ -10,6 +10,7 @@
 #include "Watchdog.h"
 #include "KernelInput.h"
 #include "KernelOutput.h"
+#include "RamConfig.h"
 #include "ServerTCP.h"
 #include "NetworkTraffic.h"
 
@@ -19,12 +20,14 @@ int main()
     auto instanceNetworkTraffic = std::make_shared<NetworkTraffic>();
     auto instanceWatchdog = std::make_shared<Watchdog>();
     auto instanceKernelInput = std::make_shared<KernelInput>();
+    auto instanceRamConfig = std::make_shared<RamConfig>();
     auto instanceKernelOutput = std::make_shared<KernelOutput>();
     auto instanceServerTCP = std::make_shared<ServerTCP>();
 
     /* Set Instances */
     instanceKernelOutput->setInstance_NetworkTraffic(instanceNetworkTraffic);
     instanceServerTCP->setInstance_NetworkTraffic(instanceNetworkTraffic);
+    instanceServerTCP->setInstance_RamConfig(instanceRamConfig);
     instanceNetworkTraffic->setInstance_KernelInput(instanceKernelInput);
 
     /* Initialize Interfaces */

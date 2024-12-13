@@ -58,6 +58,7 @@ ServerTCP::~ServerTCP()
     }
 
     m_instanceNetworkTraffic = nullptr;
+    m_instanceRamConfig = nullptr;
 }
 
 int ServerTCP::openDEV() 
@@ -168,6 +169,12 @@ void ServerTCP::threadServerTCP()
                 m_instanceNetworkTraffic->setNetworkTrafficState(NetworkTraffic_KILL);
                 m_threadKill = true;
             }
+            else if(ret == -4)
+            {
+                std::cout << "[INFO] [TCP] Execute config transfer to RAM" << std::endl;
+                m_instanceRamConfig->Execute();
+                m_timeoutCount = 0;
+            }
             else if(ret == 0)
             {
                 std::cout << "[INFO] [TCP] Client disconnected from server" << std::endl;
@@ -179,6 +186,9 @@ void ServerTCP::threadServerTCP()
                 /* TODO :: Client connected but nothing receiver */
             }
         }
+
+        /* Clear the buffer */
+        std::fill(m_Rx_ServerTCP->begin(), m_Rx_ServerTCP->end(), 0);
 
         /* Reduce consumption of CPU resources */
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
@@ -323,11 +333,17 @@ int ServerTCP::tcpRX()
     {
         m_Rx_bytesReceived = recv(m_clientSocket, m_Rx_ServerTCP->data(), TCP_SERVER_SIZE, 0);
 
-        if((*m_Rx_ServerTCP)[0] == 0xDE && (*m_Rx_ServerTCP)[1] == 0xAD)
+        if((*m_Rx_ServerTCP)[0] == 0xDE && (*m_Rx_ServerTCP)[1] == 0xAD && (*m_Rx_ServerTCP)[2] == 0xC0 && (*m_Rx_ServerTCP)[3] == 0xDE)
         {
             std::cout << std::endl;
             std::cout << "[INFO] [TCP] 0xDEAD Received" << std::endl;
             return -5;
+        }
+        else if((*m_Rx_ServerTCP)[0] == 0x5E && (*m_Rx_ServerTCP)[1] == 0xDD && (*m_Rx_ServerTCP)[2] == 0xC0 && (*m_Rx_ServerTCP)[3] == 0xDE)
+        {
+            std::cout << std::endl;
+            std::cout << "[INFO] [TCP] Received command to configure FPGA" << std::endl;
+            return -4;
         }
         else
         {
@@ -377,4 +393,9 @@ int ServerTCP::tcpClose()
 void ServerTCP::setInstance_NetworkTraffic(const std::shared_ptr<NetworkTraffic> instance)
 {
     m_instanceNetworkTraffic = instance;
+}
+
+void ServerTCP::setInstance_RamConfig(const std::shared_ptr<RamConfig> instance)
+{
+    m_instanceRamConfig = instance;
 }
