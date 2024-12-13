@@ -16,6 +16,7 @@
 #include "isrCtrl.h"
 #include "spiCtrl.h"
 #include "spiWork.h"
+#include "ramAxis.h"
 
 /////////////////////////
 //                     //
@@ -54,10 +55,13 @@ static stateMachineProcess Process =
 static int stateMachineThread(void *data)
 {
     stateType state;
+    // void* voidPointer;
     
     while (!kthread_should_stop()) 
     {
         state = getStateMachine();
+        // voidPointer = getSectorAddress(SECTOR_TEST);
+
         switch(state)
         {
             case IDLE:
@@ -69,6 +73,22 @@ static int stateMachineThread(void *data)
                 /* QUEUE :: Execution of transferFpgaInput */
                 queue_work(get_transferFpgaInput_wq(), get_transferFpgaInput_work());
                 setStateMachine(IDLE);
+
+                ramAxisInit(SECTOR_CONFIG);
+                ramAxisInit(SECTOR_BMI);
+                ramAxisInit(SECTOR_ADXL);
+                ramAxisInit(SECTOR_TEST);
+
+                printSector(SECTOR_CONFIG, 16);
+                printSector(SECTOR_BMI, 16);
+                printSector(SECTOR_ADXL, 16);
+                printSector(SECTOR_TEST, 16);
+
+                ramAxisDestroy(SECTOR_CONFIG);
+                ramAxisDestroy(SECTOR_BMI);
+                ramAxisDestroy(SECTOR_ADXL);
+                ramAxisDestroy(SECTOR_TEST);
+                
                 break;
 
             case INTERRUPT:

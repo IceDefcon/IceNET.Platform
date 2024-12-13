@@ -25,8 +25,9 @@ typedef struct
     int genericSize;
 } ramAxisType;
 
-void ramAxisInit(void);
-void ramAxisDestroy(void);
-void testPrint(void);
+/* INIT */ void ramAxisInit(ramSectorType type);
+/* DESTROY */ void ramAxisDestroy(ramSectorType type);
+/* TEST */ void printSector(ramSectorType type, int length);
+/* GET */ void* getSectorAddress(ramSectorType type);
 
 #endif // RAM_AXIS_H

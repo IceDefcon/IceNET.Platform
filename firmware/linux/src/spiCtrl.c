@@ -272,6 +272,11 @@ void killApplication(struct work_struct *work)
     charDeviceMutexCtrl(DEVICE_WATCHDOG, MUTEX_CTRL_UNLOCK);
 }
 
+/* CONFIG */ void configFpga(struct work_struct *work)
+{
+    printk(KERN_INFO "[CTRL][SPI] Sending Config from RAM to FPGA\n");
+}
+
 int spiInit(void)
 {
     (void)spiBusInit(BUS_SPI0, SPI_PRIMARY);
