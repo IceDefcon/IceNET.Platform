@@ -1,42 +1,45 @@
-#include <fcntl.h>
-#include <unistd.h>
-#include <stdio.h>
-#include <string.h>
-#include <errno.h>
-#include <stdlib.h>
+/*!
+ * 
+ * Author: Ice.Marek
+ * iceNET Technology 2025
+ * 
+ */
+#include <cstring>
+#include "RamConfig.h"
 
-#define DEVICE_PATH "/dev/IceNETDisk0" // Adjust based on your ramdisk naming
-#define SECTOR_SIZE 512  // Sector size in bytes
-
-typedef struct 
+RamConfig::RamConfig() :
+	m_test_1(0),
+	m_test_2(0)
 {
-    char header;    /* Unique ID of operation */
-    char size;      /* Total bytes sent to FPGA in one SPI/DMA Transfer */
-    char ctrl;      /* Interface (i2c, spi, pwm), Read or Write */
-    char devId;     /* In case of i2c */
-    char ops;       /* Number of Read or Write operations */
-    char checksum;  /* 8-Bit checksum */
-    char payload[]; /* Combined register addresses and write data */
-} OperationType;
+    std::cout << "[INFO] [CONSTRUCTOR] " << this << " :: Instantiate RamConfig" << std::endl;
+}
 
-// Helper function to calculate checksum
-char calculate_checksum(char *data, size_t size) 
+RamConfig::~RamConfig() 
+{
+    std::cout << "[INFO] [DESTRUCTOR] " << this << " :: Destroy RamConfig" << std::endl;
+}
+
+char RamConfig::calculate_checksum(char *data, size_t size) 
 {
     char checksum = 0;
-    for (size_t i = 0; i < size; i++) {
+    
+    for (size_t i = 0; i < size; i++) 
+    {
         checksum ^= data[i];
     }
+
     return checksum;
 }
 
-OperationType* createOperation(char devId, char ctrl, char ops) 
+RamConfig::OperationType* RamConfig::createOperation(char devId, char ctrl, char ops) 
 {
     char regSize = ops;
     char dataSize = ops;
-    char totalSize = sizeof(OperationType) + regSize + dataSize;
+    char totalSize = sizeof(RamConfig::OperationType) + regSize + dataSize;
 
     // Allocate memory
-    OperationType* op = (OperationType*)malloc(totalSize);
+    RamConfig::OperationType* op = (RamConfig::OperationType*)malloc(totalSize);
+
     if (!op)
     {
         return NULL;
@@ -49,7 +52,7 @@ OperationType* createOperation(char devId, char ctrl, char ops)
     op->ops = ops;              /* Number of writes */
 
     // Initialize payload (zero out memory)
-    memset(op->payload, 0, totalSize - sizeof(OperationType));
+    memset(op->payload, 0, totalSize - sizeof(RamConfig::OperationType));
 
     // Calculate checksum
     op->checksum = calculate_checksum((char*)op, totalSize - 1);
@@ -57,7 +60,7 @@ OperationType* createOperation(char devId, char ctrl, char ops)
     return op;
 }
 
-int main() 
+int RamConfig::Execute() 
 {
     ssize_t bytes = 0;
     int sector_offset = 0;

@@ -119,10 +119,10 @@ class TcpManager:
         self.spi_write_box = tk.Checkbutton(self.root, text="Write", variable=self.spi_write_var, command=self.spi_toggle_write_data_entry)
         self.spi_write_box.grid(row=2, column=5, pady=5, padx=5, sticky='w')
         # CTRL
-        self.spi_exe_button = tk.Button(self.root, text="Config to RAM", command=self.copy_to_RAM)
-        self.spi_exe_button.grid(row=0, column=7, pady=5, padx=5, sticky='nsew')
-        self.spi_exe_button = tk.Button(self.root, text="RAM to FPGA", command=self.send_to_FPGA)
-        self.spi_exe_button.grid(row=1, column=7, pady=5, padx=5, sticky='nsew')
+        self.i2c_device_label = tk.Label(self.root, text="Config to RAM")
+        self.i2c_device_label.grid(row=0, column=8, pady=5, padx=5, sticky='e')
+        self.spi_exe_button = tk.Button(self.root, text="SEND", command=self.configure_FPGA)
+        self.spi_exe_button.grid(row=0, column=9, pady=5, padx=5, sticky='nsew')
 
         # Console
         self.tcp_display = tk.Text(self.root, width=150, height=12, state=tk.DISABLED)
@@ -157,27 +157,18 @@ class TcpManager:
     # Debug Kill
     def kill_application(self):
         try:
-            data = bytes([0xDE, 0xAD, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00])
+            data = bytes([0xDE, 0xAD, 0xC0, 0xDE, 0x00, 0x00, 0x00, 0x00])
             self.tcp_socket.sendall(data)
             self.tcp_console("[iceNET] Kill Linux Application")
         except Exception as e:
             self.tcp_console(f"[iceNET] Server is Down: {e}")
             self.tcp_socket = None
 
-    def copy_to_RAM(self):
+    def configure_FPGA(self):
         try:
-            data = bytes([0x1A, 0x1A, 0xFF, 0xEE, 0x00, 0x00, 0x00, 0x00])
+            data = bytes([0x5E, 0xDD, 0xC0, 0xDE, 0x00, 0x00, 0x00, 0x00])
             self.tcp_socket.sendall(data)
-            self.tcp_console("[iceNET] Load Config Data to RAM")
-        except Exception as e:
-            self.tcp_console(f"[iceNET] Server is Down: {e}")
-            self.tcp_socket = None
-
-    def send_to_FPGA(self):
-        try:
-            data = bytes([0x3A, 0x3A, 0xFF, 0xEE, 0x00, 0x00, 0x00, 0x00])
-            self.tcp_socket.sendall(data)
-            self.tcp_console("[iceNET] Send Config from RAM to FPGA")
+            self.tcp_console("[iceNET] Send Configuration to FPGA")
         except Exception as e:
             self.tcp_console(f"[iceNET] Server is Down: {e}")
             self.tcp_socket = None
