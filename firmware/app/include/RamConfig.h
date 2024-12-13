@@ -23,7 +23,7 @@
 #define DEVICE_PATH "/dev/IceNETDisk0" // Adjust based on your ramdisk naming
 #define SECTOR_SIZE 512  // Sector size in bytes
 
-class RamConfig
+class RamConfig : public Console
 {
 	private:
 

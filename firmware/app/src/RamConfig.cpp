@@ -60,10 +60,12 @@ RamConfig::OperationType* RamConfig::createOperation(char devId, char ctrl, char
     return op;
 }
 
+//
+// TODO :: Refactor / Optimize
+//
 int RamConfig::Execute() 
 {
     ssize_t bytes = 0;
-    int sector_offset = 0;
     char ops = 2; /* Set up 2 registers only */
 
     // Allocate memory for the first sector
@@ -132,7 +134,6 @@ int RamConfig::Execute()
     }
     printf("Write %ld Bytes to ramDisk to Sector 0\n", bytes);
 
-    // Seek to sector 1 (sector_offset = 1)
     lseek(fd, SECTOR_SIZE * 1, SEEK_SET);
 
     // Write to sector 1
@@ -147,7 +148,6 @@ int RamConfig::Execute()
     }
     printf("Write %ld Bytes to ramDisk to Sector 1\n", bytes);
 
-    // Seek to sector 2 (sector_offset = 2)
     lseek(fd, SECTOR_SIZE * 2, SEEK_SET);
 
     // Write to sector 2
@@ -162,7 +162,6 @@ int RamConfig::Execute()
     }
     printf("Write %ld Bytes to ramDisk to Sector 2\n", bytes);
 
-    // Seek to sector 2 (sector_offset = 2)
     lseek(fd, SECTOR_SIZE * 3, SEEK_SET);
 
     // Write to sector 2
