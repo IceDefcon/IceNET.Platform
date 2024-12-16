@@ -19,6 +19,7 @@
 #include <iostream>
 
 #include "Types.h"
+#include "Console.h"
 
 #define DEVICE_PATH "/dev/IceNETDisk0" // Adjust based on your ramdisk naming
 #define SECTOR_SIZE 512  // Sector size in bytes
@@ -30,16 +31,16 @@ class RamConfig : public Console
 		int m_test_1;
 		int m_test_2;
 
-        struct OperationType
-        {
-            char header;    // Unique ID of the operation
-            char size;      // Total bytes sent to FPGA in one SPI/DMA Transfer
-            char ctrl;      // Interface (I2C, SPI, PWM), Read or Write
-            char devId;     // Device ID (e.g., for I2C)
-            char ops;       // Number of Read or Write operations
-            char checksum;  // 8-bit checksum
-            char payload[]; // Combined register addresses and write data
-        };
+    struct OperationType 
+    {
+        char header;    // Unique ID of the operation
+        char size;       // Total bytes sent to FPGA in one SPI/DMA Transfer (change to int)
+        char ctrl;      // Interface (I2C, SPI, PWM), Read or Write
+        char devId;     // Device ID (e.g., for I2C)
+        char ops;       // Number of Read or Write operations
+        char checksum;  // 8-bit checksum
+        char payload[]; // Combined register addresses and write data
+    };
 
 	public:
 

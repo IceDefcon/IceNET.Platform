@@ -333,12 +333,14 @@ int ServerTCP::tcpRX()
     {
         m_Rx_bytesReceived = recv(m_clientSocket, m_Rx_ServerTCP->data(), TCP_SERVER_SIZE, 0);
 
+        /* Dead :: CODE */
         if((*m_Rx_ServerTCP)[0] == 0xDE && (*m_Rx_ServerTCP)[1] == 0xAD && (*m_Rx_ServerTCP)[2] == 0xC0 && (*m_Rx_ServerTCP)[3] == 0xDE)
         {
             std::cout << std::endl;
             std::cout << "[INFO] [TCP] 0xDEAD Received" << std::endl;
             return -5;
         }
+        /* Send :: CODE */
         else if((*m_Rx_ServerTCP)[0] == 0x5E && (*m_Rx_ServerTCP)[1] == 0xDD && (*m_Rx_ServerTCP)[2] == 0xC0 && (*m_Rx_ServerTCP)[3] == 0xDE)
         {
             std::cout << std::endl;
