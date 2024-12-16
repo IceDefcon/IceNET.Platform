@@ -99,6 +99,8 @@ bool ServerTCP::isThreadKilled()
 
 void ServerTCP::threadServerTCP()
 {
+    size_t i = 0;
+
     initServer();
 
     socklen_t clientLength = sizeof(m_clientAddress);
@@ -187,8 +189,10 @@ void ServerTCP::threadServerTCP()
             }
         }
 
-        /* Clear the buffer */
-        std::fill(m_Rx_ServerTCP->begin(), m_Rx_ServerTCP->end(), 0);
+        for (i = 0; i < TCP_SERVER_SIZE; i++)
+        {
+            (*m_Rx_ServerTCP)[i] = 0x00;
+        }
 
         /* Reduce consumption of CPU resources */
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
