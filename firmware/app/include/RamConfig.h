@@ -22,7 +22,8 @@
 #include "Console.h"
 
 #define DEVICE_PATH "/dev/IceNETDisk0" // Adjust based on your ramdisk naming
-#define SECTOR_SIZE 512  // Sector size in bytes
+#define MAX_DMA_TRANSFTER_SIZE 100
+#define SECTOR_SIZE 512
 
 class RamConfig : public Console
 {

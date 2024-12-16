@@ -109,10 +109,16 @@ int RamConfig::Execute()
     dev_1_reg[1] = 0x31;    /* ACC_CONF */
     dev_1_bin[1] = 0x00;    /* acc_bwp = 0x2 normal mode + acc_od = 0xC 1600Hz r*/
 
-    if ((dev_0_op->size > (char)SECTOR_SIZE) || (dev_1_op->size > (char)SECTOR_SIZE)) 
+    if(dev_0_op->size > MAX_DMA_TRANSFTER_SIZE)
     {
-        fprintf(stderr, "Operation size exceeds sector size (%d bytes)\n", SECTOR_SIZE);
+        fprintf(stderr, "Device 0 operation size exceeds half sector size :: %d bytes\n", dev_0_op->size);
         free(dev_0_op);
+        return EXIT_FAILURE;
+    }
+
+    if(dev_1_op->size > MAX_DMA_TRANSFTER_SIZE)
+    {
+        fprintf(stderr, "Device 1 operation size exceeds half sector size :: %d bytes\n", dev_1_op->size);
         free(dev_1_op);
         return EXIT_FAILURE;
     }
