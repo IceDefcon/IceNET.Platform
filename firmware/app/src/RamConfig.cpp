@@ -5,11 +5,12 @@
  * 
  */
 #include <cstring>
+#include <iostream>
+#include <fcntl.h>
+#include <unistd.h>
 #include "RamConfig.h"
 
-RamConfig::RamConfig() :
-	m_test_1(0),
-	m_test_2(0)
+RamConfig::RamConfig()
 {
     std::cout << "[INFO] [CONSTRUCTOR] " << this << " :: Instantiate RamConfig" << std::endl;
 }
@@ -42,6 +43,7 @@ RamConfig::OperationType* RamConfig::createOperation(char devId, char ctrl, char
 
     if (!op)
     {
+        perror("Failed to allocate operation");
         return NULL;
     } 
 
@@ -105,10 +107,16 @@ int RamConfig::Execute()
     dev_1_reg[1] = 0x31;    /* ACC_CONF */
     dev_1_bin[1] = 0x00;    /* acc_bwp = 0x2 normal mode + acc_od = 0xC 1600Hz r*/
 
-    if ((dev_0_op->size > SECTOR_SIZE) || (dev_1_op->size > SECTOR_SIZE)) 
+    if(dev_0_op->size > MAX_DMA_TRANSFTER_SIZE)
     {
-        fprintf(stderr, "Operation size exceeds sector size (%d bytes)\n", SECTOR_SIZE);
+        fprintf(stderr, "Device 0 operation size exceeds half sector size :: %d bytes\n", dev_0_op->size);
         free(dev_0_op);
+        return EXIT_FAILURE;
+    }
+
+    if(dev_1_op->size > MAX_DMA_TRANSFTER_SIZE)
+    {
+        fprintf(stderr, "Device 1 operation size exceeds half sector size :: %d bytes\n", dev_1_op->size);
         free(dev_1_op);
         return EXIT_FAILURE;
     }
@@ -132,7 +140,7 @@ int RamConfig::Execute()
         free(dev_1_op);
         return EXIT_FAILURE;
     }
-    printf("Write %ld Bytes to ramDisk to Sector 0\n", bytes);
+    printf("Write %d Bytes to ramDisk to Sector 0\n", bytes);  // Change %ld to %d
 
     lseek(fd, SECTOR_SIZE * 1, SEEK_SET);
 
@@ -146,7 +154,7 @@ int RamConfig::Execute()
         free(dev_1_op);
         return EXIT_FAILURE;
     }
-    printf("Write %ld Bytes to ramDisk to Sector 1\n", bytes);
+    printf("Write %d Bytes to ramDisk to Sector 1\n", bytes);  // Change %ld to %d
 
     lseek(fd, SECTOR_SIZE * 2, SEEK_SET);
 
@@ -160,11 +168,11 @@ int RamConfig::Execute()
         free(dev_1_op);
         return EXIT_FAILURE;
     }
-    printf("Write %ld Bytes to ramDisk to Sector 2\n", bytes);
+    printf("Write %d Bytes to ramDisk to Sector 2\n", bytes);  // Change %ld to %d
 
     lseek(fd, SECTOR_SIZE * 3, SEEK_SET);
 
-    // Write to sector 2
+    // Write to sector 3
     bytes = write(fd, forth_sector, sizeof(forth_sector));
     if (bytes < 0) 
     {
@@ -174,7 +182,7 @@ int RamConfig::Execute()
         free(dev_1_op);
         return EXIT_FAILURE;
     }
-    printf("Write %ld Bytes to ramDisk to Sector 3\n", bytes);
+    printf("Write %d Bytes to ramDisk to Sector 3\n", bytes);  // Change %ld to %d
 
     close(fd);
     free(dev_0_op);

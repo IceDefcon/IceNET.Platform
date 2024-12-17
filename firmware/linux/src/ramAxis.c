@@ -4,6 +4,9 @@
  * IceNET Technology 2025
  *
  */
+#include <linux/slab.h>
+#include <linux/printk.h>
+
 #include "ramAxis.h"
 #include "ramDisk.h"
 
@@ -46,20 +49,39 @@ void ramAxisDestroy(ramSectorType type)
 
 void printSector(ramSectorType type, int length)
 {
-	int i = 0;
+    int i = 0;
+    char *output;  // Pointer for the buffer
+    int offset = 0;
 
+    // Check if the sector address is valid
     if (!ramAxis[type].sectorAddress) 
     {
         pr_err("[ERNO][RAM] Sector %d address is NULL\n", type);
         return;
     }
 
-    pr_info("[CTRL][RAM] Data in sector %d: ", type);
+    // Allocate memory for the output buffer (size 1024 bytes)
+    output = kmalloc(1024, GFP_KERNEL);
+    if (!output) 
+    {
+        pr_err("[ERNO][RAM] Failed to allocate memory for output buffer\n");
+        return;
+    }
+
+    // Start the message with sector type
+    offset += snprintf(output + offset, 1024 - offset, "[CTRL][RAM] Data in sector %d: ", type);
+
+    // Append the hex data to the buffer
     for (i = 0; i < length; ++i)
     {
-        pr_info("%02x ", ((char *)ramAxis[type].sectorAddress)[i]);
+        offset += snprintf(output + offset, 1024 - offset, "%02x ", ((char *)ramAxis[type].sectorAddress)[i]);
     }
-    pr_info("\n");
+
+    // Print the full message at once
+    pr_info("%s\n", output);
+
+    // Free the allocated memory after use
+    kfree(output);
 }
 
 void* getSectorAddress(ramSectorType type)

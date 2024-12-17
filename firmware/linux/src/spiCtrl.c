@@ -117,6 +117,47 @@ static int spiBusInit(spiBusType spiBusEnum, spiDeviceType spiDeviceEnum)
     return ret;
 }
 
+
+ /*************************************************************************************************************************************************
+ *
+ *                                                          -----===[ FORWARD ]===-----
+ *
+ **************************************************************************************************************************************************
+ *
+ * NETWORK ---------------> [0] DEVICE_INPUT -------------------------------------------------------------------------------------------------
+ *                           |                                                                                                               |
+ *                           V                                                                                                               |
+ *                          [0] SPI_PRIMARY -------------------->                                                                            |
+ *                           |                                  |                                                                            |
+ *                           V                                  |                                                                            |
+ * FPGA <------------------ [0] DMA_IN                          |                                                                            |
+ *                                                              V                                                                            V
+ * Device[SPI_PRIMARY].Dma.tx_dma = dma_map_single(Device[SPI_PRIMARY].spiDevice->controller->dev.parent, (void *)getCharDeviceTransfer(DEVICE_INPUT)->RxData, Device[SPI_PRIMARY].spiLength, DMA_TO_DEVICE);
+ * Device[SPI_PRIMARY].Dma.rx_dma = dma_map_single(Device[SPI_PRIMARY].spiDevice->controller->dev.parent, (void *)Device[SPI_PRIMARY].spiRx, Device[SPI_PRIMARY].spiLength, DMA_FROM_DEVICE);
+ *
+ */
+
+
+
+ /*************************************************************************************************************************************************
+ *
+ *                                                          -----===[ FEEDBACK ]===-----
+ *
+ **************************************************************************************************************************************************
+ *
+ * NETWORK <--------------- [1] DEVICE_OUTPUT <----------------------------------------------------------------------------------------------------
+ *                           Λ                                                                                                                    Λ
+ *                           |                                                                                                                    |
+ *                          [1] SPI_SECONDARY <--------------------                                                                               |
+ *                           Λ                                    Λ                                                                               |
+ *                           |                                    |                                                                               |
+ * FPGA ------------------> [1] DMA_OUT                           |                                                                               |
+ *                                                                |                                                                               |
+ * Device[SPI_SECONDARY].Dma.tx_dma = dma_map_single(Device[SPI_SECONDARY].spiDevice->controller->dev.parent, (void *)getCharDeviceTransfer(DEVICE_OUTPUT)->RxData, Device[SPI_SECONDARY].spiLength, DMA_TO_DEVICE);
+ * Device[SPI_SECONDARY].Dma.rx_dma = dma_map_single(Device[SPI_SECONDARY].spiDevice->controller->dev.parent, (void *)Device[SPI_SECONDARY].spiRx, Device[SPI_SECONDARY].spiLength, DMA_FROM_DEVICE);
+ *
+ */
+
 static int spiDmaInit(spiDeviceType spiDeviceEnum, charDeviceType charDeviceEnum, dmaControlType dmaControl)
 {
     DataTransfer* pCharDeviceTransfer = getCharDeviceTransfer(charDeviceEnum);
@@ -185,7 +226,7 @@ void transferFpgaInput(struct work_struct *work)
     ramAxisDestroy();
 #endif
 
-    /* Initate DMA Controller to perform SPI transfer */
+    /* Initiate DMA Controller to perform SPI transfer */
     ret = spi_sync(Device[SPI_PRIMARY].spiDevice, &Device[SPI_PRIMARY].Dma.spiMessage);
 
     if (ret < 0)
@@ -228,7 +269,7 @@ void transferFpgaOutput(struct work_struct *work)
     int ret;
     int i;
 
-    /* Initate DMA Controller to perform SPI transfer */
+    /* Initiate DMA Controller to perform SPI transfer */
     ret = spi_sync(Device[SPI_SECONDARY].spiDevice, &Device[SPI_SECONDARY].Dma.spiMessage);
 
     if (ret < 0)

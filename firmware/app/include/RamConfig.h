@@ -19,21 +19,36 @@
 #include <iostream>
 
 #include "Types.h"
+#include "Console.h"
 
 #define DEVICE_PATH "/dev/IceNETDisk0" // Adjust based on your ramdisk naming
-#define SECTOR_SIZE 512  // Sector size in bytes
+#define MAX_DMA_TRANSFTER_SIZE 100
+#define SECTOR_SIZE 512
 
 class RamConfig : public Console
 {
 	private:
 
-		int m_test_1;
-		int m_test_2;
+        enum Config
+        {
+            CONFIG_SECTORS,
+            CONFIG_BMI160,
+            CONFIG_ADXL345,
+            CONFIG_DMA_TEST,
+            CONFIG_AMOUNT
+        };
+
+        struct ControlSector
+        {
+            char initialisation; /* Setup pointers */
+            char transfer; /* Run DMA transfer */
+            char config; /* Amount of DMA transfters */
+        };
 
         struct OperationType
         {
             char header;    // Unique ID of the operation
-            char size;      // Total bytes sent to FPGA in one SPI/DMA Transfer
+            char size;      // Total bytes sent to FPGA in one SPI/DMA Transfer (change to int)
             char ctrl;      // Interface (I2C, SPI, PWM), Read or Write
             char devId;     // Device ID (e.g., for I2C)
             char ops;       // Number of Read or Write operations
