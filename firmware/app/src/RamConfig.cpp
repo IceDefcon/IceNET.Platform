@@ -10,9 +10,7 @@
 #include <unistd.h>
 #include "RamConfig.h"
 
-RamConfig::RamConfig() :
-    m_test_1(0),
-    m_test_2(0)
+RamConfig::RamConfig()
 {
     std::cout << "[INFO] [CONSTRUCTOR] " << this << " :: Instantiate RamConfig" << std::endl;
 }

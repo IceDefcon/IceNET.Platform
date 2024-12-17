@@ -173,7 +173,23 @@ void ServerTCP::threadServerTCP()
             }
             else if(ret == -4)
             {
-                std::cout << "[INFO] [TCP] Execute config transfer to RAM" << std::endl;
+                std::cout << "[INFO] [TCP] Assembly Configuration Data" << std::endl;
+                //
+                //
+                //
+                m_timeoutCount = 0;
+            }
+            else if(ret == -3)
+            {
+                std::cout << "[INFO] [TCP] Initialize sector pointers" << std::endl;
+                //
+                //
+                //
+                m_timeoutCount = 0;
+            }
+            else if(ret == -2)
+            {
+                std::cout << "[INFO] [TCP] Transfer Data to RAM" << std::endl;
                 m_instanceRamConfig->Execute();
                 m_timeoutCount = 0;
             }
@@ -344,12 +360,26 @@ int ServerTCP::tcpRX()
             std::cout << "[INFO] [TCP] 0xDEAD Received" << std::endl;
             return -5;
         }
+        /* Assembly :: CODE */
+        else if((*m_Rx_ServerTCP)[0] == 0x45 && (*m_Rx_ServerTCP)[1] == 0x5E && (*m_Rx_ServerTCP)[2] == 0xC0 && (*m_Rx_ServerTCP)[3] == 0xDE)
+        {
+            std::cout << std::endl;
+            std::cout << "[INFO] [TCP] Initialization of sector pointers" << std::endl;
+            return -4;
+        }
+        /* Init :: CODE */
+        else if((*m_Rx_ServerTCP)[0] == 0x14 && (*m_Rx_ServerTCP)[1] == 0x17 && (*m_Rx_ServerTCP)[2] == 0xC0 && (*m_Rx_ServerTCP)[3] == 0xDE)
+        {
+            std::cout << std::endl;
+            std::cout << "[INFO] [TCP] Initialization of sector pointers" << std::endl;
+            return -3;
+        }
         /* Send :: CODE */
         else if((*m_Rx_ServerTCP)[0] == 0x5E && (*m_Rx_ServerTCP)[1] == 0xDD && (*m_Rx_ServerTCP)[2] == 0xC0 && (*m_Rx_ServerTCP)[3] == 0xDE)
         {
             std::cout << std::endl;
-            std::cout << "[INFO] [TCP] Received command to configure FPGA" << std::endl;
-            return -4;
+            std::cout << "[INFO] [TCP] Send configuration to RAM" << std::endl;
+            return -2;
         }
         else
         {
@@ -376,9 +406,6 @@ int ServerTCP::tcpRX()
             }
         }
     }
-    
-    /* TODO :: Resize to actual bytes read */
-    // m_Rx_ServerTCP->resize(m_bytesRead);
 
     return m_Rx_bytesReceived;
 }

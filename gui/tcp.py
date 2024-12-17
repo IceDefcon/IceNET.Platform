@@ -119,10 +119,18 @@ class TcpManager:
         self.spi_write_box = tk.Checkbutton(self.root, text="Write", variable=self.spi_write_var, command=self.spi_toggle_write_data_entry)
         self.spi_write_box.grid(row=2, column=5, pady=5, padx=5, sticky='w')
         # CTRL
-        self.i2c_device_label = tk.Label(self.root, text="Config to RAM")
-        self.i2c_device_label.grid(row=0, column=8, pady=5, padx=5, sticky='e')
-        self.spi_exe_button = tk.Button(self.root, text="SEND", command=self.configure_FPGA)
-        self.spi_exe_button.grid(row=0, column=9, pady=5, padx=5, sticky='nsew')
+        self.assembly_label = tk.Label(self.root, text="Assembly")
+        self.assembly_label.grid(row=0, column=8, pady=5, padx=5, sticky='e')
+        self.assembly_button = tk.Button(self.root, text="EXE", command=self.assemblyData)
+        self.assembly_button.grid(row=0, column=9, pady=5, padx=5, sticky='nsew')
+        self.initialise_label = tk.Label(self.root, text="Initialise")
+        self.initialise_label.grid(row=1, column=8, pady=5, padx=5, sticky='e')
+        self.initialise_button = tk.Button(self.root, text="EXE", command=self.initPointers)
+        self.initialise_button.grid(row=1, column=9, pady=5, padx=5, sticky='nsew')
+        self.load_label = tk.Label(self.root, text="Load")
+        self.load_label.grid(row=2, column=8, pady=5, padx=5, sticky='e')
+        self.load_button = tk.Button(self.root, text="EXE", command=self.loadRam)
+        self.load_button.grid(row=2, column=9, pady=5, padx=5, sticky='nsew')
 
         # Console
         self.tcp_display = tk.Text(self.root, width=150, height=12, state=tk.DISABLED)
@@ -164,11 +172,29 @@ class TcpManager:
             self.tcp_console(f"[iceNET] Server is Down: {e}")
             self.tcp_socket = None
 
-    def configure_FPGA(self):
+    def assemblyData(self):
+        try:
+            data = bytes([0x45, 0x5E, 0xC0, 0xDE, 0x00, 0x00, 0x00, 0x00])
+            self.tcp_socket.sendall(data)
+            self.tcp_console("[iceNET] Assembly Data")
+        except Exception as e:
+            self.tcp_console(f"[iceNET] Server is Down: {e}")
+            self.tcp_socket = None
+
+    def initPointers(self):
+        try:
+            data = bytes([0x14, 0x17, 0xC0, 0xDE, 0x00, 0x00, 0x00, 0x00])
+            self.tcp_socket.sendall(data)
+            self.tcp_console("[iceNET] Initialise sector pointers")
+        except Exception as e:
+            self.tcp_console(f"[iceNET] Server is Down: {e}")
+            self.tcp_socket = None
+
+    def loadRam(self):
         try:
             data = bytes([0x5E, 0xDD, 0xC0, 0xDE, 0x00, 0x00, 0x00, 0x00])
             self.tcp_socket.sendall(data)
-            self.tcp_console("[iceNET] Send Configuration to FPGA")
+            self.tcp_console("[iceNET] Send data to RAM")
         except Exception as e:
             self.tcp_console(f"[iceNET] Server is Down: {e}")
             self.tcp_socket = None

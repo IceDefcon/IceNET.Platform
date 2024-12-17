@@ -78,12 +78,10 @@ static int stateMachineThread(void *data)
                 ramAxisInit(SECTOR_BMI);
                 ramAxisInit(SECTOR_ADXL);
                 ramAxisInit(SECTOR_TEST);
-
                 printSector(SECTOR_CONFIG, 16);
                 printSector(SECTOR_BMI, 16);
                 printSector(SECTOR_ADXL, 16);
                 printSector(SECTOR_TEST, 16);
-
                 ramAxisDestroy(SECTOR_CONFIG);
                 ramAxisDestroy(SECTOR_BMI);
                 ramAxisDestroy(SECTOR_ADXL);

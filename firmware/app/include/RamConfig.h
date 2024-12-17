@@ -29,19 +29,32 @@ class RamConfig : public Console
 {
 	private:
 
-		int m_test_1;
-		int m_test_2;
+        enum Config
+        {
+            CONFIG_SECTORS,
+            CONFIG_BMI160,
+            CONFIG_ADXL345,
+            CONFIG_DMA_TEST,
+            CONFIG_AMOUNT
+        };
 
-    struct OperationType 
-    {
-        char header;    // Unique ID of the operation
-        char size;       // Total bytes sent to FPGA in one SPI/DMA Transfer (change to int)
-        char ctrl;      // Interface (I2C, SPI, PWM), Read or Write
-        char devId;     // Device ID (e.g., for I2C)
-        char ops;       // Number of Read or Write operations
-        char checksum;  // 8-bit checksum
-        char payload[]; // Combined register addresses and write data
-    };
+        struct ControlSector
+        {
+            char initialisation; /* Setup pointers */
+            char transfer; /* Run DMA transfer */
+            char config; /* Amount of DMA transfters */
+        };
+
+        struct OperationType
+        {
+            char header;    // Unique ID of the operation
+            char size;      // Total bytes sent to FPGA in one SPI/DMA Transfer (change to int)
+            char ctrl;      // Interface (I2C, SPI, PWM), Read or Write
+            char devId;     // Device ID (e.g., for I2C)
+            char ops;       // Number of Read or Write operations
+            char checksum;  // 8-bit checksum
+            char payload[]; // Combined register addresses and write data
+        };
 
 	public:
 
