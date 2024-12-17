@@ -6,16 +6,11 @@
  */
 #pragma once
 
-#include <thread>
-#include <atomic>
-#include <vector>
+#include <cstdint>
 #include <memory>
+#include <vector>
 #include <fcntl.h>
-#include <stdio.h>
-#include <errno.h>
 #include <unistd.h>
-#include <string.h>
-#include <stdlib.h>
 #include <iostream>
 
 #include "Types.h"
@@ -28,33 +23,32 @@ typedef enum
     CONFIG_AMOUNT
 }DeviceType;
 
-
-typedef struct
+struct DeviceConfig
 {
-    char size;      // Total bytes sent to FPGA in one SPI/DMA Transfer (change to int)
-    char ctrl;      // Interface (I2C, SPI, PWM), Read or Write
-    char id;        // Device ID (In case of I2C)
-    char ops;       // Number of Read or Write operations
-    char payload[]; // Combined register addresses and write data
-}DeviceConfig;
+    uint8_t size;       // Total bytes sent to FPGA in one SPI/DMA Transfer
+    uint8_t ctrl;       // Interface (I2C, SPI, PWM), Read or Write
+    uint8_t id;         // Device ID (In case of I2C)
+    uint8_t ops;        // Number of Read or Write operations
+    uint8_t payload[];  // Combined register addresses and write data
+};
 
 class RamConfig : public Console
 {
 	private:
 
-        int m_file_descriptor;
-        char m_goDma;
+        int m_fileDescriptor;
 
-        char m_first_sector[1];
-        char m_forth_sector[4];
+        uint8_t m_goDma;
+        uint8_t m_firstSector[1];
+        uint8_t m_fourthSector[4];
+
+        static constexpr const char* DEVICE_PATH = "/dev/IceNETDisk0";
+        static constexpr size_t MAX_DMA_TRANSFER_SIZE = 100;
+        static constexpr size_t SECTOR_SIZE = 512;
 
         DeviceConfig* m_pDevice[CONFIG_AMOUNT];
 
 	public:
-
-        static constexpr const char* DEVICE_PATH = "/dev/IceNETDisk0";
-        static constexpr int MAX_DMA_TRANSFER_SIZE = 100;
-        static constexpr int SECTOR_SIZE = 512;
 
 		RamConfig();
 		~RamConfig();

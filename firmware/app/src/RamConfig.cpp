@@ -12,7 +12,7 @@
 
 
 RamConfig::RamConfig() :
-m_file_descriptor(0)
+m_fileDescriptor(0)
 {
     std::cout << "[INFO] [CONSTRUCTOR] " << this << " :: Instantiate RamConfig" << std::endl;
 }
@@ -58,21 +58,21 @@ DeviceConfig* RamConfig::createOperation(char id, char ctrl, char ops)
 
 int RamConfig::AssembleData()
 {
-    m_first_sector[0] = 0x02;
+    m_firstSector[0] = 0x02;
 
-    m_forth_sector[0] = 0x00;
-    m_forth_sector[1] = 0x69;
-    m_forth_sector[2] = 0x00;
-    m_forth_sector[3] = 0x00;
+    m_fourthSector[0] = 0x00;
+    m_fourthSector[1] = 0x69;
+    m_fourthSector[2] = 0x00;
+    m_fourthSector[3] = 0x00;
 
     return OK;
 }
 
 int RamConfig::openDEV()
 {
-    m_file_descriptor = open(DEVICE_PATH, O_RDWR);
+    m_fileDescriptor = open(DEVICE_PATH, O_RDWR);
 
-    if (m_file_descriptor < 0)
+    if (m_fileDescriptor < 0)
     {
         Error("[RAM] Failed to open Device");
         return EXIT_FAILURE;
@@ -110,7 +110,7 @@ int RamConfig::dataTX()
         return EXIT_FAILURE;
     }
 
-    char* dev_0 = dev_0_op->payload;
+    uint8_t* dev_0 = dev_0_op->payload;
 
     dev_0[0] = 0x7E;    /* CMD */
     dev_0[1] = 0x11;    /* Set PMU mode of accelerometer to normal */
@@ -128,7 +128,7 @@ int RamConfig::dataTX()
         return EXIT_FAILURE;
     }
 
-    char* dev_1 = dev_1_op->payload;
+    uint8_t* dev_1 = dev_1_op->payload;
 
     dev_1[0] = 0x2D;    /* CMD */
     dev_1[1] = 0x08;    /* Set PMU mode of accelerometer to normal */
@@ -154,66 +154,66 @@ int RamConfig::dataTX()
     //
     // Write to sector 0
     //
-    bytes = write(m_file_descriptor, m_first_sector, sizeof(m_first_sector));
+    bytes = write(m_fileDescriptor, m_firstSector, sizeof(m_firstSector));
     if (bytes < 0)
     {
         perror("Failed to write to block device");
-        close(m_file_descriptor);
+        close(m_fileDescriptor);
         free(dev_0_op);
         free(dev_1_op);
         return EXIT_FAILURE;
     }
     printf("[INFO] [RAM] Write %d Bytes to ramDisk to Sector 0\n", bytes);  // Change %ld to %d
 
-    lseek(m_file_descriptor, SECTOR_SIZE * 1, SEEK_SET);
+    lseek(m_fileDescriptor, SECTOR_SIZE * 1, SEEK_SET);
 
     //
     // Write to sector 1
     //
-    bytes = write(m_file_descriptor, dev_0_op, dev_0_op->size);
+    bytes = write(m_fileDescriptor, dev_0_op, dev_0_op->size);
     if (bytes < 0)
     {
         perror("Failed to write to sector 1");
-        close(m_file_descriptor);
+        close(m_fileDescriptor);
         free(dev_0_op);
         free(dev_1_op);
         return EXIT_FAILURE;
     }
     printf("[INFO] [RAM] Write %d Bytes to ramDisk to Sector 1\n", bytes);  // Change %ld to %d
 
-    lseek(m_file_descriptor, SECTOR_SIZE * 2, SEEK_SET);
+    lseek(m_fileDescriptor, SECTOR_SIZE * 2, SEEK_SET);
 
     //
     // Write to sector 2
     //
-    bytes = write(m_file_descriptor, dev_1_op, dev_1_op->size);
+    bytes = write(m_fileDescriptor, dev_1_op, dev_1_op->size);
     if (bytes < 0)
     {
         perror("Failed to write to sector 2");
-        close(m_file_descriptor);
+        close(m_fileDescriptor);
         free(dev_0_op);
         free(dev_1_op);
         return EXIT_FAILURE;
     }
     printf("[INFO] [RAM] Write %d Bytes to ramDisk to Sector 2\n", bytes);  // Change %ld to %d
 
-    lseek(m_file_descriptor, SECTOR_SIZE * 3, SEEK_SET);
+    lseek(m_fileDescriptor, SECTOR_SIZE * 3, SEEK_SET);
 
     //
     // Write to sector 3
     //
-    bytes = write(m_file_descriptor, m_forth_sector, sizeof(m_forth_sector));
+    bytes = write(m_fileDescriptor, m_fourthSector, sizeof(m_fourthSector));
     if (bytes < 0)
     {
         perror("Failed to write to sector 3");
-        close(m_file_descriptor);
+        close(m_fileDescriptor);
         free(dev_0_op);
         free(dev_1_op);
         return EXIT_FAILURE;
     }
     printf("[INFO] [RAM] Write %d Bytes to ramDisk to Sector 3\n", bytes);  // Change %ld to %d
 
-    close(m_file_descriptor);
+    close(m_fileDescriptor);
     free(dev_0_op);
     free(dev_1_op);
     return EXIT_SUCCESS;
@@ -221,10 +221,10 @@ int RamConfig::dataTX()
 
 int RamConfig::closeDEV()
 {
-    if (m_file_descriptor >= 0)
+    if (m_fileDescriptor >= 0)
     {
-        close(m_file_descriptor);
-        m_file_descriptor = 0; // Mark as closed
+        close(m_fileDescriptor);
+        m_fileDescriptor = 0; // Mark as closed
     }
 
     return OK;
