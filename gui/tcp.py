@@ -119,12 +119,20 @@ class TcpManager:
         self.spi_write_box = tk.Checkbutton(self.root, text="Write", variable=self.spi_write_var, command=self.spi_toggle_write_data_entry)
         self.spi_write_box.grid(row=2, column=5, pady=5, padx=5, sticky='w')
         # CTRL
+        self.create_label("RAM Control", 0, 8)
+        self.root.columnconfigure(8, weight=0)
         self.load_button = tk.Button(self.root, text="Load", command=self.loadRam)
-        self.load_button.grid(row=1, column=9, pady=5, padx=5, sticky='nsew')
+        self.load_button.grid(row=0, column=7, pady=5, padx=5)  # Independent padding, no stretching
+        self.root.rowconfigure(0, weight=0)  # Prevent row stretching
 
         # Console
         self.tcp_display = tk.Text(self.root, width=150, height=12, state=tk.DISABLED)
         self.tcp_display.grid(row=8, column=0, columnspan=100, pady=5, padx=5, sticky='w')
+
+    def create_label(self, text, row, column):
+        label = tk.Label(self.root, text=text, font=("Cambria", 20))  # Use self.root as the parent
+        label.grid(row=row, column=column, padx=5, pady=5)
+        return label
 
     # Connect
     def connect_to_server(self):
@@ -281,3 +289,4 @@ class TcpManager:
         self.tcp_display.insert(tk.END, message + "\n")
         self.tcp_display.config(state=tk.DISABLED)
         self.tcp_display.see(tk.END)
+
