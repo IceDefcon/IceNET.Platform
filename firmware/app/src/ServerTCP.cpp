@@ -173,14 +173,6 @@ void ServerTCP::threadServerTCP()
             }
             else if(ret == -4)
             {
-                std::cout << "[INFO] [TCP] Build Configuration Data" << std::endl;
-                //
-                //
-                //
-                m_timeoutCount = 0;
-            }
-            else if(ret == -3)
-            {
                 std::cout << "[INFO] [TCP] Transfer Data to RAM" << std::endl;
                 m_instanceRamConfig->dataTX();
                 m_timeoutCount = 0;
@@ -345,26 +337,19 @@ int ServerTCP::tcpRX()
     {
         m_Rx_bytesReceived = recv(m_clientSocket, m_Rx_ServerTCP->data(), TCP_SERVER_SIZE, 0);
 
-        /* Dead :: CODE */
+        /* DEAD :: CODE */
         if((*m_Rx_ServerTCP)[0] == 0xDE && (*m_Rx_ServerTCP)[1] == 0xAD && (*m_Rx_ServerTCP)[2] == 0xC0 && (*m_Rx_ServerTCP)[3] == 0xDE)
         {
             std::cout << std::endl;
             std::cout << "[INFO] [TCP] 0xDEAD Received" << std::endl;
             return -5;
         }
-        /* Build :: CODE */
-        else if((*m_Rx_ServerTCP)[0] == 0xB1 && (*m_Rx_ServerTCP)[1] == 0x1D && (*m_Rx_ServerTCP)[2] == 0xC0 && (*m_Rx_ServerTCP)[3] == 0xDE)
-        {
-            std::cout << std::endl;
-            std::cout << "[INFO] [TCP] Initialization of sector pointers" << std::endl;
-            return -4;
-        }
-        /* Load :: CODE */
+        /* LOAD :: CODE */
         else if((*m_Rx_ServerTCP)[0] == 0x10 && (*m_Rx_ServerTCP)[1] == 0xAD && (*m_Rx_ServerTCP)[2] == 0xC0 && (*m_Rx_ServerTCP)[3] == 0xDE)
         {
             std::cout << std::endl;
             std::cout << "[INFO] [TCP] Send configuration to RAM" << std::endl;
-            return -3;
+            return -4;
         }
         else
         {

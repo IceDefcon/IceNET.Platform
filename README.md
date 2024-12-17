@@ -37,6 +37,7 @@
 	10. Checksum in LNX Module to be send in last byte
 	11. Checksum in RTL Code to be send in last byte
 	12. UART Console (DMA controller buffer)
+	13. Upgrade Console for the functions with arguments
 
 # Testing Hardware Modules
 

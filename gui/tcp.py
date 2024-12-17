@@ -119,8 +119,6 @@ class TcpManager:
         self.spi_write_box = tk.Checkbutton(self.root, text="Write", variable=self.spi_write_var, command=self.spi_toggle_write_data_entry)
         self.spi_write_box.grid(row=2, column=5, pady=5, padx=5, sticky='w')
         # CTRL
-        self.assembly_button = tk.Button(self.root, text="Assemble", command=self.assembleData)
-        self.assembly_button.grid(row=0, column=9, pady=5, padx=5, sticky='nsew')
         self.load_button = tk.Button(self.root, text="Load", command=self.loadRam)
         self.load_button.grid(row=1, column=9, pady=5, padx=5, sticky='nsew')
 
