@@ -182,7 +182,7 @@ void ServerTCP::threadServerTCP()
             else if(ret == -3)
             {
                 std::cout << "[INFO] [TCP] Transfer Data to RAM" << std::endl;
-                m_instanceRamConfig->Execute();
+                m_instanceRamConfig->dataTX();
                 m_timeoutCount = 0;
             }
             else if(ret == 0)

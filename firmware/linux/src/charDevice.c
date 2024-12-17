@@ -368,7 +368,7 @@ static ssize_t watchdogWrite(struct file *filep, const char __user *buffer, size
 
 static int watchdogClose(struct inode *inodep, struct file *filep)
 {
-    printk(KERN_ALERT "[INIT][ C ] Unlock [C] Device Mutex\n");
+    printk(KERN_ALERT "[CTRL][ C ] Unlock [C] Device Mutex\n");
     charDeviceMutexCtrl(DEVICE_WATCHDOG, MUTEX_CTRL_UNLOCK);
     printk(KERN_INFO "[CTRL][ C ] Device successfully closed\n");
     return 0;

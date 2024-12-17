@@ -21,41 +21,40 @@
 #include "Types.h"
 #include "Console.h"
 
-#define DEVICE_PATH "/dev/IceNETDisk0" // Adjust based on your ramdisk naming
-#define MAX_DMA_TRANSFTER_SIZE 100
-#define SECTOR_SIZE 512
+typedef enum
+{
+    CONFIG_BMI160,
+    CONFIG_ADXL345,
+    CONFIG_AMOUNT
+}DeviceType;
+
+
+typedef struct
+{
+    char size;      // Total bytes sent to FPGA in one SPI/DMA Transfer (change to int)
+    char ctrl;      // Interface (I2C, SPI, PWM), Read or Write
+    char id;        // Device ID (In case of I2C)
+    char ops;       // Number of Read or Write operations
+    char payload[]; // Combined register addresses and write data
+}DeviceConfig;
 
 class RamConfig : public Console
 {
 	private:
 
-        enum Config
-        {
-            CONFIG_SECTORS,
-            CONFIG_BMI160,
-            CONFIG_ADXL345,
-            CONFIG_DMA_TEST,
-            CONFIG_AMOUNT
-        };
+        int m_file_descriptor;
+        char m_goDma;
 
-        struct ControlSector
-        {
-            char initialisation; /* Setup pointers */
-            char transfer; /* Run DMA transfer */
-            char config; /* Amount of DMA transfters */
-        };
+        char m_first_sector[1];
+        char m_forth_sector[4];
 
-        struct OperationType
-        {
-            char header;    // Unique ID of the operation
-            char size;      // Total bytes sent to FPGA in one SPI/DMA Transfer (change to int)
-            char ctrl;      // Interface (I2C, SPI, PWM), Read or Write
-            char devId;     // Device ID (e.g., for I2C)
-            char ops;       // Number of Read or Write operations
-            char payload[]; // Combined register addresses and write data
-        };
+        DeviceConfig* m_pDevice[CONFIG_AMOUNT];
 
 	public:
+
+        static constexpr const char* DEVICE_PATH = "/dev/IceNETDisk0";
+        static constexpr int MAX_DMA_TRANSFER_SIZE = 100;
+        static constexpr int SECTOR_SIZE = 512;
 
 		RamConfig();
 		~RamConfig();
@@ -66,8 +65,8 @@ class RamConfig : public Console
         int closeDEV();
 
 		char calculate_checksum(char *data, size_t size);
-		OperationType* createOperation(char devId, char ctrl, char ops);
-		int Execute();
+		DeviceConfig* createOperation(char devId, char ctrl, char ops);
+		int AssembleData();
 };
 
 /**
