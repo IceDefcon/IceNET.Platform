@@ -15,7 +15,7 @@ static ramAxisType ramAxis[SECTOR_AMOUNT] =
     [SECTOR_CONFIG] = 
     {
         .sectorAddress = NULL,
-        .genericSize = SECTOR_AMOUNT,
+        .genericSize = 0,
     },
 
     [SECTOR_BMI] = 
@@ -47,7 +47,7 @@ void ramAxisDestroy(ramSectorType type)
 	ramDiskReleasePointer(ramAxis[type].sectorAddress);
 }
 
-void printSector(ramSectorType type)
+void processSector(ramSectorType type)
 {
     int i = 0;
     char *output;
@@ -72,7 +72,7 @@ void printSector(ramSectorType type)
     // Start the message with sector type
     offset += snprintf(output + offset, 1024 - offset, "[CTRL][RAM] Data in sector %d: ", type);
 
-    size = ((char *)ramAxis[type].sectorAddress)[1];
+    size = ((char *)ramAxis[type].sectorAddress)[0];
     size = (size > 1024) ? 1024 : size;
 
     for (i = 0; i < size; ++i)

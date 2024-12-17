@@ -6,54 +6,49 @@
  */
 #pragma once
 
-#include <thread>
-#include <atomic>
-#include <vector>
+#include <cstdint>
 #include <memory>
+#include <vector>
 #include <fcntl.h>
-#include <stdio.h>
-#include <errno.h>
 #include <unistd.h>
-#include <string.h>
-#include <stdlib.h>
 #include <iostream>
 
 #include "Types.h"
 #include "Console.h"
 
-#define DEVICE_PATH "/dev/IceNETDisk0" // Adjust based on your ramdisk naming
-#define MAX_DMA_TRANSFTER_SIZE 100
-#define SECTOR_SIZE 512
+typedef enum
+{
+    CONFIG_BMI160,
+    CONFIG_ADXL345,
+    CONFIG_AMOUNT
+}DeviceType;
+
+struct DeviceConfig
+{
+    uint8_t size;       // Total bytes sent to FPGA in one SPI/DMA Transfer
+    uint8_t ctrl;       // Interface (I2C, SPI, PWM), Read or Write
+    uint8_t id;         // Device ID (In case of I2C)
+    uint8_t ops;        // Number of Read or Write operations
+    uint8_t payload[];  // Combined register addresses and write data
+};
 
 class RamConfig : public Console
 {
 	private:
 
-        enum Config
-        {
-            CONFIG_SECTORS,
-            CONFIG_BMI160,
-            CONFIG_ADXL345,
-            CONFIG_DMA_TEST,
-            CONFIG_AMOUNT
-        };
+        int m_fileDescriptor;
 
-        struct ControlSector
-        {
-            char initialisation; /* Setup pointers */
-            char transfer; /* Run DMA transfer */
-            char config; /* Amount of DMA transfters */
-        };
+        uint8_t m_goDma;
+        uint8_t m_sectorConfig[1];
+        uint8_t m_testConfig[4];
 
-        struct OperationType
-        {
-            char header;    // Unique ID of the operation
-            char size;      // Total bytes sent to FPGA in one SPI/DMA Transfer (change to int)
-            char ctrl;      // Interface (I2C, SPI, PWM), Read or Write
-            char devId;     // Device ID (e.g., for I2C)
-            char ops;       // Number of Read or Write operations
-            char payload[]; // Combined register addresses and write data
-        };
+        static constexpr const char* DEVICE_PATH = "/dev/IceNETDisk0";
+        static constexpr size_t MAX_DMA_TRANSFER_SIZE = 100;
+        static constexpr size_t SECTOR_SIZE = 512;
+
+        DeviceConfig* m_BMI160config;
+        DeviceConfig* m_ADXL345config;
+        DeviceConfig* m_pDevice[CONFIG_AMOUNT];
 
 	public:
 
@@ -66,8 +61,8 @@ class RamConfig : public Console
         int closeDEV();
 
 		char calculate_checksum(char *data, size_t size);
-		OperationType* createOperation(char devId, char ctrl, char ops);
-		int Execute();
+		DeviceConfig* createOperation(char devId, char ctrl, char ops);
+		int AssembleData();
 };
 
 /**
