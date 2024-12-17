@@ -23,11 +23,12 @@ typedef struct
 {
     void* sectorAddress;
     int genericSize;
+    char transfer[];
 } ramAxisType;
 
 /* INIT */ void ramAxisInit(ramSectorType type);
 /* DESTROY */ void ramAxisDestroy(ramSectorType type);
-/* TEST */ void printSector(ramSectorType type, int length);
+/* TEST */ void printSector(ramSectorType type);
 /* GET */ void* getSectorAddress(ramSectorType type);
 
 #endif // RAM_AXIS_H

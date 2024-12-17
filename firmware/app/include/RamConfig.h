@@ -52,7 +52,6 @@ class RamConfig : public Console
             char ctrl;      // Interface (I2C, SPI, PWM), Read or Write
             char devId;     // Device ID (e.g., for I2C)
             char ops;       // Number of Read or Write operations
-            char checksum;  // 8-bit checksum
             char payload[]; // Combined register addresses and write data
         };
 

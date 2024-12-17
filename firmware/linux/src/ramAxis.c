@@ -47,11 +47,12 @@ void ramAxisDestroy(ramSectorType type)
 	ramDiskReleasePointer(ramAxis[type].sectorAddress);
 }
 
-void printSector(ramSectorType type, int length)
+void printSector(ramSectorType type)
 {
     int i = 0;
-    char *output;  // Pointer for the buffer
+    char *output;
     int offset = 0;
+    int size  = 0;
 
     // Check if the sector address is valid
     if (!ramAxis[type].sectorAddress) 
@@ -71,8 +72,10 @@ void printSector(ramSectorType type, int length)
     // Start the message with sector type
     offset += snprintf(output + offset, 1024 - offset, "[CTRL][RAM] Data in sector %d: ", type);
 
-    // Append the hex data to the buffer
-    for (i = 0; i < length; ++i)
+    size = ((char *)ramAxis[type].sectorAddress)[1];
+    size = (size > 1024) ? 1024 : size;
+
+    for (i = 0; i < size; ++i)
     {
         offset += snprintf(output + offset, 1024 - offset, "%02x ", ((char *)ramAxis[type].sectorAddress)[i]);
     }
