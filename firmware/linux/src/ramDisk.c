@@ -1,6 +1,17 @@
+// SPDX-License-Identifier: GPL-2.0-only
+/*
+ * Ram backed block device driver.
+ *
+ * Copyright (C) 2007 Nick Piggin
+ * Copyright (C) 2007 Novell Inc.
+ *
+ * Parts derived from drivers/block/rd.c, and drivers/block/loop.c, copyright
+ * of their respective owners.
+ */
+
 /*!
  *
- * Author: Ice.Marek
+ * Re-factored: Ice.Marek
  * IceNET Technology 2025
  *
  */
