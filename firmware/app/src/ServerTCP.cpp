@@ -177,6 +177,12 @@ void ServerTCP::threadServerTCP()
                 m_instanceRamConfig->dataTX();
                 m_timeoutCount = 0;
             }
+            else if(ret == -3)
+            {
+                std::cout << "[INFO] [TCP] Launch DMA Engine" << std::endl;
+                m_instanceRamConfig->launchEngine();
+                m_timeoutCount = 0;
+            }
             else if(ret == 0)
             {
                 std::cout << "[INFO] [TCP] Client disconnected from server" << std::endl;
@@ -350,6 +356,13 @@ int ServerTCP::tcpRX()
             std::cout << std::endl;
             std::cout << "[INFO] [TCP] Send configuration to RAM" << std::endl;
             return -4;
+        }
+        /* LAUNCH :: CODE */
+        else if((*m_Rx_ServerTCP)[0] == 0x5E && (*m_Rx_ServerTCP)[1] == 0xDD && (*m_Rx_ServerTCP)[2] == 0xC0 && (*m_Rx_ServerTCP)[3] == 0xDE)
+        {
+            std::cout << std::endl;
+            std::cout << "[INFO] [TCP] Send configuration to RAM" << std::endl;
+            return -3;
         }
         else
         {

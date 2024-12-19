@@ -28,6 +28,7 @@ typedef struct
 
 /* INIT */ void ramAxisInit(ramSectorType type);
 /* DESTROY */ void ramAxisDestroy(ramSectorType type);
+/* ENGINE */ void processEngine(ramSectorType type, size_t length);
 /* STORE */ void processSector(ramSectorType type);
 /* GET */ void* getSectorAddress(ramSectorType type);
 

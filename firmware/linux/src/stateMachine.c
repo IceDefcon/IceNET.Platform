@@ -73,20 +73,17 @@ static int stateMachineThread(void *data)
                 /* QUEUE :: Execution of transferFpgaInput */
                 queue_work(get_transferFpgaInput_wq(), get_transferFpgaInput_work());
                 setStateMachine(IDLE);
-
+                /* DMA Engine Config */
+                /* DMA Device Config */
                 ramAxisInit(SECTOR_CONFIG);
                 ramAxisInit(SECTOR_BMI);
                 ramAxisInit(SECTOR_ADXL);
-                ramAxisInit(SECTOR_TEST);
-                // processSector(SECTOR_CONFIG); /* Cannot be processed :: As they are not formated */
+                processEngine(SECTOR_CONFIG, 4);
                 processSector(SECTOR_BMI);
                 processSector(SECTOR_ADXL);
-                // processSector(SECTOR_TEST); /* Cannot be processed :: As they are not formated */
+                ramAxisDestroy(SECTOR_ADXL);
                 ramAxisDestroy(SECTOR_CONFIG);
                 ramAxisDestroy(SECTOR_BMI);
-                ramAxisDestroy(SECTOR_ADXL);
-                ramAxisDestroy(SECTOR_TEST);
-                
                 break;
 
             case INTERRUPT:

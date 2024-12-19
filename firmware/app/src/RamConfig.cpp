@@ -49,7 +49,7 @@ DeviceConfig* RamConfig::createOperation(char id, char ctrl, char ops)
     op->size = (char)totalSize + 1; /* Bytes to send to FPGA + 1 for checksum */
     op->ctrl = ctrl;                /* 0:i2c 1:Write */
     op->id = id;                    /* BMI160 Id */
-    op->ops = ops;                  /* Number of writes */
+    op->ops = ops;                  /* Number of read/writes */
 
     memset(op->payload, 0, totalSize - sizeof(DeviceConfig));
 
@@ -58,12 +58,11 @@ DeviceConfig* RamConfig::createOperation(char id, char ctrl, char ops)
 
 int RamConfig::AssembleData()
 {
-    m_sectorConfig[0] = 0x02;
-
-    m_testConfig[0] = 0x00;
-    m_testConfig[1] = 0x69;
-    m_testConfig[2] = 0x00;
-    m_testConfig[3] = 0x00;
+    /* TODO :: Need parametrization */
+    m_engineConfig[0] = 0x02;
+    m_engineConfig[1] = 0x11;
+    m_engineConfig[2] = 0x02;
+    m_engineConfig[3] = 0x13;
 
     char ops = 2; /* Set up 2 registers only */
 
@@ -157,14 +156,15 @@ int RamConfig::dataRX()
     return OK; /* One way communication Here */
 }
 
-int RamConfig::dataTX()
+int RamConfig::launchEngine()
 {
     ssize_t bytes = 0;
 
-    //
-    // Write to sector 0
-    //
-    bytes = write(m_fileDescriptor, m_sectorConfig, sizeof(m_sectorConfig));
+    openDEV();
+
+    /* Write to sector 0 */
+    lseek(m_fileDescriptor, 0, SEEK_SET);
+    bytes = write(m_fileDescriptor, m_engineConfig, sizeof(m_engineConfig));
     if (bytes < 0)
     {
         perror("Failed to write to block device");
@@ -173,13 +173,22 @@ int RamConfig::dataTX()
         free(m_ADXL345config);
         return EXIT_FAILURE;
     }
-    printf("[INFO] [RAM] Write %d Bytes to ramDisk to Sector 0\n", bytes);  // Change %ld to %d
+    printf("[INFO] [RAM] Write %d Bytes to ramDisk to Sector 0\n", bytes);
 
+    closeDEV();
+
+    return EXIT_SUCCESS;
+}
+
+
+int RamConfig::dataTX()
+{
+    ssize_t bytes = 0;
+
+    openDEV();
+
+    /* Write to sector 1 */
     lseek(m_fileDescriptor, SECTOR_SIZE * 1, SEEK_SET);
-
-    //
-    // Write to sector 1
-    //
     bytes = write(m_fileDescriptor, m_BMI160config, m_BMI160config->size);
     if (bytes < 0)
     {
@@ -189,13 +198,11 @@ int RamConfig::dataTX()
         free(m_ADXL345config);
         return EXIT_FAILURE;
     }
-    printf("[INFO] [RAM] Write %d Bytes to ramDisk to Sector 1\n", bytes);  // Change %ld to %d
+    printf("[INFO] [RAM] Write %d Bytes to ramDisk to Sector 1\n", bytes);
 
+
+    /* Write to sector 2 */
     lseek(m_fileDescriptor, SECTOR_SIZE * 2, SEEK_SET);
-
-    //
-    // Write to sector 2
-    //
     bytes = write(m_fileDescriptor, m_ADXL345config, m_ADXL345config->size);
     if (bytes < 0)
     {
@@ -205,27 +212,13 @@ int RamConfig::dataTX()
         free(m_ADXL345config);
         return EXIT_FAILURE;
     }
-    printf("[INFO] [RAM] Write %d Bytes to ramDisk to Sector 2\n", bytes);  // Change %ld to %d
+    printf("[INFO] [RAM] Write %d Bytes to ramDisk to Sector 2\n", bytes);
 
-    lseek(m_fileDescriptor, SECTOR_SIZE * 3, SEEK_SET);
-
-    //
-    // Write to sector 3
-    //
-    bytes = write(m_fileDescriptor, m_testConfig, sizeof(m_testConfig));
-    if (bytes < 0)
-    {
-        perror("Failed to write to sector 3");
-        close(m_fileDescriptor);
-        free(m_BMI160config);
-        free(m_ADXL345config);
-        return EXIT_FAILURE;
-    }
-    printf("[INFO] [RAM] Write %d Bytes to ramDisk to Sector 3\n", bytes);  // Change %ld to %d
-
-    close(m_fileDescriptor);
     free(m_BMI160config);
     free(m_ADXL345config);
+
+    closeDEV();
+
     return EXIT_SUCCESS;
 }
 
