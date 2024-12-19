@@ -38,6 +38,7 @@
 	11. Checksum in RTL Code to be send in last byte
 	12. UART Console (DMA controller buffer)
 	13. Upgrade Console for the functions with arguments
+	14. Solve 120s wait mutex lock warning
 
 # Testing Hardware Modules
 

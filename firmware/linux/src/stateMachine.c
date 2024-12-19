@@ -74,19 +74,24 @@ static int stateMachineThread(void *data)
                 queue_work(get_transferFpgaInput_wq(), get_transferFpgaInput_work());
                 setStateMachine(IDLE);
 
-                ramAxisInit(SECTOR_CONFIG);
-                ramAxisInit(SECTOR_BMI);
-                ramAxisInit(SECTOR_ADXL);
-                ramAxisInit(SECTOR_TEST);
-                // processSector(SECTOR_CONFIG); /* Cannot be processed :: As they are not formated */
-                processSector(SECTOR_BMI);
-                processSector(SECTOR_ADXL);
-                // processSector(SECTOR_TEST); /* Cannot be processed :: As they are not formated */
-                ramAxisDestroy(SECTOR_CONFIG);
-                ramAxisDestroy(SECTOR_BMI);
-                ramAxisDestroy(SECTOR_ADXL);
-                ramAxisDestroy(SECTOR_TEST);
-                
+#if 1 /* DMA Engine debug */
+                /*
+                 *
+                 * [0] :: DMA Engine Config
+                 * [1] :: DMA BMI160 Config
+                 * [2] :: DMA BMI160 Config
+                 *
+                 */
+                ramAxisInit(SECTOR_ENGINE);
+                ramAxisInit(SECTOR_BMI160);
+                ramAxisInit(SECTOR_ADXL345);
+                processEngine(SECTOR_ENGINE);
+                processSector(SECTOR_BMI160);
+                processSector(SECTOR_ADXL345);
+                ramAxisDestroy(SECTOR_ENGINE);
+                ramAxisDestroy(SECTOR_BMI160);
+                ramAxisDestroy(SECTOR_ADXL345);
+#endif
                 break;
 
             case INTERRUPT:

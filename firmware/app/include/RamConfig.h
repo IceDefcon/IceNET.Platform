@@ -38,17 +38,13 @@ class RamConfig : public Console
 
         int m_fileDescriptor;
 
-        uint8_t m_goDma;
-        uint8_t m_sectorConfig[1];
-        uint8_t m_testConfig[4];
+        uint8_t m_engineConfig[4];
+        DeviceConfig* m_BMI160config;
+        DeviceConfig* m_ADXL345config;
 
         static constexpr const char* DEVICE_PATH = "/dev/IceNETDisk0";
         static constexpr size_t MAX_DMA_TRANSFER_SIZE = 100;
         static constexpr size_t SECTOR_SIZE = 512;
-
-        DeviceConfig* m_BMI160config;
-        DeviceConfig* m_ADXL345config;
-        DeviceConfig* m_pDevice[CONFIG_AMOUNT];
 
 	public:
 
@@ -60,6 +56,7 @@ class RamConfig : public Console
         int dataRX();
         int closeDEV();
 
+        int launchEngine();
 		char calculate_checksum(char *data, size_t size);
 		DeviceConfig* createOperation(char devId, char ctrl, char ops);
 		int AssembleData();
