@@ -124,12 +124,12 @@ class TcpManager:
 
         self.load_button = tk.Button(self.root, text="Load", command=self.loadRam)
         self.load_button.grid(row=1, column=7, pady=5, padx=5, sticky='we')
-        self.load_label = tk.Label(self.root, text="Data to DMA Engine")
+        self.load_label = tk.Label(self.root, text="Device config to RAM")
         self.load_label.grid(row=1, column=8, pady=5, padx=5, sticky='w')
 
-        self.send_button = tk.Button(self.root, text="Launch", command=self.launchEngine)
+        self.send_button = tk.Button(self.root, text="Start", command=self.launchEngine)
         self.send_button.grid(row=2, column=7, pady=5, padx=5, sticky='we')
-        self.send_label = tk.Label(self.root, text="Engine to sned Data")
+        self.send_label = tk.Label(self.root, text="DMA Engine")
         self.send_label.grid(row=2, column=8, pady=5, padx=5, sticky='w')
 
         # Console

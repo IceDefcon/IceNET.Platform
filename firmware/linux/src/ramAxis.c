@@ -12,19 +12,19 @@
 
 static ramAxisType ramAxis[SECTOR_AMOUNT] =
 {
-    [SECTOR_CONFIG] = 
+    [SECTOR_ENGINE] =
     {
         .sectorAddress = NULL,
         .genericSize = 0,
     },
 
-    [SECTOR_BMI] = 
+    [SECTOR_BMI160] =
     {
         .sectorAddress = NULL,
         .genericSize = 0,
     },
 
-    [SECTOR_ADXL] = 
+    [SECTOR_ADXL345] =
     {
         .sectorAddress = NULL,
         .genericSize = 0,
@@ -47,20 +47,18 @@ void ramAxisDestroy(ramSectorType type)
 	ramDiskReleasePointer(ramAxis[type].sectorAddress);
 }
 
-void processEngine(ramSectorType type, size_t length)
+void processEngine(ramSectorType type)
 {
     int i = 0;
     char *output;
     int offset = 0;
 
-    // Check if the sector address is valid
     if (!ramAxis[type].sectorAddress)
     {
         pr_err("[ERNO][RAM] Sector %d address is NULL\n", type);
         return;
     }
 
-    // Allocate memory for the output buffer (size 1024 bytes)
     output = kmalloc(1024, GFP_KERNEL);
     if (!output)
     {
@@ -68,18 +66,13 @@ void processEngine(ramSectorType type, size_t length)
         return;
     }
 
-    // Start the message with sector type
     offset += snprintf(output + offset, 1024 - offset, "[CTRL][RAM] Data in sector %d: ", type);
-
-    for (i = 0; i < length; ++i)
+    for (i = 0; i < DMA_ENGINE_SIZE; ++i)
     {
         offset += snprintf(output + offset, 1024 - offset, "%02x ", ((char *)ramAxis[type].sectorAddress)[i]);
     }
 
-    // Print the full message at once
     pr_info("%s\n", output);
-
-    // Free the allocated memory after use
     kfree(output);
 }
 
@@ -90,14 +83,12 @@ void processSector(ramSectorType type)
     int offset = 0;
     int size  = 0;
 
-    // Check if the sector address is valid
     if (!ramAxis[type].sectorAddress) 
     {
         pr_err("[ERNO][RAM] Sector %d address is NULL\n", type);
         return;
     }
 
-    // Allocate memory for the output buffer (size 1024 bytes)
     output = kmalloc(1024, GFP_KERNEL);
     if (!output) 
     {
@@ -105,21 +96,17 @@ void processSector(ramSectorType type)
         return;
     }
 
-    // Start the message with sector type
-    offset += snprintf(output + offset, 1024 - offset, "[CTRL][RAM] Data in sector %d: ", type);
-
     size = ((char *)ramAxis[type].sectorAddress)[0];
     size = (size > 1024) ? 1024 : size;
+    size = (size < 1) ? 16 : size;
 
+    offset += snprintf(output + offset, 1024 - offset, "[CTRL][RAM] Data in sector %d: ", type);
     for (i = 0; i < size; ++i)
     {
         offset += snprintf(output + offset, 1024 - offset, "%02x ", ((char *)ramAxis[type].sectorAddress)[i]);
     }
 
-    // Print the full message at once
     pr_info("%s\n", output);
-
-    // Free the allocated memory after use
     kfree(output);
 }
 
