@@ -31,9 +31,8 @@ typedef struct
 /* INIT */ void ramAxisInit(ramSectorType type);
 /* CHECK */ bool checkEngineReady(void);
 /* PRINT */ void printSector(ramSectorType type);
-/* SEQUENCE 0 */ void concatenateTransfer(void);
-/* SEQUENCE 1 */ void resetEngine(void);
-/* SEQUENCE 2 */ void launchDma(void);
+/* JOIN */ void transferConcatenation(void);
+/* RUN */ void transferExecution(void);
 /* GET */ void* getSectorAddress(ramSectorType type);
 /* DESTROY */ void ramAxisDestroy(ramSectorType type);
 

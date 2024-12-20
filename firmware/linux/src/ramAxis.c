@@ -66,25 +66,6 @@ bool checkEngineReady(void)
              * structure :: ready for concatenation
              *
              */
-            pr_info("[CTRL][RAM] DUMMY :: Clear Dma Engine Config Sector\n");
-            pr_info("[0] Value at index 0: %x\n", ((char *)ramAxis[SECTOR_ENGINE].sectorAddress)[0]);
-            pr_info("[0] Value at index 1: %x\n", ((char *)ramAxis[SECTOR_ENGINE].sectorAddress)[1]);
-            pr_info("[0] Value at index 2: %x\n", ((char *)ramAxis[SECTOR_ENGINE].sectorAddress)[2]);
-            pr_info("[0] Value at index 3: %x\n", ((char *)ramAxis[SECTOR_ENGINE].sectorAddress)[3]);
-
-            //
-            //
-            //
-            // DMA Problem
-            //
-            //
-            //
-            ClearBytesOnRamDisk(getRamDisk(), 0, 4);
-
-            pr_info("[1] Value at index 0: %x\n", ((char *)ramAxis[SECTOR_ENGINE].sectorAddress)[0]);
-            pr_info("[1] Value at index 1: %x\n", ((char *)ramAxis[SECTOR_ENGINE].sectorAddress)[1]);
-            pr_info("[1] Value at index 2: %x\n", ((char *)ramAxis[SECTOR_ENGINE].sectorAddress)[2]);
-            pr_info("[1] Value at index 3: %x\n", ((char *)ramAxis[SECTOR_ENGINE].sectorAddress)[3]);
 
             ret = true;
         }
@@ -135,23 +116,16 @@ void printSector(ramSectorType type)
     kfree(output);
 }
 
-void concatenateTransfer(void)
+void transferConcatenation(void)
 {
     pr_info("[CTRL][RAM] Concatenate DMA Transfer\n");
 
 }
 
-void resetEngine(void)
-{
-    pr_info("[CTRL][RAM] Reset DMA Engine Active Sectors\n");
-
-}
-
-void launchDma(void)
+void transferExecution(void)
 {
     pr_info("[CTRL][RAM] Launch DMA Transfer\n");
 }
-
 
 void* getSectorAddress(ramSectorType type)
 {

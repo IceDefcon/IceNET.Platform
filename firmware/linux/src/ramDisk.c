@@ -35,8 +35,6 @@ static struct list_head iceDevices =
     &(iceDevices)  /* prev */
 };
 
-static struct blockRamDisk *dmaEngineRamDisk = NULL;
-
 /*
  * Look up and return a ramDisk's page for a given sector.
  */
@@ -436,7 +434,6 @@ static struct blockRamDisk *DiskAdd(int i, bool *new)
         ramDisk->Disk->queue = ramDisk->Queue;
         add_disk(ramDisk->Disk);
         list_add_tail(&ramDisk->List, &iceDevices);
-        dmaEngineRamDisk = ramDisk;
     }
     *new = true;
 
@@ -612,36 +609,6 @@ out_free:
     return -ENOMEM;
 }
 
-void ClearBytesOnRamDisk(struct blockRamDisk *ramDisk, sector_t sector, size_t length)
-{
-    struct page *page;
-    void *dst;
-    unsigned int offset;
-    size_t clear_len;
-
-    while (length > 0)
-    {
-        offset = (sector & (PAGE_SECTORS - 1)) << SECTOR_SHIFT;
-        clear_len = min_t(size_t, length, PAGE_SIZE - offset);
-
-        page = InsertPage(ramDisk, sector);
-        if (!page)
-        {
-            pr_err("[ERROR][RAM] Failed to allocate or find page for sector %llu\n", sector);
-            return;
-        }
-
-        dst = kmap_atomic(page);
-        memset(dst + offset, 0, clear_len);
-        kunmap_atomic(dst);
-
-        length -= clear_len;
-        sector += clear_len >> SECTOR_SHIFT;
-    }
-
-    // pr_info("[INFO][RAM] Cleared %zu bytes starting at sector %llu\n", length, sector);
-}
-
 void ramDiskDestroy(void)
 {
     struct blockRamDisk *ramDisk, *ramDiskNext;
@@ -655,14 +622,4 @@ void ramDiskDestroy(void)
     unregister_blkdev(RAMDISK_MAJOR, KERNEL_BLOCK_DEVICE);
 
     // pr_info("[DESTROY][RAM] Block ramDisk Destroyed\n");
-}
-
-struct blockRamDisk *getRamDisk(void)
-{
-    if (dmaEngineRamDisk)
-    {
-        return dmaEngineRamDisk;
-    }
-    pr_err("[ERROR][RAM] No ramDisk available\n");
-    return NULL;
 }

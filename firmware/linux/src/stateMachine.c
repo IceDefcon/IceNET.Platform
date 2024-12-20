@@ -63,7 +63,7 @@ static int stateMachineThread(void *data)
         switch(state)
         {
             case IDLE:
-                if(checkEngineReady())
+                if(checkEngineReady()) /* TODO :: Infinit true */
                 {
                     setStateMachine(DMA);
                 }
@@ -73,9 +73,8 @@ static int stateMachineThread(void *data)
                 printk(KERN_INFO "[CTRL][STM] DMA mode\n");
 
                 /* Set -> Reset -> Run :: Dma Engine */
-                concatenateTransfer();
-                resetEngine();
-                launchDma();
+                transferConcatenation();
+                transferExecution();
 
                 setStateMachine(IDLE);
                 break;
