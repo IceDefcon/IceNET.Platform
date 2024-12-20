@@ -29,9 +29,11 @@ typedef struct
 } ramAxisType;
 
 /* INIT */ void ramAxisInit(ramSectorType type);
-/* DESTROY */ void ramAxisDestroy(ramSectorType type);
-/* ENGINE */ void processEngine(ramSectorType type);
-/* STORE */ void processSector(ramSectorType type);
+/* CHECK */ bool checkEngineReady(void);
+/* PRINT */ void printSector(ramSectorType type);
+/* JOIN */ void transferConcatenation(void);
+/* RUN */ void transferExecution(void);
 /* GET */ void* getSectorAddress(ramSectorType type);
+/* DESTROY */ void ramAxisDestroy(ramSectorType type);
 
 #endif // RAM_AXIS_H

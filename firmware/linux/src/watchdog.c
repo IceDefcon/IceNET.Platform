@@ -59,12 +59,16 @@ static int watchdogThread(void *data)
         watchdogData->length = 2;
         charDeviceMutexCtrl(DEVICE_WATCHDOG, MUTEX_CTRL_UNLOCK);
 
-        if(Process.indicatorPrevious != Process.indicatorCurrent)
+        if( Process.indicatorPrevious != Process.indicatorCurrent)
         {
             if(Process.indicatorFPGA == false)
             {
-                printk(KERN_INFO "[CTRL][WDG] Watchdog Live [%x|%x] Start kicking the Thread\n", Process.indicatorPrevious, Process.indicatorCurrent);
-                Process.indicatorFPGA = true;
+                /* This is here :: In case if we have a power-cut in FPGA */
+                if(Process.indicatorCurrent - Process.indicatorPrevious != 1)
+                {
+                    printk(KERN_INFO "[CTRL][WDG] Watchdog Live [%x|%x] Start kicking the Thread\n", Process.indicatorPrevious, Process.indicatorCurrent);
+                    Process.indicatorFPGA = true;
+                }
             }
         }
         else
@@ -85,7 +89,7 @@ static int watchdogThread(void *data)
          * busy waiting
          *
          */
-        msleep(500); /* Release 90% of CPU resources */
+        msleep(1000); /* Release 90% of CPU resources */
 
     }
 
@@ -115,4 +119,9 @@ void watchdogDestroy(void)
         Process.threadHandle = NULL;
     }
     printk(KERN_INFO "[DESTROY][WDG] Destroy watchdog kthread\n");
+}
+
+bool getIndicatorFPGA(void)
+{
+    return Process.indicatorFPGA;
 }

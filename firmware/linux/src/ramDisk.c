@@ -165,7 +165,7 @@ static int CopyToRamDiskSetup(struct blockRamDisk *ramDisk, sector_t sector, siz
     unsigned int offset = (sector & (PAGE_SECTORS-1)) << SECTOR_SHIFT;
     size_t copy;
 
-    pr_info("[CTRL][RAM] Disk[%d] :: Copy to RamDisk Setup\n", ramDisk->Number);
+    // pr_info("[CTRL][RAM] Disk[%d] :: Copy to RamDisk Setup\n", ramDisk->Number);
 
     copy = min_t(size_t, n, PAGE_SIZE - offset);
     if (!InsertPage(ramDisk, sector))
@@ -192,7 +192,7 @@ static void CopyToRamDisk(struct blockRamDisk *ramDisk, const void *src, sector_
     unsigned int offset = (sector & (PAGE_SECTORS - 1)) << SECTOR_SHIFT;
     size_t copy;
 
-    pr_info("[CTRL][RAM] Disk[%d] :: Copy to RamDisk\n", ramDisk->Number);
+    // pr_info("[CTRL][RAM] Disk[%d] :: Copy to RamDisk\n", ramDisk->Number);
 
     copy = min_t(size_t, n, PAGE_SIZE - offset);
     page = LookupPage(ramDisk, sector);
@@ -228,7 +228,7 @@ static void CopyFromRamDisk(void *dst, struct blockRamDisk *ramDisk, sector_t se
     unsigned int offset = (sector & (PAGE_SECTORS-1)) << SECTOR_SHIFT;
     size_t copy;
 
-    pr_info("[CTRL][RAM] Disk[%d] :: Copy from RamDisk\n", ramDisk->Number);
+    // pr_info("[CTRL][RAM] Disk[%d] :: Copy from RamDisk\n", ramDisk->Number);
 
     copy = min_t(size_t, n, PAGE_SIZE - offset);
     page = LookupPage(ramDisk, sector);
@@ -299,7 +299,7 @@ static blk_qc_t BioRequest(struct bio *bio)
     struct bio_vec bvec;
     sector_t sector;
     struct bvec_iter iter;
-    pr_info("[CTRL][RAM] Disk[%d] :: Block IO Request\n", ramDisk->Number);
+    // pr_info("[CTRL][RAM] Disk[%d] :: Block IO Request\n", ramDisk->Number);
 
     sector = bio->bi_iter.bi_sector;
     if (bio_end_sector(bio) > get_capacity(bio->bi_disk))
@@ -352,7 +352,7 @@ static struct blockRamDisk *DiskAllocation(int i)
     struct blockRamDisk *ramDisk;
     struct gendisk *disk;
 
-    pr_info("[INIT][RAM] Disk[%d] :: Memory Allocation\n", i);
+    // pr_info("[INIT][RAM] Disk[%d] :: Memory Allocation\n", i);
 
     ramDisk = kzalloc(sizeof(*ramDisk), GFP_KERNEL);
     if (!ramDisk)
@@ -417,7 +417,7 @@ static struct blockRamDisk *DiskAdd(int i, bool *new)
 {
     struct blockRamDisk *ramDisk;
 
-    pr_info("[INIT][RAM] Disk[%d] :: Add\n", i);
+    // pr_info("[INIT][RAM] Disk[%d] :: Add\n", i);
 
     *new = false;
     list_for_each_entry(ramDisk, &iceDevices, List)
@@ -443,7 +443,7 @@ out:
 
 static void DiskRemove(struct blockRamDisk *ramDisk)
 {
-    pr_info("[DESTROY][RAM] Disk[%d] :: Remove\n", ramDisk->Number);
+    // pr_info("[DESTROY][RAM] Disk[%d] :: Remove\n", ramDisk->Number);
 
     list_del(&ramDisk->List);
     del_gendisk(ramDisk->Disk);
@@ -456,7 +456,7 @@ static struct kobject *Probe(dev_t dev, int *part, void *data)
     struct kobject *kobj;
     bool new;
 
-    pr_info("[CTRL][RAM] Probe Detected\n");
+    // pr_info("[CTRL][RAM] Probe Detected\n");
 
     mutex_lock(&brd_devices_mutex);
     ramDisk = DiskAdd(MINOR(dev) / max_part, &new);
@@ -473,7 +473,7 @@ static struct kobject *Probe(dev_t dev, int *part, void *data)
 
 static inline void CheckAndResetPartition(void)
 {
-    pr_info("[INIT][RAM] Check and reset Disk Partition\n");
+    // pr_info("[INIT][RAM] Check and reset Disk Partition\n");
 
     if (unlikely(!max_part))
     {
@@ -491,7 +491,7 @@ static inline void CheckAndResetPartition(void)
 
     if (max_part > DISK_MAX_PARTS)
     {
-        pr_info("[ERROR][RAM] max_part can't be larger than %d, reset max_part = %d.\n", DISK_MAX_PARTS, DISK_MAX_PARTS);
+        // pr_info("[ERROR][RAM] max_part can't be larger than %d, reset max_part = %d.\n", DISK_MAX_PARTS, DISK_MAX_PARTS);
         max_part = DISK_MAX_PARTS;
     }
 }
@@ -546,7 +546,7 @@ int ramDiskInit(void)
     struct blockRamDisk *ramDisk, *ramDiskNext;
     int i;
 
-    pr_info("[INIT][RAM] Initialization of Block ramDisk\n");
+    // pr_info("[INIT][RAM] Initialization of Block ramDisk\n");
 
     /*
      * brd module now has a feature to instantiate underlying device
@@ -592,7 +592,7 @@ int ramDiskInit(void)
 
     blk_register_region(MKDEV(RAMDISK_MAJOR, 0), 1UL << MINORBITS, THIS_MODULE, Probe, NULL, NULL);
 
-    pr_info("[INIT][RAM] Block ramDisk Initialised\n");
+    // pr_info("[INIT][RAM] Block ramDisk Initialised\n");
 
     return 0;
 
@@ -604,7 +604,7 @@ out_free:
     }
     unregister_blkdev(RAMDISK_MAJOR, KERNEL_BLOCK_DEVICE);
 
-    pr_info("[ERROR][RAM] Module NOT Loaded !!!\n");
+    // pr_info("[ERROR][RAM] Module NOT Loaded !!!\n");
 
     return -ENOMEM;
 }
@@ -621,5 +621,5 @@ void ramDiskDestroy(void)
     blk_unregister_region(MKDEV(RAMDISK_MAJOR, 0), 1UL << MINORBITS);
     unregister_blkdev(RAMDISK_MAJOR, KERNEL_BLOCK_DEVICE);
 
-    pr_info("[DESTROY][RAM] Block ramDisk Destroyed\n");
+    // pr_info("[DESTROY][RAM] Block ramDisk Destroyed\n");
 }

@@ -21,9 +21,10 @@
 typedef enum 
 {
     IDLE = 0,
+    DMA,
     SPI,
     INTERRUPT,
-    KILL_APPLICATION
+    KILL
 } stateType;
 
 typedef struct
@@ -31,6 +32,7 @@ typedef struct
     stateType currentState;
     struct task_struct *threadHandle;
     struct mutex stateMutex;
+    bool dmaReady;
 } stateMachineProcess;
 
 /* SET */ void setStateMachine(stateType newState);

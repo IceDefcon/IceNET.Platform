@@ -39,6 +39,8 @@
 	12. UART Console (DMA controller buffer)
 	13. Upgrade Console for the functions with arguments
 	14. Solve 120s wait mutex lock warning
+	15. Upgrade TCP/IP server to DMA Server
+	16. Architecture Upgrade ---> charDevice Commander + ramDisk DMA Engine
 
 # Testing Hardware Modules
 

@@ -13,6 +13,7 @@
 
 #include "stateMachine.h"
 #include "charDevice.h"
+#include "watchdog.h"
 #include "isrCtrl.h"
 #include "spiCtrl.h"
 #include "spiWork.h"
@@ -33,6 +34,7 @@ static stateMachineProcess Process =
     .currentState = IDLE,
     .threadHandle = NULL,
     .stateMutex = __MUTEX_INITIALIZER(Process.stateMutex),
+    .dmaReady = false,
 };
 
 /* SET */ void setStateMachine(stateType newState)
@@ -54,40 +56,63 @@ static stateMachineProcess Process =
 /* Kernel state machine */
 static int stateMachineThread(void *data)
 {
+
     stateType state;
-    // void* voidPointer;
-    
-    while (!kthread_should_stop()) 
+
+    while (!kthread_should_stop())
     {
         state = getStateMachine();
-        // voidPointer = getSectorAddress(SECTOR_TEST);
 
         switch(state)
         {
             case IDLE:
-                // printk(KERN_INFO "[CTRL][STM] IDLE mode\n");
+
+                /* Check only if Dma Engine is not Ready */
+                if(false == Process.dmaReady)
+                {
+                    /* Check only if FPGA is configured :: Watchdog is Running */
+                    if(true == getIndicatorFPGA())
+                    {
+                        Process.dmaReady = checkEngineReady();
+                        if(true == Process.dmaReady)
+                        {
+                            setStateMachine(DMA);
+                        }
+                    }
+                    else
+                    {
+                        // printk(KERN_INFO "[ERNO][STM] FPFA is not sending Watchdog interrupts\n");
+                    }
+                }
                 break;
 
+            case DMA:
+                printk(KERN_INFO "[CTRL][STM] DMA mode\n");
+
+                /* Set -> Reset -> Run :: Dma Engine */
+                transferConcatenation();
+                transferExecution();
+
+                setStateMachine(IDLE);
+                break;
             case SPI:
                 printk(KERN_INFO "[CTRL][STM] SPI mode\n");
                 /* QUEUE :: Execution of transferFpgaInput */
                 queue_work(get_transferFpgaInput_wq(), get_transferFpgaInput_work());
                 setStateMachine(IDLE);
 
-#if 1 /* DMA Engine debug */
+#if 0 /* DMA Engine debug */
                 /*
-                 *
                  * [0] :: DMA Engine Config
                  * [1] :: DMA BMI160 Config
                  * [2] :: DMA BMI160 Config
-                 *
                  */
                 ramAxisInit(SECTOR_ENGINE);
                 ramAxisInit(SECTOR_BMI160);
                 ramAxisInit(SECTOR_ADXL345);
-                processEngine(SECTOR_ENGINE);
-                processSector(SECTOR_BMI160);
-                processSector(SECTOR_ADXL345);
+                printSector(SECTOR_ENGINE);
+                printSector(SECTOR_BMI160);
+                printSector(SECTOR_ADXL345);
                 ramAxisDestroy(SECTOR_ENGINE);
                 ramAxisDestroy(SECTOR_BMI160);
                 ramAxisDestroy(SECTOR_ADXL345);
@@ -101,8 +126,8 @@ static int stateMachineThread(void *data)
                 setStateMachine(IDLE);
                 break;
 
-            case KILL_APPLICATION:
-                printk(KERN_INFO "[CTRL][STM] KILL_APPLICATION mode\n");
+            case KILL:
+                printk(KERN_INFO "[CTRL][STM] KILL mode\n");
                 /* QUEUE :: Execution of killApplication */
                 queue_work(get_killApplication_wq(), get_killApplication_work());
                 printk(KERN_INFO "[CTRL][STM] Back to IDLE mode\n");
