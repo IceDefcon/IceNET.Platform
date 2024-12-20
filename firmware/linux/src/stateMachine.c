@@ -101,7 +101,7 @@ static int stateMachineThread(void *data)
                 queue_work(get_transferFpgaInput_wq(), get_transferFpgaInput_work());
                 setStateMachine(IDLE);
 
-#if 0 /* DMA Engine debug */
+#if 1 /* DMA Engine debug */
                 /*
                  * [0] :: DMA Engine Config
                  * [1] :: DMA BMI160 Config
