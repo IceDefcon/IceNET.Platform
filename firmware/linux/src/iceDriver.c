@@ -38,10 +38,10 @@ static int __init fpga_driver_init(void)
     printk(KERN_INFO "[BEGIN] IceNET CPU & FPGA Platform\n");
     printk(KERN_INFO "----------------------------------\n");
 
-    /* Initialise kthread State Machine */
-    stateMachineInit();
     /* Initialise ramDisk */
     ret = ramDiskInit();
+    /* Initialise kthread State Machine */
+    stateMachineInit();
     /* Initialise charDevice */
     charDeviceInit();
     /* Initialise SPI */
@@ -78,8 +78,8 @@ static void __exit fpga_driver_exit(void)
     spiWorkDestroy();
     spiDestroy();
     charDeviceDestroy();
-    ramDiskDestroy();
     stateMachineDestroy();
+    ramDiskDestroy();
 
     printk(KERN_INFO "[TERMINATE] Driver terminated successfully\n");
 }
