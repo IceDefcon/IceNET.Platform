@@ -221,7 +221,7 @@ int RamConfig::dataTX()
      * TODO
      *
      * We need to gather the config
-     * And settle in the engine confog sector
+     * And settle in the engine config sector
      *
      *
      */
@@ -231,18 +231,24 @@ int RamConfig::dataTX()
     return EXIT_SUCCESS;
 }
 
+
 void RamConfig::clearDma()
 {
-    /**
-     *
-     *
-     *
-     * TODO :: Make a proper clean-up here
-     *
-     *
-     *
-     */
-    printf("[INFO] [RAM] Clear Dma configuration and data sectors\n");
+    openDEV();
+
+    const size_t totalSectors = CONFIG_AMOUNT;
+    const size_t sectorSize = SECTOR_SIZE;
+
+    char zeroBuffer[SECTOR_SIZE] = {0}; // Buffer filled with zeroes
+
+    for (size_t i = 0; i < totalSectors; i++)
+    {
+        lseek(m_fileDescriptor, i * sectorSize, SEEK_SET);
+        write(m_fileDescriptor, zeroBuffer, sectorSize);
+        printf("[INFO] [RAM] Cleared sector %d\n", i);
+    }
+
+    closeDEV();
 }
 
 int RamConfig::closeDEV()
