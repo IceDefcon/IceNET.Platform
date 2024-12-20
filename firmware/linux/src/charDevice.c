@@ -219,7 +219,7 @@ static ssize_t inputWrite(struct file *filep, const char __user *buffer, size_t 
     {
         /* Kill signal from Application */
         printk(KERN_INFO "[CTRL][ C ] Kill SIGNAL received from Application\n");
-        setStateMachine(KILL_APPLICATION);
+        setStateMachine(KILL);
     }
     else if (Device[DEVICE_INPUT].io_transfer.RxData[0] == 0x12 && Device[DEVICE_INPUT].io_transfer.RxData[1] == 0x34)
     {

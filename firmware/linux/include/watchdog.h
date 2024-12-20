@@ -27,4 +27,6 @@ watchdogProcess* watchdog_getProcess(void);
 void watchdogInit(void);
 void watchdogDestroy(void);
 
+/* GET */ bool getIndicatorFPGA(void);
+
 #endif // WATCHDOG_H

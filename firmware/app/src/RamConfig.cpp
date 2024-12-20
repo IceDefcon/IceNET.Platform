@@ -59,10 +59,10 @@ DeviceConfig* RamConfig::createOperation(char id, char ctrl, char ops)
 int RamConfig::AssembleData()
 {
     /* TODO :: Need parametrization */
-    m_engineConfig[0] = 0x02;
-    m_engineConfig[1] = 0x11;
-    m_engineConfig[2] = 0x02;
-    m_engineConfig[3] = 0x13;
+    m_engineConfig[0] = 0x02; /* Number of Devices */
+    m_engineConfig[1] = 0x04; /* Size of sector 0 */
+    m_engineConfig[2] = 0x11; /* Load and Ready */
+    m_engineConfig[3] = 0x17; /* Checksum */
 
     char ops = 2; /* Set up 2 registers only */
 

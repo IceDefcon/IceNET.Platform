@@ -31,6 +31,14 @@ static ramAxisType ramAxis[SECTOR_AMOUNT] =
     },
 };
 
+typedef struct
+{
+
+} ramAxisConfig;
+
+
+
+
 void ramAxisInit(ramSectorType type)
 {
     ramAxis[type].sectorAddress = ramDiskGetPointer(type);
