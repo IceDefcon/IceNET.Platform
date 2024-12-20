@@ -21,6 +21,7 @@
 typedef enum 
 {
     IDLE = 0,
+    DMA,
     SPI,
     INTERRUPT,
     KILL_APPLICATION

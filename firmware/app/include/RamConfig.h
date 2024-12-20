@@ -56,10 +56,11 @@ class RamConfig : public Console
         int dataRX();
         int closeDEV();
 
-        int launchEngine();
 		char calculate_checksum(char *data, size_t size);
 		DeviceConfig* createOperation(char devId, char ctrl, char ops);
 		int AssembleData();
+        int launchEngine();
+        void clearDma();
 };
 
 /**

@@ -55,19 +55,30 @@ static stateMachineProcess Process =
 static int stateMachineThread(void *data)
 {
     stateType state;
-    // void* voidPointer;
     
     while (!kthread_should_stop()) 
     {
         state = getStateMachine();
-        // voidPointer = getSectorAddress(SECTOR_TEST);
 
         switch(state)
         {
             case IDLE:
-                // printk(KERN_INFO "[CTRL][STM] IDLE mode\n");
+                if(checkEngineReady())
+                {
+                    setStateMachine(DMA);
+                }
                 break;
 
+            case DMA:
+                printk(KERN_INFO "[CTRL][STM] DMA mode\n");
+
+                /* Set -> Reset -> Run :: Dma Engine */
+                concatenateTransfer();
+                resetEngine();
+                launchDma();
+
+                setStateMachine(IDLE);
+                break;
             case SPI:
                 printk(KERN_INFO "[CTRL][STM] SPI mode\n");
                 /* QUEUE :: Execution of transferFpgaInput */
@@ -85,9 +96,9 @@ static int stateMachineThread(void *data)
                 ramAxisInit(SECTOR_ENGINE);
                 ramAxisInit(SECTOR_BMI160);
                 ramAxisInit(SECTOR_ADXL345);
-                processEngine(SECTOR_ENGINE);
-                processSector(SECTOR_BMI160);
-                processSector(SECTOR_ADXL345);
+                printSector(SECTOR_ENGINE);
+                printSector(SECTOR_BMI160);
+                printSector(SECTOR_ADXL345);
                 ramAxisDestroy(SECTOR_ENGINE);
                 ramAxisDestroy(SECTOR_BMI160);
                 ramAxisDestroy(SECTOR_ADXL345);

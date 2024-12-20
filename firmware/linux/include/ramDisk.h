@@ -88,6 +88,9 @@ void *ramDiskGetPointer(sector_t sector);
 void ramDiskReleasePointer(void *page_data);
 
 int ramDiskInit(void);
+void ClearBytesOnRamDisk(struct blockRamDisk *ramDisk, sector_t sector, size_t length);
 void ramDiskDestroy(void);
+
+/* GET */ struct blockRamDisk *getRamDisk(void);
 
 #endif // RAM_DISK_H

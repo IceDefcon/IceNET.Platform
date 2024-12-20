@@ -123,6 +123,30 @@ int RamConfig::AssembleData()
     return EXIT_SUCCESS;
 }
 
+int RamConfig::launchEngine()
+{
+    ssize_t bytes = 0;
+
+    openDEV();
+
+    /* Write to sector 0 */
+    lseek(m_fileDescriptor, 0, SEEK_SET);
+    bytes = write(m_fileDescriptor, m_engineConfig, sizeof(m_engineConfig));
+    if (bytes < 0)
+    {
+        perror("Failed to write to block device");
+        close(m_fileDescriptor);
+        free(m_BMI160config);
+        free(m_ADXL345config);
+        return EXIT_FAILURE;
+    }
+    printf("[INFO] [RAM] Write %d Bytes to ramDisk to Sector 0\n", bytes);
+
+    closeDEV();
+
+    return EXIT_SUCCESS;
+}
+
 int RamConfig::openDEV()
 {
     int ret = EXIT_FAILURE;
@@ -155,31 +179,6 @@ int RamConfig::dataRX()
 {
     return OK; /* One way communication Here */
 }
-
-int RamConfig::launchEngine()
-{
-    ssize_t bytes = 0;
-
-    openDEV();
-
-    /* Write to sector 0 */
-    lseek(m_fileDescriptor, 0, SEEK_SET);
-    bytes = write(m_fileDescriptor, m_engineConfig, sizeof(m_engineConfig));
-    if (bytes < 0)
-    {
-        perror("Failed to write to block device");
-        close(m_fileDescriptor);
-        free(m_BMI160config);
-        free(m_ADXL345config);
-        return EXIT_FAILURE;
-    }
-    printf("[INFO] [RAM] Write %d Bytes to ramDisk to Sector 0\n", bytes);
-
-    closeDEV();
-
-    return EXIT_SUCCESS;
-}
-
 
 int RamConfig::dataTX()
 {
@@ -217,9 +216,33 @@ int RamConfig::dataTX()
     free(m_BMI160config);
     free(m_ADXL345config);
 
+    /**
+     *
+     * TODO
+     *
+     * We need to gather the config
+     * And settle in the engine confog sector
+     *
+     *
+     */
+
     closeDEV();
 
     return EXIT_SUCCESS;
+}
+
+void RamConfig::clearDma()
+{
+    /**
+     *
+     *
+     *
+     * TODO :: Make a proper clean-up here
+     *
+     *
+     *
+     */
+    printf("[INFO] [RAM] Clear Dma configuration and data sectors\n");
 }
 
 int RamConfig::closeDEV()
