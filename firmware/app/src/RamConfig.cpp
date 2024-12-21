@@ -56,6 +56,23 @@ DeviceConfig* RamConfig::createOperation(char id, char ctrl, char ops)
     return op;
 }
 
+/**
+ *
+ * Hardcoded configuration
+ *
+ * Requires knowledge of the devices
+ * connected to the FPGA and information
+ * about which interface they are connected through
+ *
+ * In this particular moment we have
+ * Two sensors connected over I2C
+ * So 3 memory sectors are used
+ *
+ * [0] Dma Engine Configuration
+ * [1] BMI160
+ * [2] ADXL345
+ *
+ */
 int RamConfig::AssembleData()
 {
     /* TODO :: Need parametrization */

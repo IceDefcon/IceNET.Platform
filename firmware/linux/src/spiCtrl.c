@@ -69,7 +69,7 @@ static spiDeviceData Device[SPI_AMOUNT] =
         .spiDevice = NULL,
         .spiTx = {0},
         .spiRx = {0},
-        .spiLength = 4,
+        .spiLength = 22 + 1, /* Per-defined Dma Transfer + reversed Checksum */
 
         .Dma =
         {
@@ -240,8 +240,6 @@ static int spiDmaInit(spiDeviceType spiDeviceEnum, charDeviceType charDeviceEnum
 
 static int spiDmaEngineInit(spiDeviceType spiDeviceEnum)
 {
-    /* Allocate DMA buffers */
-
     //
     // Code :: Here
     //
@@ -360,16 +358,30 @@ void killApplication(struct work_struct *work)
 
 /* CONFIG */ void configFpga(struct work_struct *work)
 {
+    uint8_t i;
+    uint8_t * dmaData;
+
     printk(KERN_INFO "[CTRL][SPI] Sending Config from RAM to FPGA\n");
+
+    dmaData = getDmaData();
+
+    for (i = 0; i < 23; i++)
+    {
+        printk(KERN_INFO "[CTRL][SPI] Data[%d] :: 0x%02x \n", i, dmaData[i]);
+    }
 }
 
 int spiInit(void)
 {
     (void)spiBusInit(BUS_SPI0, SPI_PRIMARY);
     (void)spiBusInit(BUS_SPI1, SPI_SECONDARY);
-
     spiDmaInit(SPI_PRIMARY, DEVICE_INPUT, DMA_IN);
     spiDmaInit(SPI_SECONDARY, DEVICE_OUTPUT, DMA_OUT);
+
+    (void)spiBusInit(BUS_SPI0, SPI_PRIMARY_DMA);
+    (void)spiBusInit(BUS_SPI1, SPI_SECONDARY_DMA);
+    spiDmaEngineInit(SPI_PRIMARY_DMA);
+    spiDmaEngineInit(SPI_SECONDARY_DMA);
 
     return 0;
 }

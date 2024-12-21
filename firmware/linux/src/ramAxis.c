@@ -132,9 +132,72 @@ void printSector(ramSectorType type)
     kfree(output);
 }
 
-void transferConcatenation(void)
+static uint8_t j;
+static uint8_t * dmaData;
+
+uint8_t * getDmaData(void)
 {
-    pr_info("[CTRL][RAM] Concatenate DMA Transfer\n");
+    return dmaData;
+}
+
+void allocateTransfer(void)
+{
+    dmaData = kmalloc(22 + 1, GFP_KERNEL);
+}
+
+static uint8_t reverseChecksum(uint8_t *data, size_t size)
+{
+    uint8_t i;
+    uint8_t checksum = 0;
+
+    for (i = 0; i < size; i++)
+    {
+        checksum ^= data[i];
+        pr_info("[CTRL][RAM] checksum[0x%02X] Data[0x%02X]\n", checksum, data[i]);
+    }
+
+    return checksum;
+}
+
+void prepareTransfer(ramSectorType type, bool begin, bool end)
+{
+    uint8_t i;
+
+    if (!ramAxis[type].sectorAddress)
+    {
+        pr_err("[ERNO][RAM] Sector %d address is NULL\n", type);
+        return;
+    }
+
+    /**
+     *
+     * TODO
+     *
+     * Fixed 22 + 1 bytes
+     * As we know this the current
+     * size of the DMA transfer
+     * and 1 byte for chacksum
+     *
+     */
+    if(true == begin)
+    {
+        pr_info("[CTRL][RAM] Concatenate DMA Transfer\n");
+        allocateTransfer();
+        j = 0;
+    }
+
+    for (i = 0; i < ((char *)ramAxis[type].sectorAddress)[0]; i++)
+    {
+        dmaData[j] = ((char *)ramAxis[type].sectorAddress)[i];
+        j++;
+    }
+
+    if(true == end)
+    {
+        pr_info("[CTRL][RAM] Calculating Dma transfer checksum\n");
+        dmaData[j] = reverseChecksum(dmaData, j);
+        j = 0;
+    }
 }
 
 void* getSectorAddress(ramSectorType type)

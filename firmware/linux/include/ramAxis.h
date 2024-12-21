@@ -31,8 +31,10 @@ typedef struct
 /* INIT */ void ramAxisInit(ramSectorType type);
 /* CHECK */ bool checkEngineReady(void);
 /* PRINT */ void printSector(ramSectorType type);
-/* JOIN */ void transferConcatenation(void);
+/* PREP */ void prepareTransfer(ramSectorType type, bool begin, bool end);
 /* GET */ void* getSectorAddress(ramSectorType type);
 /* DESTROY */ void ramAxisDestroy(ramSectorType type);
+
+/* GET */  uint8_t * getDmaData(void);
 
 #endif // RAM_AXIS_H
