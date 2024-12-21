@@ -62,6 +62,40 @@ static spiDeviceData Device[SPI_AMOUNT] =
             .rx_dma = 0
         }
     },
+
+    /* DMA Engine Input */
+    [SPI_PRIMARY_DMA] =
+    {
+        .spiDevice = NULL,
+        .spiTx = {0},
+        .spiRx = {0},
+        .spiLength = 4,
+
+        .Dma =
+        {
+            .spiMessage = {},
+            .spiTransfer = {0},
+            .tx_dma = 0,
+            .rx_dma = 0
+        }
+    },
+
+    /* DMA Engine Output */
+    [SPI_SECONDARY_DMA] =
+    {
+        .spiDevice = NULL,
+        .spiTx = {0},
+        .spiRx = {0},
+        .spiLength = 1,
+
+        .Dma =
+        {
+            .spiMessage = {},
+            .spiTransfer = {0},
+            .tx_dma = 0,
+            .rx_dma = 0
+        }
+    },
 };
 
 static int spiBusInit(spiBusType spiBusEnum, spiDeviceType spiDeviceEnum)
@@ -200,6 +234,17 @@ static int spiDmaInit(spiDeviceType spiDeviceEnum, charDeviceType charDeviceEnum
 
     spi_message_init(&Device[spiDeviceEnum].Dma.spiMessage);
     spi_message_add_tail(&Device[spiDeviceEnum].Dma.spiTransfer, &Device[spiDeviceEnum].Dma.spiMessage);
+
+    return 0;
+}
+
+static int spiDmaEngineInit(spiDeviceType spiDeviceEnum)
+{
+    /* Allocate DMA buffers */
+
+    //
+    // Code :: Here
+    //
 
     return 0;
 }

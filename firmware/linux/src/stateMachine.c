@@ -53,6 +53,8 @@ static stateMachineProcess Process =
     return state;
 }
 
+extern bool stopDma;
+
 /* Kernel state machine */
 static int stateMachineThread(void *data)
 {
@@ -67,32 +69,42 @@ static int stateMachineThread(void *data)
         {
             case IDLE:
 
-                /* Check only if Dma Engine is not Ready */
-                if(false == Process.dmaReady)
+                /**
+                 *
+                 * TODO :: Temporary solution
+                 *
+                 * Do not execute @ __exit
+                 *
+                 */
+                if(false == stopDma)
                 {
-                    /* Check only if FPGA is configured :: Watchdog is Running */
-                    if(true == getIndicatorFPGA())
+                    /* Check only if Dma Engine is not Ready */
+                    if(false == Process.dmaReady)
                     {
-                        Process.dmaReady = checkEngineReady();
-                        if(true == Process.dmaReady)
+                        /* Check only if FPGA is configured :: Watchdog is Running */
+                        if(true == getIndicatorFPGA())
                         {
-                            setStateMachine(DMA);
+                            Process.dmaReady = checkEngineReady();
+                            if(true == Process.dmaReady)
+                            {
+                                setStateMachine(DMA);
+                            }
+                        }
+                        else
+                        {
+                            // printk(KERN_INFO "[ERNO][STM] FPFA is not sending Watchdog interrupts\n");
                         }
                     }
-                    else
-                    {
-                        // printk(KERN_INFO "[ERNO][STM] FPFA is not sending Watchdog interrupts\n");
-                    }
                 }
+
                 break;
 
             case DMA:
                 printk(KERN_INFO "[CTRL][STM] DMA mode\n");
-
-                /* Set -> Reset -> Run :: Dma Engine */
+                /* Concatenate memory sectors */
                 transferConcatenation();
-                transferExecution();
-
+                /* QUEUE :: Execution of configFpga */
+                queue_work(get_configFpga_wq(), get_configFpga_work());
                 setStateMachine(IDLE);
                 break;
             case SPI:

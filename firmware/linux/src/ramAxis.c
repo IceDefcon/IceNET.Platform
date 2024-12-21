@@ -33,11 +33,24 @@ static ramAxisType ramAxis[SECTOR_AMOUNT] =
 
 typedef struct
 {
-
+    /**
+     *
+     *
+     *
+     *
+     * TODO
+     *
+     *
+     *
+     *
+     *
+     */
 } ramAxisConfig;
 
+static ramAxisConfig AxisConfig =
+{
 
-
+};
 
 void ramAxisInit(ramSectorType type)
 {
@@ -68,7 +81,7 @@ bool checkEngineReady(void)
 
             /**
              *
-             * TODO :: Dummy clearr
+             * TODO :: Dummy clear
              *
              * This should be copied to the local
              * structure :: ready for concatenation
@@ -110,11 +123,6 @@ void printSector(ramSectorType type)
 
     offset += snprintf(output + offset, 1024 - offset, "[CTRL][RAM] Data in sector %d: ", type);
 
-    if(type == SECTOR_ENGINE)
-    {
-        size = 4;
-    }
-
     for (i = 0; i < size; ++i)
     {
         offset += snprintf(output + offset, 1024 - offset, "%02x ", ((char *)ramAxis[type].sectorAddress)[i]);
@@ -127,12 +135,6 @@ void printSector(ramSectorType type)
 void transferConcatenation(void)
 {
     pr_info("[CTRL][RAM] Concatenate DMA Transfer\n");
-
-}
-
-void transferExecution(void)
-{
-    pr_info("[CTRL][RAM] Launch DMA Transfer\n");
 }
 
 void* getSectorAddress(ramSectorType type)

@@ -592,7 +592,7 @@ int ramDiskInit(void)
 
     blk_register_region(MKDEV(RAMDISK_MAJOR, 0), 1UL << MINORBITS, THIS_MODULE, Probe, NULL, NULL);
 
-    // pr_info("[INIT][RAM] Block ramDisk Initialised\n");
+    pr_info("[INIT][RAM] Block ramDisk Initialised\n");
 
     return 0;
 
@@ -621,5 +621,5 @@ void ramDiskDestroy(void)
     blk_unregister_region(MKDEV(RAMDISK_MAJOR, 0), 1UL << MINORBITS);
     unregister_blkdev(RAMDISK_MAJOR, KERNEL_BLOCK_DEVICE);
 
-    // pr_info("[DESTROY][RAM] Block ramDisk Destroyed\n");
+    pr_info("[DESTROY][RAM] Block ramDisk Destroyed\n");
 }

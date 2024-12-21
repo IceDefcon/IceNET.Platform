@@ -23,6 +23,8 @@ MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Ice Marek");
 MODULE_DESCRIPTION("FPGA Comms Driver");
 
+bool stopDma = false;
+
 //////////////////////////
 //                      //
 //        [FPGA]        //
@@ -71,6 +73,8 @@ static int __init fpga_driver_init(void)
 //////////////////////////
 static void __exit fpga_driver_exit(void)
 {
+    stopDma = true;
+
     /* Destroy everything */
     watchdogDestroy();
     consoleDestroy();

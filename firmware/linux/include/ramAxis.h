@@ -32,7 +32,6 @@ typedef struct
 /* CHECK */ bool checkEngineReady(void);
 /* PRINT */ void printSector(ramSectorType type);
 /* JOIN */ void transferConcatenation(void);
-/* RUN */ void transferExecution(void);
 /* GET */ void* getSectorAddress(ramSectorType type);
 /* DESTROY */ void ramAxisDestroy(ramSectorType type);
 
