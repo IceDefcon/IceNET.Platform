@@ -34,7 +34,7 @@ static stateMachineProcess Process =
     .currentState = IDLE,
     .threadHandle = NULL,
     .stateMutex = __MUTEX_INITIALIZER(Process.stateMutex),
-    .dmaReady = false,
+    .dmaStop = false,
 };
 
 /* SET */ void setStateMachine(stateType newState)
@@ -58,7 +58,7 @@ extern bool stopDma;
 /* Kernel state machine */
 static int stateMachineThread(void *data)
 {
-
+    dmaEngineType dmaEngineStatus;
     stateType state;
 
     while (!kthread_should_stop())
@@ -78,22 +78,24 @@ static int stateMachineThread(void *data)
                  */
                 if(false == stopDma)
                 {
-                    /* Check only if Dma Engine is not Ready */
-                    if(false == Process.dmaReady)
+                    /* Check only if FPGA is configured :: Watchdog is Running */
+                    if(true == getIndicatorFPGA())
                     {
-                        /* Check only if FPGA is configured :: Watchdog is Running */
-                        if(true == getIndicatorFPGA())
+                        dmaEngineStatus = checkEngine();
+
+                        if(DMA_ENGINE_READY == dmaEngineStatus && Process.dmaStop == false)
                         {
-                            Process.dmaReady = checkEngineReady();
-                            if(true == Process.dmaReady)
-                            {
-                                setStateMachine(DMA);
-                            }
+                            setStateMachine(DMA);
+                            Process.dmaStop = true;
                         }
-                        else
+                        else if(DMA_ENGINE_STOP == dmaEngineStatus)
                         {
-                            // printk(KERN_INFO "[ERNO][STM] FPFA is not sending Watchdog interrupts\n");
+                            Process.dmaStop = false;
                         }
+                    }
+                    else
+                    {
+                        // printk(KERN_INFO "[ERNO][STM] FPFA is not sending Watchdog interrupts\n");
                     }
                 }
 

@@ -21,6 +21,13 @@ typedef enum
     SECTOR_AMOUNT,
 }ramSectorType;
 
+typedef enum
+{
+    DMA_ENGINE_STOP,
+    DMA_ENGINE_READY,
+    DMA_ENGINE_AMOUNT
+}dmaEngineType;
+
 typedef struct
 {
     void* sectorAddress;
@@ -37,7 +44,7 @@ typedef struct
 
 /* INIT */ void ramAxisInit(void);
 /* INIT */ void initTransfer(ramSectorType type);
-/* CHECK */ bool checkEngineReady(void);
+/* CHECK */ dmaEngineType checkEngine(void);
 /* PRINT */ void printSector(ramSectorType type);
 /* PREP */ void prepareTransfer(ramSectorType type, bool begin, bool end);
 /* GET */ void* getSectorAddress(ramSectorType type);

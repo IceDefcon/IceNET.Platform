@@ -44,9 +44,9 @@ void initTransfer(ramSectorType type)
     }
 }
 
-bool checkEngineReady(void)
+dmaEngineType checkEngine(void)
 {
-    bool ret = false;
+    uint8_t ret = DMA_ENGINE_STOP;
 
     initTransfer(SECTOR_ENGINE);
 
@@ -58,8 +58,6 @@ bool checkEngineReady(void)
     {
         if(((char *)ramAxis[SECTOR_ENGINE].sectorAddress)[0] != 0x00)
         {
-            pr_info("[CTRL][RAM] DMA Ready to Launch\n");
-
             /**
              *
              * TODO :: Dummy clear
@@ -69,7 +67,7 @@ bool checkEngineReady(void)
              *
              */
 
-            ret = true;
+            ret = DMA_ENGINE_READY;
         }
     }
 

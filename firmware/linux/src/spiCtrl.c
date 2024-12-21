@@ -302,12 +302,6 @@ void transferFpgaInput(struct work_struct *work)
     int ret;
     int i;
 
-#if 0 /* Prototype config */
-    ramAxisInit();
-    testPrint();
-    ramAxisDestroy();
-#endif
-
     /* Initiate DMA Controller to perform SPI transfer */
     ret = spi_sync(Device[SPI_PRIMARY].spiDevice, &Device[SPI_PRIMARY].Dma.spiMessage);
 
@@ -397,30 +391,67 @@ void killApplication(struct work_struct *work)
 
 /* CONFIG */ void configFpga(struct work_struct *work)
 {
-    uint8_t i;
+    unsigned char *tx_buf;
+    unsigned char *rx_buf;
+    int ret;
+    int i;
+
+#if 0 /* Dma Data debug */
     dmaTransferType* dmaTransfer = getDmaTransfer();
-
-    printk(KERN_INFO "[CTRL][SPI] Sending Config from RAM to FPGA\n");
-
-#if 1 /* Dma Data debug */
     for (i = 0; i < 23; i++)
     {
         printk(KERN_INFO "[CTRL][SPI] Data[%d] :: 0x%02x \n", i, dmaTransfer->RxData[i]);
     }
 #endif
+
+    printk(KERN_INFO "[CTRL][SPI] Sending Config from RAM to FPGA\n");
+
+    /* Initiate DMA Controller to perform SPI transfer */
+    ret = spi_sync(Device[SPI_PRIMARY_DMA].spiDevice, &Device[SPI_PRIMARY_DMA].Dma.spiMessage);
+
+    if (ret < 0)
+    {
+        printk(KERN_ERR "[CTRL][SPI] SPI transfer at signal From Ram Disk failed: %d\n", ret);
+        return;
+    }
+    else
+    {
+        printk(KERN_INFO "[CTRL][SPI] Primary FPGA Transfer :: Signaled by configFpga over SPI.0\n");
+    }
+
+    /* Debug :: Dma buffer */
+    tx_buf = (unsigned char *)Device[SPI_PRIMARY_DMA].Dma.spiTransfer.tx_buf;
+    rx_buf = (unsigned char *)Device[SPI_PRIMARY_DMA].Dma.spiTransfer.rx_buf;
+    for (i = 0; i < Device[SPI_PRIMARY_DMA].spiLength; ++i)
+    {
+        printk(KERN_INFO "[CTRL][SPI] Primary FPGA Transfer :: Dma Buffer[%d]: [Data] Tx[0x%02x] [Feedback] Rx[0x%02x]\n", i, tx_buf[i], rx_buf[i]);
+    }
+
+    /* No feedback preamble received :: FPGA not running properly */
+    if(0x18 != rx_buf[0])
+    {
+        printk(KERN_ERR "[CTRL][SPI] No FPGA Preamble detected :: FPGA is Not Programed, Connected or Running properly\n");
+        charDeviceMutexCtrl(DEVICE_OUTPUT, MUTEX_CTRL_UNLOCK);
+    }
+
+    /* Clear the buffers */
+    for (i = 0; i < Device[SPI_PRIMARY_DMA].spiLength; ++i)
+    {
+        Device[SPI_PRIMARY_DMA].spiRx[i] = 0x00;
+        Device[SPI_PRIMARY_DMA].spiTx[i] = 0x00;
+    }
 }
 
 int spiInit(void)
 {
     (void)spiBusInit(BUS_SPI0, SPI_PRIMARY);
     (void)spiBusInit(BUS_SPI1, SPI_SECONDARY);
-    spiDmaInit(SPI_PRIMARY, DEVICE_INPUT, DMA_IN);
-    spiDmaInit(SPI_SECONDARY, DEVICE_OUTPUT, DMA_OUT);
-
     (void)spiBusInit(BUS_SPI0, SPI_PRIMARY_DMA);
     (void)spiBusInit(BUS_SPI1, SPI_SECONDARY_DMA);
     spiDmaEngineInit(SPI_PRIMARY_DMA, DMA_IN);
     spiDmaEngineInit(SPI_SECONDARY_DMA, DMA_OUT);
+    spiDmaInit(SPI_PRIMARY, DEVICE_INPUT, DMA_IN);
+    spiDmaInit(SPI_SECONDARY, DEVICE_OUTPUT, DMA_OUT);
 
     return 0;
 }
