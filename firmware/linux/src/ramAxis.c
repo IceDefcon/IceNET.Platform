@@ -31,28 +31,10 @@ static ramAxisType ramAxis[SECTOR_AMOUNT] =
     },
 };
 
-typedef struct
-{
-    /**
-     *
-     *
-     *
-     *
-     * TODO
-     *
-     *
-     *
-     *
-     *
-     */
-} ramAxisConfig;
+static uint8_t j;
+static dmaTransferType* dmaTransfer;
 
-static ramAxisConfig AxisConfig =
-{
-
-};
-
-void ramAxisInit(ramSectorType type)
+void initTransfer(ramSectorType type)
 {
     ramAxis[type].sectorAddress = ramDiskGetPointer(type);
     if (!ramAxis[type].sectorAddress) 
@@ -60,14 +42,13 @@ void ramAxisInit(ramSectorType type)
         pr_err("[ERNO][RAM] Failed to get pointer to sector %d\n", type);
         return;
     }
-    // pr_info("[CTRL][RAM] Sector[%d] Pointer: %p\n", type, ramAxis[type].sectorAddress);
 }
 
 bool checkEngineReady(void)
 {
     bool ret = false;
 
-    ramAxisInit(SECTOR_ENGINE);
+    initTransfer(SECTOR_ENGINE);
 
     if (!ramAxis[SECTOR_ENGINE].sectorAddress)
     {
@@ -92,7 +73,7 @@ bool checkEngineReady(void)
         }
     }
 
-    ramAxisDestroy(SECTOR_ENGINE);
+    destroyTransfer(SECTOR_ENGINE);
 
     return ret;
 }
@@ -132,28 +113,89 @@ void printSector(ramSectorType type)
     kfree(output);
 }
 
-static uint8_t j;
-static uint8_t * dmaData;
-
-uint8_t * getDmaData(void)
+dmaTransferType* getDmaTransfer(void)
 {
-    return dmaData;
+    return dmaTransfer;
 }
 
-void allocateTransfer(void)
+static void allocateTransfer(void)
 {
-    dmaData = kmalloc(22 + 1, GFP_KERNEL);
+    // Allocate memory for the dmaTransfer structure itself if it hasn't been initialized
+    if (!dmaTransfer)
+    {
+        dmaTransfer = kmalloc(sizeof(dmaTransferType), GFP_KERNEL);
+        if (!dmaTransfer)
+        {
+            pr_err("[ERNO][RAM] Failed to allocate memory for dmaTransfer\n");
+            return;
+        }
+        memset(dmaTransfer, 0, sizeof(dmaTransferType));
+    }
+
+    if (!dmaTransfer->RxData)
+    {
+        dmaTransfer->RxData = kmalloc(22 + 1, GFP_KERNEL);
+        if (!dmaTransfer->RxData)
+        {
+            pr_err("[ERNO][RAM] Failed to allocate memory for dmaTransfer->RxData\n");
+            return;
+        }
+        pr_info("[CTRL][RAM] Successfully allocated memory for dmaTransfer->RxData\n");
+    }
+
+    if (!dmaTransfer->TxData)
+    {
+        dmaTransfer->TxData = kmalloc(22 + 1, GFP_KERNEL);
+        if (!dmaTransfer->TxData)
+        {
+            pr_err("[ERNO][RAM] Failed to allocate memory for dmaTransfer->TxData\n");
+            return;
+        }
+        pr_info("[CTRL][RAM] Successfully allocated memory for dmaTransfer->TxData\n");
+    }
+}
+
+static void freeTransfer(void)
+{
+    if (dmaTransfer)
+    {
+        if (dmaTransfer->RxData)
+        {
+            kfree(dmaTransfer->RxData);
+            dmaTransfer->RxData = NULL;
+        }
+
+        if (dmaTransfer->TxData)
+        {
+            kfree(dmaTransfer->TxData);
+            dmaTransfer->TxData = NULL;
+        }
+
+        kfree(dmaTransfer);
+        dmaTransfer = NULL;
+    }
+}
+
+void ramAxisInit(void)
+{
+    allocateTransfer();
+}
+
+void ramAxisDestroy(void)
+{
+    freeTransfer();
 }
 
 static uint8_t reverseChecksum(uint8_t *data, size_t size)
 {
     uint8_t i;
     uint8_t checksum = 0;
-
     for (i = 0; i < size; i++)
     {
         checksum ^= data[i];
+#if 0 /* Checksum debug */
         pr_info("[CTRL][RAM] checksum[0x%02X] Data[0x%02X]\n", checksum, data[i]);
+#endif
     }
 
     return checksum;
@@ -182,20 +224,19 @@ void prepareTransfer(ramSectorType type, bool begin, bool end)
     if(true == begin)
     {
         pr_info("[CTRL][RAM] Concatenate DMA Transfer\n");
-        allocateTransfer();
         j = 0;
     }
 
     for (i = 0; i < ((char *)ramAxis[type].sectorAddress)[0]; i++)
     {
-        dmaData[j] = ((char *)ramAxis[type].sectorAddress)[i];
+        dmaTransfer->RxData[j] = ((char *)ramAxis[type].sectorAddress)[i];
         j++;
     }
 
     if(true == end)
     {
         pr_info("[CTRL][RAM] Calculating Dma transfer checksum\n");
-        dmaData[j] = reverseChecksum(dmaData, j);
+        dmaTransfer->RxData[j] = reverseChecksum(dmaTransfer->RxData, j);
         j = 0;
     }
 }
@@ -205,7 +246,7 @@ void* getSectorAddress(ramSectorType type)
     return ramAxis[type].sectorAddress;
 }
 
-void ramAxisDestroy(ramSectorType type)
+void destroyTransfer(ramSectorType type)
 {
     ramDiskReleasePointer(ramAxis[type].sectorAddress);
 }

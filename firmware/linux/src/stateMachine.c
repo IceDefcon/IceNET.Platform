@@ -102,17 +102,17 @@ static int stateMachineThread(void *data)
             case DMA:
                 printk(KERN_INFO "[CTRL][STM] DMA mode\n");
                 /* Init pointers */
-                ramAxisInit(SECTOR_ENGINE);
-                ramAxisInit(SECTOR_BMI160);
-                ramAxisInit(SECTOR_ADXL345);
+                initTransfer(SECTOR_ENGINE);
+                initTransfer(SECTOR_BMI160);
+                initTransfer(SECTOR_ADXL345);
                 /* Prepare DMA Transfer */
                 prepareTransfer(SECTOR_ENGINE, true, false);
                 prepareTransfer(SECTOR_BMI160, false, false);
                 prepareTransfer(SECTOR_ADXL345, false, true);
                 /* Destroy life-time pointers */
-                ramAxisDestroy(SECTOR_ENGINE);
-                ramAxisDestroy(SECTOR_BMI160);
-                ramAxisDestroy(SECTOR_ADXL345);
+                destroyTransfer(SECTOR_ENGINE);
+                destroyTransfer(SECTOR_BMI160);
+                destroyTransfer(SECTOR_ADXL345);
                 /* QUEUE :: Execution of configFpga */
                 queue_work(get_configFpga_wq(), get_configFpga_work());
                 setStateMachine(IDLE);
@@ -129,15 +129,15 @@ static int stateMachineThread(void *data)
                  * [1] :: DMA BMI160 Config
                  * [2] :: DMA BMI160 Config
                  */
-                ramAxisInit(SECTOR_ENGINE);
-                ramAxisInit(SECTOR_BMI160);
-                ramAxisInit(SECTOR_ADXL345);
+                initTransfer(SECTOR_ENGINE);
+                initTransfer(SECTOR_BMI160);
+                initTransfer(SECTOR_ADXL345);
                 printSector(SECTOR_ENGINE);
                 printSector(SECTOR_BMI160);
                 printSector(SECTOR_ADXL345);
-                ramAxisDestroy(SECTOR_ENGINE);
-                ramAxisDestroy(SECTOR_BMI160);
-                ramAxisDestroy(SECTOR_ADXL345);
+                destroyTransfer(SECTOR_ENGINE);
+                destroyTransfer(SECTOR_BMI160);
+                destroyTransfer(SECTOR_ADXL345);
 #endif
                 break;
 

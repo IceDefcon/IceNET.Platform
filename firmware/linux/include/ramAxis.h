@@ -28,13 +28,22 @@ typedef struct
     char transfer[];
 } ramAxisType;
 
-/* INIT */ void ramAxisInit(ramSectorType type);
+typedef struct
+{
+    uint8_t size;
+    uint8_t* RxData;
+    uint8_t* TxData;
+}dmaTransferType;
+
+/* INIT */ void ramAxisInit(void);
+/* INIT */ void initTransfer(ramSectorType type);
 /* CHECK */ bool checkEngineReady(void);
 /* PRINT */ void printSector(ramSectorType type);
 /* PREP */ void prepareTransfer(ramSectorType type, bool begin, bool end);
 /* GET */ void* getSectorAddress(ramSectorType type);
-/* DESTROY */ void ramAxisDestroy(ramSectorType type);
+/* DESTROY */ void destroyTransfer(ramSectorType type);
+/* DESTROY */ void ramAxisDestroy(void);
 
-/* GET */  uint8_t * getDmaData(void);
+/* GET */  dmaTransferType* getDmaTransfer(void);
 
 #endif // RAM_AXIS_H

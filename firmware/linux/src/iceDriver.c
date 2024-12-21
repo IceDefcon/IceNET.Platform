@@ -17,6 +17,7 @@
 #include "isrCtrl.h"
 #include "console.h"
 #include "ramDisk.h"
+#include "ramAxis.h"
 
 MODULE_VERSION("1.0");
 MODULE_LICENSE("GPL");
@@ -40,6 +41,8 @@ static int __init fpga_driver_init(void)
     printk(KERN_INFO "[BEGIN] IceNET CPU & FPGA Platform\n");
     printk(KERN_INFO "----------------------------------\n");
 
+    /* Initialise ramAxis */
+    ramAxisInit();
     /* Initialise ramDisk */
     ret = ramDiskInit();
     /* Initialise kthread State Machine */
@@ -84,6 +87,7 @@ static void __exit fpga_driver_exit(void)
     charDeviceDestroy();
     stateMachineDestroy();
     ramDiskDestroy();
+    ramAxisDestroy();
 
     printk(KERN_INFO "[TERMINATE] Driver terminated successfully\n");
 }
