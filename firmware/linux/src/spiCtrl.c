@@ -69,7 +69,7 @@ static spiDeviceData Device[SPI_AMOUNT] =
         .spiDevice = NULL,
         .spiTx = {0},
         .spiRx = {0},
-        .spiLength = 22 + 1, /* Per-defined Dma Transfer + reversed Checksum */
+        .spiLength = 16, /* Per-defined Dma Transfer + reversed Checksum */
 
         .Dma =
         {
@@ -192,12 +192,15 @@ static int spiBusInit(spiBusType spiBusEnum, spiDeviceType spiDeviceEnum)
  *
  */
 
+static uint8_t test_buffer[4] = {0x11, 0x22, 0x33, 0x44};
+
 static int spiDmaInit(spiDeviceType spiDeviceEnum, charDeviceType charDeviceEnum, dmaControlType dmaControl)
 {
     DataTransfer* pCharDeviceTransfer = getCharDeviceTransfer(charDeviceEnum);
+    dmaTransferType* dmaTransfer = getDmaTransfer();
 
     /* Allocate DMA buffers */
-    Device[spiDeviceEnum].Dma.tx_dma = dma_map_single(Device[spiDeviceEnum].spiDevice->controller->dev.parent, (void *)pCharDeviceTransfer->RxData, Device[spiDeviceEnum].spiLength, DMA_TO_DEVICE);
+    Device[spiDeviceEnum].Dma.tx_dma = dma_map_single(Device[spiDeviceEnum].spiDevice->controller->dev.parent, (void *)dmaTransfer->RxData, Device[spiDeviceEnum].spiLength, DMA_TO_DEVICE);
     Device[spiDeviceEnum].Dma.rx_dma = dma_map_single(Device[spiDeviceEnum].spiDevice->controller->dev.parent, (void *)Device[spiDeviceEnum].spiRx, Device[spiDeviceEnum].spiLength, DMA_FROM_DEVICE);
 
     if(dma_mapping_error(Device[spiDeviceEnum].spiDevice->controller->dev.parent, Device[spiDeviceEnum].Dma.tx_dma) ||
@@ -218,13 +221,13 @@ static int spiDmaInit(spiDeviceType spiDeviceEnum, charDeviceType charDeviceEnum
 
     if(DMA_IN == dmaControl)
     {
-        Device[spiDeviceEnum].Dma.spiTransfer.tx_buf = (void *)pCharDeviceTransfer->RxData;
+        Device[spiDeviceEnum].Dma.spiTransfer.tx_buf = (void *)dmaTransfer->RxData;
         Device[spiDeviceEnum].Dma.spiTransfer.rx_buf = (void *)Device[spiDeviceEnum].spiTx;
     }
     else if(DMA_OUT == dmaControl)
     {
         Device[spiDeviceEnum].Dma.spiTransfer.tx_buf = (void *)Device[spiDeviceEnum].spiRx;
-        Device[spiDeviceEnum].Dma.spiTransfer.rx_buf = (void *)pCharDeviceTransfer->TxData;
+        Device[spiDeviceEnum].Dma.spiTransfer.rx_buf = (void *)dmaTransfer->TxData;
     }
     else
     {
@@ -238,6 +241,7 @@ static int spiDmaInit(spiDeviceType spiDeviceEnum, charDeviceType charDeviceEnum
 
     return 0;
 }
+
 
 static int spiDmaEngineInit(spiDeviceType spiDeviceEnum, dmaControlType dmaControl)
 {
@@ -396,7 +400,7 @@ void killApplication(struct work_struct *work)
     int ret;
     int i;
 
-#if 0 /* Dma Data debug */
+#if 1 /* Dma Data debug */
     dmaTransferType* dmaTransfer = getDmaTransfer();
     for (i = 0; i < 23; i++)
     {
