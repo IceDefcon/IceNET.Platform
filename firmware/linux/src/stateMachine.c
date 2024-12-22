@@ -115,8 +115,6 @@ static int stateMachineThread(void *data)
                 destroyTransfer(SECTOR_ENGINE);
                 destroyTransfer(SECTOR_BMI160);
                 destroyTransfer(SECTOR_ADXL345);
-                /* QUEUE :: Execution of configFpga */
-                queue_work(get_configFpga_wq(), get_configFpga_work());
                 setStateMachine(IDLE);
                 break;
             case SPI:

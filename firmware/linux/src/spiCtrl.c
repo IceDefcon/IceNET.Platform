@@ -16,6 +16,7 @@
 #include "stateMachine.h"
 #include "types.h"
 #include "ramAxis.h"
+#include "config.h"
 
 ////////////////////////
 //                    //
@@ -29,23 +30,6 @@
 
 static spiDeviceData Device[SPI_AMOUNT] =
 {
-    /* DMA Engine */
-    [SPI_DMA] =
-    {
-        .spiDevice = NULL,
-        .spiTx = {0},
-        .spiRx = {0},
-        .spiLength = 4, /* Per-defined Dma Transfer + reversed Checksum */
-
-        .Dma =
-        {
-            .spiMessage = {},
-            .spiTransfer = {0},
-            .tx_dma = 0,
-            .rx_dma = 0
-        }
-    },
-
     /* Input */
     [SPI_PRIMARY] =
     {
@@ -177,56 +161,13 @@ static int spiBusInit(spiBusType spiBusEnum, spiDeviceType spiDeviceEnum)
 
 static int spiDmaInit(spiDeviceType spiDeviceEnum, charDeviceType charDeviceEnum, dmaControlType dmaControl)
 {
-    DataTransfer* pCharDeviceTransfer = getCharDeviceTransfer(charDeviceEnum);
-    // dmaTransferType* dmaTransfer = getDmaTransfer();
-
-    /* Allocate DMA buffers */
-    Device[spiDeviceEnum].Dma.tx_dma = dma_map_single(Device[spiDeviceEnum].spiDevice->controller->dev.parent, (void *)pCharDeviceTransfer->RxData, Device[spiDeviceEnum].spiLength, DMA_TO_DEVICE);
-    Device[spiDeviceEnum].Dma.rx_dma = dma_map_single(Device[spiDeviceEnum].spiDevice->controller->dev.parent, (void *)Device[spiDeviceEnum].spiRx, Device[spiDeviceEnum].spiLength, DMA_FROM_DEVICE);
-
-    if(dma_mapping_error(Device[spiDeviceEnum].spiDevice->controller->dev.parent, Device[spiDeviceEnum].Dma.tx_dma) ||
-        dma_mapping_error(Device[spiDeviceEnum].spiDevice->controller->dev.parent, Device[spiDeviceEnum].Dma.rx_dma))
-    {
-        printk(KERN_ERR "[INIT][SPI] DMA mapping failed for SPI %d\n", spiDeviceEnum);
-        return -1;
-    }
-    else
-    {
-        printk(KERN_ERR "[INIT][SPI] DMA mapping successful for SPI %d\n", spiDeviceEnum);
-    }
-
-    memset(&Device[spiDeviceEnum].Dma.spiTransfer, 0, sizeof(Device[spiDeviceEnum].Dma.spiTransfer));
-    Device[spiDeviceEnum].Dma.spiTransfer.tx_dma = Device[spiDeviceEnum].Dma.tx_dma;
-    Device[spiDeviceEnum].Dma.spiTransfer.rx_dma = Device[spiDeviceEnum].Dma.rx_dma;
-    Device[spiDeviceEnum].Dma.spiTransfer.len = Device[spiDeviceEnum].spiLength;
-
-    if(DMA_IN == dmaControl)
-    {
-        Device[spiDeviceEnum].Dma.spiTransfer.tx_buf = (void *)pCharDeviceTransfer->RxData;
-        Device[spiDeviceEnum].Dma.spiTransfer.rx_buf = (void *)Device[spiDeviceEnum].spiTx;
-    }
-    else if(DMA_OUT == dmaControl)
-    {
-        Device[spiDeviceEnum].Dma.spiTransfer.tx_buf = (void *)Device[spiDeviceEnum].spiRx;
-        Device[spiDeviceEnum].Dma.spiTransfer.rx_buf = (void *)pCharDeviceTransfer->TxData;
-    }
-    else
-    {
-        printk(KERN_ERR "[INIT][SPI] DMA buffers configuration for SPI %d failed\n", spiDeviceEnum);
-    }
-    Device[spiDeviceEnum].Dma.spiTransfer.cs_change = 1;
-    Device[spiDeviceEnum].Dma.spiTransfer.speed_hz = Device[spiDeviceEnum].spiDevice->max_speed_hz;
-
-    spi_message_init(&Device[spiDeviceEnum].Dma.spiMessage);
-    spi_message_add_tail(&Device[spiDeviceEnum].Dma.spiTransfer, &Device[spiDeviceEnum].Dma.spiMessage);
-
-    return 0;
-}
-
-
-static int spiDmaEngineInit(spiDeviceType spiDeviceEnum)
-{
+#if CHAR_DEVICE_CTRL
+    DataTransfer* dmaTransfer = getCharDeviceTransfer(charDeviceEnum);
+#elif RAM_DISK_CTRL
     dmaTransferType* dmaTransfer = getDmaTransfer();
+#else
+    #error "Neither CHAR_DEVICE_CTRL nor RAM_DISK_CTRL is enabled!"
+#endif
 
     /* Allocate DMA buffers */
     Device[spiDeviceEnum].Dma.tx_dma = dma_map_single(Device[spiDeviceEnum].spiDevice->controller->dev.parent, (void *)dmaTransfer->RxData, Device[spiDeviceEnum].spiLength, DMA_TO_DEVICE);
@@ -247,8 +188,21 @@ static int spiDmaEngineInit(spiDeviceType spiDeviceEnum)
     Device[spiDeviceEnum].Dma.spiTransfer.tx_dma = Device[spiDeviceEnum].Dma.tx_dma;
     Device[spiDeviceEnum].Dma.spiTransfer.rx_dma = Device[spiDeviceEnum].Dma.rx_dma;
     Device[spiDeviceEnum].Dma.spiTransfer.len = Device[spiDeviceEnum].spiLength;
-    Device[spiDeviceEnum].Dma.spiTransfer.tx_buf = (void *)dmaTransfer->RxData;
-    Device[spiDeviceEnum].Dma.spiTransfer.rx_buf = (void *)Device[spiDeviceEnum].spiTx;
+
+    if(DMA_IN == dmaControl)
+    {
+        Device[spiDeviceEnum].Dma.spiTransfer.tx_buf = (void *)dmaTransfer->RxData;
+        Device[spiDeviceEnum].Dma.spiTransfer.rx_buf = (void *)Device[spiDeviceEnum].spiTx;
+    }
+    else if(DMA_OUT == dmaControl)
+    {
+        Device[spiDeviceEnum].Dma.spiTransfer.tx_buf = (void *)Device[spiDeviceEnum].spiRx;
+        Device[spiDeviceEnum].Dma.spiTransfer.rx_buf = (void *)dmaTransfer->TxData;
+    }
+    else
+    {
+        printk(KERN_ERR "[INIT][SPI] DMA buffers configuration for SPI %d failed\n", spiDeviceEnum);
+    }
     Device[spiDeviceEnum].Dma.spiTransfer.cs_change = 1;
     Device[spiDeviceEnum].Dma.spiTransfer.speed_hz = Device[spiDeviceEnum].spiDevice->max_speed_hz;
 
@@ -361,27 +315,10 @@ void killApplication(struct work_struct *work)
     charDeviceLockCtrl(DEVICE_WATCHDOG, CTRL_UNLOCK);
 }
 
-/* CONFIG */ void configFpga(struct work_struct *work)
-{
-    int i;
-
-#if 1 /* Dma Data debug */
-    dmaTransferType* dmaTransfer = getDmaTransfer();
-    for (i = 0; i < 23; i++)
-    {
-        printk(KERN_INFO "[CTRL][SPI] Data[%d] :: 0x%02x \n", i, dmaTransfer->RxData[i]);
-    }
-#endif
-
-    printk(KERN_INFO "[CTRL][SPI] Sending Config from RAM to FPGA\n");
-}
-
 int spiInit(void)
 {
-    (void)spiBusInit(BUS_SPI0, SPI_DMA);
     (void)spiBusInit(BUS_SPI0, SPI_PRIMARY);
     (void)spiBusInit(BUS_SPI1, SPI_SECONDARY);
-    spiDmaEngineInit(SPI_DMA);
 
     spiDmaInit(SPI_PRIMARY, DEVICE_INPUT, DMA_IN);
     spiDmaInit(SPI_SECONDARY, DEVICE_OUTPUT, DMA_OUT);
@@ -393,7 +330,6 @@ void spiDestroy(void)
 {
     spiDmaDestroy(SPI_PRIMARY);
     spiDmaDestroy(SPI_SECONDARY);
-    spiDmaDestroy(SPI_DMA);
 
     spi_dev_put(Device[SPI_PRIMARY].spiDevice);
     spi_dev_put(Device[SPI_SECONDARY].spiDevice);
