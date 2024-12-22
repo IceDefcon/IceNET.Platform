@@ -12,6 +12,7 @@
 #include <linux/slab.h> 	// Include for kmalloc/kfree functions
 #include <linux/mutex.h>    // Include for mutex opearations
 #include <linux/device.h>   // Include for class_create
+#include <linux/delay.h> // For msleep
 
 #include "stateMachine.h"
 #include "charDevice.h"
@@ -49,8 +50,8 @@ static charDeviceData Device[DEVICE_AMOUNT] =
         .deviceClass = NULL,
         .nodeDevice = NULL,
         .openCount = 0,
-        .device_mutex = __MUTEX_INITIALIZER(Device[DEVICE_INPUT].device_mutex),
         .read_Mutex = __MUTEX_INITIALIZER(Device[DEVICE_INPUT].read_Mutex),
+        .isLocked = true,
         .tryLock = 0,
 
         .io_transfer =
@@ -75,8 +76,8 @@ static charDeviceData Device[DEVICE_AMOUNT] =
         .deviceClass = NULL,
         .nodeDevice = NULL,
         .openCount = 0,
-        .device_mutex = __MUTEX_INITIALIZER(Device[DEVICE_OUTPUT].device_mutex),
         .read_Mutex = __MUTEX_INITIALIZER(Device[DEVICE_OUTPUT].read_Mutex),
+        .isLocked = true,
         .tryLock = 0,
 
         .io_transfer =
@@ -101,8 +102,8 @@ static charDeviceData Device[DEVICE_AMOUNT] =
         .deviceClass = NULL,
         .nodeDevice = NULL,
         .openCount = 0,
-        .device_mutex = __MUTEX_INITIALIZER(Device[DEVICE_WATCHDOG].device_mutex),
         .read_Mutex = __MUTEX_INITIALIZER(Device[DEVICE_WATCHDOG].read_Mutex),
+        .isLocked = true,
         .tryLock = 0,
 
         .io_transfer =
@@ -170,6 +171,23 @@ static charDeviceData Device[DEVICE_AMOUNT] =
             break;
         }
     }
+}
+
+/* CTRL */ void charDeviceLockCtrl(charDeviceType charDevice, CtrlType Ctrl)
+{
+    if(CTRL_LOCK == Ctrl)
+    {
+        Device[charDevice].isLocked = true;
+    }
+    else if(CTRL_UNLOCK == Ctrl)
+    {
+        Device[charDevice].isLocked = false;
+    }
+}
+
+/* CHECK */ bool idDeviceLocked(charDeviceType charDevice)
+{
+    return Device[charDevice].isLocked;
 }
 
 /* KernelInput Interface */
@@ -275,8 +293,12 @@ static ssize_t outputRead(struct file *filep, char *buffer, size_t len, loff_t *
     int ret = 0;
     size_t i;
 
-    printk(KERN_INFO "[CTRL][ C ] Kernel is waiting for Wait mutex Unlock\n");
-    charDeviceMutexCtrl(DEVICE_OUTPUT, MUTEX_CTRL_LOCK);
+    printk(KERN_INFO "[CTRL][ C ] Output Device is waiting for flag release\n");
+    charDeviceLockCtrl(DEVICE_OUTPUT, CTRL_LOCK);
+    while(idDeviceLocked(DEVICE_OUTPUT))
+    {
+        msleep(10); /* Release 90% of CPU resources */
+    }
 
     error_count = copy_to_user(buffer, (const void *)Device[DEVICE_OUTPUT].io_transfer.TxData, Device[DEVICE_OUTPUT].io_transfer.length);
 
@@ -339,7 +361,11 @@ static ssize_t watchdogRead(struct file *filep, char *buffer, size_t len, loff_t
 {
     int error_count = 0;
 
-    charDeviceMutexCtrl(DEVICE_WATCHDOG, MUTEX_CTRL_LOCK);
+    charDeviceLockCtrl(DEVICE_WATCHDOG, CTRL_LOCK);
+    while(idDeviceLocked(DEVICE_WATCHDOG))
+    {
+        msleep(10); /* Release 90% of CPU resources */
+    }
 
     error_count = copy_to_user(buffer, (const void *)Device[DEVICE_WATCHDOG].io_transfer.TxData, Device[DEVICE_WATCHDOG].io_transfer.length);
 

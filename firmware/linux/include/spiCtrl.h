@@ -50,10 +50,9 @@ typedef enum
 
 typedef enum
 {
+    SPI_DMA,
     SPI_PRIMARY,
     SPI_SECONDARY,
-    SPI_PRIMARY_DMA,
-    SPI_SECONDARY_DMA,
     SPI_AMOUNT
 }spiDeviceType;
 
