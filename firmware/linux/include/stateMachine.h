@@ -32,7 +32,7 @@ typedef struct
     stateType currentState;
     struct task_struct *threadHandle;
     struct mutex stateMutex;
-    bool dmaReady;
+    bool dmaStop;
 } stateMachineProcess;
 
 /* SET */ void setStateMachine(stateType newState);

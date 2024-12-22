@@ -34,7 +34,7 @@ static stateMachineProcess Process =
     .currentState = IDLE,
     .threadHandle = NULL,
     .stateMutex = __MUTEX_INITIALIZER(Process.stateMutex),
-    .dmaReady = false,
+    .dmaStop = false,
 };
 
 /* SET */ void setStateMachine(stateType newState)
@@ -53,10 +53,12 @@ static stateMachineProcess Process =
     return state;
 }
 
+extern bool stopDma;
+
 /* Kernel state machine */
 static int stateMachineThread(void *data)
 {
-
+    dmaEngineType dmaEngineStatus;
     stateType state;
 
     while (!kthread_should_stop())
@@ -67,16 +69,28 @@ static int stateMachineThread(void *data)
         {
             case IDLE:
 
-                /* Check only if Dma Engine is not Ready */
-                if(false == Process.dmaReady)
+                /**
+                 *
+                 * TODO :: Temporary solution
+                 *
+                 * Do not execute @ __exit
+                 *
+                 */
+                if(false == stopDma)
                 {
                     /* Check only if FPGA is configured :: Watchdog is Running */
                     if(true == getIndicatorFPGA())
                     {
-                        Process.dmaReady = checkEngineReady();
-                        if(true == Process.dmaReady)
+                        dmaEngineStatus = checkEngine();
+
+                        if(DMA_ENGINE_READY == dmaEngineStatus && Process.dmaStop == false)
                         {
                             setStateMachine(DMA);
+                            Process.dmaStop = true;
+                        }
+                        else if(DMA_ENGINE_STOP == dmaEngineStatus)
+                        {
+                            Process.dmaStop = false;
                         }
                     }
                     else
@@ -84,15 +98,25 @@ static int stateMachineThread(void *data)
                         // printk(KERN_INFO "[ERNO][STM] FPFA is not sending Watchdog interrupts\n");
                     }
                 }
+
                 break;
 
             case DMA:
                 printk(KERN_INFO "[CTRL][STM] DMA mode\n");
-
-                /* Set -> Reset -> Run :: Dma Engine */
-                transferConcatenation();
-                transferExecution();
-
+                /* Init pointers */
+                initTransfer(SECTOR_ENGINE);
+                initTransfer(SECTOR_BMI160);
+                initTransfer(SECTOR_ADXL345);
+                /* Prepare DMA Transfer */
+                prepareTransfer(SECTOR_ENGINE, true, false);
+                prepareTransfer(SECTOR_BMI160, false, false);
+                prepareTransfer(SECTOR_ADXL345, false, true);
+                /* Destroy life-time pointers */
+                destroyTransfer(SECTOR_ENGINE);
+                destroyTransfer(SECTOR_BMI160);
+                destroyTransfer(SECTOR_ADXL345);
+                /* QUEUE :: Execution of configFpga */
+                queue_work(get_configFpga_wq(), get_configFpga_work());
                 setStateMachine(IDLE);
                 break;
             case SPI:
@@ -101,21 +125,21 @@ static int stateMachineThread(void *data)
                 queue_work(get_transferFpgaInput_wq(), get_transferFpgaInput_work());
                 setStateMachine(IDLE);
 
-#if 0 /* DMA Engine debug */
+#if 1 /* DMA Engine debug */
                 /*
                  * [0] :: DMA Engine Config
                  * [1] :: DMA BMI160 Config
                  * [2] :: DMA BMI160 Config
                  */
-                ramAxisInit(SECTOR_ENGINE);
-                ramAxisInit(SECTOR_BMI160);
-                ramAxisInit(SECTOR_ADXL345);
+                initTransfer(SECTOR_ENGINE);
+                initTransfer(SECTOR_BMI160);
+                initTransfer(SECTOR_ADXL345);
                 printSector(SECTOR_ENGINE);
                 printSector(SECTOR_BMI160);
                 printSector(SECTOR_ADXL345);
-                ramAxisDestroy(SECTOR_ENGINE);
-                ramAxisDestroy(SECTOR_BMI160);
-                ramAxisDestroy(SECTOR_ADXL345);
+                destroyTransfer(SECTOR_ENGINE);
+                destroyTransfer(SECTOR_BMI160);
+                destroyTransfer(SECTOR_ADXL345);
 #endif
                 break;
 

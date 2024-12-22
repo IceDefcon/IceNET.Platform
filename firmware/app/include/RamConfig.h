@@ -18,6 +18,7 @@
 
 typedef enum
 {
+    CONFIG_ENGINE,
     CONFIG_BMI160,
     CONFIG_ADXL345,
     CONFIG_AMOUNT

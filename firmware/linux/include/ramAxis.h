@@ -21,6 +21,13 @@ typedef enum
     SECTOR_AMOUNT,
 }ramSectorType;
 
+typedef enum
+{
+    DMA_ENGINE_STOP,
+    DMA_ENGINE_READY,
+    DMA_ENGINE_AMOUNT
+}dmaEngineType;
+
 typedef struct
 {
     void* sectorAddress;
@@ -28,12 +35,22 @@ typedef struct
     char transfer[];
 } ramAxisType;
 
-/* INIT */ void ramAxisInit(ramSectorType type);
-/* CHECK */ bool checkEngineReady(void);
+typedef struct
+{
+    uint8_t size;
+    uint8_t* RxData;
+    uint8_t* TxData;
+}dmaTransferType;
+
+/* INIT */ void ramAxisInit(void);
+/* INIT */ void initTransfer(ramSectorType type);
+/* CHECK */ dmaEngineType checkEngine(void);
 /* PRINT */ void printSector(ramSectorType type);
-/* JOIN */ void transferConcatenation(void);
-/* RUN */ void transferExecution(void);
+/* PREP */ void prepareTransfer(ramSectorType type, bool begin, bool end);
 /* GET */ void* getSectorAddress(ramSectorType type);
-/* DESTROY */ void ramAxisDestroy(ramSectorType type);
+/* DESTROY */ void destroyTransfer(ramSectorType type);
+/* DESTROY */ void ramAxisDestroy(void);
+
+/* GET */  dmaTransferType* getDmaTransfer(void);
 
 #endif // RAM_AXIS_H
