@@ -132,7 +132,7 @@ static void allocateTransfer(void)
 
     if (!dmaTransfer->RxData)
     {
-        dmaTransfer->RxData = kmalloc(23, GFP_KERNEL);
+        dmaTransfer->RxData = kmalloc(BUFFER_ALLOCATION_SIZE, GFP_KERNEL);
         if (!dmaTransfer->RxData)
         {
             pr_err("[ERNO][RAM] Failed to allocate memory for dmaTransfer->RxData\n");
@@ -143,7 +143,7 @@ static void allocateTransfer(void)
 
     if (!dmaTransfer->TxData)
     {
-        dmaTransfer->TxData = kmalloc(23, GFP_KERNEL);
+        dmaTransfer->TxData = kmalloc(BUFFER_ALLOCATION_SIZE, GFP_KERNEL);
         if (!dmaTransfer->TxData)
         {
             pr_err("[ERNO][RAM] Failed to allocate memory for dmaTransfer->TxData\n");

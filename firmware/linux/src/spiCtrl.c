@@ -36,7 +36,7 @@ static spiDeviceData Device[SPI_AMOUNT] =
         .spiDevice = NULL,
         .spiTx = {0},
         .spiRx = {0},
-        .spiLength = 4,
+        .spiLength = 32,
 
         .Dma =
         {

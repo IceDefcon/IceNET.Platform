@@ -10,8 +10,12 @@
 
 #include <stddef.h>
 
+#include "types.h"
+
 #define DMA_ENGINE_SIZE 4 /* Size of DMA Engine control bytes */
 #define RAM_SECTOR_SIZE 512 /* Number of bytes per sector */
+
+#define BUFFER_ALLOCATION_SIZE TRANSFER_BUFFER_SIZE
 
 typedef enum
 {

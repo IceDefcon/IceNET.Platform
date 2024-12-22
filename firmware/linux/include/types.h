@@ -21,7 +21,7 @@
 //                  //
 //////////////////////
 
-#define TRANSFER_BUFFER_SIZE 8
+#define TRANSFER_BUFFER_SIZE 32
 
 typedef struct
 {
