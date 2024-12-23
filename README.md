@@ -26,23 +26,17 @@
 
 # TODO Software
 
-	00. Block device for chip configuration in FPGA
-	01. 8 byte transfer mode for the Platform IO over SPI
-	02. Fix up Header in kernel space
-	03. Advance parametrization of FIFO
-	04. Fix up parametriation of I2C Controller
-	05. I2C burst mode
-	06. SPI Driver in FPGA with burst mode
-	07. UART driver in FPGA
-	08. CAN driver in FPGA
-	09. Checksum in GUI Application to be send in last byte
-	10. Checksum in LNX Module to be send in last byte
-	11. Checksum in RTL Code to be send in last byte
-	12. UART Console (DMA controller buffer)
-	13. Upgrade Console for the functions with arguments
-	14. Solve 120s wait mutex lock warning
-	15. Upgrade TCP/IP server to DMA Server
-	16. Architecture Upgrade ---> charDevice Commander + ramDisk DMA Engine
+	00. Advance parametrization of FIFO
+	01. Fix up parametriation of I2C Controller
+	02. I2C burst mode
+	03. SPI Driver in FPGA with burst mode
+	04. UART driver in FPGA
+	05. CAN driver in FPGA
+	06. Checksum in RTL Code to be send in last byte
+	07. UART Console (DMA controller buffer)
+	08. Upgrade Console for the functions with arguments
+	09. Upgrade TCP/IP server to DMA Server
+	10. Architecture Upgrade ---> charDevice Commander + ramDisk DMA Engine
 
 # Testing Hardware Modules
 

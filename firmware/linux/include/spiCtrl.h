@@ -50,10 +50,9 @@ typedef enum
 
 typedef enum
 {
+    SPI_DMA,
     SPI_PRIMARY,
     SPI_SECONDARY,
-    SPI_PRIMARY_DMA,
-    SPI_SECONDARY_DMA,
     SPI_AMOUNT
 }spiDeviceType;
 
@@ -79,7 +78,6 @@ typedef struct
 /* FPGA */ void transferFpgaInput(struct work_struct *work);
 /* FPGA */ void transferFpgaOutput(struct work_struct *work);
 /* KILL */ void killApplication(struct work_struct *work);
-/* CONFIG */ void configFpga(struct work_struct *work);
 /* SPI */ void spiDestroy(void);
 
 #endif // SPI_FPGA_H
