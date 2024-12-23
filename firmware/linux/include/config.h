@@ -11,6 +11,15 @@
 #include <stdbool.h>
 #include <stddef.h> /* size_t */
 
+//////////////////////
+//                  //
+//                  //
+//                  //
+//  [CTRL] Config   //
+//                  //
+//                  //
+//                  //
+//////////////////////
 
 #define RAM_DISK_CTRL       (true)
 #define CHAR_DEVICE_CTRL    (false)
