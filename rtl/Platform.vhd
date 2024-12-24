@@ -151,7 +151,7 @@ signal mag_x_15_8 : std_logic_vector(7 downto 0):= (others => '0');
 signal mag_x_7_0 : std_logic_vector(7 downto 0):= (others => '0');
 -- FIFO
 constant FIFO_WIDTH : integer := 8;
-constant FIFO_DEPTH : integer := 16;
+constant FIFO_DEPTH : integer := 32;
 signal primary_fifo_data_in : std_logic_vector(7 downto 0) := (others => '0');
 signal primary_fifo_wr_en : std_logic := '0';
 signal primary_fifo_rd_en : std_logic := '0';
