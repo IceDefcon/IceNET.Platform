@@ -115,7 +115,7 @@ static int stateMachineThread(void *data)
                 destroyTransfer(SECTOR_ENGINE);
                 destroyTransfer(SECTOR_BMI160);
                 destroyTransfer(SECTOR_ADXL345);
-                setStateMachine(IDLE);
+                setStateMachine(SPI);
                 break;
             case SPI:
                 printk(KERN_INFO "[CTRL][STM] SPI mode\n");

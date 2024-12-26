@@ -256,7 +256,10 @@ static ssize_t inputWrite(struct file *filep, const char __user *buffer, size_t 
             printk(KERN_INFO "[CTRL][ C ] Received Byte[%zu]: 0x%02x\n", i, (unsigned char)Device[DEVICE_INPUT].io_transfer.RxData[i]);
         }
 
-        setStateMachine(SPI);
+        printk(KERN_INFO "[CTRL][ C ] This is dead end Driver !!!\n");
+        printk(KERN_INFO "[CTRL][ C ] Currently charDevice communication is Disabled\n");
+        printk(KERN_INFO "[CTRL][ C ] Please check charDevice.c :: Line 262 for more detalis \n");
+        // setStateMachine(SPI);
     }
 
     return ret;

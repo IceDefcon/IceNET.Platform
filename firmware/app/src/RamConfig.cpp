@@ -273,7 +273,7 @@ int RamConfig::closeDEV()
     if (m_fileDescriptor >= 0)
     {
         close(m_fileDescriptor);
-        m_fileDescriptor = 0; // Mark as closed
+        m_fileDescriptor = -1;
     }
 
     return OK;
