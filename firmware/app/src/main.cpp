@@ -47,7 +47,7 @@ int main()
             instanceKernelOutput->closeDEV();
             instanceKernelInput->closeDEV();
             instanceNetworkTraffic->closeDEV();
-            // instanceRamConfig->closeDEV();
+            instanceRamConfig->closeDEV();
             break;
         }
 
