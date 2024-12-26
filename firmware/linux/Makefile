@@ -5,7 +5,7 @@ iceDriver-objs := src/charDevice.o src/charDeviceCfg.o src/isrCtrl.o src/iceDriv
 EXTRA_CFLAGS=-I$(PWD)/include
 
 all:
-	make -C /lib/modules/$(shell uname -r)/build M=$(PWD) modules -j
+	make -C /lib/modules/$(shell uname -r)/build M=$(PWD) modules
 
 clean:
 	make -C /lib/modules/$(shell uname -r)/build M=$(PWD) clean -j

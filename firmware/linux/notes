@@ -5,6 +5,7 @@
 3. kill -9 <PPID>
 
 /* Install headers */
+sudo apt-get update
 sudo apt-get install linux-headers-$(uname -r)
 
 /* Flash image to mmc */
