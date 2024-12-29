@@ -26,7 +26,7 @@ typedef enum
 
 struct DeviceConfig
 {
-    uint8_t size;       // Total bytes sent to FPGA in one SPI/DMA Transfer
+    uint8_t size;       // Total bytes of single Device config connected through FPGA bus
     uint8_t ctrl;       // Interface (I2C, SPI, PWM), Read or Write
     uint8_t id;         // Device ID (In case of I2C)
     uint8_t ops;        // Number of Read or Write operations
