@@ -36,8 +36,11 @@ static spiDeviceData Device[SPI_AMOUNT] =
         .spiDevice = NULL,
         .spiTx = {0},
         .spiRx = {0},
-        .spiLength = 24,
-
+#if CHAR_DEVICE_CTRL
+        .spiLength = 4, /* This DMA require to switch into older version of the offload controler :: In FPGA*/
+#elif RAM_DISK_CTRL
+        .spiLength = 22, /* TODO :: DMA transfer should be defined by MACRO at compilation time */
+#endif
         .Dma =
         {
             .spiMessage = {},
