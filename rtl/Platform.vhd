@@ -493,11 +493,11 @@ port map
     FIFO_DATA => primary_fifo_data_out,
     FIFO_READ_ENABLE => primary_fifo_rd_en,
 
-    OFFLOAD_READY => offload_ready,
-    OFFLOAD_ID => offload_id,
-    OFFLOAD_REGISTER => offload_register,
-    OFFLOAD_CTRL => offload_ctrl,
-    OFFLOAD_DATA => offload_data
+    OFFLOAD_READY => open, --offload_ready,
+    OFFLOAD_ID => open, --offload_id,
+    OFFLOAD_REGISTER => open, --offload_register,
+    OFFLOAD_CTRL => open, --offload_ctrl,
+    OFFLOAD_DATA => open --offload_data
 );
 
 UartController_module: UartController

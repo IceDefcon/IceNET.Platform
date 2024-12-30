@@ -202,6 +202,7 @@ static uint8_t reverseChecksum(uint8_t *data, size_t size)
 void prepareTransfer(ramSectorType type, bool begin, bool end)
 {
     uint8_t i;
+    uint8_t reversedChecksum;
 
     if (!ramAxis[type].sectorAddress)
     {
@@ -213,10 +214,8 @@ void prepareTransfer(ramSectorType type, bool begin, bool end)
      *
      * TODO
      *
-     * Fixed 22 + 1 bytes
-     * As we know this the current
-     * size of the DMA transfer
-     * and 1 byte for chacksum
+     * Fixed 22 Bytes of data 
+     * For the DMA transfer
      *
      */
     if(true == begin)
@@ -233,8 +232,18 @@ void prepareTransfer(ramSectorType type, bool begin, bool end)
 
     if(true == end)
     {
-        pr_info("[CTRL][RAM] Calculating Dma transfer checksum\n");
-        dmaTransfer->RxData[j] = reverseChecksum(dmaTransfer->RxData, j);
+        pr_info("[CTRL][RAM] Calculating Dma transfer reversed checksum\n");
+        reversedChecksum = reverseChecksum(dmaTransfer->RxData, j);
+
+        if (0x00 == reversedChecksum)
+        {
+            pr_info("[CTRL][RAM] Checksum OK\n");
+        }
+        else
+        {
+            pr_err("[ERNO][RAM] Checksum ERROR :: 0x%02X \n", reversedChecksum);
+        }
+
         j = 0;
     }
 }
