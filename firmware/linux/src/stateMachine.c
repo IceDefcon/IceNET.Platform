@@ -31,22 +31,22 @@
 
 static stateMachineProcess Process =
 {
-    .currentState = IDLE,
+    .currentState = SM_IDLE,
     .threadHandle = NULL,
     .stateMutex = __MUTEX_INITIALIZER(Process.stateMutex),
     .dmaStop = false,
 };
 
-/* SET */ void setStateMachine(stateType newState)
+/* SET */ void setStateMachine(stateMachineType newState)
 {
     mutex_lock(&Process.stateMutex);
     Process.currentState = newState;
     mutex_unlock(&Process.stateMutex);
 }
 
-/* GET */ stateType getStateMachine(void)
+/* GET */ stateMachineType getStateMachine(void)
 {
-    stateType state;
+    stateMachineType state;
     mutex_lock(&Process.stateMutex);
     state = Process.currentState;
     mutex_unlock(&Process.stateMutex);
@@ -59,7 +59,7 @@ extern bool stopDma;
 static int stateMachineThread(void *data)
 {
     dmaEngineType dmaEngineStatus;
-    stateType state;
+    stateMachineType state;
 
     while (!kthread_should_stop())
     {
@@ -67,7 +67,7 @@ static int stateMachineThread(void *data)
 
         switch(state)
         {
-            case IDLE:
+            case SM_IDLE:
 
                 /**
                  *
@@ -85,7 +85,7 @@ static int stateMachineThread(void *data)
 
                         if(DMA_ENGINE_READY == dmaEngineStatus && Process.dmaStop == false)
                         {
-                            setStateMachine(DMA);
+                            setStateMachine(SM_DMA);
                             Process.dmaStop = true;
                         }
                         else if(DMA_ENGINE_STOP == dmaEngineStatus)
@@ -101,7 +101,7 @@ static int stateMachineThread(void *data)
 
                 break;
 
-            case DMA:
+            case SM_DMA:
                 printk(KERN_INFO "[CTRL][STM] DMA mode\n");
                 /* Init pointers */
                 initTransfer(SECTOR_ENGINE);
@@ -115,15 +115,42 @@ static int stateMachineThread(void *data)
                 destroyTransfer(SECTOR_ENGINE);
                 destroyTransfer(SECTOR_BMI160);
                 destroyTransfer(SECTOR_ADXL345);
-                setStateMachine(SPI);
+                setStateMachine(SM_SPI);
                 break;
-            case SPI:
+
+            case SM_SPI:
                 printk(KERN_INFO "[CTRL][STM] SPI mode\n");
                 /* QUEUE :: Execution of transferFpgaInput */
                 queue_work(get_transferFpgaInput_wq(), get_transferFpgaInput_work());
-                setStateMachine(IDLE);
+                /**
+                 *
+                 * IMPORTANT
+                 *
+                 * In here we need to wait for the
+                 * DMA Engine to launch the transfer
+                 *
+                 * Then wait for the transfer to complete
+                 * Predefined 22 Bytes of
+                 */
+                setStateMachine(SM_INTERRUPT);
+                break;
 
-#if 1 /* DMA Engine debug */
+            case SM_INTERRUPT:
+                printk(KERN_INFO "[CTRL][STM] INTERRUPT mode\n");
+                gpio_set_value(GPIO_INTERRUPT_FROM_CPU, 1);
+                gpio_set_value(GPIO_INTERRUPT_FROM_CPU, 0);
+                setStateMachine(SM_IDLE);
+                break;
+
+            case SM_KILL:
+                printk(KERN_INFO "[CTRL][STM] KILL mode\n");
+                /* QUEUE :: Execution of killApplication */
+                queue_work(get_killApplication_wq(), get_killApplication_work());
+                printk(KERN_INFO "[CTRL][STM] Back to IDLE mode\n");
+                setStateMachine(SM_IDLE);
+                break;
+
+            case SM_PRINT:
                 /*
                  * [0] :: DMA Engine Config
                  * [1] :: DMA BMI160 Config
@@ -138,22 +165,7 @@ static int stateMachineThread(void *data)
                 destroyTransfer(SECTOR_ENGINE);
                 destroyTransfer(SECTOR_BMI160);
                 destroyTransfer(SECTOR_ADXL345);
-#endif
-                break;
-
-            case INTERRUPT:
-                printk(KERN_INFO "[CTRL][STM] INTERRUPT mode\n");
-                gpio_set_value(GPIO_INTERRUPT_FROM_CPU, 1);
-                gpio_set_value(GPIO_INTERRUPT_FROM_CPU, 0);
-                setStateMachine(IDLE);
-                break;
-
-            case KILL:
-                printk(KERN_INFO "[CTRL][STM] KILL mode\n");
-                /* QUEUE :: Execution of killApplication */
-                queue_work(get_killApplication_wq(), get_killApplication_work());
-                printk(KERN_INFO "[CTRL][STM] Back to IDLE mode\n");
-                setStateMachine(IDLE);
+                setStateMachine(SM_IDLE);
                 break;
 
             default:
@@ -177,7 +189,7 @@ static int stateMachineThread(void *data)
 
 void stateMachineInit(void)
 {
-    setStateMachine(IDLE);
+    setStateMachine(SM_IDLE);
 
     Process.threadHandle = kthread_create(stateMachineThread, NULL, "iceStateMachine");
     

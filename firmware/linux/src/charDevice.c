@@ -202,7 +202,7 @@ static int inputOpen(struct inode *inodep, struct file *filep)
     }
 
     Device[DEVICE_INPUT].openCount++;
-    printk(KERN_INFO "[CTRL][ C ] Device has been opened %d time(s)\n", Device[DEVICE_INPUT].openCount);
+    printk(KERN_INFO "[CTRL][ C ] DEVICE_INPUT has been opened %d time(s)\n", Device[DEVICE_INPUT].openCount);
 
     return 0;
 }
@@ -237,13 +237,13 @@ static ssize_t inputWrite(struct file *filep, const char __user *buffer, size_t 
     {
         /* Kill signal from Application */
         printk(KERN_INFO "[CTRL][ C ] Kill SIGNAL received from Application\n");
-        setStateMachine(KILL);
+        setStateMachine(SM_KILL);
     }
     else if (Device[DEVICE_INPUT].io_transfer.RxData[0] == 0x12 && Device[DEVICE_INPUT].io_transfer.RxData[1] == 0x34)
     {
         /* 20ms delayed :: Read Enable pulse to FIFO */
         printk(KERN_INFO "[CTRL][ C ] Generate FIFO rd_en from Kernel [long pulse] to be cut in FPGA\n");
-        setStateMachine(INTERRUPT);
+        setStateMachine(SM_INTERRUPT);
     }
     else
     {
@@ -256,10 +256,11 @@ static ssize_t inputWrite(struct file *filep, const char __user *buffer, size_t 
             printk(KERN_INFO "[CTRL][ C ] Received Byte[%zu]: 0x%02x\n", i, (unsigned char)Device[DEVICE_INPUT].io_transfer.RxData[i]);
         }
 
+        printk(KERN_INFO "[CTRL][ C ] NEW Commander !!!\n");
         printk(KERN_INFO "[CTRL][ C ] This is dead end Driver !!!\n");
         printk(KERN_INFO "[CTRL][ C ] Currently charDevice communication is Disabled\n");
         printk(KERN_INFO "[CTRL][ C ] Please check charDevice.c :: Line 262 for more detalis \n");
-        // setStateMachine(SPI);
+        // setStateMachine(SM_SPI);
     }
 
     return ret;
@@ -285,7 +286,7 @@ static int outputOpen(struct inode *inodep, struct file *filep)
     }
 
     Device[DEVICE_OUTPUT].openCount++;
-    printk(KERN_INFO "[CTRL][ C ] Device has been opened %d time(s)\n", Device[DEVICE_OUTPUT].openCount);
+    printk(KERN_INFO "[CTRL][ C ] DEVICE_OUTPUT has been opened %d time(s)\n", Device[DEVICE_OUTPUT].openCount);
 
     return 0;
 }
@@ -355,7 +356,7 @@ static int watchdogOpen(struct inode *inodep, struct file *filep)
     }
 
     Device[DEVICE_WATCHDOG].openCount++;
-    printk(KERN_INFO "[CTRL][ C ] Device has been opened %d time(s)\n", Device[DEVICE_WATCHDOG].openCount);
+    printk(KERN_INFO "[CTRL][ C ] DEVICE_WATCHDOG has been opened %d time(s)\n", Device[DEVICE_WATCHDOG].openCount);
 
     return 0;
 }
