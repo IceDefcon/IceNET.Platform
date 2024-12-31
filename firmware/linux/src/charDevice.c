@@ -74,7 +74,10 @@ static charDeviceData Device[DEVICE_AMOUNT] =
             .read = inputRead, /* Dummy :: Not used for INPUT Device */
             .write = inputWrite,
             .release = inputClose,
-        }
+        },
+
+        .name = "KernelInput",
+        .nameClass = "KernelInputClass",
     },
 
     [DEVICE_OUTPUT] =
@@ -100,7 +103,10 @@ static charDeviceData Device[DEVICE_AMOUNT] =
             .read = outputRead,
             .write = outputWrite, /* Dummy :: Not used for OUTPUT Device */
             .release = outputClose,
-        }
+        },
+
+        .name = "KernelOutput",
+        .nameClass = "KernelOutputClass",
     },
 
     [DEVICE_WATCHDOG] =
@@ -126,7 +132,10 @@ static charDeviceData Device[DEVICE_AMOUNT] =
             .read = watchdogRead,
             .write = watchdogWrite,
             .release = watchdogClose,
-        }
+        },
+
+        .name = "KernelWatchdog",
+        .nameClass = "KernelWatchdogClass",
     },
 
     [DEVICE_COMMANDER] =
@@ -152,7 +161,10 @@ static charDeviceData Device[DEVICE_AMOUNT] =
             .read = commanderRead, /* For now :: Just Prototypes */
             .write = commanderWrite, /* For now :: Just Prototypes */
             .release = commanderClose, /* For now :: Just Prototypes */
-        }
+        },
+
+        .name = "KernelCommander",
+        .nameClass = "KernelCommanderClass",
     },
 };
 

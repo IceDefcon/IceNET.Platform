@@ -22,27 +22,11 @@
 //                  //
 //                  //
 //                  //
-//   [ C ] Control  //
+//   [ C ] Config   //
 //                  //
 //                  //
 //                  //
 //////////////////////
-
-const char* DeviceNameArray[] =
-{
-    "KernelInput",
-    "KernelOutput",
-    "KernelWatchdog"
-    "KernelCommander"
-};
-
-const char* DeviceClassArray[] =
-{
-    "KernelInputClass",
-    "KernelOutputClass",
-    "KernelWatchdogClass"
-    "KernelCommanderClass"
-};
 
 static void charDeviceDataInit(charDeviceType DeviceType)
 {
@@ -72,37 +56,37 @@ static void charDeviceDataInit(charDeviceType DeviceType)
 
 static void charDeviceConfig(charDeviceType DeviceType)
 {
-    getCharDevice()[DeviceType].majorNumber = register_chrdev(0, DeviceNameArray[DeviceType], &getCharDevice()[DeviceType].fops);
+    getCharDevice()[DeviceType].majorNumber = register_chrdev(0, getCharDevice()[DeviceType].name, &getCharDevice()[DeviceType].fops);
     if (getCharDevice()[DeviceType].majorNumber<0)
     {
-        printk(KERN_ALERT "[INIT][ C ] Failed to register major number for %s :: %d\n", DeviceNameArray[DeviceType], getCharDevice()[DeviceType].majorNumber);
+        printk(KERN_ALERT "[INIT][ C ] Failed to register major number for %s :: %d\n", getCharDevice()[DeviceType].name, getCharDevice()[DeviceType].majorNumber);
     }
     else
     {
-        printk(KERN_ALERT "[INIT][ C ] Register major number for %s :: %d\n", DeviceNameArray[DeviceType], getCharDevice()[DeviceType].majorNumber);
+        printk(KERN_ALERT "[INIT][ C ] Register major number for %s :: %d\n", getCharDevice()[DeviceType].name, getCharDevice()[DeviceType].majorNumber);
     }
 
-    getCharDevice()[DeviceType].deviceClass = class_create(THIS_MODULE, DeviceClassArray[DeviceType]);
+    getCharDevice()[DeviceType].deviceClass = class_create(THIS_MODULE, getCharDevice()[DeviceType].name);
     if (IS_ERR(getCharDevice()[DeviceType].deviceClass))
     {
-        unregister_chrdev(getCharDevice()[DeviceType].majorNumber, DeviceNameArray[DeviceType]);
-        printk(KERN_ALERT "[INIT][ C ] Failed to register device class for %s :: %ld\n", DeviceNameArray[DeviceType], PTR_ERR(getCharDevice()[DeviceType].deviceClass));
+        unregister_chrdev(getCharDevice()[DeviceType].majorNumber, getCharDevice()[DeviceType].name);
+        printk(KERN_ALERT "[INIT][ C ] Failed to register device class for %s :: %ld\n", getCharDevice()[DeviceType].name, PTR_ERR(getCharDevice()[DeviceType].deviceClass));
     }
     else
     {
-        printk(KERN_ALERT "[INIT][ C ] Register device class for %s\n", DeviceNameArray[DeviceType]);
+        printk(KERN_ALERT "[INIT][ C ] Register device class for %s\n", getCharDevice()[DeviceType].name);
     }
 
-    getCharDevice()[DeviceType].nodeDevice = device_create(getCharDevice()[DeviceType].deviceClass, NULL, MKDEV(getCharDevice()[DeviceType].majorNumber, 0), NULL, DeviceNameArray[DeviceType]);
+    getCharDevice()[DeviceType].nodeDevice = device_create(getCharDevice()[DeviceType].deviceClass, NULL, MKDEV(getCharDevice()[DeviceType].majorNumber, 0), NULL, getCharDevice()[DeviceType].name);
     if (IS_ERR(getCharDevice()[DeviceType].nodeDevice))
     {
         class_destroy(getCharDevice()[DeviceType].deviceClass);
-        unregister_chrdev(getCharDevice()[DeviceType].majorNumber, DeviceNameArray[DeviceType]);
-        printk(KERN_ALERT "[INIT][ C ] Failed to create the device for %s\n", DeviceNameArray[DeviceType]);
+        unregister_chrdev(getCharDevice()[DeviceType].majorNumber, getCharDevice()[DeviceType].name);
+        printk(KERN_ALERT "[INIT][ C ] Failed to create the device for %s\n", getCharDevice()[DeviceType].name);
     }
     else
     {
-        printk(KERN_ALERT "[INIT][ C ] Succesfully created char Device for %s\n", DeviceNameArray[DeviceType]);
+        printk(KERN_ALERT "[INIT][ C ] Succesfully created char Device for %s\n", getCharDevice()[DeviceType].name);
     }
 }
 
@@ -112,85 +96,60 @@ static void charDeviceConfigDestroy(charDeviceType DeviceType)
     {
         device_destroy(getCharDevice()[DeviceType].deviceClass, MKDEV(getCharDevice()[DeviceType].majorNumber, 0));
         getCharDevice()[DeviceType].nodeDevice = NULL;
-        printk(KERN_ALERT "[DESTROY][ C ] %s Device destroyed\n", DeviceNameArray[DeviceType]);
+        printk(KERN_ALERT "[DESTROY][ C ] %s Device destroyed\n", getCharDevice()[DeviceType].name);
     }
     else
     {
-        printk(KERN_ALERT "[DESTROY][ C ] Cannot destroy %s\n", DeviceNameArray[DeviceType]);
+        printk(KERN_ALERT "[DESTROY][ C ] Cannot destroy %s\n", getCharDevice()[DeviceType].name);
     }
 
     if(getCharDevice()[DeviceType].deviceClass)
     {
         class_destroy(getCharDevice()[DeviceType].deviceClass);
         getCharDevice()[DeviceType].deviceClass = NULL;
-        printk(KERN_ALERT "[DESTROY][ C ] %s Class destroyed\n", DeviceNameArray[DeviceType]);
+        printk(KERN_ALERT "[DESTROY][ C ] %s Class destroyed\n", getCharDevice()[DeviceType].name);
     }
     else
     {
-        printk(KERN_ALERT "[DESTROY][ C ] Cannot destroy %s Class\n", DeviceNameArray[DeviceType]);
+        printk(KERN_ALERT "[DESTROY][ C ] Cannot destroy %s Class\n", getCharDevice()[DeviceType].name);
     }
 
     if(getCharDevice()[DeviceType].majorNumber != 0)
     {
-        unregister_chrdev(getCharDevice()[DeviceType].majorNumber, DeviceNameArray[DeviceType]);
+        unregister_chrdev(getCharDevice()[DeviceType].majorNumber, getCharDevice()[DeviceType].name);
         getCharDevice()[DeviceType].majorNumber = 0;
-        printk(KERN_ALERT "[DESTROY][ C ] Unregistered %s device\n", DeviceNameArray[DeviceType]);
+        printk(KERN_ALERT "[DESTROY][ C ] Unregistered %s device\n", getCharDevice()[DeviceType].name);
     }
     else
     {
-        printk(KERN_ALERT "[DESTROY][ C ] Cannot unregister %s Device\n", DeviceNameArray[DeviceType]);
+        printk(KERN_ALERT "[DESTROY][ C ] Cannot unregister %s Device\n", getCharDevice()[DeviceType].name);
     }
-    printk(KERN_ALERT "[DESTROY][ C ] %s device destruction complete\n", DeviceNameArray[DeviceType]);
+    printk(KERN_ALERT "[DESTROY][ C ] %s device destruction complete\n", getCharDevice()[DeviceType].name);
 }
 
 void charDeviceInit(void)
 {
-    // charDeviceType DeviceType;
+    charDeviceType DeviceType;
 
     printk(KERN_ALERT "[INIT][ C ] Initialize Kernel Mutexes\n");
 
-    charDeviceMutexCtrl(DEVICE_INPUT, MUTEX_CTRL_INIT);
-    charDeviceMutexCtrl(DEVICE_OUTPUT, MUTEX_CTRL_INIT);
-    charDeviceMutexCtrl(DEVICE_WATCHDOG, MUTEX_CTRL_INIT);
-    charDeviceMutexCtrl(DEVICE_COMMANDER, MUTEX_CTRL_INIT);
-
-    charDeviceDataInit(DEVICE_INPUT);
-    charDeviceDataInit(DEVICE_OUTPUT);
-    charDeviceDataInit(DEVICE_WATCHDOG);
-    charDeviceDataInit(DEVICE_COMMANDER);
-
-    charDeviceConfig(DEVICE_INPUT);
-    charDeviceConfig(DEVICE_OUTPUT);
-    charDeviceConfig(DEVICE_WATCHDOG);
-    charDeviceConfig(DEVICE_COMMANDER);
-
-    // for (DeviceType = DEVICE_INPUT; DeviceType < DEVICE_AMOUNT; DeviceType++)
-    // {
-    //     charDeviceMutexCtrl(DeviceType, MUTEX_CTRL_INIT);
-    //     charDeviceDataInit(DeviceType);
-    //     charDeviceConfig(DeviceType);
-    // }
+    for (DeviceType = DEVICE_INPUT; DeviceType < DEVICE_AMOUNT; DeviceType++)
+    {
+        charDeviceMutexCtrl(DeviceType, MUTEX_CTRL_INIT);
+        charDeviceDataInit(DeviceType);
+        charDeviceConfig(DeviceType);
+    }
 }
 
 void charDeviceDestroy(void)
 {
-    // charDeviceType DeviceType;
+    charDeviceType DeviceType;
 
-    charDeviceConfigDestroy(DEVICE_COMMANDER);
-    charDeviceConfigDestroy(DEVICE_WATCHDOG);
-    charDeviceConfigDestroy(DEVICE_OUTPUT);
-    charDeviceConfigDestroy(DEVICE_INPUT);
-
-    charDeviceMutexCtrl(DEVICE_INPUT, MUTEX_CTRL_DESTROY);
-    charDeviceMutexCtrl(DEVICE_OUTPUT, MUTEX_CTRL_DESTROY);
-    charDeviceMutexCtrl(DEVICE_WATCHDOG, MUTEX_CTRL_DESTROY);
-    charDeviceMutexCtrl(DEVICE_COMMANDER, MUTEX_CTRL_DESTROY);
-
-    // for (DeviceType = DEVICE_INPUT; DeviceType < DEVICE_AMOUNT; DeviceType++)
-    // {
-    //     charDeviceConfigDestroy(DeviceType);
-    //     charDeviceMutexCtrl(DeviceType, MUTEX_CTRL_DESTROY);
-    // }
+    for (DeviceType = DEVICE_INPUT; DeviceType < DEVICE_AMOUNT; DeviceType++)
+    {
+        charDeviceConfigDestroy(DeviceType);
+        charDeviceMutexCtrl(DeviceType, MUTEX_CTRL_DESTROY);
+    }
 
     printk(KERN_INFO "[DESTROY][ C ] Kernel Mutexes destroyed\n");
 }

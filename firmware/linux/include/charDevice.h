@@ -34,6 +34,8 @@ typedef struct
     int tryLock;
     DataTransfer io_transfer;
     struct file_operations fops;
+    char* name;
+    char* nameClass;;
 }charDeviceData;
 
 typedef enum
