@@ -32,16 +32,16 @@ const char* DeviceNameArray[] =
 {
     "KernelInput",
     "KernelOutput",
-    "FpgaWatchdog"
-    "SystemCommander"
+    "KernelWatchdog"
+    "KernelCommander"
 };
 
 const char* DeviceClassArray[] =
 {
     "KernelInputClass",
     "KernelOutputClass",
-    "FpgaWatchdogClass"
-    "SystemCommanderClass"
+    "KernelWatchdogClass"
+    "KernelCommanderClass"
 };
 
 static void charDeviceDataInit(charDeviceType DeviceType)
@@ -145,27 +145,52 @@ static void charDeviceConfigDestroy(charDeviceType DeviceType)
 
 void charDeviceInit(void)
 {
-    charDeviceType DeviceType;
+    // charDeviceType DeviceType;
 
     printk(KERN_ALERT "[INIT][ C ] Initialize Kernel Mutexes\n");
 
-    for (DeviceType = DEVICE_INPUT; DeviceType < DEVICE_AMOUNT; DeviceType++)
-    {
-        charDeviceMutexCtrl(DeviceType, MUTEX_CTRL_INIT);
-        charDeviceDataInit(DeviceType);
-        charDeviceConfig(DeviceType);
-    }
+    charDeviceMutexCtrl(DEVICE_INPUT, MUTEX_CTRL_INIT);
+    charDeviceMutexCtrl(DEVICE_OUTPUT, MUTEX_CTRL_INIT);
+    charDeviceMutexCtrl(DEVICE_WATCHDOG, MUTEX_CTRL_INIT);
+    charDeviceMutexCtrl(DEVICE_COMMANDER, MUTEX_CTRL_INIT);
+
+    charDeviceDataInit(DEVICE_INPUT);
+    charDeviceDataInit(DEVICE_OUTPUT);
+    charDeviceDataInit(DEVICE_WATCHDOG);
+    charDeviceDataInit(DEVICE_COMMANDER);
+
+    charDeviceConfig(DEVICE_INPUT);
+    charDeviceConfig(DEVICE_OUTPUT);
+    charDeviceConfig(DEVICE_WATCHDOG);
+    charDeviceConfig(DEVICE_COMMANDER);
+
+    // for (DeviceType = DEVICE_INPUT; DeviceType < DEVICE_AMOUNT; DeviceType++)
+    // {
+    //     charDeviceMutexCtrl(DeviceType, MUTEX_CTRL_INIT);
+    //     charDeviceDataInit(DeviceType);
+    //     charDeviceConfig(DeviceType);
+    // }
 }
 
 void charDeviceDestroy(void)
 {
-    charDeviceType DeviceType;
+    // charDeviceType DeviceType;
 
-    for (DeviceType = DEVICE_INPUT; DeviceType < DEVICE_AMOUNT; DeviceType++)
-    {
-        charDeviceConfigDestroy(DeviceType);
-        charDeviceMutexCtrl(DeviceType, MUTEX_CTRL_DESTROY);
-    }
+    charDeviceConfigDestroy(DEVICE_COMMANDER);
+    charDeviceConfigDestroy(DEVICE_WATCHDOG);
+    charDeviceConfigDestroy(DEVICE_OUTPUT);
+    charDeviceConfigDestroy(DEVICE_INPUT);
+
+    charDeviceMutexCtrl(DEVICE_INPUT, MUTEX_CTRL_DESTROY);
+    charDeviceMutexCtrl(DEVICE_OUTPUT, MUTEX_CTRL_DESTROY);
+    charDeviceMutexCtrl(DEVICE_WATCHDOG, MUTEX_CTRL_DESTROY);
+    charDeviceMutexCtrl(DEVICE_COMMANDER, MUTEX_CTRL_DESTROY);
+
+    // for (DeviceType = DEVICE_INPUT; DeviceType < DEVICE_AMOUNT; DeviceType++)
+    // {
+    //     charDeviceConfigDestroy(DeviceType);
+    //     charDeviceMutexCtrl(DeviceType, MUTEX_CTRL_DESTROY);
+    // }
 
     printk(KERN_INFO "[DESTROY][ C ] Kernel Mutexes destroyed\n");
 }

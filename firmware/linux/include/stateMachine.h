@@ -26,6 +26,7 @@ typedef enum
     SM_INTERRUPT,
     SM_KILL,
     SM_PRINT,
+    SM_CMD,
 } stateMachineType;
 
 typedef struct

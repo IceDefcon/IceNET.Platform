@@ -58,7 +58,6 @@ extern bool stopDma;
 /* Kernel state machine */
 static int stateMachineThread(void *data)
 {
-    dmaEngineType dmaEngineStatus;
     stateMachineType state;
 
     while (!kthread_should_stop())
@@ -68,37 +67,7 @@ static int stateMachineThread(void *data)
         switch(state)
         {
             case SM_IDLE:
-
-                /**
-                 *
-                 * TODO :: Temporary solution
-                 *
-                 * Do not execute @ __exit
-                 *
-                 */
-                if(false == stopDma)
-                {
-                    /* Check only if FPGA is configured :: Watchdog is Running */
-                    if(true == getIndicatorFPGA())
-                    {
-                        dmaEngineStatus = checkEngine();
-
-                        if(DMA_ENGINE_READY == dmaEngineStatus && Process.dmaStop == false)
-                        {
-                            setStateMachine(SM_DMA);
-                            Process.dmaStop = true;
-                        }
-                        else if(DMA_ENGINE_STOP == dmaEngineStatus)
-                        {
-                            Process.dmaStop = false;
-                        }
-                    }
-                    else
-                    {
-                        // printk(KERN_INFO "[ERNO][STM] FPFA is not sending Watchdog interrupts\n");
-                    }
-                }
-
+                /* Nothing here :: Just wait */
                 break;
 
             case SM_DMA:
@@ -165,6 +134,11 @@ static int stateMachineThread(void *data)
                 destroyTransfer(SECTOR_ENGINE);
                 destroyTransfer(SECTOR_BMI160);
                 destroyTransfer(SECTOR_ADXL345);
+                setStateMachine(SM_IDLE);
+                break;
+
+            case SM_CMD:
+                /* TODO */
                 setStateMachine(SM_IDLE);
                 break;
 
