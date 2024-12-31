@@ -36,7 +36,6 @@ int main()
     instanceKernelOutput->openDEV();
     instanceServerTCP->openDEV();
     instanceNetworkTraffic->openDEV();
-    // instanceRamConfig->openDEV();
 
     while (true) /* Terminate Kernel comms and Clean Memory */
     {
@@ -47,7 +46,6 @@ int main()
             instanceKernelOutput->closeDEV();
             instanceKernelInput->closeDEV();
             instanceNetworkTraffic->closeDEV();
-            instanceRamConfig->closeDEV();
             break;
         }
 
