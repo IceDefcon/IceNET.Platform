@@ -33,14 +33,21 @@
 /* INPUT */ static ssize_t inputRead(struct file *, char *, size_t, loff_t *);
 /* INPUT */ static ssize_t inputWrite(struct file *, const char *, size_t, loff_t *);
 /* INPUT */ static int inputClose(struct inode *inodep, struct file *filep);
+
 /* OUTPUT */ static int outputOpen(struct inode *inodep, struct file *filep);
 /* OUTPUT */ static ssize_t outputRead(struct file *, char *, size_t, loff_t *);
 /* OUTPUT */ static ssize_t outputWrite(struct file *, const char *, size_t, loff_t *);
 /* OUTPUT */ static int outputClose(struct inode *inodep, struct file *filep);
+
 /* WATCHDOG */ static int watchdogOpen(struct inode *inodep, struct file *filep);
 /* WATCHDOG */ static ssize_t watchdogRead(struct file *, char *, size_t, loff_t *);
 /* WATCHDOG */ static ssize_t watchdogWrite(struct file *, const char *, size_t, loff_t *);
 /* WATCHDOG */ static int watchdogClose(struct inode *inodep, struct file *filep);
+
+/* COMMANDER */ static int commanderOpen(struct inode *inodep, struct file *filep);
+/* COMMANDER */ static ssize_t commanderRead(struct file *, char *, size_t, loff_t *);
+/* COMMANDER */ static ssize_t commanderWrite(struct file *, const char *, size_t, loff_t *);
+/* COMMANDER */ static int commanderClose(struct inode *inodep, struct file *filep);
 
 static charDeviceData Device[DEVICE_AMOUNT] =
 {
@@ -119,6 +126,32 @@ static charDeviceData Device[DEVICE_AMOUNT] =
             .read = watchdogRead,
             .write = watchdogWrite,
             .release = watchdogClose,
+        }
+    },
+
+    [DEVICE_COMMANDER] =
+    {
+        .majorNumber = 0,
+        .deviceClass = NULL,
+        .nodeDevice = NULL,
+        .openCount = 0,
+        .read_Mutex = __MUTEX_INITIALIZER(Device[DEVICE_COMMANDER].read_Mutex),
+        .isLocked = true,
+        .tryLock = 0,
+
+        .io_transfer =
+        {
+            .RxData = NULL,
+            .TxData = NULL,
+            .length = 0,
+        },
+
+        .fops =
+        {
+            .open = commanderOpen, /* For now :: Just Prototypes */
+            .read = commanderRead, /* For now :: Just Prototypes */
+            .write = commanderWrite, /* For now :: Just Prototypes */
+            .release = commanderClose, /* For now :: Just Prototypes */
         }
     },
 };

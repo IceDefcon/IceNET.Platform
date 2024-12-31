@@ -21,13 +21,6 @@
 //                  //
 //////////////////////
 
-#define  INPUT_DEVICE  "KernelInput"
-#define  INPUT_CLASS   "KernelInputClass"
-#define  OUTPUT_DEVICE "KernelOutput"
-#define  OUTPUT_CLASS  "KernelOutputClass"
-#define  WATCHDOG_DEVICE "FpgaWatchdog"
-#define  WATCHDOG_CLASS  "FpgaWatchdogClass"
-
 #define IO_BUFFER_SIZE TRANSFER_BUFFER_SIZE
 
 typedef struct
@@ -48,6 +41,7 @@ typedef enum
     DEVICE_INPUT,
     DEVICE_OUTPUT,
     DEVICE_WATCHDOG,
+    DEVICE_COMMANDER,
     DEVICE_AMOUNT
 }charDeviceType;
 
