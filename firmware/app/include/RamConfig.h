@@ -60,6 +60,5 @@ class RamConfig : public Console
         char calculateChecksum(const char* data, size_t size);
 		DeviceConfig* createOperation(char devId, char ctrl, char ops);
 		int AssembleData();
-        int launchEngine();
         void clearDma();
 };

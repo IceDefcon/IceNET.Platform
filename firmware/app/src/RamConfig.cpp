@@ -170,30 +170,6 @@ int RamConfig::AssembleData()
     return EXIT_SUCCESS;
 }
 
-int RamConfig::launchEngine()
-{
-    ssize_t bytes = 0;
-
-    openDEV();
-
-    /* Write to sector 0 */
-    lseek(m_fileDescriptor, 0, SEEK_SET);
-    bytes = write(m_fileDescriptor, m_engineConfig, sizeof(m_engineConfig));
-    if (bytes < 0)
-    {
-        perror("Failed to write to block device");
-        close(m_fileDescriptor);
-        free(m_BMI160config);
-        free(m_ADXL345config);
-        return EXIT_FAILURE;
-    }
-    printf("[INFO] [RAM] Write %d Bytes to ramDisk to Sector 0\n", bytes);
-
-    closeDEV();
-
-    return EXIT_SUCCESS;
-}
-
 int RamConfig::openDEV()
 {
     m_fileDescriptor = open(DEVICE_PATH, O_RDWR);
@@ -221,6 +197,19 @@ int RamConfig::dataTX()
     ssize_t bytes = 0;
 
     openDEV();
+
+    /* Write to sector 0 */
+    lseek(m_fileDescriptor, 0, SEEK_SET);
+    bytes = write(m_fileDescriptor, m_engineConfig, sizeof(m_engineConfig));
+    if (bytes < 0)
+    {
+        perror("Failed to write to block device");
+        close(m_fileDescriptor);
+        free(m_BMI160config);
+        free(m_ADXL345config);
+        return EXIT_FAILURE;
+    }
+    printf("[INFO] [RAM] Write %d Bytes to ramDisk to Sector 0\n", bytes);
 
     /* Write to sector 1 */
     lseek(m_fileDescriptor, SECTOR_SIZE * 1, SEEK_SET);
