@@ -12,25 +12,44 @@
 
 
 RamConfig::RamConfig() :
-m_fileDescriptor(0)
+m_fileDescriptor(-1),
+m_engineConfig{0}
 {
+    int ret = EXIT_FAILURE;
+
     std::cout << "[INFO] [CONSTRUCTOR] " << this << " :: Instantiate RamConfig" << std::endl;
+
+    ret = AssembleData();
+
+    if(ret == EXIT_SUCCESS)
+    {
+        std::cout << "[INFO] [CONSTRUCTOR] Data Assembled Successfully" << std::endl;
+    }
+    else
+    {
+        std::cout << "[INFO] [CONSTRUCTOR] Failed to Assembly data" << std::endl;
+    }
 }
 
 RamConfig::~RamConfig()
 {
     std::cout << "[INFO] [DESTRUCTOR] " << this << " :: Destroy RamConfig" << std::endl;
+    if (m_fileDescriptor >= 0)
+    {
+        closeDEV();
+    }
+
+    free(m_BMI160config);
+    free(m_ADXL345config);
 }
 
-char RamConfig::calculate_checksum(char *data, size_t size)
+char RamConfig::calculateChecksum(const char* data, size_t size)
 {
     char checksum = 0;
-
     for (size_t i = 0; i < size; i++)
     {
         checksum ^= data[i];
     }
-
     return checksum;
 }
 
@@ -75,13 +94,24 @@ DeviceConfig* RamConfig::createOperation(char id, char ctrl, char ops)
  */
 int RamConfig::AssembleData()
 {
+    // [0] Sector
+    size_t config_size = 4;
+
+    /* Allocate only 4 bytes */
+    m_engineConfig = (uint8_t*)malloc(config_size);
+
+    if (m_engineConfig == NULL)
+    {
+        perror("Failed to allocate operation");
+    }
+
     /* TODO :: Need parametrization */
     m_engineConfig[0] = 0x04; /* Size of sector 0 */
     m_engineConfig[1] = 0x02; /* Number of Devices to configure */
     m_engineConfig[2] = 0x11; /* Load and Ready */
     m_engineConfig[3] = 0x17; /* Checksum */
 
-    char ops = 2; /* Set up 2 registers only */
+    char ops = 2; /* Configure 2 registers only */
 
     /* Temporary here before refactor */
     char regSize = ops;
@@ -103,7 +133,7 @@ int RamConfig::AssembleData()
     BMI160[2] = 0x40;    /* ACC_CONF */
     BMI160[3] = 0x2C;    /* acc_bwp = 0x2 normal mode + acc_od = 0xC 1600Hz r*/
 
-    BMI160[4] = calculate_checksum((char*)m_BMI160config, totalSize); /* totalSize is always 1 less than checksum :: since it was removed from DeviceConfig */
+    BMI160[4] = calculateChecksum((char*)m_BMI160config, totalSize); /* totalSize is always 1 less than checksum :: since it was removed from DeviceConfig */
 
     // [2] Sector
     m_ADXL345config = createOperation(0x53, 0x01, ops);
@@ -121,7 +151,7 @@ int RamConfig::AssembleData()
     ADXL345[2] = 0x31;    /* ACC_CONF */
     ADXL345[3] = 0x00;    /* acc_bwp = 0x2 normal mode + acc_od = 0xC 1600Hz r*/
 
-    ADXL345[4] = calculate_checksum((char*)m_ADXL345config, totalSize); /* totalSize is always 1 less than checksum :: since it was removed from DeviceConfig */
+    ADXL345[4] = calculateChecksum((char*)m_ADXL345config, totalSize); /* totalSize is always 1 less than checksum :: since it was removed from DeviceConfig */
 
     if(m_BMI160config->size > MAX_DMA_TRANSFER_SIZE)
     {
@@ -166,7 +196,6 @@ int RamConfig::launchEngine()
 
 int RamConfig::openDEV()
 {
-    int ret = EXIT_FAILURE;
     m_fileDescriptor = open(DEVICE_PATH, O_RDWR);
 
     if (m_fileDescriptor < 0)
@@ -177,16 +206,6 @@ int RamConfig::openDEV()
     else
     {
         Info("[RAM] Device opened successfuly");
-        ret = AssembleData();
-
-        if(ret == EXIT_SUCCESS)
-        {
-            Info("[RAM] Data Assembled Successfully");
-        }
-        else
-        {
-            Error("[RAM] Failed to Assembly data");
-        }
     }
 
     return OK;
@@ -229,9 +248,6 @@ int RamConfig::dataTX()
         return EXIT_FAILURE;
     }
     printf("[INFO] [RAM] Write %d Bytes to ramDisk to Sector 2\n", bytes);
-
-    free(m_BMI160config);
-    free(m_ADXL345config);
 
     /**
      *

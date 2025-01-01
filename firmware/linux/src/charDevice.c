@@ -337,9 +337,16 @@ static ssize_t inputWrite(struct file *filep, const char __user *buffer, size_t 
     }
     else if (Device[DEVICE_INPUT].io_transfer.RxData[0] == 0x12 && Device[DEVICE_INPUT].io_transfer.RxData[1] == 0x34)
     {
+#if 0
         /* 20ms delayed :: Read Enable pulse to FIFO */
-        printk(KERN_INFO "[CTRL][ C ] Generate FIFO rd_en from Kernel [long pulse] to be cut in FPGA\n");
+        // printk(KERN_INFO "[CTRL][ C ] Generate FIFO rd_en from Kernel [long pulse] to be cut in FPGA\n");
+        // setStateMachine(SM_INTERRUPT);
+#else
+        printk(KERN_INFO "[CTRL][ C ] Dead end driver here is left for debuging purpouses :: For the FPGA to receive INT_FROM_CPU on Demand \n");
         setStateMachine(SM_INTERRUPT);
+        printk(KERN_INFO "[CTRL][ C ] Dead end driver here is left for debuging purpouses :: To unlock the DEVICE_OUTPUT Mutex to keep the things running\n");
+        charDeviceLockCtrl(DEVICE_OUTPUT, CTRL_UNLOCK);
+#endif
     }
     else
     {
@@ -355,8 +362,21 @@ static ssize_t inputWrite(struct file *filep, const char __user *buffer, size_t 
         printk(KERN_INFO "[CTRL][ C ] NEW Commander !!!\n");
         printk(KERN_INFO "[CTRL][ C ] This is dead end Driver !!!\n");
         printk(KERN_INFO "[CTRL][ C ] Currently charDevice communication is Disabled\n");
-        printk(KERN_INFO "[CTRL][ C ] Please check charDevice.c :: Line 262 for more detalis \n");
-        // setStateMachine(SM_SPI);
+        printk(KERN_INFO "[CTRL][ C ] Please check charDevice.c :: Comment at line 362 for more detalis \n");
+
+        /**
+         * SPI<->DMA is reconfigured
+         *
+         * Now RAM Disk is used to transport
+         * data from user space to kernel
+         *
+         * charDevice is here for later usage
+         * since we not taking data from charDevice
+         * to send over SPI<->DMA the state machine
+         * transition is disabled here
+         *
+         * setStateMachine(SM_SPI);
+         */
     }
 
     return ret;
