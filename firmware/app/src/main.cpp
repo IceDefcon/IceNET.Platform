@@ -7,12 +7,13 @@
 #include <chrono> // delay
 #include <thread> // delay
 
-#include "Watchdog.h"
-#include "KernelInput.h"
+#include "NetworkTraffic.h"
 #include "KernelOutput.h"
+#include "KernelInput.h"
 #include "RamConfig.h"
 #include "ServerTCP.h"
-#include "NetworkTraffic.h"
+#include "Commander.h"
+#include "Watchdog.h"
 
 int main() 
 {
@@ -23,14 +24,18 @@ int main()
     auto instanceRamConfig = std::make_shared<RamConfig>();
     auto instanceKernelOutput = std::make_shared<KernelOutput>();
     auto instanceServerTCP = std::make_shared<ServerTCP>();
+    auto instanceCommander = std::make_shared<Commander>();
 
     /* Set Instances */
     instanceKernelOutput->setInstance_NetworkTraffic(instanceNetworkTraffic);
     instanceServerTCP->setInstance_NetworkTraffic(instanceNetworkTraffic);
     instanceServerTCP->setInstance_RamConfig(instanceRamConfig);
     instanceNetworkTraffic->setInstance_KernelInput(instanceKernelInput);
+    instanceWatchdog->setInstance_RamConfig(instanceRamConfig);
+    instanceWatchdog->setInstance_Commander(instanceCommander);
 
     /* Initialize Interfaces */
+    instanceCommander->openDEV();
     instanceWatchdog->openDEV();
     instanceKernelInput->openDEV();
     instanceKernelOutput->openDEV();
@@ -46,6 +51,7 @@ int main()
             instanceKernelOutput->closeDEV();
             instanceKernelInput->closeDEV();
             instanceNetworkTraffic->closeDEV();
+            instanceCommander->closeDEV();
             break;
         }
 

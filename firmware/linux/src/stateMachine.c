@@ -99,7 +99,7 @@ static int stateMachineThread(void *data)
                  * DMA Engine to launch the transfer
                  *
                  * Then wait for the transfer to complete
-                 * Predefined 22 Bytes of
+                 * Predefined 22 Bytes of the config data
                  */
                 setStateMachine(SM_INTERRUPT);
                 break;

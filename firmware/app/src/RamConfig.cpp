@@ -15,20 +15,7 @@ RamConfig::RamConfig() :
 m_fileDescriptor(-1),
 m_engineConfig{0}
 {
-    int ret = EXIT_FAILURE;
-
     std::cout << "[INFO] [CONSTRUCTOR] " << this << " :: Instantiate RamConfig" << std::endl;
-
-    ret = AssembleData();
-
-    if(ret == EXIT_SUCCESS)
-    {
-        std::cout << "[INFO] [CONSTRUCTOR] Data Assembled Successfully" << std::endl;
-    }
-    else
-    {
-        std::cout << "[INFO] [CONSTRUCTOR] Failed to Assembly data" << std::endl;
-    }
 }
 
 RamConfig::~RamConfig()
