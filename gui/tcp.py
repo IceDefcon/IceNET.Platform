@@ -121,16 +121,12 @@ class TcpManager:
         # DMA
         self.load_button = tk.Button(self.root, text="Load", command=self.loadRam)
         self.load_button.grid(row=0, column=7, pady=5, padx=5, sticky='we')
-        self.load_label = tk.Label(self.root, text="Device config to RAM")
+        self.load_label = tk.Label(self.root, text="Device config to RAM Disk Sectors")
         self.load_label.grid(row=0, column=8, pady=5, padx=5, sticky='w')
-        self.send_button = tk.Button(self.root, text="Start", command=self.launchEngine)
-        self.send_button.grid(row=1, column=7, pady=5, padx=5, sticky='we')
-        self.send_label = tk.Label(self.root, text="DMA Engine")
-        self.send_label.grid(row=1, column=8, pady=5, padx=5, sticky='w')
         self.clear_button = tk.Button(self.root, text="Clear", command=self.clearRam)
-        self.clear_button.grid(row=2, column=7, pady=5, padx=5, sticky='we')
-        self.clear_label = tk.Label(self.root, text="RAM")
-        self.clear_label.grid(row=2, column=8, pady=5, padx=5, sticky='w')
+        self.clear_button.grid(row=1, column=7, pady=5, padx=5, sticky='we')
+        self.clear_label = tk.Label(self.root, text="RAM Disk Sectors")
+        self.clear_label.grid(row=1, column=8, pady=5, padx=5, sticky='w')
 
         # Console
         self.tcp_display = tk.Text(self.root, width=150, height=12, state=tk.DISABLED)
@@ -186,15 +182,6 @@ class TcpManager:
             data = bytes([0x10, 0xAD, 0xC0, 0xDE, 0x00, 0x00, 0x00, 0x00])
             self.tcp_socket.sendall(data)
             self.tcp_console("[iceNET] Load data to RAM")
-        except Exception as e:
-            self.tcp_console(f"[iceNET] Server is Down: {e}")
-            self.tcp_socket = None
-
-    def launchEngine(self):
-        try:
-            data = bytes([0x5E, 0xDD, 0xC0, 0xDE, 0x00, 0x00, 0x00, 0x00])
-            self.tcp_socket.sendall(data)
-            self.tcp_console("[iceNET] Send data to FPGA")
         except Exception as e:
             self.tcp_console(f"[iceNET] Server is Down: {e}")
             self.tcp_socket = None

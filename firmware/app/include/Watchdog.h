@@ -1,7 +1,7 @@
 /*!
  * 
  * Author: Ice.Marek
- * IceNET Technology 2024
+ * IceNET Technology 2025
  * 
  */
 #pragma once
@@ -14,7 +14,8 @@
 #include <atomic>
 #include <vector>
 
-#include "NetworkTraffic.h"
+#include "RamConfig.h"
+#include "Commander.h"
 #include "Types.h"
 
 class Watchdog
@@ -24,20 +25,13 @@ class Watchdog
         std::thread m_threadWatchdog;
         std::atomic<bool> m_threadKill;
 
-        int m_portNumber;
-        int m_serverSocket;
-        int m_clientSocket;
-        int m_bytesReceived;
-        bool m_clientConnected;
+        bool m_stopFlag;
 
-        struct sockaddr_in m_serverAddress;
-        struct sockaddr_in m_clientAddress;
-
-        /* For TCP server Traffic */
         std::vector<char>* m_Rx_Watchdog;
         std::vector<char>* m_Tx_Watchdog;
 
-        std::shared_ptr<NetworkTraffic> m_instanceNetworkTraffic;
+        std::shared_ptr<RamConfig> m_instanceRamConfig;
+        std::shared_ptr<Commander> m_instanceCommander;
 
     public:
         Watchdog();
@@ -52,4 +46,8 @@ class Watchdog
         bool isThreadKilled();
 
         void threadWatchdog();
+
+        void setInstance_RamConfig(const std::shared_ptr<RamConfig> instance);
+        void setInstance_Commander(const std::shared_ptr<Commander> instance);
+
 };

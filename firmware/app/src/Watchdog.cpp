@@ -16,8 +16,9 @@
 #include "Types.h"
 
 Watchdog::Watchdog() :
-    m_file_descriptor(0), 
+    m_file_descriptor(-1),
     m_threadKill(false),
+    m_stopFlag(false),
     m_Rx_Watchdog(new std::vector<char>(CHAR_DEVICE_SIZE)),
     m_Tx_Watchdog(new std::vector<char>(CHAR_DEVICE_SIZE))
 {
@@ -132,7 +133,27 @@ void Watchdog::threadWatchdog()
 
         /* Reduce consumption of CPU resources */
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
+
+        if(false == m_stopFlag)
+        {
+            std::cout << "[INFO] [WDG] Watchdog ready :: Load FPGA Config to DMA Engine" << std::endl;
+            m_instanceRamConfig->AssembleData();
+            m_instanceRamConfig->dataTX();
+            m_stopFlag = true;
+            std::cout << "[INFO] [WDG] Watchdog ready :: Activate DMA Engine" << std::endl;
+            m_instanceCommander->dataTX();
+        }
     }
 
     std::cout << "[INFO] [WDG] Terminate threadWatchdog" << std::endl;
+}
+
+void Watchdog::setInstance_RamConfig(const std::shared_ptr<RamConfig> instance)
+{
+    m_instanceRamConfig = instance;
+}
+
+void Watchdog::setInstance_Commander(const std::shared_ptr<Commander> instance)
+{
+    m_instanceCommander = instance;
 }

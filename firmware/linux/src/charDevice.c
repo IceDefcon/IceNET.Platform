@@ -71,7 +71,7 @@ static charDeviceData Device[DEVICE_AMOUNT] =
         .fops =
         {
             .open = inputOpen,
-            .read = inputRead, /* Dummy :: Not used for INPUT Device */
+            .read = inputRead, /* Dummy :: Not used */
             .write = inputWrite,
             .release = inputClose,
         },
@@ -101,7 +101,7 @@ static charDeviceData Device[DEVICE_AMOUNT] =
         {
             .open = outputOpen,
             .read = outputRead,
-            .write = outputWrite, /* Dummy :: Not used for OUTPUT Device */
+            .write = outputWrite, /* Dummy :: Not used */
             .release = outputClose,
         },
 
@@ -130,7 +130,7 @@ static charDeviceData Device[DEVICE_AMOUNT] =
         {
             .open = watchdogOpen,
             .read = watchdogRead,
-            .write = watchdogWrite,
+            .write = watchdogWrite, /* Dummy :: Not used */
             .release = watchdogClose,
         },
 
@@ -157,10 +157,10 @@ static charDeviceData Device[DEVICE_AMOUNT] =
 
         .fops =
         {
-            .open = commanderOpen, /* For now :: Just Prototypes */
-            .read = commanderRead, /* For now :: Just Prototypes */
-            .write = commanderWrite, /* For now :: Just Prototypes */
-            .release = commanderClose, /* For now :: Just Prototypes */
+            .open = commanderOpen,
+            .read = commanderRead, /* Dummy :: Not used */
+            .write = commanderWrite,
+            .release = commanderClose,
         },
 
         .name = "KernelCommander",
@@ -494,10 +494,10 @@ static ssize_t commanderWrite(struct file *filep, const char __user *buffer, siz
         ret = -EFAULT;
     }
 
-    if (Device[DEVICE_COMMANDER].io_transfer.RxData[0] == 0xC0 && Device[DEVICE_COMMANDER].io_transfer.RxData[1] == 0xF1)
+    if (Device[DEVICE_COMMANDER].io_transfer.RxData[0] == 0x10 && Device[DEVICE_COMMANDER].io_transfer.RxData[1] == 0xAD)
     {
-        /* Kill signal from Application */
-        printk(KERN_INFO "[CTRL][ C ] Command to send config to FPGA ReceivedW\n");
+        /* Activate DMA Engine */
+        printk(KERN_INFO "[CTRL][ C ] Command to Activate DMA Engine Received\n");
         setStateMachine(SM_DMA);
     }
     else

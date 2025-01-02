@@ -179,12 +179,6 @@ void ServerTCP::threadServerTCP()
             }
             else if(ret == -3)
             {
-                std::cout << "[INFO] [TCP] Launch DMA Engine" << std::endl;
-                m_instanceRamConfig->launchEngine();
-                m_timeoutCount = 0;
-            }
-            else if(ret == -2)
-            {
                 std::cout << "[INFO] [TCP] Clear DMA Engine from RAM" << std::endl;
                 m_instanceRamConfig->clearDma();
                 m_timeoutCount = 0;
@@ -363,19 +357,12 @@ int ServerTCP::tcpRX()
             std::cout << "[INFO] [TCP] Send configuration to RAM" << std::endl;
             return -4;
         }
-        /* LAUNCH :: CODE */
-        else if((*m_Rx_ServerTCP)[0] == 0x5E && (*m_Rx_ServerTCP)[1] == 0xDD && (*m_Rx_ServerTCP)[2] == 0xC0 && (*m_Rx_ServerTCP)[3] == 0xDE)
-        {
-            std::cout << std::endl;
-            std::cout << "[INFO] [TCP] Send configuration to RAM" << std::endl;
-            return -3;
-        }
         /* CLEAR :: CODE */
         else if((*m_Rx_ServerTCP)[0] == 0xC1 && (*m_Rx_ServerTCP)[1] == 0xEA && (*m_Rx_ServerTCP)[2] == 0xC0 && (*m_Rx_ServerTCP)[3] == 0xDE)
         {
             std::cout << std::endl;
             std::cout << "[INFO] [TCP] Clear DMA from RAM" << std::endl;
-            return -2;
+            return -3;
         }
         else
         {

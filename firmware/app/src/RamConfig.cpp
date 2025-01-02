@@ -15,20 +15,7 @@ RamConfig::RamConfig() :
 m_fileDescriptor(-1),
 m_engineConfig{0}
 {
-    int ret = EXIT_FAILURE;
-
     std::cout << "[INFO] [CONSTRUCTOR] " << this << " :: Instantiate RamConfig" << std::endl;
-
-    ret = AssembleData();
-
-    if(ret == EXIT_SUCCESS)
-    {
-        std::cout << "[INFO] [CONSTRUCTOR] Data Assembled Successfully" << std::endl;
-    }
-    else
-    {
-        std::cout << "[INFO] [CONSTRUCTOR] Failed to Assembly data" << std::endl;
-    }
 }
 
 RamConfig::~RamConfig()
@@ -170,30 +157,6 @@ int RamConfig::AssembleData()
     return EXIT_SUCCESS;
 }
 
-int RamConfig::launchEngine()
-{
-    ssize_t bytes = 0;
-
-    openDEV();
-
-    /* Write to sector 0 */
-    lseek(m_fileDescriptor, 0, SEEK_SET);
-    bytes = write(m_fileDescriptor, m_engineConfig, sizeof(m_engineConfig));
-    if (bytes < 0)
-    {
-        perror("Failed to write to block device");
-        close(m_fileDescriptor);
-        free(m_BMI160config);
-        free(m_ADXL345config);
-        return EXIT_FAILURE;
-    }
-    printf("[INFO] [RAM] Write %d Bytes to ramDisk to Sector 0\n", bytes);
-
-    closeDEV();
-
-    return EXIT_SUCCESS;
-}
-
 int RamConfig::openDEV()
 {
     m_fileDescriptor = open(DEVICE_PATH, O_RDWR);
@@ -221,6 +184,19 @@ int RamConfig::dataTX()
     ssize_t bytes = 0;
 
     openDEV();
+
+    /* Write to sector 0 */
+    lseek(m_fileDescriptor, 0, SEEK_SET);
+    bytes = write(m_fileDescriptor, m_engineConfig, sizeof(m_engineConfig));
+    if (bytes < 0)
+    {
+        perror("Failed to write to block device");
+        close(m_fileDescriptor);
+        free(m_BMI160config);
+        free(m_ADXL345config);
+        return EXIT_FAILURE;
+    }
+    printf("[INFO] [RAM] Write %d Bytes to ramDisk to Sector 0\n", bytes);
 
     /* Write to sector 1 */
     lseek(m_fileDescriptor, SECTOR_SIZE * 1, SEEK_SET);
