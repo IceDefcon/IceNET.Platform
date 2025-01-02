@@ -33,6 +33,35 @@ use ieee.std_logic_unsigned.all;
 -- PIN_A19 :: P9_39 :: UNUSED_29            | PIN_B19 :: P9_40 :: UNUSED_30     |
 -- PIN_A20 :: P9_41 :: WATCHDOG_INTERRUPT   | PIN_B20 :: P9_42 :: UNUSED_32     |
 ---------------------------------------------------------------------------------
+-- PIN_AB13 :: NOTUSED_01                   | PIN_AA13 :: NOTUSED_02            |
+-- PIN_AB14 :: NOTUSED_03                   | PIN_AA14 :: NOTUSED_04            |
+-- PIN_AB15 :: NOTUSED_05                   | PIN_AA15 :: NOTUSED_06            |
+-- PIN_AB16 :: NOTUSED_07                   | PIN_AA16 :: NOTUSED_08            |
+-- PIN_AB17 :: NOTUSED_09                   | PIN_AA17 :: NOTUSED_10            |
+-- PIN_AB18 :: NOTUSED_11                   | PIN_AA18 :: NOTUSED_12            |
+-- PIN_AB19 :: NOTUSED_13                   | PIN_AA19 :: NOTUSED_14            |
+-- PIN_AB20 :: NOTUSED_15                   | PIN_AA20 :: NOTUSED_16            |
+-- PIN_Y21  :: NOTUSED_17                   | PIN_Y22  :: NOTUSED_18            |
+-- PIN_W21  :: NOTUSED_19                   | PIN_W22  :: NOTUSED_20            |
+-- PIN_V21  :: NOTUSED_21                   | PIN_V22  :: NOTUSED_22            |
+-- PIN_U21  :: NOTUSED_23                   | PIN_U22  :: NOTUSED_24            |
+-- PIN_R21  :: NOTUSED_25                   | PIN_R22  :: NOTUSED_26            |
+-- PIN_P21  :: NOTUSED_27                   | PIN_P22  :: NOTUSED_28            |
+-- PIN_N21  :: NOTUSED_29                   | PIN_N22  :: NOTUSED_30            |
+-- PIN_M21  :: NOTUSED_31                   | PIN_M22  :: NOTUSED_32            |
+-- PIN_L21  :: NOTUSED_33                   | PIN_L22  :: NOTUSED_34            |
+-- PIN_K21  :: NOTUSED_35                   | PIN_K22  :: NOTUSED_36            |
+-- PIN_J21  :: NOTUSED_37                   | PIN_J22  :: NOTUSED_38            |
+-- PIN_H21  :: NOTUSED_39                   | PIN_H22  :: NOTUSED_40            |
+-- PIN_F21  :: NOTUSED_41                   | PIN_F22  :: NOTUSED_42            |
+-- PIN_E21  :: NOTUSED_43                   | PIN_E22  :: NOTUSED_44            |
+-- PIN_D21  :: LOGIC_CH5                    | PIN_D22  :: LOGIC_CH6             |
+-- PIN_C21  :: LOGIC_CH3                    | PIN_C22  :: LOGIC_CH4             |
+-- PIN_B21  :: LOGIC_CH1                    | PIN_B22  :: LOGIC_CH2             |
+-- PIN_N19  :: NOTUSED_51                   | PIN_N20  :: NOTUSED_52            |
+-- PIN_M19  :: NOTUSED_53                   | PIN_M20  :: NOTUSED_54            |
+---------------------------------------------------------------------------------
+
 
 entity Platform is
 port
@@ -106,6 +135,13 @@ port
     CAN_BBB_RX : out std_logic; -- PIN_A7 :: P9_19
     CAN_MPP_TX : out std_logic; -- PIN_N20 :: MPP Tx
     CAN_MPP_RX : in std_logic;  -- PIN_M20 :: MPP Rx
+    -- Locic
+    LOGIC_CH1 : out std_logic; -- PIN_B21
+    LOGIC_CH2 : out std_logic; -- PIN_B22
+    LOGIC_CH3 : out std_logic; -- PIN_C21
+    LOGIC_CH4 : out std_logic; -- PIN_C22
+    LOGIC_CH5 : out std_logic; -- PIN_D21
+    LOGIC_CH6 : out std_logic; -- PIN_D22
     --
     -- Tri-state Unused Pins :: For the PCB Safety
     --
@@ -646,5 +682,16 @@ end process;
 --NRF905_PWR_UP <= '1';
 --NRF905_TRX_CE <= '0';
 --NRF905_TX_EN <= 'Z';
+
+logic_process:
+process(CLOCK_50MHz)
+begin
+    if rising_edge(CLOCK_50MHz) then
+        LOGIC_CH1 <= PRIMARY_CS;
+        LOGIC_CH2 <= PRIMARY_MOSI;
+        LOGIC_CH3 <= PRIMARY_SCLK;
+        LOGIC_CH4 <= INT_FROM_CPU;
+    end if;
+end process;
 
 end rtl;
