@@ -16,7 +16,7 @@
 #include "Types.h"
 
 Watchdog::Watchdog() :
-    m_file_descriptor(0), 
+    m_file_descriptor(-1),
     m_threadKill(false),
     m_Rx_Watchdog(new std::vector<char>(CHAR_DEVICE_SIZE)),
     m_Tx_Watchdog(new std::vector<char>(CHAR_DEVICE_SIZE))

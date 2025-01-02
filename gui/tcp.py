@@ -121,11 +121,11 @@ class TcpManager:
         # DMA
         self.load_button = tk.Button(self.root, text="Load", command=self.loadRam)
         self.load_button.grid(row=0, column=7, pady=5, padx=5, sticky='we')
-        self.load_label = tk.Label(self.root, text="Device config to RAM")
+        self.load_label = tk.Label(self.root, text="Device config to RAM Disk Sectors")
         self.load_label.grid(row=0, column=8, pady=5, padx=5, sticky='w')
         self.clear_button = tk.Button(self.root, text="Clear", command=self.clearRam)
         self.clear_button.grid(row=1, column=7, pady=5, padx=5, sticky='we')
-        self.clear_label = tk.Label(self.root, text="RAM")
+        self.clear_label = tk.Label(self.root, text="RAM Disk Sectors")
         self.clear_label.grid(row=1, column=8, pady=5, padx=5, sticky='w')
 
         # Console

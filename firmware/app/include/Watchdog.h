@@ -24,12 +24,6 @@ class Watchdog
         std::thread m_threadWatchdog;
         std::atomic<bool> m_threadKill;
 
-        int m_portNumber;
-        int m_serverSocket;
-        int m_clientSocket;
-        int m_bytesReceived;
-        bool m_clientConnected;
-
         struct sockaddr_in m_serverAddress;
         struct sockaddr_in m_clientAddress;
 
