@@ -25,13 +25,9 @@ architecture rtl of OffloadController is
 type STATE is 
 (
     IDLE,
-    HEADER,
-    DELAY_CONFIG,
-    DELAY_OFFSET,
-    READ_ID,
-    READ_REGISTER,
-    READ_CONTROL,
-    READ_DATA
+    INIT,
+    READ_EN,
+    HEADER
 );
 signal offload_state: STATE := IDLE;
 
@@ -52,10 +48,17 @@ begin
             when IDLE =>
                 OFFLOAD_READY <= '0';
                 if OFFLOAD_INTERRUPT = '1' then
-                    offload_state <= HEADER;
                 	FIFO_READ_ENABLE <= '1';
+                    offload_state <= INIT;
                 else
                     offload_state <= IDLE;
+                end if;
+
+            when INIT =>
+                FIFO_READ_ENABLE <= '1';
+
+                if FIFO_DATA > "00000000" then
+                    header_size <= to_integer(unsigned(FIFO_DATA)) - 1;
                 end if;
 
             when HEADER =>
@@ -63,7 +66,7 @@ begin
             		header_size <= to_integer(unsigned(FIFO_DATA));
             		header_flag <= '1';
             	elsif header_size > 0 then
-                	FIFO_READ_ENABLE <= '1';
+                	--FIFO_READ_ENABLE <= '1';
                 	header_size <= header_size - 1;
                 else
                 	offload_state <= IDLE;
