@@ -138,12 +138,12 @@ begin
                 offload_state <= DEVICE_INIT;
 
             when DEVICE_INIT =>
-                FIFO_READ_ENABLE <= '1';
                 if config_devices > 0 then
+                    FIFO_READ_ENABLE <= '1';
                     config_devices <= config_devices - 1;
                     offload_state <= DEVICE_DELAY;
                 else
-                    offload_state <= IDLE;
+                    offload_state <= DONE;
                 end if;
 
             when DEVICE_DELAY =>
@@ -172,7 +172,6 @@ begin
                 offload_state <= DEVICE_CONFIG;
 
             when DEVICE_CONFIG =>
-                FIFO_READ_ENABLE <= '0';
                 transfer_size <= device_size;
                 transfer_id <= device_id;
                 transfer_ctrl <= device_ctrl;
@@ -188,24 +187,22 @@ begin
                 offload_state <= TRANSFER;
 
             when TRANSFER =>
-                FIFO_READ_ENABLE <= '1';
                 if transfer_reads > 0 then
+                    FIFO_READ_ENABLE <= '1';
                     transfer_reads <= transfer_reads - 1;
                     offload_state <= TRANSFER;
                 else
                     offload_state <= CHECKSUM;
                 end if;
 
-            when CHECKSUM =>
-                FIFO_READ_ENABLE <= '0';
-                offload_state <= DONE;
-
-            when DONE =>
-                FIFO_READ_ENABLE <= '0';
+            when CHECKSUM
+                FIFO_READ_ENABLE <= '1';
                 offload_state <= DEVICE_INIT;
 
+            when DONE =>
+                offload_state <= IDLE;
+
             when others =>
-                FIFO_READ_ENABLE <= '0';
                 offload_state <= IDLE;
 
         end case;

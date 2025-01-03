@@ -325,11 +325,11 @@ port
     FIFO_DATA : in std_logic_vector(7 downto 0);
     FIFO_READ_ENABLE : out std_logic;
 
-    OFFLOAD_READY : out std_logic;
-    OFFLOAD_ID : out std_logic_vector(6 downto 0);
-    OFFLOAD_REGISTER : out std_logic_vector(7 downto 0);
-    OFFLOAD_CTRL : out std_logic_vector(7 downto 0);
-    OFFLOAD_DATA : out std_logic_vector(7 downto 0)
+    OFFLOAD_READY : out std_logic
+    --OFFLOAD_ID : out std_logic_vector(6 downto 0);
+    --OFFLOAD_REGISTER : out std_logic_vector(7 downto 0);
+    --OFFLOAD_CTRL : out std_logic_vector(7 downto 0);
+    --OFFLOAD_DATA : out std_logic_vector(7 downto 0)
 );
 end component;
 
@@ -529,11 +529,11 @@ port map
     FIFO_DATA => primary_fifo_data_out,
     FIFO_READ_ENABLE => primary_fifo_rd_en,
 
-    OFFLOAD_READY => open, --offload_ready,
-    OFFLOAD_ID => open, --offload_id,
-    OFFLOAD_REGISTER => open, --offload_register,
-    OFFLOAD_CTRL => open, --offload_ctrl,
-    OFFLOAD_DATA => open --offload_data
+    OFFLOAD_READY => open --offload_ready,
+    --OFFLOAD_ID => open, --offload_id,
+    --OFFLOAD_REGISTER => open, --offload_register,
+    --OFFLOAD_CTRL => open, --offload_ctrl,
+    --OFFLOAD_DATA => open --offload_data
 );
 
 UartController_module: UartController
