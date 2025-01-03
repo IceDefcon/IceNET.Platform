@@ -11,7 +11,6 @@ port
     FIFO_DATA : in std_logic_vector(7 downto 0);
 
     FIFO_READ_ENABLE : out std_logic;
-
     OFFLOAD_READY : out std_logic
 );
 end OffloadController;
@@ -68,6 +67,9 @@ signal transfer_size : integer := 0;
 signal transfer_id : std_logic_vector(7 downto 0) := (others => '0');
 signal transfer_ctrl : std_logic_vector(7 downto 0) := (others => '0');
 signal transfer_reads : integer := 0;
+
+signal transfer_register : std_logic_vector(7 downto 0) := (others => '0');
+signal transfer_data : std_logic_vector(7 downto 0) := (others => '0');
 
 ----------------------------------------------------------------------------------------------------------------
 -- MAIN ROUTINE
@@ -138,11 +140,12 @@ begin
                 offload_state <= DEVICE_INIT;
 
             when DEVICE_INIT =>
-                FIFO_READ_ENABLE <= '1';
                 if config_devices > 0 then
+                    FIFO_READ_ENABLE <= '1';
                     config_devices <= config_devices - 1;
                     offload_state <= DEVICE_DELAY;
                 else
+                    FIFO_READ_ENABLE <= '0';
                     offload_state <= IDLE;
                 end if;
 
@@ -188,11 +191,12 @@ begin
                 offload_state <= TRANSFER;
 
             when TRANSFER =>
-                FIFO_READ_ENABLE <= '1';
                 if transfer_reads > 0 then
+                    FIFO_READ_ENABLE <= '1';
                     transfer_reads <= transfer_reads - 1;
                     offload_state <= TRANSFER;
                 else
+                    FIFO_READ_ENABLE <= '1';
                     offload_state <= CHECKSUM;
                 end if;
 
