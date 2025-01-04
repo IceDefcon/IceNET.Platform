@@ -71,11 +71,12 @@ signal transfer_reads : integer := 0;
 signal transfer_register : std_logic_vector(7 downto 0) := (others => '0');
 signal transfer_data : std_logic_vector(7 downto 0) := (others => '0');
 
+
 ----------------------------------------------------------------------------------------------------------------
 -- MAIN ROUTINE
 ----------------------------------------------------------------------------------------------------------------
 begin
-    
+
 offload_process:
 process (CLOCK_50MHz)
 begin
@@ -179,7 +180,7 @@ begin
                 transfer_size <= device_size;
                 transfer_id <= device_id;
                 transfer_ctrl <= device_ctrl;
-                transfer_reads <= 2 * device_pairs - 2;
+                transfer_reads <= 2 * device_pairs;
                 offload_state <= TRANSFER_INIT;
 
             when TRANSFER_INIT =>
@@ -192,6 +193,11 @@ begin
 
             when TRANSFER =>
                 if transfer_reads > 0 then
+                    if transfer_reads mod 2 = 0 then
+                        OFFLOAD_READY <= '1';
+                    else
+                        OFFLOAD_READY <= '0';
+                    end if;
                     FIFO_READ_ENABLE <= '1';
                     transfer_reads <= transfer_reads - 1;
                     offload_state <= TRANSFER;
