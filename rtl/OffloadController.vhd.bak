@@ -11,6 +11,7 @@ port
     FIFO_DATA : in std_logic_vector(7 downto 0);
 
     FIFO_READ_ENABLE : out std_logic;
+
     OFFLOAD_READY : out std_logic
 );
 end OffloadController;
@@ -68,15 +69,11 @@ signal transfer_id : std_logic_vector(7 downto 0) := (others => '0');
 signal transfer_ctrl : std_logic_vector(7 downto 0) := (others => '0');
 signal transfer_reads : integer := 0;
 
-signal transfer_register : std_logic_vector(7 downto 0) := (others => '0');
-signal transfer_data : std_logic_vector(7 downto 0) := (others => '0');
-
-
 ----------------------------------------------------------------------------------------------------------------
 -- MAIN ROUTINE
 ----------------------------------------------------------------------------------------------------------------
 begin
-
+    
 offload_process:
 process (CLOCK_50MHz)
 begin
@@ -146,8 +143,7 @@ begin
                     config_devices <= config_devices - 1;
                     offload_state <= DEVICE_DELAY;
                 else
-                    FIFO_READ_ENABLE <= '0';
-                    offload_state <= IDLE;
+                    offload_state <= DONE;
                 end if;
 
             when DEVICE_DELAY =>
@@ -176,11 +172,10 @@ begin
                 offload_state <= DEVICE_CONFIG;
 
             when DEVICE_CONFIG =>
-                FIFO_READ_ENABLE <= '0';
                 transfer_size <= device_size;
                 transfer_id <= device_id;
                 transfer_ctrl <= device_ctrl;
-                transfer_reads <= 2 * device_pairs;
+                transfer_reads <= 2 * device_pairs - 2;
                 offload_state <= TRANSFER_INIT;
 
             when TRANSFER_INIT =>
@@ -193,29 +188,21 @@ begin
 
             when TRANSFER =>
                 if transfer_reads > 0 then
-                    if transfer_reads mod 2 = 0 then
-                        OFFLOAD_READY <= '1';
-                    else
-                        OFFLOAD_READY <= '0';
-                    end if;
                     FIFO_READ_ENABLE <= '1';
                     transfer_reads <= transfer_reads - 1;
                     offload_state <= TRANSFER;
                 else
-                    FIFO_READ_ENABLE <= '1';
                     offload_state <= CHECKSUM;
                 end if;
 
-            when CHECKSUM =>
-                FIFO_READ_ENABLE <= '0';
-                offload_state <= DONE;
-
-            when DONE =>
-                FIFO_READ_ENABLE <= '0';
+            when CHECKSUM
+                FIFO_READ_ENABLE <= '1';
                 offload_state <= DEVICE_INIT;
 
+            when DONE =>
+                offload_state <= IDLE;
+
             when others =>
-                FIFO_READ_ENABLE <= '0';
                 offload_state <= IDLE;
 
         end case;

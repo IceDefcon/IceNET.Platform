@@ -229,7 +229,7 @@ void transferFpgaInput(struct work_struct *work)
     unsigned char *tx_buf;
     unsigned char *rx_buf;
     int ret;
-    // int i;
+    int i;
 
     /* Initiate DMA Controller to perform SPI transfer */
     ret = spi_sync(Device[SPI_PRIMARY].spiDevice, &Device[SPI_PRIMARY].Dma.spiMessage);
@@ -247,10 +247,10 @@ void transferFpgaInput(struct work_struct *work)
     /* Debug :: Dma buffer */
     tx_buf = (unsigned char *)Device[SPI_PRIMARY].Dma.spiTransfer.tx_buf;
     rx_buf = (unsigned char *)Device[SPI_PRIMARY].Dma.spiTransfer.rx_buf;
-    // for (i = 0; i < Device[SPI_PRIMARY].spiLength; ++i)
-    // {
-    //     printk(KERN_INFO "[CTRL][SPI] Primary FPGA Transfer :: Dma Buffer[%d]: [Data] Tx[0x%02x] [Feedback] Rx[0x%02x]\n", i, tx_buf[i], rx_buf[i]);
-    // }
+    for (i = 0; i < Device[SPI_PRIMARY].spiLength; ++i)
+    {
+        printk(KERN_INFO "[CTRL][SPI] Primary FPGA Transfer :: Dma Buffer[%d]: [Data] Tx[0x%02x] [Feedback] Rx[0x%02x]\n", i, tx_buf[i], rx_buf[i]);
+    }
 
     /* No feedback preamble received :: FPGA not running properly */
     if(0x18 != rx_buf[0])
@@ -260,11 +260,11 @@ void transferFpgaInput(struct work_struct *work)
     }
 
     /* Clear the buffers */
-    // for (i = 0; i < Device[SPI_PRIMARY].spiLength; ++i)
-    // {
-    //     Device[SPI_PRIMARY].spiRx[i] = 0x00;
-    //     Device[SPI_PRIMARY].spiTx[i] = 0x00;
-    // }
+    for (i = 0; i < Device[SPI_PRIMARY].spiLength; ++i)
+    {
+        Device[SPI_PRIMARY].spiRx[i] = 0x00;
+        Device[SPI_PRIMARY].spiTx[i] = 0x00;
+    }
 }
 
 void transferFpgaOutput(struct work_struct *work)
