@@ -7,11 +7,17 @@ port
 (    
     CLOCK_50MHz : in std_logic;
 
+    OFFLOAD_WAIT : in std_logic;
     OFFLOAD_INTERRUPT : in std_logic;
     FIFO_DATA : in std_logic_vector(7 downto 0);
 
     FIFO_READ_ENABLE : out std_logic;
-    OFFLOAD_READY : out std_logic
+
+    OFFLOAD_READY : out std_logic;
+    OFFLOAD_ID : out std_logic;
+    OFFLOAD_CTRL : out std_logic;
+    OFFLOAD_REGISTER : out std_logic;
+    OFFLOAD_DATA : out std_logic
 );
 end OffloadController;
 
@@ -154,7 +160,18 @@ begin
                 FIFO_READ_ENABLE <= '1';
                 offload_state <= DEVICE_1;
 
-
+            ----------------------------------------------------------
+            --
+            -- DEVICE CONFIG
+            --
+            ----------------------------------------------------------
+            --
+            -- DEVICE 0 :: Device Config Size
+            -- DEVICE 1 :: Device Ctrl :: 0x11 ---> I2C, Write
+            -- DEVICE 2 :: Device ID :: For I2C
+            -- DEVICE 3 :: Device config pairs
+            --
+            ----------------------------------------------------------
             when DEVICE_1 =>
                 device_size <= to_integer(unsigned(FIFO_DATA));
                 FIFO_READ_ENABLE <= '1';
@@ -200,13 +217,16 @@ begin
                     end if;
                     FIFO_READ_ENABLE <= '1';
                     transfer_reads <= transfer_reads - 1;
-                    offload_state <= TRANSFER;
-                else
-                    FIFO_READ_ENABLE <= '1';
+                end if;
+
+                if transfer_reads = 2 then
                     offload_state <= CHECKSUM;
+                else
+                    offload_state <= TRANSFER;
                 end if;
 
             when CHECKSUM =>
+                OFFLOAD_READY <= '0';
                 FIFO_READ_ENABLE <= '0';
                 offload_state <= DONE;
 
