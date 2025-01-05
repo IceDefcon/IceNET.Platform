@@ -46,7 +46,7 @@ static void charDeviceDataInit(charDeviceType DeviceType)
     }
     else
     {
-        printk(KERN_INFO "[INIT][ C ] Memory allocated succesfully for all char devices\n");
+        printk(KERN_INFO "[INIT][ C ] %s :: Memory allocated succesfully\n", getCharDevice()[DeviceType].name);
     }
 
     getCharDevice()[DeviceType].io_transfer.RxData = RxData;
@@ -59,22 +59,22 @@ static void charDeviceConfig(charDeviceType DeviceType)
     getCharDevice()[DeviceType].majorNumber = register_chrdev(0, getCharDevice()[DeviceType].name, &getCharDevice()[DeviceType].fops);
     if (getCharDevice()[DeviceType].majorNumber<0)
     {
-        printk(KERN_ALERT "[INIT][ C ] Failed to register major number for %s :: %d\n", getCharDevice()[DeviceType].name, getCharDevice()[DeviceType].majorNumber);
+        printk(KERN_ALERT "[INIT][ C ] %s :: Failed to register major number\n", getCharDevice()[DeviceType].name);
     }
     else
     {
-        printk(KERN_ALERT "[INIT][ C ] Register major number for %s :: %d\n", getCharDevice()[DeviceType].name, getCharDevice()[DeviceType].majorNumber);
+        printk(KERN_ALERT "[INIT][ C ] %s :: Register major number[%d]\n", getCharDevice()[DeviceType].name, getCharDevice()[DeviceType].majorNumber);
     }
 
     getCharDevice()[DeviceType].deviceClass = class_create(THIS_MODULE, getCharDevice()[DeviceType].name);
     if (IS_ERR(getCharDevice()[DeviceType].deviceClass))
     {
         unregister_chrdev(getCharDevice()[DeviceType].majorNumber, getCharDevice()[DeviceType].name);
-        printk(KERN_ALERT "[INIT][ C ] Failed to register device class for %s :: %ld\n", getCharDevice()[DeviceType].name, PTR_ERR(getCharDevice()[DeviceType].deviceClass));
+        printk(KERN_ALERT "[INIT][ C ] %s :: Failed to register device class\n", getCharDevice()[DeviceType].name);
     }
     else
     {
-        printk(KERN_ALERT "[INIT][ C ] Register device class for %s\n", getCharDevice()[DeviceType].name);
+        printk(KERN_ALERT "[INIT][ C ] %s :: Register device class\n", getCharDevice()[DeviceType].name);
     }
 
     getCharDevice()[DeviceType].nodeDevice = device_create(getCharDevice()[DeviceType].deviceClass, NULL, MKDEV(getCharDevice()[DeviceType].majorNumber, 0), NULL, getCharDevice()[DeviceType].name);
@@ -86,7 +86,7 @@ static void charDeviceConfig(charDeviceType DeviceType)
     }
     else
     {
-        printk(KERN_ALERT "[INIT][ C ] Succesfully created char Device for %s\n", getCharDevice()[DeviceType].name);
+        printk(KERN_ALERT "[INIT][ C ] %s :: Char Device Succesfully created\n", getCharDevice()[DeviceType].name);
     }
 }
 
@@ -96,35 +96,35 @@ static void charDeviceConfigDestroy(charDeviceType DeviceType)
     {
         device_destroy(getCharDevice()[DeviceType].deviceClass, MKDEV(getCharDevice()[DeviceType].majorNumber, 0));
         getCharDevice()[DeviceType].nodeDevice = NULL;
-        printk(KERN_ALERT "[DESTROY][ C ] %s Device destroyed\n", getCharDevice()[DeviceType].name);
+        printk(KERN_ALERT "[DESTROY][ C ] %s :: Device destroyed\n", getCharDevice()[DeviceType].name);
     }
     else
     {
-        printk(KERN_ALERT "[DESTROY][ C ] Cannot destroy %s\n", getCharDevice()[DeviceType].name);
+        printk(KERN_ALERT "[DESTROY][ C ] %s :: Cannot destroy\n", getCharDevice()[DeviceType].name);
     }
 
     if(getCharDevice()[DeviceType].deviceClass)
     {
         class_destroy(getCharDevice()[DeviceType].deviceClass);
         getCharDevice()[DeviceType].deviceClass = NULL;
-        printk(KERN_ALERT "[DESTROY][ C ] %s Class destroyed\n", getCharDevice()[DeviceType].name);
+        printk(KERN_ALERT "[DESTROY][ C ] %s :: Class destroyed\n", getCharDevice()[DeviceType].name);
     }
     else
     {
-        printk(KERN_ALERT "[DESTROY][ C ] Cannot destroy %s Class\n", getCharDevice()[DeviceType].name);
+        printk(KERN_ALERT "[DESTROY][ C ] %s :: Class Cannot destroyed\n", getCharDevice()[DeviceType].name);
     }
 
     if(getCharDevice()[DeviceType].majorNumber != 0)
     {
         unregister_chrdev(getCharDevice()[DeviceType].majorNumber, getCharDevice()[DeviceType].name);
         getCharDevice()[DeviceType].majorNumber = 0;
-        printk(KERN_ALERT "[DESTROY][ C ] Unregistered %s device\n", getCharDevice()[DeviceType].name);
+        printk(KERN_ALERT "[DESTROY][ C ] %s :: Char Device Unregistered\n", getCharDevice()[DeviceType].name);
     }
     else
     {
-        printk(KERN_ALERT "[DESTROY][ C ] Cannot unregister %s Device\n", getCharDevice()[DeviceType].name);
+        printk(KERN_ALERT "[DESTROY][ C ] %s :: Cannot unregister Char Device\n", getCharDevice()[DeviceType].name);
     }
-    printk(KERN_ALERT "[DESTROY][ C ] %s device destruction complete\n", getCharDevice()[DeviceType].name);
+    printk(KERN_ALERT "[DESTROY][ C ] %s :: Char Device destruction complete\n", getCharDevice()[DeviceType].name);
 }
 
 void charDeviceInit(void)

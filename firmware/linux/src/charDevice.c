@@ -512,33 +512,33 @@ static ssize_t commanderWrite(struct file *filep, const char __user *buffer, siz
 
 /* CLOSE */ static int inputClose(struct inode *inodep, struct file *filep)
 {
-    printk(KERN_ALERT "[CTRL][ C ] Unlock [C] Device Mutex\n");
+    printk(KERN_ALERT "[CTRL][ C ] Unlock Mutex DEVICE_INPUT\n");
     charDeviceMutexCtrl(DEVICE_INPUT, MUTEX_CTRL_UNLOCK);
-    printk(KERN_INFO "[CTRL][ C ] Device successfully closed\n");
+    printk(KERN_INFO "[CTRL][ C ] Close DEVICE_INPUT\n");
     return 0;
 }
 
 /* CLOSE */ static int outputClose(struct inode *inodep, struct file *filep)
 {
-    printk(KERN_ALERT "[CTRL][ C ] Unlock [C] Device Mutex\n");
+    printk(KERN_ALERT "[CTRL][ C ] Unlock Mutex DEVICE_OUTPUT\n");
     charDeviceMutexCtrl(DEVICE_OUTPUT, MUTEX_CTRL_UNLOCK);
-    printk(KERN_INFO "[CTRL][ C ] Device successfully closed\n");
+    printk(KERN_INFO "[CTRL][ C ] Close DEVICE_OUTPUT\n");
     return 0;
 }
 
 /* CLOSE */ static int watchdogClose(struct inode *inodep, struct file *filep)
 {
-    printk(KERN_ALERT "[CTRL][ C ] Unlock [C] Device Mutex\n");
+    printk(KERN_ALERT "[CTRL][ C ] Unlock Mutex DEVICE_WATCHDOG\n");
     charDeviceMutexCtrl(DEVICE_WATCHDOG, MUTEX_CTRL_UNLOCK);
-    printk(KERN_INFO "[CTRL][ C ] Device successfully closed\n");
+    printk(KERN_INFO "[CTRL][ C ] Close DEVICE_WATCHDOG\n");
     return 0;
 }
 
 /* CLOSE */ static int commanderClose(struct inode *inodep, struct file *filep)
 {
-    printk(KERN_ALERT "[CTRL][ C ] Unlock [C] Device Mutex\n");
+    printk(KERN_ALERT "[CTRL][ C ] Unlock Mutex DEVICE_COMMANDER\n");
     charDeviceMutexCtrl(DEVICE_COMMANDER, MUTEX_CTRL_UNLOCK);
-    printk(KERN_INFO "[CTRL][ C ] Device successfully closed\n");
+    printk(KERN_INFO "[CTRL][ C ] Close DEVICE_COMMANDER\n");
     return 0;
 }
 

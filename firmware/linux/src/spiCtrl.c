@@ -76,12 +76,12 @@ static int spiBusInit(spiBusType spiBusEnum, spiDeviceType spiDeviceEnum)
     pMaster = spi_busnum_to_master(spiBusEnum);
     if (!pMaster)
     {
-        printk(KERN_ERR "[INIT][SPI] SPI Master at BUS %d not found!\n", spiBusEnum);
+        printk(KERN_ERR "[INIT][SPI] SPI %d Master BUS not found!\n", spiBusEnum);
         return -ENODEV;
     }
     else
     {
-        printk(KERN_ERR "[INIT][SPI] SPI Master at BUS %d Registered\n", spiBusEnum);
+        printk(KERN_ERR "[INIT][SPI] SPI %d Master BUS Registered\n", spiBusEnum);
     }
 
     Device[spiDeviceEnum].spiDevice = spi_alloc_device(pMaster);
