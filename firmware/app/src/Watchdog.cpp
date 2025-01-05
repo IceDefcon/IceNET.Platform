@@ -136,6 +136,7 @@ void Watchdog::threadWatchdog()
 
         if(false == m_stopFlag)
         {
+            std::cout << std::endl;
             std::cout << "[INFO] [WDG] Watchdog ready :: Load FPGA Config to DMA Engine" << std::endl;
             m_instanceRamConfig->AssembleData();
             m_instanceRamConfig->dataTX();
