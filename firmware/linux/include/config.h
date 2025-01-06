@@ -21,8 +21,8 @@
 //                  //
 //////////////////////
 
-#define RAM_DISK_CTRL       (false)
-#define CHAR_DEVICE_CTRL    (true)
+#define RAM_DISK_CTRL       (true)
+#define CHAR_DEVICE_CTRL    (false)
 
 
 #endif // CONFIG_H
