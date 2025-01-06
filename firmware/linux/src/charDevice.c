@@ -231,7 +231,7 @@ static charDeviceData Device[DEVICE_AMOUNT] =
     }
 }
 
-/* CHECK */ bool idDeviceLocked(charDeviceType charDevice)
+/* CHECK */ bool isDeviceLocked(charDeviceType charDevice)
 {
     return Device[charDevice].isLocked;
 }
@@ -389,13 +389,13 @@ static ssize_t inputWrite(struct file *filep, const char __user *buffer, size_t 
 
 static ssize_t outputRead(struct file *filep, char *buffer, size_t len, loff_t *offset)
 {
-    int error_count = 0;
     int ret = 0;
+    int error_count = 0;
     size_t i;
 
     printk(KERN_INFO "[CTRL][ C ] Output Device is waiting for flag release\n");
     charDeviceLockCtrl(DEVICE_OUTPUT, CTRL_LOCK);
-    while(idDeviceLocked(DEVICE_OUTPUT))
+    while(isDeviceLocked(DEVICE_OUTPUT))
     {
         msleep(10); /* Release 90% of CPU resources */
     }
@@ -440,7 +440,7 @@ static ssize_t watchdogRead(struct file *filep, char *buffer, size_t len, loff_t
     int error_count = 0;
 
     charDeviceLockCtrl(DEVICE_WATCHDOG, CTRL_LOCK);
-    while(idDeviceLocked(DEVICE_WATCHDOG))
+    while(isDeviceLocked(DEVICE_WATCHDOG))
     {
         msleep(10); /* Release 90% of CPU resources */
     }
