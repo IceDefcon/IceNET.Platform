@@ -321,15 +321,17 @@ port
 (    
     CLOCK_50MHz : in std_logic;
 
+    OFFLOAD_WAIT : in std_logic;
     OFFLOAD_INTERRUPT : in std_logic;
     FIFO_DATA : in std_logic_vector(7 downto 0);
+
     FIFO_READ_ENABLE : out std_logic;
 
     OFFLOAD_READY : out std_logic;
-    OFFLOAD_ID : out std_logic_vector(6 downto 0);
-    OFFLOAD_REGISTER : out std_logic_vector(7 downto 0);
-    OFFLOAD_CTRL : out std_logic_vector(7 downto 0);
-    OFFLOAD_DATA : out std_logic_vector(7 downto 0)
+    OFFLOAD_ID : out std_logic;
+    OFFLOAD_CTRL : out std_logic;
+    OFFLOAD_REGISTER : out std_logic;
+    OFFLOAD_DATA : out std_logic
 );
 end component;
 
@@ -520,20 +522,21 @@ port map
     EMPTY => primary_fifo_empty
 );
 
-
 OffloadController_module: OffloadController
 port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
 
+    OFFLOAD_WAIT => '0',
     OFFLOAD_INTERRUPT => offload_interrupt,
     FIFO_DATA => primary_fifo_data_out,
+
     FIFO_READ_ENABLE => primary_fifo_rd_en,
 
     OFFLOAD_READY => offload_ready,
     OFFLOAD_ID => offload_id,
-    OFFLOAD_REGISTER => offload_ctrl,
-    OFFLOAD_CTRL => offload_register,
+    OFFLOAD_CTRL => offload_ctrl,
+    OFFLOAD_REGISTER => offload_register,
     OFFLOAD_DATA => offload_data
 );
 

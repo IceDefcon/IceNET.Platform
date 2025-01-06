@@ -18,6 +18,7 @@
 #include "spiCtrl.h"
 #include "spiWork.h"
 #include "ramAxis.h"
+#include "config.h"
 
 /////////////////////////
 //                     //
@@ -91,6 +92,8 @@ static int stateMachineThread(void *data)
                 printk(KERN_INFO "[CTRL][STM] SPI mode\n");
                 /* QUEUE :: Execution of transferFpgaInput */
                 queue_work(get_transferFpgaInput_wq(), get_transferFpgaInput_work());
+#if RAM_DISK_CTRL
+
                 /**
                  *
                  * IMPORTANT
@@ -102,6 +105,7 @@ static int stateMachineThread(void *data)
                  * Predefined 22 Bytes of the config data
                  */
                 setStateMachine(SM_INTERRUPT);
+#endif
                 break;
 
             case SM_INTERRUPT:

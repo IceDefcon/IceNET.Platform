@@ -17,6 +17,7 @@
 #include "stateMachine.h"
 #include "charDevice.h"
 #include "spiWork.h"
+#include "config.h"
 #include "types.h"
 
 //////////////////////
@@ -337,10 +338,10 @@ static ssize_t inputWrite(struct file *filep, const char __user *buffer, size_t 
     }
     else if (Device[DEVICE_INPUT].io_transfer.RxData[0] == 0x12 && Device[DEVICE_INPUT].io_transfer.RxData[1] == 0x34)
     {
-#if 0
+#if 1
         /* 20ms delayed :: Read Enable pulse to FIFO */
-        // printk(KERN_INFO "[CTRL][ C ] Generate FIFO rd_en from Kernel [long pulse] to be cut in FPGA\n");
-        // setStateMachine(SM_INTERRUPT);
+        printk(KERN_INFO "[CTRL][ C ] Generate FIFO rd_en from Kernel [long pulse] to be cut in FPGA\n");
+        setStateMachine(SM_INTERRUPT);
 #else
         printk(KERN_INFO "[CTRL][ C ] Dead end driver here is left for debuging purpouses :: For the FPGA to receive INT_FROM_CPU on Demand \n");
         setStateMachine(SM_INTERRUPT);
@@ -359,6 +360,9 @@ static ssize_t inputWrite(struct file *filep, const char __user *buffer, size_t 
             printk(KERN_INFO "[CTRL][ C ] Received Byte[%zu]: 0x%02x\n", i, (unsigned char)Device[DEVICE_INPUT].io_transfer.RxData[i]);
         }
 
+#if CHAR_DEVICE_CTRL
+        setStateMachine(SM_SPI);
+#elif RAM_DISK_CTRL
         printk(KERN_INFO "[CTRL][ C ] NEW Commander !!!\n");
         printk(KERN_INFO "[CTRL][ C ] This is dead end Driver !!!\n");
         printk(KERN_INFO "[CTRL][ C ] Currently charDevice communication is Disabled\n");
@@ -374,9 +378,8 @@ static ssize_t inputWrite(struct file *filep, const char __user *buffer, size_t 
          * since we not taking data from charDevice
          * to send over SPI<->DMA the state machine
          * transition is disabled here
-         *
-         * setStateMachine(SM_SPI);
          */
+#endif
     }
 
     return ret;
@@ -481,8 +484,9 @@ static ssize_t commanderRead(struct file *filep, char *buffer, size_t len, loff_
 
 static ssize_t commanderWrite(struct file *filep, const char __user *buffer, size_t len, loff_t *offset)
 {
-    int error_count = 0;
     int ret = 0;
+#if RAM_DISK_CTRL
+    int error_count = 0;
 
     /* Copy RxData from user space to kernel space */
     error_count = copy_from_user((void *)Device[DEVICE_COMMANDER].io_transfer.RxData, buffer, len);
@@ -493,7 +497,6 @@ static ssize_t commanderWrite(struct file *filep, const char __user *buffer, siz
         /* Copy failed */
         ret = -EFAULT;
     }
-
     if (Device[DEVICE_COMMANDER].io_transfer.RxData[0] == 0x10 && Device[DEVICE_COMMANDER].io_transfer.RxData[1] == 0xAD)
     {
         /* Activate DMA Engine */
@@ -504,7 +507,7 @@ static ssize_t commanderWrite(struct file *filep, const char __user *buffer, siz
     {
         printk(KERN_INFO "[ERNO][ C ] Wrong command received\n");
     }
-
+#endif
     return ret;
 }
 
