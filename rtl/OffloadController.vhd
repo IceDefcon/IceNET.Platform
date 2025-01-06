@@ -14,10 +14,10 @@ port
     FIFO_READ_ENABLE : out std_logic;
 
     OFFLOAD_READY : out std_logic;
-    OFFLOAD_ID : out std_logic;
-    OFFLOAD_CTRL : out std_logic;
-    OFFLOAD_REGISTER : out std_logic;
-    OFFLOAD_DATA : out std_logic
+    OFFLOAD_ID : out std_logic_vector(6 downto 0);
+    OFFLOAD_CTRL : out std_logic_vector(7 downto 0);
+    OFFLOAD_REGISTER : out std_logic_vector(7 downto 0);
+    OFFLOAD_DATA : out std_logic_vector(7 downto 0)
 );
 end OffloadController;
 
@@ -45,7 +45,10 @@ type STATE is
     -- TRANSFER
     TRANSFER_INIT,
     TRANSFER_DELAY,
-    TRANSFER,
+    TRANSFER_1,
+    TRANSFER_2,
+    TRANSFER_READY,
+    -- FINAL CHECKSUM
     CHECKSUM,
     DONE
 );
@@ -197,34 +200,54 @@ begin
                 transfer_size <= device_size;
                 transfer_id <= device_id;
                 transfer_ctrl <= device_ctrl;
-                transfer_reads <= 2 * device_pairs;
+                transfer_reads <= device_pairs;
                 offload_state <= TRANSFER_INIT;
 
+            ----------------------------------------------------------
+            --
+            -- REGISTER TRANSFER
+            --
+            ----------------------------------------------------------
+            --
+            -- TRANSFER_1     :: I2C or SPI Register
+            -- TRANSFER_2     :: Data in case of write
+            -- TRANSFER_READY :: Transfer Offload ready
+            --
+            ----------------------------------------------------------
             when TRANSFER_INIT =>
-                FIFO_READ_ENABLE <= '1';
-                offload_state <= TRANSFER_DELAY;
+                OFFLOAD_READY <= '0';
+                if transfer_reads > 0 then
+                    FIFO_READ_ENABLE <= '1';
+                    offload_state <= TRANSFER_DELAY;
+                else
+                    FIFO_READ_ENABLE <= '1';
+                    offload_state <= CHECKSUM;
+                end if;
 
             when TRANSFER_DELAY =>
                 FIFO_READ_ENABLE <= '1';
-                offload_state <= TRANSFER;
+                transfer_reads <= transfer_reads - 1;
+                offload_state <= TRANSFER_1;
 
-            when TRANSFER =>
-                if transfer_reads > 0 then
-                    if transfer_reads mod 2 = 0 then
-                        OFFLOAD_READY <= '1';
-                    else
-                        OFFLOAD_READY <= '0';
-                    end if;
-                    FIFO_READ_ENABLE <= '1';
-                    transfer_reads <= transfer_reads - 1;
-                end if;
+            when TRANSFER_1 =>
+                FIFO_READ_ENABLE <= '0';
+                OFFLOAD_REGISTER <= FIFO_DATA;
+                offload_state <= TRANSFER_2;
 
-                if transfer_reads = 2 then
-                    offload_state <= CHECKSUM;
-                else
-                    offload_state <= TRANSFER;
-                end if;
+            when TRANSFER_2 =>
+                FIFO_READ_ENABLE <= '0';
+                OFFLOAD_DATA <= FIFO_DATA;
+                offload_state <= TRANSFER_READY;
 
+            when TRANSFER_READY =>
+                OFFLOAD_READY <= '1';
+                offload_state <= TRANSFER_INIT;
+
+            ----------------------------------------------------------
+            --
+            -- FINAL CHECKSUM
+            --
+            ----------------------------------------------------------
             when CHECKSUM =>
                 OFFLOAD_READY <= '0';
                 FIFO_READ_ENABLE <= '0';

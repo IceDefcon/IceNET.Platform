@@ -328,10 +328,10 @@ port
     FIFO_READ_ENABLE : out std_logic;
 
     OFFLOAD_READY : out std_logic;
-    OFFLOAD_ID : out std_logic;
-    OFFLOAD_CTRL : out std_logic;
-    OFFLOAD_REGISTER : out std_logic;
-    OFFLOAD_DATA : out std_logic
+    OFFLOAD_ID : out std_logic_vector(6 downto 0);
+    OFFLOAD_CTRL : out std_logic_vector(7 downto 0);
+    OFFLOAD_REGISTER : out std_logic_vector(7 downto 0);
+    OFFLOAD_DATA : out std_logic_vector(7 downto 0)
 );
 end component;
 
