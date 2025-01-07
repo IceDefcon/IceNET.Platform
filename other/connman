@@ -1,0 +1,9 @@
+//
+//
+//
+connmanctl> technologies
+connmanctl> enable wifi
+connmanctl> scan wifi
+connmanctl> services
+connmanctl> agent on
+connmanctl> connect xxx_service_xxx
