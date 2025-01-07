@@ -48,9 +48,11 @@ type STATE is
     TRANSFER_1,
     TRANSFER_2,
     TRANSFER_READY,
+    TRANSFER_WAIT_1,
+    TRANSFER_WAIT_2,
+    TRANSFER_EXECUTE,
     -- FINAL CHECKSUM
-    CHECKSUM,
-    TRANSITION
+    CHECKSUM
 );
 signal offload_state: STATE := IDLE;
 
@@ -204,9 +206,12 @@ begin
             --
             ----------------------------------------------------------
             --
-            -- TRANSFER_1     :: I2C or SPI Register
-            -- TRANSFER_2     :: Data in case of write
-            -- TRANSFER_READY :: Transfer Offload ready
+            -- TRANSFER_1       :: I2C or SPI Register
+            -- TRANSFER_2       :: Data in case of write
+            -- TRANSFER_READY   :: Transfer Offload ready
+            -- TRANSFER_WAIT_1  :: Need to wait for 2 clk in order to take WAIT flag into account
+            -- TRANSFER_WAIT_2  :: Need to wait for 2 clk in order to take WAIT flag into account
+            -- TRANSFER_EXECUTE :: The actual Data Transfer
             --
             ----------------------------------------------------------
             when TRANSFER_INIT =>
@@ -236,7 +241,23 @@ begin
 
             when TRANSFER_READY =>
                 OFFLOAD_READY <= '1';
-                offload_state <= TRANSFER_INIT;
+                offload_state <= TRANSFER_WAIT_1;
+
+            when TRANSFER_WAIT_1 =>
+                OFFLOAD_READY <= '0';
+                offload_state <= TRANSFER_WAIT_2;
+
+            when TRANSFER_WAIT_2 =>
+                OFFLOAD_READY <= '0';
+                offload_state <= TRANSFER_EXECUTE;
+
+            when TRANSFER_EXECUTE =>
+                FIFO_READ_ENABLE <= '0';
+                if OFFLOAD_WAIT = '0' then
+                    offload_state <= TRANSFER_INIT;
+                else
+                    offload_state <= TRANSFER_EXECUTE;
+                end if;
 
             ----------------------------------------------------------
             --
@@ -246,15 +267,7 @@ begin
             when CHECKSUM =>
                 OFFLOAD_READY <= '0';
                 FIFO_READ_ENABLE <= '0';
-                offload_state <= TRANSITION;
-
-            when TRANSITION =>
-                FIFO_READ_ENABLE <= '0';
-                if OFFLOAD_WAIT = '0' then
-                    offload_state <= DEVICE_INIT;
-                else
-                    offload_state <= TRANSITION;
-                end if;
+                offload_state <= DEVICE_INIT;
 
             when others =>
                 FIFO_READ_ENABLE <= '0';
