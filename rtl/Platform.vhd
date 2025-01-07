@@ -204,6 +204,7 @@ signal offload_id : std_logic_vector(6 downto 0) := (others => '0');
 signal offload_register : std_logic_vector(7 downto 0) := (others => '0');
 signal offload_ctrl : std_logic_vector(7 downto 0) := (others => '0');
 signal offload_data : std_logic_vector(7 downto 0) := (others => '0');
+signal offload_wait : std_logic := '0';
 -- PacketSwitch
 signal switch_i2c_ready : std_logic := '0';
 signal switch_pwm_ready : std_logic := '0';
@@ -286,6 +287,7 @@ port
     OFFLOAD_COTROL : in std_logic;
     OFFLOAD_DATA : in std_logic_vector(7 downto 0);
 
+    OFFLOAD_WAIT : out std_logic;
     DATA : out std_logic_vector(7 downto 0)
 );
 end component;
@@ -327,9 +329,11 @@ port
 
     OFFLOAD_READY : out std_logic;
     OFFLOAD_ID : out std_logic_vector(6 downto 0);
-    OFFLOAD_REGISTER : out std_logic_vector(7 downto 0);
     OFFLOAD_CTRL : out std_logic_vector(7 downto 0);
-    OFFLOAD_DATA : out std_logic_vector(7 downto 0)
+    OFFLOAD_REGISTER : out std_logic_vector(7 downto 0);
+    OFFLOAD_DATA : out std_logic_vector(7 downto 0);
+
+    OFFLOAD_WAIT : in std_logic
 );
 end component;
 
@@ -520,7 +524,6 @@ port map
     EMPTY => primary_fifo_empty
 );
 
-
 OffloadController_module: OffloadController
 port map
 (
@@ -532,9 +535,11 @@ port map
 
     OFFLOAD_READY => offload_ready,
     OFFLOAD_ID => offload_id,
-    OFFLOAD_REGISTER => offload_ctrl,
-    OFFLOAD_CTRL => offload_register,
-    OFFLOAD_DATA => offload_data
+    OFFLOAD_CTRL => offload_ctrl,
+    OFFLOAD_REGISTER => offload_register,
+    OFFLOAD_DATA => offload_data,
+
+    OFFLOAD_WAIT => offload_wait
 );
 
 UartController_module: UartController
@@ -599,6 +604,7 @@ I2cController_module: I2cController port map
 	OFFLOAD_COTROL => offload_ctrl(0), -- For now :: Read/Write
     OFFLOAD_DATA => offload_data, -- Write Data
     -- out
+    OFFLOAD_WAIT => offload_wait, -- Wait between consecutive i2c transfers
 	DATA => data_i2c_feedback
 );
 

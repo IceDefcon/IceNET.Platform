@@ -7,17 +7,17 @@ port
 (    
     CLOCK_50MHz : in std_logic;
 
-    OFFLOAD_WAIT : in std_logic;
     OFFLOAD_INTERRUPT : in std_logic;
     FIFO_DATA : in std_logic_vector(7 downto 0);
-
     FIFO_READ_ENABLE : out std_logic;
 
     OFFLOAD_READY : out std_logic;
     OFFLOAD_ID : out std_logic_vector(6 downto 0);
     OFFLOAD_CTRL : out std_logic_vector(7 downto 0);
     OFFLOAD_REGISTER : out std_logic_vector(7 downto 0);
-    OFFLOAD_DATA : out std_logic_vector(7 downto 0)
+    OFFLOAD_DATA : out std_logic_vector(7 downto 0);
+
+    OFFLOAD_WAIT : in std_logic
 );
 end OffloadController;
 
@@ -50,7 +50,7 @@ type STATE is
     TRANSFER_READY,
     -- FINAL CHECKSUM
     CHECKSUM,
-    DONE
+    TRANSITION
 );
 signal offload_state: STATE := IDLE;
 
@@ -251,11 +251,15 @@ begin
             when CHECKSUM =>
                 OFFLOAD_READY <= '0';
                 FIFO_READ_ENABLE <= '0';
-                offload_state <= DONE;
+                offload_state <= TRANSITION;
 
-            when DONE =>
+            when TRANSITION =>
                 FIFO_READ_ENABLE <= '0';
-                offload_state <= DEVICE_INIT;
+                if OFFLOAD_WAIT = 0 then
+                    offload_state <= DEVICE_INIT;
+                else
+                    offload_state <= TRANSITION;
+                end if;
 
             when others =>
                 FIFO_READ_ENABLE <= '0';

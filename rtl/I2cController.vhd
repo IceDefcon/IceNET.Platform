@@ -22,6 +22,7 @@ port
     OFFLOAD_COTROL : in std_logic;
     OFFLOAD_DATA : in std_logic_vector(7 downto 0);
 
+    OFFLOAD_WAIT : out std_logic;
     DATA : out std_logic_vector(7 downto 0)
 );
 end I2cController;
@@ -109,6 +110,7 @@ begin
             -- State Machine :: Reset
             ----------------------------------------
             if RESET = '1' or OFFLOAD_INT = '1' then
+                OFFLOAD_WAIT <= '1';
                 i2c_state <= INIT;
             else
 
@@ -117,26 +119,22 @@ begin
                     -- State Machine :: IDLE
                     ------------------------------------
                     when IDLE =>
-                    --if i2c_state = IDLE then
+                        OFFLOAD_WAIT <= '0';
                         I2C_SCK <= 'Z';
                         I2C_SDA <= 'Z';
-                    --end if;
                     ------------------------------------
                     -- State Machine :: INIT
                     ------------------------------------
                     when INIT =>
-                    --if i2c_state = INIT then
                         if init_timer = smInitDelay then -- delay for the reset to stabilise
                             i2c_state <= CONFIG;
                         else
                             init_timer <= init_timer + '1';
                         end if;
-                    --end if;
                     ------------------------------------
                     -- State Machine :: CONFIG
                     ------------------------------------
                     when CONFIG =>
-                    --if i2c_state = CONFIG then
                         if config_timer = smConfigDelay then
                             if OFFLOAD_COTROL = '0' then
                                 i2c_state <= RD;
@@ -150,12 +148,10 @@ begin
                         else    
                             config_timer <= config_timer + '1';
                         end if;
-                    --end if;
                     ------------------------------------
                     -- State Machine :: RD
                     ------------------------------------
                     when RD =>
-                    --if i2c_state = RD then
                         if send_timer = smReadDelay then
                             i2c_state <= DONE;
                         else
@@ -441,12 +437,10 @@ begin
                             end if;
                             send_timer <= send_timer + '1';
                         end if;
-                    --end if;
                     ------------------------------------
                     -- State Machine :: WR
                     ------------------------------------
                     when WR =>
-                    --if i2c_state = WR then
                         if send_timer = smWriteDelay then
                             i2c_state <= DONE;
                         else
@@ -632,7 +626,8 @@ begin
 
                                 if status_sda = "1010" then -- [16000] :: Stop Bit
                                     I2C_SDA <= '0';
-                                    DATA <= "01111110";
+                                    --DATA <= "01111110"; -- 0x7e
+                                    DATA <= OFFLOAD_REGISTER;
                                     FPGA_INT <= '1';
                                 end if;
 
@@ -657,12 +652,10 @@ begin
                             end if;
                             send_timer <= send_timer + '1';
                         end if;
-                    --end if;
                     ------------------------------------
                     -- State Machine :: DONE
                     ------------------------------------
                     when DONE =>
-                    --if i2c_state = DONE then
                         if done_timer = smDoneDelay then
                             -- Reset Timers
                             status_timer <= (others => '0');
@@ -682,7 +675,6 @@ begin
                         else
                             done_timer <= done_timer + '1';
                         end if;
-                    --end if;
 
                     when others =>
                         i2c_state <= IDLE;
