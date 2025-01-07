@@ -161,7 +161,63 @@ port
     UNUSED_28 : inout std_logic; -- PIN_B18
     UNUSED_29 : inout std_logic; -- PIN_A19
     UNUSED_30 : inout std_logic; -- PIN_B19
-    UNUSED_32 : inout std_logic -- PIN_B20
+    UNUSED_32 : inout std_logic; -- PIN_B20
+    -----------------------------------------------------
+    --
+    -- 256Mbit SDRAM
+    --
+    -----------------------------------------------------
+    -- Row Address: RA0 ~ RA12, Column Address: CA0 ~ CA8
+    -- Auto-precharge flag: A10
+    A0 : out std_logic; -- PIN_V2
+    A1 : out std_logic; -- PIN_V1
+    A2 : out std_logic; -- PIN_U2
+    A3 : out std_logic; -- PIN_U1
+    A4 : out std_logic; -- PIN_V3
+    A5 : out std_logic; -- PIN_V4
+    A6 : out std_logic; -- PIN_Y2
+    A7 : out std_logic; -- PIN_AA1
+    A8 : out std_logic; -- PIN_Y3
+    A9 : out std_logic; -- PIN_V5
+    A10 : out std_logic; -- PIN_W1
+    A11 : out std_logic; -- PIN_Y4
+    A12 : out std_logic; -- PIN_V6
+    -- Main System Clock
+    CLK_SDRAM : std_logic; -- PIN_Y6
+    -- Bank Address
+    BA0 : out std_logic; -- A13 :: PIN_Y1
+    BA1 : out std_logic; -- A14 :: PIN_W2
+    -- When active (low): The memory controller sends the column address on the address bus
+    CAS : out std_logic; -- PIN_AA4
+    -- Clock Enable:
+    CKE : out std_logic; -- PIN_W6
+    -- When active (low): The memory controller sends the row address on the address bus
+    RAS : out std_logic; -- PIN_AB3
+    -- When active (low): The operation is a write (data will be written to the DRAM)
+    -- When inactive (high): The operation is a read (data will be read from the DRAM)
+    WE : out std_logic; -- PIN_AB4
+    -- Chip Select: Enables or disables all inputs except CLK, CKE and DQM
+    CS : out std_logic; -- PIN_AA3
+    -- Data Input / Output: Multiplexed data input / output pin
+    D0 : inout std_logic; -- PIN_AA10
+    D1 : inout std_logic; -- PIN_AB9
+    D2 : inout std_logic; -- PIN_AA9
+    D3 : inout std_logic; -- PIN_AB8
+    D4 : inout std_logic; -- PIN_AA8
+    D5 : inout std_logic; -- PIN_AB7
+    D6 : inout std_logic; -- PIN_AA7
+    D7 : inout std_logic; -- PIN_AB5
+    D8 : inout std_logic; -- PIN_Y7
+    D9 : inout std_logic; -- PIN_W8
+    D10 : inout std_logic; -- PIN_Y8
+    D11 : inout std_logic; -- PIN_V9
+    D12 : inout std_logic; -- PIN_V10
+    D13 : inout std_logic; -- PIN_Y10
+    D14 : inout std_logic; -- PIN_W10
+    D15 : inout std_logic; -- PIN_V11
+    -- Data Mask: Controls output buffers in read mode and masks input data in write mode
+    LDQM : inout std_logic; -- PIN_AA5
+    UDQM : inout std_logic -- PIN_W7
 );
 end Platform;
 
