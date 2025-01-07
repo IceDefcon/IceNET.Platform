@@ -38,8 +38,13 @@ signal kernel_interrupt : std_logic := '0';
 signal system_start : std_logic := '0';
 --SM Parameters
 signal rw : std_logic := '0';
-constant smStartDelay : std_logic_vector(15 downto 0):= "1100001101001111"; -- 1000ns
-constant smStateDelay : std_logic_vector(15 downto 0):= "1100001101001111"; -- 1000ns
+constant smStartDelay  : std_logic_vector(15 downto 0):= "0000000000110001"; -- 1us
+constant smInitDelay   : std_logic_vector(15 downto 0):= "0000000000110001"; -- 1us
+constant smConfigDelay : std_logic_vector(15 downto 0):= "0000000000110001"; -- 1us
+constant smReadDelay   : std_logic_vector(15 downto 0):= "0110000110100111"; -- 500us
+constant smWriteDelay  : std_logic_vector(15 downto 0):= "0110000110100111"; -- 500us
+constant smDoneDelay   : std_logic_vector(15 downto 0):= "0000000000110001"; -- 1us
+
 -- SM Status Register
 signal status_sck : std_logic_vector(3 downto 0) := "0000";
 signal status_sda : std_logic_vector(3 downto 0) := "0000";
@@ -121,7 +126,7 @@ begin
                     ------------------------------------
                     when INIT =>
                     --if i2c_state = INIT then
-                        if init_timer = smStateDelay then -- delay for the reset to stabilise
+                        if init_timer = smInitDelay then -- delay for the reset to stabilise
                             i2c_state <= CONFIG;
                         else
                             init_timer <= init_timer + '1';
@@ -132,7 +137,7 @@ begin
                     ------------------------------------
                     when CONFIG =>
                     --if i2c_state = CONFIG then
-                        if config_timer = smStateDelay then
+                        if config_timer = smConfigDelay then
                             if OFFLOAD_COTROL = '0' then
                                 i2c_state <= RD;
                             else
@@ -151,7 +156,7 @@ begin
                     ------------------------------------
                     when RD =>
                     --if i2c_state = RD then
-                        if send_timer = smStateDelay then
+                        if send_timer = smReadDelay then
                             i2c_state <= DONE;
                         else
                             if status_timer = "1111111111111111" then -- Length :: 25k clock cycles :: -----===[ RESET ]===----
@@ -442,7 +447,7 @@ begin
                     ------------------------------------
                     when WR =>
                     --if i2c_state = WR then
-                        if send_timer = smStateDelay then
+                        if send_timer = smWriteDelay then
                             i2c_state <= DONE;
                         else
                             if status_timer = "1111111111111111" then -- Length :: 25k clock cycles :: -----===[ RESET ]===----
@@ -658,7 +663,7 @@ begin
                     ------------------------------------
                     when DONE =>
                     --if i2c_state = DONE then
-                        if done_timer = smStateDelay then
+                        if done_timer = smDoneDelay then
                             -- Reset Timers
                             status_timer <= (others => '0');
                             sda_timer <= (others => '0');
@@ -681,7 +686,7 @@ begin
 
                     when others =>
                         i2c_state <= IDLE;
-                
+
                 end case;
             end if;
         end if;

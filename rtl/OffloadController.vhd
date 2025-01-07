@@ -7,17 +7,15 @@ port
 (    
     CLOCK_50MHz : in std_logic;
 
-    OFFLOAD_WAIT : in std_logic;
     OFFLOAD_INTERRUPT : in std_logic;
     FIFO_DATA : in std_logic_vector(7 downto 0);
-
     FIFO_READ_ENABLE : out std_logic;
 
     OFFLOAD_READY : out std_logic;
-    OFFLOAD_ID : out std_logic;
-    OFFLOAD_CTRL : out std_logic;
-    OFFLOAD_REGISTER : out std_logic;
-    OFFLOAD_DATA : out std_logic
+    OFFLOAD_ID : out std_logic_vector(6 downto 0);
+    OFFLOAD_REGISTER : out std_logic_vector(7 downto 0);
+    OFFLOAD_CTRL : out std_logic_vector(7 downto 0);
+    OFFLOAD_DATA : out std_logic_vector(7 downto 0)
 );
 end OffloadController;
 
@@ -26,63 +24,21 @@ architecture rtl of OffloadController is
 type STATE is 
 (
     IDLE,
-    -- HEADER
-    HEADER_INIT,
-    HEADER_DELAY,
-    HEADER_1,
-    HEADER_2,
-    HEADER_3,
-    HEADER_4,
-    HEADER_CONFIG,
-    -- DEVICE
-    DEVICE_INIT,
-    DEVICE_DELAY,
-    DEVICE_1,
-    DEVICE_2,
-    DEVICE_3,
-    DEVICE_4,
-    DEVICE_CONFIG,
-    -- TRANSFER
-    TRANSFER_INIT,
-    TRANSFER_DELAY,
-    TRANSFER,
-    CHECKSUM,
-    DONE
+    DELAY_INIT,
+    DELAY_CONFIG,
+    DELAY_OFFSET,
+    READ_ID,
+    READ_REGISTER,
+    READ_CONTROL,
+    READ_DATA
 );
 signal offload_state: STATE := IDLE;
-
-signal header_size : integer := 0;
-signal header_devices : integer := 0;
-signal header_scramble : std_logic_vector(7 downto 0) := (others => '0');
-signal header_checksum : std_logic_vector(7 downto 0) := (others => '0');
-
-signal config_size : integer := 0;
-signal config_devices : integer := 0;
-signal config_scramble : std_logic_vector(7 downto 0) := (others => '0');
-signal config_checksum : std_logic_vector(7 downto 0) := (others => '0');
-
-signal device_size : integer := 0;
-signal device_ctrl : std_logic_vector(7 downto 0) := (others => '0');
-signal device_id : std_logic_vector(7 downto 0) := (others => '0');
-signal device_pairs : integer := 0;
-signal device_register : std_logic_vector(7 downto 0) := (others => '0');
-signal device_data : std_logic_vector(7 downto 0) := (others => '0');
-signal device_checksum : std_logic_vector(7 downto 0) := (others => '0');
-
-signal transfer_size : integer := 0;
-signal transfer_id : std_logic_vector(7 downto 0) := (others => '0');
-signal transfer_ctrl : std_logic_vector(7 downto 0) := (others => '0');
-signal transfer_reads : integer := 0;
-
-signal transfer_register : std_logic_vector(7 downto 0) := (others => '0');
-signal transfer_data : std_logic_vector(7 downto 0) := (others => '0');
-
 
 ----------------------------------------------------------------------------------------------------------------
 -- MAIN ROUTINE
 ----------------------------------------------------------------------------------------------------------------
 begin
-
+    
 offload_process:
 process (CLOCK_50MHz)
 begin
@@ -91,151 +47,44 @@ begin
 
             when IDLE =>
                 OFFLOAD_READY <= '0';
-                FIFO_READ_ENABLE <= '0';
                 if OFFLOAD_INTERRUPT = '1' then
-                    offload_state <= HEADER_INIT;
+                    offload_state <= DELAY_INIT;
                 else
                     offload_state <= IDLE;
                 end if;
 
-            when HEADER_INIT =>
+            when DELAY_INIT =>
                 FIFO_READ_ENABLE <= '1';
-                offload_state <= HEADER_DELAY;
+                offload_state <= DELAY_CONFIG;
 
-            when HEADER_DELAY =>
+            when DELAY_CONFIG =>
                 FIFO_READ_ENABLE <= '1';
-                offload_state <= HEADER_1;
+                offload_state <= READ_CONTROL;
 
-            ----------------------------------------------------------
-            --
-            -- HEADER
-            --
-            ----------------------------------------------------------
-            --
-            -- BYTE 0 :: Header Size
-            -- BYTE 1 :: Device Amount
-            -- BYTE 2 :: Scrambling byte
-            -- BYTE 3 :: Checksum
-            --
-            ----------------------------------------------------------
-            when HEADER_1 =>
+            when READ_CONTROL =>
                 FIFO_READ_ENABLE <= '1';
-                header_size <= to_integer(unsigned(FIFO_DATA));
-                offload_state <= HEADER_2;
+                OFFLOAD_CTRL <= FIFO_DATA; -- Control
+                offload_state <= READ_ID;
 
-            when HEADER_2 =>
+            When READ_ID =>
                 FIFO_READ_ENABLE <= '1';
-                header_devices <= to_integer(unsigned(FIFO_DATA));
-                offload_state <= HEADER_3;
+                OFFLOAD_ID <= FIFO_DATA(0) & FIFO_DATA(1) 
+                & FIFO_DATA(2) & FIFO_DATA(3) 
+                & FIFO_DATA(4) & FIFO_DATA(5) 
+                & FIFO_DATA(6); -- Device ID :: Reverse concatenation
+                offload_state <= READ_REGISTER;
 
-            when HEADER_3 =>
+            When READ_REGISTER =>
                 FIFO_READ_ENABLE <= '0';
-                header_scramble <= FIFO_DATA;
-                offload_state <= HEADER_4;
+                OFFLOAD_REGISTER <= FIFO_DATA; -- Register
+                offload_state <= READ_DATA;
 
-            when HEADER_4 =>
-                FIFO_READ_ENABLE <= '0';
-                header_checksum <= FIFO_DATA;
-                offload_state <= HEADER_CONFIG;
-
-            when HEADER_CONFIG =>
-                FIFO_READ_ENABLE <= '0';
-                config_size <= header_size;
-                config_devices <= header_devices;
-                config_scramble <= header_scramble;
-                config_checksum <= header_checksum;
-                offload_state <= DEVICE_INIT;
-
-            when DEVICE_INIT =>
-                if config_devices > 0 then
-                    FIFO_READ_ENABLE <= '1';
-                    config_devices <= config_devices - 1;
-                    offload_state <= DEVICE_DELAY;
-                else
-                    FIFO_READ_ENABLE <= '0';
-                    offload_state <= IDLE;
-                end if;
-
-            when DEVICE_DELAY =>
-                FIFO_READ_ENABLE <= '1';
-                offload_state <= DEVICE_1;
-
-            ----------------------------------------------------------
-            --
-            -- DEVICE CONFIG
-            --
-            ----------------------------------------------------------
-            --
-            -- DEVICE 0 :: Device Config Size
-            -- DEVICE 1 :: Device Ctrl :: 0x11 ---> I2C, Write
-            -- DEVICE 2 :: Device ID :: For I2C
-            -- DEVICE 3 :: Device config pairs
-            --
-            ----------------------------------------------------------
-            when DEVICE_1 =>
-                device_size <= to_integer(unsigned(FIFO_DATA));
-                FIFO_READ_ENABLE <= '1';
-                offload_state <= DEVICE_2;
-
-            when DEVICE_2 =>
-                device_ctrl <= FIFO_DATA;
-                FIFO_READ_ENABLE <= '1';
-                offload_state <= DEVICE_3;
-
-            when DEVICE_3 =>
-                device_id <= FIFO_DATA;
-                FIFO_READ_ENABLE <= '0';
-                offload_state <= DEVICE_4;
-
-            when DEVICE_4 =>
-                FIFO_READ_ENABLE <= '0';
-                device_pairs <= to_integer(unsigned(FIFO_DATA));
-                offload_state <= DEVICE_CONFIG;
-
-            when DEVICE_CONFIG =>
-                FIFO_READ_ENABLE <= '0';
-                transfer_size <= device_size;
-                transfer_id <= device_id;
-                transfer_ctrl <= device_ctrl;
-                transfer_reads <= 2 * device_pairs;
-                offload_state <= TRANSFER_INIT;
-
-            when TRANSFER_INIT =>
-                FIFO_READ_ENABLE <= '1';
-                offload_state <= TRANSFER_DELAY;
-
-            when TRANSFER_DELAY =>
-                FIFO_READ_ENABLE <= '1';
-                offload_state <= TRANSFER;
-
-            when TRANSFER =>
-                if transfer_reads > 0 then
-                    if transfer_reads mod 2 = 0 then
-                        OFFLOAD_READY <= '1';
-                    else
-                        OFFLOAD_READY <= '0';
-                    end if;
-                    FIFO_READ_ENABLE <= '1';
-                    transfer_reads <= transfer_reads - 1;
-                end if;
-
-                if transfer_reads = 2 then
-                    offload_state <= CHECKSUM;
-                else
-                    offload_state <= TRANSFER;
-                end if;
-
-            when CHECKSUM =>
-                OFFLOAD_READY <= '0';
-                FIFO_READ_ENABLE <= '0';
-                offload_state <= DONE;
-
-            when DONE =>
-                FIFO_READ_ENABLE <= '0';
-                offload_state <= DEVICE_INIT;
+            when READ_DATA =>
+                OFFLOAD_DATA <= FIFO_DATA; -- Data
+                OFFLOAD_READY <= '1';
+                offload_state <= IDLE;
 
             when others =>
-                FIFO_READ_ENABLE <= '0';
                 offload_state <= IDLE;
 
         end case;
