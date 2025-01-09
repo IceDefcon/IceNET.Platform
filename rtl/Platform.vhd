@@ -612,25 +612,10 @@ port map
     EMPTY => primary_fifo_empty
 );
 
-    MEMORY_CLOCK : in  std_logic;
-
-    MEMORY_ADDRESS : out std_logic_vector(12 downto 0);
-    MEMORY_DATA : inout std_logic_vector(15 downto 0);
-    MEMORY_BANK : out std_logic_vector(1 downto 0);
-
-    MEMORY_CAS : out std_logic;
-    MEMORY_CKE : out std_logic;
-    MEMORY_RAS : out std_logic;
-    MEMORY_WE : out std_logic;
-    MEMORY_CS : out std_logic;
-
-    MEMORY_DQML : out std_logic;
-    MEMORY_DQMH : out std_logic
-
 MemoryControler_module: MemoryControler
 port map
 (
-    CLOCK_50MHz => CLOCK_50MHz
+    CLOCK_50MHz => CLOCK_50MHz,
     MEMORY_CLOCK => CLK_SDRAM,
 
     MEMORY_ADDRESS => memory_address,
@@ -643,7 +628,7 @@ port map
     MEMORY_WE => memory_we,
     MEMORY_CS => memory_cs,
 
-    MEMORY_DQMH => memory_dqml,
+    MEMORY_DQML => memory_dqml,
     MEMORY_DQMH => memory_dqmh
 );
 
@@ -824,26 +809,26 @@ begin
     end if;
 end process;
 
-memory_address_process:
+memory_data_process:
 process(CLOCK_50MHz)
 begin
     if rising_edge(CLOCK_50MHz) then
-        A0 <= memory_data(0);
-        A1 <= memory_data(1);
-        A2 <= memory_data(2);
-        A3 <= memory_data(3);
-        A4 <= memory_data(4);
-        A5 <= memory_data(5);
-        A6 <= memory_data(6);
-        A7 <= memory_data(7);
-        A8 <= memory_data(8);
-        A9 <= memory_data(9);
-        A10 <= memory_data(10);
-        A11 <= memory_data(11);
-        A12 <= memory_data(12);
-        A13 <= memory_data(13);
-        A14 <= memory_data(14);
-        A15 <= memory_data(15);
+        D0 <= memory_data(0);
+        D1 <= memory_data(1);
+        D2 <= memory_data(2);
+        D3 <= memory_data(3);
+        D4 <= memory_data(4);
+        D5 <= memory_data(5);
+        D6 <= memory_data(6);
+        D7 <= memory_data(7);
+        D8 <= memory_data(8);
+        D9 <= memory_data(9);
+        D10 <= memory_data(10);
+        D11 <= memory_data(11);
+        D12 <= memory_data(12);
+        D13 <= memory_data(13);
+        D14 <= memory_data(14);
+        D15 <= memory_data(15);
     end if;
 end process;
 
@@ -866,16 +851,5 @@ begin
         A12 <= memory_address(12);
     end if;
 end process;
-
-signal memory_address : std_logic_vector(12 downto 0) := (others => '0');
-signal memory_data : std_logic_vector(15 downto 0) := (others => '0');
-signal memory_bank : std_logic_vector(1 downto 0) := (others => '0');
-signal memory_cas : std_logic := '0';
-signal memory_cke : std_logic := '0';
-signal memory_ras : std_logic := '0';
-signal memory_we : std_logic := '0';
-signal memory_cs : std_logic := '0';
-signal memory_dqml : std_logic := '0';
-signal memory_dqmh : std_logic := '0';
 
 end rtl;

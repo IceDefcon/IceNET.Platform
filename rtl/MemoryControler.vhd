@@ -27,28 +27,48 @@ architecture rtl of MemoryControler is
 
 type MEMORY is
 (
-    IDLE,
-    PRODUCE,
-    DONE
+    MEMORY_IDLE,
+    MEMORY_INIT,
+    MEMORY_PRECHARGE,
+    MEMORY_AUTO_REFRESH,
+    MEMORY_ACTIVATE,
+    MEMORY_WRITE,
+    MEMORY_READ
 );
-signal ram_state: MEMORY := IDLE;
+signal ram_state: MEMORY := MEMORY_IDLE;
 
 begin
 
-    interrupt_process: process(CLOCK_50MHz)
+    process (CLOCK_50MHz)
     begin
         if rising_edge(CLOCK_50MHz) then
-
             case ram_state is
-                when IDLE =>
 
-                when PRODUCE =>
+                when MEMORY_IDLE =>
+                    -- Idle state
 
-                when DONE =>
+                when MEMORY_INIT =>
+                    -- Power-up and initialization sequence
+
+                when MEMORY_PRECHARGE =>
+                    -- Issue precharge all command
+
+                when MEMORY_AUTO_REFRESH =>
+                    -- Issue auto-refresh commands
+
+                when MEMORY_ACTIVATE =>
+                    -- Issue activate command with row address
+
+                when MEMORY_WRITE =>
+                    -- Drive column address and write data to SDRAM
+
+                when MEMORY_READ =>
+                    -- Issue read command and capture data from SDRAM
 
                 when others =>
-                    ram_state <= IDLE;
+                    ram_state <= MEMORY_IDLE;
             end case;
         end if;
-    end process interrupt_process;
+    end process;
+
 end architecture rtl;
