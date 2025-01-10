@@ -95,7 +95,10 @@ class UartManager:
             self.uart_console("No UART connection established.\r\n")
 
     def uart_console(self, data):
+        data = data.replace('\r', ' ')
         self.uart_display.config(state=tk.NORMAL)
         self.uart_display.insert(tk.END, data)
         self.uart_display.config(state=tk.DISABLED)
-        self.uart_display.see(tk.END)  # Scroll to the end
+        self.uart_display.see(tk.END)
+
+
