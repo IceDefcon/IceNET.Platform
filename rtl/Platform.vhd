@@ -385,7 +385,7 @@ port
 );
 end component;
 
-component MemoryControler
+component SDRAMControler
 Port
 (
     CLOCK_50MHz : in  std_logic;
@@ -612,7 +612,7 @@ port map
     EMPTY => primary_fifo_empty
 );
 
-MemoryControler_module: MemoryControler
+SDRAMControler_module: SDRAMControler
 port map
 (
     CLOCK_50MHz => CLOCK_50MHz,

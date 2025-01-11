@@ -2,7 +2,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-entity MemoryControler is
+entity SDRAMControler is
 Port
 (
     CLOCK_50MHz : in  std_logic;
@@ -21,9 +21,9 @@ Port
     MEMORY_DQML : inout std_logic;
     MEMORY_DQMH : inout std_logic
 );
-end entity MemoryControler;
+end entity SDRAMControler;
 
-architecture rtl of MemoryControler is
+architecture rtl of SDRAMControler is
 
 type MEMORY is
 (
