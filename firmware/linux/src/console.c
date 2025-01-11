@@ -156,7 +156,7 @@ static int consoleThread(void *data)
         // ktime_get_real_ts64(&ts);
         // len = snprintf(message, sizeof(message), "---==[ %lld.%09ld :: 0x%x ]==---\r\n", (long long)ts.tv_sec, ts.tv_nsec, ++count);
 
-        len = snprintf(message, sizeof(message), "ABC");
+        len = snprintf(message, sizeof(message), "A");
 
         uart_write(message, len);
 
