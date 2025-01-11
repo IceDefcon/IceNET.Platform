@@ -146,7 +146,7 @@ static int consoleThread(void *data)
     /* TODO :: To be considered later */
     int len;
     // struct timespec64 ts;
-    static char count = 0;
+    // static char count = 0;
     char message[128];
 
     while (!kthread_should_stop())
@@ -156,7 +156,7 @@ static int consoleThread(void *data)
         // ktime_get_real_ts64(&ts);
         // len = snprintf(message, sizeof(message), "---==[ %lld.%09ld :: 0x%x ]==---\r\n", (long long)ts.tv_sec, ts.tv_nsec, ++count);
 
-        len = snprintf(message, sizeof(message), "FPGA 0x%x\n", ++count);
+        len = snprintf(message, sizeof(message), "ABC");
 
         uart_write(message, len);
 
