@@ -144,21 +144,21 @@ ssize_t uart_write(const char *buf, size_t len)
 static int consoleThread(void *data)
 {
     /* TODO :: To be considered later */
-    int len;
+    // int len;
     // struct timespec64 ts;
     // static char count = 0;
-    char message[128];
+    // char message[128];
 
     while (!kthread_should_stop())
     {
         /* TODO :: To be considered later */
-        memset(message, 0, sizeof(message));
+        // memset(message, 0, sizeof(message));
         // ktime_get_real_ts64(&ts);
         // len = snprintf(message, sizeof(message), "---==[ %lld.%09ld :: 0x%x ]==---\r\n", (long long)ts.tv_sec, ts.tv_nsec, ++count);
 
-        len = snprintf(message, sizeof(message), "A");
+        // len = snprintf(message, sizeof(message), "C\n");
 
-        uart_write(message, len);
+        // uart_write(message, len);
 
         /**
          *

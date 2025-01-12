@@ -15,11 +15,13 @@ port
     UART_x86_TX : out std_logic;
     UART_x86_RX : in std_logic;
 
-    UART_BUSY : out std_logic
+    WRITE_BUSY : out std_logic
 );
 end UartController;
 
 architecture rtl of UartController is
+
+constant baudRate : std_logic_vector(7 downto 0) := "00011000"; -- 1/[25*20ns] ---> 2M Baud Rate
 
 type STATE is
 (
@@ -33,13 +35,9 @@ type STATE is
 );
 signal uart_state: STATE := UART_IDLE;
 
-constant baud_rate : std_logic_vector(7 downto 0) := "00011000"; -- 1/[25*20ns] ---> 2M Baud Rate
-
-signal bit_count : integer := 0;
-signal pause_count : std_logic_vector(12 downto 0) := (others => '0');
-signal tick_count : std_logic_vector(7 downto 0) := (others => '0');
-
-signal uart_out : std_logic := '1';
+signal bit_number : integer := 0;
+signal baud_count : std_logic_vector(7 downto 0) := (others => '0');
+signal uart_output : std_logic := '1';
 
 begin
 
@@ -55,60 +53,55 @@ begin
                 end if;
 
             when UART_CONFIG =>
-                if pause_count = "1001110001000" then
-                    UART_BUSY <= '1';
-                    pause_count <= (others => '0');
-                    uart_state <= UART_START;
-                else
-                    pause_count <= pause_count + '1';
-                end if;
+                WRITE_BUSY <= '1';
+                uart_state <= UART_START;
 
             when UART_START =>
-                uart_out <= '0';
-                if tick_count = baud_rate then
-                    tick_count <= (others => '0');
+                uart_output <= '0';
+                if baud_count = baudRate then
+                    baud_count <= (others => '0');
                     uart_state <= UART_WRITE;
                 else
-                    tick_count <= tick_count + '1';
+                    baud_count <= baud_count + '1';
                 end if;
 
             when UART_WRITE =>
-                if bit_count = 7 then
-                    uart_out <= '0';
+                if bit_number = 7 then
+                    uart_output <= '0';
                     uart_state <= UART_STOP;
-                    bit_count <= 0;
+                    bit_number <= 0;
                 else
-                    if tick_count = baud_rate then
-                        tick_count <= (others => '0');
-                        bit_count <= bit_count + 1;
+                    if baud_count = baudRate then
+                        baud_count <= (others => '0');
+                        bit_number <= bit_number + 1;
                     else
-                        tick_count <= tick_count + '1';
+                        baud_count <= baud_count + '1';
                     end if;
 
-                    uart_out <= WRITE_DATA(bit_count);
+                    uart_output <= WRITE_DATA(bit_number);
 
                 end if;
 
             when UART_STOP =>
-                if tick_count = baud_rate then
-                    uart_out <= '1';
-                    tick_count <= (others => '0');
+                if baud_count = baudRate then
+                    uart_output <= '1';
+                    baud_count <= (others => '0');
                     uart_state <= UART_PAUSE;
                 else
-                    tick_count <= tick_count + '1';
+                    baud_count <= baud_count + '1';
                 end if;
 
             when UART_PAUSE =>
-                if tick_count = baud_rate then
-                    uart_out <= '1';
-                    tick_count <= (others => '0');
+                if baud_count = baudRate then
+                    uart_output <= '1';
+                    baud_count <= (others => '0');
                     uart_state <= UART_DONE;
                 else
-                    tick_count <= tick_count + '1';
+                    baud_count <= baud_count + '1';
                 end if;
 
             when UART_DONE =>
-                UART_BUSY <= '0';
+                WRITE_BUSY <= '0';
                 uart_state <= UART_IDLE;
 
             when others =>
@@ -116,7 +109,7 @@ begin
 
         end case;
 
-        UART_x86_TX <= uart_out;
+        UART_x86_TX <= uart_output;
 
     end if;
 end process;
