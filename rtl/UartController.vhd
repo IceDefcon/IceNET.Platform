@@ -9,10 +9,7 @@ port
     CLOCK_50MHz : in std_logic;
 
     WRITE_ENABLE : in std_logic;
-    WRITE_LAST  in std_logic;
-
-    UART_BBB_TX : in std_logic;
-    UART_BBB_RX : out std_logic;
+    WRITE_LAST : in std_logic;
 
     UART_x86_TX : out std_logic;
     UART_x86_RX : in std_logic
@@ -32,14 +29,16 @@ type STATE is
 );
 signal uart_state: STATE := UART_IDLE;
 
-constant baud_rate : std_logic_vector(7 downto 0) := "00110110"; -- 1/54*20ns ---> 925926 baud rate
+constant baud_rate : std_logic_vector(7 downto 0) := "00011000"; -- 1/[25*20ns] ---> 2M Baud Rate
 
 signal bit_count : integer := 0;
-signal stop_count : std_logic_vector(12 downto 0) := (others => '0');
+signal pause_count : std_logic_vector(12 downto 0) := (others => '0');
 signal tick_count : std_logic_vector(7 downto 0) := (others => '0');
 
-signal test_tick : std_logic := '1';
-signal test_data : std_logic_vector(6 downto 0) := "1000001";
+signal uart_out : std_logic := '1';
+signal ASCII_A : std_logic_vector(6 downto 0) := "1000001";
+signal ASCII_B : std_logic_vector(6 downto 0) := "1000010";
+signal ASCII_C : std_logic_vector(6 downto 0) := "1000011";
 
 begin
 
@@ -55,15 +54,15 @@ begin
                 end if;
 
             when UART_INIT =>
-                if stop_count = "1001110001000" then
-                    stop_count <= (others => '0');
+                if pause_count = "1001110001000" then
+                    pause_count <= (others => '0');
                     uart_state <= UART_START;
                 else
-                    stop_count <= stop_count + '1';
+                    pause_count <= pause_count + '1';
                 end if;
 
             when UART_START =>
-                test_tick <= '0';
+                uart_out <= '0';
                 if tick_count = baud_rate then
                     tick_count <= (others => '0');
                     uart_state <= UART_WRITE;
@@ -73,6 +72,7 @@ begin
 
             when UART_WRITE =>
                 if bit_count = 7 then
+                    uart_out <= '0';
                     uart_state <= UART_STOP;
                     bit_count <= 0;
                 else
@@ -82,13 +82,15 @@ begin
                     else
                         tick_count <= tick_count + '1';
                     end if;
+
+                    uart_out <= ASCII_C(bit_count);
+
                 end if;
 
-                test_tick <= test_data(bit_count);
 
             when UART_STOP =>
-                test_tick <= '0';
                 if tick_count = baud_rate then
+                    uart_out <= '1';
                     tick_count <= (others => '0');
                     uart_state <= UART_DONE;
                 else
@@ -96,7 +98,6 @@ begin
                 end if;
 
             when UART_DONE =>
-                test_tick <= '1';
                 uart_state <= UART_IDLE;
 
             when others =>
@@ -104,8 +105,7 @@ begin
 
         end case;
 
-        UART_x86_TX <= test_tick;
-        UART_BBB_RX <= UART_x86_RX;
+        UART_x86_TX <= uart_out;
 
     end if;
 end process;

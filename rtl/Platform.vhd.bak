@@ -449,7 +449,7 @@ port
     CLOCK_50MHz : in std_logic;
 
     WRITE_ENABLE : in std_logic;
-    WRITE_LAST : in std_logic;
+    WRITE_LAST  in std_logic;
 
     UART_x86_TX : out std_logic;
     UART_x86_RX : in std_logic
