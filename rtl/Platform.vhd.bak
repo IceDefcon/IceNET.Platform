@@ -286,30 +286,6 @@ signal memory_we : std_logic := '0';
 signal memory_cs : std_logic := '0';
 signal memory_dqml : std_logic := '0';
 signal memory_dqmh : std_logic := '0';
--- UART
-signal uart_enable : std_logic := '0';
-signal uart_data : std_logic_vector(6 downto 0) := (others => '0');
-signal uart_last : std_logic := '0';
-signal uart_busy : std_logic := '0';
--- UART Const
-constant ASCII_0 : std_logic_vector(6 downto 0) := "0110000";
-constant ASCII_1 : std_logic_vector(6 downto 0) := "0110001";
-constant ASCII_2 : std_logic_vector(6 downto 0) := "0110010";
-constant ASCII_3 : std_logic_vector(6 downto 0) := "0110011";
-constant ASCII_4 : std_logic_vector(6 downto 0) := "0110100";
-constant ASCII_5 : std_logic_vector(6 downto 0) := "0110101";
-constant ASCII_6 : std_logic_vector(6 downto 0) := "0110110";
-constant ASCII_7 : std_logic_vector(6 downto 0) := "0110111";
-constant ASCII_8 : std_logic_vector(6 downto 0) := "0111000";
-constant ASCII_9 : std_logic_vector(6 downto 0) := "0111001";
-constant ASCII_A : std_logic_vector(6 downto 0) := "1000001";
-constant ASCII_B : std_logic_vector(6 downto 0) := "1000010";
-constant ASCII_C : std_logic_vector(6 downto 0) := "1000011";
-constant ASCII_D : std_logic_vector(6 downto 0) := "1000100";
-constant ASCII_E : std_logic_vector(6 downto 0) := "1000101";
-constant ASCII_F : std_logic_vector(6 downto 0) := "1000110";
-constant ASCII_LF : std_logic_vector(6 downto 0) := "1011000";
-constant ASCII_CR : std_logic_vector(6 downto 0) := "0101000";
 
 ----------------------------------------------------------------------------------------------------------------
 -- COMPONENTS DECLARATION
@@ -473,13 +449,10 @@ port
     CLOCK_50MHz : in std_logic;
 
     WRITE_ENABLE : in std_logic;
-    WRITE_DATA : in std_logic_vector;
-    WRITE_LAST : in std_logic;
+    WRITE_LAST  in std_logic;
 
     UART_x86_TX : out std_logic;
-    UART_x86_RX : in std_logic;
-
-    UART_BUSY : out std_logic
+    UART_x86_RX : in std_logic
 );
 end component;
 
@@ -682,14 +655,11 @@ port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
 
-    WRITE_ENABLE => uart_enable,
-    WRITE_DATA => uart_data,
-    WRITE_LAST => uart_last,
+    WRITE_ENABLE => '1',
+    WRITE_LAST => '1',
 
     UART_x86_TX => UART_x86_TX,
-    UART_x86_RX => UART_x86_RX,
-
-    UART_BUSY => uart_busy
+    UART_x86_RX => UART_x86_RX
 );
 
 CanController_module: CanController
@@ -890,26 +860,5 @@ end process;
 --        UART_BBB_RX <= UART_x86_RX;
 --    end if;
 --end process;
-
---type STATE is
---(
---    TEST_IDLE,
---    TEST_1,
---    TEST_2,
---    TEST_LF,
---    TEST_CR,
---    TEST_DONE
---);
---signal uart_state: STATE := TEST_IDLE;
-
-uart_process:
-process(CLOCK_50MHz)
-begin
-    if rising_edge(CLOCK_50MHz) then
-        uart_enable <= '1';
-        uart_data <= ASCII_5;
-        uart_last <= '0';
-    end if;
-end process;
 
 end rtl;

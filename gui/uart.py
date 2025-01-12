@@ -48,7 +48,7 @@ class UartManager:
     def serial_connect(self):
         selected_port = self.uart_combobox.get()
         try:
-            self.serial_port = serial.Serial(selected_port, baudrate=921600, timeout=1)
+            self.serial_port = serial.Serial(selected_port, baudrate=2000000, timeout=1)
             threading.Thread(target=self.read_uart, daemon=True).start()
             self.uart_console(f"Connected to {selected_port}\r\n")
         except Exception as e:
