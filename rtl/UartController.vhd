@@ -9,10 +9,13 @@ port
     CLOCK_50MHz : in std_logic;
 
     WRITE_ENABLE : in std_logic;
+    WRITE_DATA : in std_logic_vector(6 downto 0);
     WRITE_LAST : in std_logic;
 
     UART_x86_TX : out std_logic;
-    UART_x86_RX : in std_logic
+    UART_x86_RX : in std_logic;
+
+    UART_BUSY : out std_logic
 );
 end UartController;
 
@@ -21,7 +24,7 @@ architecture rtl of UartController is
 type STATE is
 (
     UART_IDLE,
-    UART_INIT,
+    UART_CONFIG,
     UART_START,
     UART_WRITE,
     UART_STOP,
@@ -37,9 +40,6 @@ signal pause_count : std_logic_vector(12 downto 0) := (others => '0');
 signal tick_count : std_logic_vector(7 downto 0) := (others => '0');
 
 signal uart_out : std_logic := '1';
-signal ASCII_A : std_logic_vector(6 downto 0) := "1000001";
-signal ASCII_B : std_logic_vector(6 downto 0) := "1000010";
-signal ASCII_C : std_logic_vector(6 downto 0) := "1000011";
 
 begin
 
@@ -51,10 +51,10 @@ begin
 
             when UART_IDLE =>
                 if WRITE_ENABLE = '1' then
-                    uart_state <= UART_INIT;
+                    uart_state <= UART_CONFIG;
                 end if;
 
-            when UART_INIT =>
+            when UART_CONFIG =>
                 if pause_count = "1001110001000" then
                     pause_count <= (others => '0');
                     uart_state <= UART_START;
@@ -84,7 +84,7 @@ begin
                         tick_count <= tick_count + '1';
                     end if;
 
-                    uart_out <= ASCII_C(bit_count);
+                    uart_out <= WRITE_DATA(bit_count);
 
                 end if;
 
