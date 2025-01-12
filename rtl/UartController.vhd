@@ -25,6 +25,7 @@ type STATE is
     UART_START,
     UART_WRITE,
     UART_STOP,
+    UART_PAUSE,
     UART_DONE
 );
 signal uart_state: STATE := UART_IDLE;
@@ -87,8 +88,16 @@ begin
 
                 end if;
 
-
             when UART_STOP =>
+                if tick_count = baud_rate then
+                    uart_out <= '1';
+                    tick_count <= (others => '0');
+                    uart_state <= UART_PAUSE;
+                else
+                    tick_count <= tick_count + '1';
+                end if;
+
+            when UART_PAUSE =>
                 if tick_count = baud_rate then
                     uart_out <= '1';
                     tick_count <= (others => '0');
