@@ -891,6 +891,17 @@ end process;
 --    end if;
 --end process;
 
+--type STATE is
+--(
+--    TEST_IDLE,
+--    TEST_1,
+--    TEST_2,
+--    TEST_LF,
+--    TEST_CR,
+--    TEST_DONE
+--);
+--signal uart_state: STATE := TEST_IDLE;
+
 uart_process:
 process(CLOCK_50MHz)
 begin

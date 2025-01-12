@@ -56,6 +56,7 @@ begin
 
             when UART_CONFIG =>
                 if pause_count = "1001110001000" then
+                    UART_BUSY <= '1';
                     pause_count <= (others => '0');
                     uart_state <= UART_START;
                 else
@@ -107,6 +108,7 @@ begin
                 end if;
 
             when UART_DONE =>
+                UART_BUSY <= '0';
                 uart_state <= UART_IDLE;
 
             when others =>
