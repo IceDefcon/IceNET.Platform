@@ -15,14 +15,15 @@
 
 # TODO Hardware
 
-	00. Order Nvidia Jetson Nano :: GPU Development
-	01. Port BBB Project into Nvidia board @ Quad core Cortex-A57
-	01. Attach JTAG Header to the PCB
-	02. Boot Kernel trough the JTAG via U-Boot
-	03. Customize Root File System
-	04. Order J-Link Cable :: SEGGER
-	05. Attach to CPU @ Ozone Debuger
-	06. Design Powered PCB for bus control
+	00. Order LTE module for high speed radio troughput :: Video transmission
+	01. Order Nvidia Jetson Nano :: GPU Development
+	02. Port BBB Project into Nvidia board @ Quad core Cortex-A57
+	03. Attach JTAG Header to the PCB
+	04. Boot Kernel trough the JTAG via U-Boot
+	05. Customize Root File System
+	06. Order J-Link Cable :: SEGGER
+	07. Attach to CPU @ Ozone Debuger
+	08. Design Powered PCB for bus control
 
 # TODO Software
 
