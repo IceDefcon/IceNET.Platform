@@ -44,15 +44,15 @@ signal uart_tx : uart_type;
 
 type STATE is
 (
-    TEST_IDLE,
-    TEST_INIT,
-    TEST_CONFIG,
-    TEST_WAIT,
-    TEST_TRANSFER,
-    TEST_CHECK,
-    TEST_DONE
+    WRITE_IDLE,
+    WRITE_INIT,
+    WRITE_CONFIG,
+    WRITE_WAIT,
+    WRITE_TRANSFER,
+    WRITE_CHECK,
+    WRITE_DONE
 );
-signal uart_state: STATE := TEST_IDLE;
+signal uart_state: STATE := WRITE_IDLE;
 signal delay_timer : std_logic_vector(25 downto 0) := (others => '0');
 signal uart_length : integer := 0;
 signal uart_byte : integer := 0;
@@ -65,15 +65,15 @@ begin
         if rising_edge(CLOCK_50MHz) then
 
             case uart_state is
-                when TEST_IDLE =>
+                when WRITE_IDLE =>
                     if delay_timer = "10111110101111000001111111" then
                         delay_timer <= (others => '0');
-                        uart_state <= TEST_INIT;
+                        uart_state <= WRITE_INIT;
                     else
                         delay_timer <= delay_timer + '1';
                     end if;
 
-                when TEST_INIT =>
+                when WRITE_INIT =>
                     uart_length <= 10;
                     uart_tx(0) <= ASCII_D;
                     uart_tx(1) <= ASCII_E;
@@ -85,38 +85,37 @@ begin
                     uart_tx(7) <= ASCII_D;
                     uart_tx(8) <= ASCII_E;
                     uart_tx(9) <= ASCII_LF;
-                    --uart_tx(3) <= ASCII_CR;
-                    uart_state <= TEST_CONFIG;
+                    uart_state <= WRITE_CONFIG;
 
-                when TEST_CONFIG =>
+                when WRITE_CONFIG =>
                     WRITE_ENABLE <= '0';
                     if uart_byte = uart_length then
                         uart_byte <= 0;
-                        uart_state <= TEST_DONE;
+                        uart_state <= WRITE_DONE;
                     else
-                        uart_state <= TEST_WAIT;
+                        uart_state <= WRITE_WAIT;
                     end if;
 
-                when TEST_WAIT =>
-                    uart_state <= TEST_TRANSFER;
+                when WRITE_WAIT =>
+                    uart_state <= WRITE_TRANSFER;
 
-                when TEST_TRANSFER =>
+                when WRITE_TRANSFER =>
                     if WRITE_BUSY = '0' then
                         WRITE_DATA <= uart_tx(uart_byte);
                         WRITE_LAST <= '0';
                         uart_byte <= uart_byte + 1;
-                        uart_state <= TEST_CHECK;
+                        uart_state <= WRITE_CHECK;
                     end if;
 
-                when TEST_CHECK =>
+                when WRITE_CHECK =>
                     WRITE_ENABLE <= '1';
-                    uart_state <= TEST_CONFIG;
+                    uart_state <= WRITE_CONFIG;
 
-                when TEST_DONE =>
-                    uart_state <= TEST_IDLE;
+                when WRITE_DONE =>
+                    uart_state <= WRITE_IDLE;
 
                 when others =>
-                    uart_state <= TEST_IDLE;
+                    uart_state <= WRITE_IDLE;
 
             end case;
         end if;

@@ -499,6 +499,7 @@ begin
 -- Tri-state Unused Pins :: For the PCB Safety
 ----------------------------------------------------------
 UNUSED_01 <= 'Z';
+UNUSED_02 <= 'Z';
 UNUSED_03 <= 'Z';
 UNUSED_04 <= 'Z';
 UNUSED_06 <= 'Z';
