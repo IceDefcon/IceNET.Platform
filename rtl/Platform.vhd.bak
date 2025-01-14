@@ -292,6 +292,9 @@ signal uart_write_enable : std_logic := '0';
 signal uart_write_symbol : std_logic_vector(6 downto 0) := (others => '0');
 signal uart_write_busy : std_logic := '0';
 
+signal UART_LOG_MESSAGE_ID : UART_LOG_ID;
+signal UART_LOG_MESSAGE_DATA : UART_LOG_DATA;
+
 signal UART_LOG_MESSAGE_ID : UART_LOG_ID := ("0110001", "1000110");  -- 0x1F
 signal UART_LOG_MESSAGE_DATA : UART_LOG_DATA := ("0110101", "0110111", "1000101", "1000001"); -- 0x57EA
 

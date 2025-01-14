@@ -5,7 +5,7 @@ package Types is
 
     -- Type Definitions
     type UART_LOG_MESSAGE is array (0 to 7) of std_logic_vector(6 downto 0);
-    type UART_LOG_DATA is array (0 to 5) of std_logic_vector(6 downto 0);
+    type UART_LOG_DATA is array (0 to 3) of std_logic_vector(6 downto 0);
     type UART_LOG_ID is array (0 to 1) of std_logic_vector(6 downto 0);
 
     -- Function Declaration
@@ -52,11 +52,14 @@ package body Types is
         -- Insert log_id into the first 2 elements
         result(0) := log_id(0);
         result(1) := log_id(1);
+        result(2) := ASCII_SPACE;
 
         -- Insert log_data into the next 6 elements
-        for i in 0 to 5 loop
-            result(i + 2) := log_data(i);
+        for i in 0 to 3 loop
+            result(i + 3) := log_data(i);
         end loop;
+
+        result(7) := ASCII_LF;
 
         return result;
     end function CONCATENATE_LOG;
