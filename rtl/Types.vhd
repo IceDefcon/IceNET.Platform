@@ -1,67 +1,55 @@
 library ieee;
 use ieee.std_logic_1164.all;
+use work.Types.all;
 
 package Types is
 
-    -- Type Definitions
-    type UART_LOG_MESSAGE is array (0 to 7) of std_logic_vector(6 downto 0);
-    type UART_LOG_DATA is array (0 to 3) of std_logic_vector(6 downto 0);
-    type UART_LOG_ID is array (0 to 1) of std_logic_vector(6 downto 0);
+    subtype UART_ASCII is std_logic_vector(6 downto 0);
+    type UART_LOG_ID is array (0 to 1) of std_logic_vector(3 downto 0);
+    type UART_LOG_DATA is array (0 to 3) of std_logic_vector(3 downto 0);
 
-    -- Function Declaration
-    function CONCATENATE_LOG(
-        log_id : UART_LOG_ID;
-        log_data : UART_LOG_DATA
-    ) return UART_LOG_MESSAGE;
+    function CONVERT_TO_ASCII
+    (
+        hex_code : std_logic_vector(3 downto 0)
+    )
+    return UART_ASCII;
 
-    -- ASCII Constants
-    constant ASCII_0    : std_logic_vector(6 downto 0) := "0110000"; -- 0x30
-    constant ASCII_1    : std_logic_vector(6 downto 0) := "0110001"; -- 0x31
-    constant ASCII_2    : std_logic_vector(6 downto 0) := "0110010"; -- 0x32
-    constant ASCII_3    : std_logic_vector(6 downto 0) := "0110011"; -- 0x33
-    constant ASCII_4    : std_logic_vector(6 downto 0) := "0110100"; -- 0x34
-    constant ASCII_5    : std_logic_vector(6 downto 0) := "0110101"; -- 0x35
-    constant ASCII_6    : std_logic_vector(6 downto 0) := "0110110"; -- 0x36
-    constant ASCII_7    : std_logic_vector(6 downto 0) := "0110111"; -- 0x37
-    constant ASCII_8    : std_logic_vector(6 downto 0) := "0111000"; -- 0x38
-    constant ASCII_9    : std_logic_vector(6 downto 0) := "0111001"; -- 0x39
-    constant ASCII_A    : std_logic_vector(6 downto 0) := "1000001"; -- 0x41
-    constant ASCII_B    : std_logic_vector(6 downto 0) := "1000010"; -- 0x42
-    constant ASCII_C    : std_logic_vector(6 downto 0) := "1000011"; -- 0x43
-    constant ASCII_D    : std_logic_vector(6 downto 0) := "1000100"; -- 0x44
-    constant ASCII_E    : std_logic_vector(6 downto 0) := "1000101"; -- 0x45
-    constant ASCII_F    : std_logic_vector(6 downto 0) := "1000110"; -- 0x46
-    constant ASCII_LF   : std_logic_vector(6 downto 0) := "0001010"; -- 0x0A
-    constant ASCII_CR   : std_logic_vector(6 downto 0) := "0001100"; -- 0x0D
-    constant ASCII_DOT  : std_logic_vector(6 downto 0) := "0101110"; -- 0x2E
-    constant ASCII_SPACE: std_logic_vector(6 downto 0) := "0100000"; -- 0x20
+    constant ASCII_LF    : std_logic_vector(6 downto 0) := "0001010";
+    constant ASCII_CR    : std_logic_vector(6 downto 0) := "0001100";
+    constant ASCII_DOT   : std_logic_vector(6 downto 0) := "0101110";
+    constant ASCII_SPACE : std_logic_vector(6 downto 0) := "0100000";
 
 end package Types;
 
 package body Types is
 
-    -- Function Definition
-    function CONCATENATE_LOG
+    function CONVERT_TO_ASCII
     (
-        log_id : UART_LOG_ID;
-        log_data : UART_LOG_DATA
+        hex_code : std_logic_vector(3 downto 0)
     )
-    return UART_LOG_MESSAGE is variable result : UART_LOG_MESSAGE;
+    return UART_ASCII is variable result : UART_ASCII;
     begin
-
-        -- Insert log_id into the first 2 elements
-        result(0) := log_id(0);
-        result(1) := log_id(1);
-        result(2) := ASCII_SPACE;
-
-        -- Insert log_data into the next 6 elements
-        for i in 0 to 3 loop
-            result(i + 3) := log_data(i);
-        end loop;
-
-        result(7) := ASCII_LF;
+        case hex_code is
+            when "0000" => result := "0110000"; -- ASCII '0'
+            when "0001" => result := "0110001"; -- ASCII '1'
+            when "0010" => result := "0110010"; -- ASCII '2'
+            when "0011" => result := "0110011"; -- ASCII '3'
+            when "0100" => result := "0110100"; -- ASCII '4'
+            when "0101" => result := "0110101"; -- ASCII '5'
+            when "0110" => result := "0110110"; -- ASCII '6'
+            when "0111" => result := "0110111"; -- ASCII '7'
+            when "1000" => result := "0111000"; -- ASCII '8'
+            when "1001" => result := "0111001"; -- ASCII '9'
+            when "1010" => result := "1000001"; -- ASCII 'A'
+            when "1011" => result := "1000010"; -- ASCII 'B'
+            when "1100" => result := "1000011"; -- ASCII 'C'
+            when "1101" => result := "1000100"; -- ASCII 'D'
+            when "1110" => result := "1000101"; -- ASCII 'E'
+            when "1111" => result := "1000110"; -- ASCII 'F'
+            when others => result := "0000000"; -- Default (undefined input)
+        end case;
 
         return result;
-    end function CONCATENATE_LOG;
+    end function CONVERT_TO_ASCII;
 
 end package body Types;

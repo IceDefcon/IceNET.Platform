@@ -57,13 +57,13 @@ begin
                     end if;
 
                 when WRITE_INIT =>
-                    uart_tx(0) <= UART_LOG_MESSAGE_ID(0);
-                    uart_tx(1) <= UART_LOG_MESSAGE_ID(1);
+                    uart_tx(0) <= CONVERT_TO_ASCII(UART_LOG_MESSAGE_ID(0));
+                    uart_tx(1) <= CONVERT_TO_ASCII(UART_LOG_MESSAGE_ID(1));
                     uart_tx(2) <= ASCII_SPACE;
-                    uart_tx(3) <= UART_LOG_MESSAGE_DATA(0);
-                    uart_tx(4) <= UART_LOG_MESSAGE_DATA(1);
-                    uart_tx(5) <= UART_LOG_MESSAGE_DATA(2);
-                    uart_tx(6) <= UART_LOG_MESSAGE_DATA(3);
+                    uart_tx(3) <= CONVERT_TO_ASCII(UART_LOG_MESSAGE_DATA(0));
+                    uart_tx(4) <= CONVERT_TO_ASCII(UART_LOG_MESSAGE_DATA(1));
+                    uart_tx(5) <= CONVERT_TO_ASCII(UART_LOG_MESSAGE_DATA(2));
+                    uart_tx(6) <= CONVERT_TO_ASCII(UART_LOG_MESSAGE_DATA(3));
                     uart_tx(7) <= ASCII_LF;
                     uart_state <= WRITE_CONFIG;
 
