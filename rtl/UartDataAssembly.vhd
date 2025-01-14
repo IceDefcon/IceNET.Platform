@@ -2,21 +2,24 @@ library ieee;
 use ieee.numeric_std.all;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.all;
+use work.Types.all;
 
-entity UartDriver is
+entity UartDataAssembly is
 port
 (
     CLOCK_50MHz : in std_logic;
 
+    UART_LOG_MESSAGE_ID : in UART_LOG_ID;
+    UART_LOG_MESSAGE_DATA : in UART_LOG_DATA;
+
     WRITE_ENABLE : out std_logic;
-    WRITE_DATA : out std_logic_vector(6 downto 0);
-    WRITE_LAST : out std_logic;
+    WRITE_SYMBOL : out std_logic_vector(6 downto 0);
 
     WRITE_BUSY : in std_logic
 );
-end UartDriver;
+end UartDataAssembly;
 
-architecture rtl of UartDriver is
+architecture rtl of UartDataAssembly is
 
 constant ASCII_0 : std_logic_vector(6 downto 0) := "0110000"; -- 0x30
 constant ASCII_1 : std_logic_vector(6 downto 0) := "0110001"; -- 0x31
@@ -75,16 +78,16 @@ begin
 
                 when WRITE_INIT =>
                     uart_length <= 10;
-                    uart_tx(0) <= ASCII_D;
-                    uart_tx(1) <= ASCII_E;
-                    uart_tx(2) <= ASCII_A;
-                    uart_tx(3) <= ASCII_D;
-                    uart_tx(4) <= ASCII_SPACE;
-                    uart_tx(5) <= ASCII_C;
-                    uart_tx(6) <= ASCII_0;
-                    uart_tx(7) <= ASCII_D;
-                    uart_tx(8) <= ASCII_E;
-                    uart_tx(9) <= ASCII_LF;
+                    uart_tx(0) <= "1000100";
+                    uart_tx(1) <= "1000101";
+                    uart_tx(2) <= "1000001";
+                    uart_tx(3) <= "1000100";
+                    uart_tx(4) <= "0100000";
+                    uart_tx(5) <= "1000011";
+                    uart_tx(6) <= "0110000";
+                    uart_tx(7) <= "1000100";
+                    uart_tx(8) <= "1000101";
+                    uart_tx(9) <= "0001010";
                     uart_state <= WRITE_CONFIG;
 
                 when WRITE_CONFIG =>
@@ -101,8 +104,7 @@ begin
 
                 when WRITE_TRANSFER =>
                     if WRITE_BUSY = '0' then
-                        WRITE_DATA <= uart_tx(uart_byte);
-                        WRITE_LAST <= '0';
+                        WRITE_SYMBOL <= uart_tx(uart_byte);
                         uart_byte <= uart_byte + 1;
                         uart_state <= WRITE_CHECK;
                     end if;

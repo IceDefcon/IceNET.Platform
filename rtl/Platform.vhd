@@ -2,6 +2,7 @@ library ieee;
 use ieee.numeric_std.all;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.all;
+use work.Types.all;
 
 ---------------------------------------------------------------------------
 -- Author: Ice.Marek
@@ -288,9 +289,11 @@ signal memory_dqml : std_logic := '0';
 signal memory_dqmh : std_logic := '0';
 -- UART
 signal uart_write_enable : std_logic := '0';
-signal uart_write_data : std_logic_vector(6 downto 0) := (others => '0');
-signal uart_write_last : std_logic := '0';
+signal uart_write_symbol : std_logic_vector(6 downto 0) := (others => '0');
 signal uart_write_busy : std_logic := '0';
+
+signal UART_LOG_MESSAGE_ID : UART_LOG_ID;
+signal UART_LOG_MESSAGE_DATA : UART_LOG_DATA;
 
 ----------------------------------------------------------------------------------------------------------------
 -- COMPONENTS DECLARATION
@@ -448,14 +451,13 @@ port
 );
 end component;
 
-component UartController
+component UartDataTransfer
 port
 (
     CLOCK_50MHz : in std_logic;
 
     WRITE_ENABLE : in std_logic;
-    WRITE_DATA : in std_logic_vector;
-    WRITE_LAST : in std_logic;
+    WRITE_SYMBOL : in std_logic_vector;
 
     UART_x86_TX : out std_logic;
     UART_x86_RX : in std_logic;
@@ -464,14 +466,16 @@ port
 );
 end component;
 
-component UartDriver
+component UartDataAssembly
 port
 (
     CLOCK_50MHz : in std_logic;
 
+    UART_LOG_MESSAGE_ID : in UART_LOG_ID;
+    UART_LOG_MESSAGE_DATA : in UART_LOG_DATA;
+
     WRITE_ENABLE : out std_logic;
-    WRITE_DATA : out std_logic_vector(6 downto 0);
-    WRITE_LAST : out std_logic;
+    WRITE_SYMBOL : out std_logic_vector(6 downto 0);
 
     WRITE_BUSY : in std_logic
 );
@@ -670,14 +674,13 @@ port map
     OFFLOAD_WAIT => offload_wait
 );
 
-UartController_module: UartController
+UartDataTransfer_module: UartDataTransfer
 port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
 
     WRITE_ENABLE => uart_write_enable,
-    WRITE_DATA => uart_write_data,
-    WRITE_LAST => uart_write_last,
+    WRITE_SYMBOL => uart_write_symbol,
 
     UART_x86_TX => UART_x86_TX,
     UART_x86_RX => UART_x86_RX,
@@ -685,14 +688,16 @@ port map
     WRITE_BUSY => uart_write_busy
 );
 
-UartDriver_module: UartDriver
+UartDataAssembly_module: UartDataAssembly
 port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
 
+    UART_LOG_MESSAGE_ID => UART_LOG_MESSAGE_ID,
+    UART_LOG_MESSAGE_DATA => UART_LOG_MESSAGE_DATA,
+
     WRITE_ENABLE => uart_write_enable,
-    WRITE_DATA => uart_write_data,
-    WRITE_LAST => uart_write_last,
+    WRITE_SYMBOL => uart_write_symbol,
 
     WRITE_BUSY => uart_write_busy
 );
