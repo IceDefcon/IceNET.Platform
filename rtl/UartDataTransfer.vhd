@@ -3,23 +3,22 @@ use ieee.numeric_std.all;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.all;
 
-entity UartController is
+entity UartDataTransfer is
 port
 (
     CLOCK_50MHz : in std_logic;
 
     WRITE_ENABLE : in std_logic;
-    WRITE_DATA : in std_logic_vector(6 downto 0);
-    WRITE_LAST : in std_logic;
+    WRITE_SYMBOL : in std_logic_vector(6 downto 0);
 
     UART_x86_TX : out std_logic;
     UART_x86_RX : in std_logic;
 
     WRITE_BUSY : out std_logic
 );
-end UartController;
+end UartDataTransfer;
 
-architecture rtl of UartController is
+architecture rtl of UartDataTransfer is
 
 constant baudRate : std_logic_vector(7 downto 0) := "00011000"; -- 1/[25*20ns] ---> 2M Baud Rate
 
@@ -78,7 +77,7 @@ begin
                         baud_count <= baud_count + '1';
                     end if;
 
-                    uart_output <= WRITE_DATA(bit_number);
+                    uart_output <= WRITE_SYMBOL(bit_number);
 
                 end if;
 

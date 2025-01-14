@@ -74,7 +74,7 @@ set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
 set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
 set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
 set_global_assignment -name ENABLE_SIGNALTAP ON
-set_global_assignment -name USE_SIGNALTAP_FILE ../IceNET/IceNET.Platform/rtl/tap/i2c_SM.stp
+set_global_assignment -name USE_SIGNALTAP_FILE ../IceNET/IceNET.Platform/rtl/tap/watchdog.stp
 set_location_assignment PIN_T2 -to CLOCK_50MHz
 set_location_assignment PIN_N8 -to LED_8
 set_location_assignment PIN_K18 -to BUTTON_4
@@ -122,8 +122,6 @@ set_location_assignment PIN_A5 -to INT_FROM_CPU
 set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to INT_FROM_CPU
 set_location_assignment PIN_A9 -to INT_FROM_FPGA
 set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to INT_FROM_FPGA
-set_location_assignment PIN_A20 -to WATCHDOG_INTERRUPT
-set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to WATCHDOG_INTERRUPT
 set_instance_assignment -name IO_STANDARD "3.3-V LVCMOS" -to PWM_SIGNAL
 set_instance_assignment -name IO_STANDARD "3.3-V LVCMOS" -to LED_8
 set_instance_assignment -name IO_STANDARD "3.3-V LVCMOS" -to LED_7
@@ -139,7 +137,6 @@ set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to UART_BBB_TX
 set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to UART_BBB_RX
 set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to UART_x86_TX
 set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to UART_x86_RX
-set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[18] -to auto_signaltap_0|gnd -section_id auto_signaltap_0
 set_location_assignment PIN_B7 -to CAN_BBB_TX
 set_location_assignment PIN_A7 -to CAN_BBB_RX
 set_location_assignment PIN_N20 -to CAN_MPP_TX
@@ -198,7 +195,6 @@ set_instance_assignment -name IO_STANDARD "3.3-V LVCMOS" -to LED_1
 set_instance_assignment -name IO_STANDARD "3.3-V LVCMOS" -to LED_2
 set_instance_assignment -name IO_STANDARD "3.3-V LVCMOS" -to LED_4
 set_instance_assignment -name IO_STANDARD "3.3-V LVCMOS" -to PRIMARY_CS
-set_instance_assignment -name IO_STANDARD "3.3-V LVCMOS" -to WATCHDOG_INTERRUPT
 set_instance_assignment -name IO_STANDARD "3.3-V LVCMOS" -to UART_x86_TX
 set_instance_assignment -name IO_STANDARD "3.3-V LVCMOS" -to UART_x86_RX
 set_instance_assignment -name IO_STANDARD "3.3-V LVCMOS" -to UART_BBB_TX
@@ -210,32 +206,7 @@ set_instance_assignment -name IO_STANDARD "3.3-V LVCMOS" -to SECONDARY_CS
 set_instance_assignment -name IO_STANDARD "3.3-V LVCMOS" -to PRIMARY_SCLK
 set_instance_assignment -name IO_STANDARD "3.3-V LVCMOS" -to PRIMARY_MOSI
 set_instance_assignment -name IO_STANDARD "3.3-V LVCMOS" -to PRIMARY_MISO
-set_global_assignment -name VHDL_FILE ../IceNET/IceNET.Platform/rtl/Platform.vhd
-set_global_assignment -name VHDL_FILE ../IceNET/IceNET.Platform/rtl/DebounceController.vhd
-set_global_assignment -name VHDL_FILE ../IceNET/IceNET.Platform/rtl/InterruptGenerator.vhd
-set_global_assignment -name VHDL_FILE ../IceNET/IceNET.Platform/rtl/OffloadController.vhd
-set_global_assignment -name VHDL_FILE ../IceNET/IceNET.Platform/rtl/UartController.vhd
-set_global_assignment -name VHDL_FILE ../IceNET/IceNET.Platform/rtl/SpiConverter.vhd
-set_global_assignment -name VHDL_FILE ../IceNET/IceNET.Platform/rtl/I2cController.vhd
-set_global_assignment -name VHDL_FILE ../IceNET/IceNET.Platform/rtl/PwmController.vhd
-set_global_assignment -name VHDL_FILE ../IceNET/IceNET.Platform/rtl/SpiController.vhd
-set_global_assignment -name VHDL_FILE ../IceNET/IceNET.Platform/rtl/FifoController.vhd
-set_global_assignment -name VHDL_FILE ../IceNET/IceNET.Platform/rtl/CanController.vhd
-set_global_assignment -name SDC_FILE ../IceNET/IceNET.Platform/rtl/Platform.sdc
-set_global_assignment -name SIGNALTAP_FILE ../IceNET/IceNET.Platform/rtl/tap/secondary_spi.stp
-set_global_assignment -name SIGNALTAP_FILE ../IceNET/IceNET.Platform/rtl/tap/primary_spi.stp
-set_global_assignment -name SIGNALTAP_FILE ../IceNET/IceNET.Platform/rtl/tap/i2c_SM.stp
-set_global_assignment -name SIGNALTAP_FILE ../IceNET/IceNET.Platform/rtl/tap/read_enable.stp
-set_global_assignment -name SIGNALTAP_FILE ../IceNET/IceNET.Platform/rtl/tap/bypass_spi.stp
-set_global_assignment -name SIGNALTAP_FILE ../IceNET/IceNET.Platform/rtl/tap/DebounceResetButton.stp
-set_global_assignment -name SIGNALTAP_FILE ../IceNET/IceNET.Platform/rtl/tap/pwmControl.stp
-set_global_assignment -name SIGNALTAP_FILE ../IceNET/IceNET.Platform/rtl/tap/fifoCtrl.stp
-set_global_assignment -name SIGNALTAP_FILE ../IceNET/IceNET.Platform/rtl/tap/InterruptGenerator.stp
-set_global_assignment -name SIGNALTAP_FILE ../IceNET/IceNET.Platform/rtl/tap/uartDriver.stp
-set_global_assignment -name SIGNALTAP_FILE ../IceNET/IceNET.Platform/rtl/tap/canDriver.stp
-set_global_assignment -name SIGNALTAP_FILE ../IceNET/IceNET.Platform/rtl/tap/spiLooptrough.stp
 set_location_assignment PIN_A4 -to UNUSED_01
-set_location_assignment PIN_B4 -to UNUSED_02
 set_location_assignment PIN_C3 -to UNUSED_03
 set_location_assignment PIN_C4 -to UNUSED_04
 set_location_assignment PIN_B5 -to UNUSED_06
@@ -252,7 +223,6 @@ set_location_assignment PIN_A19 -to UNUSED_29
 set_location_assignment PIN_B19 -to UNUSED_30
 set_location_assignment PIN_B20 -to UNUSED_32
 set_instance_assignment -name IO_STANDARD "3.3-V LVCMOS" -to UNUSED_01
-set_instance_assignment -name IO_STANDARD "3.3-V LVCMOS" -to UNUSED_02
 set_instance_assignment -name IO_STANDARD "3.3-V LVCMOS" -to UNUSED_03
 set_instance_assignment -name IO_STANDARD "3.3-V LVCMOS" -to UNUSED_04
 set_instance_assignment -name IO_STANDARD "3.3-V LVCMOS" -to UNUSED_06
@@ -268,19 +238,7 @@ set_instance_assignment -name IO_STANDARD "3.3-V LVCMOS" -to UNUSED_28
 set_instance_assignment -name IO_STANDARD "3.3-V LVCMOS" -to UNUSED_29
 set_instance_assignment -name IO_STANDARD "3.3-V LVCMOS" -to UNUSED_30
 set_instance_assignment -name IO_STANDARD "3.3-V LVCMOS" -to UNUSED_32
-set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[3] -to auto_signaltap_0|gnd -section_id auto_signaltap_0
-set_global_assignment -name SIGNALTAP_FILE ../IceNET/IceNET.Platform/rtl/tap/OffloadController.stp
-set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[13] -to auto_signaltap_0|vcc -section_id auto_signaltap_0
-set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[24] -to auto_signaltap_0|vcc -section_id auto_signaltap_0
-set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[4] -to auto_signaltap_0|vcc -section_id auto_signaltap_0
-set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[6] -to auto_signaltap_0|gnd -section_id auto_signaltap_0
-set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[25] -to auto_signaltap_0|vcc -section_id auto_signaltap_0
-set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[1] -to auto_signaltap_0|vcc -section_id auto_signaltap_0
-set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[8] -to auto_signaltap_0|vcc -section_id auto_signaltap_0
-set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[17] -to auto_signaltap_0|gnd -section_id auto_signaltap_0
 set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[21] -to auto_signaltap_0|gnd -section_id auto_signaltap_0
-set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[26] -to auto_signaltap_0|gnd -section_id auto_signaltap_0
-set_global_assignment -name SIGNALTAP_FILE ../IceNET/IceNET.Platform/rtl/tap/debug.stp
 set_location_assignment PIN_B21 -to LOGIC_CH1
 set_location_assignment PIN_B22 -to LOGIC_CH2
 set_location_assignment PIN_C21 -to LOGIC_CH3
@@ -293,57 +251,12 @@ set_instance_assignment -name IO_STANDARD "3.3-V LVCMOS" -to LOGIC_CH3
 set_instance_assignment -name IO_STANDARD "3.3-V LVCMOS" -to LOGIC_CH4
 set_instance_assignment -name IO_STANDARD "3.3-V LVCMOS" -to LOGIC_CH5
 set_instance_assignment -name IO_STANDARD "3.3-V LVCMOS" -to LOGIC_CH6
-set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[7] -to auto_signaltap_0|gnd -section_id auto_signaltap_0
-set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[9] -to auto_signaltap_0|vcc -section_id auto_signaltap_0
 set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[19] -to auto_signaltap_0|gnd -section_id auto_signaltap_0
 set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[23] -to auto_signaltap_0|vcc -section_id auto_signaltap_0
-set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[12] -to auto_signaltap_0|gnd -section_id auto_signaltap_0
 set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[20] -to auto_signaltap_0|gnd -section_id auto_signaltap_0
 set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[30] -to auto_signaltap_0|gnd -section_id auto_signaltap_0
-set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[15] -to auto_signaltap_0|vcc -section_id auto_signaltap_0
-set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[27] -to auto_signaltap_0|gnd -section_id auto_signaltap_0
-set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[0] -to auto_signaltap_0|gnd -section_id auto_signaltap_0
 set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[2] -to auto_signaltap_0|gnd -section_id auto_signaltap_0
-set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[5] -to auto_signaltap_0|vcc -section_id auto_signaltap_0
-set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[10] -to auto_signaltap_0|vcc -section_id auto_signaltap_0
-set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[11] -to auto_signaltap_0|gnd -section_id auto_signaltap_0
-set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[14] -to auto_signaltap_0|vcc -section_id auto_signaltap_0
 set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[16] -to auto_signaltap_0|vcc -section_id auto_signaltap_0
-set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[22] -to auto_signaltap_0|gnd -section_id auto_signaltap_0
-set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[28] -to auto_signaltap_0|vcc -section_id auto_signaltap_0
-set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[31] -to auto_signaltap_0|vcc -section_id auto_signaltap_0
-set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[29] -to auto_signaltap_0|vcc -section_id auto_signaltap_0
-set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_INVERSION_MASK=00000000000000000000000000000" -section_id auto_signaltap_0
-set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_INVERSION_MASK_LENGTH=29" -section_id auto_signaltap_0
-set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_SEGMENT_SIZE=32768" -section_id auto_signaltap_0
-set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_SAMPLE_DEPTH=32768" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_clk -to "I2cController:I2cController_module|CLOCK" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[1] -to "I2cController:I2cController_module|I2C_SDA" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[1] -to "I2cController:I2cController_module|I2C_SDA" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[0] -to "I2cController:I2cController_module|I2C_SCK" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[0] -to "I2cController:I2cController_module|I2C_SCK" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[2] -to "I2cController:I2cController_module|OFFLOAD_WAIT" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[3] -to "I2cController:I2cController_module|status_sck[0]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[4] -to "I2cController:I2cController_module|status_sck[1]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[5] -to "I2cController:I2cController_module|status_sck[2]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[6] -to "I2cController:I2cController_module|status_sck[3]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[7] -to "I2cController:I2cController_module|status_sda[0]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[8] -to "I2cController:I2cController_module|status_sda[1]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[9] -to "I2cController:I2cController_module|status_sda[2]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[10] -to "I2cController:I2cController_module|status_sda[3]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[2] -to "I2cController:I2cController_module|OFFLOAD_WAIT" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[3] -to "I2cController:I2cController_module|status_sck[0]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[4] -to "I2cController:I2cController_module|status_sck[1]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[5] -to "I2cController:I2cController_module|status_sck[2]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[6] -to "I2cController:I2cController_module|status_sck[3]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[7] -to "I2cController:I2cController_module|status_sda[0]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[8] -to "I2cController:I2cController_module|status_sda[1]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[9] -to "I2cController:I2cController_module|status_sda[2]" -section_id auto_signaltap_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[10] -to "I2cController:I2cController_module|status_sda[3]" -section_id auto_signaltap_0
-set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_DATA_BITS=11" -section_id auto_signaltap_0
-set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_TRIGGER_BITS=11" -section_id auto_signaltap_0
-set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_STORAGE_QUALIFIER_BITS=11" -section_id auto_signaltap_0
-set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_ADVANCED_TRIGGER_ENTITY=sld_reserved_Platform_auto_signaltap_0_1_1c16," -section_id auto_signaltap_0
 set_instance_assignment -name IO_STANDARD "3.3-V LVCMOS" -to A0
 set_instance_assignment -name IO_STANDARD "3.3-V LVCMOS" -to A1
 set_instance_assignment -name IO_STANDARD "3.3-V LVCMOS" -to A2
@@ -426,5 +339,80 @@ set_location_assignment PIN_V10 -to D12
 set_location_assignment PIN_Y10 -to D13
 set_location_assignment PIN_W10 -to D14
 set_location_assignment PIN_V11 -to D15
-set_global_assignment -name SLD_FILE db/i2c_SM_auto_stripped.stp
+set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[0] -to auto_signaltap_0|vcc -section_id auto_signaltap_0
+set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[6] -to auto_signaltap_0|vcc -section_id auto_signaltap_0
+set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[7] -to auto_signaltap_0|vcc -section_id auto_signaltap_0
+set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[25] -to auto_signaltap_0|gnd -section_id auto_signaltap_0
+set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[26] -to auto_signaltap_0|vcc -section_id auto_signaltap_0
+set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[1] -to auto_signaltap_0|gnd -section_id auto_signaltap_0
+set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[3] -to auto_signaltap_0|gnd -section_id auto_signaltap_0
+set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[5] -to auto_signaltap_0|gnd -section_id auto_signaltap_0
+set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[8] -to auto_signaltap_0|gnd -section_id auto_signaltap_0
+set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[9] -to auto_signaltap_0|vcc -section_id auto_signaltap_0
+set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[10] -to auto_signaltap_0|gnd -section_id auto_signaltap_0
+set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[13] -to auto_signaltap_0|vcc -section_id auto_signaltap_0
+set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[14] -to auto_signaltap_0|gnd -section_id auto_signaltap_0
+set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[15] -to auto_signaltap_0|gnd -section_id auto_signaltap_0
+set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[18] -to auto_signaltap_0|gnd -section_id auto_signaltap_0
+set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[27] -to auto_signaltap_0|gnd -section_id auto_signaltap_0
+set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[29] -to auto_signaltap_0|vcc -section_id auto_signaltap_0
+set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[31] -to auto_signaltap_0|vcc -section_id auto_signaltap_0
+set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[12] -to auto_signaltap_0|vcc -section_id auto_signaltap_0
+set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[17] -to auto_signaltap_0|gnd -section_id auto_signaltap_0
+set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[22] -to auto_signaltap_0|vcc -section_id auto_signaltap_0
+set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[28] -to auto_signaltap_0|gnd -section_id auto_signaltap_0
+set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[4] -to auto_signaltap_0|gnd -section_id auto_signaltap_0
+set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[11] -to auto_signaltap_0|gnd -section_id auto_signaltap_0
+set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_INVERSION_MASK=0000000000000000000000000000" -section_id auto_signaltap_0
+set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_INVERSION_MASK_LENGTH=28" -section_id auto_signaltap_0
+set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_SEGMENT_SIZE=16384" -section_id auto_signaltap_0
+set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_SAMPLE_DEPTH=16384" -section_id auto_signaltap_0
+set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[24] -to auto_signaltap_0|vcc -section_id auto_signaltap_0
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_clk -to CLOCK_50MHz -section_id auto_signaltap_0
+set_global_assignment -name VHDL_FILE ../IceNET/IceNET.Platform/rtl/Platform.vhd
+set_global_assignment -name VHDL_FILE ../IceNET/IceNET.Platform/rtl/DebounceController.vhd
+set_global_assignment -name VHDL_FILE ../IceNET/IceNET.Platform/rtl/I2cController.vhd
+set_global_assignment -name VHDL_FILE ../IceNET/IceNET.Platform/rtl/InterruptGenerator.vhd
+set_global_assignment -name VHDL_FILE ../IceNET/IceNET.Platform/rtl/OffloadController.vhd
+set_global_assignment -name VHDL_FILE ../IceNET/IceNET.Platform/rtl/SDRAMWrite.vhd
+set_global_assignment -name VHDL_FILE ../IceNET/IceNET.Platform/rtl/SDRAMControler.vhd
+set_global_assignment -name VHDL_FILE ../IceNET/IceNET.Platform/rtl/PwmController.vhd
+set_global_assignment -name VHDL_FILE ../IceNET/IceNET.Platform/rtl/FifoController.vhd
+set_global_assignment -name VHDL_FILE ../IceNET/IceNET.Platform/rtl/CanController.vhd
+set_global_assignment -name VHDL_FILE ../IceNET/IceNET.Platform/rtl/SpiController.vhd
+set_global_assignment -name VHDL_FILE ../IceNET/IceNET.Platform/rtl/SpiConverter.vhd
+set_global_assignment -name VHDL_FILE ../IceNET/IceNET.Platform/rtl/UartController.vhd
+set_global_assignment -name VHDL_FILE ../IceNET/IceNET.Platform/rtl/UartDriver.vhd
+set_global_assignment -name SDC_FILE ../IceNET/IceNET.Platform/rtl/Platform.sdc
+set_global_assignment -name SIGNALTAP_FILE ../IceNET/IceNET.Platform/rtl/tap/secondary_spi.stp
+set_global_assignment -name SIGNALTAP_FILE ../IceNET/IceNET.Platform/rtl/tap/primary_spi.stp
+set_global_assignment -name SIGNALTAP_FILE ../IceNET/IceNET.Platform/rtl/tap/i2c_SM.stp
+set_global_assignment -name SIGNALTAP_FILE ../IceNET/IceNET.Platform/rtl/tap/read_enable.stp
+set_global_assignment -name SIGNALTAP_FILE ../IceNET/IceNET.Platform/rtl/tap/bypass_spi.stp
+set_global_assignment -name SIGNALTAP_FILE ../IceNET/IceNET.Platform/rtl/tap/DebounceResetButton.stp
+set_global_assignment -name SIGNALTAP_FILE ../IceNET/IceNET.Platform/rtl/tap/pwmControl.stp
+set_global_assignment -name SIGNALTAP_FILE ../IceNET/IceNET.Platform/rtl/tap/fifoCtrl.stp
+set_global_assignment -name SIGNALTAP_FILE ../IceNET/IceNET.Platform/rtl/tap/InterruptGenerator.stp
+set_global_assignment -name SIGNALTAP_FILE ../IceNET/IceNET.Platform/rtl/tap/uartDriver.stp
+set_global_assignment -name SIGNALTAP_FILE ../IceNET/IceNET.Platform/rtl/tap/canDriver.stp
+set_global_assignment -name SIGNALTAP_FILE ../IceNET/IceNET.Platform/rtl/tap/spiLooptrough.stp
+set_global_assignment -name SIGNALTAP_FILE ../IceNET/IceNET.Platform/rtl/tap/OffloadController.stp
+set_global_assignment -name SIGNALTAP_FILE ../IceNET/IceNET.Platform/rtl/tap/debug.stp
+set_global_assignment -name SIGNALTAP_FILE ../IceNET/IceNET.Platform/rtl/tap/uartLoop.stp
+set_location_assignment PIN_B4 -to WDG_INT_FROM_CPU
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to WDG_INT_FROM_CPU
+set_instance_assignment -name IO_STANDARD "3.3-V LVCMOS" -to WDG_INT_FROM_CPU
+set_location_assignment PIN_A20 -to WDG_INT_FROM_FPGA
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to WDG_INT_FROM_FPGA
+set_instance_assignment -name IO_STANDARD "3.3-V LVCMOS" -to WDG_INT_FROM_FPGA
+set_global_assignment -name SIGNALTAP_FILE ../IceNET/IceNET.Platform/rtl/tap/watchdog.stp
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[0] -to WDG_INT_FROM_CPU -section_id auto_signaltap_0
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[1] -to WDG_INT_FROM_FPGA -section_id auto_signaltap_0
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[0] -to WDG_INT_FROM_CPU -section_id auto_signaltap_0
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[1] -to WDG_INT_FROM_FPGA -section_id auto_signaltap_0
+set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_DATA_BITS=2" -section_id auto_signaltap_0
+set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_TRIGGER_BITS=2" -section_id auto_signaltap_0
+set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_STORAGE_QUALIFIER_BITS=2" -section_id auto_signaltap_0
+set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_ADVANCED_TRIGGER_ENTITY=sld_reserved_Platform_auto_signaltap_0_1_7640," -section_id auto_signaltap_0
+set_global_assignment -name SLD_FILE db/watchdog_auto_stripped.stp
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
