@@ -1,0 +1,133 @@
+library ieee;
+use ieee.numeric_std.all;
+use ieee.std_logic_1164.all;
+use ieee.std_logic_unsigned.all;
+
+entity SDRAM_IO_Controler is
+Port
+(
+    CLOCK_50MHz : in  std_logic;
+    MEMORY_CLOCK : out  std_logic;
+
+    MEMORY_ADDRESS : out std_logic_vector(12 downto 0);
+    MEMORY_DATA : inout std_logic_vector(15 downto 0);
+    MEMORY_BANK : out std_logic_vector(1 downto 0);
+
+    MEMORY_CAS : out std_logic;
+    MEMORY_CKE : out std_logic;
+    MEMORY_RAS : out std_logic;
+    MEMORY_WE : out std_logic;
+    MEMORY_CS : out std_logic;
+
+    MEMORY_DQML : inout std_logic;
+    MEMORY_DQMH : inout std_logic;
+
+    READ_EN : in std_logic;
+    WRITE_EN : in std_logic;
+    DATA_IN : in std_logic_vector(15 downto 0);
+    DATA_OUT : out std_logic_vector(15 downto 0)
+);
+end entity SDRAM_IO_Controler;
+
+architecture rtl of SDRAM_IO_Controler is
+
+type MEMORY is
+(
+    MEMORY_IDLE,
+    MEMORY_INIT,
+    MEMORY_ACTIVATE,
+    MEMORY_WRITE,
+    MEMORY_READ,
+    MEMORY_PRECHARGE
+);
+signal ram_state: MEMORY := MEMORY_IDLE;
+signal delay_timer : std_logic_vector(27 downto 0) := (others => '0');
+
+signal dq_internal : std_logic_vector(15 downto 0); -- Internal Data Bus
+signal row_address : std_logic_vector(12 downto 0) := "0000000000101"; -- Example row address
+signal col_address : std_logic_vector(12 downto 0) := "0000000001010"; -- Example column address
+signal bank_select : std_logic_vector(1 downto 0)  := "00"; -- Example bank address
+
+constant wrrd_flag : std_logic := '0';
+
+begin
+
+    process (CLOCK_50MHz)
+    begin
+        if rising_edge(CLOCK_50MHz) then
+            case ram_state is
+
+                when MEMORY_IDLE =>
+                    if delay_timer = "1000111100001101000101111111" then
+                        delay_timer <= (others => '0');
+                        ram_state <= MEMORY_INIT;
+                        wrrd_flag <= not wrrd_flag;
+                    else
+                        delay_timer <= delay_timer + '1';
+                    end if;
+
+                when MEMORY_INIT =>
+                    if wrrd_flag = '1' then
+                        MEMORY_CAS <= '1';
+                        MEMORY_CKE <= '1'; -- Enable SDRAM Clock
+                        MEMORY_RAS <= '0'; -- Activate Command
+                        MEMORY_WE <= '1';
+                        MEMORY_CS <= '0';  -- Select SDRAM
+                        MEMORY_ADDRESS <= row_address; -- Set Row Address
+                        MEMORY_BANK <= bank_select; -- Select Bank
+                        ram_state <= MEMORY_ACTIVATE;
+                    else
+                        MEMORY_CAS <= '1';
+                        MEMORY_CKE <= '1'; -- Enable SDRAM Clock
+                        MEMORY_RAS <= '0'; -- Activate Command
+                        MEMORY_WE <= '1';
+                        MEMORY_CS <= '0';  -- Select SDRAM
+                        MEMORY_ADDRESS <= row_address; -- Set Row Address
+                        MEMORY_BANK <= bank_select; -- Select Bank
+                        ram_state <= MEMORY_ACTIVATE; -- Transition to activate for read
+                    end if;
+
+                when MEMORY_ACTIVATE =>
+                    if wrrd_flag = '1' then
+                        MEMORY_CAS <= '0'; -- Column Address Strobe
+                        MEMORY_RAS <= '1'; -- De-assert RAS for the next command
+                        MEMORY_WE <= '0';  -- Write Enable
+                        MEMORY_ADDRESS <= col_address; -- Set Column Address
+                        MEMORY_BANK <= bank_select; -- Select Bank
+                        dq_internal <= DATA_IN; -- Load Data to Internal Buffer
+                        ram_state <= MEMORY_WRITE;
+                    else
+                        MEMORY_CAS <= '0'; -- Column Address Strobe
+                        MEMORY_RAS <= '1'; -- De-assert RAS for the next command
+                        MEMORY_WE <= '1';  -- Read Enable
+                        MEMORY_ADDRESS <= col_address; -- Set Column Address
+                        MEMORY_BANK <= bank_select; -- Select Bank
+                        ram_state <= MEMORY_READ;
+                    end if;
+
+                when MEMORY_WRITE =>
+                    MEMORY_DATA <= dq_internal; -- Drive Data onto the Bus
+                    MEMORY_DQML <= '0'; -- Enable Lower Data Mask
+                    MEMORY_DQMH <= '0'; -- Enable Upper Data Mask
+                    ram_state <= MEMORY_PRECHARGE;
+
+                when MEMORY_READ =>
+                    MEMORY_DATA <= (others => 'Z'); -- Tri-state for read operation
+                    DATA_OUT <= MEMORY_DATA; -- Capture the read data
+                    ram_state <= MEMORY_PRECHARGE;
+
+                when MEMORY_PRECHARGE =>
+                    MEMORY_CAS <= '1';
+                    MEMORY_RAS <= '0'; -- Precharge Command
+                    MEMORY_WE <= '0';
+                    MEMORY_ADDRESS(10) <= '1'; -- All banks precharge
+                    MEMORY_BANK <= bank_select;
+                    ram_state <= MEMORY_IDLE;
+
+                when others =>
+                    ram_state <= MEMORY_IDLE;
+            end case;
+        end if;
+    end process;
+
+end architecture rtl;
