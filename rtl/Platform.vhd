@@ -276,24 +276,20 @@ signal interrupt_from_cpu : std_logic := '0';
 -- Interrupts
 signal interrupt_feedback_signal : std_logic := '0';
 signal interrupt_feedback_count : std_logic_vector(7 downto 0) := (others => '0');
--- Memory
-signal memory_address : std_logic_vector(12 downto 0) := (others => '0');
-signal memory_data : std_logic_vector(15 downto 0) := (others => '0');
-signal memory_bank : std_logic_vector(1 downto 0) := (others => '0');
-signal memory_cas : std_logic := '0';
-signal memory_cke : std_logic := '0';
-signal memory_ras : std_logic := '0';
-signal memory_we : std_logic := '0';
-signal memory_cs : std_logic := '0';
-signal memory_dqml : std_logic := '0';
-signal memory_dqmh : std_logic := '0';
 -- UART
 signal uart_write_enable : std_logic := '0';
 signal uart_write_symbol : std_logic_vector(6 downto 0) := (others => '0');
 signal uart_write_busy : std_logic := '0';
-
+-- UART Test Log
 signal UART_LOG_MESSAGE_ID : UART_LOG_ID := ("0101", "1100"); -- 0x5C
 signal UART_LOG_MESSAGE_DATA : UART_LOG_DATA := ("0111", "1010", "0001", "1011"); -- 0x7A1B
+-- SDRAM
+signal Memory_READ_EN : std_logic := '0';
+signal Memory_WRITE_EN : std_logic := '0';
+signal Memory_DATA_IN : std_logic_vector(15 downto 0) := (others => '0');
+signal Memory_DATA_OUT : std_logic_vector(15 downto 0) := (others => '0');
+signal Memory_count : std_logic_vector(12 downto 0) := (others => '0');
+signal Memory_toggle : std_logic := '0';
 
 ----------------------------------------------------------------------------------------------------------------
 -- COMPONENTS DECLARATION
@@ -393,24 +389,58 @@ port
 );
 end component;
 
-component SDRAMControler
+component RamControler
 Port
 (
     CLOCK_50MHz : in  std_logic;
-    MEMORY_CLOCK : out  std_logic;
+    CLK_SDRAM : out  std_logic;
 
-    MEMORY_ADDRESS : out std_logic_vector(12 downto 0);
-    MEMORY_DATA : inout std_logic_vector(15 downto 0);
-    MEMORY_BANK : out std_logic_vector(1 downto 0);
+    A0 : out std_logic;
+    A1 : out std_logic;
+    A2 : out std_logic;
+    A3 : out std_logic;
+    A4 : out std_logic;
+    A5 : out std_logic;
+    A6 : out std_logic;
+    A7 : out std_logic;
+    A8 : out std_logic;
+    A9 : out std_logic;
+    A10 : out std_logic;
+    A11 : out std_logic;
+    A12 : out std_logic;
 
-    MEMORY_CAS : out std_logic;
-    MEMORY_CKE : out std_logic;
-    MEMORY_RAS : out std_logic;
-    MEMORY_WE : out std_logic;
-    MEMORY_CS : out std_logic;
+    BA0 : out std_logic;
+    BA1 : out std_logic;
 
-    MEMORY_DQML : inout std_logic;
-    MEMORY_DQMH : inout std_logic
+    D0 : inout std_logic;
+    D1 : inout std_logic;
+    D2 : inout std_logic;
+    D3 : inout std_logic;
+    D4 : inout std_logic;
+    D5 : inout std_logic;
+    D6 : inout std_logic;
+    D7 : inout std_logic;
+    D8 : inout std_logic;
+    D9 : inout std_logic;
+    D10 : inout std_logic;
+    D11 : inout std_logic;
+    D12 : inout std_logic;
+    D13 : inout std_logic;
+    D14 : inout std_logic;
+    D15 : inout std_logic;
+
+    CAS : out std_logic;
+    CKE : out std_logic;
+    RAS : out std_logic;
+    WE : out std_logic;
+    CS : out std_logic;
+    LDQM : inout std_logic;
+    UDQM : inout std_logic;
+
+    SDRAM_WRITE_EN : in std_logic;
+    SDRAM_READ_EN : in std_logic;
+    SDRAM_DATA_IN : in std_logic_vector(15 downto 0);
+    SDRAM_DATA_OUT : out std_logic_vector(15 downto 0)
 );
 end component;
 
@@ -636,24 +666,58 @@ port map
     EMPTY => primary_fifo_empty
 );
 
-SDRAMControler_module: SDRAMControler
+RamControler_module: RamControler
 port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
-    MEMORY_CLOCK => CLK_SDRAM,
+    CLK_SDRAM => CLK_SDRAM,
 
-    MEMORY_ADDRESS => memory_address,
-    MEMORY_DATA => memory_data,
-    MEMORY_BANK => memory_bank,
+    A0 => A0,
+    A1 => A1,
+    A2 => A2,
+    A3 => A3,
+    A4 => A4,
+    A5 => A5,
+    A6 => A6,
+    A7 => A7,
+    A8 => A8,
+    A9 => A9,
+    A10 => A10,
+    A11 => A11,
+    A12 => A12,
 
-    MEMORY_CAS => memory_cas,
-    MEMORY_CKE => memory_cke,
-    MEMORY_RAS => memory_ras,
-    MEMORY_WE => memory_we,
-    MEMORY_CS => memory_cs,
+    BA0 => BA0,
+    BA1 => BA1,
 
-    MEMORY_DQML => memory_dqml,
-    MEMORY_DQMH => memory_dqmh
+    D0 => D0,
+    D1 => D1,
+    D2 => D2,
+    D3 => D3,
+    D4 => D4,
+    D5 => D5,
+    D6 => D6,
+    D7 => D7,
+    D8 => D8,
+    D9 => D9,
+    D10 => D10,
+    D11 => D11,
+    D12 => D12,
+    D13 => D13,
+    D14 => D14,
+    D15 => D15,
+
+    CAS => CAS,
+    CKE => CKE,
+    RAS => RAS,
+    WE => WE,
+    CS => CS,
+    LDQM => LDQM,
+    UDQM => UDQM,
+
+    SDRAM_WRITE_EN => Memory_READ_EN,
+    SDRAM_READ_EN => Memory_WRITE_EN,
+    SDRAM_DATA_IN => Memory_DATA_IN,
+    SDRAM_DATA_OUT => Memory_DATA_OUT
 );
 
 OffloadController_module: OffloadController
@@ -846,49 +910,6 @@ begin
         LOGIC_CH2 <= PRIMARY_MOSI;
         LOGIC_CH3 <= PRIMARY_SCLK;
         LOGIC_CH4 <= INT_FROM_CPU;
-    end if;
-end process;
-
-memory_data_process:
-process(CLOCK_50MHz)
-begin
-    if rising_edge(CLOCK_50MHz) then
-        D0 <= memory_data(0);
-        D1 <= memory_data(1);
-        D2 <= memory_data(2);
-        D3 <= memory_data(3);
-        D4 <= memory_data(4);
-        D5 <= memory_data(5);
-        D6 <= memory_data(6);
-        D7 <= memory_data(7);
-        D8 <= memory_data(8);
-        D9 <= memory_data(9);
-        D10 <= memory_data(10);
-        D11 <= memory_data(11);
-        D12 <= memory_data(12);
-        D13 <= memory_data(13);
-        D14 <= memory_data(14);
-        D15 <= memory_data(15);
-    end if;
-end process;
-
-memory_address_process:
-process(CLOCK_50MHz)
-begin
-    if rising_edge(CLOCK_50MHz) then
-        A0 <= memory_address(0);
-        A1 <= memory_address(1);
-        A2 <= memory_address(2);
-        A3 <= memory_address(3);
-        A4 <= memory_address(4);
-        A5 <= memory_address(5);
-        A6 <= memory_address(6);
-        A7 <= memory_address(7);
-        A8 <= memory_address(8);
-        A9 <= memory_address(9);
-        A10 <= memory_address(10);
-        A11 <= memory_address(11);
-        A12 <= memory_address(12);
     end if;
 end process;
 
