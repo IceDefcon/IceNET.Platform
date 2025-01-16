@@ -286,34 +286,21 @@ signal UART_LOG_MESSAGE_DATA : UART_LOG_DATA := ("0111", "1010", "0001", "1011")
 -- SDRAM
 signal Memory_READ_EN : std_logic := '0';
 signal Memory_WRITE_EN : std_logic := '0';
-signal Memory_DATA_IN : std_logic_vector(15 downto 0) := "0111011101010000";
+signal Memory_DATA_IN : std_logic_vector(15 downto 0) := "0001001000110100";
 signal Memory_DATA_OUT : std_logic_vector(15 downto 0) := (others => '0');
 signal Memory_count : std_logic_vector(12 downto 0) := (others => '0');
 signal Memory_toggle : std_logic := '0';
 -- Test
-type TEST is
-(
-    TEST_IDLE,
-    TEST_INIT,
-    TEST_CONFIG,
-    TEST_WRITE,
-    TEST_READ,
-    TEST_CLEAR,
-    TEST_DONE
-);
-signal test_state: TEST := TEST_IDLE;
-signal big_counter : std_logic_vector(25 downto 0) := (others => '0');
-signal small_counter : std_logic_vector(6 downto 0) := (others => '0');
-signal write_amount : integer := 0;
-signal check_amount : integer := 0;
-signal test_switch : std_logic := '0';
+signal test_stop_flag : std_logic = '0';
+signal test_count_first : std_logic_vector(25 downto 0) := (others => '0');
+signal test_count_second : std_logic_vector(25 downto 0) := (others => '0');
 
 ----------------------------------------------------------------------------------------------------------------
 -- COMPONENTS DECLARATION
 ----------------------------------------------------------------------------------------------------------------
 
 component DebounceController
-generic
+generic 
 (
     PERIOD : integer := 50000; -- 50Mhz :: 50000*20ns = 1ms
     SM_OFFSET : integer := 3
@@ -327,7 +314,7 @@ port
 end component;
 
 component SpiConverter
-Port
+Port 
 (
     CLOCK : in  std_logic;
 
@@ -349,7 +336,7 @@ generic
     PERIOD_MS : integer := 1000;
     PULSE_LENGTH : integer := 50
 );
-Port
+Port 
 (
     CLOCK_50MHz : in  std_logic;
     INTERRUPT_SIGNAL : out std_logic
@@ -358,7 +345,7 @@ end component;
 
 component I2cController
 port
-(
+(    
     CLOCK : in std_logic;
     RESET : in std_logic;
 
@@ -406,7 +393,60 @@ port
 );
 end component;
 
-component RamControler
+component RamReadController
+Port
+(
+    CLOCK_50MHz : in  std_logic;
+    CLK_SDRAM : out  std_logic;
+
+    A0 : out std_logic;
+    A1 : out std_logic;
+    A2 : out std_logic;
+    A3 : out std_logic;
+    A4 : out std_logic;
+    A5 : out std_logic;
+    A6 : out std_logic;
+    A7 : out std_logic;
+    A8 : out std_logic;
+    A9 : out std_logic;
+    A10 : out std_logic;
+    A11 : out std_logic;
+    A12 : out std_logic;
+
+    BA0 : out std_logic;
+    BA1 : out std_logic;
+
+    D0 : inout std_logic;
+    D1 : inout std_logic;
+    D2 : inout std_logic;
+    D3 : inout std_logic;
+    D4 : inout std_logic;
+    D5 : inout std_logic;
+    D6 : inout std_logic;
+    D7 : inout std_logic;
+    D8 : inout std_logic;
+    D9 : inout std_logic;
+    D10 : inout std_logic;
+    D11 : inout std_logic;
+    D12 : inout std_logic;
+    D13 : inout std_logic;
+    D14 : inout std_logic;
+    D15 : inout std_logic;
+
+    CAS : out std_logic;
+    CKE : out std_logic;
+    RAS : out std_logic;
+    WE : out std_logic;
+    CS : out std_logic;
+    LDQM : out std_logic;
+    UDQM : out std_logic;
+
+    SDRAM_READ_EN : in std_logic;
+    SDRAM_DATA_OUT : out std_logic_vector(15 downto 0)
+);
+end component;
+
+component RamWriteControler
 Port
 (
     CLOCK_50MHz : in  std_logic;
@@ -455,15 +495,13 @@ Port
     UDQM : inout std_logic;
 
     SDRAM_WRITE_EN : in std_logic;
-    SDRAM_DATA_IN : in std_logic_vector(15 downto 0);
-    SDRAM_READ_EN : in std_logic;
-    SDRAM_DATA_OUT : out std_logic_vector(15 downto 0)
+    SDRAM_DATA_IN : in std_logic_vector(15 downto 0)
 );
 end component;
 
 component OffloadController
 port
-(
+(    
     CLOCK_50MHz : in std_logic;
 
     OFFLOAD_INTERRUPT : in std_logic;
@@ -486,7 +524,7 @@ generic
     BASE_PERIOD_MS : integer := 20
 );
 port
-(
+(    
     CLOCK_50MHz : in std_logic;
 
     OFFLOAD_INT : in std_logic;
@@ -580,7 +618,7 @@ port map
     button_out => reset_button
 );
 
-primarySpiConverter_module: SpiConverter port map
+primarySpiConverter_module: SpiConverter port map 
 (
 	CLOCK => CLOCK_50MHz,
 
@@ -595,7 +633,7 @@ primarySpiConverter_module: SpiConverter port map
     CONVERSION_COMPLETE => primary_conversion_complete -- Out :: Data byte is ready [FIFO Write Enable]
 );
 
-secondarySpiConverter_module: SpiConverter port map
+secondarySpiConverter_module: SpiConverter port map 
 (
     CLOCK => CLOCK_50MHz,
 
@@ -659,7 +697,7 @@ end process;
 -- Byte[1] :: READ_ID
 -- Byte[2] :: READ_REGISTER
 -- Byte[3] :: READ_DATA
---
+-- 
 -- TODO :: CHECKSUM
 --
 ---------------------------------------
@@ -683,7 +721,59 @@ port map
     EMPTY => primary_fifo_empty
 );
 
-RamControler_module: RamControler
+RamReadControler_module: RamReadControler
+port map
+(
+    CLOCK_50MHz => CLOCK_50MHz,
+    CLK_SDRAM => CLK_SDRAM,
+
+    A0 => A0,
+    A1 => A1,
+    A2 => A2,
+    A3 => A3,
+    A4 => A4,
+    A5 => A5,
+    A6 => A6,
+    A7 => A7,
+    A8 => A8,
+    A9 => A9,
+    A10 => A10,
+    A11 => A11,
+    A12 => A12,
+
+    BA0 => BA0,
+    BA1 => BA1,
+
+    D0 => D0,
+    D1 => D1,
+    D2 => D2,
+    D3 => D3,
+    D4 => D4,
+    D5 => D5,
+    D6 => D6,
+    D7 => D7,
+    D8 => D8,
+    D9 => D9,
+    D10 => D10,
+    D11 => D11,
+    D12 => D12,
+    D13 => D13,
+    D14 => D14,
+    D15 => D15,
+
+    CAS => CAS,
+    CKE => CKE,
+    RAS => RAS,
+    WE => WE,
+    CS => CS,
+    LDQM => LDQM,
+    UDQM => UDQM,
+
+    SDRAM_READ_EN => Memory_READ_EN,
+    SDRAM_DATA_OUT => Memory_DATA_OUT
+);
+
+RamWriteControler_module: RamWriteControler
 port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
@@ -732,9 +822,7 @@ port map
     UDQM => UDQM,
 
     SDRAM_WRITE_EN => Memory_WRITE_EN,
-    SDRAM_DATA_IN => Memory_DATA_IN,
-    SDRAM_READ_EN => Memory_READ_EN,
-    SDRAM_DATA_OUT => Memory_DATA_OUT
+    SDRAM_DATA_IN => Memory_DATA_IN
 );
 
 OffloadController_module: OffloadController
@@ -861,7 +949,7 @@ generic map
 (
     BASE_PERIOD_MS => 20  -- 20ms Base Period
 )
-port map
+port map 
 (
     -- IN
     CLOCK_50MHz => CLOCK_50MHz,
@@ -930,67 +1018,28 @@ begin
     end if;
 end process;
 
-write_process:
+write_read_process:
 process(CLOCK_50MHz)
 begin
     if rising_edge(CLOCK_50MHz) then
-
-        case test_state is
-
-            when TEST_IDLE =>
-                if big_counter = "10111110101111000001111111" then
-                    big_counter <= (others => '0');
-                    test_state <= TEST_INIT;
-                else
-                    big_counter <= big_counter + '1';
-                end if;
-
-            when TEST_INIT =>
-                write_amount <= 4;
-                test_state <= TEST_CONFIG;
-
-            when TEST_CONFIG =>
-                if small_counter = "1100011" then
-                    small_counter <= (others => '0');
-                    if check_amount = write_amount then
-                        check_amount <= 0;
-                        test_state <= TEST_DONE;
-                    else
-                        if test_switch = '0' then
-                            test_state <= TEST_WRITE;
-                        else
-                            test_state <= TEST_READ;
-                        end if;
-                        check_amount <= check_amount + 1;
-                    end if;
-                else
-                    small_counter <= small_counter + '1';
-                end if;
-
-            when TEST_WRITE =>
-                Memory_WRITE_EN <= '1';
-                Memory_DATA_IN <= Memory_DATA_IN + '1';
-                test_state <= TEST_CLEAR;
-
-            when TEST_READ =>
-                Memory_READ_EN <= '1';
-                test_state <= TEST_CLEAR;
-
-            when TEST_CLEAR =>
-                Memory_WRITE_EN <= '0';
+        if test_stop_flag = '0' then
+            if test_count_first = "10111110101111000001111111" then
                 Memory_READ_EN <= '0';
-                test_state <= TEST_CONFIG;
-
-            when TEST_DONE =>
-                if test_switch = '0' then
-                    test_switch <= '1';
-                    test_state <= TEST_CONFIG;
+                Memory_WRITE_EN <= '1';
+                if test_count_second = "10111110101111000001111111" then
+                    Memory_READ_EN <= '1';
+                    Memory_WRITE_EN <= '0';
+                    test_stop_flag <= '1';
+                else
+                    test_count_second <= test_count_second + '1';
                 end if;
-
-            when others =>
-                test_state <= TEST_IDLE;
-
-        end case;
+            else
+                test_count_first <= test_count_first + '1';
+            end if;
+        else
+            Memory_READ_EN <= '0';
+            Memory_WRITE_EN <= '0';
+        end if;
     end if;
 end process;
 
