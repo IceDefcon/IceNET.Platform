@@ -303,7 +303,7 @@ type TEST is
 );
 signal test_state: TEST := TEST_IDLE;
 signal big_counter : std_logic_vector(25 downto 0) := (others => '0');
-signal small_counter : std_logic_vector(8 downto 0) := (others => '0');
+signal small_counter : std_logic_vector(6 downto 0) := (others => '0');
 signal write_amount : integer := 0;
 signal check_amount : integer := 0;
 signal test_switch : std_logic := '0';
@@ -950,7 +950,7 @@ begin
                 test_state <= TEST_CONFIG;
 
             when TEST_CONFIG =>
-                if small_counter = "111110011" then
+                if small_counter = "1100011" then
                     small_counter <= (others => '0');
                     if check_amount = write_amount then
                         check_amount <= 0;
