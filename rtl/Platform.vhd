@@ -303,16 +303,20 @@ signal test_ram_state : TEST_STATE := TEST_IDLE;
 signal test_timer : std_logic_vector(26 downto 0) := (others => '0');
 signal test_flag : std_logic := '0';
 signal test_ops : integer := 0;
--- Test
-signal TEST_ADDR :  std_logic_vector(23 downto 0) := (others => '0');
+--
+--
+-- Address ---> Row[23:11] : Bank[10:9] : Column[8:0]
+-- Data ---> 0x5570
+--
+signal TEST_ADDR :  std_logic_vector(23 downto 0) := "000000000000100000000011";
 signal TEST_WRITE_EN : std_logic := '0';
-signal TEST_DATA_IN :  std_logic_vector(15 downto 0) := (others => '0');
+signal TEST_DATA_IN :  std_logic_vector(15 downto 0) := "0101010101110000";
 signal TEST_READ_EN : std_logic := '0';
 signal TEST_DATA_OUT : std_logic_vector(15 downto 0) := (others => '0');
 signal TEST_READY : std_logic := '0';
-
 -- PLL
 signal clock_100MHz : std_logic := '0';
+
 ----------------------------------------------------------------------------------------------------------------
 -- COMPONENTS DECLARATION
 ----------------------------------------------------------------------------------------------------------------
@@ -991,16 +995,18 @@ begin
                 test_ram_state <= TEST_WRITE;
 
             when TEST_CONFIG =>
+                TEST_READ_EN <= '0';
+                TEST_WRITE_EN <= '0';
                 if test_flag = '0' then
                     if test_ops = 3 then
                         test_ops <= 0;
                         test_flag <= '1';
-                        test_ram_state <= TEST_READ;
+                        test_ram_state <= TEST_CONFIG;
                     else
                         test_ops <= test_ops + 1;
                         test_ram_state <= TEST_WRITE;
                     end if;
-                else
+                elsif test_flag = '1' then
                     if test_ops = 4 then
                         test_ops <= 0;
                         test_flag <= '0';
@@ -1012,15 +1018,14 @@ begin
                 end if;
 
             when TEST_WRITE =>
-                --
-                --
-                --
+                TEST_WRITE_EN <= '1';
+                TEST_DATA_IN <= TEST_DATA_IN + '1';
+                TEST_ADDR <= TEST_ADDR + "100000000000";
                 test_ram_state <= TEST_CONFIG;
 
             when TEST_READ =>
-                --
-                --
-                --
+                TEST_READ_EN <= '1';
+                TEST_ADDR <= TEST_ADDR - "100000000000";
                 test_ram_state <= TEST_CONFIG;
 
             when TEST_DONE =>
