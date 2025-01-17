@@ -288,8 +288,8 @@ signal reset_i    : std_logic := '0';
 signal refresh_i  : std_logic := '0';
 signal rw_i       : std_logic := '0';
 signal we_i       : std_logic := '0';
-signal addr_i     : std_logic_vector(23 downto 0);
-signal data_i     : std_logic_vector(15 downto 0);
+signal addr_i     : std_logic_vector(23 downto 0) := "000000000000011000000001";
+signal data_i     : std_logic_vector(15 downto 0) := "0101010101110000";
 signal ub_i       : std_logic;
 signal lb_i       : std_logic;
 signal ready_o    : std_logic;
@@ -302,17 +302,20 @@ signal sdData : std_logic_vector(15 downto 0);
 -- Test
 type state_type is
 (
-    ST_WAIT,
     ST_IDLE,
+    ST_INIT,
+    ST_CONFIG,
     ST_READ,
     ST_WRITE,
-    ST_REFRESH
+    ST_REFRESH,
+    ST_DONE
 );
 
-signal state_r, state_x : state_type := ST_WAIT;
+signal state_r : state_type := ST_IDLE;
 -- Test
-signal test_timer : std_logic_vector(26 downto 0);
-
+signal test_timer : std_logic_vector(26 downto 0) := (others => '0');
+signal test_flag : std_logic := '0';
+signal test_ops : integer := 0;
 ----------------------------------------------------------------------------------------------------------------
 -- COMPONENTS DECLARATION
 ----------------------------------------------------------------------------------------------------------------
@@ -933,68 +936,74 @@ end process;
 --NRF905_TRX_CE <= '0';
 --NRF905_TX_EN <= 'Z';
 
-process (CLOCK_50MHz)
+process (CLOCK_50MHz, state_r, ready_o, done_o)
 begin
     if rising_edge(CLOCK_50MHz) then
-        state_r <= state_x;
-    end if;
-end process;
 
-process ( state_r, ready_o, done_o )
-begin
-    if test_timer = "101111101011110000011111111" then
-
-        state_x <= state_r;
         rw_i <= '0';
         we_i <= '1';
         ub_i <= '0';
         lb_i <= '0';
 
-        case ( state_r ) is
-
-            when ST_WAIT =>
-                if  ready_o = '1' then
-                    state_x <= ST_READ;
-                end if;
+        case (state_r) is
 
             when ST_IDLE =>
-                state_x <= ST_IDLE;
+                if test_timer = "101111101011110000011111111" then
+                    state_r <= ST_INIT;
+                else
+                    test_timer <= test_timer + '1';
+                end if;
+
+            when ST_INIT =>
+                if  ready_o = '1' then
+                    state_r <= ST_WRITE;
+                end if;
+
+            when ST_CONFIG =>
+                if done_o = '1' then
+                    if test_flag = '0' then
+                        if test_ops = 4 then
+                            test_ops <= 0;
+                            test_flag <= '1';
+                            state_r <= ST_CONFIG;
+                        else
+                            test_ops <= test_ops + 1;
+                            state_r <= ST_WRITE;
+                        end if;
+                    elsif test_flag = '1' then
+                        if test_ops = 4 then
+                            test_ops <= 0;
+                            state_r <= ST_DONE;
+                        else
+                            test_ops <= test_ops + 1;
+                            state_r <= ST_READ;
+                        end if;
+                    end if;
+                end if;
 
             when ST_READ =>
-                if done_o = '0' then
-                    rw_i <= '1';
-                    addr_i <= "000000000000011000000001";
-                else
-                    state_x <= ST_WRITE;
-                end if;
+                rw_i <= '1';
+                addr_i <= addr_i - '1';
+                state_r <= ST_REFRESH;
 
             when ST_WRITE =>
-                if done_o = '0' then
-                    rw_i <= '1';
-                    we_i <= '0';
-                    addr_i <= "000000000000011000000001";
-                    data_i <= X"ADCD";
-                    ub_i <= '1';
-                    lb_i <= '0';
-                else
-                    state_x <= ST_REFRESH;
-                end if;
+                rw_i <= '1';
+                we_i <= '0';
+                addr_i <= addr_i + '1';
+                data_i <= data_i + '1';
+                ub_i <= '1';
+                lb_i <= '0';
+                state_r <= ST_REFRESH;
 
             when ST_REFRESH =>
-                if done_o = '0' then
-                    refresh_i <= '1';
-                else
-                    state_x <= ST_IDLE;
-                end if;
+                refresh_i <= '1';
+                state_r <= ST_CONFIG;
+
+            when ST_DONE =>
+                state_r <= ST_DONE;
+
         end case;
-    else
-        test_timer <= test_timer + '1';
     end if;
 end process;
 
-
-
-
 end rtl;
-
-

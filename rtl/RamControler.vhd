@@ -89,69 +89,71 @@ architecture rtl of RamControler is
 
 
 
-   -- SDRAM controller states.
+-- SDRAM controller states.
 
 
-    type RAM_STATE_MACHINE is
-    (
-        ST_INIT_WAIT,
-        ST_INIT_PRECHARGE,
-        ST_INIT_REFRESH1,
-        ST_INIT_MODE,
-        ST_INIT_REFRESH2,
-        ST_IDLE,
-        ST_REFRESH,
-        ST_ACTIVATE,
-        ST_RCD,
-        ST_RW,
-        ST_RAS1,
-        ST_RAS2,
-        ST_PRECHARGE
-    );
-   signal state_r, state_x : RAM_STATE_MACHINE := ST_INIT_WAIT;
+type RAM_STATE_MACHINE is
+(
+    ST_INIT_WAIT,
+    ST_INIT_PRECHARGE,
+    ST_INIT_REFRESH1,
+    ST_INIT_MODE,
+    ST_INIT_REFRESH2,
+    ST_IDLE,
+    ST_REFRESH,
+    ST_ACTIVATE,
+    ST_RCD,
+    ST_RW,
+    ST_RAS1,
+    ST_RAS2,
+    ST_PRECHARGE
+);
+signal state_r, state_x : RAM_STATE_MACHINE := ST_INIT_WAIT;
 
 
-   -- SDRAM mode register data sent on the address bus.
-   --
-   -- | A12-A10 |    A9    | A8  A7 | A6 A5 A4 |    A3   | A2 A1 A0 |
-   -- | reserved| wr burst |reserved| CAS Ltncy|addr mode| burst len|
-   --   0  0  0      0       0   0    0  1  0       0      0  0  0
-   constant MODE_REG : std_logic_vector(12 downto 0) := "000" & "0" & "00" & "010" & "0" & "000";
+-- SDRAM mode register data sent on the address bus.
+--
+-- | A12-A10 |    A9    | A8  A7 | A6 A5 A4 |    A3   | A2 A1 A0 |
+-- | reserved| wr burst |reserved| CAS Ltncy|addr mode| burst len|
+--   0  0  0      0       0   0    0  1  0       0      0  0  0
+constant MODE_REG : std_logic_vector(12 downto 0) := "000" & "0" & "00" & "010" & "0" & "000";
 
-   -- SDRAM commands combine SDRAM inputs: cs, ras, cas, we.
-   subtype cmd_type is unsigned(3 downto 0);
-   constant CMD_ACTIVATE         : cmd_type := "0011";
-   constant CMD_PRECHARGE        : cmd_type := "0010";
-   constant CMD_WRITE            : cmd_type := "0100";
-   constant CMD_READ             : cmd_type := "0101";
-   constant CMD_MODE             : cmd_type := "0000";
-   constant CMD_NOP              : cmd_type := "0111";
-   constant CMD_REFRESH          : cmd_type := "0001";
+-- SDRAM commands combine SDRAM inputs: cs, ras, cas, we.
+subtype cmd_type is unsigned(3 downto 0);
+constant CMD_ACTIVATE         : cmd_type := "0011";
+constant CMD_PRECHARGE        : cmd_type := "0010";
+constant CMD_WRITE            : cmd_type := "0100";
+constant CMD_READ             : cmd_type := "0101";
+constant CMD_MODE             : cmd_type := "0000";
+constant CMD_NOP              : cmd_type := "0111";
+constant CMD_REFRESH          : cmd_type := "0001";
 
-   signal cmd_r                  : cmd_type;
-   signal cmd_x                  : cmd_type;
+signal cmd_r                  : cmd_type;
+signal cmd_x                  : cmd_type;
 
-   signal bank_s                 : std_logic_vector( 1 downto 0);
-   signal row_s                  : std_logic_vector(12 downto 0);
-   signal col_s                  : std_logic_vector( 8 downto 0);
-   signal addr_r                 : std_logic_vector(12 downto 0);
-   signal addr_x                 : std_logic_vector(12 downto 0);    -- SDRAM row/column address.
-   signal sd_dout_r              : std_logic_vector(15 downto 0);
-   signal sd_dout_x              : std_logic_vector(15 downto 0);
-   signal sd_busdir_r            : std_logic;
-   signal sd_busdir_x            : std_logic;
+signal bank_s                 : std_logic_vector( 1 downto 0);
+signal row_s                  : std_logic_vector(12 downto 0);
+signal col_s                  : std_logic_vector( 8 downto 0);
+signal addr_r                 : std_logic_vector(12 downto 0);
+signal addr_x                 : std_logic_vector(12 downto 0);    -- SDRAM row/column address.
+signal sd_dout_r              : std_logic_vector(15 downto 0);
+signal sd_dout_x              : std_logic_vector(15 downto 0);
+signal sd_busdir_r            : std_logic;
+signal sd_busdir_x            : std_logic;
 
-   signal timer_r, timer_x       : natural range 0 to 20000 := 0;
-   signal refcnt_r, refcnt_x     : natural range 0 to 8 := 0;
+signal timer_r, timer_x       : natural range 0 to 20000 := 0;
+signal refcnt_r, refcnt_x     : natural range 0 to 8 := 0;
 
-   signal bank_r, bank_x         : std_logic_vector(1 downto 0);
-   signal cke_r, cke_x           : std_logic;
-   signal sd_dqmu_r, sd_dqmu_x   : std_logic;
-   signal sd_dqml_r, sd_dqml_x   : std_logic;
-   signal ready_r, ready_x       : std_logic;
+signal bank_r, bank_x         : std_logic_vector(1 downto 0);
+signal cke_r, cke_x           : std_logic;
+signal sd_dqmu_r, sd_dqmu_x   : std_logic;
+signal sd_dqml_r, sd_dqml_x   : std_logic;
+signal ready_r, ready_x       : std_logic;
 
-   -- Data buffer for SDRAM to Host.
-   signal buf_dout_r, buf_dout_x : std_logic_vector(15 downto 0);
+-- Data buffer for SDRAM to Host.
+signal buf_dout_r, buf_dout_x : std_logic_vector(15 downto 0);
+
+signal test_timer : std_logic_vector(26 downto 0) := (others => '0');
 
 begin
 
@@ -370,7 +372,6 @@ begin
             state_x <= ST_IDLE;
             DONE_O <= '1';             -- Read data is ready and should be latched by the host.
             timer_x <= 1;              -- Buffer to make sure host takes down memory request before going IDLE.
-
          end case;
       end if;
    end process;
