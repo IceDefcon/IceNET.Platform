@@ -283,30 +283,35 @@ signal uart_write_busy : std_logic := '0';
 -- UART Test Log
 signal UART_LOG_MESSAGE_ID : UART_LOG_ID := ("0101", "1100"); -- 0x5C
 signal UART_LOG_MESSAGE_DATA : UART_LOG_DATA := ("0111", "1010", "0001", "1011"); -- 0x7A1B
--- SDRAM
-signal Memory_READ_EN : std_logic := '0';
-signal Memory_WRITE_EN : std_logic := '0';
-signal Memory_DATA_IN : std_logic_vector(15 downto 0) := "0111011101010000";
-signal Memory_DATA_OUT : std_logic_vector(15 downto 0) := (others => '0');
-signal Memory_count : std_logic_vector(12 downto 0) := (others => '0');
-signal Memory_toggle : std_logic := '0';
+-- Signals for RamControler
+signal reset_i    : std_logic := '0';
+signal refresh_i  : std_logic := '0';
+signal rw_i       : std_logic := '0';
+signal we_i       : std_logic := '0';
+signal addr_i     : std_logic_vector(23 downto 0);
+signal data_i     : std_logic_vector(15 downto 0);
+signal ub_i       : std_logic;
+signal lb_i       : std_logic;
+signal ready_o    : std_logic;
+signal done_o     : std_logic;
+signal data_o     : std_logic_vector(15 downto 0);
+-- Signals for SDRAM Address and Data Mapping
+signal sdBs : std_logic_vector(1 downto 0);
+signal sdAddr : std_logic_vector(12 downto 0);
+signal sdData : std_logic_vector(15 downto 0);
 -- Test
-type TEST is
+type state_type is
 (
-    TEST_IDLE,
-    TEST_INIT,
-    TEST_CONFIG,
-    TEST_WRITE,
-    TEST_READ,
-    TEST_CLEAR,
-    TEST_DONE
+    ST_WAIT,
+    ST_IDLE,
+    ST_READ,
+    ST_WRITE,
+    ST_REFRESH
 );
-signal test_state: TEST := TEST_IDLE;
-signal big_counter : std_logic_vector(25 downto 0) := (others => '0');
-signal small_counter : std_logic_vector(6 downto 0) := (others => '0');
-signal write_amount : integer := 0;
-signal check_amount : integer := 0;
-signal test_switch : std_logic := '0';
+
+signal state_r, state_x : state_type := ST_WAIT;
+-- Test
+signal test_timer : std_logic_vector(26 downto 0);
 
 ----------------------------------------------------------------------------------------------------------------
 -- COMPONENTS DECLARATION
@@ -409,55 +414,31 @@ end component;
 component RamControler
 Port
 (
-    CLOCK_50MHz : in  std_logic;
-    CLK_SDRAM : out  std_logic;
+    -- Host side
+    CLOCK_50MHz_I : in std_logic; -- Master clock
+    RESET_I : in std_logic := '0'; -- Reset, active high
+    REFRESH_I : in std_logic := '0'; -- Initiate a refresh cycle, active high
+    RW_I : in std_logic := '0'; -- Initiate a read or write operation, active high
+    WE_I : in std_logic := '0'; -- Write enable, active low
+    ADDR_I : in std_logic_vector(23 downto 0); -- Address from host to SDRAM
+    DATA_I : in std_logic_vector(15 downto 0); -- Data from host to SDRAM
+    UB_I : in std_logic; -- Data upper byte enable, active low
+    LB_I : in std_logic; -- Data lower byte enable, active low
+    READY_O : out std_logic := '0'; -- Set to '1' when the memory is ready
+    DONE_O : out std_logic := '0'; -- Read, write, or refresh, operation is done
+    DATA_O : out std_logic_vector(15 downto 0); -- Data from SDRAM to host
 
-    A0 : out std_logic;
-    A1 : out std_logic;
-    A2 : out std_logic;
-    A3 : out std_logic;
-    A4 : out std_logic;
-    A5 : out std_logic;
-    A6 : out std_logic;
-    A7 : out std_logic;
-    A8 : out std_logic;
-    A9 : out std_logic;
-    A10 : out std_logic;
-    A11 : out std_logic;
-    A12 : out std_logic;
-
-    BA0 : out std_logic;
-    BA1 : out std_logic;
-
-    D0 : inout std_logic;
-    D1 : inout std_logic;
-    D2 : inout std_logic;
-    D3 : inout std_logic;
-    D4 : inout std_logic;
-    D5 : inout std_logic;
-    D6 : inout std_logic;
-    D7 : inout std_logic;
-    D8 : inout std_logic;
-    D9 : inout std_logic;
-    D10 : inout std_logic;
-    D11 : inout std_logic;
-    D12 : inout std_logic;
-    D13 : inout std_logic;
-    D14 : inout std_logic;
-    D15 : inout std_logic;
-
-    CAS : out std_logic;
-    CKE : out std_logic;
-    RAS : out std_logic;
-    WE : out std_logic;
-    CS : out std_logic;
-    LDQM : inout std_logic;
-    UDQM : inout std_logic;
-
-    SDRAM_WRITE_EN : in std_logic;
-    SDRAM_DATA_IN : in std_logic_vector(15 downto 0);
-    SDRAM_READ_EN : in std_logic;
-    SDRAM_DATA_OUT : out std_logic_vector(15 downto 0)
+    -- SDRAM side
+    CKE_O : out std_logic; -- Clock-enable to SDRAM
+    CS_O : out std_logic; -- Chip-select to SDRAM
+    RAS_O : out std_logic; -- SDRAM row address strobe
+    CAS_O : out std_logic; -- SDRAM column address strobe
+    WE_O : out std_logic; -- SDRAM write enable
+    BA_O : out std_logic_vector( 1 downto 0); -- SDRAM bank address
+    ADDR_O : out std_logic_vector(12 downto 0); -- SDRAM row/column address
+    DATA_IO : inout std_logic_vector(15 downto 0); -- Data to/from SDRAM
+    DQMH_O : out std_logic; -- Enable upper-byte of SDRAM databus if true
+    DQML_O : out std_logic -- Enable lower-byte of SDRAM databus if true
 );
 end component;
 
@@ -686,56 +667,69 @@ port map
 RamControler_module: RamControler
 port map
 (
-    CLOCK_50MHz => CLOCK_50MHz,
-    CLK_SDRAM => CLK_SDRAM,
+    -- Host Interface
+    CLOCK_50MHz_I => CLOCK_50MHz,
+    RESET_I => reset_i,
+    REFRESH_I => refresh_i,
+    RW_I => rw_i,
+    WE_I => we_i,
+    ADDR_I => addr_i,
+    DATA_I => data_i,
+    UB_I => ub_i,
+    LB_I => lb_i,
+    READY_O => ready_o,
+    DONE_O => done_o,
+    DATA_O => data_o,
 
-    A0 => A0,
-    A1 => A1,
-    A2 => A2,
-    A3 => A3,
-    A4 => A4,
-    A5 => A5,
-    A6 => A6,
-    A7 => A7,
-    A8 => A8,
-    A9 => A9,
-    A10 => A10,
-    A11 => A11,
-    A12 => A12,
-
-    BA0 => BA0,
-    BA1 => BA1,
-
-    D0 => D0,
-    D1 => D1,
-    D2 => D2,
-    D3 => D3,
-    D4 => D4,
-    D5 => D5,
-    D6 => D6,
-    D7 => D7,
-    D8 => D8,
-    D9 => D9,
-    D10 => D10,
-    D11 => D11,
-    D12 => D12,
-    D13 => D13,
-    D14 => D14,
-    D15 => D15,
-
-    CAS => CAS,
-    CKE => CKE,
-    RAS => RAS,
-    WE => WE,
-    CS => CS,
-    LDQM => LDQM,
-    UDQM => UDQM,
-
-    SDRAM_WRITE_EN => Memory_WRITE_EN,
-    SDRAM_DATA_IN => Memory_DATA_IN,
-    SDRAM_READ_EN => Memory_READ_EN,
-    SDRAM_DATA_OUT => Memory_DATA_OUT
+    -- SDRAM Interface
+    CKE_O => CKE,
+    CS_O => CS,
+    RAS_O => RAS,
+    CAS_O => CAS,
+    WE_O => WE,
+    BA_O => sdBs,
+    ADDR_O => sdAddr,
+    DATA_IO => sdData,
+    DQMH_O => UDQM,
+    DQML_O => LDQM
 );
+
+-----------------------------------------------------------------------------------------------
+-- Map to output
+-----------------------------------------------------------------------------------------------
+BA0 <= sdBs(0);
+BA1 <= sdBs(1);
+
+A0 <= sdAddr(0);
+A1 <= sdAddr(1);
+A2 <= sdAddr(2);
+A3 <= sdAddr(3);
+A4 <= sdAddr(4);
+A5 <= sdAddr(5);
+A6 <= sdAddr(6);
+A7 <= sdAddr(7);
+A8 <= sdAddr(8);
+A9 <= sdAddr(9);
+A10 <= sdAddr(10);
+A11 <= sdAddr(11);
+A12 <= sdAddr(12);
+
+D0 <= sdData(0);
+D1 <= sdData(1);
+D2 <= sdData(2);
+D3 <= sdData(3);
+D4 <= sdData(4);
+D5 <= sdData(5);
+D6 <= sdData(6);
+D7 <= sdData(7);
+D8 <= sdData(8);
+D9 <= sdData(9);
+D10 <= sdData(10);
+D11 <= sdData(11);
+D12 <= sdData(12);
+D13 <= sdData(13);
+D14 <= sdData(14);
+D15 <= sdData(15);
 
 OffloadController_module: OffloadController
 port map
@@ -904,6 +898,26 @@ begin
     end if;
 end process;
 
+logic_process:
+process(CLOCK_50MHz)
+begin
+    if rising_edge(CLOCK_50MHz) then
+        LOGIC_CH1 <= PRIMARY_CS;
+        LOGIC_CH2 <= PRIMARY_MOSI;
+        LOGIC_CH3 <= PRIMARY_SCLK;
+        LOGIC_CH4 <= INT_FROM_CPU;
+    end if;
+end process;
+
+--uart_loopthrough_process:
+--process(CLOCK_50MHz)
+--begin
+--    if rising_edge(CLOCK_50MHz) then
+--        UART_x86_TX <= UART_BBB_TX;
+--        UART_BBB_RX <= UART_x86_RX;
+--    end if;
+--end process;
+
 --looptrough_spi_process:
 --process(CLOCK_50MHz)
 --begin
@@ -919,89 +933,67 @@ end process;
 --NRF905_TRX_CE <= '0';
 --NRF905_TX_EN <= 'Z';
 
-logic_process:
-process(CLOCK_50MHz)
+process (CLOCK_50MHz)
 begin
     if rising_edge(CLOCK_50MHz) then
-        LOGIC_CH1 <= PRIMARY_CS;
-        LOGIC_CH2 <= PRIMARY_MOSI;
-        LOGIC_CH3 <= PRIMARY_SCLK;
-        LOGIC_CH4 <= INT_FROM_CPU;
+        state_r <= state_x;
     end if;
 end process;
 
-write_process:
-process(CLOCK_50MHz)
+process ( state_r, ready_o, done_o )
 begin
-    if rising_edge(CLOCK_50MHz) then
+    if test_timer = "101111101011110000011111111" then
 
-        case test_state is
+        state_x <= state_r;
+        rw_i <= '0';
+        we_i <= '1';
+        ub_i <= '0';
+        lb_i <= '0';
 
-            when TEST_IDLE =>
-                if big_counter = "10111110101111000001111111" then
-                    big_counter <= (others => '0');
-                    test_state <= TEST_INIT;
+        case ( state_r ) is
+
+            when ST_WAIT =>
+                if  ready_o = '1' then
+                    state_x <= ST_READ;
+                end if;
+
+            when ST_IDLE =>
+                state_x <= ST_IDLE;
+
+            when ST_READ =>
+                if done_o = '0' then
+                    rw_i <= '1';
+                    addr_i <= "000000000000011000000001";
                 else
-                    big_counter <= big_counter + '1';
+                    state_x <= ST_WRITE;
                 end if;
 
-            when TEST_INIT =>
-                write_amount <= 4;
-                test_state <= TEST_CONFIG;
-
-            when TEST_CONFIG =>
-                if small_counter = "1100011" then
-                    small_counter <= (others => '0');
-                    if check_amount = write_amount then
-                        check_amount <= 0;
-                        test_state <= TEST_DONE;
-                    else
-                        if test_switch = '0' then
-                            test_state <= TEST_WRITE;
-                        else
-                            test_state <= TEST_READ;
-                        end if;
-                        check_amount <= check_amount + 1;
-                    end if;
+            when ST_WRITE =>
+                if done_o = '0' then
+                    rw_i <= '1';
+                    we_i <= '0';
+                    addr_i <= "000000000000011000000001";
+                    data_i <= X"ADCD";
+                    ub_i <= '1';
+                    lb_i <= '0';
                 else
-                    small_counter <= small_counter + '1';
+                    state_x <= ST_REFRESH;
                 end if;
 
-            when TEST_WRITE =>
-                Memory_WRITE_EN <= '1';
-                Memory_DATA_IN <= Memory_DATA_IN + '1';
-                test_state <= TEST_CLEAR;
-
-            when TEST_READ =>
-                Memory_READ_EN <= '1';
-                test_state <= TEST_CLEAR;
-
-            when TEST_CLEAR =>
-                Memory_WRITE_EN <= '0';
-                Memory_READ_EN <= '0';
-                test_state <= TEST_CONFIG;
-
-            when TEST_DONE =>
-                if test_switch = '0' then
-                    test_switch <= '1';
-                    test_state <= TEST_CONFIG;
+            when ST_REFRESH =>
+                if done_o = '0' then
+                    refresh_i <= '1';
+                else
+                    state_x <= ST_IDLE;
                 end if;
-
-            when others =>
-                test_state <= TEST_IDLE;
-
         end case;
+    else
+        test_timer <= test_timer + '1';
     end if;
 end process;
 
---uart_loopthrough_process:
---process(CLOCK_50MHz)
---begin
---    if rising_edge(CLOCK_50MHz) then
---        UART_x86_TX <= UART_BBB_TX;
---        UART_BBB_RX <= UART_x86_RX;
---    end if;
---end process;
+
+
 
 end rtl;
 
