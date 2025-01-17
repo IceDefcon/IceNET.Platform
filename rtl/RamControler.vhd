@@ -1,339 +1,408 @@
-library ieee;
-use ieee.numeric_std.all;
-use ieee.std_logic_1164.all;
-use ieee.std_logic_unsigned.all;
+-- Released under the 3-Clause BSD License:
+--
+-- Copyright 2010-2019 Matthew Hagerty (matthew <at> dnotq <dot> io)
+--
+-- Redistribution and use in source and binary forms, with or without
+-- modification, are permitted provided that the following conditions are met:
+--
+-- 1. Redistributions of source code must retain the above copyright notice,
+-- this list of conditions and the following disclaimer.
+--
+-- 2. Redistributions in binary form must reproduce the above copyright
+-- notice, this list of conditions and the following disclaimer in the
+-- documentation and/or other materials provided with the distribution.
+--
+-- 3. Neither the name of the copyright holder nor the names of its
+-- contributors may be used to endorse or promote products derived from this
+-- software without specific prior written permission.
+--
+-- THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+-- AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+-- IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+-- ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+-- LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+-- CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+-- SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+-- INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+-- CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+-- ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+-- POSSIBILITY OF SUCH DAMAGE.
+
+-- Simple SDRAM Controller for Winbond W9812G6JH-75
+--
+-- Matthew Hagerty
+--
+-- Change Log:
+--
+-- Dec 14, 2019
+--    Changed SDRAM input data setup to ST_RAS1 so it will be correctly
+--    registered during ST_RAS2.
+--    Comment cleanup.
+--
+-- Jan 28, 2016
+--    Changed to use positive clock edge.
+--    Buffered output (read) data, sampled during RAS2.
+--    Removed unused signals for features that were not implemented.
+--    Changed tabs to space.
+--
+-- March 19, 2014
+--    Initial implementation.
+
+library IEEE, UNISIM;
+use IEEE.std_logic_1164.all;
+use IEEE.std_logic_unsigned.all;
+use IEEE.numeric_std.all;
+use IEEE.math_real.all;
 
 entity RamControler is
 Port
 (
-    CLOCK_50MHz : in  std_logic;
-    CLK_SDRAM : out  std_logic;
+    -- Host side
+    CLOCK_50MHz_I : in std_logic; -- Master clock
+    RESET_I : in std_logic := '0'; -- Reset, active high
+    REFRESH_I : in std_logic := '0'; -- Initiate a refresh cycle, active high
+    RW_I : in std_logic := '0'; -- Initiate a read or write operation, active high
+    WE_I : in std_logic := '0'; -- Write enable, active low
+    ADDR_I : in std_logic_vector(23 downto 0); -- Address from host to SDRAM
+    DATA_I : in std_logic_vector(15 downto 0); -- Data from host to SDRAM
+    UB_I : in std_logic; -- Data upper byte enable, active low
+    LB_I : in std_logic; -- Data lower byte enable, active low
+    READY_O : out std_logic := '0'; -- Set to '1' when the memory is ready
+    DONE_O : out std_logic := '0'; -- Read, write, or refresh, operation is done
+    DATA_O : out std_logic_vector(15 downto 0); -- Data from SDRAM to host
 
-    A0 : out std_logic;
-    A1 : out std_logic;
-    A2 : out std_logic;
-    A3 : out std_logic;
-    A4 : out std_logic;
-    A5 : out std_logic;
-    A6 : out std_logic;
-    A7 : out std_logic;
-    A8 : out std_logic;
-    A9 : out std_logic;
-    A10 : out std_logic;
-    A11 : out std_logic;
-    A12 : out std_logic;
-
-    BA0 : out std_logic;
-    BA1 : out std_logic;
-
-    D0 : inout std_logic;
-    D1 : inout std_logic;
-    D2 : inout std_logic;
-    D3 : inout std_logic;
-    D4 : inout std_logic;
-    D5 : inout std_logic;
-    D6 : inout std_logic;
-    D7 : inout std_logic;
-    D8 : inout std_logic;
-    D9 : inout std_logic;
-    D10 : inout std_logic;
-    D11 : inout std_logic;
-    D12 : inout std_logic;
-    D13 : inout std_logic;
-    D14 : inout std_logic;
-    D15 : inout std_logic;
-
-    CAS : out std_logic;
-    CKE : out std_logic;
-    RAS : out std_logic;
-    WE : out std_logic;
-    CS : out std_logic;
-    LDQM : inout std_logic;
-    UDQM : inout std_logic;
-
-    SDRAM_WRITE_EN : in std_logic;
-    SDRAM_DATA_IN : in std_logic_vector(15 downto 0);
-    SDRAM_READ_EN : in std_logic;
-    SDRAM_DATA_OUT : out std_logic_vector(15 downto 0)
+    -- SDRAM side
+    CLK_SDRAM : out std_logic; -- Clock to RAM
+    CKE_O : out std_logic; -- Clock-enable to SDRAM
+    CS_O : out std_logic; -- Chip-select to SDRAM
+    RAS_O : out std_logic; -- SDRAM row address strobe
+    CAS_O : out std_logic; -- SDRAM column address strobe
+    WE_O : out std_logic; -- SDRAM write enable
+    BA_O : out std_logic_vector( 1 downto 0); -- SDRAM bank address
+    ADDR_O : out std_logic_vector(12 downto 0); -- SDRAM row/column address
+    DATA_IO : inout std_logic_vector(15 downto 0); -- Data to/from SDRAM
+    DQMH_O : out std_logic; -- Enable upper-byte of SDRAM databus if true
+    DQML_O : out std_logic -- Enable lower-byte of SDRAM databus if true
 );
-end entity RamControler;
+end entity;
 
 architecture rtl of RamControler is
 
-type WRITE_STATE is
-(
-    WRITE_IDLE,
-    WRITE_INIT,
-    WRITE_ACTIVATE,
-    WRITE_PROCESS,
-    WRITE_PRECHARGE
-);
-signal write_ram_state: WRITE_STATE := WRITE_IDLE;
 
-type READ_STATE is
-(
-    READ_IDLE,
-    READ_INIT,
-    READ_ACTIVATE,
-    READ_PROCESS,
-    READ_PRECHARGE
-);
-signal read_ram_state: READ_STATE := READ_IDLE;
 
-signal write_dq_internal : std_logic_vector(15 downto 0); -- Internal Data Bus
-signal write_row_address : std_logic_vector(12 downto 0) := (others => '0');
-signal write_col_address : std_logic_vector(12 downto 0) := (others => '0');
-signal write_bank_select : std_logic_vector(1 downto 0)  := (others => '0');
-signal read_dq_internal : std_logic_vector(15 downto 0); -- Internal Data Bus
-signal read_row_address : std_logic_vector(12 downto 0) := (others => '0');
-signal read_col_address : std_logic_vector(12 downto 0) := (others => '0');
-signal read_bank_select : std_logic_vector(1 downto 0)  := (others => '0');
-signal timing_counter : integer := 0;
+-- SDRAM controller states.
+
+
+type RAM_STATE_MACHINE is
+(
+    ST_INIT_WAIT,
+    ST_INIT_PRECHARGE,
+    ST_INIT_REFRESH1,
+    ST_INIT_MODE,
+    ST_INIT_REFRESH2,
+    ST_IDLE,
+    ST_REFRESH,
+    ST_ACTIVATE,
+    ST_RCD,
+    ST_RW,
+    ST_RAS1,
+    ST_RAS2,
+    ST_PRECHARGE
+);
+signal state_r, state_x : RAM_STATE_MACHINE := ST_INIT_WAIT;
+
+
+-- SDRAM mode register data sent on the address bus.
+--
+-- | A12-A10 |    A9    | A8  A7 | A6 A5 A4 |    A3   | A2 A1 A0 |
+-- | reserved| wr burst |reserved| CAS Ltncy|addr mode| burst len|
+--   0  0  0      0       0   0    0  1  0       0      0  0  0
+constant MODE_REG : std_logic_vector(12 downto 0) := "000" & "0" & "00" & "010" & "0" & "000";
+
+-- SDRAM commands combine SDRAM inputs: cs, ras, cas, we.
+subtype cmd_type is unsigned(3 downto 0);
+constant CMD_ACTIVATE         : cmd_type := "0011";
+constant CMD_PRECHARGE        : cmd_type := "0010";
+constant CMD_WRITE            : cmd_type := "0100";
+constant CMD_READ             : cmd_type := "0101";
+constant CMD_MODE             : cmd_type := "0000";
+constant CMD_NOP              : cmd_type := "0111";
+constant CMD_REFRESH          : cmd_type := "0001";
+
+signal cmd_r                  : cmd_type;
+signal cmd_x                  : cmd_type;
+
+signal bank_s                 : std_logic_vector( 1 downto 0);
+signal row_s                  : std_logic_vector(12 downto 0);
+signal col_s                  : std_logic_vector( 8 downto 0);
+signal addr_r                 : std_logic_vector(12 downto 0);
+signal addr_x                 : std_logic_vector(12 downto 0);    -- SDRAM row/column address.
+signal sd_dout_r              : std_logic_vector(15 downto 0);
+signal sd_dout_x              : std_logic_vector(15 downto 0);
+signal sd_busdir_r            : std_logic;
+signal sd_busdir_x            : std_logic;
+
+signal timer_r, timer_x       : natural range 0 to 20000 := 0;
+signal refcnt_r, refcnt_x     : natural range 0 to 8 := 0;
+
+signal bank_r, bank_x         : std_logic_vector(1 downto 0);
+signal cke_r, cke_x           : std_logic;
+signal sd_dqmu_r, sd_dqmu_x   : std_logic;
+signal sd_dqml_r, sd_dqml_x   : std_logic;
+signal ready_r, ready_x       : std_logic;
+
+-- Data buffer for SDRAM to Host.
+signal buf_dout_r, buf_dout_x : std_logic_vector(15 downto 0);
+
+signal test_timer : std_logic_vector(26 downto 0) := (others => '0');
 
 begin
 
-    process (CLOCK_50MHz)
+   -- All signals to SDRAM buffered.
+
+   (CS_O, RAS_O, CAS_O, WE_O) <= cmd_r;   -- SDRAM operation control bits
+   CKE_O     <= cke_r;      -- SDRAM clock enable
+   BA_O      <= bank_r;     -- SDRAM bank address
+   ADDR_O    <= addr_r;     -- SDRAM address
+   DATA_IO   <= sd_dout_r when sd_busdir_r = '1' else (others => 'Z');   -- SDRAM data bus.
+   DQMH_O    <= sd_dqmu_r;  -- SDRAM high data byte enable, active low
+   DQML_O    <= sd_dqml_r;  -- SDRAM low date byte enable, active low
+
+   -- Signals back to host.
+   READY_O <= ready_r;
+   DATA_O <= buf_dout_r;
+
+   -- 23  22  | 21 20 19 18 17 16 15 14 13 12 11 10 09 | 08 07 06 05 04 03 02 01 00 |
+   -- BS0 BS1 |        ROW (A12-A0)  8192 rows         |   COL (A8-A0)  512 cols    |
+   bank_s <= ADDR_I(23 downto 22);
+   row_s <= ADDR_I(21 downto 9);
+   col_s <= ADDR_I(8 downto 0);
+
+
+   process (
+   state_r, timer_r, refcnt_r, cke_r, addr_r, sd_dout_r, sd_busdir_r, sd_dqmu_r, sd_dqml_r, ready_r,
+   bank_s, row_s, col_s,
+   RW_I, REFRESH_I, ADDR_I, DATA_I, WE_I, UB_I, LB_I,
+   buf_dout_r, DATA_IO)
+   begin
+
+      state_x     <= state_r;       -- Stay in the same state unless changed.
+      timer_x     <= timer_r;       -- Hold the cycle timer by default.
+      refcnt_x    <= refcnt_r;      -- Hold the refresh timer by default.
+      cke_x       <= cke_r;         -- Stay in the same clock mode unless changed.
+      cmd_x       <= CMD_NOP;       -- Default to NOP unless changed.
+      bank_x      <= bank_r;        -- Register the SDRAM bank.
+      addr_x      <= addr_r;        -- Register the SDRAM address.
+      sd_dout_x   <= sd_dout_r;     -- Register the SDRAM write data.
+      sd_busdir_x <= sd_busdir_r;   -- Register the SDRAM bus tristate control.
+      sd_dqmu_x   <= sd_dqmu_r;
+      sd_dqml_x   <= sd_dqml_r;
+      buf_dout_x  <= buf_dout_r;    -- SDRAM to host data buffer.
+
+      ready_x     <= ready_r;       -- Always ready unless performing initialization.
+      DONE_O      <= '0';           -- Done tick, single cycle.
+
+      if timer_r /= 0 then
+         timer_x <= timer_r - 1;
+      else
+
+         cke_x       <= '1';
+         bank_x      <= bank_s;
+         -- A10 low for rd/wr commands to suppress auto-precharge.
+         addr_x      <= "0000" & col_s;
+         sd_dqmu_x   <= '0';
+         sd_dqml_x   <= '0';
+
+         case state_r is
+
+         when ST_INIT_WAIT =>
+
+            -- 1. Wait 200us with DQM signals high, cmd NOP.
+            -- 2. Precharge all banks.
+            -- 3. Eight refresh cycles.
+            -- 4. Set mode register.
+            -- 5. Eight refresh cycles.
+
+            state_x <= ST_INIT_PRECHARGE;
+            timer_x <= 20000;          -- Wait 200us (20,000 cycles).
+--          timer_x <= 2;              -- for simulation
+            sd_dqmu_x <= '1';
+            sd_dqml_x <= '1';
+
+         when ST_INIT_PRECHARGE =>
+
+            state_x <= ST_INIT_REFRESH1;
+            refcnt_x <= 8;             -- Do 8 refresh cycles in the next state.
+--          refcnt_x <= 2;             -- for simulation
+            cmd_x <= CMD_PRECHARGE;
+            timer_x <= 2;              -- Wait 2 cycles plus state overhead for 20ns Trp.
+            bank_x <= "00";
+            addr_x(10) <= '1';         -- Precharge all banks.
+
+         when ST_INIT_REFRESH1 =>
+
+            if refcnt_r = 0 then
+               state_x <= ST_INIT_MODE;
+            else
+               refcnt_x <= refcnt_r - 1;
+               cmd_x <= CMD_REFRESH;
+               timer_x <= 7;           -- Wait 7 cycles plus state overhead for 70ns refresh.
+            end if;
+
+         when ST_INIT_MODE =>
+
+            state_x <= ST_INIT_REFRESH2;
+            refcnt_x <= 8;             -- Do 8 refresh cycles in the next state.
+--          refcnt_x <= 2;             -- for simulation
+            bank_x <= "00";
+            addr_x <= MODE_REG;
+            cmd_x <= CMD_MODE;
+            timer_x <= 2;              -- Trsc == 2 cycles after issuing MODE command.
+
+         when ST_INIT_REFRESH2 =>
+
+            if refcnt_r = 0 then
+               state_x <= ST_IDLE;
+               ready_x <= '1';
+            else
+               refcnt_x <= refcnt_r - 1;
+               cmd_x <= CMD_REFRESH;
+               timer_x <= 7;           -- Wait 7 cycles plus state overhead for 70ns refresh.
+            end if;
+
+      --
+      -- Normal Operation
+      --
+         -- Trc  - 70ns - Activate to activate command.
+         -- Trcd - 20ns - Activate to read/write command.
+         -- Tras - 50ns - Activate to precharge command.
+         -- Trp  - 20ns - Precharge to activate command.
+         -- TCas - 2clk - Read/write to data out.
+         --
+         --         |<-----------       Trc      ------------>|
+         --         |<----------- Tras ---------->|
+         --         |<- Trcd  ->|<- TCas  ->|     |<-  Trp  ->|
+         --  T0__  T1__  T2__  T3__  T4__  T5__  T6__  T0__  T1__
+         -- __/  \__/  \__/  \__/  \__/  \__/  \__/  \__/  \__/  \__
+         -- IDLE  ACTVT  NOP  RD/WR  NOP   NOP  PRECG IDLE  ACTVT
+         --     --<Row>-------------------------------------<Row>--
+         --                ---<Col>---
+         --                ---<A10>-------------<A10>---
+         --                                  ---<Bank>---
+         --                ---<DQM>---
+         --                ---<Din>---
+         --                                  ---<Dout>---
+         --   ---<Refsh>-----------------------------------<Refsh>---
+         --
+         -- A10 during rd/wr : 0 = disable auto-precharge, 1 = enable auto-precharge.
+         -- A10 during precharge: 0 = single bank, 1 = all banks.
+
+         -- Next State vs Current State Guide
+         --
+         --  T0__  T1__  T2__  T3__  T4__  T5__  T6__  T0__  T1__  T2__
+         -- __/  \__/  \__/  \__/  \__/  \__/  \__/  \__/  \__/  \__/  \__
+         -- IDLE  ACTVT  NOP  RD/WR  NOP   NOP  PRECG IDLE  ACTVT
+         --       IDLE  ACTVT  NOP  RD/WR  NOP   NOP  PRECG IDLE  ACTVT
+
+
+         when ST_IDLE =>
+            -- 60ns since activate when coming from PRECHARGE state.
+            -- 10ns since PRECHARGE.  Trp == 20ns min.
+            if RW_I = '1' then
+               state_x <= ST_ACTIVATE;
+               cmd_x <= CMD_ACTIVATE;
+               addr_x <= row_s;        -- Set bank select and row on activate command.
+            elsif REFRESH_I = '1' then
+               state_x <= ST_REFRESH;
+               cmd_x <= CMD_REFRESH;
+               timer_x <= 7;           -- Wait 7 cycles plus state overhead for 70ns refresh.
+            end if;
+
+         when ST_REFRESH =>
+
+            state_x <= ST_IDLE;
+            DONE_O <= '1';
+
+         when ST_ACTIVATE =>
+            -- Trc (Active to Active Command Period) is 65ns min.
+            -- 70ns since activate when coming from PRECHARGE -> IDLE states.
+            -- 20ns since PRECHARGE.
+            -- ACTIVATE command is presented to the SDRAM.  The command out of this
+            -- state will be NOP for one cycle.
+            state_x <= ST_RCD;
+            sd_dout_x <= DATA_I;       -- Register any write data, even if not used.
+
+         when ST_RCD =>
+            -- 10ns since activate.
+            -- Trcd == 20ns min.  The clock is 10ns, so the requirement is satisfied by this state.
+            -- READ or WRITE command will be active in the next cycle.
+            state_x <= ST_RW;
+
+            if WE_I = '0' then
+               cmd_x <= CMD_WRITE;
+               sd_busdir_x <= '1';     -- The SDRAM latches the input data with the command.
+               sd_dqmu_x <= UB_I;
+               sd_dqml_x <= LB_I;
+            else
+               cmd_x <= CMD_READ;
+            end if;
+
+         when ST_RW =>
+            -- 20ns since activate.
+            -- READ or WRITE command presented to SDRAM.
+            state_x <= ST_RAS1;
+            sd_busdir_x <= '0';
+
+         when ST_RAS1 =>
+            -- 30ns since activate.
+            -- Data from the SDRAM will be registered on the next clock.
+            state_x <= ST_RAS2;
+            buf_dout_x <= DATA_IO;
+
+         when ST_RAS2 =>
+            -- 40ns since activate.
+            -- Tras (Active to precharge Command Period) 45ns min.
+            -- PRECHARGE command will be active in the next cycle.
+            state_x <= ST_PRECHARGE;
+            cmd_x <= CMD_PRECHARGE;
+            addr_x(10) <= '1';         -- Precharge all banks.
+
+         when ST_PRECHARGE =>
+            -- 50ns since activate.
+            -- PRECHARGE presented to SDRAM.
+            state_x <= ST_IDLE;
+            DONE_O <= '1';             -- Read data is ready and should be latched by the host.
+            timer_x <= 1;              -- Buffer to make sure host takes down memory request before going IDLE.
+         end case;
+      end if;
+   end process;
+
+    process (CLOCK_50MHz_I)
     begin
-        if rising_edge(CLOCK_50MHz) then
-
-            CLK_SDRAM <= CLOCK_50MHz;
-
-            --------------------------------------------------------------
-            --
-            -- WRITE
-            --
-            --------------------------------------------------------------
-            case write_ram_state is
-
-                when WRITE_IDLE =>
-                    if SDRAM_WRITE_EN = '1' then
-                        write_row_address <= write_row_address + '1';
-                        write_col_address <= write_col_address + '1';
-                        write_ram_state <= WRITE_INIT;
-                    end if;
-
-                when WRITE_INIT =>
-                    CAS <= '1';
-                    CKE <= '1';
-                    RAS <= '0';
-                    WE <= '1';
-                    CS <= '0';
-                    A0 <= write_row_address(0);
-                    A1 <= write_row_address(1);
-                    A2 <= write_row_address(2);
-                    A3 <= write_row_address(3);
-                    A4 <= write_row_address(4);
-                    A5 <= write_row_address(5);
-                    A6 <= write_row_address(6);
-                    A7 <= write_row_address(7);
-                    A8 <= write_row_address(8);
-                    A9 <= write_row_address(9);
-                    A10 <= write_row_address(10);
-                    A11 <= write_row_address(11);
-                    A12 <= write_row_address(12);
-                    BA0 <= write_bank_select(0);
-                    BA1 <= write_bank_select(1);
-                    write_ram_state <= WRITE_ACTIVATE;
-
-                when WRITE_ACTIVATE =>
-                    if timing_counter < 3 then  -- tRCD (3 clock cycles at 50 MHz)
-                        timing_counter <= timing_counter + 1;
-                    else
-                        timing_counter <= 0;
-                        CAS <= '0'; -- Column Address Strobe
-                        RAS <= '1'; -- De-assert RAS for the next command
-                        WE <= '0';  -- Write Enable
-                        A0 <= write_col_address(0);
-                        A1 <= write_col_address(1);
-                        A2 <= write_col_address(2);
-                        A3 <= write_col_address(3);
-                        A4 <= write_col_address(4);
-                        A5 <= write_col_address(5);
-                        A6 <= write_col_address(6);
-                        A7 <= write_col_address(7);
-                        A8 <= write_col_address(8);
-                        A9 <= write_col_address(9);
-                        A10 <= write_col_address(10);
-                        A11 <= write_col_address(11);
-                        A12 <= write_col_address(12);
-                        BA0 <= write_bank_select(0);
-                        BA1 <= write_bank_select(1);
-                        write_dq_internal <= SDRAM_DATA_IN; -- Load Data to Internal Buffer
-                        write_ram_state <= WRITE_PROCESS;
-                    end if;
-
-                when WRITE_PROCESS =>
-                    D0 <= write_dq_internal(0);
-                    D1 <= write_dq_internal(1);
-                    D2 <= write_dq_internal(2);
-                    D3 <= write_dq_internal(3);
-                    D4 <= write_dq_internal(4);
-                    D5 <= write_dq_internal(5);
-                    D6 <= write_dq_internal(6);
-                    D7 <= write_dq_internal(7);
-                    D8 <= write_dq_internal(8);
-                    D9 <= write_dq_internal(9);
-                    D10 <= write_dq_internal(10);
-                    D11 <= write_dq_internal(11);
-                    D12 <= write_dq_internal(12);
-                    D13 <= write_dq_internal(13);
-                    D14 <= write_dq_internal(14);
-                    D15 <= write_dq_internal(15);
-                    LDQM <= '0'; -- Enable Lower Data Mask
-                    UDQM <= '0'; -- Enable Upper Data Mask
-                    if timing_counter < 3 then  -- tWR (3 clock cycles at 50 MHz)
-                        timing_counter <= timing_counter + 1;
-                    else
-                        timing_counter <= 0;
-                        write_ram_state <= WRITE_PRECHARGE;
-                    end if;
-
-                when WRITE_PRECHARGE =>
-                    CAS <= '1';
-                    RAS <= '0'; -- Precharge Command
-                    WE <= '0';
-                    A10 <= '1'; -- All banks precharge
-                    BA0 <= write_bank_select(0);
-                    BA1 <= write_bank_select(1);
-                    if timing_counter < 3 then  -- tRP (3 clock cycles at 50 MHz)
-                        timing_counter <= timing_counter + 1;
-                    else
-                        timing_counter <= 0;
-                        write_ram_state <= WRITE_IDLE;
-                    end if;
-
-                when others =>
-                    write_ram_state <= WRITE_IDLE;
-
-            end case;
-
-            --------------------------------------------------------------
-            --
-            -- READ
-            --
-            --------------------------------------------------------------
-            case read_ram_state is
-
-                when READ_IDLE =>
-                    if SDRAM_READ_EN = '1' then
-                        read_row_address <= read_row_address + '1';
-                        read_col_address <= read_col_address + '1';
-                        read_ram_state <= READ_INIT;
-                    end if;
-
-                when READ_INIT =>
-                    CAS <= '1';
-                    CKE <= '1'; -- Enable SDRAM Clock
-                    RAS <= '0'; -- Activate Command
-                    WE <= '1';
-                    CS <= '0';  -- Select SDRAM
-                    A0 <= read_row_address(0);
-                    A1 <= read_row_address(1);
-                    A2 <= read_row_address(2);
-                    A3 <= read_row_address(3);
-                    A4 <= read_row_address(4);
-                    A5 <= read_row_address(5);
-                    A6 <= read_row_address(6);
-                    A7 <= read_row_address(7);
-                    A8 <= read_row_address(8);
-                    A9 <= read_row_address(9);
-                    A10 <= read_row_address(10);
-                    A11 <= read_row_address(11);
-                    A12 <= read_row_address(12);
-                    BA0 <= read_bank_select(0);
-                    BA1 <= read_bank_select(1);
-                    D0 <= 'Z';
-                    D1 <= 'Z';
-                    D2 <= 'Z';
-                    D3 <= 'Z';
-                    D4 <= 'Z';
-                    D5 <= 'Z';
-                    D6 <= 'Z';
-                    D7 <= 'Z';
-                    D8 <= 'Z';
-                    D9 <= 'Z';
-                    D10 <= 'Z';
-                    D11 <= 'Z';
-                    D12 <= 'Z';
-                    D13 <= 'Z';
-                    D14 <= 'Z';
-                    D15 <= 'Z';
-                    LDQM <= 'Z';
-                    UDQM <= 'Z';
-                    read_ram_state <= READ_ACTIVATE;
-
-                when READ_ACTIVATE =>
-                    if timing_counter < 3 then  -- tRCD (3 clock cycles at 50 MHz)
-                        timing_counter <= timing_counter + 1;
-                    else
-                        timing_counter <= 0;
-                        CAS <= '0'; -- Column Address Strobe
-                        RAS <= '1'; -- De-assert RAS for the next command
-                        WE <= '1';  -- Read Command
-                        A0 <= read_col_address(0);
-                        A1 <= read_col_address(1);
-                        A2 <= read_col_address(2);
-                        A3 <= read_col_address(3);
-                        A4 <= read_col_address(4);
-                        A5 <= read_col_address(5);
-                        A6 <= read_col_address(6);
-                        A7 <= read_col_address(7);
-                        A8 <= read_col_address(8);
-                        A9 <= read_col_address(9);
-                        A10 <= read_col_address(10);
-                        A11 <= read_col_address(11);
-                        A12 <= read_col_address(12);
-                        BA0 <= read_bank_select(0);
-                        BA1 <= read_bank_select(1);
-                        read_ram_state <= READ_PROCESS;
-                    end if;
-
-                when READ_PROCESS =>
-                    LDQM <= '0'; -- Enable Lower Data Mask
-                    UDQM <= '0'; -- Enable Upper Data Mask
-                    if timing_counter < 3 then  -- CL (CAS Latency: 3 clock cycles at 50 MHz)
-                        timing_counter <= timing_counter + 1;
-                    else
-                        timing_counter <= 0;
-                        read_dq_internal(0) <= D0;
-                        read_dq_internal(1) <= D1;
-                        read_dq_internal(2) <= D2;
-                        read_dq_internal(3) <= D3;
-                        read_dq_internal(4) <= D4;
-                        read_dq_internal(5) <= D5;
-                        read_dq_internal(6) <= D6;
-                        read_dq_internal(7) <= D7;
-                        read_dq_internal(8) <= D8;
-                        read_dq_internal(9) <= D9;
-                        read_dq_internal(10) <= D10;
-                        read_dq_internal(11) <= D11;
-                        read_dq_internal(12) <= D12;
-                        read_dq_internal(13) <= D13;
-                        read_dq_internal(14) <= D14;
-                        read_dq_internal(15) <= D15;
-                        SDRAM_DATA_OUT <= read_dq_internal; -- Output data to external port
-                        read_ram_state <= READ_PRECHARGE;
-                    end if;
-
-                when READ_PRECHARGE =>
-                    CAS <= '1';
-                    RAS <= '0'; -- Precharge Command
-                    WE <= '0';
-                    A10 <= '1'; -- All banks precharge
-                    BA0 <= read_bank_select(0);
-                    BA1 <= read_bank_select(1);
-                    if timing_counter < 3 then  -- tRP (3 clock cycles at 50 MHz)
-                        timing_counter <= timing_counter + 1;
-                    else
-                        timing_counter <= 0;
-                        read_ram_state <= READ_IDLE;
-                    end if;
-
-                when others =>
-                    read_ram_state <= READ_IDLE;
-
-            end case;
+        if rising_edge(CLOCK_50MHz_I) then
+            if RESET_I = '1' then
+                state_r  <= ST_INIT_WAIT;
+                timer_r  <= 0;
+                cmd_r    <= CMD_NOP;
+                cke_r    <= '0';
+                ready_r  <= '0';
+            else
+                CLK_SDRAM   <= CLOCK_50MHz_I;
+                state_r     <= state_x;
+                timer_r     <= timer_x;
+                refcnt_r    <= refcnt_x;
+                cke_r       <= cke_x;         -- CKE to SDRAM.
+                cmd_r       <= cmd_x;         -- Command to SDRAM.
+                bank_r      <= bank_x;        -- Bank to SDRAM.
+                addr_r      <= addr_x;        -- Address to SDRAM.
+                sd_dout_r   <= sd_dout_x;     -- Data to SDRAM.
+                sd_busdir_r <= sd_busdir_x;   -- SDRAM bus direction.
+                sd_dqmu_r   <= sd_dqmu_x;     -- Upper byte enable to SDRAM.
+                sd_dqml_r   <= sd_dqml_x;     -- Lower byte enable to SDRAM.
+                ready_r     <= ready_x;
+                buf_dout_r  <= buf_dout_x;
+            end if;
         end if;
     end process;
 
-end architecture rtl;
+end architecture;
