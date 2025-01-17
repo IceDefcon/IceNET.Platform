@@ -525,6 +525,17 @@ port
 );
 end component;
 
+component SDRAM_CLOAK
+port
+(
+    ref_clk_clk        : in  std_logic := 'X'; -- clk
+    ref_reset_reset    : in  std_logic := 'X'; -- reset
+    sys_clk_clk        : out std_logic;        -- clk
+    sdram_clk_clk      : out std_logic;        -- clk
+    reset_source_reset : out std_logic         -- reset
+);
+end component SDRAM_CLOAK;
+
 ----------------------------------------------------------------------------------------------------------------
 -- MAIN ROUTINE
 ----------------------------------------------------------------------------------------------------------------
@@ -792,6 +803,16 @@ port map
     CAN_MPP_RX => CAN_MPP_RX
 );
 
+SDRAM_CLOAK_module: SDRAM_CLOAK
+port map
+(
+    ref_clk_clk => CLOCK_50MHz,
+    ref_reset_reset => '0',
+    sys_clk_clk => open,
+    sdram_clk_clk => CLK_SDRAM,
+    reset_source_reset => open
+);
+
 PacketSwitch:
 process(CLOCK_50MHz)
 begin
@@ -940,11 +961,6 @@ process (CLOCK_50MHz, state_r, ready_o, done_o)
 begin
     if rising_edge(CLOCK_50MHz) then
 
-        rw_i <= '0';
-        we_i <= '1';
-        ub_i <= '0';
-        lb_i <= '0';
-
         case (state_r) is
 
             when ST_IDLE =>
@@ -962,7 +978,7 @@ begin
             when ST_CONFIG =>
                 if done_o = '1' then
                     if test_flag = '0' then
-                        if test_ops = 4 then
+                        if test_ops = 3 then
                             test_ops <= 0;
                             test_flag <= '1';
                             state_r <= ST_CONFIG;

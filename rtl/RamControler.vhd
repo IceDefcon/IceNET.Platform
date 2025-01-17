@@ -72,6 +72,7 @@ Port
     DATA_O : out std_logic_vector(15 downto 0); -- Data from SDRAM to host
 
     -- SDRAM side
+    CLK_SDRAM : out std_logic; -- Clock to RAM
     CKE_O : out std_logic; -- Clock-enable to SDRAM
     CS_O : out std_logic; -- Chip-select to SDRAM
     RAS_O : out std_logic; -- SDRAM row address strobe
@@ -386,6 +387,7 @@ begin
                 cke_r    <= '0';
                 ready_r  <= '0';
             else
+                CLK_SDRAM   <= CLOCK_50MHz_I;
                 state_r     <= state_x;
                 timer_r     <= timer_x;
                 refcnt_r    <= refcnt_x;
