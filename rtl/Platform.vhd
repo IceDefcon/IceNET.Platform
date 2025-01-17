@@ -283,39 +283,36 @@ signal uart_write_busy : std_logic := '0';
 -- UART Test Log
 signal UART_LOG_MESSAGE_ID : UART_LOG_ID := ("0101", "1100"); -- 0x5C
 signal UART_LOG_MESSAGE_DATA : UART_LOG_DATA := ("0111", "1010", "0001", "1011"); -- 0x7A1B
--- Signals for RamControler
-signal reset_i    : std_logic := '0';
-signal refresh_i  : std_logic := '0';
-signal rw_i       : std_logic := '0';
-signal we_i       : std_logic := '0';
-signal addr_i     : std_logic_vector(23 downto 0) := "000000000000011000000001";
-signal data_i     : std_logic_vector(15 downto 0) := "0101010101110000";
-signal ub_i       : std_logic;
-signal lb_i       : std_logic;
-signal ready_o    : std_logic;
-signal done_o     : std_logic;
-signal data_o     : std_logic_vector(15 downto 0);
 -- Signals for SDRAM Address and Data Mapping
-signal sdBs : std_logic_vector(1 downto 0);
-signal sdAddr : std_logic_vector(12 downto 0);
-signal sdData : std_logic_vector(15 downto 0);
+signal SD_BANK : std_logic_vector(1 downto 0);
+signal SD_ADDRESS : std_logic_vector(12 downto 0);
+signal SD_DATA : std_logic_vector(15 downto 0);
 -- Test
-type state_type is
+type TEST_STATE is
 (
-    ST_IDLE,
-    ST_INIT,
-    ST_CONFIG,
-    ST_READ,
-    ST_WRITE,
-    ST_REFRESH,
-    ST_DONE
+    TEST_IDLE,
+    TEST_INIT,
+    TEST_CONFIG,
+    TEST_READ,
+    TEST_WRITE,
+    TEST_DONE
 );
 
-signal state_r : state_type := ST_IDLE;
+signal test_ram_state : TEST_STATE := TEST_IDLE;
 -- Test
 signal test_timer : std_logic_vector(26 downto 0) := (others => '0');
 signal test_flag : std_logic := '0';
 signal test_ops : integer := 0;
+-- Test
+signal TEST_ADDR :  std_logic_vector(23 downto 0) := (others => '0');
+signal TEST_WRITE_EN : std_logic := '0';
+signal TEST_DATA_IN :  std_logic_vector(15 downto 0) := (others => '0');
+signal TEST_READ_EN : std_logic := '0';
+signal TEST_DATA_OUT : std_logic_vector(15 downto 0) := (others => '0');
+signal TEST_READY : std_logic := '0';
+
+-- PLL
+signal clock_100MHz : std_logic := '0';
 ----------------------------------------------------------------------------------------------------------------
 -- COMPONENTS DECLARATION
 ----------------------------------------------------------------------------------------------------------------
@@ -414,34 +411,33 @@ port
 );
 end component;
 
-component RamControler
+component SDRAM_Controller
 Port
 (
-    -- Host side
-    CLOCK_50MHz_I : in std_logic; -- Master clock
-    RESET_I : in std_logic := '0'; -- Reset, active high
-    REFRESH_I : in std_logic := '0'; -- Initiate a refresh cycle, active high
-    RW_I : in std_logic := '0'; -- Initiate a read or write operation, active high
-    WE_I : in std_logic := '0'; -- Write enable, active low
-    ADDR_I : in std_logic_vector(23 downto 0); -- Address from host to SDRAM
-    DATA_I : in std_logic_vector(15 downto 0); -- Data from host to SDRAM
-    UB_I : in std_logic; -- Data upper byte enable, active low
-    LB_I : in std_logic; -- Data lower byte enable, active low
-    READY_O : out std_logic := '0'; -- Set to '1' when the memory is ready
-    DONE_O : out std_logic := '0'; -- Read, write, or refresh, operation is done
-    DATA_O : out std_logic_vector(15 downto 0); -- Data from SDRAM to host
+    CLK         : in  std_logic;
+    CLK_SLOW    : in  std_logic;
+    RESET       : in  std_logic;
 
-    -- SDRAM side
-    CKE_O : out std_logic; -- Clock-enable to SDRAM
-    CS_O : out std_logic; -- Chip-select to SDRAM
-    RAS_O : out std_logic; -- SDRAM row address strobe
-    CAS_O : out std_logic; -- SDRAM column address strobe
-    WE_O : out std_logic; -- SDRAM write enable
-    BA_O : out std_logic_vector( 1 downto 0); -- SDRAM bank address
-    ADDR_O : out std_logic_vector(12 downto 0); -- SDRAM row/column address
-    DATA_IO : inout std_logic_vector(15 downto 0); -- Data to/from SDRAM
-    DQMH_O : out std_logic; -- Enable upper-byte of SDRAM databus if true
-    DQML_O : out std_logic -- Enable lower-byte of SDRAM databus if true
+    -- SDRAM Interface
+    A           : out std_logic_vector(12 downto 0);  -- Address Bus
+    BA          : out std_logic_vector(1 downto 0);   -- Bank Address
+    CLK_SDRAM   : out std_logic;
+    CKE         : out std_logic;
+    CS          : out std_logic;
+    RAS         : out std_logic;
+    CAS         : out std_logic;
+    WE          : out std_logic;
+    DQ          : inout std_logic_vector(15 downto 0); -- Data Bus
+    LDQM        : out std_logic;
+    UDQM        : out std_logic;
+
+    -- User Interface
+    ADDR        : in  std_logic_vector(23 downto 0);
+    DATA_IN     : in  std_logic_vector(15 downto 0);
+    DATA_OUT    : out std_logic_vector(15 downto 0);
+    READ_EN     : in  std_logic;
+    WRITE_EN    : in  std_logic;
+    READY       : out std_logic
 );
 end component;
 
@@ -525,16 +521,26 @@ port
 );
 end component;
 
-component SDRAM_CLOAK
+--component SDRAM_CLOAK
+--port
+--(
+--    ref_clk_clk        : in  std_logic := 'X'; -- clk
+--    ref_reset_reset    : in  std_logic := 'X'; -- reset
+--    sys_clk_clk        : out std_logic;        -- clk
+--    sdram_clk_clk      : out std_logic;        -- clk
+--    reset_source_reset : out std_logic         -- reset
+--);
+--end component SDRAM_CLOAK;
+
+component SDRAM_PLL
 port
 (
-    ref_clk_clk        : in  std_logic := 'X'; -- clk
-    ref_reset_reset    : in  std_logic := 'X'; -- reset
-    sys_clk_clk        : out std_logic;        -- clk
-    sdram_clk_clk      : out std_logic;        -- clk
-    reset_source_reset : out std_logic         -- reset
+    areset  : IN STD_LOGIC := '0';
+    inclk0  : IN STD_LOGIC := '0';
+    c0      : OUT STD_LOGIC;
+    locked  : OUT STD_LOGIC
 );
-end component SDRAM_CLOAK;
+end component SDRAM_PLL;
 
 ----------------------------------------------------------------------------------------------------------------
 -- MAIN ROUTINE
@@ -678,72 +684,74 @@ port map
     EMPTY => primary_fifo_empty
 );
 
-RamControler_module: RamControler
+SDRAM_Controller_module: SDRAM_Controller
 port map
 (
-    -- Host Interface
-    CLOCK_50MHz_I => CLOCK_50MHz,
-    RESET_I => reset_i,
-    REFRESH_I => refresh_i,
-    RW_I => rw_i,
-    WE_I => we_i,
-    ADDR_I => addr_i,
-    DATA_I => data_i,
-    UB_I => ub_i,
-    LB_I => lb_i,
-    READY_O => ready_o,
-    DONE_O => done_o,
-    DATA_O => data_o,
+    CLK => clock_100MHz,
+    CLK_SLOW => CLOCK_50MHz,
+    RESET => '0',
 
     -- SDRAM Interface
-    CKE_O => CKE,
-    CS_O => CS,
-    RAS_O => RAS,
-    CAS_O => CAS,
-    WE_O => WE,
-    BA_O => sdBs,
-    ADDR_O => sdAddr,
-    DATA_IO => sdData,
-    DQMH_O => UDQM,
-    DQML_O => LDQM
+    A => SD_ADDRESS,
+    BA => SD_BANK,
+    CLK_SDRAM => CLK_SDRAM,
+    CKE => CKE,
+    CS => CS,
+    RAS => RAS,
+    CAS => CAS,
+    WE => WE,
+    DQ => SD_DATA,
+    LDQM => LDQM,
+    UDQM => UDQM,
+
+    -- User Interface
+    ADDR => TEST_ADDR,
+    DATA_IN => TEST_DATA_IN,
+    DATA_OUT => TEST_DATA_OUT,
+    READ_EN => TEST_READ_EN,
+    WRITE_EN => TEST_WRITE_EN,
+    READY => TEST_READY
 );
+
+
 
 -----------------------------------------------------------------------------------------------
 -- Map to output
 -----------------------------------------------------------------------------------------------
-BA0 <= sdBs(0);
-BA1 <= sdBs(1);
 
-A0 <= sdAddr(0);
-A1 <= sdAddr(1);
-A2 <= sdAddr(2);
-A3 <= sdAddr(3);
-A4 <= sdAddr(4);
-A5 <= sdAddr(5);
-A6 <= sdAddr(6);
-A7 <= sdAddr(7);
-A8 <= sdAddr(8);
-A9 <= sdAddr(9);
-A10 <= sdAddr(10);
-A11 <= sdAddr(11);
-A12 <= sdAddr(12);
+BA0 <= SD_BANK(0);
+BA1 <= SD_BANK(1);
 
-D0 <= sdData(0);
-D1 <= sdData(1);
-D2 <= sdData(2);
-D3 <= sdData(3);
-D4 <= sdData(4);
-D5 <= sdData(5);
-D6 <= sdData(6);
-D7 <= sdData(7);
-D8 <= sdData(8);
-D9 <= sdData(9);
-D10 <= sdData(10);
-D11 <= sdData(11);
-D12 <= sdData(12);
-D13 <= sdData(13);
-D14 <= sdData(14);
-D15 <= sdData(15);
+A0 <= SD_ADDRESS(0);
+A1 <= SD_ADDRESS(1);
+A2 <= SD_ADDRESS(2);
+A3 <= SD_ADDRESS(3);
+A4 <= SD_ADDRESS(4);
+A5 <= SD_ADDRESS(5);
+A6 <= SD_ADDRESS(6);
+A7 <= SD_ADDRESS(7);
+A8 <= SD_ADDRESS(8);
+A9 <= SD_ADDRESS(9);
+A10 <= SD_ADDRESS(10);
+A11 <= SD_ADDRESS(11);
+A12 <= SD_ADDRESS(12);
+
+D0 <= SD_DATA(0);
+D1 <= SD_DATA(1);
+D2 <= SD_DATA(2);
+D3 <= SD_DATA(3);
+D4 <= SD_DATA(4);
+D5 <= SD_DATA(5);
+D6 <= SD_DATA(6);
+D7 <= SD_DATA(7);
+D8 <= SD_DATA(8);
+D9 <= SD_DATA(9);
+D10 <= SD_DATA(10);
+D11 <= SD_DATA(11);
+D12 <= SD_DATA(12);
+D13 <= SD_DATA(13);
+D14 <= SD_DATA(14);
+D15 <= SD_DATA(15);
 
 OffloadController_module: OffloadController
 port map
@@ -803,14 +811,23 @@ port map
     CAN_MPP_RX => CAN_MPP_RX
 );
 
-SDRAM_CLOAK_module: SDRAM_CLOAK
+--SDRAM_CLOAK_module: SDRAM_CLOAK
+--port map
+--(
+--    ref_clk_clk => CLOCK_50MHz,
+--    ref_reset_reset => '0',
+--    sys_clk_clk => open,
+--    sdram_clk_clk => CLK_SDRAM,
+--    reset_source_reset => open
+--);
+
+SDRAM_PLL_module: SDRAM_PLL
 port map
 (
-    ref_clk_clk => CLOCK_50MHz,
-    ref_reset_reset => '0',
-    sys_clk_clk => open,
-    sdram_clk_clk => CLK_SDRAM,
-    reset_source_reset => open
+    areset => '0',
+    inclk0 => CLOCK_50MHz,
+    c0 => clock_100MHz,
+    locked => open
 );
 
 PacketSwitch:
@@ -957,66 +974,57 @@ end process;
 --NRF905_TRX_CE <= '0';
 --NRF905_TX_EN <= 'Z';
 
-process (CLOCK_50MHz, state_r, ready_o, done_o)
+process (CLOCK_100MHz, test_ram_state)
 begin
-    if rising_edge(CLOCK_50MHz) then
+    if rising_edge(CLOCK_100MHz) then
 
-        case (state_r) is
+        case (test_ram_state) is
 
-            when ST_IDLE =>
+            when TEST_IDLE =>
                 if test_timer = "101111101011110000011111111" then
-                    state_r <= ST_INIT;
+                    test_ram_state <= TEST_INIT;
                 else
                     test_timer <= test_timer + '1';
                 end if;
 
-            when ST_INIT =>
-                if  ready_o = '1' then
-                    state_r <= ST_WRITE;
-                end if;
+            when TEST_INIT =>
+                test_ram_state <= TEST_WRITE;
 
-            when ST_CONFIG =>
-                if done_o = '1' then
-                    if test_flag = '0' then
-                        if test_ops = 3 then
-                            test_ops <= 0;
-                            test_flag <= '1';
-                            state_r <= ST_CONFIG;
-                        else
-                            test_ops <= test_ops + 1;
-                            state_r <= ST_WRITE;
-                        end if;
-                    elsif test_flag = '1' then
-                        if test_ops = 4 then
-                            test_ops <= 0;
-                            state_r <= ST_DONE;
-                        else
-                            test_ops <= test_ops + 1;
-                            state_r <= ST_READ;
-                        end if;
+            when TEST_CONFIG =>
+                if test_flag = '0' then
+                    if test_ops = 3 then
+                        test_ops <= 0;
+                        test_flag <= '1';
+                        test_ram_state <= TEST_READ;
+                    else
+                        test_ops <= test_ops + 1;
+                        test_ram_state <= TEST_WRITE;
+                    end if;
+                else
+                    if test_ops = 4 then
+                        test_ops <= 0;
+                        test_flag <= '0';
+                        test_ram_state <= TEST_DONE;
+                    else
+                        test_ops <= test_ops + 1;
+                        test_ram_state <= TEST_READ;
                     end if;
                 end if;
 
-            when ST_READ =>
-                rw_i <= '1';
-                addr_i <= addr_i - '1';
-                state_r <= ST_REFRESH;
+            when TEST_WRITE =>
+                --
+                --
+                --
+                test_ram_state <= TEST_CONFIG;
 
-            when ST_WRITE =>
-                rw_i <= '1';
-                we_i <= '0';
-                addr_i <= addr_i + '1';
-                data_i <= data_i + '1';
-                ub_i <= '1';
-                lb_i <= '0';
-                state_r <= ST_REFRESH;
+            when TEST_READ =>
+                --
+                --
+                --
+                test_ram_state <= TEST_CONFIG;
 
-            when ST_REFRESH =>
-                refresh_i <= '1';
-                state_r <= ST_CONFIG;
-
-            when ST_DONE =>
-                state_r <= ST_DONE;
+            when TEST_DONE =>
+                test_ram_state <= TEST_DONE;
 
         end case;
     end if;
