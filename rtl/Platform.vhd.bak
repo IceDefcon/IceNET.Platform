@@ -295,7 +295,7 @@ type TEST_STATE is
     TEST_CONFIG,
     TEST_READ,
     TEST_WRITE,
-    TEST_WAIT,
+    TEST_WAIT
     TEST_DONE
 );
 
@@ -998,25 +998,23 @@ begin
             when TEST_CONFIG =>
                 TEST_READ_EN <= '0';
                 TEST_WRITE_EN <= '0';
-                if TEST_BUSY = '0' then
-                    if test_flag = '0' then
-                        if test_ops = 3 then
-                            test_ops <= 0;
-                            test_flag <= '1';
-                            test_ram_state <= TEST_CONFIG;
-                        else
-                            test_ops <= test_ops + 1;
-                            test_ram_state <= TEST_WRITE;
-                        end if;
-                    elsif test_flag = '1' then
-                        if test_ops = 4 then
-                            test_ops <= 0;
-                            test_flag <= '0';
-                            test_ram_state <= TEST_DONE;
-                        else
-                            test_ops <= test_ops + 1;
-                            test_ram_state <= TEST_READ;
-                        end if;
+                if test_flag = '0' then
+                    if test_ops = 3 then
+                        test_ops <= 0;
+                        test_flag <= '1';
+                        test_ram_state <= TEST_CONFIG;
+                    else
+                        test_ops <= test_ops + 1;
+                        test_ram_state <= TEST_WRITE;
+                    end if;
+                elsif test_flag = '1' then
+                    if test_ops = 4 then
+                        test_ops <= 0;
+                        test_flag <= '0';
+                        test_ram_state <= TEST_DONE;
+                    else
+                        test_ops <= test_ops + 1;
+                        test_ram_state <= TEST_READ;
                     end if;
                 end if;
 

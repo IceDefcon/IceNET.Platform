@@ -29,7 +29,7 @@ Port
     DATA_OUT    : out std_logic_vector(15 downto 0);
     READ_EN     : in  std_logic;
     WRITE_EN    : in  std_logic;
-    READY       : out std_logic
+    BUSY       : out std_logic
 );
 end SDRAM_Controller;
 
@@ -173,7 +173,7 @@ begin
         end if;
     end process;
 
-    -- Ready signal
-    READY <= '1' when current_state = SDRAM_IDLE else '0';
+    -- BUSY signal
+    BUSY <= '1' when current_state /= SDRAM_IDLE else '0';
 
 end Behavioral;
