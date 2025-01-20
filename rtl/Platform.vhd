@@ -309,7 +309,11 @@ signal test_ops : integer := 0;
 -- Address ---> Row[23:11] : Bank[10:9] : Column[8:0]
 -- Data ---> 0x5570
 --
-signal TEST_ADDR :  std_logic_vector(23 downto 0) := "000000000000100000000011";
+-- ADDR(23 downto 11); -- Row address
+-- ADDR(10 downto 9); -- Bank address
+-- ADDR(8 downto 0); -- Column address
+--
+signal TEST_ADDR :  std_logic_vector(23 downto 0) := "000000000000000000000000";
 signal TEST_WRITE_EN : std_logic := '0';
 signal TEST_DATA_IN :  std_logic_vector(15 downto 0) := "0101010101110000";
 signal TEST_READ_EN : std_logic := '0';
@@ -1004,6 +1008,7 @@ begin
                             test_ops <= 0;
                             test_flag <= '1';
                             test_ram_state <= TEST_CONFIG;
+                            TEST_ADDR <= "000000000000000000000000";
                         else
                             test_ops <= test_ops + 1;
                             test_ram_state <= TEST_WRITE;
@@ -1023,12 +1028,12 @@ begin
             when TEST_WRITE =>
                 TEST_WRITE_EN <= '1';
                 TEST_DATA_IN <= TEST_DATA_IN + '1';
-                TEST_ADDR <= TEST_ADDR + "100000000000";
+                TEST_ADDR <= TEST_ADDR + '1';
                 test_ram_state <= TEST_WAIT;
 
             when TEST_READ =>
                 TEST_READ_EN <= '1';
-                TEST_ADDR <= "000000000000000000000000";
+                TEST_ADDR <= TEST_ADDR + '1';
                 test_ram_state <= TEST_WAIT;
 
             when TEST_WAIT =>

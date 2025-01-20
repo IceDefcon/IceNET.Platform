@@ -51,26 +51,26 @@ architecture Behavioral of SDRAM_Controller is
     -- Internal signals
     signal init_counter : integer range 0 to 100 := 0;
     signal refresh_counter : integer range 0 to 8192 := 0;
-    signal command : std_logic_vector(4 downto 0); -- Command signal
+    signal command : std_logic_vector(3 downto 0); -- Command signal
 
     -- Command definitions
-    constant CMD_NOP        : std_logic_vector(4 downto 0) := "10111";
-    constant CMD_ACTIVE     : std_logic_vector(4 downto 0) := "10011";
-    constant CMD_READ       : std_logic_vector(4 downto 0) := "10101";
-    constant CMD_WRITE      : std_logic_vector(4 downto 0) := "10100";
-    constant CMD_PRECHARGE  : std_logic_vector(4 downto 0) := "10010";
-    constant CMD_REFRESH    : std_logic_vector(4 downto 0) := "10001";
-    constant CMD_LOAD_MODE  : std_logic_vector(4 downto 0) := "10000";
+constant CMD_NOP        : std_logic_vector(3 downto 0) := "0111";
+constant CMD_ACTIVE     : std_logic_vector(3 downto 0) := "0011";
+constant CMD_READ       : std_logic_vector(3 downto 0) := "0101";
+constant CMD_WRITE      : std_logic_vector(3 downto 0) := "0100";
+constant CMD_PRECHARGE  : std_logic_vector(3 downto 0) := "0010";
+constant CMD_REFRESH    : std_logic_vector(3 downto 0) := "0001";
+constant CMD_LOAD_MODE  : std_logic_vector(3 downto 0) := "0000";
 
 begin
 
     -- Assign SDRAM signals
     CLK_SDRAM <= CLK;
     CKE       <= '1';
-    CS        <= command(4);
-    RAS       <= command(3);
-    CAS       <= command(2);
-    WE        <= command(1);
+    CS  <= command(3);
+    RAS <= command(2);
+    CAS <= command(1);
+    WE  <= command(0);
     LDQM      <= '0'; -- Assume full-width access for simplicity
     UDQM      <= '0';
 
