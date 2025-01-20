@@ -295,13 +295,12 @@ type TEST_STATE is
     TEST_CONFIG,
     TEST_READ,
     TEST_WRITE,
-    TEST_WAIT,
     TEST_DONE
 );
 
 signal test_ram_state : TEST_STATE := TEST_IDLE;
 -- Test
-signal test_timer : std_logic_vector(26 downto 0) := (others => '0');
+signal test_timer : std_logic_vector(28 downto 0) := (others => '0');
 signal test_flag : std_logic := '0';
 signal test_ops : integer := 0;
 --
@@ -320,8 +319,10 @@ signal TEST_READ_EN : std_logic := '0';
 signal TEST_DATA_OUT : std_logic_vector(15 downto 0) := (others => '0');
 signal TEST_BUSY : std_logic := '0';
 -- PLL
-signal clock_100MHz : std_logic := '0';
-
+signal CLOCK_100MHz : std_logic := '0';
+signal CLOCK_200MHz : std_logic := '0';
+signal CLOCK_400MHz : std_logic := '0';
+signal CLOCK_600MHz : std_logic := '0';
 ----------------------------------------------------------------------------------------------------------------
 -- COMPONENTS DECLARATION
 ----------------------------------------------------------------------------------------------------------------
@@ -423,8 +424,9 @@ end component;
 component SDRAM_Controller
 Port
 (
-    CLK         : in  std_logic;
-    CLK_SLOW    : in  std_logic;
+    CLK_200MHz  : in  std_logic;
+    CLK_100MHz  : in  std_logic;
+    CLK_50Mhz   : in  std_logic;
     RESET       : in  std_logic;
 
     -- SDRAM Interface
@@ -541,15 +543,18 @@ end component;
 --);
 --end component SDRAM_CLOAK;
 
-component SDRAM_PLL
+component PLL_Clock
 port
 (
-    areset  : IN STD_LOGIC := '0';
-    inclk0  : IN STD_LOGIC := '0';
-    c0      : OUT STD_LOGIC;
+    areset  : IN STD_LOGIC  := '0';
+    inclk0  : IN STD_LOGIC  := '0';
+    c0      : OUT STD_LOGIC ;
+    c1      : OUT STD_LOGIC ;
+    c2      : OUT STD_LOGIC ;
+    c3      : OUT STD_LOGIC ;
     locked  : OUT STD_LOGIC
 );
-end component SDRAM_PLL;
+end component PLL_Clock;
 
 ----------------------------------------------------------------------------------------------------------------
 -- MAIN ROUTINE
@@ -696,8 +701,9 @@ port map
 SDRAM_Controller_module: SDRAM_Controller
 port map
 (
-    CLK => clock_100MHz,
-    CLK_SLOW => CLOCK_50MHz,
+    CLK_200MHz => CLOCK_200MHz,
+    CLK_100MHz => CLOCK_100MHz,
+    CLK_50Mhz => CLOCK_50MHz,
     RESET => '0',
 
     -- SDRAM Interface
@@ -830,12 +836,15 @@ port map
 --    reset_source_reset => open
 --);
 
-SDRAM_PLL_module: SDRAM_PLL
+PLL_Clock_module: PLL_Clock
 port map
 (
     areset => '0',
     inclk0 => CLOCK_50MHz,
-    c0 => clock_100MHz,
+    c0 => CLOCK_100MHz,
+    c1 => CLOCK_200MHz,
+    c2 => CLOCK_400MHz,
+    c3 => CLOCK_600MHz,
     locked => open
 );
 
@@ -983,14 +992,14 @@ end process;
 --NRF905_TRX_CE <= '0';
 --NRF905_TX_EN <= 'Z';
 
-process (CLOCK_100MHz, test_ram_state)
+process (CLOCK_200MHz, test_ram_state)
 begin
-    if rising_edge(CLOCK_100MHz) then
+    if rising_edge(CLOCK_200MHz) then
 
         case (test_ram_state) is
 
             when TEST_IDLE =>
-                if test_timer = "101111101011110000011111111" then
+                if test_timer = "10111110101111000001111111111" then
                     test_ram_state <= TEST_INIT;
                 else
                     test_timer <= test_timer + '1';
@@ -1029,14 +1038,11 @@ begin
                 TEST_WRITE_EN <= '1';
                 TEST_DATA_IN <= TEST_DATA_IN + '1';
                 TEST_ADDR <= TEST_ADDR + '1';
-                test_ram_state <= TEST_WAIT;
+                test_ram_state <= TEST_CONFIG;
 
             when TEST_READ =>
                 TEST_READ_EN <= '1';
                 TEST_ADDR <= TEST_ADDR + '1';
-                test_ram_state <= TEST_WAIT;
-
-            when TEST_WAIT =>
                 test_ram_state <= TEST_CONFIG;
 
             when TEST_DONE =>
