@@ -113,12 +113,16 @@ begin
                 when SDRAM_INIT =>
                     command <= CMD_NOP;
                     if init_counter = 100 then
-                        memory_state <= SDRAM_IDLE;
+                        memory_state <= SDRAM_MODE;
                     else
                         init_counter <= init_counter + 1;
                     end if;
 
                 when SDRAM_MODE =>
+                    BA <= "00";
+                    A <= MODE_REG;
+                    command <= CMD_LOAD_MODE;
+                    memory_state <= SDRAM_MODE_DELAY;
 
                 when SDRAM_MODE_DELAY =>
                     if delay_mode = delay_offset - two_states_offset then
@@ -129,7 +133,6 @@ begin
                     end if;
 
                 when SDRAM_IDLE =>
-                    DQ <= (others => '0');
                     command <= CMD_NOP;
                     if WRITE_EN = '1' then
                         process_write <= '1';
