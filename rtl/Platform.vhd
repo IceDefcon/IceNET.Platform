@@ -144,25 +144,7 @@ port
     LOGIC_CH4 : out std_logic; -- PIN_C22
     LOGIC_CH5 : out std_logic; -- PIN_D21
     LOGIC_CH6 : out std_logic; -- PIN_D22
-    --
-    -- Tri-state Unused Pins :: For the PCB Safety
-    --
-    UNUSED_01 : inout std_logic; -- PIN_A4
-    UNUSED_03 : inout std_logic; -- PIN_C3
-    UNUSED_04 : inout std_logic; -- PIN_C4
-    UNUSED_06 : inout std_logic; -- PIN_B5
-    UNUSED_15 : inout std_logic; -- PIN_A10
-    UNUSED_17 : inout std_logic; -- PIN_A13
-    UNUSED_22 : inout std_logic; -- PIN_B15 :: VDD_ADC :: Not Connected
-    UNUSED_23 : inout std_logic; -- PIN_A16
-    UNUSED_24 : inout std_logic; -- PIN_B16 :: GND_ADC :: Not Connected
-    UNUSED_25 : inout std_logic; -- PIN_A17
-    UNUSED_26 : inout std_logic; -- PIN_B17
-    UNUSED_27 : inout std_logic; -- PIN_A18
-    UNUSED_28 : inout std_logic; -- PIN_B18
-    UNUSED_29 : inout std_logic; -- PIN_A19
-    UNUSED_30 : inout std_logic; -- PIN_B19
-    UNUSED_32 : inout std_logic; -- PIN_B20
+
     -----------------------------------------------------
     --
     -- 256Mbit SDRAM
@@ -295,14 +277,15 @@ type TEST_STATE is
     TEST_CONFIG,
     TEST_READ,
     TEST_WRITE,
+    TEST_WAIT,
     TEST_DONE
 );
 
 signal test_ram_state : TEST_STATE := TEST_IDLE;
 -- Test
 signal test_timer : std_logic_vector(28 downto 0) := (others => '0');
+signal test_ops : std_logic_vector(3 downto 0) := (others => '0');
 signal test_flag : std_logic := '0';
-signal test_ops : integer := 0;
 --
 --
 -- Address ---> Row[23:11] : Bank[10:9] : Column[8:0]
@@ -560,27 +543,6 @@ end component PLL_Clock;
 -- MAIN ROUTINE
 ----------------------------------------------------------------------------------------------------------------
 begin
-
-----------------------------------------------------------
--- Tri-state Unused Pins :: For the PCB Safety
-----------------------------------------------------------
-UNUSED_01 <= 'Z';
-UNUSED_03 <= 'Z';
-UNUSED_04 <= 'Z';
-UNUSED_06 <= 'Z';
-UNUSED_15 <= 'Z';
-UNUSED_17 <= 'Z';
-UNUSED_22 <= 'Z';
-UNUSED_23 <= 'Z';
-UNUSED_24 <= 'Z';
-UNUSED_25 <= 'Z';
-UNUSED_26 <= 'Z';
-UNUSED_27 <= 'Z';
-UNUSED_28 <= 'Z';
-UNUSED_29 <= 'Z';
-UNUSED_30 <= 'Z';
-UNUSED_32 <= 'Z';
-----------------------------------------------------------
 
 DebounceController_module: DebounceController
 generic map
@@ -927,7 +889,7 @@ port map
     PWM_SIGNAL => PWM_SIGNAL
 );
 
-return_interrupts_process:
+feedback_interrupts_process:
 process(CLOCK_50MHz)
 begin
     if rising_edge(CLOCK_50MHz) then
@@ -1013,22 +975,22 @@ begin
                 TEST_WRITE_EN <= '0';
                 if TEST_BUSY = '0' then
                     if test_flag = '0' then
-                        if test_ops = 3 then
-                            test_ops <= 0;
+                        if test_ops = "0011" then
+                            test_ops <= "0000";
                             test_flag <= '1';
                             test_ram_state <= TEST_CONFIG;
                             TEST_ADDR <= "000000000000000000000000";
                         else
-                            test_ops <= test_ops + 1;
+                            test_ops <= test_ops + '1';
                             test_ram_state <= TEST_WRITE;
                         end if;
                     elsif test_flag = '1' then
-                        if test_ops = 4 then
-                            test_ops <= 0;
+                        if test_ops = "1000" then
+                            test_ops <= "0000";
                             test_flag <= '0';
                             test_ram_state <= TEST_DONE;
                         else
-                            test_ops <= test_ops + 1;
+                            test_ops <= test_ops + '1';
                             test_ram_state <= TEST_READ;
                         end if;
                     end if;
@@ -1038,11 +1000,14 @@ begin
                 TEST_WRITE_EN <= '1';
                 TEST_DATA_IN <= TEST_DATA_IN + '1';
                 TEST_ADDR <= TEST_ADDR + '1';
-                test_ram_state <= TEST_CONFIG;
+                test_ram_state <= TEST_WAIT;
 
             when TEST_READ =>
                 TEST_READ_EN <= '1';
                 TEST_ADDR <= TEST_ADDR + '1';
+                test_ram_state <= TEST_WAIT;
+
+            when TEST_WAIT =>
                 test_ram_state <= TEST_CONFIG;
 
             when TEST_DONE =>
