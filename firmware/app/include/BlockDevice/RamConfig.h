@@ -14,7 +14,6 @@
 #include <iostream>
 
 #include "Types.h"
-#include "Console.h"
 
 typedef enum
 {
@@ -33,7 +32,7 @@ struct DeviceConfig
     uint8_t payload[];  // Combined register addresses and write data
 };
 
-class RamConfig : public Console
+class RamConfig
 {
 	private:
 

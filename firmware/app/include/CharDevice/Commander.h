@@ -11,11 +11,9 @@
 #include <atomic>
 #include <vector>
 
-#include "Console.h"
 #include "Types.h"
 
-
-class Commander : public Console
+class Commander
 {
     private:
         int m_file_descriptor;

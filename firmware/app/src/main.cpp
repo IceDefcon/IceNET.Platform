@@ -6,52 +6,29 @@
  */
 #include <chrono> // delay
 #include <thread> // delay
+#include "DroneCtrl.h"
 
-#include "NetworkTraffic.h"
-#include "KernelOutput.h"
-#include "KernelInput.h"
-#include "RamConfig.h"
-#include "ServerTCP.h"
-#include "Commander.h"
-#include "Watchdog.h"
-
-int main() 
+int main()
 {
-    /* Smart pointers for auto Heap allocation and dealocation */
-    auto instanceNetworkTraffic = std::make_shared<NetworkTraffic>();
-    auto instanceWatchdog = std::make_shared<Watchdog>();
-    auto instanceKernelInput = std::make_shared<KernelInput>();
-    auto instanceRamConfig = std::make_shared<RamConfig>();
-    auto instanceKernelOutput = std::make_shared<KernelOutput>();
-    auto instanceServerTCP = std::make_shared<ServerTCP>();
-    auto instanceCommander = std::make_shared<Commander>();
+    /**
+     * Smart pointer for auto Heap
+     * allocation and dealocation
+     */
+    auto instanceDroneCtrl = std::make_shared<DroneCtrl>();
 
-    /* Set Instances */
-    instanceKernelOutput->setInstance_NetworkTraffic(instanceNetworkTraffic);
-    instanceServerTCP->setInstance_NetworkTraffic(instanceNetworkTraffic);
-    instanceServerTCP->setInstance_RamConfig(instanceRamConfig);
-    instanceNetworkTraffic->setInstance_KernelInput(instanceKernelInput);
-    instanceWatchdog->setInstance_RamConfig(instanceRamConfig);
-    instanceWatchdog->setInstance_Commander(instanceCommander);
-
-    /* Initialize Interfaces */
-    instanceCommander->openDEV();
-    instanceWatchdog->openDEV();
-    instanceKernelInput->openDEV();
-    instanceKernelOutput->openDEV();
-    instanceServerTCP->openDEV();
-    instanceNetworkTraffic->openDEV();
+    instanceDroneCtrl->KernelComms::Commander::openDEV();
+    instanceDroneCtrl->KernelComms::Watchdog::openDEV();
+    instanceDroneCtrl->KernelComms::Input::openDEV();
+    instanceDroneCtrl->KernelComms::Output::openDEV();
 
     while (true) /* Terminate Kernel comms and Clean Memory */
     {
-        if (instanceKernelOutput->isThreadKilled() || instanceWatchdog->isThreadKilled())
+        if (instanceDroneCtrl->Output::isThreadKilled() || instanceDroneCtrl->Watchdog::isThreadKilled())
         {
-            instanceWatchdog->closeDEV();
-            instanceServerTCP->closeDEV();
-            instanceKernelOutput->closeDEV();
-            instanceKernelInput->closeDEV();
-            instanceNetworkTraffic->closeDEV();
-            instanceCommander->closeDEV();
+            instanceDroneCtrl->KernelComms::Watchdog::closeDEV();
+            instanceDroneCtrl->KernelComms::Output::closeDEV();
+            instanceDroneCtrl->KernelComms::Input::closeDEV();
+            instanceDroneCtrl->KernelComms::Commander::closeDEV();
             break;
         }
 
@@ -62,3 +39,23 @@ int main()
     /* shared_ptr in use :: No need for deallocation */
     return 0;
 }
+
+#if 0 /* Old Costruction */
+
+    /* Initialize Interfaces */
+    instanceCommander->openDEV();
+    instanceWatchdog->openDEV();
+    instanceInput->openDEV();
+    instanceOutput->openDEV();
+    instanceServerTCP->openDEV();
+    instanceNetworkTraffic->openDEV();
+
+    /* Terminate Kernel comms and Clean Memory */
+    instanceWatchdog->closeDEV();
+    instanceServerTCP->closeDEV();
+    instanceOutput->closeDEV();
+    instanceInput->closeDEV();
+    instanceNetworkTraffic->closeDEV();
+    instanceCommander->closeDEV();
+
+#endif

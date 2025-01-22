@@ -43,12 +43,12 @@ int Commander::openDEV()
 
     if(m_file_descriptor < 0)
     {
-        Error("[CMD] Failed to open Device");
+        std::cout << "[ERNO] [CMD] Failed to open Device" << std::endl;
         return ERROR;
     } 
     else 
     {
-        Info("[CMD] Device opened successfuly");
+        std::cout << "[INFO] [CMD] Device opened successfuly" << std::endl;
     }
 
     return OK;
@@ -77,7 +77,7 @@ int Commander::dataTX()
 {
     int ret = -1;
 
-    Info("[CMD] Command Received :: Sending to Kernel");
+    std::cout << "[INFO] [CMD] Command Received :: Sending to Kernel" << std::endl;
 
     (*m_Tx_Commander)[0] = 0x10;
     (*m_Tx_Commander)[1] = 0xAD;
@@ -85,7 +85,7 @@ int Commander::dataTX()
 
     if (ret == -1)
     {
-        Error("[CMD] Cannot write command to kernel space");
+        std::cout << "[ERNO] [CMD] Cannot write command to kernel space" << std::endl;
         return ERROR;
     }
 

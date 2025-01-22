@@ -15,36 +15,33 @@
 #include <vector>
 
 #include "NetworkTraffic.h"
-#include "RamConfig.h"
 #include "Types.h"
 
-class ServerTCP
+class Output
 {
     private:
-        std::thread m_threadServerTCP;
+        int m_file_descriptor;
+        std::thread m_threadOutput;
         std::atomic<bool> m_threadKill;
 
-        int m_timeoutCount;
         int m_portNumber;
         int m_serverSocket;
         int m_clientSocket;
+        int m_bytesReceived;
         bool m_clientConnected;
 
         struct sockaddr_in m_serverAddress;
         struct sockaddr_in m_clientAddress;
 
         /* For TCP server Traffic */
-        std::vector<char>* m_Rx_ServerTCP;
-        std::vector<char>* m_Tx_ServerTCP;
-        int m_Rx_bytesReceived;
-        int m_Tx_bytesReceived;
+        std::vector<char>* m_Rx_Output;
+        std::vector<char>* m_Tx_Output;
 
         std::shared_ptr<NetworkTraffic> m_instanceNetworkTraffic;
-        std::shared_ptr<RamConfig> m_instanceRamConfig;
 
     public:
-        ServerTCP();
-        ~ServerTCP();
+        Output();
+        ~Output();
 
         int openDEV();
         int dataTX();
@@ -54,13 +51,7 @@ class ServerTCP
         void initThread();
         bool isThreadKilled();
 
-        void threadServerTCP();
-
-        int initServer();
-        int tcpTX();
-        int tcpRX();
-        int tcpClose();
+        void threadOutput();
 
         void setInstance_NetworkTraffic(const std::shared_ptr<NetworkTraffic> instance);
-        void setInstance_RamConfig(const std::shared_ptr<RamConfig> instance);
 };

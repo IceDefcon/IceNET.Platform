@@ -33,13 +33,9 @@ ServerTCP::ServerTCP() :
     m_serverAddress.sin_family = AF_INET;
     m_serverAddress.sin_addr.s_addr = INADDR_ANY;
     m_serverAddress.sin_port = htons(m_portNumber);
-
-    /* Initialize m_Rx_ServerTCP and m_Tx_ServerTCP with zeros */
-    std::fill(m_Rx_ServerTCP->begin(), m_Rx_ServerTCP->end(), 0);
-    std::fill(m_Tx_ServerTCP->begin(), m_Tx_ServerTCP->end(), 0);
 }
 
-ServerTCP::~ServerTCP() 
+ServerTCP::~ServerTCP()
 {
     std::cout << "[INFO] [DESTRUCTOR] " << this << " :: Destroy ServerTCP" << std::endl;
 
@@ -47,12 +43,12 @@ ServerTCP::~ServerTCP()
     closeDEV();
 
     /* Unblock the accept function */
-    if (m_serverSocket >= 0) 
+    if (m_serverSocket >= 0)
     {
         close(m_serverSocket);
     }
 
-    if (m_threadServerTCP.joinable()) 
+    if (m_threadServerTCP.joinable())
     {
         m_threadServerTCP.join();
     }
@@ -61,7 +57,14 @@ ServerTCP::~ServerTCP()
     m_instanceRamConfig = nullptr;
 }
 
-int ServerTCP::openDEV() 
+void ServerTCP::InitServerBuffers()
+{
+    std::cout << "[INFO] [TCP] Initialise ServerTCP Buffers" << std::endl;
+    std::fill(m_Rx_ServerTCP->begin(), m_Rx_ServerTCP->end(), 0);
+    std::fill(m_Tx_ServerTCP->begin(), m_Tx_ServerTCP->end(), 0);
+}
+
+int ServerTCP::openDEV()
 {
     initThread();
 
@@ -78,7 +81,7 @@ int ServerTCP::dataTX()
     return OK;
 }
 
-int ServerTCP::closeDEV() 
+int ServerTCP::closeDEV()
 {
     /* TODO :: Temporarily here */
     m_threadKill = true;
@@ -151,8 +154,8 @@ void ServerTCP::threadServerTCP()
             {
                 std::cout << "[INFO] [TCP] Sending data to NetworkTraffic" << std::endl;
                 m_instanceNetworkTraffic->setNetworkTrafficRx(m_Rx_ServerTCP, m_Rx_bytesReceived);
-                std::cout << "[INFO] [TCP] Set NetworkTraffic_KernelInput mode" << std::endl;
-                m_instanceNetworkTraffic->setNetworkTrafficState(NetworkTraffic_KernelInput);
+                std::cout << "[INFO] [TCP] Set NetworkTraffic_Input mode" << std::endl;
+                m_instanceNetworkTraffic->setNetworkTrafficState(NetworkTraffic_Input);
 
                 if (tcpTX() < 0)
                 {
@@ -207,23 +210,23 @@ void ServerTCP::threadServerTCP()
     std::cout << "[INFO] [TCP] Terminate threadServerTCP" << std::endl;
 }
 
-int ServerTCP::initServer() 
+int ServerTCP::initServer()
 {
     m_serverSocket = socket(AF_INET, SOCK_STREAM, 0);
-    
+
     if (m_serverSocket < 0)
     {
         std::cout << "[ERNO] [TCP] Error opening socket" << std::endl;
     }
 
     /**
-     * 
-     * option = 1 
-     * 
-     * Allows you to reuse the socket address and port 
-     * immediately after the socket is closed, 
+     *
+     * option = 1
+     *
+     * Allows you to reuse the socket address and port
+     * immediately after the socket is closed,
      * even if it's in the TIME_WAIT state
-     * 
+     *
      */
     int ret = -1;
     int option = 1;
@@ -242,7 +245,7 @@ int ServerTCP::initServer()
     tv.tv_sec = 1;  /* 5 seconds timeout */
     tv.tv_usec = 0;
     ret = setsockopt(m_serverSocket, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof(tv));
-    if (ret < 0) 
+    if (ret < 0)
     {
         std::cout << "[ERNO] [TCP] setsockopt :: SO_RCVTIMEO Failed" << std::endl;
     }
@@ -252,7 +255,7 @@ int ServerTCP::initServer()
     }
 
     ret = bind(m_serverSocket, (struct sockaddr *)&m_serverAddress, sizeof(m_serverAddress));
-    if (ret < 0) 
+    if (ret < 0)
     {
         std::cout << "[ERNO] [TCP] Error on binding the socket" << std::endl;
     }
@@ -262,15 +265,15 @@ int ServerTCP::initServer()
     }
 
     /**
-     * 
-     * backlog parameter = 5 
-     * 
+     *
+     * backlog parameter = 5
+     *
      * Maximum number of
      * pending connections
-     * 
+     *
      */
     listen(m_serverSocket, 5);
-    if (ret < 0) 
+    if (ret < 0)
     {
         std::cout << "[ERNO] [TCP] Error listening for connections" << std::endl;
     }
@@ -287,14 +290,14 @@ int ServerTCP::tcpTX()
     ssize_t ret = -1;
 
     /**
-     * As in kernelOutput we have here
+     * As in Output we have here
      * lack of synchronisation due to
      * the trigger that is happemning
      * on the client side :: GUI
      *
      * Therefore :: No need for State Machine
      */
-    if (!m_clientConnected) 
+    if (!m_clientConnected)
     {
         std::cerr << "[ERNO] [TCP] No client connected" << std::endl;
     }
@@ -317,12 +320,12 @@ int ServerTCP::tcpTX()
         std::cout << std::endl;
 
         /**
-         * 
-         * This one here is to keep 
+         *
+         * This one here is to keep
          * the things running in the GUI
          * as the transfer is check against
          * 0x0000000000000000 so we add 0xEE
-         * 
+         *
          */
 
         (*m_Tx_ServerTCP)[7] = 0xEE;
@@ -393,9 +396,9 @@ int ServerTCP::tcpRX()
     return m_Rx_bytesReceived;
 }
 
-int ServerTCP::tcpClose() 
+int ServerTCP::tcpClose()
 {
-    if (m_clientSocket >= 0) 
+    if (m_clientSocket >= 0)
     {
         close(m_clientSocket);
         m_clientSocket = -1;

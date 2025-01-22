@@ -12,40 +12,40 @@
 #include <fcntl.h> // For open, O_RDWR, etc.
 #include <unistd.h>// For close, read, write, etc.
 
-#include "KernelOutput.h"
+#include "Output.h"
 #include "Types.h"
 
-KernelOutput::KernelOutput() :
+Output::Output() :
     m_file_descriptor(0), 
     m_threadKill(false),
-    m_Rx_KernelOutput(new std::vector<char>(CHAR_DEVICE_SIZE)),
-    m_Tx_KernelOutput(new std::vector<char>(CHAR_DEVICE_SIZE))
+    m_Rx_Output(new std::vector<char>(CHAR_DEVICE_SIZE)),
+    m_Tx_Output(new std::vector<char>(CHAR_DEVICE_SIZE))
 {
-    std::cout << "[INFO] [CONSTRUCTOR] " << this << " :: Instantiate KernelOutput" << std::endl;
+    std::cout << "[INFO] [CONSTRUCTOR] " << this << " :: Instantiate Output" << std::endl;
 
-    /* Initialize m_Rx_KernelOutput and m_Tx_KernelOutput with zeros */
-    std::fill(m_Rx_KernelOutput->begin(), m_Rx_KernelOutput->end(), 0);
-    std::fill(m_Tx_KernelOutput->begin(), m_Tx_KernelOutput->end(), 0);
+    /* Initialize m_Rx_Output and m_Tx_Output with zeros */
+    std::fill(m_Rx_Output->begin(), m_Rx_Output->end(), 0);
+    std::fill(m_Tx_Output->begin(), m_Tx_Output->end(), 0);
 }
 
-KernelOutput::~KernelOutput() 
+Output::~Output()
 {
-    std::cout << "[INFO] [DESTRUCTOR] " << this << " :: Destroy KernelOutput" << std::endl;
+    std::cout << "[INFO] [DESTRUCTOR] " << this << " :: Destroy Output" << std::endl;
 
     closeDEV();
 
-    if (m_threadKernelOutput.joinable()) 
+    if (m_threadOutput.joinable())
     {
-        m_threadKernelOutput.join();
+        m_threadOutput.join();
     }
 
     m_instanceNetworkTraffic = nullptr;
 
-    delete m_Rx_KernelOutput;
-    delete m_Tx_KernelOutput;
+    delete m_Rx_Output;
+    delete m_Tx_Output;
 }
 
-int KernelOutput::openDEV() 
+int Output::openDEV()
 {
     m_file_descriptor = open("/dev/KernelOutput", O_RDWR);
 
@@ -64,21 +64,21 @@ int KernelOutput::openDEV()
     return OK;
 }
 
-int KernelOutput::dataRX()
+int Output::dataRX()
 {
     int ret;
 
     std::cout << "[INFO] [ O ] Trying to read from Kernel" << std::endl;
-    ret = read(m_file_descriptor, m_Rx_KernelOutput->data(), CHAR_DEVICE_SIZE);
+    ret = read(m_file_descriptor, m_Rx_Output->data(), CHAR_DEVICE_SIZE);
 
     std::cout << "[INFO] [ O ] Received " << ret << " Bytes of data: ";
     for (int i = 0; i < ret; ++i)
     {
-        std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>((*m_Rx_KernelOutput)[i]) << " ";
+        std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>((*m_Rx_Output)[i]) << " ";
     }
     std::cout << std::endl;
 
-    if (m_Rx_KernelOutput->size() >= 2 && (*m_Rx_KernelOutput)[0] == 0xDE && (*m_Rx_KernelOutput)[1] == 0xAD)
+    if (m_Rx_Output->size() >= 2 && (*m_Rx_Output)[0] == 0xDE && (*m_Rx_Output)[1] == 0xAD)
     {
         std::cout << "[INFO] [ O ] Kill SIGNAL Received" << std::endl;
         return 0;
@@ -87,18 +87,18 @@ int KernelOutput::dataRX()
     return ret;
 }
 
-int KernelOutput::dataTX()
+int Output::dataTX()
 {
     /**
      * One way communication Here
      *
      * Tx is not Active in fops
-     * in the KernelOutput module
+     * in the Output module
      */
     return OK;
 }
 
-int KernelOutput::closeDEV() 
+int Output::closeDEV()
 {
     if (m_file_descriptor >= 0) 
     {
@@ -112,18 +112,18 @@ int KernelOutput::closeDEV()
     return OK;
 }
 
-void KernelOutput::initThread()
+void Output::initThread()
 {
-    std::cout << "[INFO] [ O ] Initialize threadKernelOutput" << std::endl;
-    m_threadKernelOutput = std::thread(&KernelOutput::threadKernelOutput, this);
+    std::cout << "[INFO] [ O ] Initialize threadOutput" << std::endl;
+    m_threadOutput = std::thread(&Output::threadOutput, this);
 }
 
-bool KernelOutput::isThreadKilled()
+bool Output::isThreadKilled()
 {
     return m_threadKill;
 }
 
-void KernelOutput::threadKernelOutput()
+void Output::threadOutput()
 {
     while (!m_threadKill)
     {
@@ -138,8 +138,8 @@ void KernelOutput::threadKernelOutput()
 
         if(dataRX() > 0)
         {
-            m_instanceNetworkTraffic->setNetworkTrafficTx(m_Rx_KernelOutput);
-            m_instanceNetworkTraffic->setNetworkTrafficState(NetworkTraffic_KernelOutput);
+            m_instanceNetworkTraffic->setNetworkTrafficTx(m_Rx_Output);
+            m_instanceNetworkTraffic->setNetworkTrafficState(NetworkTraffic_Output);
         }
         else
         {
@@ -151,10 +151,10 @@ void KernelOutput::threadKernelOutput()
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
 
-    std::cout << "[INFO] [ O ] Terminate threadKernelOutput" << std::endl;
+    std::cout << "[INFO] [ O ] Terminate threadOutput" << std::endl;
 }
 
-void KernelOutput::setInstance_NetworkTraffic(const std::shared_ptr<NetworkTraffic> instance)
+void Output::setInstance_NetworkTraffic(const std::shared_ptr<NetworkTraffic> instance)
 {
     m_instanceNetworkTraffic = instance;
 }
