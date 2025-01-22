@@ -2,13 +2,20 @@
 # Clock 50MHz
 ####################################################################################################################################
 
+set MIN_I_DELAY_50MHz  0
 set MAX_I_DELAY_50MHz  2
-set MAX_O_DELAY_50MHz  2
-set MIN_I_DELAY_50MHz  1
-set MIN_O_DELAY_50MHz  1
 
-create_clock -name {CLOCK_50MHz} -period 20 CLOCK_50MHz
-# create_clock -name {CLOCK_50MHz} -period 20 -waveform {0.000 10.000} [get_nets {CLOCK_50MHz}]
+set MIN_O_DELAY_50MHz  0
+set MAX_O_DELAY_50MHz  2
+
+set MIN_I_DELAY_200MHz 0
+set MAX_I_DELAY_200MHz 0.5
+
+set MIN_O_DELAY_200MHz 0
+set MAX_O_DELAY_200MHz 0.5
+
+# create_clock -name {CLOCK_50MHz} -period 20 CLOCK_50MHz
+create_clock -name {CLOCK_50MHz} -period 20 -waveform {0.000 10.000} [get_ports {CLOCK_50MHz}]
 
 set_input_delay -clock [get_clocks CLOCK_50MHz] -max $MAX_I_DELAY_50MHz -rise [get_nets CLOCK_50MHz]
 set_input_delay -clock [get_clocks CLOCK_50MHz] -max $MAX_I_DELAY_50MHz -fall [get_nets CLOCK_50MHz]
@@ -22,45 +29,26 @@ set_clock_uncertainty 0.1 -fall_from [get_clocks {CLOCK_50MHz}] -to [get_clocks 
 # Clock 50MHz - Derived from PLL
 ###########################################################################################################################
 
-set_input_delay -clock [get_clocks CLOCK_50MHz] -max $MAX_I_DELAY_50MHz -rise [get_nets CLOCK_50MHz]
-set_input_delay -clock [get_clocks CLOCK_50MHz] -max $MAX_I_DELAY_50MHz -fall [get_nets CLOCK_50MHz]
-set_input_delay -clock [get_clocks CLOCK_50MHz] -min $MIN_I_DELAY_50MHz -rise [get_nets CLOCK_50MHz]
-set_input_delay -clock [get_clocks CLOCK_50MHz] -min $MIN_I_DELAY_50MHz -fall [get_nets CLOCK_50MHz]
+create_clock -name {CLOCK_200MHz} -period 5 -waveform {0.000 2.500} [get_nets {CLOCK_200MHz}]
 
-set_clock_uncertainty 0.2 -rise_from [get_clocks {CLOCK_50MHz}] -to [get_clocks {CLOCK_50MHz}]
-set_clock_uncertainty 0.1 -fall_from [get_clocks {CLOCK_50MHz}] -to [get_clocks {CLOCK_50MHz}]
+set_input_delay -clock [get_clocks CLOCK_200MHz] -max $MAX_I_DELAY_200MHz -rise [get_nets CLOCK_200MHz]
+set_input_delay -clock [get_clocks CLOCK_200MHz] -max $MAX_I_DELAY_200MHz -fall [get_nets CLOCK_200MHz]
+set_input_delay -clock [get_clocks CLOCK_200MHz] -min $MIN_I_DELAY_200MHz -rise [get_nets CLOCK_200MHz]
+set_input_delay -clock [get_clocks CLOCK_200MHz] -min $MIN_I_DELAY_200MHz -fall [get_nets CLOCK_200MHz]
 
-set_output_delay -clock [get_clocks CLOCK_50MHz] -max $MAX_O_DELAY_50MHz [get_ports {A0 A1 A2 A3 A4 A5 A6 A7 A8 A9 A10 A11 A12}]
-set_output_delay -clock [get_clocks CLOCK_50MHz] -min $MIN_O_DELAY_50MHz [get_ports {A0 A1 A2 A3 A4 A5 A6 A7 A8 A9 A10 A11 A12}]
-set_output_delay -clock [get_clocks CLOCK_50MHz] -max $MAX_O_DELAY_50MHz [get_ports {D0 D1 D2 D3 D4 D5 D6 D7 D8 D9 D10 D11 D12 D13 D14 D15}]
-set_output_delay -clock [get_clocks CLOCK_50MHz] -min $MIN_O_DELAY_50MHz [get_ports {D0 D1 D2 D3 D4 D5 D6 D7 D8 D9 D10 D11 D12 D13 D14 D15}]
-set_output_delay -clock [get_clocks CLOCK_50MHz] -max $MAX_O_DELAY_50MHz [get_ports {CLK_SDRAM BA0 BA1 CAS CKE RAS WE CS LDQM UDQM}]
-set_output_delay -clock [get_clocks CLOCK_50MHz] -min $MIN_O_DELAY_50MHz [get_ports {CLK_SDRAM BA0 BA1 CAS CKE RAS WE CS LDQM UDQM}]
+set_clock_uncertainty 0.2 -rise_from [get_clocks {CLOCK_200MHz}] -to [get_clocks {CLOCK_200MHz}]
+set_clock_uncertainty 0.1 -fall_from [get_clocks {CLOCK_200MHz}] -to [get_clocks {CLOCK_200MHz}]
 
-# create_clock -name {CLOCK_50MHz} -period 5 -waveform {0.000 2.500} [get_nets {CLOCK_50MHz}]
+###########################################################################################################################
+# SDRAM
+###########################################################################################################################
 
-# set MAX_I_DELAY_200MHz 0.5
-# set MAX_O_DELAY_200MHz 0.5
-# set MIN_I_DELAY_200MHz 0.1
-# set MIN_O_DELAY_200MHz 0.1
-
-# # create_clock -name {CLOCK_200MHz} -period 5 CLOCK_200MHz
-# create_clock -name {CLOCK_200MHz} -period 5 -waveform {0.000 2.500} [get_nets {CLOCK_200MHz}]
-
-# set_input_delay -clock [get_clocks CLOCK_200MHz] -max $MAX_I_DELAY_200MHz -rise [get_nets CLOCK_200MHz]
-# set_input_delay -clock [get_clocks CLOCK_200MHz] -max $MAX_I_DELAY_200MHz -fall [get_nets CLOCK_200MHz]
-# set_input_delay -clock [get_clocks CLOCK_200MHz] -min $MIN_I_DELAY_200MHz -rise [get_nets CLOCK_200MHz]
-# set_input_delay -clock [get_clocks CLOCK_200MHz] -min $MIN_I_DELAY_200MHz -fall [get_nets CLOCK_200MHz]
-
-# set_clock_uncertainty 0.2 -rise_from [get_clocks {CLOCK_200MHz}] -to [get_clocks {CLOCK_200MHz}]
-# set_clock_uncertainty 0.1 -fall_from [get_clocks {CLOCK_200MHz}] -to [get_clocks {CLOCK_200MHz}]
-
-# set_output_delay -clock [get_clocks CLOCK_200MHz] -max $MAX_O_DELAY_200MHz [get_ports {A0 A1 A2 A3 A4 A5 A6 A7 A8 A9 A10 A11 A12}]
-# set_output_delay -clock [get_clocks CLOCK_200MHz] -min $MIN_O_DELAY_200MHz [get_ports {A0 A1 A2 A3 A4 A5 A6 A7 A8 A9 A10 A11 A12}]
-# set_output_delay -clock [get_clocks CLOCK_200MHz] -max $MAX_O_DELAY_200MHz [get_ports {D0 D1 D2 D3 D4 D5 D6 D7 D8 D9 D10 D11 D12 D13 D14 D15}]
-# set_output_delay -clock [get_clocks CLOCK_200MHz] -min $MIN_O_DELAY_200MHz [get_ports {D0 D1 D2 D3 D4 D5 D6 D7 D8 D9 D10 D11 D12 D13 D14 D15}]
-# set_output_delay -clock [get_clocks CLOCK_200MHz] -max $MAX_O_DELAY_200MHz [get_ports {CLK_SDRAM BA0 BA1 CAS CKE RAS WE CS LDQM UDQM}]
-# set_output_delay -clock [get_clocks CLOCK_200MHz] -min $MIN_O_DELAY_200MHz [get_ports {CLK_SDRAM BA0 BA1 CAS CKE RAS WE CS LDQM UDQM}]
+set_output_delay -clock [get_clocks CLOCK_200MHz] -max $MAX_O_DELAY_200MHz [get_ports {A0 A1 A2 A3 A4 A5 A6 A7 A8 A9 A10 A11 A12}]
+set_output_delay -clock [get_clocks CLOCK_200MHz] -min $MIN_O_DELAY_200MHz [get_ports {A0 A1 A2 A3 A4 A5 A6 A7 A8 A9 A10 A11 A12}]
+set_output_delay -clock [get_clocks CLOCK_200MHz] -max $MAX_O_DELAY_200MHz [get_ports {D0 D1 D2 D3 D4 D5 D6 D7 D8 D9 D10 D11 D12 D13 D14 D15}]
+set_output_delay -clock [get_clocks CLOCK_200MHz] -min $MIN_O_DELAY_200MHz [get_ports {D0 D1 D2 D3 D4 D5 D6 D7 D8 D9 D10 D11 D12 D13 D14 D15}]
+set_output_delay -clock [get_clocks CLOCK_200MHz] -max $MAX_O_DELAY_200MHz [get_ports {CLK_SDRAM BA0 BA1 CAS CKE RAS WE CS LDQM UDQM}]
+set_output_delay -clock [get_clocks CLOCK_200MHz] -min $MIN_O_DELAY_200MHz [get_ports {CLK_SDRAM BA0 BA1 CAS CKE RAS WE CS LDQM UDQM}]
 
 ###########################################################################################################################
 # Input Constraints :: relative to the CLOCK_50MHz

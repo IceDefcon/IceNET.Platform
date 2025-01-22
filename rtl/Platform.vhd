@@ -515,29 +515,16 @@ port
 );
 end component;
 
---component SDRAM_CLOAK
---port
---(
---    ref_clk_clk        : in  std_logic := 'X'; -- clk
---    ref_reset_reset    : in  std_logic := 'X'; -- reset
---    sys_clk_clk        : out std_logic;        -- clk
---    sdram_clk_clk      : out std_logic;        -- clk
---    reset_source_reset : out std_logic         -- reset
---);
---end component SDRAM_CLOAK;
-
-component PLL_Clock
+component PLL_100_200
 port
 (
     areset  : IN STD_LOGIC  := '0';
     inclk0  : IN STD_LOGIC  := '0';
     c0      : OUT STD_LOGIC ;
     c1      : OUT STD_LOGIC ;
-    c2      : OUT STD_LOGIC ;
-    c3      : OUT STD_LOGIC ;
     locked  : OUT STD_LOGIC
 );
-end component PLL_Clock;
+end component;
 
 ----------------------------------------------------------------------------------------------------------------
 -- MAIN ROUTINE
@@ -690,8 +677,6 @@ port map
     BUSY => TEST_BUSY
 );
 
-
-
 -----------------------------------------------------------------------------------------------
 -- Map to output
 -----------------------------------------------------------------------------------------------
@@ -788,25 +773,13 @@ port map
     CAN_MPP_RX => CAN_MPP_RX
 );
 
---SDRAM_CLOAK_module: SDRAM_CLOAK
---port map
---(
---    ref_clk_clk => CLOCK_50MHz,
---    ref_reset_reset => '0',
---    sys_clk_clk => open,
---    sdram_clk_clk => CLK_SDRAM,
---    reset_source_reset => open
---);
-
-PLL_Clock_module: PLL_Clock
+PLL_100_200_module: PLL_100_200
 port map
 (
     areset => '0',
     inclk0 => CLOCK_50MHz,
     c0 => CLOCK_100MHz,
     c1 => CLOCK_200MHz,
-    c2 => CLOCK_400MHz,
-    c3 => CLOCK_600MHz,
     locked => open
 );
 

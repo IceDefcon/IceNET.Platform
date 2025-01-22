@@ -34,7 +34,7 @@ Port
 );
 end SDRAM_Controller;
 
-architecture Behavioral of SDRAM_Controller is
+architecture rtl of SDRAM_Controller is
 
     -- State definitions
     type SDRAM_STATE is
@@ -49,27 +49,25 @@ architecture Behavioral of SDRAM_Controller is
         SDRAM_READ_CMD,
         SDRAM_OP_DELAY,
         SDRAM_READ_DATA,
-        SDRAM_PRECHARGE,
-        SDRAM_RAS_PRECHARGE_DELAY,
+        SDRAM_DONE,
         SDRAM_REFRESH
     );
     signal memory_state : SDRAM_STATE;
 
     -- Internal signals
-    signal init_counter : integer range 0 to 100 := 0;
+    signal init_counter : integer range 0 to 400 := 0;
     signal refresh_counter : integer range 0 to 8192 := 0;
     signal command : std_logic_vector(3 downto 0); -- Command signal
 
     signal process_read : std_logic := '0';
     signal process_write : std_logic := '0';
 
-    signal delay_op : std_logic_vector(3 downto 0);
-    signal delay_mode : std_logic_vector(3 downto 0);
-    signal delay_ras_to_cas : std_logic_vector(3 downto 0);
-    signal delay_ras_precharge : std_logic_vector(3 downto 0);
+    signal delay_op : std_logic_vector(4 downto 0);
+    signal delay_mode : std_logic_vector(4 downto 0);
+    signal delay_ras_to_cas : std_logic_vector(4 downto 0);
     -- For 200Mhz two jumps between states takes 10ns
-    constant two_states_offset : std_logic_vector(3 downto 0) := "0010";
-    constant delay_offset : std_logic_vector(3 downto 0) := "1110";
+    constant two_states_offset : std_logic_vector(4 downto 0) := "00010";
+    constant delay_offset : std_logic_vector(4 downto 0) := "11110";
     -- Command definitions
     constant CMD_NOP        : std_logic_vector(3 downto 0) := "0111";
     constant CMD_ACTIVE     : std_logic_vector(3 downto 0) := "0011";
@@ -91,7 +89,7 @@ begin
 
     -- Assign SDRAM signals
     CLK_SDRAM <= CLK_200MHz;
-    CKE       <= '1';
+    CKE <= '1';
     CS        <= command(3);
     RAS       <= command(2);
     CAS       <= command(1);
@@ -112,7 +110,7 @@ begin
 
                 when SDRAM_INIT =>
                     command <= CMD_NOP;
-                    if init_counter = 100 then
+                    if init_counter = 400 then
                         memory_state <= SDRAM_MODE;
                     else
                         init_counter <= init_counter + 1;
@@ -133,7 +131,6 @@ begin
                     end if;
 
                 when SDRAM_IDLE =>
-                    command <= CMD_NOP;
                     if WRITE_EN = '1' then
                         process_write <= '1';
                         memory_state <= SDRAM_ACTIVE;
@@ -142,6 +139,8 @@ begin
                         memory_state <= SDRAM_ACTIVE;
                     elsif refresh_counter = 8192 then
                         memory_state <= SDRAM_REFRESH;
+                    else
+                        command <= CMD_NOP;
                     end if;
 
                 when SDRAM_ACTIVE =>
@@ -166,20 +165,23 @@ begin
                     command <= CMD_WRITE;
                     DQ <= DATA_IN;
                     A(8 downto 0) <= ADDR(8 downto 0); -- Column address
+                    A(10) <= '1'; -- Auto-precharge
                     memory_state <= SDRAM_OP_DELAY;
 
                 when SDRAM_READ_CMD =>
                     command <= CMD_READ;
-                    DQ <= (others => 'Z');
+                    DQ <= (others => 'Z');  -- Set data bus to high-impedance
                     A(8 downto 0) <= ADDR(8 downto 0); -- Column address
+                    A(10) <= '1'; -- Auto-precharge
                     memory_state <= SDRAM_OP_DELAY;
 
                 when SDRAM_OP_DELAY =>
                     if delay_op = delay_offset - two_states_offset then
                         delay_op <= (others => '0');
                             if process_write = '1' then
-                                memory_state <= SDRAM_PRECHARGE;
+                                memory_state <= SDRAM_DONE;
                             elsif process_read = '1' then
+                                DATA_OUT <= DQ;
                                 memory_state <= SDRAM_READ_DATA;
                             end if;
                     else
@@ -187,23 +189,12 @@ begin
                     end if;
 
                 when SDRAM_READ_DATA =>
-                    DATA_OUT <= DQ;
-                    memory_state <= SDRAM_PRECHARGE;
+                    memory_state <= SDRAM_DONE;
 
-                when SDRAM_PRECHARGE =>
+                when SDRAM_DONE =>
                     process_read <= '0';
                     process_write <= '0';
-                    A(10) <= '1';
-                    command <= CMD_PRECHARGE;
-                    memory_state <= SDRAM_RAS_PRECHARGE_DELAY;
-
-                when SDRAM_RAS_PRECHARGE_DELAY =>
-                    if delay_ras_precharge = delay_offset - two_states_offset then
-                        delay_ras_precharge <= (others => '0');
-                        memory_state <= SDRAM_IDLE;
-                    else
-                        delay_ras_precharge <= delay_ras_precharge + '1';
-                    end if;
+                    memory_state <= SDRAM_IDLE;
 
                 when SDRAM_REFRESH =>
                     command <= CMD_REFRESH;
@@ -223,4 +214,4 @@ begin
     -- BUSY signal
     BUSY <= '1' when memory_state /= SDRAM_IDLE else '0';
 
-end Behavioral;
+end rtl;
