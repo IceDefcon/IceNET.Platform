@@ -14,17 +14,13 @@
 NetworkTraffic::NetworkTraffic() :
     m_threadKill(false),
     m_currentState(NetworkTraffic_IDLE),
-    m_readyKernelOutput(false),
+    m_readyOutput(false),
     m_Rx_NetworkTraffic(new std::vector<char>(NETWORK_TRAFFIC_SIZE)),
     m_Tx_NetworkTraffic(new std::vector<char>(NETWORK_TRAFFIC_SIZE)),
     m_Rx_bytesReceived(0),
     m_Tx_bytesReceived(0)
 {
     std::cout << "[INFO] [CONSTRUCTOR] " << this << " :: Instantiate NetworkTraffic" << std::endl;
-
-    /* Initialize m_Rx_NetworkTraffic and m_Tx_NetworkTraffic with zeros */
-    std::fill(m_Rx_NetworkTraffic->begin(), m_Rx_NetworkTraffic->end(), 0);
-    std::fill(m_Tx_NetworkTraffic->begin(), m_Tx_NetworkTraffic->end(), 0);
 }
 
 NetworkTraffic::~NetworkTraffic()
@@ -35,6 +31,13 @@ NetworkTraffic::~NetworkTraffic()
     {
         m_threadNetworkTraffic.join();
     }
+}
+
+void NetworkTraffic::InitNetworkTrafficBuffers()
+{
+    std::cout << "[INFO] [NET] Initialise NetworkTraffic Buffers" << std::endl;
+    std::fill(m_Rx_NetworkTraffic->begin(), m_Rx_NetworkTraffic->end(), 0);
+    std::fill(m_Tx_NetworkTraffic->begin(), m_Tx_NetworkTraffic->end(), 0);
 }
 
 int NetworkTraffic::openDEV()
@@ -83,8 +86,8 @@ void NetworkTraffic::threadNetworkTraffic()
             case NetworkTraffic_IDLE:
                 break;
 
-            case NetworkTraffic_KernelInput:
-                std::cout << "[INFO] [NET] NetworkTraffic_KernelInput mode" << std::endl;
+            case NetworkTraffic_Input:
+                std::cout << "[INFO] [NET] NetworkTraffic_Input mode" << std::endl;
                 std::cout << "[INFO] [NET] Received 8 Bytes of data: ";
                 for (int i = 0; i < 8; ++i)
                 {
@@ -92,28 +95,28 @@ void NetworkTraffic::threadNetworkTraffic()
                 }
                 std::cout << std::endl;
 
-                m_instanceKernelInput->setTx_KernelInput(m_Rx_NetworkTraffic, m_Rx_bytesReceived);
-                m_instanceKernelInput->setKernelInputState(KernelInput_TX);
+                m_instanceInput->setTx_Input(m_Rx_NetworkTraffic, m_Rx_bytesReceived);
+                m_instanceInput->setInputState(Input_TX);
 
                 setNetworkTrafficState(NetworkTraffic_IDLE);
 
                 break;
 
-            case NetworkTraffic_KernelOutput:
-                std::cout << "[INFO] [NET] NetworkTraffic_KernelOutput mode" << std::endl;
+            case NetworkTraffic_Output:
+                std::cout << "[INFO] [NET] NetworkTraffic_Output mode" << std::endl;
                 std::cout << "[INFO] [NET] Received " << m_Rx_bytesReceived << " Byte of data: ";
                 for (int i = 0; i < m_Rx_bytesReceived; ++i)
                 {
                     std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>((*m_Tx_NetworkTraffic)[i]) << " ";
                 }
                 std::cout << std::endl;
-                m_readyKernelOutput = true;
+                m_readyOutput = true;
                 setNetworkTrafficState(NetworkTraffic_IDLE);
                 break;
 
             case NetworkTraffic_KILL:
                 std::cout << "[INFO] [NET] NetworkTraffic_KILL mode" << std::endl;
-                m_instanceKernelInput->setKernelInputState(KernelInput_KILL);
+                m_instanceInput->setInputState(Input_KILL);
                 setNetworkTrafficState(NetworkTraffic_IDLE);
                 m_threadKill = true;
                 break;
@@ -135,9 +138,9 @@ void NetworkTraffic::setNetworkTrafficState(NetworkTraffic_stateType newState)
     m_currentState = newState;
 }
 
-void NetworkTraffic::setInstance_KernelInput(const std::shared_ptr<KernelInput> instance)
+void NetworkTraffic::setInstance_Input(const std::shared_ptr<Input> instance)
 {
-    m_instanceKernelInput = instance;
+    m_instanceInput = instance;
 }
 
 void NetworkTraffic::setNetworkTrafficRx(std::vector<char>* DataRx, int bytesReceived)
@@ -158,10 +161,10 @@ std::vector<char>* NetworkTraffic::getNetworkTrafficTx()
 
 void NetworkTraffic::resetFeedbackFlag()
 {
-    m_readyKernelOutput = false;
+    m_readyOutput = false;
 }
 
 bool NetworkTraffic::getFeedbackFlag()
 {
-    return m_readyKernelOutput;
+    return m_readyOutput;
 }

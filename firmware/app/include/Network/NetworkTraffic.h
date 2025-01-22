@@ -12,7 +12,7 @@
 #include <memory>
 #include <iostream>
 
-#include "KernelInput.h"
+#include "Input.h"
 #include "Types.h"
 
 class NetworkTraffic
@@ -22,7 +22,7 @@ class NetworkTraffic
 		std::thread m_threadNetworkTraffic;
 		std::atomic<bool> m_threadKill;
 		NetworkTraffic_stateType m_currentState;
-        bool m_readyKernelOutput;
+        bool m_readyOutput;
 
         /* For data Traffic */
         std::vector<char>* m_Rx_NetworkTraffic;
@@ -31,7 +31,7 @@ class NetworkTraffic
         int m_Rx_bytesReceived;
         int m_Tx_bytesReceived;
 
-        std::shared_ptr<KernelInput> m_instanceKernelInput;
+        std::shared_ptr<Input> m_instanceInput;
 
 	public:
 
@@ -43,13 +43,14 @@ class NetworkTraffic
         int dataRX();
         int closeDEV();
 
+        void InitNetworkTrafficBuffers();
         void initThread();
         bool isThreadKilled();
 
 		void threadNetworkTraffic();
 		void setNetworkTrafficState(NetworkTraffic_stateType newState);
 
-        void setInstance_KernelInput(const std::shared_ptr<KernelInput> instance);
+        void setInstance_Input(const std::shared_ptr<Input> instance);
 
         void setNetworkTrafficRx(std::vector<char>* DataRx, int bytesReceived);
 		void setNetworkTrafficTx(std::vector<char>* DataTx);

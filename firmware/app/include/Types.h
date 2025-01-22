@@ -20,14 +20,14 @@ enum Status
 typedef enum 
 {
     NetworkTraffic_IDLE = 0,
-    NetworkTraffic_KernelInput,
-    NetworkTraffic_KernelOutput,
+    NetworkTraffic_Input,
+    NetworkTraffic_Output,
     NetworkTraffic_KILL
 } NetworkTraffic_stateType;
 
 typedef enum 
 {
-    KernelInput_IDLE = 0,
-    KernelInput_TX,
-    KernelInput_KILL
-} KernelInput_stateType;
+    Input_IDLE = 0,
+    Input_TX,
+    Input_KILL
+} Input_stateType;

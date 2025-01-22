@@ -11,28 +11,27 @@
 #include <vector>
 #include <semaphore.h>
 
-#include "Console.h"
 #include "Types.h"
 
-class KernelInput : public Console
+class Input
 {
 private:
     int m_file_descriptor;
-    std::thread m_threadKernelInput;
+    std::thread m_threadInput;
     std::atomic<bool> m_threadKill;
-    KernelInput_stateType m_currentState;
+    Input_stateType m_currentState;
     
     /* For char Device Traffic */
-    std::vector<char>* m_Rx_KernelInput;
-    std::vector<char>* m_Tx_KernelInput;
+    std::vector<char>* m_Rx_Input;
+    std::vector<char>* m_Tx_Input;
     int m_Rx_bytesReceived;
     int m_Tx_bytesReceived;
 
-    bool m_waitKernelInput;
+    bool m_waitInput;
 
 public:
-    KernelInput();
-    ~KernelInput();
+    Input();
+    ~Input();
 
     int openDEV();
     int dataTX();
@@ -42,9 +41,9 @@ public:
     void initThread();
     bool isThreadKilled();
 
-    void threadKernelInput();
+    void threadInput();
 
-    void setTx_KernelInput(std::vector<char>* DataRx, int byteReceived);
+    void setTx_Input(std::vector<char>* DataRx, int byteReceived);
 
-    void setKernelInputState(KernelInput_stateType newState);
+    void setInputState(Input_stateType newState);
 };

@@ -163,12 +163,12 @@ int RamConfig::openDEV()
 
     if (m_fileDescriptor < 0)
     {
-        Error("[RAM] Failed to open Device");
+        std::cout << "[ERNO] [RAM] Failed to open Device" << std::endl;
         return EXIT_FAILURE;
     }
     else
     {
-        Info("[RAM] Device opened successfuly");
+        std::cout << "[INFO] [RAM] Device opened successfuly" << std::endl;
     }
 
     return OK;
