@@ -144,25 +144,7 @@ port
     LOGIC_CH4 : out std_logic; -- PIN_C22
     LOGIC_CH5 : out std_logic; -- PIN_D21
     LOGIC_CH6 : out std_logic; -- PIN_D22
-    --
-    -- Tri-state Unused Pins :: For the PCB Safety
-    --
-    UNUSED_01 : inout std_logic; -- PIN_A4
-    UNUSED_03 : inout std_logic; -- PIN_C3
-    UNUSED_04 : inout std_logic; -- PIN_C4
-    UNUSED_06 : inout std_logic; -- PIN_B5
-    UNUSED_15 : inout std_logic; -- PIN_A10
-    UNUSED_17 : inout std_logic; -- PIN_A13
-    UNUSED_22 : inout std_logic; -- PIN_B15 :: VDD_ADC :: Not Connected
-    UNUSED_23 : inout std_logic; -- PIN_A16
-    UNUSED_24 : inout std_logic; -- PIN_B16 :: GND_ADC :: Not Connected
-    UNUSED_25 : inout std_logic; -- PIN_A17
-    UNUSED_26 : inout std_logic; -- PIN_B17
-    UNUSED_27 : inout std_logic; -- PIN_A18
-    UNUSED_28 : inout std_logic; -- PIN_B18
-    UNUSED_29 : inout std_logic; -- PIN_A19
-    UNUSED_30 : inout std_logic; -- PIN_B19
-    UNUSED_32 : inout std_logic; -- PIN_B20
+
     -----------------------------------------------------
     --
     -- 256Mbit SDRAM
@@ -301,9 +283,9 @@ type TEST_STATE is
 
 signal test_ram_state : TEST_STATE := TEST_IDLE;
 -- Test
-signal test_timer : std_logic_vector(26 downto 0) := (others => '0');
+signal test_timer : std_logic_vector(28 downto 0) := (others => '0');
+signal test_ops : std_logic_vector(3 downto 0) := (others => '0');
 signal test_flag : std_logic := '0';
-signal test_ops : integer := 0;
 --
 --
 -- Address ---> Row[23:11] : Bank[10:9] : Column[8:0]
@@ -320,8 +302,10 @@ signal TEST_READ_EN : std_logic := '0';
 signal TEST_DATA_OUT : std_logic_vector(15 downto 0) := (others => '0');
 signal TEST_BUSY : std_logic := '0';
 -- PLL
-signal clock_100MHz : std_logic := '0';
-
+signal CLOCK_100MHz : std_logic := '0';
+signal CLOCK_200MHz : std_logic := '0';
+signal CLOCK_400MHz : std_logic := '0';
+signal CLOCK_600MHz : std_logic := '0';
 ----------------------------------------------------------------------------------------------------------------
 -- COMPONENTS DECLARATION
 ----------------------------------------------------------------------------------------------------------------
@@ -423,8 +407,9 @@ end component;
 component SDRAM_Controller
 Port
 (
-    CLK         : in  std_logic;
-    CLK_SLOW    : in  std_logic;
+    CLK_200MHz  : in  std_logic;
+    CLK_100MHz  : in  std_logic;
+    CLK_50Mhz   : in  std_logic;
     RESET       : in  std_logic;
 
     -- SDRAM Interface
@@ -530,52 +515,21 @@ port
 );
 end component;
 
---component SDRAM_CLOAK
---port
---(
---    ref_clk_clk        : in  std_logic := 'X'; -- clk
---    ref_reset_reset    : in  std_logic := 'X'; -- reset
---    sys_clk_clk        : out std_logic;        -- clk
---    sdram_clk_clk      : out std_logic;        -- clk
---    reset_source_reset : out std_logic         -- reset
---);
---end component SDRAM_CLOAK;
-
-component SDRAM_PLL
+component PLL_100_200
 port
 (
-    areset  : IN STD_LOGIC := '0';
-    inclk0  : IN STD_LOGIC := '0';
-    c0      : OUT STD_LOGIC;
+    areset  : IN STD_LOGIC  := '0';
+    inclk0  : IN STD_LOGIC  := '0';
+    c0      : OUT STD_LOGIC ;
+    c1      : OUT STD_LOGIC ;
     locked  : OUT STD_LOGIC
 );
-end component SDRAM_PLL;
+end component;
 
 ----------------------------------------------------------------------------------------------------------------
 -- MAIN ROUTINE
 ----------------------------------------------------------------------------------------------------------------
 begin
-
-----------------------------------------------------------
--- Tri-state Unused Pins :: For the PCB Safety
-----------------------------------------------------------
-UNUSED_01 <= 'Z';
-UNUSED_03 <= 'Z';
-UNUSED_04 <= 'Z';
-UNUSED_06 <= 'Z';
-UNUSED_15 <= 'Z';
-UNUSED_17 <= 'Z';
-UNUSED_22 <= 'Z';
-UNUSED_23 <= 'Z';
-UNUSED_24 <= 'Z';
-UNUSED_25 <= 'Z';
-UNUSED_26 <= 'Z';
-UNUSED_27 <= 'Z';
-UNUSED_28 <= 'Z';
-UNUSED_29 <= 'Z';
-UNUSED_30 <= 'Z';
-UNUSED_32 <= 'Z';
-----------------------------------------------------------
 
 DebounceController_module: DebounceController
 generic map
@@ -696,8 +650,9 @@ port map
 SDRAM_Controller_module: SDRAM_Controller
 port map
 (
-    CLK => clock_100MHz,
-    CLK_SLOW => CLOCK_50MHz,
+    CLK_200MHz => CLOCK_200MHz,
+    CLK_100MHz => CLOCK_100MHz,
+    CLK_50Mhz => CLOCK_50MHz,
     RESET => '0',
 
     -- SDRAM Interface
@@ -721,8 +676,6 @@ port map
     WRITE_EN => TEST_WRITE_EN,
     BUSY => TEST_BUSY
 );
-
-
 
 -----------------------------------------------------------------------------------------------
 -- Map to output
@@ -820,22 +773,13 @@ port map
     CAN_MPP_RX => CAN_MPP_RX
 );
 
---SDRAM_CLOAK_module: SDRAM_CLOAK
---port map
---(
---    ref_clk_clk => CLOCK_50MHz,
---    ref_reset_reset => '0',
---    sys_clk_clk => open,
---    sdram_clk_clk => CLK_SDRAM,
---    reset_source_reset => open
---);
-
-SDRAM_PLL_module: SDRAM_PLL
+PLL_100_200_module: PLL_100_200
 port map
 (
     areset => '0',
     inclk0 => CLOCK_50MHz,
-    c0 => clock_100MHz,
+    c0 => CLOCK_100MHz,
+    c1 => CLOCK_200MHz,
     locked => open
 );
 
@@ -918,7 +862,7 @@ port map
     PWM_SIGNAL => PWM_SIGNAL
 );
 
-return_interrupts_process:
+feedback_interrupts_process:
 process(CLOCK_50MHz)
 begin
     if rising_edge(CLOCK_50MHz) then
@@ -983,14 +927,14 @@ end process;
 --NRF905_TRX_CE <= '0';
 --NRF905_TX_EN <= 'Z';
 
-process (CLOCK_100MHz, test_ram_state)
+process (CLOCK_200MHz, test_ram_state)
 begin
-    if rising_edge(CLOCK_100MHz) then
+    if rising_edge(CLOCK_200MHz) then
 
         case (test_ram_state) is
 
             when TEST_IDLE =>
-                if test_timer = "101111101011110000011111111" then
+                if test_timer = "10111110101111000001111111111" then
                     test_ram_state <= TEST_INIT;
                 else
                     test_timer <= test_timer + '1';
@@ -1004,22 +948,22 @@ begin
                 TEST_WRITE_EN <= '0';
                 if TEST_BUSY = '0' then
                     if test_flag = '0' then
-                        if test_ops = 3 then
-                            test_ops <= 0;
+                        if test_ops = "0011" then
+                            test_ops <= "0000";
                             test_flag <= '1';
                             test_ram_state <= TEST_CONFIG;
                             TEST_ADDR <= "000000000000000000000000";
                         else
-                            test_ops <= test_ops + 1;
+                            test_ops <= test_ops + '1';
                             test_ram_state <= TEST_WRITE;
                         end if;
                     elsif test_flag = '1' then
-                        if test_ops = 4 then
-                            test_ops <= 0;
+                        if test_ops = "0100" then
+                            test_ops <= "0000";
                             test_flag <= '0';
                             test_ram_state <= TEST_DONE;
                         else
-                            test_ops <= test_ops + 1;
+                            test_ops <= test_ops + '1';
                             test_ram_state <= TEST_READ;
                         end if;
                     end if;
