@@ -1,7 +1,7 @@
 /*!
  * 
  * Author: Ice.Marek
- * IceNET Technology 2024
+ * IceNET Technology 2025
  * 
  */
 #include <chrono> // delay
@@ -13,6 +13,7 @@
 #include <unistd.h>// For close, read, write, etc.
 
 #include "KernelComms.h"
+#include "Network.h"
 #include "Types.h"
 
 KernelComms::KernelComms()
@@ -25,3 +26,16 @@ KernelComms::~KernelComms()
     std::cout << "[INFO] [DESTRUCTOR] " << this << " :: Destroy KernelComms" << std::endl;
 }
 
+void KernelComms::configInstances()
+{
+    std::cout << "[INFO] [KIO] " << "Configure instances of comms classes" << std::endl;
+
+    m_instanceCommander = Commander::getInstance();
+    m_instanceRamConfig = RamConfig::getInstance();
+
+    std::cout << "[INFO] [KIO] " << "Commander :: " << m_instanceCommander << std::endl;
+    std::cout << "[INFO] [KIO] " << "RamConfig :: " << m_instanceRamConfig << std::endl;
+
+    Watchdog::setInstance_Commander(m_instanceCommander);
+    Watchdog::setInstance_RamConfig(m_instanceRamConfig);
+}

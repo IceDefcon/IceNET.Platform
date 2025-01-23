@@ -15,6 +15,7 @@
 #include "Output.h"
 #include "Watchdog.h"
 #include "Commander.h"
+#include "RamConfig.h"
 #include "Types.h"
 
 class KernelComms :
@@ -26,8 +27,12 @@ class KernelComms :
 {
     private:
 
+        Commander* m_instanceCommander;
+        RamConfig* m_instanceRamConfig;
+
     public:
         KernelComms();
         ~KernelComms();
 
+        void configInstances();
 };

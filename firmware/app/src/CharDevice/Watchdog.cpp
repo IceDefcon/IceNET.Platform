@@ -1,7 +1,7 @@
 /*!
  * 
  * Author: Ice.Marek
- * IceNET Technology 2024
+ * IceNET Technology 2025
  * 
  */
 #include <chrono> // delay
@@ -149,12 +149,12 @@ void Watchdog::threadWatchdog()
     std::cout << "[INFO] [WDG] Terminate threadWatchdog" << std::endl;
 }
 
-void Watchdog::setInstance_RamConfig(const std::shared_ptr<RamConfig> instance)
+void Watchdog::setInstance_RamConfig(RamConfig* instance)
 {
     m_instanceRamConfig = instance;
 }
 
-void Watchdog::setInstance_Commander(const std::shared_ptr<Commander> instance)
+void Watchdog::setInstance_Commander(Commander* instance)
 {
     m_instanceCommander = instance;
 }

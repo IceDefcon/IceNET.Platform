@@ -1,7 +1,7 @@
 /*!
  * 
  * Author: Ice.Marek
- * IceNET Technology 2024
+ * IceNET Technology 2025
  * 
  */
 
@@ -295,9 +295,26 @@ void transferFpgaOutput(struct work_struct *work)
         printk(KERN_INFO "[CTRL][SPI] Secondary FPGA Transfer :: Byte[%d]: [Feedback] Tx[0x%02x] [Data] Rx[0x%02x]\n", i, tx_buf[i], rx_buf[i]);
     }
 
+    /**
+     *
+     * -----===[  TODO  ]===-----
+     *
+     * Now Output is disconnected
+     * There is no feedback after
+     * Secondary SPI Transfer
+     *
+     * This require to use feedback byte
+     * from FPGA during primary transfer
+     *
+     * For now this is hardcoded to 0x18
+     * But for SPI/DMA and new offload
+     * controller 0x77 can be used !
+     *
+     */
+#if 0
     /* Unlock OUTPUT mutex for Kernel Output Device to process */
     charDeviceLockCtrl(DEVICE_OUTPUT, CTRL_UNLOCK);
-
+#endif
     /* Clear the buffers */
     for (i = 0; i < Device[SPI_SECONDARY].spiLength; ++i)
     {

@@ -1,7 +1,7 @@
 /*!
  * 
  * Author: Ice.Marek
- * IceNET Technology 2024
+ * IceNET Technology 2025
  * 
  */
 #pragma once
@@ -18,7 +18,7 @@
 #include "RamConfig.h"
 #include "Types.h"
 
-class ServerTCP : public NetworkTraffic
+class ServerTCP
 {
     private:
         std::thread m_threadServerTCP;

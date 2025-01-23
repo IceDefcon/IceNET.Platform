@@ -11,18 +11,18 @@
 #include <atomic>
 #include <vector>
 
-#include "KernelComms.h"
-#include "Network.h"
+#include "NetworkTraffic.h"
+#include "ServerTCP.h"
 #include "Types.h"
 
-class DroneCtrl :
-    public Network,
-    public KernelComms
+class Network :
+    public ServerTCP,
+    public NetworkTraffic
 {
     private:
 
     public:
-        DroneCtrl();
-        ~DroneCtrl();
+        Network();
+        ~Network();
 
 };

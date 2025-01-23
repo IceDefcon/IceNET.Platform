@@ -1,7 +1,7 @@
 /*!
  *
  * Author: Ice.Marek
- * IceNET Technology 2024
+ * IceNET Technology 2025
  *
  */
 #include <linux/module.h>

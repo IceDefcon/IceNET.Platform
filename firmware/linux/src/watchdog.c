@@ -1,7 +1,7 @@
 /*!
  *
  * Author: Ice.Marek
- * IceNET Technology 2024
+ * IceNET Technology 2025
  *
  */
 
@@ -74,7 +74,9 @@ static int watchdogThread(void *data)
         else
         {
             printk(KERN_INFO "[CTRL][WDG] Watchdog Dead [%x|%x] ERROR: Please check if FPGA binary is loaded\n", Process.indicatorPrevious, Process.indicatorCurrent);
+#if 0 /* TODO :: Check spiCtrl.c Line:300 */
             charDeviceLockCtrl(DEVICE_OUTPUT, CTRL_UNLOCK);
+#endif
             Process.indicatorFPGA = false;
         }
 
