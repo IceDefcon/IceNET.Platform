@@ -35,4 +35,5 @@ class KernelComms :
         ~KernelComms();
 
         void configInstances();
+        void initRamDiskCommander();
 };
