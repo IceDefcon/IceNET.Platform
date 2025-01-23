@@ -19,7 +19,7 @@ int main()
 
     instanceDroneCtrl->KernelComms::configInstances();
 
-#if 0 /* Test */
+#if 1 /* Test */
 
     instanceDroneCtrl->KernelComms::Commander::openDEV();
     instanceDroneCtrl->KernelComms::Watchdog::openDEV();
@@ -31,6 +31,7 @@ int main()
         if (instanceDroneCtrl->KernelComms::Output::isThreadKilled() ||
             instanceDroneCtrl->KernelComms::Watchdog::isThreadKilled())
         {
+            std::cout << "[EXIT] [TERMINATE] Shutdown Application" << std::endl;
             instanceDroneCtrl->KernelComms::Watchdog::closeDEV();
             instanceDroneCtrl->KernelComms::Output::closeDEV();
             instanceDroneCtrl->KernelComms::Input::closeDEV();
