@@ -1,7 +1,7 @@
 /*!
  * 
  * Author: Ice.Marek
- * IceNET Technology 2024
+ * IceNET Technology 2025
  * 
  */
 #include <chrono> // delay
@@ -16,11 +16,12 @@
 #include "Types.h"
 
 Commander::Commander() :
-    m_file_descriptor(-1),
-    m_Rx_Commander(new std::vector<char>(CHAR_DEVICE_SIZE)),
-    m_Tx_Commander(new std::vector<char>(CHAR_DEVICE_SIZE))
+m_file_descriptor(-1),
+m_instance(this),
+m_Rx_Commander(new std::vector<char>(CHAR_DEVICE_SIZE)),
+m_Tx_Commander(new std::vector<char>(CHAR_DEVICE_SIZE))
 {
-    std::cout << "[INFO] [CONSTRUCTOR] " << this << " :: Instantiate Commander" << std::endl;
+    std::cout << "[INFO] [CONSTRUCTOR] " << m_instance << " :: Instantiate Commander" << std::endl;
 
     /* Initialize m_Rx_Commander and m_Tx_Commander with zeros */
     std::fill(m_Rx_Commander->begin(), m_Rx_Commander->end(), 0);
@@ -29,7 +30,7 @@ Commander::Commander() :
 
 Commander::~Commander()
 {
-    std::cout << "[INFO] [DESTRUCTOR] " << this << " :: Destroy Commander" << std::endl;
+    std::cout << "[INFO] [DESTRUCTOR] " << m_instance << " :: Destroy Commander" << std::endl;
 
     closeDEV();
 
@@ -103,4 +104,9 @@ int Commander::closeDEV()
     }
 
     return OK;
+}
+
+Commander* Commander::getInstance()
+{
+    return m_instance;
 }

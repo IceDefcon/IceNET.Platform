@@ -38,6 +38,8 @@ class RamConfig
 
         int m_fileDescriptor;
 
+        RamConfig* m_instance;
+
         uint8_t* m_engineConfig;
         DeviceConfig* m_BMI160config;
         DeviceConfig* m_ADXL345config;
@@ -60,4 +62,7 @@ class RamConfig
 		DeviceConfig* createOperation(char devId, char ctrl, char ops);
 		int AssembleData();
         void clearDma();
+
+        RamConfig* getInstance();
 };
+

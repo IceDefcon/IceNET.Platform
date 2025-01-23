@@ -10,17 +10,17 @@
 #include <unistd.h>
 #include "RamConfig.h"
 
-
 RamConfig::RamConfig() :
 m_fileDescriptor(-1),
+m_instance(this),
 m_engineConfig{0}
 {
-    std::cout << "[INFO] [CONSTRUCTOR] " << this << " :: Instantiate RamConfig" << std::endl;
+    std::cout << "[INFO] [CONSTRUCTOR] " << m_instance << " :: Instantiate RamConfig" << std::endl;
 }
 
 RamConfig::~RamConfig()
 {
-    std::cout << "[INFO] [DESTRUCTOR] " << this << " :: Destroy RamConfig" << std::endl;
+    std::cout << "[INFO] [DESTRUCTOR] " << m_instance << " :: Destroy RamConfig" << std::endl;
     if (m_fileDescriptor >= 0)
     {
         closeDEV();
@@ -269,4 +269,9 @@ int RamConfig::closeDEV()
     }
 
     return OK;
+}
+
+RamConfig* RamConfig::getInstance()
+{
+    return m_instance;
 }

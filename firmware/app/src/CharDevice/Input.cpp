@@ -1,7 +1,7 @@
 /*!
  * 
- * Author: Ice.Marek and Ventor
- * IceNET Technology 2024
+ * Author: Ice.Marek
+ * IceNET Technology 2025
  * 
  */
 #include <iostream> 		// IO devices :: keyboard

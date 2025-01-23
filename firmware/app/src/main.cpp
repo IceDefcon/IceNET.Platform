@@ -1,11 +1,12 @@
 /*!
  * 
  * Author: Ice.Marek
- * IceNET Technology 2024
+ * IceNET Technology 2025
  * 
  */
 #include <chrono> // delay
 #include <thread> // delay
+
 #include "DroneCtrl.h"
 
 int main()
@@ -16,6 +17,10 @@ int main()
      */
     auto instanceDroneCtrl = std::make_shared<DroneCtrl>();
 
+    instanceDroneCtrl->KernelComms::configInstances();
+
+#if 0 /* Test */
+
     instanceDroneCtrl->KernelComms::Commander::openDEV();
     instanceDroneCtrl->KernelComms::Watchdog::openDEV();
     instanceDroneCtrl->KernelComms::Input::openDEV();
@@ -23,7 +28,8 @@ int main()
 
     while (true) /* Terminate Kernel comms and Clean Memory */
     {
-        if (instanceDroneCtrl->Output::isThreadKilled() || instanceDroneCtrl->Watchdog::isThreadKilled())
+        if (instanceDroneCtrl->KernelComms::Output::isThreadKilled() ||
+            instanceDroneCtrl->KernelComms::Watchdog::isThreadKilled())
         {
             instanceDroneCtrl->KernelComms::Watchdog::closeDEV();
             instanceDroneCtrl->KernelComms::Output::closeDEV();
@@ -35,7 +41,7 @@ int main()
         /* Reduce consumption of CPU resources */
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
-
+#endif
     /* shared_ptr in use :: No need for deallocation */
     return 0;
 }

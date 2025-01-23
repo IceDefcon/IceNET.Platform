@@ -30,8 +30,8 @@ class Watchdog
         std::vector<char>* m_Rx_Watchdog;
         std::vector<char>* m_Tx_Watchdog;
 
-        std::shared_ptr<RamConfig> m_instanceRamConfig;
-        std::shared_ptr<Commander> m_instanceCommander;
+        RamConfig* m_instanceRamConfig;
+        Commander* m_instanceCommander;
 
     public:
         Watchdog();
@@ -47,7 +47,7 @@ class Watchdog
 
         void threadWatchdog();
 
-        void setInstance_RamConfig(const std::shared_ptr<RamConfig> instance);
-        void setInstance_Commander(const std::shared_ptr<Commander> instance);
+        void setInstance_RamConfig(RamConfig* instance);
+        void setInstance_Commander(Commander* instance);
 
 };

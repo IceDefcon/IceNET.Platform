@@ -18,6 +18,8 @@ class Commander
     private:
         int m_file_descriptor;
 
+        Commander* m_instance;
+
         std::vector<char>* m_Rx_Commander;
         std::vector<char>* m_Tx_Commander;
 
@@ -29,4 +31,6 @@ class Commander
         int dataTX();
         int dataRX();
         int closeDEV();
+
+        Commander* getInstance();
 };
