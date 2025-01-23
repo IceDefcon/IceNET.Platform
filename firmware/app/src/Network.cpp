@@ -12,16 +12,16 @@
 #include <fcntl.h> // For open, O_RDWR, etc.
 #include <unistd.h>// For close, read, write, etc.
 
-#include "DroneCtrl.h"
+#include "Network.h"
 #include "Types.h"
 
-DroneCtrl::DroneCtrl()
+Network::Network()
 {
-    std::cout << "[INFO] [CONSTRUCTOR] " << this << " :: Instantiate DroneCtrl" << std::endl;
+    std::cout << "[INFO] [CONSTRUCTOR] " << this << " :: Instantiate Network" << std::endl;
 }
 
-DroneCtrl::~DroneCtrl()
+Network::~Network()
 {
-    std::cout << "[INFO] [DESTRUCTOR] " << this << " :: Destroy DroneCtrl" << std::endl;
+    std::cout << "[INFO] [DESTRUCTOR] " << this << " :: Destroy Network" << std::endl;
 }
 

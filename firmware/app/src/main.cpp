@@ -23,18 +23,13 @@ int main()
 
     instanceDroneCtrl->KernelComms::Commander::openDEV();
     instanceDroneCtrl->KernelComms::Watchdog::openDEV();
-    instanceDroneCtrl->KernelComms::Input::openDEV();
-    instanceDroneCtrl->KernelComms::Output::openDEV();
 
     while (true) /* Terminate Kernel comms and Clean Memory */
     {
-        if (instanceDroneCtrl->KernelComms::Output::isThreadKilled() ||
-            instanceDroneCtrl->KernelComms::Watchdog::isThreadKilled())
+        if (instanceDroneCtrl->KernelComms::Output::isThreadKilled() || instanceDroneCtrl->KernelComms::Watchdog::isThreadKilled())
         {
             std::cout << "[EXIT] [TERMINATE] Shutdown Application" << std::endl;
             instanceDroneCtrl->KernelComms::Watchdog::closeDEV();
-            instanceDroneCtrl->KernelComms::Output::closeDEV();
-            instanceDroneCtrl->KernelComms::Input::closeDEV();
             instanceDroneCtrl->KernelComms::Commander::closeDEV();
             break;
         }
@@ -48,6 +43,14 @@ int main()
 }
 
 #if 0 /* Old Costruction */
+
+    /* Set Instances */
+    instanceOutput->setInstance_NetworkTraffic(instanceNetworkTraffic);
+    instanceServerTCP->setInstance_NetworkTraffic(instanceNetworkTraffic);
+    instanceServerTCP->setInstance_RamConfig(instanceRamConfig);
+    instanceNetworkTraffic->setInstance_Input(instanceInput);
+    instanceWatchdog->setInstance_RamConfig(instanceRamConfig);
+    instanceWatchdog->setInstance_Commander(instanceCommander);
 
     /* Initialize Interfaces */
     instanceCommander->openDEV();

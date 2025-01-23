@@ -18,7 +18,7 @@
 #include "RamConfig.h"
 #include "Types.h"
 
-class ServerTCP : public NetworkTraffic
+class ServerTCP
 {
     private:
         std::thread m_threadServerTCP;
