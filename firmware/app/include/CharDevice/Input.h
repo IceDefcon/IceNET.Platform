@@ -15,35 +15,37 @@
 
 class Input
 {
-private:
-    int m_file_descriptor;
-    std::thread m_threadInput;
-    std::atomic<bool> m_threadKill;
-    Input_stateType m_currentState;
-    
-    /* For char Device Traffic */
-    std::vector<char>* m_Rx_Input;
-    std::vector<char>* m_Tx_Input;
-    int m_Rx_bytesReceived;
-    int m_Tx_bytesReceived;
+    private:
+        int m_file_descriptor;
+        std::thread m_threadInput;
+        std::atomic<bool> m_threadKill;
+        Input_stateType m_currentState;
 
-    bool m_waitInput;
+        /* For char Device Traffic */
+        std::vector<char>* m_Rx_Input;
+        std::vector<char>* m_Tx_Input;
+        int m_Rx_bytesReceived;
+        int m_Tx_bytesReceived;
 
-public:
-    Input();
-    ~Input();
+        bool m_waitInput;
 
-    int openDEV();
-    int dataTX();
-    int dataRX();
-    int closeDEV();
+    public:
+        Input();
+        ~Input();
 
-    void initThread();
-    bool isThreadKilled();
+        void initBuffers();
 
-    void threadInput();
+        int openDEV();
+        int dataTX();
+        int dataRX();
+        int closeDEV();
 
-    void setTx_Input(std::vector<char>* DataRx, int byteReceived);
+        void initThread();
+        bool isThreadKilled();
 
-    void setInputState(Input_stateType newState);
+        void threadInput();
+
+        void setTx_Input(std::vector<char>* DataRx, int byteReceived);
+
+        void setInputState(Input_stateType newState);
 };

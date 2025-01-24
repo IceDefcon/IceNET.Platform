@@ -22,10 +22,6 @@ Output::Output() :
     m_Tx_Output(new std::vector<char>(CHAR_DEVICE_SIZE))
 {
     std::cout << "[INFO] [CONSTRUCTOR] " << this << " :: Instantiate Output" << std::endl;
-
-    /* Initialize m_Rx_Output and m_Tx_Output with zeros */
-    std::fill(m_Rx_Output->begin(), m_Rx_Output->end(), 0);
-    std::fill(m_Tx_Output->begin(), m_Tx_Output->end(), 0);
 }
 
 Output::~Output()
@@ -43,6 +39,13 @@ Output::~Output()
 
     delete m_Rx_Output;
     delete m_Tx_Output;
+}
+
+void Output::initBuffers()
+{
+    std::cout << "[INFO] [ O ] Initialise Output Buffers" << std::endl;
+    std::fill(m_Rx_Output->begin(), m_Rx_Output->end(), 0);
+    std::fill(m_Tx_Output->begin(), m_Tx_Output->end(), 0);
 }
 
 int Output::openDEV()

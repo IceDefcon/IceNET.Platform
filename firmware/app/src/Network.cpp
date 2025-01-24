@@ -25,3 +25,15 @@ Network::~Network()
     std::cout << "[INFO] [DESTRUCTOR] " << this << " :: Destroy Network" << std::endl;
 }
 
+void Network::initServerTCP()
+{
+    std::cout << "[INFO] [NET] " << "Initialize TCP Server" << std::endl;
+    ServerTCP::initBuffers();
+    ServerTCP::openDEV();
+}
+
+void Network::exitServerTCP()
+{
+    std::cout << "[INFO] [NET] " << "Shutdown TCP Server" << std::endl;
+    Network::ServerTCP::closeDEV();
+}

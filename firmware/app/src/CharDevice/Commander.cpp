@@ -22,10 +22,6 @@ m_Rx_Commander(new std::vector<char>(CHAR_DEVICE_SIZE)),
 m_Tx_Commander(new std::vector<char>(CHAR_DEVICE_SIZE))
 {
     std::cout << "[INFO] [CONSTRUCTOR] " << m_instance << " :: Instantiate Commander" << std::endl;
-
-    /* Initialize m_Rx_Commander and m_Tx_Commander with zeros */
-    std::fill(m_Rx_Commander->begin(), m_Rx_Commander->end(), 0);
-    std::fill(m_Tx_Commander->begin(), m_Tx_Commander->end(), 0);
 }
 
 Commander::~Commander()
@@ -36,6 +32,13 @@ Commander::~Commander()
 
     delete m_Rx_Commander;
     delete m_Tx_Commander;
+}
+
+void Commander::initBuffers()
+{
+    std::cout << "[INFO] [COM] Initialise Commander Buffers" << std::endl;
+    std::fill(m_Rx_Commander->begin(), m_Rx_Commander->end(), 0);
+    std::fill(m_Tx_Commander->begin(), m_Tx_Commander->end(), 0);
 }
 
 int Commander::openDEV()

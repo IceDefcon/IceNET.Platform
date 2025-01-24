@@ -27,6 +27,8 @@ class Commander
         Commander();
         ~Commander();
 
+        void initBuffers();
+
         int openDEV();
         int dataTX();
         int dataRX();

@@ -57,7 +57,7 @@ ServerTCP::~ServerTCP()
     m_instanceRamConfig = nullptr;
 }
 
-void ServerTCP::InitServerBuffers()
+void ServerTCP::initBuffers()
 {
     std::cout << "[INFO] [TCP] Initialise ServerTCP Buffers" << std::endl;
     std::fill(m_Rx_ServerTCP->begin(), m_Rx_ServerTCP->end(), 0);
@@ -149,8 +149,14 @@ void ServerTCP::threadServerTCP()
         else
         {
             int ret = tcpRX();
-
-            if(ret > 0)
+#if 1 /* TODO :: Redesign Server side */
+            if(ret == 0)
+            {
+                std::cout << "[INFO] [TCP] Client disconnected from server" << std::endl;
+                m_clientConnected = false;
+                m_timeoutCount = 0;
+            }
+            else if(ret > 0)
             {
                 std::cout << "[INFO] [TCP] Sending data to NetworkTraffic" << std::endl;
                 m_instanceNetworkTraffic->setNetworkTrafficRx(m_Rx_ServerTCP, m_Rx_bytesReceived);
@@ -186,16 +192,11 @@ void ServerTCP::threadServerTCP()
                 m_instanceRamConfig->clearDma();
                 m_timeoutCount = 0;
             }
-            else if(ret == 0)
-            {
-                std::cout << "[INFO] [TCP] Client disconnected from server" << std::endl;
-                m_clientConnected = false;
-                m_timeoutCount = 0;
-            }
             else
             {
                 /* TODO :: Client connected but nothing receiver */
             }
+#endif
         }
 
         for (i = 0; i < TCP_SERVER_SIZE; i++)
