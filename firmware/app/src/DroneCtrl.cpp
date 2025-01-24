@@ -46,9 +46,8 @@ void DroneCtrl::droneExit()
 bool DroneCtrl::isKilled()
 {
     bool retFlag = false;
-    retFlag = KernelComms::Watchdog::isThreadKilled() ? true : false;
+
+    retFlag = KernelComms::Watchdog::isThreadKilled() || Network::ServerTCP::isThreadKilled();
 
     return retFlag;
 }
-
-

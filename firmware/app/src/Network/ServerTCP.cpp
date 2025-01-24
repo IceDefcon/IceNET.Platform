@@ -54,7 +54,7 @@ ServerTCP::~ServerTCP()
     }
 
     m_instanceNetworkTraffic = nullptr;
-    m_instanceRamConfig = nullptr;
+    m_instanceRamDisk = nullptr;
 }
 
 void ServerTCP::initBuffers()
@@ -177,19 +177,19 @@ void ServerTCP::threadServerTCP()
             {
                 tcpClose();
                 std::cout << "[INFO] [TCP] Ready to Kill threadServerTCP" << std::endl;
-                m_instanceNetworkTraffic->setNetworkTrafficState(NetworkTraffic_KILL);
+                // m_instanceNetworkTraffic->setNetworkTrafficState(NetworkTraffic_KILL);
                 m_threadKill = true;
             }
             else if(ret == -4)
             {
                 std::cout << "[INFO] [TCP] Transfer Data to RAM" << std::endl;
-                m_instanceRamConfig->dataTX();
+                m_instanceRamDisk->dataTX();
                 m_timeoutCount = 0;
             }
             else if(ret == -3)
             {
                 std::cout << "[INFO] [TCP] Clear DMA Engine from RAM" << std::endl;
-                m_instanceRamConfig->clearDma();
+                m_instanceRamDisk->clearDma();
                 m_timeoutCount = 0;
             }
             else
@@ -415,7 +415,7 @@ void ServerTCP::setInstance_NetworkTraffic(const std::shared_ptr<NetworkTraffic>
     m_instanceNetworkTraffic = instance;
 }
 
-void ServerTCP::setInstance_RamConfig(const std::shared_ptr<RamConfig> instance)
+void ServerTCP::setInstance_RamDisk(const std::shared_ptr<RamDisk> instance)
 {
-    m_instanceRamConfig = instance;
+    m_instanceRamDisk = instance;
 }

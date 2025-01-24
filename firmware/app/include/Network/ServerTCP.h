@@ -15,7 +15,7 @@
 #include <vector>
 
 #include "NetworkTraffic.h"
-#include "RamConfig.h"
+#include "RamDisk.h"
 #include "Types.h"
 
 class ServerTCP
@@ -40,7 +40,7 @@ class ServerTCP
         int m_Tx_bytesReceived;
 
         std::shared_ptr<NetworkTraffic> m_instanceNetworkTraffic;
-        std::shared_ptr<RamConfig> m_instanceRamConfig;
+        std::shared_ptr<RamDisk> m_instanceRamDisk;
 
     public:
         ServerTCP();
@@ -64,5 +64,5 @@ class ServerTCP
         int tcpClose();
 
         void setInstance_NetworkTraffic(const std::shared_ptr<NetworkTraffic> instance);
-        void setInstance_RamConfig(const std::shared_ptr<RamConfig> instance);
+        void setInstance_RamDisk(const std::shared_ptr<RamDisk> instance);
 };
