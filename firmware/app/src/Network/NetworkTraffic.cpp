@@ -33,7 +33,7 @@ NetworkTraffic::~NetworkTraffic()
     }
 }
 
-void NetworkTraffic::InitNetworkTrafficBuffers()
+void NetworkTraffic::initBuffers()
 {
     std::cout << "[INFO] [NET] Initialise NetworkTraffic Buffers" << std::endl;
     std::fill(m_Rx_NetworkTraffic->begin(), m_Rx_NetworkTraffic->end(), 0);

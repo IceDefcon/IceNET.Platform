@@ -46,12 +46,13 @@ class ServerTCP
         ServerTCP();
         ~ServerTCP();
 
+        void initBuffers();
+
         int openDEV();
         int dataTX();
         int dataRX();
         int closeDEV();
 
-        void InitServerBuffers();
         void initThread();
         bool isThreadKilled();
 

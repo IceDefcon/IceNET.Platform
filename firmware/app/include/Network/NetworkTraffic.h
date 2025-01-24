@@ -38,12 +38,13 @@ class NetworkTraffic
 		NetworkTraffic();
 		~NetworkTraffic();
 
+        void initBuffers();
+
         int openDEV();
         int dataTX();
         int dataRX();
         int closeDEV();
 
-        void InitNetworkTrafficBuffers();
         void initThread();
         bool isThreadKilled();
 

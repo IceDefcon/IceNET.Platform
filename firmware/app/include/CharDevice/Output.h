@@ -43,6 +43,8 @@ class Output
         Output();
         ~Output();
 
+        void initBuffers();
+
         int openDEV();
         int dataTX();
         int dataRX();

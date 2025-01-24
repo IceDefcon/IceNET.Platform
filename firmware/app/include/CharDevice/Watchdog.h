@@ -37,6 +37,8 @@ class Watchdog
         Watchdog();
         ~Watchdog();
 
+        void initBuffers();
+
         int openDEV();
         int dataTX();
         int dataRX();

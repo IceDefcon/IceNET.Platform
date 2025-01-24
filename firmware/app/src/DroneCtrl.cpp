@@ -28,15 +28,19 @@ DroneCtrl::~DroneCtrl()
 void DroneCtrl::droneInit()
 {
     std::cout << "[INFO] [DRONE] Drone Initialization" << std::endl;
+    /* Set instances */
     KernelComms::configInstances();
+    /* Ram Disk Commander */
     KernelComms::initRamDiskCommander();
+    /* TCP Server */
+    Network::initServerTCP();
 }
 
 void DroneCtrl::droneExit()
 {
     std::cout << "[INFO] [DRONE] Drone Exit" << std::endl;
-    Watchdog::closeDEV();
-    Commander::closeDEV();
+    KernelComms::exitRamDiskCommander();
+    Network::exitServerTCP();
 }
 
 bool DroneCtrl::isKilled()

@@ -28,12 +28,7 @@ Input::Input() :
     m_Tx_bytesReceived(0),
     m_waitInput(true)
 {
-    // Initialize m_Rx_Input and m_Tx_Input with zeros
-    std::fill(m_Rx_Input->begin(), m_Rx_Input->end(), 0);
-    std::fill(m_Tx_Input->begin(), m_Tx_Input->end(), 0);
-
     std::cout << "[INFO] [CONSTRUCTOR] " << this << " :: Instantiate Input" << std::endl;
-
 }
 
 Input::~Input()
@@ -48,6 +43,13 @@ Input::~Input()
 
     delete m_Rx_Input;
     delete m_Tx_Input;
+}
+
+void Input::initBuffers()
+{
+    std::cout << "[INFO] [ I ] Initialise Input Buffers" << std::endl;
+    std::fill(m_Rx_Input->begin(), m_Rx_Input->end(), 0);
+    std::fill(m_Tx_Input->begin(), m_Tx_Input->end(), 0);
 }
 
 int Input::openDEV()

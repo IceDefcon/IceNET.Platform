@@ -24,9 +24,6 @@ Watchdog::Watchdog() :
 {
     std::cout << "[INFO] [CONSTRUCTOR] " << this << " :: Instantiate Watchdog" << std::endl;
 
-    /* Initialize m_Rx_Watchdog and m_Tx_Watchdog with zeros */
-    std::fill(m_Rx_Watchdog->begin(), m_Rx_Watchdog->end(), 0);
-    std::fill(m_Tx_Watchdog->begin(), m_Tx_Watchdog->end(), 0);
 }
 
 Watchdog::~Watchdog()
@@ -42,6 +39,13 @@ Watchdog::~Watchdog()
 
     delete m_Rx_Watchdog;
     delete m_Tx_Watchdog;
+}
+
+void Watchdog::initBuffers()
+{
+    std::cout << "[INFO] [WDG] Initialise Watchdog Buffers" << std::endl;
+    std::fill(m_Rx_Watchdog->begin(), m_Rx_Watchdog->end(), 0);
+    std::fill(m_Tx_Watchdog->begin(), m_Tx_Watchdog->end(), 0);
 }
 
 int Watchdog::openDEV()
