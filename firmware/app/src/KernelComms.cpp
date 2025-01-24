@@ -30,9 +30,9 @@ void KernelComms::configInstances()
 {
     std::cout << "[INFO] [KIO] " << "Configure instances of comms classes" << std::endl;
     m_instanceCommander = Commander::getInstance();
-    m_instanceRamConfig = RamConfig::getInstance();
+    m_instanceRamDisk = RamDisk::getInstance();
     Watchdog::setInstance_Commander(m_instanceCommander);
-    Watchdog::setInstance_RamConfig(m_instanceRamConfig);
+    Watchdog::setInstance_RamDisk(m_instanceRamDisk);
 }
 
 void KernelComms::initRamDiskCommander()

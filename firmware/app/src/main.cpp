@@ -20,7 +20,7 @@ int main()
 
 #if 1 /* Test */
 
-    while (true) /* Terminate Kernel comms and Clean Memory */
+    while (true) /* Terminate Drone Application threads and Clean Memory */
     {
         if (true == instanceDroneCtrl->isKilled())
         {

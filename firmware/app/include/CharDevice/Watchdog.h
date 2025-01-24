@@ -14,7 +14,7 @@
 #include <atomic>
 #include <vector>
 
-#include "RamConfig.h"
+#include "RamDisk.h"
 #include "Commander.h"
 #include "Types.h"
 
@@ -30,7 +30,7 @@ class Watchdog
         std::vector<char>* m_Rx_Watchdog;
         std::vector<char>* m_Tx_Watchdog;
 
-        RamConfig* m_instanceRamConfig;
+        RamDisk* m_instanceRamDisk;
         Commander* m_instanceCommander;
 
     public:
@@ -49,7 +49,7 @@ class Watchdog
 
         void threadWatchdog();
 
-        void setInstance_RamConfig(RamConfig* instance);
+        void setInstance_RamDisk(RamDisk* instance);
         void setInstance_Commander(Commander* instance);
 
 };

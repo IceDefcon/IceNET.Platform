@@ -32,13 +32,13 @@ struct DeviceConfig
     uint8_t payload[];  // Combined register addresses and write data
 };
 
-class RamConfig
+class RamDisk
 {
 	private:
 
         int m_fileDescriptor;
 
-        RamConfig* m_instance;
+        RamDisk* m_instance;
 
         uint8_t* m_engineConfig;
         DeviceConfig* m_BMI160config;
@@ -50,8 +50,8 @@ class RamConfig
 
 	public:
 
-		RamConfig();
-		~RamConfig();
+		RamDisk();
+		~RamDisk();
 
         int openDEV();
         int dataTX();
@@ -63,6 +63,6 @@ class RamConfig
 		int AssembleData();
         void clearDma();
 
-        RamConfig* getInstance();
+        RamDisk* getInstance();
 };
 

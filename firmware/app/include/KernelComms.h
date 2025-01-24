@@ -15,7 +15,7 @@
 #include "Output.h"
 #include "Watchdog.h"
 #include "Commander.h"
-#include "RamConfig.h"
+#include "RamDisk.h"
 #include "Types.h"
 
 class KernelComms :
@@ -23,12 +23,12 @@ class KernelComms :
     public Output,
     public Watchdog,
     public Commander,
-    public RamConfig
+    public RamDisk
 {
     private:
 
         Commander* m_instanceCommander;
-        RamConfig* m_instanceRamConfig;
+        RamDisk* m_instanceRamDisk;
 
     public:
         KernelComms();

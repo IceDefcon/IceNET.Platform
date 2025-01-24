@@ -142,8 +142,8 @@ void Watchdog::threadWatchdog()
         {
             std::cout << std::endl;
             std::cout << "[INFO] [WDG] Watchdog ready :: Load FPGA Config to DMA Engine" << std::endl;
-            m_instanceRamConfig->AssembleData();
-            m_instanceRamConfig->dataTX();
+            m_instanceRamDisk->AssembleData();
+            m_instanceRamDisk->dataTX();
             m_stopFlag = true;
             std::cout << "[INFO] [WDG] Watchdog ready :: Activate DMA Engine" << std::endl;
             m_instanceCommander->dataTX();
@@ -153,9 +153,9 @@ void Watchdog::threadWatchdog()
     std::cout << "[INFO] [WDG] Terminate threadWatchdog" << std::endl;
 }
 
-void Watchdog::setInstance_RamConfig(RamConfig* instance)
+void Watchdog::setInstance_RamDisk(RamDisk* instance)
 {
-    m_instanceRamConfig = instance;
+    m_instanceRamDisk = instance;
 }
 
 void Watchdog::setInstance_Commander(Commander* instance)

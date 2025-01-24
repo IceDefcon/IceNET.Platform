@@ -8,19 +8,19 @@
 #include <iostream>
 #include <fcntl.h>
 #include <unistd.h>
-#include "RamConfig.h"
+#include "RamDisk.h"
 
-RamConfig::RamConfig() :
+RamDisk::RamDisk() :
 m_fileDescriptor(-1),
 m_instance(this),
 m_engineConfig{0}
 {
-    std::cout << "[INFO] [CONSTRUCTOR] " << m_instance << " :: Instantiate RamConfig" << std::endl;
+    std::cout << "[INFO] [CONSTRUCTOR] " << m_instance << " :: Instantiate RamDisk" << std::endl;
 }
 
-RamConfig::~RamConfig()
+RamDisk::~RamDisk()
 {
-    std::cout << "[INFO] [DESTRUCTOR] " << m_instance << " :: Destroy RamConfig" << std::endl;
+    std::cout << "[INFO] [DESTRUCTOR] " << m_instance << " :: Destroy RamDisk" << std::endl;
     if (m_fileDescriptor >= 0)
     {
         closeDEV();
@@ -30,7 +30,7 @@ RamConfig::~RamConfig()
     free(m_ADXL345config);
 }
 
-char RamConfig::calculateChecksum(const char* data, size_t size)
+char RamDisk::calculateChecksum(const char* data, size_t size)
 {
     char checksum = 0;
     for (size_t i = 0; i < size; i++)
@@ -40,7 +40,7 @@ char RamConfig::calculateChecksum(const char* data, size_t size)
     return checksum;
 }
 
-DeviceConfig* RamConfig::createOperation(char id, char ctrl, char ops)
+DeviceConfig* RamDisk::createOperation(char id, char ctrl, char ops)
 {
     char totalSize = sizeof(DeviceConfig) + (2 * ops); /* 2x ---> Regs + Data */
 
@@ -79,7 +79,7 @@ DeviceConfig* RamConfig::createOperation(char id, char ctrl, char ops)
  * [2] ADXL345
  *
  */
-int RamConfig::AssembleData()
+int RamDisk::AssembleData()
 {
     // [0] Sector
     size_t config_size = 4;
@@ -157,7 +157,7 @@ int RamConfig::AssembleData()
     return EXIT_SUCCESS;
 }
 
-int RamConfig::openDEV()
+int RamDisk::openDEV()
 {
     m_fileDescriptor = open(DEVICE_PATH, O_RDWR);
 
@@ -174,12 +174,12 @@ int RamConfig::openDEV()
     return OK;
 }
 
-int RamConfig::dataRX()
+int RamDisk::dataRX()
 {
     return OK; /* One way communication Here */
 }
 
-int RamConfig::dataTX()
+int RamDisk::dataTX()
 {
     ssize_t bytes = 0;
 
@@ -241,7 +241,7 @@ int RamConfig::dataTX()
 }
 
 
-void RamConfig::clearDma()
+void RamDisk::clearDma()
 {
     openDEV();
 
@@ -260,7 +260,7 @@ void RamConfig::clearDma()
     closeDEV();
 }
 
-int RamConfig::closeDEV()
+int RamDisk::closeDEV()
 {
     if (m_fileDescriptor >= 0)
     {
@@ -271,7 +271,7 @@ int RamConfig::closeDEV()
     return OK;
 }
 
-RamConfig* RamConfig::getInstance()
+RamDisk* RamDisk::getInstance()
 {
     return m_instance;
 }
