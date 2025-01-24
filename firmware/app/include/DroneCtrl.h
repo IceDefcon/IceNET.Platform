@@ -25,4 +25,7 @@ class DroneCtrl :
         DroneCtrl();
         ~DroneCtrl();
 
+        void droneInit();
+        void droneExit();
+        bool isKilled();
 };

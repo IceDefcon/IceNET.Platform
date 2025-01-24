@@ -32,10 +32,12 @@ void KernelComms::configInstances()
 
     m_instanceCommander = Commander::getInstance();
     m_instanceRamConfig = RamConfig::getInstance();
-
-    std::cout << "[INFO] [KIO] " << "Commander :: " << m_instanceCommander << std::endl;
-    std::cout << "[INFO] [KIO] " << "RamConfig :: " << m_instanceRamConfig << std::endl;
-
     Watchdog::setInstance_Commander(m_instanceCommander);
     Watchdog::setInstance_RamConfig(m_instanceRamConfig);
+}
+
+void KernelComms::initRamDiskCommander()
+{
+    Commander::openDEV();
+    Watchdog::openDEV();
 }

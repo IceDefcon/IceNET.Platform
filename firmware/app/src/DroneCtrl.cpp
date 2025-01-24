@@ -25,3 +25,26 @@ DroneCtrl::~DroneCtrl()
     std::cout << "[INFO] [DESTRUCTOR] " << this << " :: Destroy DroneCtrl" << std::endl;
 }
 
+void DroneCtrl::droneInit()
+{
+    std::cout << "[INFO] [DRONE] Drone Initialization" << std::endl;
+    KernelComms::configInstances();
+    KernelComms::initRamDiskCommander();
+}
+
+void DroneCtrl::droneExit()
+{
+    std::cout << "[INFO] [DRONE] Drone Exit" << std::endl;
+    Watchdog::closeDEV();
+    Commander::closeDEV();
+}
+
+bool DroneCtrl::isKilled()
+{
+    bool retFlag = false;
+    retFlag = KernelComms::Watchdog::isThreadKilled() ? true : false;
+
+    return retFlag;
+}
+
+
