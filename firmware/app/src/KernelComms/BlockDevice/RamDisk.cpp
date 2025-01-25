@@ -225,16 +225,6 @@ int RamDisk::dataTX()
     }
     printf("[INFO] [RAM] Write %d Bytes to ramDisk to Sector 2\n", bytes);
 
-    /**
-     *
-     * TODO
-     *
-     * We need to gather the config
-     * And settle in the engine config sector
-     *
-     *
-     */
-
     closeDEV();
 
     return EXIT_SUCCESS;

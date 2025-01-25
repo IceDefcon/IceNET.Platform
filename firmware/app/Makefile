@@ -12,8 +12,10 @@ CPP_OBJECTS = $(CPP_SOURCES:.cpp=.o)
 
 INCLUDES = \
     include \
-    include/BlockDevice \
-    include/CharDevice \
+    include/Diagnostics \
+    include/KernelComms \
+    include/KernelComms/BlockDevice \
+    include/KernelComms/CharDevice \
     include/Network
 
 CFLAGS += $(addprefix -I, $(INCLUDES))
