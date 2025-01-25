@@ -49,7 +49,7 @@ class Watchdog
 
         void threadWatchdog();
 
-        void setInstance_RamDisk(RamDisk* instance);
-        void setInstance_Commander(Commander* instance);
+        void setRamDiskInstance(RamDisk* instance);
+        void setCommanderInstance(Commander* instance);
 
 };

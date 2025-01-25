@@ -153,12 +153,12 @@ void Watchdog::threadWatchdog()
     std::cout << "[INFO] [WDG] Terminate threadWatchdog" << std::endl;
 }
 
-void Watchdog::setInstance_RamDisk(RamDisk* instance)
+void Watchdog::setRamDiskInstance(RamDisk* instance)
 {
     m_instanceRamDisk = instance;
 }
 
-void Watchdog::setInstance_Commander(Commander* instance)
+void Watchdog::setCommanderInstance(Commander* instance)
 {
     m_instanceCommander = instance;
 }
