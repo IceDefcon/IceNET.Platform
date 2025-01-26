@@ -46,7 +46,7 @@ void KernelComms::initRamDiskCommander()
     Watchdog::openDEV();
 }
 
-void KernelComms::exitRamDiskCommander()
+void KernelComms::shutdownRamDiskCommander()
 {
     std::cout << "[INFO] [KIO] " << "Close (C)Commander and (B)RamDisk devices" << std::endl;
     Watchdog::closeDEV();

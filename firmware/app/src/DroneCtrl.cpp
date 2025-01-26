@@ -39,8 +39,8 @@ void DroneCtrl::droneInit()
 void DroneCtrl::droneExit()
 {
     std::cout << "[INFO] [DRONE] Drone Exit" << std::endl;
-    KernelComms::exitRamDiskCommander();
-    Network::exitServerTCP();
+    KernelComms::shutdownRamDiskCommander();
+    Network::shutdownServerTCP();
 }
 
 bool DroneCtrl::isKilled()

@@ -26,5 +26,5 @@ class Network :
         ~Network();
 
         void initServerTCP();
-        void exitServerTCP();
+        void shutdownServerTCP();
 };

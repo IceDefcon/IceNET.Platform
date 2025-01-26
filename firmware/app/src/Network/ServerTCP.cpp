@@ -40,7 +40,7 @@ ServerTCP::~ServerTCP()
     std::cout << "[INFO] [DESTRUCTOR] " << this << " :: Destroy ServerTCP" << std::endl;
 
     /* Kill the thread */
-    closeDEV();
+    shutdownThread();
 
     /* Unblock the accept function */
     if (m_serverSocket >= 0)
@@ -64,27 +64,12 @@ void ServerTCP::initBuffers()
     std::fill(m_Tx_ServerTCP->begin(), m_Tx_ServerTCP->end(), 0);
 }
 
-int ServerTCP::openDEV()
+int ServerTCP::shutdownThread()
 {
-    initThread();
-
-    return OK;
-}
-
-int ServerTCP::dataRX()
-{
-    return OK;
-}
-
-int ServerTCP::dataTX()
-{
-    return OK;
-}
-
-int ServerTCP::closeDEV()
-{
-    /* TODO :: Temporarily here */
-    m_threadKill = true;
+    if(false == m_threadKill)
+    {
+        m_threadKill = true;
+    }
 
     return OK;
 }
@@ -122,6 +107,11 @@ void ServerTCP::threadServerTCP()
         if (false == m_clientConnected)
         {
             std::cout << "\r[INFO] [TCP] threadServerTCP waiting for the TCP Client... [" << m_timeoutCount << "]" << std::flush;
+            if(100 == m_timeoutCount)
+            {
+                std::cout << "\r[INFO] [TCP] 100s inactive server :: Shuddown connection" << m_timeoutCount << "]" << std::flush;
+            }
+
             /* Wait for the TCP client connection */
             m_clientSocket = accept(m_serverSocket, (struct sockaddr *)&m_clientAddress, &clientLength);
 
