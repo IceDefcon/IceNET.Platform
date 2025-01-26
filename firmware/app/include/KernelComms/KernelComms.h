@@ -37,5 +37,5 @@ class KernelComms :
         void configInstances();
 
         void initRamDiskCommander();
-        void exitRamDiskCommander();
+        void shutdownRamDiskCommander();
 };

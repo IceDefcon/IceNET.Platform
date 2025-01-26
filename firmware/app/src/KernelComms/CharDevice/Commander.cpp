@@ -93,7 +93,10 @@ int Commander::dataTX()
         return ERROR;
     }
 
-    m_Tx_Commander->clear();
+    for (size_t i = 0; i < CHAR_DEVICE_SIZE; i++)
+    {
+        (*m_Tx_Commander)[i] = 0x00;
+    }
 
     return OK;
 }

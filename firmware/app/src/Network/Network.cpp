@@ -29,11 +29,11 @@ void Network::initServerTCP()
 {
     std::cout << "[INFO] [NET] " << "Initialize TCP Server" << std::endl;
     ServerTCP::initBuffers();
-    ServerTCP::openDEV();
+    ServerTCP::initThread();
 }
 
-void Network::exitServerTCP()
+void Network::shutdownServerTCP()
 {
     std::cout << "[INFO] [NET] " << "Shutdown TCP Server" << std::endl;
-    Network::ServerTCP::closeDEV();
+    Network::ServerTCP::shutdownThread();
 }

@@ -48,15 +48,10 @@ class ServerTCP
 
         void initBuffers();
 
-        int openDEV();
-        int dataTX();
-        int dataRX();
-        int closeDEV();
-
-        void initThread();
+        int shutdownThread();
         bool isThreadKilled();
-
         void threadServerTCP();
+        void initThread();
 
         int initServer();
         int tcpTX();

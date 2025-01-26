@@ -31,8 +31,8 @@ void KernelComms::configInstances()
     std::cout << "[INFO] [KIO] " << "Configure instances of comms classes" << std::endl;
     m_instanceCommander = Commander::getInstance();
     m_instanceRamDisk = RamDisk::getInstance();
-    Watchdog::setInstance_Commander(m_instanceCommander);
-    Watchdog::setInstance_RamDisk(m_instanceRamDisk);
+    Watchdog::setCommanderInstance(m_instanceCommander);
+    Watchdog::setRamDiskInstance(m_instanceRamDisk);
 }
 
 void KernelComms::initRamDiskCommander()
@@ -46,7 +46,7 @@ void KernelComms::initRamDiskCommander()
     Watchdog::openDEV();
 }
 
-void KernelComms::exitRamDiskCommander()
+void KernelComms::shutdownRamDiskCommander()
 {
     std::cout << "[INFO] [KIO] " << "Close (C)Commander and (B)RamDisk devices" << std::endl;
     Watchdog::closeDEV();
