@@ -35,4 +35,5 @@ class Commander
         int closeDEV();
 
         Commander* getInstance();
+        void test();
 };

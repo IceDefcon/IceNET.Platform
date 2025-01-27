@@ -148,6 +148,9 @@ void ServerTCP::threadServerTCP()
             }
             else if(ret > 0)
             {
+                m_instanceCommander->test();
+                m_timeoutCount = 0;
+#if 0
                 std::cout << "[INFO] [TCP] Sending data to NetworkTraffic" << std::endl;
                 m_instanceNetworkTraffic->setNetworkTrafficRx(m_Rx_ServerTCP, m_Rx_bytesReceived);
                 std::cout << "[INFO] [TCP] Set NetworkTraffic_Input mode" << std::endl;
@@ -162,6 +165,7 @@ void ServerTCP::threadServerTCP()
                     std::cout << "[INFO] [TCP] Transfer complete" << std::endl;
                     m_timeoutCount = 0;
                 }
+#endif
             }
             else if(ret == -5)
             {
@@ -408,4 +412,9 @@ void ServerTCP::setInstance_NetworkTraffic(const std::shared_ptr<NetworkTraffic>
 void ServerTCP::setInstance_RamDisk(const std::shared_ptr<RamDisk> instance)
 {
     m_instanceRamDisk = instance;
+}
+
+void ServerTCP::setCommanderInstance(Commander* instance)
+{
+    m_instanceCommander = instance;
 }

@@ -15,6 +15,7 @@
 #include <vector>
 
 #include "NetworkTraffic.h"
+#include "Commander.h"
 #include "RamDisk.h"
 #include "Types.h"
 
@@ -41,6 +42,7 @@ class ServerTCP
 
         std::shared_ptr<NetworkTraffic> m_instanceNetworkTraffic;
         std::shared_ptr<RamDisk> m_instanceRamDisk;
+        Commander* m_instanceCommander;
 
     public:
         ServerTCP();
@@ -60,4 +62,5 @@ class ServerTCP
 
         void setInstance_NetworkTraffic(const std::shared_ptr<NetworkTraffic> instance);
         void setInstance_RamDisk(const std::shared_ptr<RamDisk> instance);
+        void setCommanderInstance(Commander* instance);
 };
