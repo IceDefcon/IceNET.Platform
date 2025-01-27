@@ -13,7 +13,6 @@
 #include <unistd.h>// For close, read, write, etc.
 
 #include "KernelComms.h"
-#include "Network.h"
 #include "Types.h"
 
 KernelComms::KernelComms()

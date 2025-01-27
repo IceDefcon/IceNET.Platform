@@ -32,6 +32,8 @@ void DroneCtrl::droneInit()
     KernelComms::configInstances();
     /* Ram Disk Commander */
     KernelComms::initRamDiskCommander();
+    /* TODO :: Maybe tidy this up */
+    Network::ServerTCP::setCommanderInstance(KernelComms::Commander::getInstance());
     /* TCP Server */
     Network::initServerTCP();
 }

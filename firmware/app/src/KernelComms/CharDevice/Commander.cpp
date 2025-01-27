@@ -116,3 +116,8 @@ Commander* Commander::getInstance()
 {
     return m_instance;
 }
+
+void Commander::test()
+{
+    std::cout << "[INFO] [CMD] Test Command Received :: Sending to Kernel" << std::endl;
+}
