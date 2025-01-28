@@ -14,7 +14,6 @@
 #include <atomic>
 #include <vector>
 
-#include "NetworkTraffic.h"
 #include "Commander.h"
 #include "RamDisk.h"
 #include "Types.h"
@@ -40,8 +39,6 @@ class ServerTCP
         int m_Rx_bytesReceived;
         int m_Tx_bytesReceived;
 
-        std::shared_ptr<NetworkTraffic> m_instanceNetworkTraffic;
-        std::shared_ptr<RamDisk> m_instanceRamDisk;
         Commander* m_instanceCommander;
 
     public:
@@ -60,7 +57,5 @@ class ServerTCP
         int tcpRX();
         int tcpClose();
 
-        void setInstance_NetworkTraffic(const std::shared_ptr<NetworkTraffic> instance);
-        void setInstance_RamDisk(const std::shared_ptr<RamDisk> instance);
         void setCommanderInstance(Commander* instance);
 };

@@ -11,16 +11,12 @@
 #include <atomic>
 #include <vector>
 
-#include "Input.h"
-#include "Output.h"
 #include "Watchdog.h"
 #include "Commander.h"
 #include "RamDisk.h"
 #include "Types.h"
 
 class KernelComms :
-    public Input,
-    public Output,
     public Watchdog,
     public Commander,
     public RamDisk

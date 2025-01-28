@@ -53,8 +53,8 @@ ServerTCP::~ServerTCP()
         m_threadServerTCP.join();
     }
 
-    m_instanceNetworkTraffic = nullptr;
-    m_instanceRamDisk = nullptr;
+    // m_instanceNetworkTraffic = nullptr;
+    // m_instanceRamDisk = nullptr;
 }
 
 void ServerTCP::initBuffers()
@@ -148,13 +148,14 @@ void ServerTCP::threadServerTCP()
             }
             else if(ret > 0)
             {
+#if 1
                 m_instanceCommander->test();
                 m_timeoutCount = 0;
-#if 0
+#else
                 std::cout << "[INFO] [TCP] Sending data to NetworkTraffic" << std::endl;
-                m_instanceNetworkTraffic->setNetworkTrafficRx(m_Rx_ServerTCP, m_Rx_bytesReceived);
+                // m_instanceNetworkTraffic->setNetworkTrafficRx(m_Rx_ServerTCP, m_Rx_bytesReceived);
                 std::cout << "[INFO] [TCP] Set NetworkTraffic_Input mode" << std::endl;
-                m_instanceNetworkTraffic->setNetworkTrafficState(NetworkTraffic_Input);
+                // m_instanceNetworkTraffic->setNetworkTrafficState(NetworkTraffic_Input);
 
                 if (tcpTX() < 0)
                 {
@@ -177,13 +178,13 @@ void ServerTCP::threadServerTCP()
             else if(ret == -4)
             {
                 std::cout << "[INFO] [TCP] Transfer Data to RAM" << std::endl;
-                m_instanceRamDisk->dataTX();
+                // m_instanceRamDisk->dataTX();
                 m_timeoutCount = 0;
             }
             else if(ret == -3)
             {
                 std::cout << "[INFO] [TCP] Clear DMA Engine from RAM" << std::endl;
-                m_instanceRamDisk->clearDma();
+                // m_instanceRamDisk->clearDma();
                 m_timeoutCount = 0;
             }
             else
@@ -283,7 +284,7 @@ int ServerTCP::initServer()
 int ServerTCP::tcpTX()
 {
     ssize_t ret = -1;
-
+#if 0
     /**
      * As in Output we have here
      * lack of synchronisation due to
@@ -327,7 +328,7 @@ int ServerTCP::tcpTX()
         ret = write(m_clientSocket, m_Tx_ServerTCP->data(), m_Tx_ServerTCP->size());
         (*m_Tx_ServerTCP)[7] = 0x00; /* Now clear me !! */
     }
-
+#endif
     return ret;
 }
 
@@ -404,17 +405,8 @@ int ServerTCP::tcpClose()
     return 0;
 }
 
-void ServerTCP::setInstance_NetworkTraffic(const std::shared_ptr<NetworkTraffic> instance)
-{
-    m_instanceNetworkTraffic = instance;
-}
-
-void ServerTCP::setInstance_RamDisk(const std::shared_ptr<RamDisk> instance)
-{
-    m_instanceRamDisk = instance;
-}
-
 void ServerTCP::setCommanderInstance(Commander* instance)
 {
     m_instanceCommander = instance;
 }
+
