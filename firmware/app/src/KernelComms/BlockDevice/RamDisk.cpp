@@ -260,8 +260,3 @@ int RamDisk::closeDEV()
 
     return OK;
 }
-
-RamDisk* RamDisk::getInstance()
-{
-    return m_instance;
-}

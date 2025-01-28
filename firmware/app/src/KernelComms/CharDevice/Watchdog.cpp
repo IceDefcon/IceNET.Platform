@@ -70,7 +70,6 @@ int Watchdog::dataRX()
 
     if (m_Rx_Watchdog->size() >= 2 && (*m_Rx_Watchdog)[0] == (*m_Rx_Watchdog)[1])
     {
-        std::cout << std::endl;
         std::cout << "[ERNO] [WDG] [0] Kill the App :: No FPGA Watchdog Signal" << std::endl;
         return 0;
     }
@@ -156,20 +155,17 @@ void Watchdog::threadWatchdog()
              */
             m_watchdogDead = true;
         }
+        else
+        {
+            if(false == m_stopFlag)
+            {
+                setFpgaConfigReady();
+                m_stopFlag = true;
+            }
+        }
 
         /* Reduce consumption of CPU resources */
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
-
-        if(false == m_stopFlag)
-        {
-            std::cout << std::endl;
-            std::cout << "[INFO] [WDG] Watchdog ready :: Load FPGA Config to DMA Engine" << std::endl;
-            m_instanceRamDisk->AssembleData();
-            m_instanceRamDisk->dataTX();
-            m_stopFlag = true;
-            std::cout << "[INFO] [WDG] Watchdog ready :: Activate DMA Engine" << std::endl;
-            m_instanceCommander->dataTX();
-        }
     }
 
     std::cout << "[INFO] [WDG] Terminate threadWatchdog" << std::endl;
@@ -180,12 +176,12 @@ bool Watchdog::isWatchdogDead()
     return m_watchdogDead;
 }
 
-void Watchdog::setRamDiskInstance(RamDisk* instance)
+void Watchdog::setFpgaConfigReady()
 {
-    m_instanceRamDisk = instance;
+    m_fpgaConfigReady = true;
 }
 
-void Watchdog::setCommanderInstance(Commander* instance)
+bool Watchdog::getFpgaConfigReady()
 {
-    m_instanceCommander = instance;
+    return m_fpgaConfigReady;
 }

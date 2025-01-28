@@ -20,7 +20,8 @@ class Commander
         std::thread m_threadCommander;
         std::atomic<bool> m_threadKill;
 
-        commanderStateType m_commanderState;
+        ioStateType m_ioState;
+        ioStateType m_ioStatePrev;
 
         Commander* m_instance;
 
@@ -43,7 +44,14 @@ class Commander
         bool isThreadKilled();
         void threadCommander();
 
-        Commander* getInstance();
-        /* TODO :: Do something Here */
-        void test();
+        /**
+         * TODO
+         *
+         * This must be mutex protected
+         * to avoid read/write in the
+         * same time
+         *
+         */
+        void setIO_State(ioStateType state);
+        ioStateType getIO_State();
 };

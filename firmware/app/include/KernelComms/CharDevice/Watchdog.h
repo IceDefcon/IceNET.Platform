@@ -26,13 +26,11 @@ class Watchdog
         std::atomic<bool> m_threadKill;
 
         bool m_stopFlag;
+        bool m_fpgaConfigReady;
         bool m_watchdogDead;
 
         std::vector<char>* m_Rx_Watchdog;
         std::vector<char>* m_Tx_Watchdog;
-
-        RamDisk* m_instanceRamDisk;
-        Commander* m_instanceCommander;
 
     public:
         Watchdog();
@@ -52,7 +50,6 @@ class Watchdog
 
         bool isWatchdogDead();
 
-        void setRamDiskInstance(RamDisk* instance);
-        void setCommanderInstance(Commander* instance);
-
+        void setFpgaConfigReady();
+        bool getFpgaConfigReady();
 };

@@ -62,7 +62,5 @@ class RamDisk
 		DeviceConfig* createOperation(char devId, char ctrl, char ops);
 		int AssembleData();
         void clearDma();
-
-        RamDisk* getInstance();
 };
 

@@ -15,7 +15,10 @@
 #include "DroneCtrl.h"
 #include "Types.h"
 
-DroneCtrl::DroneCtrl()
+DroneCtrl::DroneCtrl() :
+m_ioState(IO_IDLE),
+m_ctrlState(CTRL_INIT),
+m_ctrlStatePrev(CTRL_INIT)
 {
     std::cout << "[INFO] [CONSTRUCTOR] " << this << " :: Instantiate DroneCtrl" << std::endl;
 }
@@ -27,20 +30,23 @@ DroneCtrl::~DroneCtrl()
 
 void DroneCtrl::droneInit()
 {
-    std::cout << "[INFO] [DRONE] Drone Initialization" << std::endl;
-    /* Set instances */
-    KernelComms::configInstances();
+    std::cout << "[INFO] [ D ] Drone Initialization" << std::endl;
+
+    /* Get control instances */
+    m_instanceServerTCP = this;
+    m_instanceCommander = this;
+    m_instanceWatchdog = this;
+    m_instanceRamDisk = this;
+
     /* Ram Disk Commander */
     KernelComms::initRamDiskCommander();
-    /* TODO :: Maybe tidy this up */
-    Network::ServerTCP::setCommanderInstance(KernelComms::Commander::getInstance());
     /* TCP Server */
     Network::initServerTCP();
 }
 
 void DroneCtrl::droneExit()
 {
-    std::cout << "[INFO] [DRONE] Drone Exit" << std::endl;
+    std::cout << "[INFO] [ D ] Drone Exit" << std::endl;
     KernelComms::shutdownRamDiskCommander();
     Network::shutdownServerTCP();
 }
@@ -52,4 +58,93 @@ bool DroneCtrl::isKilled()
     retFlag = KernelComms::Watchdog::isWatchdogDead() || KernelComms::Commander::isThreadKilled() || Network::ServerTCP::isThreadKilled();
 
     return retFlag;
+}
+
+std::string DroneCtrl::getCtrlStateString(ctrlType state)
+{
+    static const std::array<std::string, IO_AMOUNT> ctrlStateStrings =
+    {
+        "CTRL_INIT",
+        "CTRL_CONFIG",
+        "CTRL_IDLE",
+        "CTRL_COMMANDER",
+        "CTRL_SERVER",
+    };
+
+    if (state >= 0 && state < CTRL_AMOUNT)
+    {
+        return ctrlStateStrings[state];
+    }
+    else
+    {
+        return "UNKNOWN_STATE";
+    }
+}
+
+void DroneCtrl::sendFpgaConfig()
+{
+    std::cout << "[INFO] [ D ] Watchdog ready :: Load FPGA Config to DMA Engine" << std::endl;
+    m_instanceRamDisk->AssembleData();
+    m_instanceRamDisk->dataTX();
+    std::cout << "[INFO] [ D ] Watchdog ready :: Activate DMA Engine" << std::endl;
+    m_instanceCommander->dataTX();
+}
+
+void DroneCtrl::droneCtrlMain()
+{
+    if(m_ctrlStatePrev != m_ctrlState)
+    {
+        std::cout << "[INFO] [ D ] State DroneCtrl " << m_ctrlStatePrev << "->" << m_ctrlState << " " << getCtrlStateString(m_ctrlState) << std::endl;
+        m_ctrlStatePrev = m_ctrlState;
+    }
+
+    switch(m_ctrlState)
+    {
+        case CTRL_INIT:
+            /**
+             * Main Config
+             *
+             * Configure chips connectd to FPGA
+             * Either I2C or SPI buses
+             * Trough the DMA
+             */
+            if(true == KernelComms::Watchdog::getFpgaConfigReady())
+            {
+                m_ctrlState = CTRL_CONFIG;
+            }
+            break;
+
+        case CTRL_CONFIG:
+            sendFpgaConfig();
+            m_ctrlState = CTRL_IDLE;
+            break;
+
+        case CTRL_IDLE:
+            if(m_ioState != m_instanceServerTCP->getIO_State())
+            {
+                std::cout << "[INFO] [ D ] State Commander " << m_ioState << "->" << m_instanceServerTCP->getIO_State() << " " << getIoStateString(m_instanceServerTCP->getIO_State()) << std::endl;
+                m_ioState = m_instanceServerTCP->getIO_State();
+                m_ctrlState = CTRL_COMMANDER;
+            }
+            else if(m_ioState != m_instanceCommander->getIO_State())
+            {
+                std::cout << "[INFO] [ D ] State ServerTCP " << m_ioState << "->" << m_instanceCommander->getIO_State() << " " << getIoStateString(m_instanceCommander->getIO_State()) << std::endl;
+                m_ioState = m_instanceCommander->getIO_State();
+                m_ctrlState = CTRL_SERVER;
+            }
+            break;
+
+        case CTRL_COMMANDER:
+            m_instanceCommander->setIO_State(m_ioState);
+            m_ctrlState = CTRL_IDLE;
+            break;
+
+        case CTRL_SERVER:
+            m_instanceServerTCP->setIO_State(m_ioState);
+            m_ctrlState = CTRL_IDLE;
+            break;
+
+        default:
+            std::cout << "[INFO] [ D ] Main State" << std::endl;
+    }
 }

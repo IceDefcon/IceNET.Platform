@@ -20,9 +20,11 @@ int main()
 
 #if 1 /* Test */
 
-    while (true) /* Terminate Drone Application threads and Clean Memory */
+    while (true)
     {
-        if (true == instanceDroneCtrl->isKilled())
+        instanceDroneCtrl->droneCtrlMain();
+
+        if (true == instanceDroneCtrl->isKilled()) /* Terminate Drone Application threads and Clean Memory */
         {
             std::cout << "[EXIT] [TERMINATE] Shutdown Application" << std::endl;
             instanceDroneCtrl->droneExit();
@@ -37,4 +39,3 @@ int main()
     /* shared_ptr in use :: No need for deallocation */
     return 0;
 }
-

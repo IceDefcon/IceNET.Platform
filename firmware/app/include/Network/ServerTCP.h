@@ -24,6 +24,9 @@ class ServerTCP
         std::thread m_threadServerTCP;
         std::atomic<bool> m_threadKill;
 
+        ioStateType m_ioState;
+        ioStateType m_ioStatePrev;
+
         int m_timeoutCount;
         int m_portNumber;
         int m_serverSocket;
@@ -39,8 +42,6 @@ class ServerTCP
         int m_Rx_bytesReceived;
         int m_Tx_bytesReceived;
 
-        Commander* m_instanceCommander;
-
     public:
         ServerTCP();
         ~ServerTCP();
@@ -52,10 +53,19 @@ class ServerTCP
         bool isThreadKilled();
         void threadServerTCP();
 
-        int initServer();
+        int configureServer();
         int tcpTX();
         int tcpRX();
         int tcpClose();
 
-        void setCommanderInstance(Commander* instance);
+        /**
+         * TODO
+         *
+         * This must be mutex protected
+         * to avoid read/write in the
+         * same time
+         *
+         */
+        void setIO_State(ioStateType state);
+        ioStateType getIO_State();
 };

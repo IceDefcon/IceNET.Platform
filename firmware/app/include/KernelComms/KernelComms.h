@@ -23,14 +23,9 @@ class KernelComms :
 {
     private:
 
-        Commander* m_instanceCommander;
-        RamDisk* m_instanceRamDisk;
-
     public:
         KernelComms();
         ~KernelComms();
-
-        void configInstances();
 
         void initRamDiskCommander();
         void shutdownRamDiskCommander();

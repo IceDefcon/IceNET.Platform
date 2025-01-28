@@ -17,6 +17,8 @@
 
 ServerTCP::ServerTCP() :
     m_threadKill(false),
+    m_ioState(IO_IDLE),
+    m_ioStatePrev(IO_IDLE),
     m_timeoutCount(0),
     m_portNumber(2555),
     m_serverSocket(-1),
@@ -87,7 +89,7 @@ void ServerTCP::threadServerTCP()
 {
     size_t i = 0;
 
-    initServer();
+    configureServer();
 
     socklen_t clientLength = sizeof(m_clientAddress);
 
@@ -104,12 +106,9 @@ void ServerTCP::threadServerTCP()
          */
         if (false == m_clientConnected)
         {
-            std::cout << "\r[INFO] [TCP] threadServerTCP waiting for the TCP Client... [" << m_timeoutCount << "]" << std::flush;
-            if(100 == m_timeoutCount)
-            {
-                std::cout << "\r[INFO] [TCP] 100s inactive server :: Shuddown connection" << m_timeoutCount << "]" << std::flush;
-            }
-
+#if 0
+            std::cout << "\r[INFO] [TCP] threadServerTCP waiting for the TCP Client... [" << m_timeoutCount << "]" << std::endl;
+#endif
             /* Wait for the TCP client connection */
             m_clientSocket = accept(m_serverSocket, (struct sockaddr *)&m_clientAddress, &clientLength);
 
@@ -122,13 +121,11 @@ void ServerTCP::threadServerTCP()
                 }
                 else
                 {
-                    std::cout << std::endl;
                     std::cerr << "[ERROR] [TCP] accept failed: " << strerror(errno) << std::endl;
                 }
             }
             else
             {
-                std::cout << std::endl;
                 std::cout << "[INFO] [TCP] threadServerTCP client connection established" << std::endl;
                 m_clientConnected = true;
                 m_timeoutCount = 0;
@@ -137,7 +134,6 @@ void ServerTCP::threadServerTCP()
         else
         {
             int ret = tcpRX();
-#if 1 /* TODO :: Redesign Server side */
             if(ret == 0)
             {
                 std::cout << "[INFO] [TCP] Client disconnected from server" << std::endl;
@@ -147,7 +143,7 @@ void ServerTCP::threadServerTCP()
             else if(ret > 0)
             {
 #if 1
-                m_instanceCommander->test();
+                m_ioState = IO_WRITE;
                 m_timeoutCount = 0;
 #else
                 std::cout << "[INFO] [TCP] Sending data to NetworkTraffic" << std::endl;
@@ -170,7 +166,6 @@ void ServerTCP::threadServerTCP()
             {
                 tcpClose();
                 std::cout << "[INFO] [TCP] Ready to Kill threadServerTCP" << std::endl;
-                // m_instanceNetworkTraffic->setNetworkTrafficState(NetworkTraffic_KILL);
                 m_threadKill = true;
             }
             else if(ret == -4)
@@ -187,9 +182,44 @@ void ServerTCP::threadServerTCP()
             }
             else
             {
+                m_ioState = IO_IDLE;
                 /* TODO :: Client connected but nothing receiver */
             }
-#endif
+
+            if(m_ioState != m_ioStatePrev)
+            {
+                std::cout << "[INFO] [TCP] State ServerTCP " << m_ioStatePrev << "->" << m_ioState << " " << getIoStateString(m_ioState) << std::endl;
+                m_ioStatePrev = m_ioState;
+
+                switch(m_ioState)
+                {
+                    case IO_IDLE:
+                        break;
+
+                    case IO_READ:
+                        // std::cout << "[INFO] [TCP] Read Command" << std::endl;
+                        m_ioState = IO_IDLE;
+                        break;
+
+                    case IO_WRITE:
+                        // std::cout << "[INFO] [TCP] Write Command" << std::endl;
+                        // m_ioState = IO_READ;
+                        break;
+
+                    case IO_LOAD:
+                        // std::cout << "[INFO] [TCP] Load Command" << std::endl;
+                        // m_ioState = IO_READ;
+                        break;
+
+                    case IO_CLEAR:
+                        // std::cout << "[INFO] [TCP] Clear Command" << std::endl;
+                        // m_ioState = IO_READ;
+                        break;
+
+                    default:
+                        std::cout << "[INFO] [TCP] Unknown Command" << std::endl;
+                }
+            }
         }
 
         for (i = 0; i < TCP_SERVER_SIZE; i++)
@@ -204,7 +234,7 @@ void ServerTCP::threadServerTCP()
     std::cout << "[INFO] [TCP] Terminate threadServerTCP" << std::endl;
 }
 
-int ServerTCP::initServer()
+int ServerTCP::configureServer()
 {
     m_serverSocket = socket(AF_INET, SOCK_STREAM, 0);
 
@@ -343,21 +373,18 @@ int ServerTCP::tcpRX()
         /* DEAD :: CODE */
         if((*m_Rx_ServerTCP)[0] == 0xDE && (*m_Rx_ServerTCP)[1] == 0xAD && (*m_Rx_ServerTCP)[2] == 0xC0 && (*m_Rx_ServerTCP)[3] == 0xDE)
         {
-            std::cout << std::endl;
             std::cout << "[INFO] [TCP] 0xDEAD Received" << std::endl;
             return -5;
         }
         /* LOAD :: CODE */
         else if((*m_Rx_ServerTCP)[0] == 0x10 && (*m_Rx_ServerTCP)[1] == 0xAD && (*m_Rx_ServerTCP)[2] == 0xC0 && (*m_Rx_ServerTCP)[3] == 0xDE)
         {
-            std::cout << std::endl;
             std::cout << "[INFO] [TCP] Send configuration to RAM" << std::endl;
             return -4;
         }
         /* CLEAR :: CODE */
         else if((*m_Rx_ServerTCP)[0] == 0xC1 && (*m_Rx_ServerTCP)[1] == 0xEA && (*m_Rx_ServerTCP)[2] == 0xC0 && (*m_Rx_ServerTCP)[3] == 0xDE)
         {
-            std::cout << std::endl;
             std::cout << "[INFO] [TCP] Clear DMA from RAM" << std::endl;
             return -3;
         }
@@ -365,7 +392,6 @@ int ServerTCP::tcpRX()
         {
             if (m_Rx_bytesReceived > 0)
             {
-                std::cout << std::endl;
                 std::cout << "[INFO] [TCP] Received " << m_Rx_bytesReceived << " Bytes of data: ";
                 for (int i = 0; i < m_Rx_bytesReceived; ++i)
                 {
@@ -375,13 +401,18 @@ int ServerTCP::tcpRX()
             }
             else if (m_Rx_bytesReceived == 0)
             {
-                std::cout << std::endl;
                 std::cout << "[INFO] [TCP] Connection closed by client" << std::endl;
+            }
+            else if(10 == m_timeoutCount)
+            {
+                std::cout << "\r[INFO] [TCP] 10s inactive server :: Shuddown connection" << std::endl;
+                m_clientConnected = false;
             }
             else
             {
-                std::cout << "\r[INFO] [TCP] Nothing received, listening... [" << m_timeoutCount << "]" << std::flush;
-
+#if 0
+                std::cout << "\r[INFO] [TCP] Nothing received, listening... [" << m_timeoutCount << "]" << std::endl;
+#endif
                 m_timeoutCount++;
             }
         }
@@ -403,8 +434,20 @@ int ServerTCP::tcpClose()
     return 0;
 }
 
-void ServerTCP::setCommanderInstance(Commander* instance)
+/**
+ * TODO
+ *
+ * This must be mutex protected
+ * to avoid read/write in the
+ * same time
+ *
+ */
+void ServerTCP::setIO_State(ioStateType state)
 {
-    m_instanceCommander = instance;
+    m_ioState = state;
 }
 
+ioStateType ServerTCP::getIO_State()
+{
+    return m_ioState;
+}
