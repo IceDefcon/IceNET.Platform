@@ -15,7 +15,8 @@
 #include "DroneCtrl.h"
 #include "Types.h"
 
-DroneCtrl::DroneCtrl()
+DroneCtrl::DroneCtrl():
+m_droneCtrlState(CTRL_INIT)
 {
     std::cout << "[INFO] [CONSTRUCTOR] " << this << " :: Instantiate DroneCtrl" << std::endl;
 }
@@ -28,12 +29,15 @@ DroneCtrl::~DroneCtrl()
 void DroneCtrl::droneInit()
 {
     std::cout << "[INFO] [DRONE] Drone Initialization" << std::endl;
-    /* Set instances */
-    KernelComms::configInstances();
+
+    /* Get control instances */
+    m_instanceServerTCP = this;
+    m_instanceCommander = this;
+    m_instanceWatchdog = this;
+    m_instanceRamDisk = this;
+
     /* Ram Disk Commander */
     KernelComms::initRamDiskCommander();
-    /* TODO :: Maybe tidy this up */
-    Network::ServerTCP::setCommanderInstance(KernelComms::Commander::getInstance());
     /* TCP Server */
     Network::initServerTCP();
 }
@@ -52,4 +56,60 @@ bool DroneCtrl::isKilled()
     retFlag = KernelComms::Watchdog::isWatchdogDead() || KernelComms::Commander::isThreadKilled() || Network::ServerTCP::isThreadKilled();
 
     return retFlag;
+}
+
+void DroneCtrl::sendFpgaConfig()
+{
+    std::cout << std::endl;
+    std::cout << "[INFO] [DRONE] Watchdog ready :: Load FPGA Config to DMA Engine" << std::endl;
+    m_instanceRamDisk->AssembleData();
+    m_instanceRamDisk->dataTX();
+    std::cout << "[INFO] [DRONE] Watchdog ready :: Activate DMA Engine" << std::endl;
+    m_instanceCommander->dataTX();
+}
+
+void DroneCtrl::droneCtrlMain()
+{
+    switch(m_droneCtrlState)
+    {
+        case CTRL_INIT:
+            /**
+             * Main Config
+             *
+             * Configure chips connectd to FPGA
+             * Either I2C or SPI buses
+             * Trough the DMA
+             */
+            if(true == KernelComms::Watchdog::getFpgaConfigReady())
+            {
+                std::cout << "[INFO] [DRONE] CTRL_INIT" << std::endl;
+                m_droneCtrlState = CTRL_CONFIG;
+            }
+            break;
+
+        case CTRL_CONFIG:
+            std::cout << "[INFO] [DRONE] CTRL_CONFIG" << std::endl;
+            sendFpgaConfig();
+            m_droneCtrlState = CTRL_IDLE;
+            break;
+
+        case CTRL_IDLE:
+            m_droneCtrlState = CTRL_INPUT;
+            break;
+
+        case CTRL_INPUT:
+            // m_commanderState = m_instanceServerTCP->getCommanderState();
+            // m_instanceCommander->setCommanderState(m_commanderState);
+            m_droneCtrlState = CTRL_OUTPUT;
+            break;
+
+        case CTRL_OUTPUT:
+            // m_commanderState = m_instanceServerTCP->getCommanderState();
+            // m_instanceCommander->setCommanderState(m_commanderState);
+            m_droneCtrlState = CTRL_IDLE;
+            break;
+
+        default:
+            std::cout << "[INFO] [DRONE] Main State" << std::endl;
+    }
 }

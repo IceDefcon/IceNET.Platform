@@ -17,6 +17,7 @@
 
 ServerTCP::ServerTCP() :
     m_threadKill(false),
+    m_ioState(IO_IDLE),
     m_timeoutCount(0),
     m_portNumber(2555),
     m_serverSocket(-1),
@@ -137,7 +138,6 @@ void ServerTCP::threadServerTCP()
         else
         {
             int ret = tcpRX();
-#if 1 /* TODO :: Redesign Server side */
             if(ret == 0)
             {
                 std::cout << "[INFO] [TCP] Client disconnected from server" << std::endl;
@@ -147,7 +147,7 @@ void ServerTCP::threadServerTCP()
             else if(ret > 0)
             {
 #if 1
-                m_instanceCommander->test();
+                m_ioState = IO_TEST;
                 m_timeoutCount = 0;
 #else
                 std::cout << "[INFO] [TCP] Sending data to NetworkTraffic" << std::endl;
@@ -189,12 +189,45 @@ void ServerTCP::threadServerTCP()
             {
                 /* TODO :: Client connected but nothing receiver */
             }
-#endif
         }
 
         for (i = 0; i < TCP_SERVER_SIZE; i++)
         {
             (*m_Rx_ServerTCP)[i] = 0x00;
+        }
+
+        switch(m_ioState)
+        {
+            case IO_IDLE:
+                break;
+
+            case IO_READ:
+                std::cout << "[INFO] [TCP] Read Command" << std::endl;
+                m_ioState = IO_IDLE;
+                break;
+
+            case IO_WRITE:
+                std::cout << "[INFO] [TCP] Write Command" << std::endl;
+                m_ioState = IO_READ;
+                break;
+
+            case IO_DEAD:
+                std::cout << "[INFO] [TCP] Dead Command" << std::endl;
+                m_ioState = IO_READ;
+                break;
+
+            case IO_LOAD:
+                std::cout << "[INFO] [TCP] Load Command" << std::endl;
+                m_ioState = IO_READ;
+                break;
+
+            case IO_CLEAR:
+                std::cout << "[INFO] [TCP] Clear Command" << std::endl;
+                m_ioState = IO_READ;
+                break;
+
+            default:
+                std::cout << "[INFO] [TCP] Unknown Command" << std::endl;
         }
 
         /* Reduce consumption of CPU resources */
@@ -403,8 +436,20 @@ int ServerTCP::tcpClose()
     return 0;
 }
 
-void ServerTCP::setCommanderInstance(Commander* instance)
+/**
+ * TODO
+ *
+ * This must be mutex protected
+ * to avoid read/write in the
+ * same time
+ *
+ */
+void ServerTCP::setIO_State(ioStateType state)
 {
-    m_instanceCommander = instance;
+    m_ioState = state;
 }
 
+bool ServerTCP::getIO_State()
+{
+    return m_ioState;
+}

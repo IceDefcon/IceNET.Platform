@@ -18,11 +18,21 @@ enum Status
 
 typedef enum 
 {
-    COMMANDER_IDLE = 0,
-    COMMANDER_READ,
-    COMMANDER_WRITE,
-    COMMANDER_DEAD,
-    COMMANDER_LOAD,
-    COMMANDER_CLEAR,
-    COMMANDER_AMOUNT
-} commanderStateType;
+    IO_IDLE = 0,
+    IO_READ,
+    IO_WRITE,
+    IO_DEAD,
+    IO_LOAD,
+    IO_CLEAR,
+    IO_TEST,
+    IO_AMOUNT
+} ioStateType;
+
+typedef enum
+{
+    CTRL_INIT = 0,
+    CTRL_CONFIG,
+    CTRL_IDLE,
+    CTRL_INPUT,
+    CTRL_OUTPUT,
+} ctrlType;

@@ -18,7 +18,7 @@
 Commander::Commander() :
 m_file_descriptor(-1),
 m_threadKill(false),
-m_commanderState(COMMANDER_IDLE),
+m_ioState(IO_IDLE),
 m_instance(this),
 m_Rx_Commander(new std::vector<char>(CHAR_DEVICE_SIZE)),
 m_Tx_Commander(new std::vector<char>(CHAR_DEVICE_SIZE))
@@ -143,29 +143,34 @@ void Commander::threadCommander()
 {
     while (!m_threadKill)
     {
-        switch(m_commanderState)
+        switch(m_ioState)
         {
-            case COMMANDER_IDLE:
+            case IO_IDLE:
                 break;
 
-            case COMMANDER_READ:
-                m_commanderState = COMMANDER_IDLE;
+            case IO_READ:
+                std::cout << "[INFO] [CMD] Read Command" << std::endl;
+                m_ioState = IO_IDLE;
                 break;
 
-            case COMMANDER_WRITE:
-                m_commanderState = COMMANDER_READ;
+            case IO_WRITE:
+                std::cout << "[INFO] [CMD] Write Command" << std::endl;
+                m_ioState = IO_READ;
                 break;
 
-            case COMMANDER_DEAD:
-                m_commanderState = COMMANDER_READ;
+            case IO_DEAD:
+                std::cout << "[INFO] [CMD] Dead Command" << std::endl;
+                m_ioState = IO_READ;
                 break;
 
-            case COMMANDER_LOAD:
-                m_commanderState = COMMANDER_READ;
+            case IO_LOAD:
+                std::cout << "[INFO] [CMD] Load Command" << std::endl;
+                m_ioState = IO_READ;
                 break;
 
-            case COMMANDER_CLEAR:
-                m_commanderState = COMMANDER_READ;
+            case IO_CLEAR:
+                std::cout << "[INFO] [CMD] Clear Command" << std::endl;
+                m_ioState = IO_READ;
                 break;
 
             default:
@@ -179,11 +184,25 @@ void Commander::threadCommander()
     std::cout << "[INFO] [WDG] Terminate threadCommander" << std::endl;
 }
 
-Commander* Commander::getInstance()
+/**
+ * TODO
+ *
+ * This must be mutex protected
+ * to avoid read/write in the
+ * same time
+ *
+ */
+void Commander::setIO_State(ioStateType state)
 {
-    return m_instance;
+    m_ioState = state;
 }
 
+bool Commander::getIO_State()
+{
+    return m_ioState;
+}
+
+/* DEBUG */
 void Commander::test()
 {
     std::cout << "[INFO] [CMD] Test Command Received :: Sending to Kernel" << std::endl;

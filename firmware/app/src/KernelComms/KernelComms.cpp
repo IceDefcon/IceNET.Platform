@@ -25,15 +25,6 @@ KernelComms::~KernelComms()
     std::cout << "[INFO] [DESTRUCTOR] " << this << " :: Destroy KernelComms" << std::endl;
 }
 
-void KernelComms::configInstances()
-{
-    std::cout << "[INFO] [KIO] " << "Configure instances of comms classes" << std::endl;
-    m_instanceCommander = Commander::getInstance();
-    m_instanceRamDisk = RamDisk::getInstance();
-    Watchdog::setCommanderInstance(m_instanceCommander);
-    Watchdog::setRamDiskInstance(m_instanceRamDisk);
-}
-
 void KernelComms::initRamDiskCommander()
 {
     std::cout << "[INFO] [KIO] " << "Open (C)Commander and (B)RamDisk devices" << std::endl;

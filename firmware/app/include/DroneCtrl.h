@@ -20,7 +20,12 @@ class DroneCtrl :
     public KernelComms
 {
     private:
+        ctrlType m_droneCtrlState;
 
+        Network::ServerTCP* m_instanceServerTCP;
+        KernelComms::Commander* m_instanceCommander;
+        KernelComms::Watchdog* m_instanceWatchdog;
+        KernelComms::RamDisk* m_instanceRamDisk;
     public:
         DroneCtrl();
         ~DroneCtrl();
@@ -28,4 +33,7 @@ class DroneCtrl :
         void droneInit();
         void droneExit();
         bool isKilled();
+
+        void sendFpgaConfig();
+        void droneCtrlMain();
 };

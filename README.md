@@ -9,8 +9,8 @@
 
 	Quartus :: 22.1std.1.917 :: SC Lite Edition
 	Cyclone IV :: EP4CE15F23C8N
-	Cortex-A8 :: User Space Controller
-	Cortex A8 :: FPGA Kernel Driver
+	Cortex-A8 :: User Space Application
+	Cortex A8 :: Kernel Space Module
 	x86 :: Master Control Application
 
 # TODO Hardware
