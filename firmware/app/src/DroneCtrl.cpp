@@ -49,7 +49,7 @@ bool DroneCtrl::isKilled()
 {
     bool retFlag = false;
 
-    retFlag = KernelComms::Watchdog::isThreadKilled() || Network::ServerTCP::isThreadKilled();
+    retFlag = KernelComms::Watchdog::isWatchdogDead() || KernelComms::Commander::isThreadKilled() || Network::ServerTCP::isThreadKilled();
 
     return retFlag;
 }

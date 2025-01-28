@@ -11,13 +11,11 @@
 #include <atomic>
 #include <vector>
 
-#include "NetworkTraffic.h"
 #include "ServerTCP.h"
 #include "Types.h"
 
 class Network :
-    public ServerTCP,
-    public NetworkTraffic
+    public ServerTCP
 {
     private:
 

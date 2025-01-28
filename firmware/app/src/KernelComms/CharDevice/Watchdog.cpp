@@ -19,6 +19,7 @@ Watchdog::Watchdog() :
     m_file_descriptor(-1),
     m_threadKill(false),
     m_stopFlag(false),
+    m_watchdogDead(false),
     m_Rx_Watchdog(new std::vector<char>(CHAR_DEVICE_SIZE)),
     m_Tx_Watchdog(new std::vector<char>(CHAR_DEVICE_SIZE))
 {
@@ -31,11 +32,6 @@ Watchdog::~Watchdog()
     std::cout << "[INFO] [DESTRUCTOR] " << this << " :: Destroy Watchdog" << std::endl;
 
     closeDEV();
-
-    if (m_threadWatchdog.joinable())
-    {
-        m_threadWatchdog.join();
-    }
 
     delete m_Rx_Watchdog;
     delete m_Tx_Watchdog;
@@ -55,7 +51,6 @@ int Watchdog::openDEV()
     if(m_file_descriptor < 0)
     {
         std::cout << "[ERNO] [WDG] Failed to open Device" << std::endl;
-        m_threadKill = true;
         return ERROR;
     } 
     else 
@@ -75,7 +70,8 @@ int Watchdog::dataRX()
 
     if (m_Rx_Watchdog->size() >= 2 && (*m_Rx_Watchdog)[0] == (*m_Rx_Watchdog)[1])
     {
-        std::cout << "[ERNO] [WDG] [0] Kill the App :: No FPGA Signal" << std::endl;
+        std::cout << std::endl;
+        std::cout << "[ERNO] [WDG] [0] Kill the App :: No FPGA Watchdog Signal" << std::endl;
         return 0;
     }
 
@@ -101,9 +97,6 @@ int Watchdog::closeDEV()
         m_file_descriptor = -1; // Mark as closed
     }
 
-    /* TODO :: Temporarily here */
-    m_threadKill = true;
-
     return OK;
 }
 
@@ -111,6 +104,19 @@ void Watchdog::initThread()
 {
     std::cout << "[INFO] [WDG] Initialize threadWatchdog" << std::endl;
     m_threadWatchdog = std::thread(&Watchdog::threadWatchdog, this);
+}
+
+void Watchdog::shutdownThread()
+{
+    if(false == m_threadKill)
+    {
+        m_threadKill = true;
+    }
+
+    if (m_threadWatchdog.joinable())
+    {
+        m_threadWatchdog.join();
+    }
 }
 
 bool Watchdog::isThreadKilled()
@@ -131,8 +137,24 @@ void Watchdog::threadWatchdog()
          */
         if(dataRX() <= 0)
         {
-            std::cout << "[ERNO] [WDG] [1] Kill the App :: On Demand" << std::endl;
-            m_threadKill = true;
+            std::cout << "[ERNO] [WDG] [1] Kill the App :: Something bad happen" << std::endl;
+
+            /**
+             *
+             * TODO
+             *
+             * We cannot directly call shutdownThread() from here
+             * because it will be called from main later causing
+             * multiple call of the thread join()
+             *
+             * And :: terminate called after throwing an instance of 'std::system_error'
+             *
+             * Therefore we can only set the flag if watchdog is dead or not
+             * And check this flag in main to call thread terminatino or not
+             * This ensure right termination sequence
+             *
+             */
+            m_watchdogDead = true;
         }
 
         /* Reduce consumption of CPU resources */
@@ -151,6 +173,11 @@ void Watchdog::threadWatchdog()
     }
 
     std::cout << "[INFO] [WDG] Terminate threadWatchdog" << std::endl;
+}
+
+bool Watchdog::isWatchdogDead()
+{
+    return m_watchdogDead;
 }
 
 void Watchdog::setRamDiskInstance(RamDisk* instance)

@@ -17,6 +17,8 @@
 
 Commander::Commander() :
 m_file_descriptor(-1),
+m_threadKill(false),
+m_commanderState(COMMANDER_IDLE),
 m_instance(this),
 m_Rx_Commander(new std::vector<char>(CHAR_DEVICE_SIZE)),
 m_Tx_Commander(new std::vector<char>(CHAR_DEVICE_SIZE))
@@ -53,6 +55,7 @@ int Commander::openDEV()
     else 
     {
         std::cout << "[INFO] [CMD] Device opened successfuly" << std::endl;
+        initThread();
     }
 
     return OK;
@@ -110,6 +113,70 @@ int Commander::closeDEV()
     }
 
     return OK;
+}
+
+void Commander::initThread()
+{
+    std::cout << "[INFO] [CMD] Initialize threadCommander" << std::endl;
+    m_threadCommander = std::thread(&Commander::threadCommander, this);
+}
+
+void Commander::shutdownThread()
+{
+    if(false == m_threadKill)
+    {
+        m_threadKill = true;
+    }
+
+    if (m_threadCommander.joinable())
+    {
+        m_threadCommander.join();
+    }
+}
+
+bool Commander::isThreadKilled()
+{
+    return m_threadKill;
+}
+
+void Commander::threadCommander()
+{
+    while (!m_threadKill)
+    {
+        switch(m_commanderState)
+        {
+            case COMMANDER_IDLE:
+                break;
+
+            case COMMANDER_READ:
+                m_commanderState = COMMANDER_IDLE;
+                break;
+
+            case COMMANDER_WRITE:
+                m_commanderState = COMMANDER_READ;
+                break;
+
+            case COMMANDER_DEAD:
+                m_commanderState = COMMANDER_READ;
+                break;
+
+            case COMMANDER_LOAD:
+                m_commanderState = COMMANDER_READ;
+                break;
+
+            case COMMANDER_CLEAR:
+                m_commanderState = COMMANDER_READ;
+                break;
+
+            default:
+                std::cout << "[INFO] [CMD] Unknown Command" << std::endl;
+        }
+
+        /* Reduce consumption of CPU resources */
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
+
+    std::cout << "[INFO] [WDG] Terminate threadCommander" << std::endl;
 }
 
 Commander* Commander::getInstance()

@@ -39,22 +39,8 @@ ServerTCP::~ServerTCP()
 {
     std::cout << "[INFO] [DESTRUCTOR] " << this << " :: Destroy ServerTCP" << std::endl;
 
-    /* Kill the thread */
-    shutdownThread();
-
-    /* Unblock the accept function */
-    if (m_serverSocket >= 0)
-    {
-        close(m_serverSocket);
-    }
-
-    if (m_threadServerTCP.joinable())
-    {
-        m_threadServerTCP.join();
-    }
-
-    m_instanceNetworkTraffic = nullptr;
-    m_instanceRamDisk = nullptr;
+    delete m_Rx_ServerTCP;
+    delete m_Tx_ServerTCP;
 }
 
 void ServerTCP::initBuffers()
@@ -64,20 +50,32 @@ void ServerTCP::initBuffers()
     std::fill(m_Tx_ServerTCP->begin(), m_Tx_ServerTCP->end(), 0);
 }
 
-int ServerTCP::shutdownThread()
-{
-    if(false == m_threadKill)
-    {
-        m_threadKill = true;
-    }
-
-    return OK;
-}
-
 void ServerTCP::initThread()
 {
     std::cout << "[INFO] [TCP] Initialize threadServerTCP" << std::endl;
     m_threadServerTCP = std::thread(&ServerTCP::threadServerTCP, this);
+}
+
+void ServerTCP::shutdownThread()
+{
+    /* Unblock the accept function */
+    if (m_serverSocket >= 0)
+    {
+        close(m_serverSocket);
+        m_serverSocket = -1; // Prevent double-closing
+    }
+
+    /* Set the threadKill flag */
+    if (!m_threadKill)
+    {
+        m_threadKill = true;
+    }
+
+    /* Join the thread if it's joinable */
+    if (m_threadServerTCP.joinable())
+    {
+        m_threadServerTCP.join();
+    }
 }
 
 bool ServerTCP::isThreadKilled()
@@ -148,13 +146,14 @@ void ServerTCP::threadServerTCP()
             }
             else if(ret > 0)
             {
+#if 1
                 m_instanceCommander->test();
                 m_timeoutCount = 0;
-#if 0
+#else
                 std::cout << "[INFO] [TCP] Sending data to NetworkTraffic" << std::endl;
-                m_instanceNetworkTraffic->setNetworkTrafficRx(m_Rx_ServerTCP, m_Rx_bytesReceived);
+                // m_instanceNetworkTraffic->setNetworkTrafficRx(m_Rx_ServerTCP, m_Rx_bytesReceived);
                 std::cout << "[INFO] [TCP] Set NetworkTraffic_Input mode" << std::endl;
-                m_instanceNetworkTraffic->setNetworkTrafficState(NetworkTraffic_Input);
+                // m_instanceNetworkTraffic->setNetworkTrafficState(NetworkTraffic_Input);
 
                 if (tcpTX() < 0)
                 {
@@ -177,13 +176,13 @@ void ServerTCP::threadServerTCP()
             else if(ret == -4)
             {
                 std::cout << "[INFO] [TCP] Transfer Data to RAM" << std::endl;
-                m_instanceRamDisk->dataTX();
+                // m_instanceRamDisk->dataTX();
                 m_timeoutCount = 0;
             }
             else if(ret == -3)
             {
                 std::cout << "[INFO] [TCP] Clear DMA Engine from RAM" << std::endl;
-                m_instanceRamDisk->clearDma();
+                // m_instanceRamDisk->clearDma();
                 m_timeoutCount = 0;
             }
             else
@@ -283,7 +282,7 @@ int ServerTCP::initServer()
 int ServerTCP::tcpTX()
 {
     ssize_t ret = -1;
-
+#if 0
     /**
      * As in Output we have here
      * lack of synchronisation due to
@@ -327,7 +326,7 @@ int ServerTCP::tcpTX()
         ret = write(m_clientSocket, m_Tx_ServerTCP->data(), m_Tx_ServerTCP->size());
         (*m_Tx_ServerTCP)[7] = 0x00; /* Now clear me !! */
     }
-
+#endif
     return ret;
 }
 
@@ -404,17 +403,8 @@ int ServerTCP::tcpClose()
     return 0;
 }
 
-void ServerTCP::setInstance_NetworkTraffic(const std::shared_ptr<NetworkTraffic> instance)
-{
-    m_instanceNetworkTraffic = instance;
-}
-
-void ServerTCP::setInstance_RamDisk(const std::shared_ptr<RamDisk> instance)
-{
-    m_instanceRamDisk = instance;
-}
-
 void ServerTCP::setCommanderInstance(Commander* instance)
 {
     m_instanceCommander = instance;
 }
+
