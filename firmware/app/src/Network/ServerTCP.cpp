@@ -106,12 +106,9 @@ void ServerTCP::threadServerTCP()
          */
         if (false == m_clientConnected)
         {
-            std::cout << "\r[INFO] [TCP] threadServerTCP waiting for the TCP Client... [" << m_timeoutCount << "]" << std::flush;
-            if(100 == m_timeoutCount)
-            {
-                std::cout << "\r[INFO] [TCP] 100s inactive server :: Shuddown connection" << m_timeoutCount << "]" << std::flush;
-            }
-
+#if 0
+            std::cout << "\r[INFO] [TCP] threadServerTCP waiting for the TCP Client... [" << m_timeoutCount << "]" << std::endl;
+#endif
             /* Wait for the TCP client connection */
             m_clientSocket = accept(m_serverSocket, (struct sockaddr *)&m_clientAddress, &clientLength);
 
@@ -124,13 +121,11 @@ void ServerTCP::threadServerTCP()
                 }
                 else
                 {
-                    std::cout << std::endl;
                     std::cerr << "[ERROR] [TCP] accept failed: " << strerror(errno) << std::endl;
                 }
             }
             else
             {
-                std::cout << std::endl;
                 std::cout << "[INFO] [TCP] threadServerTCP client connection established" << std::endl;
                 m_clientConnected = true;
                 m_timeoutCount = 0;
@@ -378,21 +373,18 @@ int ServerTCP::tcpRX()
         /* DEAD :: CODE */
         if((*m_Rx_ServerTCP)[0] == 0xDE && (*m_Rx_ServerTCP)[1] == 0xAD && (*m_Rx_ServerTCP)[2] == 0xC0 && (*m_Rx_ServerTCP)[3] == 0xDE)
         {
-            std::cout << std::endl;
             std::cout << "[INFO] [TCP] 0xDEAD Received" << std::endl;
             return -5;
         }
         /* LOAD :: CODE */
         else if((*m_Rx_ServerTCP)[0] == 0x10 && (*m_Rx_ServerTCP)[1] == 0xAD && (*m_Rx_ServerTCP)[2] == 0xC0 && (*m_Rx_ServerTCP)[3] == 0xDE)
         {
-            std::cout << std::endl;
             std::cout << "[INFO] [TCP] Send configuration to RAM" << std::endl;
             return -4;
         }
         /* CLEAR :: CODE */
         else if((*m_Rx_ServerTCP)[0] == 0xC1 && (*m_Rx_ServerTCP)[1] == 0xEA && (*m_Rx_ServerTCP)[2] == 0xC0 && (*m_Rx_ServerTCP)[3] == 0xDE)
         {
-            std::cout << std::endl;
             std::cout << "[INFO] [TCP] Clear DMA from RAM" << std::endl;
             return -3;
         }
@@ -400,7 +392,6 @@ int ServerTCP::tcpRX()
         {
             if (m_Rx_bytesReceived > 0)
             {
-                std::cout << std::endl;
                 std::cout << "[INFO] [TCP] Received " << m_Rx_bytesReceived << " Bytes of data: ";
                 for (int i = 0; i < m_Rx_bytesReceived; ++i)
                 {
@@ -410,13 +401,18 @@ int ServerTCP::tcpRX()
             }
             else if (m_Rx_bytesReceived == 0)
             {
-                std::cout << std::endl;
                 std::cout << "[INFO] [TCP] Connection closed by client" << std::endl;
+            }
+            else if(10 == m_timeoutCount)
+            {
+                std::cout << "\r[INFO] [TCP] 10s inactive server :: Shuddown connection" << std::endl;
+                m_clientConnected = false;
             }
             else
             {
-                std::cout << "\r[INFO] [TCP] Nothing received, listening... [" << m_timeoutCount << "]" << std::flush;
-
+#if 0
+                std::cout << "\r[INFO] [TCP] Nothing received, listening... [" << m_timeoutCount << "]" << std::endl;
+#endif
                 m_timeoutCount++;
             }
         }

@@ -83,7 +83,6 @@ std::string DroneCtrl::getCtrlStateString(ctrlType state)
 
 void DroneCtrl::sendFpgaConfig()
 {
-    std::cout << std::endl;
     std::cout << "[INFO] [ D ] Watchdog ready :: Load FPGA Config to DMA Engine" << std::endl;
     m_instanceRamDisk->AssembleData();
     m_instanceRamDisk->dataTX();

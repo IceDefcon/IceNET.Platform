@@ -70,7 +70,6 @@ int Watchdog::dataRX()
 
     if (m_Rx_Watchdog->size() >= 2 && (*m_Rx_Watchdog)[0] == (*m_Rx_Watchdog)[1])
     {
-        std::cout << std::endl;
         std::cout << "[ERNO] [WDG] [0] Kill the App :: No FPGA Watchdog Signal" << std::endl;
         return 0;
     }
