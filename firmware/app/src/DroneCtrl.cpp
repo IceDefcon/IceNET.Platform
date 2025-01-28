@@ -122,13 +122,17 @@ void DroneCtrl::droneCtrlMain()
         case CTRL_IDLE:
             if(m_ioState != m_instanceServerTCP->getIO_State())
             {
+#if 0
                 std::cout << "[INFO] [ D ] State Commander " << m_ioState << "->" << m_instanceServerTCP->getIO_State() << " " << getIoStateString(m_instanceServerTCP->getIO_State()) << std::endl;
+#endif
                 m_ioState = m_instanceServerTCP->getIO_State();
                 m_ctrlState = CTRL_COMMANDER;
             }
             else if(m_ioState != m_instanceCommander->getIO_State())
             {
+#if 0
                 std::cout << "[INFO] [ D ] State ServerTCP " << m_ioState << "->" << m_instanceCommander->getIO_State() << " " << getIoStateString(m_instanceCommander->getIO_State()) << std::endl;
+#endif
                 m_ioState = m_instanceCommander->getIO_State();
                 m_ctrlState = CTRL_SERVER;
             }

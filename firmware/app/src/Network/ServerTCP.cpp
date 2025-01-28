@@ -26,7 +26,7 @@ ServerTCP::ServerTCP() :
     m_clientConnected(false),
     m_Rx_ServerTCP(new std::vector<char>(TCP_SERVER_SIZE)),
     m_Tx_ServerTCP(new std::vector<char>(TCP_SERVER_SIZE)),
-    m_Rx_bytesReceived(0),
+    m_Rx_bytesReceived(-1),
     m_Tx_bytesReceived(0)
 {
     std::cout << "[INFO] [CONSTRUCTOR] " << this << " :: Instantiate ServerTCP" << std::endl;
@@ -198,7 +198,7 @@ void ServerTCP::threadServerTCP()
 
                     case IO_READ:
                         // std::cout << "[INFO] [TCP] Read Command" << std::endl;
-                        m_ioState = IO_IDLE;
+                        // m_ioState = IO_IDLE;
                         break;
 
                     case IO_WRITE:
@@ -368,7 +368,25 @@ int ServerTCP::tcpRX()
     }
     else
     {
+        /**
+         *
+         * TODO
+         *
+         * Dummy TCP Feedback
+         * To keep the things
+         * running in App
+         *
+         */
         m_Rx_bytesReceived = recv(m_clientSocket, m_Rx_ServerTCP->data(), TCP_SERVER_SIZE, 0);
+        (*m_Tx_ServerTCP)[0] = 0x11;
+        (*m_Tx_ServerTCP)[1] = 0x22;
+        (*m_Tx_ServerTCP)[2] = 0x33;
+        (*m_Tx_ServerTCP)[3] = 0x44;
+        (*m_Tx_ServerTCP)[4] = 0x55;
+        (*m_Tx_ServerTCP)[5] = 0x66;
+        (*m_Tx_ServerTCP)[6] = 0x77;
+        (*m_Tx_ServerTCP)[7] = 0xEE;
+        write(m_clientSocket, m_Tx_ServerTCP->data(), m_Tx_ServerTCP->size());
 
         /* DEAD :: CODE */
         if((*m_Rx_ServerTCP)[0] == 0xDE && (*m_Rx_ServerTCP)[1] == 0xAD && (*m_Rx_ServerTCP)[2] == 0xC0 && (*m_Rx_ServerTCP)[3] == 0xDE)
