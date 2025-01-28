@@ -7,7 +7,6 @@
 #pragma once
 
 const size_t CHAR_DEVICE_SIZE = 8;
-const size_t NETWORK_TRAFFIC_SIZE = 8;
 const size_t TCP_SERVER_SIZE = 8;
 
 enum Status
@@ -19,15 +18,11 @@ enum Status
 
 typedef enum 
 {
-    NetworkTraffic_IDLE = 0,
-    NetworkTraffic_Input,
-    NetworkTraffic_Output,
-    NetworkTraffic_KILL
-} NetworkTraffic_stateType;
-
-typedef enum 
-{
-    Input_IDLE = 0,
-    Input_TX,
-    Input_KILL
-} Input_stateType;
+    COMMANDER_IDLE = 0,
+    COMMANDER_READ,
+    COMMANDER_WRITE,
+    COMMANDER_DEAD,
+    COMMANDER_LOAD,
+    COMMANDER_CLEAR,
+    COMMANDER_AMOUNT
+} commanderStateType;

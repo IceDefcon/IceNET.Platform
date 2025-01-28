@@ -17,6 +17,10 @@ class Commander
 {
     private:
         int m_file_descriptor;
+        std::thread m_threadCommander;
+        std::atomic<bool> m_threadKill;
+
+        commanderStateType m_commanderState;
 
         Commander* m_instance;
 
@@ -34,6 +38,12 @@ class Commander
         int dataRX();
         int closeDEV();
 
+        void initThread();
+        void shutdownThread();
+        bool isThreadKilled();
+        void threadCommander();
+
         Commander* getInstance();
+        /* TODO :: Do something Here */
         void test();
 };

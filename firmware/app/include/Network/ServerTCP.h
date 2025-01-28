@@ -47,10 +47,10 @@ class ServerTCP
 
         void initBuffers();
 
-        int shutdownThread();
+        void initThread();
+        void shutdownThread();
         bool isThreadKilled();
         void threadServerTCP();
-        void initThread();
 
         int initServer();
         int tcpTX();

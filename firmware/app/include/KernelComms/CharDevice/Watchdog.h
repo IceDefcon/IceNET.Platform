@@ -26,6 +26,7 @@ class Watchdog
         std::atomic<bool> m_threadKill;
 
         bool m_stopFlag;
+        bool m_watchdogDead;
 
         std::vector<char>* m_Rx_Watchdog;
         std::vector<char>* m_Tx_Watchdog;
@@ -45,9 +46,11 @@ class Watchdog
         int closeDEV();
 
         void initThread();
+        void shutdownThread();
         bool isThreadKilled();
-
         void threadWatchdog();
+
+        bool isWatchdogDead();
 
         void setRamDiskInstance(RamDisk* instance);
         void setCommanderInstance(Commander* instance);

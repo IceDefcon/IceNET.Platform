@@ -39,22 +39,8 @@ ServerTCP::~ServerTCP()
 {
     std::cout << "[INFO] [DESTRUCTOR] " << this << " :: Destroy ServerTCP" << std::endl;
 
-    /* Kill the thread */
-    shutdownThread();
-
-    /* Unblock the accept function */
-    if (m_serverSocket >= 0)
-    {
-        close(m_serverSocket);
-    }
-
-    if (m_threadServerTCP.joinable())
-    {
-        m_threadServerTCP.join();
-    }
-
-    // m_instanceNetworkTraffic = nullptr;
-    // m_instanceRamDisk = nullptr;
+    delete m_Rx_ServerTCP;
+    delete m_Tx_ServerTCP;
 }
 
 void ServerTCP::initBuffers()
@@ -64,20 +50,32 @@ void ServerTCP::initBuffers()
     std::fill(m_Tx_ServerTCP->begin(), m_Tx_ServerTCP->end(), 0);
 }
 
-int ServerTCP::shutdownThread()
-{
-    if(false == m_threadKill)
-    {
-        m_threadKill = true;
-    }
-
-    return OK;
-}
-
 void ServerTCP::initThread()
 {
     std::cout << "[INFO] [TCP] Initialize threadServerTCP" << std::endl;
     m_threadServerTCP = std::thread(&ServerTCP::threadServerTCP, this);
+}
+
+void ServerTCP::shutdownThread()
+{
+    /* Unblock the accept function */
+    if (m_serverSocket >= 0)
+    {
+        close(m_serverSocket);
+        m_serverSocket = -1; // Prevent double-closing
+    }
+
+    /* Set the threadKill flag */
+    if (!m_threadKill)
+    {
+        m_threadKill = true;
+    }
+
+    /* Join the thread if it's joinable */
+    if (m_threadServerTCP.joinable())
+    {
+        m_threadServerTCP.join();
+    }
 }
 
 bool ServerTCP::isThreadKilled()
