@@ -18,6 +18,7 @@
 ServerTCP::ServerTCP() :
     m_threadKill(false),
     m_ioState(IO_IDLE),
+    m_ioStatePrev(IO_IDLE),
     m_timeoutCount(0),
     m_portNumber(2555),
     m_serverSocket(-1),
@@ -88,7 +89,7 @@ void ServerTCP::threadServerTCP()
 {
     size_t i = 0;
 
-    initServer();
+    configureServer();
 
     socklen_t clientLength = sizeof(m_clientAddress);
 
@@ -147,7 +148,7 @@ void ServerTCP::threadServerTCP()
             else if(ret > 0)
             {
 #if 1
-                m_ioState = IO_TEST;
+                m_ioState = IO_WRITE;
                 m_timeoutCount = 0;
 #else
                 std::cout << "[INFO] [TCP] Sending data to NetworkTraffic" << std::endl;
@@ -170,7 +171,6 @@ void ServerTCP::threadServerTCP()
             {
                 tcpClose();
                 std::cout << "[INFO] [TCP] Ready to Kill threadServerTCP" << std::endl;
-                // m_instanceNetworkTraffic->setNetworkTrafficState(NetworkTraffic_KILL);
                 m_threadKill = true;
             }
             else if(ret == -4)
@@ -187,47 +187,49 @@ void ServerTCP::threadServerTCP()
             }
             else
             {
+                m_ioState = IO_IDLE;
                 /* TODO :: Client connected but nothing receiver */
+            }
+
+            if(m_ioState != m_ioStatePrev)
+            {
+                std::cout << "[INFO] [TCP] State ServerTCP " << m_ioStatePrev << "->" << m_ioState << " " << getIoStateString(m_ioState) << std::endl;
+                m_ioStatePrev = m_ioState;
+
+                switch(m_ioState)
+                {
+                    case IO_IDLE:
+                        break;
+
+                    case IO_READ:
+                        // std::cout << "[INFO] [TCP] Read Command" << std::endl;
+                        m_ioState = IO_IDLE;
+                        break;
+
+                    case IO_WRITE:
+                        // std::cout << "[INFO] [TCP] Write Command" << std::endl;
+                        // m_ioState = IO_READ;
+                        break;
+
+                    case IO_LOAD:
+                        // std::cout << "[INFO] [TCP] Load Command" << std::endl;
+                        // m_ioState = IO_READ;
+                        break;
+
+                    case IO_CLEAR:
+                        // std::cout << "[INFO] [TCP] Clear Command" << std::endl;
+                        // m_ioState = IO_READ;
+                        break;
+
+                    default:
+                        std::cout << "[INFO] [TCP] Unknown Command" << std::endl;
+                }
             }
         }
 
         for (i = 0; i < TCP_SERVER_SIZE; i++)
         {
             (*m_Rx_ServerTCP)[i] = 0x00;
-        }
-
-        switch(m_ioState)
-        {
-            case IO_IDLE:
-                break;
-
-            case IO_READ:
-                std::cout << "[INFO] [TCP] Read Command" << std::endl;
-                m_ioState = IO_IDLE;
-                break;
-
-            case IO_WRITE:
-                std::cout << "[INFO] [TCP] Write Command" << std::endl;
-                m_ioState = IO_READ;
-                break;
-
-            case IO_DEAD:
-                std::cout << "[INFO] [TCP] Dead Command" << std::endl;
-                m_ioState = IO_READ;
-                break;
-
-            case IO_LOAD:
-                std::cout << "[INFO] [TCP] Load Command" << std::endl;
-                m_ioState = IO_READ;
-                break;
-
-            case IO_CLEAR:
-                std::cout << "[INFO] [TCP] Clear Command" << std::endl;
-                m_ioState = IO_READ;
-                break;
-
-            default:
-                std::cout << "[INFO] [TCP] Unknown Command" << std::endl;
         }
 
         /* Reduce consumption of CPU resources */
@@ -237,7 +239,7 @@ void ServerTCP::threadServerTCP()
     std::cout << "[INFO] [TCP] Terminate threadServerTCP" << std::endl;
 }
 
-int ServerTCP::initServer()
+int ServerTCP::configureServer()
 {
     m_serverSocket = socket(AF_INET, SOCK_STREAM, 0);
 
@@ -449,7 +451,7 @@ void ServerTCP::setIO_State(ioStateType state)
     m_ioState = state;
 }
 
-bool ServerTCP::getIO_State()
+ioStateType ServerTCP::getIO_State()
 {
     return m_ioState;
 }

@@ -19,6 +19,7 @@ Commander::Commander() :
 m_file_descriptor(-1),
 m_threadKill(false),
 m_ioState(IO_IDLE),
+m_ioStatePrev(IO_IDLE),
 m_instance(this),
 m_Rx_Commander(new std::vector<char>(CHAR_DEVICE_SIZE)),
 m_Tx_Commander(new std::vector<char>(CHAR_DEVICE_SIZE))
@@ -143,38 +144,39 @@ void Commander::threadCommander()
 {
     while (!m_threadKill)
     {
-        switch(m_ioState)
+        if(m_ioState != m_ioStatePrev)
         {
-            case IO_IDLE:
-                break;
+            std::cout << "[INFO] [CMD] State Commander " << m_ioStatePrev << "->" << m_ioState << " " << getIoStateString(m_ioState) << std::endl;
+            m_ioStatePrev = m_ioState;
 
-            case IO_READ:
-                std::cout << "[INFO] [CMD] Read Command" << std::endl;
-                m_ioState = IO_IDLE;
-                break;
+            switch(m_ioState)
+            {
+                case IO_IDLE:
+                    break;
 
-            case IO_WRITE:
-                std::cout << "[INFO] [CMD] Write Command" << std::endl;
-                m_ioState = IO_READ;
-                break;
+                case IO_READ:
+                    // std::cout << "[INFO] [CMD] Read Command" << std::endl;
+                    // m_ioState = IO_IDLE;
+                    break;
 
-            case IO_DEAD:
-                std::cout << "[INFO] [CMD] Dead Command" << std::endl;
-                m_ioState = IO_READ;
-                break;
+                case IO_WRITE:
+                    // std::cout << "[INFO] [CMD] Write Command" << std::endl;
+                    m_ioState = IO_READ;
+                    break;
 
-            case IO_LOAD:
-                std::cout << "[INFO] [CMD] Load Command" << std::endl;
-                m_ioState = IO_READ;
-                break;
+                case IO_LOAD:
+                    // std::cout << "[INFO] [CMD] Load Command" << std::endl;
+                    // m_ioState = IO_READ;
+                    break;
 
-            case IO_CLEAR:
-                std::cout << "[INFO] [CMD] Clear Command" << std::endl;
-                m_ioState = IO_READ;
-                break;
+                case IO_CLEAR:
+                    // std::cout << "[INFO] [CMD] Clear Command" << std::endl;
+                    // m_ioState = IO_READ;
+                    break;
 
-            default:
-                std::cout << "[INFO] [CMD] Unknown Command" << std::endl;
+                default:
+                    std::cout << "[INFO] [CMD] Unknown Command" << std::endl;
+            }
         }
 
         /* Reduce consumption of CPU resources */
@@ -197,13 +199,7 @@ void Commander::setIO_State(ioStateType state)
     m_ioState = state;
 }
 
-bool Commander::getIO_State()
+ioStateType Commander::getIO_State()
 {
     return m_ioState;
-}
-
-/* DEBUG */
-void Commander::test()
-{
-    std::cout << "[INFO] [CMD] Test Command Received :: Sending to Kernel" << std::endl;
 }

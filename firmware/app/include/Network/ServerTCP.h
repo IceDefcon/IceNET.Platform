@@ -25,6 +25,7 @@ class ServerTCP
         std::atomic<bool> m_threadKill;
 
         ioStateType m_ioState;
+        ioStateType m_ioStatePrev;
 
         int m_timeoutCount;
         int m_portNumber;
@@ -52,7 +53,7 @@ class ServerTCP
         bool isThreadKilled();
         void threadServerTCP();
 
-        int initServer();
+        int configureServer();
         int tcpTX();
         int tcpRX();
         int tcpClose();
@@ -66,5 +67,5 @@ class ServerTCP
          *
          */
         void setIO_State(ioStateType state);
-        bool getIO_State();
+        ioStateType getIO_State();
 };

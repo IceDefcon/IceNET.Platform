@@ -21,6 +21,7 @@ class Commander
         std::atomic<bool> m_threadKill;
 
         ioStateType m_ioState;
+        ioStateType m_ioStatePrev;
 
         Commander* m_instance;
 
@@ -52,8 +53,5 @@ class Commander
          *
          */
         void setIO_State(ioStateType state);
-        bool getIO_State();
-
-        /* DEBUG */
-        void test();
+        ioStateType getIO_State();
 };

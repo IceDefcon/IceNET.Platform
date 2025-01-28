@@ -20,12 +20,15 @@ class DroneCtrl :
     public KernelComms
 {
     private:
-        ctrlType m_droneCtrlState;
+        ioStateType m_ioState;
+        ctrlType m_ctrlState;
+        ctrlType m_ctrlStatePrev;
 
         Network::ServerTCP* m_instanceServerTCP;
         KernelComms::Commander* m_instanceCommander;
         KernelComms::Watchdog* m_instanceWatchdog;
         KernelComms::RamDisk* m_instanceRamDisk;
+
     public:
         DroneCtrl();
         ~DroneCtrl();
@@ -33,6 +36,8 @@ class DroneCtrl :
         void droneInit();
         void droneExit();
         bool isKilled();
+
+        std::string getCtrlStateString(ctrlType state);
 
         void sendFpgaConfig();
         void droneCtrlMain();
