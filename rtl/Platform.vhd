@@ -25,7 +25,7 @@ use work.Types.all;
 -- PIN_A8  :: P9_21 :: SPI0_D0              | PIN_B8  :: P9_22 :: SPI0_SCLK         |
 -- PIN_A9  :: P9_23 :: INT_FROM_FPGA        | PIN_B9  :: P9_24 :: UART_BBB_TX       |
 -- PIN_A10 :: P9_25 :: UNUSED_15            | PIN_B10 :: P9_26 :: UART_BBB_RX       |
--- PIN_A13 :: P9_27 :: UNUSED_17            | PIN_B13 :: P9_28 :: SPI1_CS0          |
+-- PIN_A13 :: P9_27 :: TIMER_INT_FROM_FPGA  | PIN_B13 :: P9_28 :: SPI1_CS0          |
 -- PIN_A14 :: P9_29 :: SPI1_D0              | PIN_B14 :: P9_30 :: SPI1_D1           |
 -- PIN_A15 :: P9_31 :: SPI1_SCLK            | PIN_B15 :: P9_32 :: UNUSED_22         |
 -- PIN_A16 :: P9_33 :: UNUSED_23            | PIN_B16 :: P9_34 :: UNUSED_24         |
@@ -121,6 +121,7 @@ port
     SECONDARY_MOSI : in std_logic;  -- PIN_B14 :: P9_30 :: SPI1_D1
     SECONDARY_SCLK : in std_logic;  -- PIN_A15 :: P9_31 :: SPI1_SCLK
     -- Watchdog signal
+    TIMER_INT_FROM_FPGA : out std_logic; -- PIN_A13 :: P9_41
     WDG_INT_FROM_FPGA : out std_logic; -- PIN_A20 :: P9_41
     WDG_INT_FROM_CPU : in std_logic; -- PIN_B4 :: P9_12
 
@@ -575,16 +576,28 @@ secondarySpiConverter_module: SpiConverter port map
 );
 
 -- Watchdog interrupt signal
-InterruptGenerator_module: InterruptGenerator
+WatchdogInterrupt: InterruptGenerator
 generic map
 (
-    PERIOD_MS => 100,
-    PULSE_LENGTH => 50 -- 50 * 20ns = 100ns Interrupt Pulse
+    PERIOD_MS => 100, -- Every 100ms
+    PULSE_LENGTH => 50 -- 50 * 20ns = 1us Interrupt Pulse
 )
 port map
 (
 	CLOCK_50MHz => CLOCK_50MHz,
 	INTERRUPT_SIGNAL => WDG_INT_FROM_FPGA
+);
+
+TimerInterrupt: InterruptGenerator
+generic map
+(
+    PERIOD_MS => 1, -- Every 1ms
+    PULSE_LENGTH => 50 -- 50 * 20ns = 1us Interrupt Pulse
+)
+port map
+(
+    CLOCK_50MHz => CLOCK_50MHz,
+    INTERRUPT_SIGNAL => TIMER_INT_FROM_FPGA
 );
 
 --
