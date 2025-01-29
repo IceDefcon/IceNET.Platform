@@ -10,10 +10,10 @@
 
 typedef enum
 {
-    SCH_IDLE = 0,
+    SCH_INIT = 0,
     SCH_CONFIG,
-    SCH_INIT,
-    SCH_MAIN,
+    SCH_IDLE,
+    SCH_MAIN_20MS,
     SCH_AMOUNT,
 } schedulerType;
 
@@ -22,10 +22,12 @@ typedef struct
     schedulerType currentState;
     struct task_struct *threadHandle;
     struct mutex stateMutex;
+    bool configDone;
 } schedulerProcess;
 
 /* SET */ void setScheduler(schedulerType newState);
 /* GET */ schedulerType getScheduler(void);
+/* READY */ bool isShedulerReady(void);
 
 void schedulerInit(void);
 void schedulerDestroy(void);

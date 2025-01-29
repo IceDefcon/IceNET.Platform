@@ -28,6 +28,7 @@ static schedulerProcess Process =
     .currentState = SCH_IDLE,
     .threadHandle = NULL,
     .stateMutex = __MUTEX_INITIALIZER(Process.stateMutex),
+    .configDone = false,
 };
 
 /* SET */ void setScheduler(schedulerType newState)
@@ -46,6 +47,18 @@ static schedulerProcess Process =
     return state;
 }
 
+/* READY */ bool isShedulerReady(void)
+{
+    bool ret = false;
+
+    if(true == Process.configDone && SCH_IDLE == getScheduler())
+    {
+        ret = true;
+    }
+
+    return ret;
+}
+
 /* Kernel state machine */
 static int schedulerThread(void *data)
 {
@@ -58,21 +71,38 @@ static int schedulerThread(void *data)
         switch(state)
         {
             case SCH_IDLE:
-                /* Nothing here :: Just wait */
-                break;
-
-            case SCH_CONFIG:
-                printk(KERN_INFO "[INIT][SCH] :: SCH_CONFIG\n");
-                setScheduler(SCH_INIT);
+                // printk(KERN_INFO "[INIT][SCH] :: SCH_IDLE\n");
+                /* Nothing here :: Just wait for state change */
                 break;
 
             case SCH_INIT:
                 printk(KERN_INFO "[INIT][SCH] :: SCH_INIT\n");
-                setScheduler(SCH_MAIN);
+                //
+                // TODO
+                //
+                setScheduler(SCH_CONFIG);
                 break;
 
-            case SCH_MAIN:
+            case SCH_CONFIG:
+                printk(KERN_INFO "[INIT][SCH] :: SCH_CONFIG\n");
+                //
+                // TODO
+                //
+                Process.configDone = true;
+                setScheduler(SCH_IDLE);
+                break;
+
+            case SCH_MAIN_20MS:
                 printk(KERN_INFO "[INIT][SCH] :: SCH_MAIN\n");
+                /**
+                 *
+                 * TODO
+                 *
+                 * Main 10ms loop and
+                 * go back to SCH_IDLE state
+                 * wait for another 10ms interrupt
+                 *
+                 */
                 setScheduler(SCH_IDLE);
                 break;
 
@@ -110,7 +140,7 @@ void schedulerInit(void)
         wake_up_process(Process.threadHandle);
     }
 
-    setScheduler(SCH_CONFIG);
+    setScheduler(SCH_INIT);
 }
 
 void schedulerDestroy(void)

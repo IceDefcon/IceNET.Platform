@@ -13,6 +13,7 @@
 #include "isrCtrl.h"
 #include "spiWork.h"
 #include "watchdog.h"
+#include "scheduler.h"
 
 //////////////////////////
 //                      //
@@ -27,9 +28,12 @@
 /* ISR */
 static irqreturn_t timerISR(int irq, void *data)
 {
-    gpio_set_value(GPIO_WATCHDOG_INTERRUPT_FROM_CPU, 1);
-    gpio_set_value(GPIO_WATCHDOG_INTERRUPT_FROM_CPU, 0);
-
+#if 0 /* TODO :: Temporarily turned off */
+    if(isShedulerReady())
+    {
+        setScheduler(SCH_MAIN);
+    }
+#endif
     return IRQ_HANDLED;
 }
 
@@ -47,6 +51,9 @@ static irqreturn_t watchdogISR(int irq, void *data)
         tmpProcess->indicatorCurrent++;
     }
     watchdog_unlockWatchdogMutex();
+
+    gpio_set_value(GPIO_WATCHDOG_INTERRUPT_FROM_CPU, 1);
+    gpio_set_value(GPIO_WATCHDOG_INTERRUPT_FROM_CPU, 0);
 
     return IRQ_HANDLED;
 }
