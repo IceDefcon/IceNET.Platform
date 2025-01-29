@@ -54,8 +54,6 @@ static stateMachineProcess Process =
     return state;
 }
 
-extern bool stopDma;
-
 /* Kernel state machine */
 static int stateMachineThread(void *data)
 {

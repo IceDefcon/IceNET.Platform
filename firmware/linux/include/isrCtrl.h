@@ -19,6 +19,7 @@
 //                      //
 //////////////////////////
 
+#define GPIO_TIMER_INTERRUPT_FROM_FPGA 115  // IN  :: PIN_A13 :: P9_27 :: TIMER_INT_FROM_FPGA
 #define GPIO_INTERRUPT_FROM_CPU 48  // OUT :: P9_15 :: PIN_A5 :: INT_FROM_CPU
 #define GPIO_INTERRUPT_FROM_FPGA 49 // IN  :: P9_23 :: PIN_A9 :: INT_FROM_FPGA
 #define GPIO_WATCHDOG_INTERRUPT_FROM_FPGA 20  // IN  :: PIN_A20 :: P9_41 :: WDG_INT_FROM_FPGA

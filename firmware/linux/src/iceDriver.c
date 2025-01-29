@@ -11,6 +11,7 @@
 // #include "networkStack.h"
 #include "stateMachine.h"
 #include "charDevice.h"
+#include "scheduler.h"
 #include "watchdog.h"
 #include "spiWork.h"
 #include "spiCtrl.h"
@@ -57,6 +58,8 @@ static int __init fpga_driver_init(void)
     consoleInit();
     /* Initialise kthread Watchdog */
     watchdogInit();
+    /* Initialize scheduler */
+    schedulerInit();
 
     printk(KERN_INFO "----------------------------------\n");
     printk(KERN_INFO "[READY] Driver loaded successfuly \n");
@@ -75,6 +78,7 @@ static int __init fpga_driver_init(void)
 static void __exit fpga_driver_exit(void)
 {
     /* Destroy everything */
+    schedulerDestroy();
     watchdogDestroy();
     consoleDestroy();
     isrGpioDestroy();
