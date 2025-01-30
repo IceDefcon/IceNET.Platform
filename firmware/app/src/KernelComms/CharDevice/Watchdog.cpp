@@ -20,8 +20,8 @@ Watchdog::Watchdog() :
     m_threadKill(false),
     m_stopFlag(false),
     m_watchdogDead(false),
-    m_Rx_Watchdog(new std::vector<char>(CHAR_DEVICE_SIZE)),
-    m_Tx_Watchdog(new std::vector<char>(CHAR_DEVICE_SIZE))
+    m_Rx_Watchdog(new std::vector<char>(IO_TRAMSFER_SIZE)),
+    m_Tx_Watchdog(new std::vector<char>(IO_TRAMSFER_SIZE))
 {
     std::cout << "[INFO] [CONSTRUCTOR] " << this << " :: Instantiate Watchdog" << std::endl;
 
@@ -66,7 +66,7 @@ int Watchdog::dataRX()
 {
     int ret;
 
-    ret = read(m_file_descriptor, m_Rx_Watchdog->data(), CHAR_DEVICE_SIZE);
+    ret = read(m_file_descriptor, m_Rx_Watchdog->data(), IO_TRAMSFER_SIZE);
 
     if (m_Rx_Watchdog->size() >= 2 && (*m_Rx_Watchdog)[0] == (*m_Rx_Watchdog)[1])
     {

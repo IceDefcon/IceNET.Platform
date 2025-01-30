@@ -68,4 +68,7 @@ class ServerTCP
          */
         void setIO_State(ioStateType state);
         ioStateType getIO_State();
+
+        /* COPY */ int getRx_ServerTCP(std::vector<char> &dataRx);
+        /* COPY */ void setTx_ServerTCP(const std::vector<char> &dataTx, int size);
 };

@@ -8,9 +8,11 @@
 
 #include <string>
 #include <array>
+#include <iostream>
+#include <vector>
+#include <iomanip>  // For std::hex and std::setw
 
-const size_t CHAR_DEVICE_SIZE = 8;
-const size_t TCP_SERVER_SIZE = 8;
+const size_t IO_TRAMSFER_SIZE = 8;
 
 enum Status
 {
@@ -58,4 +60,14 @@ inline std::string getIoStateString(ioStateType state)
     {
         return "UNKNOWN_STATE";
     }
+}
+
+inline void printHexBuffer(std::vector<char>* buffer)
+{
+    std::cout << "[INFO] [ T ] Data in the buffer: ";
+    for (size_t i = 0; i < buffer->size(); ++i)
+    {
+        std::cout << std::hex << std::setw(2) << std::setfill('0') << (int)(*buffer)[i] << " ";
+    }
+    std::cout << std::endl;
 }

@@ -16,9 +16,13 @@
 #include "Types.h"
 
 DroneCtrl::DroneCtrl() :
-m_ioState(IO_IDLE),
-m_ctrlState(CTRL_INIT),
-m_ctrlStatePrev(CTRL_INIT)
+    m_ioState(IO_IDLE),
+    m_ctrlState(CTRL_INIT),
+    m_ctrlStatePrev(CTRL_INIT),
+    m_Rx_DroneCtrl(new std::vector<char>(IO_TRAMSFER_SIZE)),
+    m_Tx_DroneCtrl(new std::vector<char>(IO_TRAMSFER_SIZE)),
+    m_Rx_bytesReceived(0),
+    m_Tx_bytesReceived(0)
 {
     std::cout << "[INFO] [CONSTRUCTOR] " << this << " :: Instantiate DroneCtrl" << std::endl;
 }
@@ -30,13 +34,17 @@ DroneCtrl::~DroneCtrl()
 
 void DroneCtrl::droneInit()
 {
-    std::cout << "[INFO] [ D ] Drone Initialization" << std::endl;
+    std::cout << "[INIT] [ D ] Drone Initialization" << std::endl;
 
     /* Get control instances */
     m_instanceServerTCP = this;
     m_instanceCommander = this;
     m_instanceWatchdog = this;
     m_instanceRamDisk = this;
+
+    std::cout << "[INIT] [ D ] Initialise DroneCtrl Buffers" << std::endl;
+    std::fill(m_Rx_DroneCtrl->begin(), m_Rx_DroneCtrl->end(), 0);
+    std::fill(m_Tx_DroneCtrl->begin(), m_Tx_DroneCtrl->end(), 0);
 
     /* Ram Disk Commander */
     KernelComms::initRamDiskCommander();
@@ -92,12 +100,13 @@ void DroneCtrl::sendFpgaConfig()
 
 void DroneCtrl::droneCtrlMain()
 {
+#if 1 /* Just another debug */
     if(m_ctrlStatePrev != m_ctrlState)
     {
         std::cout << "[INFO] [ D ] State DroneCtrl " << m_ctrlStatePrev << "->" << m_ctrlState << " " << getCtrlStateString(m_ctrlState) << std::endl;
         m_ctrlStatePrev = m_ctrlState;
     }
-
+#endif
     switch(m_ctrlState)
     {
         case CTRL_INIT:
@@ -138,12 +147,16 @@ void DroneCtrl::droneCtrlMain()
             }
             break;
 
-        case CTRL_COMMANDER:
+        case CTRL_COMMANDER: /* Data to Kernel */
+            m_Rx_bytesReceived = m_instanceServerTCP->getRx_ServerTCP(*m_Rx_DroneCtrl);
+            m_instanceCommander->setTx_Commander(*m_Rx_DroneCtrl, m_Rx_bytesReceived);
             m_instanceCommander->setIO_State(m_ioState);
             m_ctrlState = CTRL_IDLE;
             break;
 
-        case CTRL_SERVER:
+        case CTRL_SERVER: /* Data From Kernel */
+            m_Tx_bytesReceived = m_instanceCommander->getRx_Commander(*m_Tx_DroneCtrl);
+            m_instanceServerTCP->setTx_ServerTCP(*m_Tx_DroneCtrl, m_Tx_bytesReceived);
             m_instanceServerTCP->setIO_State(m_ioState);
             m_ctrlState = CTRL_IDLE;
             break;

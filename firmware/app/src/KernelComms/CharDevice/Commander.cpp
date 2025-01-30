@@ -16,13 +16,15 @@
 #include "Types.h"
 
 Commander::Commander() :
-m_file_descriptor(-1),
-m_threadKill(false),
-m_ioState(IO_IDLE),
-m_ioStatePrev(IO_IDLE),
-m_instance(this),
-m_Rx_Commander(new std::vector<char>(CHAR_DEVICE_SIZE)),
-m_Tx_Commander(new std::vector<char>(CHAR_DEVICE_SIZE))
+    m_file_descriptor(-1),
+    m_threadKill(false),
+    m_ioState(IO_IDLE),
+    m_ioStatePrev(IO_IDLE),
+    m_instance(this),
+    m_Rx_Commander(new std::vector<char>(IO_TRAMSFER_SIZE)),
+    m_Tx_Commander(new std::vector<char>(IO_TRAMSFER_SIZE)),
+    m_Rx_bytesReceived(0),
+    m_Tx_bytesReceived(0)
 {
     std::cout << "[INFO] [CONSTRUCTOR] " << m_instance << " :: Instantiate Commander" << std::endl;
 }
@@ -97,7 +99,7 @@ int Commander::dataTX()
         return ERROR;
     }
 
-    for (size_t i = 0; i < CHAR_DEVICE_SIZE; i++)
+    for (size_t i = 0; i < IO_TRAMSFER_SIZE; i++)
     {
         (*m_Tx_Commander)[i] = 0x00;
     }
@@ -160,6 +162,7 @@ void Commander::threadCommander()
                     break;
 
                 case IO_WRITE:
+                    printHexBuffer(m_Tx_Commander);
                     // std::cout << "[INFO] [CMD] Write Command" << std::endl;
                     m_ioState = IO_READ;
                     break;
@@ -202,4 +205,16 @@ void Commander::setIO_State(ioStateType state)
 ioStateType Commander::getIO_State()
 {
     return m_ioState;
+}
+
+/* COPY */ int Commander::getRx_Commander(std::vector<char> &dataRx)
+{
+    dataRx = *m_Rx_Commander;
+    return m_Rx_bytesReceived;
+}
+
+/* COPY */ void Commander::setTx_Commander(const std::vector<char> &dataTx, int size)
+{
+    *m_Tx_Commander = dataTx;
+    m_Tx_bytesReceived = size;
 }

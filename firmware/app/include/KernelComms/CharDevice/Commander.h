@@ -27,6 +27,8 @@ class Commander
 
         std::vector<char>* m_Rx_Commander;
         std::vector<char>* m_Tx_Commander;
+        int m_Rx_bytesReceived;
+        int m_Tx_bytesReceived;
 
     public:
         Commander();
@@ -54,4 +56,7 @@ class Commander
          */
         void setIO_State(ioStateType state);
         ioStateType getIO_State();
+
+        /* COPY */ int getRx_Commander(std::vector<char> &dataRx);
+        /* COPY */ void setTx_Commander(const std::vector<char> &dataTx, int size);
 };
