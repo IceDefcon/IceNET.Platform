@@ -144,6 +144,7 @@ bool Commander::isThreadKilled()
 
 void Commander::threadCommander()
 {
+    int ret = 0;
     while (!m_threadKill)
     {
         if(m_ioState != m_ioStatePrev)
@@ -163,6 +164,21 @@ void Commander::threadCommander()
 
                 case IO_WRITE:
                     printHexBuffer(m_Tx_Commander);
+                    ret = -1;
+
+                    std::cout << "[INFO] [CMD] Data Received :: Sending to Kernel" << std::endl;
+
+                    ret = write(m_file_descriptor, m_Tx_Commander->data(), m_Tx_bytesReceived);
+
+                    if (ret == -1)
+                    {
+                        std::cout << "[ERNO] [CMD] Cannot write command to kernel space" << std::endl;
+                    }
+
+                    for (size_t i = 0; i < IO_TRAMSFER_SIZE; i++)
+                    {
+                        (*m_Tx_Commander)[i] = 0x00;
+                    }
                     // std::cout << "[INFO] [CMD] Write Command" << std::endl;
                     m_ioState = IO_READ;
                     break;

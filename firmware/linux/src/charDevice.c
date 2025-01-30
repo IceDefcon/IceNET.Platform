@@ -484,6 +484,7 @@ static ssize_t commanderRead(struct file *filep, char *buffer, size_t len, loff_
 
 static ssize_t commanderWrite(struct file *filep, const char __user *buffer, size_t len, loff_t *offset)
 {
+    int i = 0;
     int ret = 0;
 #if RAM_DISK_CTRL
     int error_count = 0;
@@ -505,7 +506,11 @@ static ssize_t commanderWrite(struct file *filep, const char __user *buffer, siz
     }
     else
     {
-        printk(KERN_INFO "[ERNO][ C ] Wrong command received\n");
+        printk(KERN_INFO "[CTRL][ C ] Data Received: \n");
+        for (i = 0; i < len; i++)
+        {
+            printk(KERN_INFO "[CTRL][ C ] Byte[%d] %x\n", i, Device[DEVICE_COMMANDER].io_transfer.RxData[i]);
+        }
     }
 #endif
     return ret;
