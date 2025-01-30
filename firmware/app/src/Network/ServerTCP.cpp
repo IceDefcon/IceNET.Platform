@@ -24,7 +24,8 @@ ServerTCP::ServerTCP() :
     m_serverSocket(-1),
     m_clientSocket(-1),
     m_clientConnected(false),
-    m_ServerTCPVector(std::make_shared<std::vector<char>>(IO_TRAMSFER_SIZE)),
+    m_Rx_ServerTCPVector(std::make_shared<std::vector<char>>(IO_TRAMSFER_SIZE)),
+    m_Tx_ServerTCPVector(std::make_shared<std::vector<char>>(IO_TRAMSFER_SIZE)),
     m_Rx_ServerTCP(new std::vector<char>(IO_TRAMSFER_SIZE)),
     m_Tx_ServerTCP(new std::vector<char>(IO_TRAMSFER_SIZE)),
     m_Rx_bytesReceived(0),
@@ -523,7 +524,8 @@ ioStateType ServerTCP::getIO_State()
     m_Tx_bytesReceived = size;
 }
 
-/* SHARE */ void ServerTCP::setSharedPointer(std::shared_ptr<std::vector<char>> sharedPointer)
+/* SHARE */ void ServerTCP::setTransferPointer(std::shared_ptr<std::vector<char>> transferPointerRx, std::shared_ptr<std::vector<char>> transferPointerTx)
 {
-    m_ServerTCPVector = sharedPointer;
+    m_Rx_ServerTCPVector = transferPointerRx;
+    m_Tx_ServerTCPVector = transferPointerTx;
 }

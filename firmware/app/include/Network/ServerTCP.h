@@ -36,7 +36,8 @@ class ServerTCP
         struct sockaddr_in m_serverAddress;
         struct sockaddr_in m_clientAddress;
 
-        std::shared_ptr<std::vector<char>> m_ServerTCPVector;
+        std::shared_ptr<std::vector<char>> m_Rx_ServerTCPVector;
+        std::shared_ptr<std::vector<char>> m_Tx_ServerTCPVector;
 
         std::vector<char>* m_Rx_ServerTCP;
         std::vector<char>* m_Tx_ServerTCP;
@@ -75,5 +76,5 @@ class ServerTCP
         /* COPY */ int getRx_ServerTCP(std::vector<char> &dataRx);
         /* COPY */ void setTx_ServerTCP(const std::vector<char> &dataTx, int size);
 
-        /* SHARE */ void setSharedPointer(std::shared_ptr<std::vector<char>> sharedPointer);
+        /* SHARE */ void setTransferPointer(std::shared_ptr<std::vector<char>> transferPointerRx, std::shared_ptr<std::vector<char>> transferPointerTx);
 };

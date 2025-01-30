@@ -11,6 +11,7 @@
 #include <iostream>
 #include <vector>
 #include <iomanip>  // For std::hex and std::setw
+#include <memory>
 
 const size_t IO_TRAMSFER_SIZE = 8;
 
@@ -62,9 +63,9 @@ inline std::string getIoStateString(ioStateType state)
     }
 }
 
-inline void printHexBuffer(std::vector<char>* buffer)
+inline void printSharedBuffer(std::shared_ptr<std::vector<char>> buffer)
 {
-    std::cout << "[INFO] [ T ] Data in the buffer: ";
+    std::cout << "[INFO] [SHARED] Data in the buffer: ";
     for (size_t i = 0; i < buffer->size(); ++i)
     {
         std::cout << std::hex << std::setw(2) << std::setfill('0') << (int)(*buffer)[i] << " ";

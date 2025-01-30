@@ -20,20 +20,20 @@ Commander::Commander() :
     m_threadKill(false),
     m_ioState(IO_IDLE),
     m_ioStatePrev(IO_IDLE),
-    m_instance(this),
-    m_CommanderVector(std::make_shared<std::vector<char>>(IO_TRAMSFER_SIZE)),
+    m_Rx_CommanderVector(std::make_shared<std::vector<char>>(IO_TRAMSFER_SIZE)),
+    m_Tx_CommanderVector(std::make_shared<std::vector<char>>(IO_TRAMSFER_SIZE)),
     m_Rx_Commander(new std::vector<char>(IO_TRAMSFER_SIZE)),
     m_Tx_Commander(new std::vector<char>(IO_TRAMSFER_SIZE)),
     m_Rx_bytesReceived(0),
     m_Tx_bytesReceived(0),
     m_transferComplete(false)
 {
-    std::cout << "[INFO] [CONSTRUCTOR] " << m_instance << " :: Instantiate Commander" << std::endl;
+    std::cout << "[INFO] [CONSTRUCTOR] " << this << " :: Instantiate Commander" << std::endl;
 }
 
 Commander::~Commander()
 {
-    std::cout << "[INFO] [DESTRUCTOR] " << m_instance << " :: Destroy Commander" << std::endl;
+    std::cout << "[INFO] [DESTRUCTOR] " << this << " :: Destroy Commander" << std::endl;
 
     closeDEV();
 
@@ -180,7 +180,6 @@ void Commander::threadCommander()
                     break;
 
                 case IO_WRITE:
-                    printHexBuffer(m_Tx_Commander);
                     ret = -1;
 
                     std::cout << "[INFO] [CMD] Data Received :: Sending to Kernel" << std::endl;
@@ -252,7 +251,8 @@ ioStateType Commander::getIO_State()
     m_Tx_bytesReceived = size;
 }
 
-/* SHARE */ void Commander::setSharedPointer(std::shared_ptr<std::vector<char>> sharedPointer)
+/* SHARE */ void Commander::setTransferPointer(std::shared_ptr<std::vector<char>> transferPointerRx, std::shared_ptr<std::vector<char>> transferPointerTx)
 {
-    m_CommanderVector = sharedPointer;
+    m_Rx_CommanderVector = transferPointerRx;
+    m_Tx_CommanderVector = transferPointerTx;
 }

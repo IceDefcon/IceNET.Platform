@@ -19,7 +19,8 @@ DroneCtrl::DroneCtrl() :
     m_ioState(IO_IDLE),
     m_ctrlState(CTRL_INIT),
     m_ctrlStatePrev(CTRL_INIT),
-    m_DroneCtrlVector(std::make_shared<std::vector<char>>(IO_TRAMSFER_SIZE)),
+    m_Rx_DroneCtrlVector(std::make_shared<std::vector<char>>(IO_TRAMSFER_SIZE)),
+    m_Tx_DroneCtrlVector(std::make_shared<std::vector<char>>(IO_TRAMSFER_SIZE)),
     m_Rx_DroneCtrl(new std::vector<char>(IO_TRAMSFER_SIZE)),
     m_Tx_DroneCtrl(new std::vector<char>(IO_TRAMSFER_SIZE)),
     m_Rx_bytesReceived(0),
@@ -43,21 +44,12 @@ void DroneCtrl::droneInit()
     m_instanceWatchdog = this;
     m_instanceRamDisk = this;
 
-    m_instanceServerTCP->setSharedPointer(m_DroneCtrlVector);
-    m_instanceCommander->setSharedPointer(m_DroneCtrlVector);
+    m_instanceServerTCP->setTransferPointer(m_Rx_DroneCtrlVector, m_Tx_DroneCtrlVector);
+    m_instanceCommander->setTransferPointer(m_Rx_DroneCtrlVector, m_Tx_DroneCtrlVector);
 
     std::cout << "[INIT] [ D ] Initialise DroneCtrl Buffers" << std::endl;
     std::fill(m_Rx_DroneCtrl->begin(), m_Rx_DroneCtrl->end(), 0);
     std::fill(m_Tx_DroneCtrl->begin(), m_Tx_DroneCtrl->end(), 0);
-
-    (*m_DroneCtrlVector)[0] = 0x1A;
-    (*m_DroneCtrlVector)[1] = 0x2A;
-    (*m_DroneCtrlVector)[2] = 0x3A;
-    (*m_DroneCtrlVector)[3] = 0x4A;
-    (*m_DroneCtrlVector)[4] = 0x5A;
-    (*m_DroneCtrlVector)[5] = 0x6A;
-    (*m_DroneCtrlVector)[6] = 0x7A;
-    (*m_DroneCtrlVector)[7] = 0x8A;
 
     /* Ram Disk Commander */
     KernelComms::initRamDiskCommander();
