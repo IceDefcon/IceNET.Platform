@@ -42,6 +42,8 @@ class ServerTCP
         int m_Rx_bytesReceived;
         int m_Tx_bytesReceived;
 
+        bool m_transferComplete;
+
     public:
         ServerTCP();
         ~ServerTCP();

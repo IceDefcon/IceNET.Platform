@@ -27,7 +27,8 @@ ServerTCP::ServerTCP() :
     m_Rx_ServerTCP(new std::vector<char>(IO_TRAMSFER_SIZE)),
     m_Tx_ServerTCP(new std::vector<char>(IO_TRAMSFER_SIZE)),
     m_Rx_bytesReceived(0),
-    m_Tx_bytesReceived(0)
+    m_Tx_bytesReceived(0),
+    m_transferComplete(false)
 {
     std::cout << "[INFO] [CONSTRUCTOR] " << this << " :: Instantiate ServerTCP" << std::endl;
 
@@ -193,20 +194,29 @@ void ServerTCP::threadServerTCP()
                 switch(m_ioState)
                 {
                     case IO_IDLE:
+                        m_transferComplete = false;
                         break;
 
                     case IO_READ:
-#if 0
-                        (*m_Tx_ServerTCP)[0] = 0x11;
-                        (*m_Tx_ServerTCP)[1] = 0x22;
-                        (*m_Tx_ServerTCP)[2] = 0x33;
-                        (*m_Tx_ServerTCP)[3] = 0x44;
-                        (*m_Tx_ServerTCP)[4] = 0x55;
-                        (*m_Tx_ServerTCP)[5] = 0x66;
-                        (*m_Tx_ServerTCP)[6] = 0x77;
-                        (*m_Tx_ServerTCP)[7] = 0xEE;
+                        if(false == m_transferComplete)
+                        {
+                            printHexBuffer(m_Tx_ServerTCP);
+                            (*m_Tx_ServerTCP)[0] = 0x11;
+                            (*m_Tx_ServerTCP)[1] = 0x22;
+                            (*m_Tx_ServerTCP)[2] = 0x33;
+                            (*m_Tx_ServerTCP)[3] = 0x44;
+                            (*m_Tx_ServerTCP)[4] = 0x55;
+                            (*m_Tx_ServerTCP)[5] = 0x66;
+                            (*m_Tx_ServerTCP)[6] = 0x77;
+                            (*m_Tx_ServerTCP)[7] = 0xEE;
+                            m_transferComplete = true;
+                        }
                         write(m_clientSocket, m_Tx_ServerTCP->data(), m_Tx_ServerTCP->size());
-#endif
+                        // if(false == m_transferComplete)
+                        // {
+                        //     write(m_clientSocket, m_Tx_ServerTCP->data(), m_Tx_bytesReceived);
+                        //     m_transferComplete = true;
+                        // }
                         m_ioState = IO_IDLE;
                         break;
 
@@ -397,6 +407,7 @@ int ServerTCP::tcpRX()
          * running in App
          *
          */
+#if 0 /* To be removed ??? */
         (*m_Tx_ServerTCP)[0] = 0x11;
         (*m_Tx_ServerTCP)[1] = 0x22;
         (*m_Tx_ServerTCP)[2] = 0x33;
@@ -406,7 +417,7 @@ int ServerTCP::tcpRX()
         (*m_Tx_ServerTCP)[6] = 0x77;
         (*m_Tx_ServerTCP)[7] = 0xEE;
         write(m_clientSocket, m_Tx_ServerTCP->data(), m_Tx_ServerTCP->size());
-
+#endif
         /* DEAD :: CODE */
         if((*m_Rx_ServerTCP)[0] == 0xDE && (*m_Rx_ServerTCP)[1] == 0xAD && (*m_Rx_ServerTCP)[2] == 0xC0 && (*m_Rx_ServerTCP)[3] == 0xDE)
         {
