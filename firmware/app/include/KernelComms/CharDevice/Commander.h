@@ -25,6 +25,8 @@ class Commander
 
         Commander* m_instance;
 
+        std::shared_ptr<std::vector<char>> m_CommanderVector;
+
         std::vector<char>* m_Rx_Commander;
         std::vector<char>* m_Tx_Commander;
         int m_Rx_bytesReceived;
@@ -61,4 +63,6 @@ class Commander
 
         /* COPY */ int getRx_Commander(std::vector<char> &dataRx);
         /* COPY */ void setTx_Commander(const std::vector<char> &dataTx, int size);
+
+        /* SHARE */ void setSharedPointer(std::shared_ptr<std::vector<char>> sharedPointer);
 };

@@ -29,6 +29,8 @@ class DroneCtrl :
         KernelComms::Watchdog* m_instanceWatchdog;
         KernelComms::RamDisk* m_instanceRamDisk;
 
+        std::shared_ptr<std::vector<char>> m_DroneCtrlVector;
+
         std::vector<char>* m_Rx_DroneCtrl;
         std::vector<char>* m_Tx_DroneCtrl;
         int m_Rx_bytesReceived;

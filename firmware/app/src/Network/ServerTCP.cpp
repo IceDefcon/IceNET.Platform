@@ -24,6 +24,7 @@ ServerTCP::ServerTCP() :
     m_serverSocket(-1),
     m_clientSocket(-1),
     m_clientConnected(false),
+    m_ServerTCPVector(std::make_shared<std::vector<char>>(IO_TRAMSFER_SIZE)),
     m_Rx_ServerTCP(new std::vector<char>(IO_TRAMSFER_SIZE)),
     m_Tx_ServerTCP(new std::vector<char>(IO_TRAMSFER_SIZE)),
     m_Rx_bytesReceived(0),
@@ -132,6 +133,7 @@ void ServerTCP::threadServerTCP()
         }
         else
         {
+            /* This is the problem as it is not in state machine */
             int ret = tcpRX();
 
             if(ret == 0)
@@ -198,26 +200,28 @@ void ServerTCP::threadServerTCP()
                         break;
 
                     case IO_READ:
+                        std::cout << "[DEBUG] [ICE] Debug 0 :: " << m_transferComplete << std::endl;
                         if(false == m_transferComplete)
                         {
-                            printHexBuffer(m_Tx_ServerTCP);
-                            (*m_Tx_ServerTCP)[0] = 0x11;
-                            (*m_Tx_ServerTCP)[1] = 0x22;
-                            (*m_Tx_ServerTCP)[2] = 0x33;
-                            (*m_Tx_ServerTCP)[3] = 0x44;
-                            (*m_Tx_ServerTCP)[4] = 0x55;
-                            (*m_Tx_ServerTCP)[5] = 0x66;
-                            (*m_Tx_ServerTCP)[6] = 0x77;
-                            (*m_Tx_ServerTCP)[7] = 0xEE;
-                            m_transferComplete = true;
+                            std::cout << "[DEBUG] [ICE] Debug 1" << std::endl;
+                            // ret = write(m_clientSocket, m_Tx_ServerTCP->data(), m_Tx_bytesReceived);
+                            ret = 8;
+                            std::cout << "[DEBUG] [ICE] Debug 2" << std::endl;
+
+                            if (ret < 0)
+                            {
+                                std::cout << "[DEBUG] [ICE] Debug 3" << std::endl;
+                                std::cout << "[DEBUG] [ICE] Failed to send message" << std::endl;
+                            }
+                            else
+                            {
+                                std::cout << "[DEBUG] [ICE] Debug 4" << std::endl;
+                                std::cout << "[DEBUG] [ICE] Transfer complete" << std::endl;
+                                m_transferComplete = true;
+                                m_ioState = IO_IDLE;
+                                m_timeoutCount = 0;
+                            }
                         }
-                        write(m_clientSocket, m_Tx_ServerTCP->data(), m_Tx_ServerTCP->size());
-                        // if(false == m_transferComplete)
-                        // {
-                        //     write(m_clientSocket, m_Tx_ServerTCP->data(), m_Tx_bytesReceived);
-                        //     m_transferComplete = true;
-                        // }
-                        m_ioState = IO_IDLE;
                         break;
 
                     case IO_WRITE:
@@ -397,73 +401,80 @@ int ServerTCP::tcpRX()
             (*m_Rx_ServerTCP)[i] = 0x00;
         }
 #endif
-        m_Rx_bytesReceived = recv(m_clientSocket, m_Rx_ServerTCP->data(), IO_TRAMSFER_SIZE, 0);
-        /**
-         *
-         * TODO
-         *
-         * Dummy TCP Feedback
-         * To keep the things
-         * running in App
-         *
-         */
-#if 0 /* To be removed ??? */
-        (*m_Tx_ServerTCP)[0] = 0x11;
-        (*m_Tx_ServerTCP)[1] = 0x22;
-        (*m_Tx_ServerTCP)[2] = 0x33;
-        (*m_Tx_ServerTCP)[3] = 0x44;
-        (*m_Tx_ServerTCP)[4] = 0x55;
-        (*m_Tx_ServerTCP)[5] = 0x66;
-        (*m_Tx_ServerTCP)[6] = 0x77;
-        (*m_Tx_ServerTCP)[7] = 0xEE;
-        write(m_clientSocket, m_Tx_ServerTCP->data(), m_Tx_ServerTCP->size());
-#endif
-        /* DEAD :: CODE */
-        if((*m_Rx_ServerTCP)[0] == 0xDE && (*m_Rx_ServerTCP)[1] == 0xAD && (*m_Rx_ServerTCP)[2] == 0xC0 && (*m_Rx_ServerTCP)[3] == 0xDE)
-        {
-            std::cout << "[INFO] [TCP] 0xDEAD Received" << std::endl;
-            return -5;
-        }
-        /* LOAD :: CODE */
-        else if((*m_Rx_ServerTCP)[0] == 0x10 && (*m_Rx_ServerTCP)[1] == 0xAD && (*m_Rx_ServerTCP)[2] == 0xC0 && (*m_Rx_ServerTCP)[3] == 0xDE)
-        {
-            std::cout << "[INFO] [TCP] Send configuration to RAM" << std::endl;
-            return -4;
-        }
-        /* CLEAR :: CODE */
-        else if((*m_Rx_ServerTCP)[0] == 0xC1 && (*m_Rx_ServerTCP)[1] == 0xEA && (*m_Rx_ServerTCP)[2] == 0xC0 && (*m_Rx_ServerTCP)[3] == 0xDE)
-        {
-            std::cout << "[INFO] [TCP] Clear DMA from RAM" << std::endl;
-            return -3;
-        }
-        else
-        {
-            if (m_Rx_bytesReceived > 0)
+        // if(true == m_transferComplete)
+        // {
+            std::cout << "[INFO] [TCP] Debug 0 :: " << m_Rx_bytesReceived << std::endl;
+            m_Rx_bytesReceived = recv(m_clientSocket, m_Rx_ServerTCP->data(), IO_TRAMSFER_SIZE, 0);
+            std::cout << "[INFO] [TCP] Debug 1 :: " << m_Rx_bytesReceived << std::endl;
+
+            /**
+             *
+             * TODO
+             *
+             * Dummy TCP Feedback
+             * To keep the things
+             * running in App
+             *
+             */
+    #if 0 /* To be removed ??? */
+            (*m_Tx_ServerTCP)[0] = 0x11;
+            (*m_Tx_ServerTCP)[1] = 0x22;
+            (*m_Tx_ServerTCP)[2] = 0x33;
+            (*m_Tx_ServerTCP)[3] = 0x44;
+            (*m_Tx_ServerTCP)[4] = 0x55;
+            (*m_Tx_ServerTCP)[5] = 0x66;
+            (*m_Tx_ServerTCP)[6] = 0x77;
+            (*m_Tx_ServerTCP)[7] = 0xEE;
+            write(m_clientSocket, m_Tx_ServerTCP->data(), m_Tx_ServerTCP->size());
+    #endif
+            /* DEAD :: CODE */
+            if((*m_Rx_ServerTCP)[0] == 0xDE && (*m_Rx_ServerTCP)[1] == 0xAD && (*m_Rx_ServerTCP)[2] == 0xC0 && (*m_Rx_ServerTCP)[3] == 0xDE)
             {
-                std::cout << "[INFO] [TCP] Received " << m_Rx_bytesReceived << " Bytes of data: ";
-                for (int i = 0; i < m_Rx_bytesReceived; ++i)
-                {
-                    std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>((*m_Rx_ServerTCP)[i]) << " ";
-                }
-                std::cout << std::endl;
+                std::cout << "[INFO] [TCP] 0xDEAD Received" << std::endl;
+                return -5;
             }
-            else if (m_Rx_bytesReceived == 0)
+            /* LOAD :: CODE */
+            else if((*m_Rx_ServerTCP)[0] == 0x10 && (*m_Rx_ServerTCP)[1] == 0xAD && (*m_Rx_ServerTCP)[2] == 0xC0 && (*m_Rx_ServerTCP)[3] == 0xDE)
             {
-                std::cout << "[INFO] [TCP] Connection closed by client" << std::endl;
+                std::cout << "[INFO] [TCP] Send configuration to RAM" << std::endl;
+                return -4;
             }
-            else if(10 == m_timeoutCount)
+            /* CLEAR :: CODE */
+            else if((*m_Rx_ServerTCP)[0] == 0xC1 && (*m_Rx_ServerTCP)[1] == 0xEA && (*m_Rx_ServerTCP)[2] == 0xC0 && (*m_Rx_ServerTCP)[3] == 0xDE)
             {
-                std::cout << "\r[INFO] [TCP] Server inactive for 10s :: Shutdown TCP connection" << std::endl;
-                m_clientConnected = false;
+                std::cout << "[INFO] [TCP] Clear DMA from RAM" << std::endl;
+                return -3;
             }
             else
             {
-#if 0
-                std::cout << "\r[INFO] [TCP] Nothing received, listening... [" << m_timeoutCount << "]" << std::endl;
-#endif
-                m_timeoutCount++;
+                if (m_Rx_bytesReceived > 0)
+                {
+                    std::cout << "[INFO] [TCP] Received " << m_Rx_bytesReceived << " Bytes of data: ";
+                    for (int i = 0; i < m_Rx_bytesReceived; ++i)
+                    {
+                        std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>((*m_Rx_ServerTCP)[i]) << " ";
+                    }
+                    std::cout << std::endl;
+                }
+                else if (m_Rx_bytesReceived == 0)
+                {
+                    std::cout << "[INFO] [TCP] Connection closed by client" << std::endl;
+                }
+                else if(10 == m_timeoutCount)
+                {
+                    std::cout << "\r[INFO] [TCP] Server inactive for 10s :: Shutdown TCP connection" << std::endl;
+                    m_clientConnected = false;
+                }
+                else
+                {
+    #if 0
+                    std::cout << "\r[INFO] [TCP] Nothing received, listening... [" << m_timeoutCount << "]" << std::endl;
+    #endif
+                    m_timeoutCount++;
+                }
             }
-        }
+        //     m_transferComplete = false;
+        // }
     }
 
     return m_Rx_bytesReceived;
@@ -510,4 +521,9 @@ ioStateType ServerTCP::getIO_State()
 {
     *m_Tx_ServerTCP = dataTx;
     m_Tx_bytesReceived = size;
+}
+
+/* SHARE */ void ServerTCP::setSharedPointer(std::shared_ptr<std::vector<char>> sharedPointer)
+{
+    m_ServerTCPVector = sharedPointer;
 }

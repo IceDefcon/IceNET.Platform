@@ -21,6 +21,7 @@ Commander::Commander() :
     m_ioState(IO_IDLE),
     m_ioStatePrev(IO_IDLE),
     m_instance(this),
+    m_CommanderVector(std::make_shared<std::vector<char>>(IO_TRAMSFER_SIZE)),
     m_Rx_Commander(new std::vector<char>(IO_TRAMSFER_SIZE)),
     m_Tx_Commander(new std::vector<char>(IO_TRAMSFER_SIZE)),
     m_Rx_bytesReceived(0),
@@ -249,4 +250,9 @@ ioStateType Commander::getIO_State()
 {
     *m_Tx_Commander = dataTx;
     m_Tx_bytesReceived = size;
+}
+
+/* SHARE */ void Commander::setSharedPointer(std::shared_ptr<std::vector<char>> sharedPointer)
+{
+    m_CommanderVector = sharedPointer;
 }
