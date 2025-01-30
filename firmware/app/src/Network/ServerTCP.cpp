@@ -24,9 +24,9 @@ ServerTCP::ServerTCP() :
     m_serverSocket(-1),
     m_clientSocket(-1),
     m_clientConnected(false),
-    m_Rx_ServerTCP(new std::vector<char>(TCP_SERVER_SIZE)),
-    m_Tx_ServerTCP(new std::vector<char>(TCP_SERVER_SIZE)),
-    m_Rx_bytesReceived(-1),
+    m_Rx_ServerTCP(new std::vector<char>(IO_TRAMSFER_SIZE)),
+    m_Tx_ServerTCP(new std::vector<char>(IO_TRAMSFER_SIZE)),
+    m_Rx_bytesReceived(0),
     m_Tx_bytesReceived(0)
 {
     std::cout << "[INFO] [CONSTRUCTOR] " << this << " :: Instantiate ServerTCP" << std::endl;
@@ -87,8 +87,6 @@ bool ServerTCP::isThreadKilled()
 
 void ServerTCP::threadServerTCP()
 {
-    size_t i = 0;
-
     configureServer();
 
     socklen_t clientLength = sizeof(m_clientAddress);
@@ -134,6 +132,7 @@ void ServerTCP::threadServerTCP()
         else
         {
             int ret = tcpRX();
+
             if(ret == 0)
             {
                 std::cout << "[INFO] [TCP] Client disconnected from server" << std::endl;
@@ -182,7 +181,7 @@ void ServerTCP::threadServerTCP()
             }
             else
             {
-                m_ioState = IO_IDLE;
+                // m_ioState = IO_IDLE;
                 /* TODO :: Client connected but nothing receiver */
             }
 
@@ -197,8 +196,18 @@ void ServerTCP::threadServerTCP()
                         break;
 
                     case IO_READ:
-                        // std::cout << "[INFO] [TCP] Read Command" << std::endl;
-                        // m_ioState = IO_IDLE;
+#if 0
+                        (*m_Tx_ServerTCP)[0] = 0x11;
+                        (*m_Tx_ServerTCP)[1] = 0x22;
+                        (*m_Tx_ServerTCP)[2] = 0x33;
+                        (*m_Tx_ServerTCP)[3] = 0x44;
+                        (*m_Tx_ServerTCP)[4] = 0x55;
+                        (*m_Tx_ServerTCP)[5] = 0x66;
+                        (*m_Tx_ServerTCP)[6] = 0x77;
+                        (*m_Tx_ServerTCP)[7] = 0xEE;
+                        write(m_clientSocket, m_Tx_ServerTCP->data(), m_Tx_ServerTCP->size());
+#endif
+                        m_ioState = IO_IDLE;
                         break;
 
                     case IO_WRITE:
@@ -220,11 +229,6 @@ void ServerTCP::threadServerTCP()
                         std::cout << "[INFO] [TCP] Unknown Command" << std::endl;
                 }
             }
-        }
-
-        for (i = 0; i < TCP_SERVER_SIZE; i++)
-        {
-            (*m_Rx_ServerTCP)[i] = 0x00;
         }
 
         /* Reduce consumption of CPU resources */
@@ -372,12 +376,27 @@ int ServerTCP::tcpRX()
          *
          * TODO
          *
+         * Check if we can clear
+         * the buffer here
+         *
+         */
+#if 0
+        size_t i = 0;
+        for (i = 0; i < IO_TRAMSFER_SIZE; i++)
+        {
+            (*m_Rx_ServerTCP)[i] = 0x00;
+        }
+#endif
+        m_Rx_bytesReceived = recv(m_clientSocket, m_Rx_ServerTCP->data(), IO_TRAMSFER_SIZE, 0);
+        /**
+         *
+         * TODO
+         *
          * Dummy TCP Feedback
          * To keep the things
          * running in App
          *
          */
-        m_Rx_bytesReceived = recv(m_clientSocket, m_Rx_ServerTCP->data(), TCP_SERVER_SIZE, 0);
         (*m_Tx_ServerTCP)[0] = 0x11;
         (*m_Tx_ServerTCP)[1] = 0x22;
         (*m_Tx_ServerTCP)[2] = 0x33;
@@ -423,7 +442,7 @@ int ServerTCP::tcpRX()
             }
             else if(10 == m_timeoutCount)
             {
-                std::cout << "\r[INFO] [TCP] 10s inactive server :: Shuddown connection" << std::endl;
+                std::cout << "\r[INFO] [TCP] Server inactive for 10s :: Shutdown TCP connection" << std::endl;
                 m_clientConnected = false;
             }
             else
@@ -468,4 +487,16 @@ void ServerTCP::setIO_State(ioStateType state)
 ioStateType ServerTCP::getIO_State()
 {
     return m_ioState;
+}
+
+/* COPY */ int ServerTCP::getRx_ServerTCP(std::vector<char> &dataRx)
+{
+    dataRx = *m_Rx_ServerTCP;
+    return m_Rx_bytesReceived;
+}
+
+/* COPY */ void ServerTCP::setTx_ServerTCP(const std::vector<char> &dataTx, int size)
+{
+    *m_Tx_ServerTCP = dataTx;
+    m_Tx_bytesReceived = size;
 }
