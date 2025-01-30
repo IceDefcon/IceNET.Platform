@@ -24,7 +24,8 @@ Commander::Commander() :
     m_Rx_Commander(new std::vector<char>(IO_TRAMSFER_SIZE)),
     m_Tx_Commander(new std::vector<char>(IO_TRAMSFER_SIZE)),
     m_Rx_bytesReceived(0),
-    m_Tx_bytesReceived(0)
+    m_Tx_bytesReceived(0),
+    m_transferComplete(false)
 {
     std::cout << "[INFO] [CONSTRUCTOR] " << m_instance << " :: Instantiate Commander" << std::endl;
 }
@@ -155,10 +156,25 @@ void Commander::threadCommander()
             switch(m_ioState)
             {
                 case IO_IDLE:
+                    m_transferComplete = false;
                     break;
 
                 case IO_READ:
-                    // std::cout << "[INFO] [CMD] Read Command" << std::endl;
+                    if(false == m_transferComplete)
+                    {
+                        std::cout << "[INFO] [CMD] Trying to read from Kernel" << std::endl;
+                        ret = read(m_file_descriptor, m_Rx_Commander->data(), IO_TRAMSFER_SIZE);
+
+                        std::cout << "[INFO] [CMD] Received " << ret << " Bytes of data: ";
+                        for (int i = 0; i < ret; ++i)
+                        {
+                            std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>((*m_Rx_Commander)[i]) << " ";
+                        }
+                        std::cout << std::endl;
+                        m_transferComplete = true;
+                    }
+
+
                     // m_ioState = IO_IDLE;
                     break;
 

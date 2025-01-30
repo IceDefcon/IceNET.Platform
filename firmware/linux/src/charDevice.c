@@ -159,7 +159,7 @@ static charDeviceData Device[DEVICE_AMOUNT] =
         .fops =
         {
             .open = commanderOpen,
-            .read = commanderRead, /* Dummy :: Not used */
+            .read = commanderRead,
             .write = commanderWrite,
             .release = commanderClose,
         },
@@ -474,12 +474,39 @@ static ssize_t watchdogWrite(struct file *filep, const char __user *buffer, size
 
 static ssize_t commanderRead(struct file *filep, char *buffer, size_t len, loff_t *offset)
 {
-    /**
-     * Dummy
-     *
-     * Not used for INPUT Device
-     */
-    return 0;
+    int ret = 0;
+    int error_count = 0;
+    size_t i;
+
+    Device[DEVICE_WATCHDOG].io_transfer.TxData[0] = 0x12;
+    Device[DEVICE_WATCHDOG].io_transfer.TxData[1] = 0x13;
+    Device[DEVICE_WATCHDOG].io_transfer.TxData[2] = 0x14;
+    Device[DEVICE_WATCHDOG].io_transfer.TxData[3] = 0x15;
+    Device[DEVICE_WATCHDOG].io_transfer.TxData[4] = 0x17;
+    Device[DEVICE_WATCHDOG].io_transfer.TxData[5] = 0x18;
+    Device[DEVICE_WATCHDOG].io_transfer.TxData[6] = 0x19;
+    Device[DEVICE_WATCHDOG].io_transfer.TxData[7] = 0xAA;
+    Device[DEVICE_WATCHDOG].io_transfer.length = 8;
+
+    error_count = copy_to_user(buffer, (const void *)Device[DEVICE_WATCHDOG].io_transfer.TxData, Device[DEVICE_WATCHDOG].io_transfer.length);
+
+    if (error_count == 0)
+    {
+        printk(KERN_INFO "[CTRL][ C ] Sent %zu characters to user-space\n", Device[DEVICE_WATCHDOG].io_transfer.length);
+        ret = Device[DEVICE_WATCHDOG].io_transfer.length;
+    }
+    else
+    {
+        printk(KERN_INFO "[CTRL][ C ] Failed to send %d characters to user-space\n", error_count);
+        ret = -EFAULT; /* Failed -- return a bad address message (i.e. -14) */
+    }
+
+    for (i = 0; i < Device[DEVICE_WATCHDOG].io_transfer.length; ++i)
+    {
+        Device[DEVICE_WATCHDOG].io_transfer.TxData[i] = 0x00;
+    }
+
+    return ret;
 }
 
 static ssize_t commanderWrite(struct file *filep, const char __user *buffer, size_t len, loff_t *offset)

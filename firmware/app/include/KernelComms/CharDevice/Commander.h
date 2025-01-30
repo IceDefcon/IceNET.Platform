@@ -30,6 +30,8 @@ class Commander
         int m_Rx_bytesReceived;
         int m_Tx_bytesReceived;
 
+        bool m_transferComplete;
+
     public:
         Commander();
         ~Commander();
