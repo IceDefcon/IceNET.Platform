@@ -66,7 +66,7 @@ static charDeviceData Device[DEVICE_AMOUNT] =
         {
             .RxData = NULL,
             .TxData = NULL,
-            .length = 0,
+            .size = 0,
         },
 
         .fops =
@@ -95,7 +95,7 @@ static charDeviceData Device[DEVICE_AMOUNT] =
         {
             .RxData = NULL,
             .TxData = NULL,
-            .length = 0,
+            .size = 0,
         },
 
         .fops =
@@ -124,7 +124,7 @@ static charDeviceData Device[DEVICE_AMOUNT] =
         {
             .RxData = NULL,
             .TxData = NULL,
-            .length = 0,
+            .size = 0,
         },
 
         .fops =
@@ -153,7 +153,7 @@ static charDeviceData Device[DEVICE_AMOUNT] =
         {
             .RxData = NULL,
             .TxData = NULL,
-            .length = 0,
+            .size = 0,
         },
 
         .fops =
@@ -352,10 +352,10 @@ static ssize_t inputWrite(struct file *filep, const char __user *buffer, size_t 
     else
     {
         Device[DEVICE_INPUT].io_transfer.RxData[len] = '\0';  /* Null terminate the char array */
-        Device[DEVICE_INPUT].io_transfer.length = len;
+        Device[DEVICE_INPUT].io_transfer.size = len;
 
         // Print each character of the RxData array
-        for (i = 0; i < Device[DEVICE_INPUT].io_transfer.length; i++)
+        for (i = 0; i < Device[DEVICE_INPUT].io_transfer.size; i++)
         {
             printk(KERN_INFO "[CTRL][ C ] Received Byte[%zu]: 0x%02x\n", i, (unsigned char)Device[DEVICE_INPUT].io_transfer.RxData[i]);
         }
@@ -400,12 +400,12 @@ static ssize_t outputRead(struct file *filep, char *buffer, size_t len, loff_t *
         msleep(10); /* Release 90% of CPU resources */
     }
 
-    error_count = copy_to_user(buffer, (const void *)Device[DEVICE_OUTPUT].io_transfer.TxData, Device[DEVICE_OUTPUT].io_transfer.length);
+    error_count = copy_to_user(buffer, (const void *)Device[DEVICE_OUTPUT].io_transfer.TxData, Device[DEVICE_OUTPUT].io_transfer.size);
 
     if (error_count == 0)
     {
-        printk(KERN_INFO "[CTRL][ C ] Sent %zu characters to user-space\n", Device[DEVICE_OUTPUT].io_transfer.length);
-        ret = Device[DEVICE_OUTPUT].io_transfer.length;
+        printk(KERN_INFO "[CTRL][ C ] Sent %zu characters to user-space\n", Device[DEVICE_OUTPUT].io_transfer.size);
+        ret = Device[DEVICE_OUTPUT].io_transfer.size;
     }
     else
     {
@@ -413,12 +413,12 @@ static ssize_t outputRead(struct file *filep, char *buffer, size_t len, loff_t *
         ret = -EFAULT; /* Failed -- return a bad address message (i.e. -14) */
     }
 
-    for (i = 0; i < Device[DEVICE_OUTPUT].io_transfer.length; ++i)
+    for (i = 0; i < Device[DEVICE_OUTPUT].io_transfer.size; ++i)
     {
         Device[DEVICE_OUTPUT].io_transfer.TxData[i] = 0x00;
     }
     /* TODO :: Must be considered */
-    Device[DEVICE_OUTPUT].io_transfer.length = 1;
+    Device[DEVICE_OUTPUT].io_transfer.size = 1;
 
     return ret;
 }
@@ -445,12 +445,12 @@ static ssize_t watchdogRead(struct file *filep, char *buffer, size_t len, loff_t
         msleep(10); /* Release 90% of CPU resources */
     }
 
-    error_count = copy_to_user(buffer, (const void *)Device[DEVICE_WATCHDOG].io_transfer.TxData, Device[DEVICE_WATCHDOG].io_transfer.length);
+    error_count = copy_to_user(buffer, (const void *)Device[DEVICE_WATCHDOG].io_transfer.TxData, Device[DEVICE_WATCHDOG].io_transfer.size);
 
     if (error_count == 0)
     {
-        /* Length == Preamble + Null Terminator */
-        return Device[DEVICE_WATCHDOG].io_transfer.length;
+        /* size == Preamble + Null Terminator */
+        return Device[DEVICE_WATCHDOG].io_transfer.size;
     }
     else
     {
@@ -486,14 +486,14 @@ static ssize_t commanderRead(struct file *filep, char *buffer, size_t len, loff_
     Device[DEVICE_WATCHDOG].io_transfer.TxData[5] = 0x18;
     Device[DEVICE_WATCHDOG].io_transfer.TxData[6] = 0x19;
     Device[DEVICE_WATCHDOG].io_transfer.TxData[7] = 0xAA;
-    Device[DEVICE_WATCHDOG].io_transfer.length = 8;
+    Device[DEVICE_WATCHDOG].io_transfer.size = 8;
 
-    error_count = copy_to_user(buffer, (const void *)Device[DEVICE_WATCHDOG].io_transfer.TxData, Device[DEVICE_WATCHDOG].io_transfer.length);
+    error_count = copy_to_user(buffer, (const void *)Device[DEVICE_WATCHDOG].io_transfer.TxData, Device[DEVICE_WATCHDOG].io_transfer.size);
 
     if (error_count == 0)
     {
-        printk(KERN_INFO "[CTRL][ C ] Sent %zu characters to user-space\n", Device[DEVICE_WATCHDOG].io_transfer.length);
-        ret = Device[DEVICE_WATCHDOG].io_transfer.length;
+        printk(KERN_INFO "[CTRL][ C ] Sent %zu characters to user-space\n", Device[DEVICE_WATCHDOG].io_transfer.size);
+        ret = Device[DEVICE_WATCHDOG].io_transfer.size;
     }
     else
     {
@@ -501,7 +501,7 @@ static ssize_t commanderRead(struct file *filep, char *buffer, size_t len, loff_
         ret = -EFAULT; /* Failed -- return a bad address message (i.e. -14) */
     }
 
-    for (i = 0; i < Device[DEVICE_WATCHDOG].io_transfer.length; ++i)
+    for (i = 0; i < Device[DEVICE_WATCHDOG].io_transfer.size; ++i)
     {
         Device[DEVICE_WATCHDOG].io_transfer.TxData[i] = 0x00;
     }
@@ -590,7 +590,7 @@ static ssize_t commanderWrite(struct file *filep, const char __user *buffer, siz
     return Device;
 }
 
-/* GET */ DataTransfer* getCharDeviceTransfer(charDeviceType charDevice)
+/* GET */ DmaTransferType* getCharDeviceTransfer(charDeviceType charDevice)
 {
     return &Device[charDevice].io_transfer;
 }

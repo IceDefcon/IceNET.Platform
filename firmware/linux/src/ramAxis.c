@@ -32,7 +32,7 @@ static ramAxisType ramAxis[SECTOR_AMOUNT] =
 };
 
 static uint8_t j;
-static dmaTransferType* dmaTransfer;
+static DmaTransferType* dmaTransfer;
 
 void initTransfer(ramSectorType type)
 {
@@ -111,7 +111,7 @@ void printSector(ramSectorType type)
     kfree(output);
 }
 
-dmaTransferType* getDmaTransfer(void)
+DmaTransferType* getDmaTransfer(void)
 {
     return dmaTransfer;
 }
@@ -121,13 +121,13 @@ static void allocateTransfer(void)
     // Allocate memory for the dmaTransfer structure itself if it hasn't been initialized
     if (!dmaTransfer)
     {
-        dmaTransfer = kmalloc(sizeof(dmaTransferType), GFP_KERNEL);
+        dmaTransfer = kmalloc(sizeof(DmaTransferType), GFP_KERNEL);
         if (!dmaTransfer)
         {
             pr_err("[ERNO][RAM] Failed to allocate memory for dmaTransfer\n");
             return;
         }
-        memset(dmaTransfer, 0, sizeof(dmaTransferType));
+        memset(dmaTransfer, 0, sizeof(DmaTransferType));
     }
 
     if (!dmaTransfer->RxData)

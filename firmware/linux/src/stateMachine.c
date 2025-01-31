@@ -71,6 +71,7 @@ static int stateMachineThread(void *data)
 
             case SM_DMA:
                 printk(KERN_INFO "[CTRL][STM] Normal DMA mode\n");
+                enableDMAServer();
                 setStateMachine(SM_IDLE);
                 break;
 

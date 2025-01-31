@@ -30,17 +30,13 @@
 
 static spiDeviceData Device[SPI_AMOUNT] =
 {
-    /* Input */
-    [SPI_PRIMARY] =
+    [SPI_PRIMARY] = /* SPI 0 */
     {
         .spiDevice = NULL,
         .spiTx = {0},
         .spiRx = {0},
-#if CHAR_DEVICE_CTRL
-        .spiLength = 4, /* This DMA require to switch into older version of the offload controler :: In FPGA*/
-#elif RAM_DISK_CTRL
-        .spiLength = 22, /* TODO :: DMA transfer should be defined by MACRO at compilation time */
-#endif
+        .spiLength = 0,
+
         .Dma =
         {
             .spiMessage = {},
@@ -50,13 +46,12 @@ static spiDeviceData Device[SPI_AMOUNT] =
         }
     },
 
-    /* Output */
-    [SPI_SECONDARY] =
+    [SPI_SECONDARY] = /* SPI 1 */
     {
         .spiDevice = NULL,
         .spiTx = {0},
         .spiRx = {0},
-        .spiLength = 1,
+        .spiLength = 0,
 
         .Dma =
         {
@@ -162,15 +157,48 @@ static int spiBusInit(spiBusType spiBusEnum, spiDeviceType spiDeviceEnum)
  *
  */
 
-static int spiDmaInit(spiDeviceType spiDeviceEnum, charDeviceType charDeviceEnum, dmaControlType dmaControl)
+static int spiDmaInit(spiDeviceType spiDeviceEnum, dmaControlType dmaControl, bool fpgaConfig)
 {
-#if CHAR_DEVICE_CTRL
-    DataTransfer* dmaTransfer = getCharDeviceTransfer(charDeviceEnum);
-#elif RAM_DISK_CTRL
-    dmaTransferType* dmaTransfer = getDmaTransfer();
-#else
-    #error "Neither CHAR_DEVICE_CTRL nor RAM_DISK_CTRL is enabled!"
-#endif
+    DmaTransferType* dmaTransfer;
+
+    if(true == fpgaConfig)
+    {
+        dmaTransfer = getDmaTransfer();
+
+        if(SPI_PRIMARY == spiDeviceEnum)
+        {
+            printk(KERN_ERR "[INIT][SPI] SPI/DMA FPGA Config\n");
+            Device[spiDeviceEnum].spiLength = 22;
+        }
+        else if(SPI_SECONDARY == spiDeviceEnum)
+        {
+            printk(KERN_ERR "[INIT][SPI] SPI/DMA Feedback\n");
+            Device[spiDeviceEnum].spiLength = 1;
+        }
+        else
+        {
+            printk(KERN_ERR "[INIT][SPI] Wrong SPI Device\n");
+        }
+    }
+    else if(false == fpgaConfig)
+    {
+        dmaTransfer = getCharDeviceTransfer(DEVICE_COMMANDER);
+
+        if(SPI_PRIMARY == spiDeviceEnum)
+        {
+            printk(KERN_ERR "[INIT][SPI] SPI/DMA Server Config\n");
+            Device[spiDeviceEnum].spiLength = 4;
+        }
+        else if(SPI_SECONDARY == spiDeviceEnum)
+        {
+            printk(KERN_ERR "[INIT][SPI] SPI/DMA Feedback\n");
+            Device[spiDeviceEnum].spiLength = 1;
+        }
+        else
+        {
+            printk(KERN_ERR "[INIT][SPI] Wrong SPI Device\n");
+        }
+    }
 
     /* Allocate DMA buffers */
     Device[spiDeviceEnum].Dma.tx_dma = dma_map_single(Device[spiDeviceEnum].spiDevice->controller->dev.parent, (void *)dmaTransfer->RxData, Device[spiDeviceEnum].spiLength, DMA_TO_DEVICE);
@@ -325,11 +353,11 @@ void transferFpgaOutput(struct work_struct *work)
 
 void killApplication(struct work_struct *work)
 {
-    DataTransfer* kernelOutptData = getCharDeviceTransfer(DEVICE_OUTPUT);
+    DmaTransferType* kernelOutptData = getCharDeviceTransfer(DEVICE_OUTPUT);
 
     kernelOutptData->TxData[0] = 0xDE;
     kernelOutptData->TxData[1] = 0xAD;
-    kernelOutptData->length = 2;
+    kernelOutptData->size = 2;
 
     charDeviceLockCtrl(DEVICE_OUTPUT, CTRL_UNLOCK);
     charDeviceLockCtrl(DEVICE_WATCHDOG, CTRL_UNLOCK);
@@ -340,10 +368,17 @@ int spiInit(void)
     (void)spiBusInit(BUS_SPI0, SPI_PRIMARY);
     (void)spiBusInit(BUS_SPI1, SPI_SECONDARY);
 
-    spiDmaInit(SPI_PRIMARY, DEVICE_INPUT, DMA_IN);
-    spiDmaInit(SPI_SECONDARY, DEVICE_OUTPUT, DMA_OUT);
+    spiDmaInit(SPI_PRIMARY, DMA_IN, true);
+    spiDmaInit(SPI_SECONDARY, DMA_OUT, true);
 
     return 0;
+}
+
+/* CONFIG */ void enableDMAServer(void)
+{
+    printk(KERN_INFO "[CTRL][SPI] Reconigure Primary SPI into DMA Server Mode\n");
+    spiDmaDestroy(SPI_PRIMARY);
+    spiDmaInit(SPI_PRIMARY, DMA_IN, false);
 }
 
 void spiDestroy(void)

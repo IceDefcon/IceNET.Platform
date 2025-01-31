@@ -25,9 +25,9 @@
 
 typedef struct
 {
-    volatile char *RxData;
-    volatile char *TxData;
-    size_t length;
-} DataTransfer;
+    uint8_t* RxData;
+    uint8_t* TxData;
+    size_t size;
+} DmaTransferType;
 
 #endif // TYPES_H
