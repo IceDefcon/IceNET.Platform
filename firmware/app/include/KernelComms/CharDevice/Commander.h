@@ -23,42 +23,30 @@ class Commander
         ioStateType m_ioState;
         ioStateType m_ioStatePrev;
 
-        Commander* m_instance;
+        std::shared_ptr<std::vector<char>> m_Rx_CommanderVector;
+        std::shared_ptr<std::vector<char>> m_Tx_CommanderVector;
+        std::shared_ptr<ioStateType> m_IO_CommanderState;
 
-        std::vector<char>* m_Rx_Commander;
-        std::vector<char>* m_Tx_Commander;
-        int m_Rx_bytesReceived;
-        int m_Tx_bytesReceived;
-
-        bool m_transferComplete;
+        std::vector<std::vector<char>> m_commandMatrix;
 
     public:
         Commander();
         ~Commander();
-
-        void initBuffers();
 
         int openDEV();
         int dataTX();
         int dataRX();
         int closeDEV();
 
+        void sendCommand();
+        int activateConfig();
+        void reconfigureEngine();
+
         void initThread();
         void shutdownThread();
         bool isThreadKilled();
         void threadCommander();
 
-        /**
-         * TODO
-         *
-         * This must be mutex protected
-         * to avoid read/write in the
-         * same time
-         *
-         */
-        void setIO_State(ioStateType state);
-        ioStateType getIO_State();
-
-        /* COPY */ int getRx_Commander(std::vector<char> &dataRx);
-        /* COPY */ void setTx_Commander(const std::vector<char> &dataTx, int size);
+        /* SHARE */ void setTransferPointer(std::shared_ptr<std::vector<char>> transferPointerRx, std::shared_ptr<std::vector<char>> transferPointerTx);
+        /* SHARE */ void setTransferState(std::shared_ptr<ioStateType> transferStatee);
 };

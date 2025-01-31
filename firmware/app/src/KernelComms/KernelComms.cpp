@@ -29,10 +29,9 @@ void KernelComms::initRamDiskCommander()
 {
     std::cout << "[INFO] [KIO] " << "Open (C)Commander and (B)RamDisk devices" << std::endl;
 
-    Commander::initBuffers();
-    Watchdog::initBuffers();
-
     Commander::openDEV();
+
+    Watchdog::initBuffers();
     Watchdog::openDEV();
 }
 

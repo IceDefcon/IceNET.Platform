@@ -11,8 +11,9 @@
 #include <iostream>
 #include <vector>
 #include <iomanip>  // For std::hex and std::setw
+#include <memory>
 
-const size_t IO_TRAMSFER_SIZE = 8;
+const size_t IO_TRANSFER_SIZE = 8;
 
 enum Status
 {
@@ -21,11 +22,20 @@ enum Status
 	UNKNOWN
 };
 
+typedef enum
+{
+    CMD_FPGA_CONFIG,
+    CMD_DMA_RECONFIG,
+    CMD_AMOUNT
+} commandType;
+
 typedef enum 
 {
     IO_IDLE = 0,
-    IO_READ,
-    IO_WRITE,
+    IO_TCP_READ,
+    IO_COM_WRITE,
+    IO_COM_READ,
+    IO_TCP_WRITE,
     IO_LOAD,
     IO_CLEAR,
     IO_AMOUNT
@@ -35,9 +45,7 @@ typedef enum
 {
     CTRL_INIT = 0,
     CTRL_CONFIG,
-    CTRL_IDLE,
-    CTRL_COMMANDER,
-    CTRL_SERVER,
+    CTRL_MAIN,
     CTRL_AMOUNT,
 } ctrlType;
 
@@ -46,8 +54,10 @@ inline std::string getIoStateString(ioStateType state)
     static const std::array<std::string, IO_AMOUNT> ioStateStrings =
     {
         "IO_IDLE",
-        "IO_READ",
-        "IO_WRITE",
+        "IO_TCP_READ",
+        "IO_COM_WRITE",
+        "IO_COM_READ",
+        "IO_TCP_WRITE",
         "IO_LOAD",
         "IO_CLEAR"
     };
@@ -64,10 +74,21 @@ inline std::string getIoStateString(ioStateType state)
 
 inline void printHexBuffer(std::vector<char>* buffer)
 {
-    std::cout << "[INFO] [ T ] Data in the buffer: ";
+    std::cout << "[INFO] [HEX] Data in the buffer: ";
     for (size_t i = 0; i < buffer->size(); ++i)
     {
         std::cout << std::hex << std::setw(2) << std::setfill('0') << (int)(*buffer)[i] << " ";
     }
     std::cout << std::endl;
 }
+
+inline void printSharedBuffer(std::shared_ptr<std::vector<char>> buffer)
+{
+    std::cout << "[INFO] [SHARED] Data in the buffer: ";
+    for (size_t i = 0; i < buffer->size(); ++i)
+    {
+        std::cout << std::hex << std::setw(2) << std::setfill('0') << (int)(*buffer)[i] << " ";
+    }
+    std::cout << std::endl;
+}
+

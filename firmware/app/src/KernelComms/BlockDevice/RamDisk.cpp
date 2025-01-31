@@ -30,6 +30,50 @@ RamDisk::~RamDisk()
     free(m_ADXL345config);
 }
 
+int RamDisk::openDEV()
+{
+    m_fileDescriptor = open(DEVICE_PATH, O_RDWR);
+
+    if (m_fileDescriptor < 0)
+    {
+        std::cout << "[ERNO] [RAM] Failed to open Device" << std::endl;
+        return EXIT_FAILURE;
+    }
+    else
+    {
+        std::cout << "[INFO] [RAM] Device opened successfuly" << std::endl;
+    }
+
+    return OK;
+}
+
+int RamDisk::dataTX()
+{
+    /**
+     *
+     * TODO
+     *
+     */
+
+    return OK;
+}
+
+int RamDisk::dataRX()
+{
+    return OK; /* One way communication Here */
+}
+
+int RamDisk::closeDEV()
+{
+    if (m_fileDescriptor >= 0)
+    {
+        close(m_fileDescriptor);
+        m_fileDescriptor = -1;
+    }
+
+    return OK;
+}
+
 char RamDisk::calculateChecksum(const char* data, size_t size)
 {
     char checksum = 0;
@@ -79,7 +123,7 @@ DeviceConfig* RamDisk::createOperation(char id, char ctrl, char ops)
  * [2] ADXL345
  *
  */
-int RamDisk::AssembleData()
+int RamDisk::assembleConfig()
 {
     // [0] Sector
     size_t config_size = 4;
@@ -157,29 +201,7 @@ int RamDisk::AssembleData()
     return EXIT_SUCCESS;
 }
 
-int RamDisk::openDEV()
-{
-    m_fileDescriptor = open(DEVICE_PATH, O_RDWR);
-
-    if (m_fileDescriptor < 0)
-    {
-        std::cout << "[ERNO] [RAM] Failed to open Device" << std::endl;
-        return EXIT_FAILURE;
-    }
-    else
-    {
-        std::cout << "[INFO] [RAM] Device opened successfuly" << std::endl;
-    }
-
-    return OK;
-}
-
-int RamDisk::dataRX()
-{
-    return OK; /* One way communication Here */
-}
-
-int RamDisk::dataTX()
+int RamDisk::sendConfig()
 {
     ssize_t bytes = 0;
 
@@ -230,7 +252,6 @@ int RamDisk::dataTX()
     return EXIT_SUCCESS;
 }
 
-
 void RamDisk::clearDma()
 {
     openDEV();
@@ -250,13 +271,3 @@ void RamDisk::clearDma()
     closeDEV();
 }
 
-int RamDisk::closeDEV()
-{
-    if (m_fileDescriptor >= 0)
-    {
-        close(m_fileDescriptor);
-        m_fileDescriptor = -1;
-    }
-
-    return OK;
-}

@@ -13,9 +13,9 @@ int main()
 {
     /**
      * Smart pointer for auto Heap
-     * allocation and dealocation
+     * allocation and deallocation
      */
-    auto instanceDroneCtrl = std::make_shared<DroneCtrl>();
+    auto instanceDroneCtrl = std::make_unique<DroneCtrl>();
     instanceDroneCtrl->droneInit();
 
 #if 1 /* Test */
@@ -36,6 +36,6 @@ int main()
     }
 #endif
 
-    /* shared_ptr in use :: No need for deallocation */
+    /* unique_ptr in use :: No need for deallocation */
     return 0;
 }

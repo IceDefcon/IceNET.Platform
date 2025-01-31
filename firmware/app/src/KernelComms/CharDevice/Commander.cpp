@@ -20,31 +20,32 @@ Commander::Commander() :
     m_threadKill(false),
     m_ioState(IO_IDLE),
     m_ioStatePrev(IO_IDLE),
-    m_instance(this),
-    m_Rx_Commander(new std::vector<char>(IO_TRAMSFER_SIZE)),
-    m_Tx_Commander(new std::vector<char>(IO_TRAMSFER_SIZE)),
-    m_Rx_bytesReceived(0),
-    m_Tx_bytesReceived(0),
-    m_transferComplete(false)
+    m_Rx_CommanderVector(std::make_shared<std::vector<char>>(IO_TRANSFER_SIZE)),
+    m_Tx_CommanderVector(std::make_shared<std::vector<char>>(IO_TRANSFER_SIZE)),
+    m_IO_CommanderState(std::make_shared<ioStateType>(IO_IDLE)),
+    m_commandMatrix(4, std::vector<char>(2, 0))  // Initialize a 4x2 matrix of zeros
 {
-    std::cout << "[INFO] [CONSTRUCTOR] " << m_instance << " :: Instantiate Commander" << std::endl;
+    std::cout << "[INFO] [CONSTRUCTOR] " << this << " :: Instantiate Commander" << std::endl;
+
+    /* Activate DMA transfer to send config to FPGA */
+    m_commandMatrix[0][0] = 0x10;
+    m_commandMatrix[0][1] = 0xAD;
+    /* Load Device config to RAM Disk Sectors */
+    m_commandMatrix[1][0] = 0x10;
+    m_commandMatrix[1][1] = 0xAD;
+    /* Clear RamDisk */
+    m_commandMatrix[2][0] = 0xC1;
+    m_commandMatrix[2][1] = 0xEA;
+    /* Additional Empty Command */
+    m_commandMatrix[3][0] = 0x00;
+    m_commandMatrix[3][1] = 0x00;
 }
 
 Commander::~Commander()
 {
-    std::cout << "[INFO] [DESTRUCTOR] " << m_instance << " :: Destroy Commander" << std::endl;
+    std::cout << "[INFO] [DESTRUCTOR] " << this << " :: Destroy Commander" << std::endl;
 
     closeDEV();
-
-    delete m_Rx_Commander;
-    delete m_Tx_Commander;
-}
-
-void Commander::initBuffers()
-{
-    std::cout << "[INFO] [COM] Initialise Commander Buffers" << std::endl;
-    std::fill(m_Rx_Commander->begin(), m_Rx_Commander->end(), 0);
-    std::fill(m_Tx_Commander->begin(), m_Tx_Commander->end(), 0);
 }
 
 int Commander::openDEV()
@@ -86,23 +87,52 @@ int Commander::dataRX()
  */
 int Commander::dataTX()
 {
+    /**
+     *
+     * TODO
+     *
+     */
+
+    return OK;
+}
+
+void Commander::sendCommand()
+{
+    /**
+     *
+     * TODO
+     *
+     */
+}
+
+
+void Commander::reconfigureEngine()
+{
+    /**
+     *
+     * TODO
+     *
+     * Need
+     */
+}
+
+int Commander::activateConfig()
+{
     int ret = -1;
+    std::vector<char>* loadCommand = new std::vector<char>(IO_TRANSFER_SIZE);
 
     std::cout << "[INFO] [CMD] Command Received :: Sending to Kernel" << std::endl;
 
-    (*m_Tx_Commander)[0] = 0x10;
-    (*m_Tx_Commander)[1] = 0xAD;
-    ret = write(m_file_descriptor, m_Tx_Commander->data(), 2);
+    (*loadCommand)[0] = 0x10;
+    (*loadCommand)[1] = 0xAD;
+    ret = write(m_file_descriptor, loadCommand->data(), 2);
+
+    delete loadCommand;
 
     if (ret == -1)
     {
         std::cout << "[ERNO] [CMD] Cannot write command to kernel space" << std::endl;
         return ERROR;
-    }
-
-    for (size_t i = 0; i < IO_TRAMSFER_SIZE; i++)
-    {
-        (*m_Tx_Commander)[i] = 0x00;
     }
 
     return OK;
@@ -146,72 +176,88 @@ bool Commander::isThreadKilled()
 void Commander::threadCommander()
 {
     int ret = 0;
+
     while (!m_threadKill)
     {
+        m_ioState = (ioStateType)(*m_IO_CommanderState);
+
         if(m_ioState != m_ioStatePrev)
         {
             std::cout << "[INFO] [CMD] State Commander " << m_ioStatePrev << "->" << m_ioState << " " << getIoStateString(m_ioState) << std::endl;
             m_ioStatePrev = m_ioState;
+        }
 
-            switch(m_ioState)
-            {
-                case IO_IDLE:
-                    m_transferComplete = false;
-                    break;
+        switch(*m_IO_CommanderState)
+        {
+            case IO_IDLE:
+                break;
 
-                case IO_READ:
-                    if(false == m_transferComplete)
+            case IO_TCP_READ:
+                /* DO NOTHING HERE */
+                break;
+
+            case IO_COM_WRITE:
+                std::cout << "[INFO] [CMD] Write to Kernel Commander" << std::endl;
+                ret = -1;
+                std::cout << "[INFO] [CMD] Data Received :: Sending to Kernel" << std::endl;
+                printSharedBuffer(m_Tx_CommanderVector);
+                ret = write(m_file_descriptor, m_Tx_CommanderVector->data(), IO_TRANSFER_SIZE);
+
+                if (ret == -1)
+                {
+                    std::cout << "[ERNO] [CMD] Cannot write command to kernel space" << std::endl;
+                }
+                else
+                {
+                    for (size_t i = 0; i < IO_TRANSFER_SIZE; i++)
                     {
-                        std::cout << "[INFO] [CMD] Trying to read from Kernel" << std::endl;
-                        ret = read(m_file_descriptor, m_Rx_Commander->data(), IO_TRAMSFER_SIZE);
-
-                        std::cout << "[INFO] [CMD] Received " << ret << " Bytes of data: ";
-                        for (int i = 0; i < ret; ++i)
-                        {
-                            std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>((*m_Rx_Commander)[i]) << " ";
-                        }
-                        std::cout << std::endl;
-                        m_transferComplete = true;
+                        (*m_Tx_CommanderVector)[i] = 0x00;
                     }
 
+                    *m_IO_CommanderState = IO_COM_READ;
+                }
 
-                    // m_ioState = IO_IDLE;
-                    break;
+                break;
 
-                case IO_WRITE:
-                    printHexBuffer(m_Tx_Commander);
-                    ret = -1;
+            case IO_COM_READ:
+                std::cout << "[INFO] [CMD] Read from Kernel Commander" << std::endl;
+                std::cout << "[INFO] [CMD] Trying to read from Kernel" << std::endl;
+                ret = read(m_file_descriptor, m_Rx_CommanderVector->data(), IO_TRANSFER_SIZE);
+                // ret = read(m_file_descriptor, reinterpret_cast<void*>(m_Rx_CommanderVector.get()), IO_TRANSFER_SIZE);
 
-                    std::cout << "[INFO] [CMD] Data Received :: Sending to Kernel" << std::endl;
-
-                    ret = write(m_file_descriptor, m_Tx_Commander->data(), m_Tx_bytesReceived);
-
-                    if (ret == -1)
+                if(ret > 0)
+                {
+                    std::cout << "[INFO] [CMD] Received " << ret << " Bytes of data: ";
+                    for (int i = 0; i < ret; ++i)
                     {
-                        std::cout << "[ERNO] [CMD] Cannot write command to kernel space" << std::endl;
+                        std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>((*m_Rx_CommanderVector)[i]) << " ";
                     }
+                    std::cout << std::endl;
+                    *m_IO_CommanderState = IO_TCP_WRITE;
+                }
+                else
+                {
+                    std::cout << "[ERNO] [CMD] Cannot read from kernel space" << std::endl;
+                }
 
-                    for (size_t i = 0; i < IO_TRAMSFER_SIZE; i++)
-                    {
-                        (*m_Tx_Commander)[i] = 0x00;
-                    }
-                    // std::cout << "[INFO] [CMD] Write Command" << std::endl;
-                    m_ioState = IO_READ;
-                    break;
+                break;
 
-                case IO_LOAD:
-                    // std::cout << "[INFO] [CMD] Load Command" << std::endl;
-                    // m_ioState = IO_READ;
-                    break;
+            case IO_TCP_WRITE:
+                /* DO NOTHING HERE */
+                break;
 
-                case IO_CLEAR:
-                    // std::cout << "[INFO] [CMD] Clear Command" << std::endl;
-                    // m_ioState = IO_READ;
-                    break;
+            case IO_LOAD:
+                // std::cout << "[INFO] [CMD] Load Command" << std::endl;
+                // m_ioState = IO_READ;
+                break;
 
-                default:
-                    std::cout << "[INFO] [CMD] Unknown Command" << std::endl;
-            }
+            case IO_CLEAR:
+                // std::cout << "[INFO] [CMD] Clear Command" << std::endl;
+                // m_ioState = IO_READ;
+                break;
+
+            default:
+                std::cout << "[INFO] [CMD] Unknown Command" << std::endl;
         }
 
         /* Reduce consumption of CPU resources */
@@ -221,32 +267,13 @@ void Commander::threadCommander()
     std::cout << "[INFO] [WDG] Terminate threadCommander" << std::endl;
 }
 
-/**
- * TODO
- *
- * This must be mutex protected
- * to avoid read/write in the
- * same time
- *
- */
-void Commander::setIO_State(ioStateType state)
+/* SHARE */ void Commander::setTransferPointer(std::shared_ptr<std::vector<char>> transferPointerRx, std::shared_ptr<std::vector<char>> transferPointerTx)
 {
-    m_ioState = state;
+    m_Rx_CommanderVector = transferPointerRx;
+    m_Tx_CommanderVector = transferPointerTx;
 }
 
-ioStateType Commander::getIO_State()
+/* SHARE */ void Commander::setTransferState(std::shared_ptr<ioStateType> transferStatee)
 {
-    return m_ioState;
-}
-
-/* COPY */ int Commander::getRx_Commander(std::vector<char> &dataRx)
-{
-    dataRx = *m_Rx_Commander;
-    return m_Rx_bytesReceived;
-}
-
-/* COPY */ void Commander::setTx_Commander(const std::vector<char> &dataTx, int size)
-{
-    *m_Tx_Commander = dataTx;
-    m_Tx_bytesReceived = size;
+    m_IO_CommanderState = transferStatee;
 }

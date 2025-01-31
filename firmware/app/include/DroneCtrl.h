@@ -20,7 +20,6 @@ class DroneCtrl :
     public KernelComms
 {
     private:
-        ioStateType m_ioState;
         ctrlType m_ctrlState;
         ctrlType m_ctrlStatePrev;
 
@@ -29,10 +28,9 @@ class DroneCtrl :
         KernelComms::Watchdog* m_instanceWatchdog;
         KernelComms::RamDisk* m_instanceRamDisk;
 
-        std::vector<char>* m_Rx_DroneCtrl;
-        std::vector<char>* m_Tx_DroneCtrl;
-        int m_Rx_bytesReceived;
-        int m_Tx_bytesReceived;
+        std::shared_ptr<std::vector<char>> m_Rx_DroneCtrlVector;
+        std::shared_ptr<std::vector<char>> m_Tx_DroneCtrlVector;
+        std::shared_ptr<ioStateType> m_IO_DroneCtrlState;
 
     public:
         DroneCtrl();

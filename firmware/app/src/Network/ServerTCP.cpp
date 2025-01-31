@@ -24,11 +24,9 @@ ServerTCP::ServerTCP() :
     m_serverSocket(-1),
     m_clientSocket(-1),
     m_clientConnected(false),
-    m_Rx_ServerTCP(new std::vector<char>(IO_TRAMSFER_SIZE)),
-    m_Tx_ServerTCP(new std::vector<char>(IO_TRAMSFER_SIZE)),
-    m_Rx_bytesReceived(0),
-    m_Tx_bytesReceived(0),
-    m_transferComplete(false)
+    m_Rx_ServerTCPVector(std::make_shared<std::vector<char>>(IO_TRANSFER_SIZE)),
+    m_Tx_ServerTCPVector(std::make_shared<std::vector<char>>(IO_TRANSFER_SIZE)),
+    m_IO_ServerTCPState(std::make_shared<ioStateType>(IO_IDLE))
 {
     std::cout << "[INFO] [CONSTRUCTOR] " << this << " :: Instantiate ServerTCP" << std::endl;
 
@@ -41,211 +39,6 @@ ServerTCP::ServerTCP() :
 ServerTCP::~ServerTCP()
 {
     std::cout << "[INFO] [DESTRUCTOR] " << this << " :: Destroy ServerTCP" << std::endl;
-
-    delete m_Rx_ServerTCP;
-    delete m_Tx_ServerTCP;
-}
-
-void ServerTCP::initBuffers()
-{
-    std::cout << "[INFO] [TCP] Initialise ServerTCP Buffers" << std::endl;
-    std::fill(m_Rx_ServerTCP->begin(), m_Rx_ServerTCP->end(), 0);
-    std::fill(m_Tx_ServerTCP->begin(), m_Tx_ServerTCP->end(), 0);
-}
-
-void ServerTCP::initThread()
-{
-    std::cout << "[INFO] [TCP] Initialize threadServerTCP" << std::endl;
-    m_threadServerTCP = std::thread(&ServerTCP::threadServerTCP, this);
-}
-
-void ServerTCP::shutdownThread()
-{
-    /* Unblock the accept function */
-    if (m_serverSocket >= 0)
-    {
-        close(m_serverSocket);
-        m_serverSocket = -1; // Prevent double-closing
-    }
-
-    /* Set the threadKill flag */
-    if (!m_threadKill)
-    {
-        m_threadKill = true;
-    }
-
-    /* Join the thread if it's joinable */
-    if (m_threadServerTCP.joinable())
-    {
-        m_threadServerTCP.join();
-    }
-}
-
-bool ServerTCP::isThreadKilled()
-{
-    return m_threadKill;
-}
-
-void ServerTCP::threadServerTCP()
-{
-    configureServer();
-
-    socklen_t clientLength = sizeof(m_clientAddress);
-
-    while (!m_threadKill)
-    {
-        /**
-         *
-         * TODO
-         *
-         * State Machine would be
-         * more suitable for
-         * this process
-         *
-         */
-        if (false == m_clientConnected)
-        {
-#if 0
-            std::cout << "\r[INFO] [TCP] threadServerTCP waiting for the TCP Client... [" << m_timeoutCount << "]" << std::endl;
-#endif
-            /* Wait for the TCP client connection */
-            m_clientSocket = accept(m_serverSocket, (struct sockaddr *)&m_clientAddress, &clientLength);
-
-            if (m_clientSocket < 0)
-            {
-                if (errno == EAGAIN || errno == EWOULDBLOCK)
-                {
-                    m_timeoutCount++;
-                    continue; /* Continue waiting for the client */
-                }
-                else
-                {
-                    std::cerr << "[ERROR] [TCP] accept failed: " << strerror(errno) << std::endl;
-                }
-            }
-            else
-            {
-                std::cout << "[INFO] [TCP] threadServerTCP client connection established" << std::endl;
-                m_clientConnected = true;
-                m_timeoutCount = 0;
-            }
-        }
-        else
-        {
-            int ret = tcpRX();
-
-            if(ret == 0)
-            {
-                std::cout << "[INFO] [TCP] Client disconnected from server" << std::endl;
-                m_clientConnected = false;
-                m_timeoutCount = 0;
-            }
-            else if(ret > 0)
-            {
-#if 1
-                m_ioState = IO_WRITE;
-                m_timeoutCount = 0;
-#else
-                std::cout << "[INFO] [TCP] Sending data to NetworkTraffic" << std::endl;
-                // m_instanceNetworkTraffic->setNetworkTrafficRx(m_Rx_ServerTCP, m_Rx_bytesReceived);
-                std::cout << "[INFO] [TCP] Set NetworkTraffic_Input mode" << std::endl;
-                // m_instanceNetworkTraffic->setNetworkTrafficState(NetworkTraffic_Input);
-
-                if (tcpTX() < 0)
-                {
-                    std::cout << "[ERNO] [TCP] Failed to send message" << std::endl;
-                }
-                else
-                {
-                    std::cout << "[INFO] [TCP] Transfer complete" << std::endl;
-                    m_timeoutCount = 0;
-                }
-#endif
-            }
-            else if(ret == -5)
-            {
-                tcpClose();
-                std::cout << "[INFO] [TCP] Ready to Kill threadServerTCP" << std::endl;
-                m_threadKill = true;
-            }
-            else if(ret == -4)
-            {
-                std::cout << "[INFO] [TCP] Transfer Data to RAM" << std::endl;
-                // m_instanceRamDisk->dataTX();
-                m_timeoutCount = 0;
-            }
-            else if(ret == -3)
-            {
-                std::cout << "[INFO] [TCP] Clear DMA Engine from RAM" << std::endl;
-                // m_instanceRamDisk->clearDma();
-                m_timeoutCount = 0;
-            }
-            else
-            {
-                // m_ioState = IO_IDLE;
-                /* TODO :: Client connected but nothing receiver */
-            }
-
-            if(m_ioState != m_ioStatePrev)
-            {
-                std::cout << "[INFO] [TCP] State ServerTCP " << m_ioStatePrev << "->" << m_ioState << " " << getIoStateString(m_ioState) << std::endl;
-                m_ioStatePrev = m_ioState;
-
-                switch(m_ioState)
-                {
-                    case IO_IDLE:
-                        m_transferComplete = false;
-                        break;
-
-                    case IO_READ:
-                        if(false == m_transferComplete)
-                        {
-                            printHexBuffer(m_Tx_ServerTCP);
-                            (*m_Tx_ServerTCP)[0] = 0x11;
-                            (*m_Tx_ServerTCP)[1] = 0x22;
-                            (*m_Tx_ServerTCP)[2] = 0x33;
-                            (*m_Tx_ServerTCP)[3] = 0x44;
-                            (*m_Tx_ServerTCP)[4] = 0x55;
-                            (*m_Tx_ServerTCP)[5] = 0x66;
-                            (*m_Tx_ServerTCP)[6] = 0x77;
-                            (*m_Tx_ServerTCP)[7] = 0xEE;
-                            m_transferComplete = true;
-                        }
-                        write(m_clientSocket, m_Tx_ServerTCP->data(), m_Tx_ServerTCP->size());
-                        // if(false == m_transferComplete)
-                        // {
-                        //     write(m_clientSocket, m_Tx_ServerTCP->data(), m_Tx_bytesReceived);
-                        //     m_transferComplete = true;
-                        // }
-                        m_ioState = IO_IDLE;
-                        break;
-
-                    case IO_WRITE:
-                        // std::cout << "[INFO] [TCP] Write Command" << std::endl;
-                        // m_ioState = IO_READ;
-                        break;
-
-                    case IO_LOAD:
-                        // std::cout << "[INFO] [TCP] Load Command" << std::endl;
-                        // m_ioState = IO_READ;
-                        break;
-
-                    case IO_CLEAR:
-                        // std::cout << "[INFO] [TCP] Clear Command" << std::endl;
-                        // m_ioState = IO_READ;
-                        break;
-
-                    default:
-                        std::cout << "[INFO] [TCP] Unknown Command" << std::endl;
-                }
-            }
-        }
-
-        /* Reduce consumption of CPU resources */
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
-    }
-
-    std::cout << "[INFO] [TCP] Terminate threadServerTCP" << std::endl;
 }
 
 int ServerTCP::configureServer()
@@ -326,37 +119,13 @@ int ServerTCP::configureServer()
 int ServerTCP::tcpTX()
 {
     ssize_t ret = -1;
-#if 0
-    /**
-     * As in Output we have here
-     * lack of synchronisation due to
-     * the trigger that is happemning
-     * on the client side :: GUI
-     *
-     * Therefore :: No need for State Machine
-     */
+
     if (!m_clientConnected)
     {
         std::cerr << "[ERNO] [TCP] No client connected" << std::endl;
     }
     else
     {
-        while(false == m_instanceNetworkTraffic->getFeedbackFlag())
-        {
-            std::this_thread::sleep_for(std::chrono::milliseconds(10));
-        }
-
-        std::this_thread::sleep_for(std::chrono::milliseconds(50));
-
-        m_Tx_ServerTCP = m_instanceNetworkTraffic->getNetworkTrafficTx();
-        m_instanceNetworkTraffic->resetFeedbackFlag();
-        std::cout << "[INFO] [TCP] Received " << m_Tx_ServerTCP->size() << " Bytes of data: ";
-        for (int i = 0; i < (int)m_Tx_ServerTCP->size(); ++i)
-        {
-            std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>((*m_Tx_ServerTCP)[i]) << " ";
-        }
-        std::cout << std::endl;
-
         /**
          *
          * This one here is to keep
@@ -366,88 +135,55 @@ int ServerTCP::tcpTX()
          *
          */
 
-        (*m_Tx_ServerTCP)[7] = 0xEE;
-        ret = write(m_clientSocket, m_Tx_ServerTCP->data(), m_Tx_ServerTCP->size());
-        (*m_Tx_ServerTCP)[7] = 0x00; /* Now clear me !! */
+        (*m_Rx_ServerTCPVector)[7] = 0xEE;
+        ret = write(m_clientSocket, m_Rx_ServerTCPVector->data(), IO_TRANSFER_SIZE);
     }
-#endif
+
     return ret;
 }
 
 int ServerTCP::tcpRX()
 {
+    int ret = 0;
+
     if (m_clientSocket < 0)
     {
         std::cout << "[ERNO] [TCP] Failed to accept the client connection" << std::endl;
     }
     else
     {
-        /**
-         *
-         * TODO
-         *
-         * Check if we can clear
-         * the buffer here
-         *
-         */
-#if 0
-        size_t i = 0;
-        for (i = 0; i < IO_TRAMSFER_SIZE; i++)
-        {
-            (*m_Rx_ServerTCP)[i] = 0x00;
-        }
-#endif
-        m_Rx_bytesReceived = recv(m_clientSocket, m_Rx_ServerTCP->data(), IO_TRAMSFER_SIZE, 0);
-        /**
-         *
-         * TODO
-         *
-         * Dummy TCP Feedback
-         * To keep the things
-         * running in App
-         *
-         */
-#if 0 /* To be removed ??? */
-        (*m_Tx_ServerTCP)[0] = 0x11;
-        (*m_Tx_ServerTCP)[1] = 0x22;
-        (*m_Tx_ServerTCP)[2] = 0x33;
-        (*m_Tx_ServerTCP)[3] = 0x44;
-        (*m_Tx_ServerTCP)[4] = 0x55;
-        (*m_Tx_ServerTCP)[5] = 0x66;
-        (*m_Tx_ServerTCP)[6] = 0x77;
-        (*m_Tx_ServerTCP)[7] = 0xEE;
-        write(m_clientSocket, m_Tx_ServerTCP->data(), m_Tx_ServerTCP->size());
-#endif
+        ret = recv(m_clientSocket, m_Tx_ServerTCPVector->data(), IO_TRANSFER_SIZE, 0);
+
         /* DEAD :: CODE */
-        if((*m_Rx_ServerTCP)[0] == 0xDE && (*m_Rx_ServerTCP)[1] == 0xAD && (*m_Rx_ServerTCP)[2] == 0xC0 && (*m_Rx_ServerTCP)[3] == 0xDE)
+        if((*m_Tx_ServerTCPVector)[0] == 0xDE && (*m_Tx_ServerTCPVector)[1] == 0xAD && (*m_Tx_ServerTCPVector)[2] == 0xC0 && (*m_Tx_ServerTCPVector)[3] == 0xDE)
         {
             std::cout << "[INFO] [TCP] 0xDEAD Received" << std::endl;
             return -5;
         }
         /* LOAD :: CODE */
-        else if((*m_Rx_ServerTCP)[0] == 0x10 && (*m_Rx_ServerTCP)[1] == 0xAD && (*m_Rx_ServerTCP)[2] == 0xC0 && (*m_Rx_ServerTCP)[3] == 0xDE)
+        else if((*m_Tx_ServerTCPVector)[0] == 0x10 && (*m_Tx_ServerTCPVector)[1] == 0xAD && (*m_Tx_ServerTCPVector)[2] == 0xC0 && (*m_Tx_ServerTCPVector)[3] == 0xDE)
         {
             std::cout << "[INFO] [TCP] Send configuration to RAM" << std::endl;
             return -4;
         }
         /* CLEAR :: CODE */
-        else if((*m_Rx_ServerTCP)[0] == 0xC1 && (*m_Rx_ServerTCP)[1] == 0xEA && (*m_Rx_ServerTCP)[2] == 0xC0 && (*m_Rx_ServerTCP)[3] == 0xDE)
+        else if((*m_Tx_ServerTCPVector)[0] == 0xC1 && (*m_Tx_ServerTCPVector)[1] == 0xEA && (*m_Tx_ServerTCPVector)[2] == 0xC0 && (*m_Tx_ServerTCPVector)[3] == 0xDE)
         {
             std::cout << "[INFO] [TCP] Clear DMA from RAM" << std::endl;
             return -3;
         }
         else
         {
-            if (m_Rx_bytesReceived > 0)
+            if (ret > 0)
             {
-                std::cout << "[INFO] [TCP] Received " << m_Rx_bytesReceived << " Bytes of data: ";
-                for (int i = 0; i < m_Rx_bytesReceived; ++i)
+                std::cout << "[INFO] [TCP] Received " << ret << " Bytes of data: ";
+                for (int i = 0; i < ret; ++i)
                 {
-                    std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>((*m_Rx_ServerTCP)[i]) << " ";
+                    std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>((*m_Tx_ServerTCPVector)[i]) << " ";
                 }
                 std::cout << std::endl;
             }
-            else if (m_Rx_bytesReceived == 0)
+            else if (ret == 0)
             {
                 std::cout << "[INFO] [TCP] Connection closed by client" << std::endl;
             }
@@ -455,6 +191,7 @@ int ServerTCP::tcpRX()
             {
                 std::cout << "\r[INFO] [TCP] Server inactive for 10s :: Shutdown TCP connection" << std::endl;
                 m_clientConnected = false;
+                *m_IO_ServerTCPState = IO_IDLE;
             }
             else
             {
@@ -466,7 +203,7 @@ int ServerTCP::tcpRX()
         }
     }
 
-    return m_Rx_bytesReceived;
+    return ret;
 }
 
 int ServerTCP::tcpClose()
@@ -476,38 +213,202 @@ int ServerTCP::tcpClose()
         close(m_clientSocket);
         m_clientSocket = -1;
         m_clientConnected = false;
+        *m_IO_ServerTCPState = IO_IDLE;
         m_timeoutCount = 0;
     }
 
     return 0;
 }
 
-/**
- * TODO
- *
- * This must be mutex protected
- * to avoid read/write in the
- * same time
- *
- */
-void ServerTCP::setIO_State(ioStateType state)
+void ServerTCP::initThread()
 {
-    m_ioState = state;
+    std::cout << "[INFO] [TCP] Initialize threadServerTCP" << std::endl;
+    m_threadServerTCP = std::thread(&ServerTCP::threadServerTCP, this);
 }
 
-ioStateType ServerTCP::getIO_State()
+void ServerTCP::shutdownThread()
 {
-    return m_ioState;
+    /* Unblock the accept function */
+    if (m_serverSocket >= 0)
+    {
+        close(m_serverSocket);
+        m_serverSocket = -1; // Prevent double-closing
+    }
+
+    /* Set the threadKill flag */
+    if (!m_threadKill)
+    {
+        m_threadKill = true;
+    }
+
+    /* Join the thread if it's joinable */
+    if (m_threadServerTCP.joinable())
+    {
+        m_threadServerTCP.join();
+    }
 }
 
-/* COPY */ int ServerTCP::getRx_ServerTCP(std::vector<char> &dataRx)
+bool ServerTCP::isThreadKilled()
 {
-    dataRx = *m_Rx_ServerTCP;
-    return m_Rx_bytesReceived;
+    return m_threadKill;
 }
 
-/* COPY */ void ServerTCP::setTx_ServerTCP(const std::vector<char> &dataTx, int size)
+bool ServerTCP::isClientConnected()
 {
-    *m_Tx_ServerTCP = dataTx;
-    m_Tx_bytesReceived = size;
+    bool ret = false;
+    socklen_t clientLength = sizeof(m_clientAddress);
+#if 0
+    std::cout << "\r[INFO] [TCP] threadServerTCP waiting for the TCP Client... [" << m_timeoutCount << "]" << std::endl;
+#endif
+    /* Wait for the TCP client connection */
+    m_clientSocket = accept(m_serverSocket, (struct sockaddr *)&m_clientAddress, &clientLength);
+
+    if (m_clientSocket < 0)
+    {
+        if (errno == EAGAIN || errno == EWOULDBLOCK)
+        {
+            m_timeoutCount++;
+        }
+        else
+        {
+            std::cerr << "[ERROR] [TCP] accept failed: " << strerror(errno) << std::endl;
+        }
+    }
+    else
+    {
+        std::cout << "[INFO] [TCP] threadServerTCP client connection established" << std::endl;
+        m_timeoutCount = 0;
+        ret = true;
+    }
+
+    return ret;
+}
+
+void ServerTCP::threadServerTCP()
+{
+    int ret = 0;
+    configureServer();
+
+    while (!m_threadKill)
+    {
+        if (false == m_clientConnected)
+        {
+            m_clientConnected = isClientConnected();
+        }
+        else
+        {
+            m_ioState = (ioStateType)(*m_IO_ServerTCPState);
+
+            if(m_ioState != m_ioStatePrev)
+            {
+                std::cout << "[INFO] [TCP] State ServerTCP " << m_ioStatePrev << "->" << m_ioState << " " << getIoStateString(m_ioState) << std::endl;
+                m_ioStatePrev = m_ioState;
+            }
+
+            switch(*m_IO_ServerTCPState)
+            {
+                case IO_IDLE:
+                    if(true == m_clientConnected)
+                    {
+                        *m_IO_ServerTCPState = IO_TCP_READ;
+                        std::cout << "[INFO] [TCP] Read from TCP Client" << std::endl;
+                    }
+                    break;
+
+                case IO_TCP_READ:
+                    ret = tcpRX();
+
+                    if(ret == 0)
+                    {
+                        std::cout << "[INFO] [TCP] Client disconnected from server" << std::endl;
+                        m_clientConnected = false;
+                        *m_IO_ServerTCPState = IO_IDLE;
+                        m_timeoutCount = 0;
+                    }
+                    else if(ret > 0)
+                    {
+                        m_timeoutCount = 0;
+                        *m_IO_ServerTCPState = IO_COM_WRITE;
+                    }
+                    else if(ret == -5)
+                    {
+                        tcpClose();
+                        std::cout << "[INFO] [TCP] Ready to Kill threadServerTCP" << std::endl;
+                        m_threadKill = true;
+                    }
+                    else if(ret == -4)
+                    {
+                        std::cout << "[INFO] [TCP] Transfer Data to RAM" << std::endl;
+                        // m_instanceRamDisk->dataTX();
+                        m_timeoutCount = 0;
+                    }
+                    else if(ret == -3)
+                    {
+                        std::cout << "[INFO] [TCP] Clear DMA Engine from RAM" << std::endl;
+                        // m_instanceRamDisk->clearDma();
+                        m_timeoutCount = 0;
+                    }
+                    else
+                    {
+                        /* TODO :: Client connected but nothing receiver */
+                    }
+                    break;
+
+                case IO_COM_WRITE:
+                    /* DO NOTHING HERE */
+                    break;
+
+                case IO_COM_READ:
+                    /* DO NOTHING HERE */
+                    break;
+
+                case IO_TCP_WRITE:
+                    std::cout << "[INFO] [TCP] Write to TCP Client" << std::endl;
+
+                    if (tcpTX() < 0)
+                    {
+                        std::cout << "[ERNO] [TCP] Failed to send message" << std::endl;
+                    }
+                    else
+                    {
+                        std::cout << "[INFO] [TCP] Transfer complete" << std::endl;
+                        m_timeoutCount = 0;
+                        for (size_t i = 0; i < IO_TRANSFER_SIZE; i++)
+                        {
+                            (*m_Rx_ServerTCPVector)[i] = 0x00;
+                        }
+                        *m_IO_ServerTCPState = IO_IDLE; /* Test */
+                    }
+
+                    break;
+
+                case IO_LOAD:
+                    // std::cout << "[INFO] [TCP] Load Command" << std::endl;
+                    break;
+
+                case IO_CLEAR:
+                    // std::cout << "[INFO] [TCP] Clear Command" << std::endl;
+                    break;
+
+                default:
+                    std::cout << "[INFO] [TCP] Unknown Command" << std::endl;
+            }
+        }
+
+        /* Reduce consumption of CPU resources */
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
+
+    std::cout << "[INFO] [TCP] Terminate threadServerTCP" << std::endl;
+}
+
+/* SHARE */ void ServerTCP::setTransferPointer(std::shared_ptr<std::vector<char>> transferPointerRx, std::shared_ptr<std::vector<char>> transferPointerTx)
+{
+    m_Rx_ServerTCPVector = transferPointerRx;
+    m_Tx_ServerTCPVector = transferPointerTx;
+}
+
+/* SHARE */ void ServerTCP::setTransferState(std::shared_ptr<ioStateType> transferStatee)
+{
+    m_IO_ServerTCPState = transferStatee;
 }
