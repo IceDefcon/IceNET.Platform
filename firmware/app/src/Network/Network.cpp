@@ -28,7 +28,6 @@ Network::~Network()
 void Network::initServerTCP()
 {
     std::cout << "[INFO] [NET] " << "Initialize TCP Server" << std::endl;
-    ServerTCP::initBuffers();
     ServerTCP::initThread();
 }
 

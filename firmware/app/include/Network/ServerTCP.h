@@ -38,11 +38,7 @@ class ServerTCP
 
         std::shared_ptr<std::vector<char>> m_Rx_ServerTCPVector;
         std::shared_ptr<std::vector<char>> m_Tx_ServerTCPVector;
-
-        std::vector<char>* m_Rx_ServerTCP;
-        std::vector<char>* m_Tx_ServerTCP;
-        int m_Rx_bytesReceived;
-        int m_Tx_bytesReceived;
+        std::shared_ptr<ioStateType> m_IO_ServerTCPState;
 
         bool m_transferComplete;
 
@@ -50,31 +46,17 @@ class ServerTCP
         ServerTCP();
         ~ServerTCP();
 
-        void initBuffers();
-
-        void initThread();
-        void shutdownThread();
-        bool isThreadKilled();
-        void threadServerTCP();
-
         int configureServer();
         int tcpTX();
         int tcpRX();
         int tcpClose();
 
-        /**
-         * TODO
-         *
-         * This must be mutex protected
-         * to avoid read/write in the
-         * same time
-         *
-         */
-        void setIO_State(ioStateType state);
-        ioStateType getIO_State();
-
-        /* COPY */ int getRx_ServerTCP(std::vector<char> &dataRx);
-        /* COPY */ void setTx_ServerTCP(const std::vector<char> &dataTx, int size);
+        void initThread();
+        void shutdownThread();
+        bool isThreadKilled();
+        bool isClientConnected();
+        void threadServerTCP();
 
         /* SHARE */ void setTransferPointer(std::shared_ptr<std::vector<char>> transferPointerRx, std::shared_ptr<std::vector<char>> transferPointerTx);
+        /* SHARE */ void setTransferState(std::shared_ptr<ioStateType> transferStatee);
 };

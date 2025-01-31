@@ -60,7 +60,7 @@ class RamDisk
 
         char calculateChecksum(const char* data, size_t size);
 		DeviceConfig* createOperation(char devId, char ctrl, char ops);
-		int AssembleData();
+		int assembleConfig();
+        int sendConfig();
         void clearDma();
 };
-
