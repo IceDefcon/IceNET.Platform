@@ -22,6 +22,13 @@ enum Status
 	UNKNOWN
 };
 
+typedef enum
+{
+    CMD_FPGA_CONFIG,
+    CMD_DMA_RECONFIG,
+    CMD_AMOUNT
+} commandType;
+
 typedef enum 
 {
     IO_IDLE = 0,
@@ -84,3 +91,4 @@ inline void printSharedBuffer(std::shared_ptr<std::vector<char>> buffer)
     }
     std::cout << std::endl;
 }
+

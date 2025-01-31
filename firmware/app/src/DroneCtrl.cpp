@@ -16,7 +16,6 @@
 #include "Types.h"
 
 DroneCtrl::DroneCtrl() :
-    m_ioState(IO_IDLE),
     m_ctrlState(CTRL_INIT),
     m_ctrlStatePrev(CTRL_INIT),
     m_Rx_DroneCtrlVector(std::make_shared<std::vector<char>>(IO_TRANSFER_SIZE)),
@@ -95,7 +94,7 @@ void DroneCtrl::sendFpgaConfig()
     m_instanceRamDisk->assembleConfig();
     m_instanceRamDisk->sendConfig();
     std::cout << "[INFO] [ D ] Watchdog ready :: Activate DMA Engine" << std::endl;
-    m_instanceCommander->sendCommand();
+    m_instanceCommander->activateConfig();
 }
 
 void DroneCtrl::droneCtrlMain()
@@ -129,6 +128,7 @@ void DroneCtrl::droneCtrlMain()
             break;
 
         case CTRL_MAIN:
+            m_instanceCommander->reconfigureEngine();
             /* TODO :: Main Function */
             break;
 

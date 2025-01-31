@@ -27,6 +27,8 @@ class Commander
         std::shared_ptr<std::vector<char>> m_Tx_CommanderVector;
         std::shared_ptr<ioStateType> m_IO_CommanderState;
 
+        std::vector<std::vector<char>> m_commandMatrix;
+
     public:
         Commander();
         ~Commander();
@@ -36,7 +38,9 @@ class Commander
         int dataRX();
         int closeDEV();
 
-        int sendCommand();
+        void sendCommand();
+        int activateConfig();
+        void reconfigureEngine();
 
         void initThread();
         void shutdownThread();

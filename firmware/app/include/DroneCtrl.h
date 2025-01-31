@@ -20,7 +20,6 @@ class DroneCtrl :
     public KernelComms
 {
     private:
-        ioStateType m_ioState;
         ctrlType m_ctrlState;
         ctrlType m_ctrlStatePrev;
 

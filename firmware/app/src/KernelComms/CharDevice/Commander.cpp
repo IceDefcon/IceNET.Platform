@@ -22,9 +22,23 @@ Commander::Commander() :
     m_ioStatePrev(IO_IDLE),
     m_Rx_CommanderVector(std::make_shared<std::vector<char>>(IO_TRANSFER_SIZE)),
     m_Tx_CommanderVector(std::make_shared<std::vector<char>>(IO_TRANSFER_SIZE)),
-    m_IO_CommanderState(std::make_shared<ioStateType>(IO_IDLE))
+    m_IO_CommanderState(std::make_shared<ioStateType>(IO_IDLE)),
+    m_commandMatrix(4, std::vector<char>(2, 0))  // Initialize a 4x2 matrix of zeros
 {
     std::cout << "[INFO] [CONSTRUCTOR] " << this << " :: Instantiate Commander" << std::endl;
+
+    /* Activate DMA transfer to send config to FPGA */
+    m_commandMatrix[0][0] = 0x10;
+    m_commandMatrix[0][1] = 0xAD;
+    /* Load Device config to RAM Disk Sectors */
+    m_commandMatrix[1][0] = 0x10;
+    m_commandMatrix[1][1] = 0xAD;
+    /* Clear RamDisk */
+    m_commandMatrix[2][0] = 0xC1;
+    m_commandMatrix[2][1] = 0xEA;
+    /* Additional Empty Command */
+    m_commandMatrix[3][0] = 0x00;
+    m_commandMatrix[3][1] = 0x00;
 }
 
 Commander::~Commander()
@@ -81,7 +95,28 @@ int Commander::dataTX()
 
     return OK;
 }
-int Commander::sendCommand()
+
+void Commander::sendCommand()
+{
+    /**
+     *
+     * TODO
+     *
+     */
+}
+
+
+void Commander::reconfigureEngine()
+{
+    /**
+     *
+     * TODO
+     *
+     * Need
+     */
+}
+
+int Commander::activateConfig()
 {
     int ret = -1;
     std::vector<char>* loadCommand = new std::vector<char>(IO_TRANSFER_SIZE);
