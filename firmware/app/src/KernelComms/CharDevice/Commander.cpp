@@ -31,8 +31,8 @@ Commander::Commander() :
     m_commandMatrix[CMD_FPGA_CONFIG][0] = 0xC0;
     m_commandMatrix[CMD_FPGA_CONFIG][1] = 0xF1;
     /* Reconfigure DMA Engine to work with single tramsfer */
-    m_commandMatrix[CMD_DMA_RECONFIG][0] = 0xC0;
-    m_commandMatrix[CMD_DMA_RECONFIG][1] = 0xDE;
+    m_commandMatrix[CMD_DMA_RECONFIG][0] = 0xAE;
+    m_commandMatrix[CMD_DMA_RECONFIG][1] = 0xC0;
     /* Load Device config to RAM Disk Sectors */
     m_commandMatrix[CMD_RAM_LOAD][0] = 0x10;
     m_commandMatrix[CMD_RAM_LOAD][1] = 0xAD;
@@ -96,38 +96,19 @@ int Commander::dataTX()
     return OK;
 }
 
-void Commander::sendCommand()
-{
-    /**
-     *
-     * TODO
-     *
-     */
-}
-
-
-void Commander::reconfigureEngine()
-{
-    /**
-     *
-     * TODO
-     *
-     * Need
-     */
-}
-
-int Commander::activateConfig()
+int Commander::sendCommand(commandType cmd)
 {
     int ret = -1;
-    std::vector<char>* loadCommand = new std::vector<char>(IO_TRANSFER_SIZE);
+    std::vector<char>* command = new std::vector<char>(IO_TRANSFER_SIZE);
 
     std::cout << "[INFO] [CMD] Command Received :: Sending to Kernel" << std::endl;
 
-    (*loadCommand)[0] = 0xC0;
-    (*loadCommand)[1] = 0xF1;
-    ret = write(m_file_descriptor, loadCommand->data(), 2);
+    (*command)[0] = m_commandMatrix[cmd][0];
+    (*command)[1] = m_commandMatrix[cmd][1];
 
-    delete loadCommand;
+    ret = write(m_file_descriptor, command->data(), CMD_LENGTH);
+
+    delete command;
 
     if (ret == -1)
     {

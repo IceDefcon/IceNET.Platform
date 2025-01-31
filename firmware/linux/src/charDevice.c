@@ -528,7 +528,13 @@ static ssize_t commanderWrite(struct file *filep, const char __user *buffer, siz
     if (Device[DEVICE_COMMANDER].io_transfer.RxData[0] == 0xC0 && Device[DEVICE_COMMANDER].io_transfer.RxData[1] == 0xF1)
     {
         /* Activate DMA Engine */
-        printk(KERN_INFO "[CTRL][ C ] Command to Activate DMA Engine Received\n");
+        printk(KERN_INFO "[CTRL][ C ] Activate DMA Engine\n");
+        setStateMachine(SM_LONG_DMA);
+    }
+    if (Device[DEVICE_COMMANDER].io_transfer.RxData[0] == 0xAE && Device[DEVICE_COMMANDER].io_transfer.RxData[1] == 0xC0)
+    {
+        /* Reconfigure DMA Engine */
+        printk(KERN_INFO "[CTRL][ C ] Reconfigure DMA Engine\n");
         setStateMachine(SM_DMA);
     }
     else

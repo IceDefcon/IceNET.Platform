@@ -16,6 +16,8 @@
 const size_t CMD_LENGTH = 2;
 const size_t IO_TRANSFER_SIZE = 8;
 
+typedef std::shared_ptr<std::vector<char>> s_pVectorChar;
+
 enum Status
 {
 	OK,
@@ -48,6 +50,7 @@ typedef enum
 {
     CTRL_INIT = 0,
     CTRL_CONFIG,
+    CTRL_RECONFIG_DMA,
     CTRL_MAIN,
     CTRL_AMOUNT,
 } ctrlType;

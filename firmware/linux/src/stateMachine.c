@@ -70,7 +70,12 @@ static int stateMachineThread(void *data)
                 break;
 
             case SM_DMA:
-                printk(KERN_INFO "[CTRL][STM] DMA mode\n");
+                printk(KERN_INFO "[CTRL][STM] Normal DMA mode\n");
+                setStateMachine(SM_IDLE);
+                break;
+
+            case SM_LONG_DMA:
+                printk(KERN_INFO "[CTRL][STM] Long Configuration DMA mode\n");
                 /* Init pointers */
                 initTransfer(SECTOR_ENGINE);
                 initTransfer(SECTOR_BMI160);

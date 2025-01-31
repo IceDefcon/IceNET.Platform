@@ -38,9 +38,7 @@ class Commander
         int dataRX();
         int closeDEV();
 
-        void sendCommand();
-        int activateConfig();
-        void reconfigureEngine();
+        int sendCommand(commandType cmd);
 
         void initThread();
         void shutdownThread();
