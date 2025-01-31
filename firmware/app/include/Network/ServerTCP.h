@@ -40,8 +40,6 @@ class ServerTCP
         std::shared_ptr<std::vector<char>> m_Tx_ServerTCPVector;
         std::shared_ptr<ioStateType> m_IO_ServerTCPState;
 
-        bool m_transferComplete;
-
     public:
         ServerTCP();
         ~ServerTCP();

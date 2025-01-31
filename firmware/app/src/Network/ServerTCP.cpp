@@ -26,8 +26,7 @@ ServerTCP::ServerTCP() :
     m_clientConnected(false),
     m_Rx_ServerTCPVector(std::make_shared<std::vector<char>>(IO_TRANSFER_SIZE)),
     m_Tx_ServerTCPVector(std::make_shared<std::vector<char>>(IO_TRANSFER_SIZE)),
-    m_IO_ServerTCPState(std::make_shared<ioStateType>(IO_IDLE)),
-    m_transferComplete(false)
+    m_IO_ServerTCPState(std::make_shared<ioStateType>(IO_IDLE))
 {
     std::cout << "[INFO] [CONSTRUCTOR] " << this << " :: Instantiate ServerTCP" << std::endl;
 
@@ -120,37 +119,13 @@ int ServerTCP::configureServer()
 int ServerTCP::tcpTX()
 {
     ssize_t ret = -1;
-#if 1
-    /**
-     * As in Output we have here
-     * lack of synchronisation due to
-     * the trigger that is happemning
-     * on the client side :: GUI
-     *
-     * Therefore :: No need for State Machine
-     */
+
     if (!m_clientConnected)
     {
         std::cerr << "[ERNO] [TCP] No client connected" << std::endl;
     }
     else
     {
-        // while(false == m_instanceNetworkTraffic->getFeedbackFlag())
-        // {
-        //     std::this_thread::sleep_for(std::chrono::milliseconds(10));
-        // }
-
-        // std::this_thread::sleep_for(std::chrono::milliseconds(50));
-
-        // m_Tx_ServerTCP = m_instanceNetworkTraffic->getNetworkTrafficTx();
-        // m_instanceNetworkTraffic->resetFeedbackFlag();
-        // std::cout << "[INFO] [TCP] Received " << m_Tx_ServerTCP->size() << " Bytes of data: ";
-        // for (int i = 0; i < (int)m_Tx_ServerTCP->size(); ++i)
-        // {
-        //     std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>((*m_Tx_ServerTCP)[i]) << " ";
-        // }
-        // std::cout << std::endl;
-
         /**
          *
          * This one here is to keep
@@ -160,11 +135,10 @@ int ServerTCP::tcpTX()
          *
          */
 
-        // (*m_Tx_ServerTCP)[7] = 0xEE;
+        (*m_Rx_ServerTCPVector)[7] = 0xEE;
         ret = write(m_clientSocket, m_Rx_ServerTCPVector->data(), IO_TRANSFER_SIZE);
-        // (*m_Tx_ServerTCP)[7] = 0x00; /* Now clear me !! */
     }
-#endif
+
     return ret;
 }
 
@@ -178,101 +152,53 @@ int ServerTCP::tcpRX()
     }
     else
     {
-        /**
-         *
-         * TODO
-         *
-         * Check if we can clear
-         * the buffer here
-         *
-         */
-#if 0
-        size_t i = 0;
-        for (i = 0; i < IO_TRANSFER_SIZE; i++)
-        {
-            (*m_Rx_ServerTCP)[i] = 0x00;
-        }
-#endif
-        if(false == m_transferComplete)
-        {
-            ret = recv(m_clientSocket, m_Tx_ServerTCPVector->data(), IO_TRANSFER_SIZE, 0);
-            std::cout << "[INFO] [TCP] Debug recv ret = " << ret << std::endl;
+        ret = recv(m_clientSocket, m_Tx_ServerTCPVector->data(), IO_TRANSFER_SIZE, 0);
 
-            /**
-             *
-             * TODO
-             *
-             * Dummy TCP Feedback
-             * To keep the things
-             * running in App
-             *
-             */
-    #if 0 /* To be removed ??? */
-            (*m_Tx_ServerTCP)[0] = 0x11;
-            (*m_Tx_ServerTCP)[1] = 0x22;
-            (*m_Tx_ServerTCP)[2] = 0x33;
-            (*m_Tx_ServerTCP)[3] = 0x44;
-            (*m_Tx_ServerTCP)[4] = 0x55;
-            (*m_Tx_ServerTCP)[5] = 0x66;
-            (*m_Tx_ServerTCP)[6] = 0x77;
-            (*m_Tx_ServerTCP)[7] = 0xEE;
-            write(m_clientSocket, m_Tx_ServerTCP->data(), m_Tx_ServerTCP->size());
-    #endif
-            /* DEAD :: CODE */
-            if((*m_Tx_ServerTCPVector)[0] == 0xDE && (*m_Tx_ServerTCPVector)[1] == 0xAD && (*m_Tx_ServerTCPVector)[2] == 0xC0 && (*m_Tx_ServerTCPVector)[3] == 0xDE)
+        /* DEAD :: CODE */
+        if((*m_Tx_ServerTCPVector)[0] == 0xDE && (*m_Tx_ServerTCPVector)[1] == 0xAD && (*m_Tx_ServerTCPVector)[2] == 0xC0 && (*m_Tx_ServerTCPVector)[3] == 0xDE)
+        {
+            std::cout << "[INFO] [TCP] 0xDEAD Received" << std::endl;
+            return -5;
+        }
+        /* LOAD :: CODE */
+        else if((*m_Tx_ServerTCPVector)[0] == 0x10 && (*m_Tx_ServerTCPVector)[1] == 0xAD && (*m_Tx_ServerTCPVector)[2] == 0xC0 && (*m_Tx_ServerTCPVector)[3] == 0xDE)
+        {
+            std::cout << "[INFO] [TCP] Send configuration to RAM" << std::endl;
+            return -4;
+        }
+        /* CLEAR :: CODE */
+        else if((*m_Tx_ServerTCPVector)[0] == 0xC1 && (*m_Tx_ServerTCPVector)[1] == 0xEA && (*m_Tx_ServerTCPVector)[2] == 0xC0 && (*m_Tx_ServerTCPVector)[3] == 0xDE)
+        {
+            std::cout << "[INFO] [TCP] Clear DMA from RAM" << std::endl;
+            return -3;
+        }
+        else
+        {
+            if (ret > 0)
             {
-                std::cout << "[INFO] [TCP] 0xDEAD Received" << std::endl;
-                return -5;
+                std::cout << "[INFO] [TCP] Received " << ret << " Bytes of data: ";
+                for (int i = 0; i < ret; ++i)
+                {
+                    std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>((*m_Tx_ServerTCPVector)[i]) << " ";
+                }
+                std::cout << std::endl;
             }
-            /* LOAD :: CODE */
-            else if((*m_Tx_ServerTCPVector)[0] == 0x10 && (*m_Tx_ServerTCPVector)[1] == 0xAD && (*m_Tx_ServerTCPVector)[2] == 0xC0 && (*m_Tx_ServerTCPVector)[3] == 0xDE)
+            else if (ret == 0)
             {
-                std::cout << "[INFO] [TCP] Send configuration to RAM" << std::endl;
-                return -4;
+                std::cout << "[INFO] [TCP] Connection closed by client" << std::endl;
             }
-            /* CLEAR :: CODE */
-            else if((*m_Tx_ServerTCPVector)[0] == 0xC1 && (*m_Tx_ServerTCPVector)[1] == 0xEA && (*m_Tx_ServerTCPVector)[2] == 0xC0 && (*m_Tx_ServerTCPVector)[3] == 0xDE)
+            else if(10 == m_timeoutCount)
             {
-                std::cout << "[INFO] [TCP] Clear DMA from RAM" << std::endl;
-                return -3;
+                std::cout << "\r[INFO] [TCP] Server inactive for 10s :: Shutdown TCP connection" << std::endl;
+                m_clientConnected = false;
+                *m_IO_ServerTCPState = IO_IDLE;
             }
             else
             {
-                if (ret > 0)
-                {
-                    std::cout << "[INFO] [TCP] Received " << ret << " Bytes of data: ";
-                    for (int i = 0; i < ret; ++i)
-                    {
-                        std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>((*m_Tx_ServerTCPVector)[i]) << " ";
-                    }
-                    std::cout << std::endl;
-                    /**
-                     *
-                     * Question
-                     *
-                     * Do we need this on Kill
-                     * at ret == 0
-                     *
-                     */
-                    m_transferComplete = true;
-                }
-                else if (ret == 0)
-                {
-                    std::cout << "[INFO] [TCP] Connection closed by client" << std::endl;
-                }
-                else if(10 == m_timeoutCount)
-                {
-                    std::cout << "\r[INFO] [TCP] Server inactive for 10s :: Shutdown TCP connection" << std::endl;
-                    m_clientConnected = false;
-                    *m_IO_ServerTCPState = IO_IDLE;
-                }
-                else
-                {
-    #if 0
-                    std::cout << "\r[INFO] [TCP] Nothing received, listening... [" << m_timeoutCount << "]" << std::endl;
-    #endif
-                    m_timeoutCount++;
-                }
+#if 0
+                std::cout << "\r[INFO] [TCP] Nothing received, listening... [" << m_timeoutCount << "]" << std::endl;
+#endif
+                m_timeoutCount++;
             }
         }
     }
@@ -382,17 +308,14 @@ void ServerTCP::threadServerTCP()
             switch(*m_IO_ServerTCPState)
             {
                 case IO_IDLE:
-                    m_transferComplete = false;
                     if(true == m_clientConnected)
                     {
                         *m_IO_ServerTCPState = IO_TCP_READ;
+                        std::cout << "[INFO] [TCP] Read from TCP Client" << std::endl;
                     }
                     break;
 
                 case IO_TCP_READ:
-                    std::cout << "[INFO] [TCP] Read from TCP Client" << std::endl;
-
-                    /* This is the problem as it is not in state machine */
                     ret = tcpRX();
 
                     if(ret == 0)
@@ -427,7 +350,6 @@ void ServerTCP::threadServerTCP()
                     }
                     else
                     {
-                        // m_ioState = IO_IDLE;
                         /* TODO :: Client connected but nothing receiver */
                     }
                     break;

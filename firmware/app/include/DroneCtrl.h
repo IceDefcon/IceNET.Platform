@@ -33,11 +33,6 @@ class DroneCtrl :
         std::shared_ptr<std::vector<char>> m_Tx_DroneCtrlVector;
         std::shared_ptr<ioStateType> m_IO_DroneCtrlState;
 
-        std::vector<char>* m_Rx_DroneCtrl;
-        std::vector<char>* m_Tx_DroneCtrl;
-        int m_Rx_bytesReceived;
-        int m_Tx_bytesReceived;
-
     public:
         DroneCtrl();
         ~DroneCtrl();

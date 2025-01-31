@@ -21,11 +21,7 @@ DroneCtrl::DroneCtrl() :
     m_ctrlStatePrev(CTRL_INIT),
     m_Rx_DroneCtrlVector(std::make_shared<std::vector<char>>(IO_TRANSFER_SIZE)),
     m_Tx_DroneCtrlVector(std::make_shared<std::vector<char>>(IO_TRANSFER_SIZE)),
-    m_IO_DroneCtrlState(std::make_shared<ioStateType>(IO_IDLE)),
-    m_Rx_DroneCtrl(new std::vector<char>(IO_TRANSFER_SIZE)),
-    m_Tx_DroneCtrl(new std::vector<char>(IO_TRANSFER_SIZE)),
-    m_Rx_bytesReceived(0),
-    m_Tx_bytesReceived(0)
+    m_IO_DroneCtrlState(std::make_shared<ioStateType>(IO_IDLE))
 {
     std::cout << "[INFO] [CONSTRUCTOR] " << this << " :: Instantiate DroneCtrl" << std::endl;
 }
@@ -49,10 +45,6 @@ void DroneCtrl::droneInit()
     m_instanceCommander->setTransferPointer(m_Rx_DroneCtrlVector, m_Tx_DroneCtrlVector);
     m_instanceServerTCP->setTransferState(m_IO_DroneCtrlState);
     m_instanceCommander->setTransferState(m_IO_DroneCtrlState);
-
-    std::cout << "[INIT] [ D ] Initialise DroneCtrl Buffers" << std::endl;
-    std::fill(m_Rx_DroneCtrl->begin(), m_Rx_DroneCtrl->end(), 0);
-    std::fill(m_Tx_DroneCtrl->begin(), m_Tx_DroneCtrl->end(), 0);
 
     /* Ram Disk Commander */
     KernelComms::initRamDiskCommander();
