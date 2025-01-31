@@ -73,6 +73,7 @@ typedef struct
 }spiDeviceData;
 
 /* SPI */ int spiInit(void);
+/* CONFIG */ void enableDMAConfig(void);
 /* CONFIG */ void enableDMAServer(void);
 /* FPGA */ void transferFpgaInput(struct work_struct *work);
 /* FPGA */ void transferFpgaOutput(struct work_struct *work);

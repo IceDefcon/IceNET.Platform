@@ -77,6 +77,8 @@ static int stateMachineThread(void *data)
 
             case SM_LONG_DMA:
                 printk(KERN_INFO "[CTRL][STM] Long Configuration DMA mode\n");
+                /* Switch to SPI/DMA @ Config */
+                enableDMAConfig();
                 /* Init pointers */
                 initTransfer(SECTOR_ENGINE);
                 initTransfer(SECTOR_BMI160);
@@ -96,8 +98,6 @@ static int stateMachineThread(void *data)
                 printk(KERN_INFO "[CTRL][STM] SPI mode\n");
                 /* QUEUE :: Execution of transferFpgaInput */
                 queue_work(get_transferFpgaInput_wq(), get_transferFpgaInput_work());
-#if RAM_DISK_CTRL
-
                 /**
                  *
                  * IMPORTANT
@@ -109,7 +109,6 @@ static int stateMachineThread(void *data)
                  * Predefined 22 Bytes of the config data
                  */
                 setStateMachine(SM_INTERRUPT);
-#endif
                 break;
 
             case SM_INTERRUPT:

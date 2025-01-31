@@ -133,7 +133,7 @@ void charDeviceInit(void)
 
     printk(KERN_ALERT "[INIT][ C ] Initialize Kernel Mutexes\n");
 
-    for (DeviceType = DEVICE_INPUT; DeviceType < DEVICE_AMOUNT; DeviceType++)
+    for (DeviceType = DEVICE_WATCHDOG; DeviceType < DEVICE_AMOUNT; DeviceType++)
     {
         charDeviceMutexCtrl(DeviceType, MUTEX_CTRL_INIT);
         charDeviceDataInit(DeviceType);
@@ -145,7 +145,7 @@ void charDeviceDestroy(void)
 {
     charDeviceType DeviceType;
 
-    for (DeviceType = DEVICE_INPUT; DeviceType < DEVICE_AMOUNT; DeviceType++)
+    for (DeviceType = DEVICE_WATCHDOG; DeviceType < DEVICE_AMOUNT; DeviceType++)
     {
         charDeviceConfigDestroy(DeviceType);
         charDeviceMutexCtrl(DeviceType, MUTEX_CTRL_DESTROY);

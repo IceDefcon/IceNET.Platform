@@ -123,7 +123,7 @@ static int spiBusInit(spiBusType spiBusEnum, spiDeviceType spiDeviceEnum)
  *
  **************************************************************************************************************************************************
  *
- * NETWORK ---------------> [0] DEVICE_INPUT -------------------------------------------------------------------------------------------------
+ * APPLICATION -----------> [0] DEVICE_COMMANDER ---------------------------------------------------------------------------------------------
  *                           |                                                                                                               |
  *                           V                                                                                                               |
  *                          [0] SPI_PRIMARY -------------------->                                                                            |
@@ -131,7 +131,7 @@ static int spiBusInit(spiBusType spiBusEnum, spiDeviceType spiDeviceEnum)
  *                           V                                  |                                                                            |
  * FPGA <------------------ [0] DMA_IN                          |                                                                            |
  *                                                              V                                                                            V
- * Device[SPI_PRIMARY].Dma.tx_dma = dma_map_single(Device[SPI_PRIMARY].spiDevice->controller->dev.parent, (void *)getCharDeviceTransfer(DEVICE_INPUT)->RxData, Device[SPI_PRIMARY].spiLength, DMA_TO_DEVICE);
+ * Device[SPI_PRIMARY].Dma.tx_dma = dma_map_single(Device[SPI_PRIMARY].spiDevice->controller->dev.parent, (void *)getCharDeviceTransfer(DEVICE_COMMANDER)->RxData, Device[SPI_PRIMARY].spiLength, DMA_TO_DEVICE);
  * Device[SPI_PRIMARY].Dma.rx_dma = dma_map_single(Device[SPI_PRIMARY].spiDevice->controller->dev.parent, (void *)Device[SPI_PRIMARY].spiRx, Device[SPI_PRIMARY].spiLength, DMA_FROM_DEVICE);
  *
  */
@@ -144,7 +144,7 @@ static int spiBusInit(spiBusType spiBusEnum, spiDeviceType spiDeviceEnum)
  *
  **************************************************************************************************************************************************
  *
- * NETWORK <--------------- [1] DEVICE_OUTPUT <----------------------------------------------------------------------------------------------------
+ * APPLICATION <----------- [1] DEVICE_COMMANDER <-------------------------------------------------------------------------------------------------
  *                           Λ                                                                                                                    Λ
  *                           |                                                                                                                    |
  *                          [1] SPI_SECONDARY <--------------------                                                                               |
@@ -152,7 +152,7 @@ static int spiBusInit(spiBusType spiBusEnum, spiDeviceType spiDeviceEnum)
  *                           |                                    |                                                                               |
  * FPGA ------------------> [1] DMA_OUT                           |                                                                               |
  *                                                                |                                                                               |
- * Device[SPI_SECONDARY].Dma.tx_dma = dma_map_single(Device[SPI_SECONDARY].spiDevice->controller->dev.parent, (void *)getCharDeviceTransfer(DEVICE_OUTPUT)->RxData, Device[SPI_SECONDARY].spiLength, DMA_TO_DEVICE);
+ * Device[SPI_SECONDARY].Dma.tx_dma = dma_map_single(Device[SPI_SECONDARY].spiDevice->controller->dev.parent, (void *)getCharDeviceTransfer(DEVICE_COMMANDER)->RxData, Device[SPI_SECONDARY].spiLength, DMA_TO_DEVICE);
  * Device[SPI_SECONDARY].Dma.rx_dma = dma_map_single(Device[SPI_SECONDARY].spiDevice->controller->dev.parent, (void *)Device[SPI_SECONDARY].spiRx, Device[SPI_SECONDARY].spiLength, DMA_FROM_DEVICE);
  *
  */
@@ -245,9 +245,17 @@ static int spiDmaInit(spiDeviceType spiDeviceEnum, dmaControlType dmaControl, bo
 
 static int spiDmaDestroy(spiDeviceType spiDeviceEnum)
 {
-    /* Unmap DMA buffers */
-    dma_unmap_single(Device[spiDeviceEnum].spiDevice->controller->dev.parent, Device[spiDeviceEnum].Dma.tx_dma, Device[spiDeviceEnum].spiLength, DMA_TO_DEVICE);
-    dma_unmap_single(Device[spiDeviceEnum].spiDevice->controller->dev.parent, Device[spiDeviceEnum].Dma.rx_dma, Device[spiDeviceEnum].spiLength, DMA_FROM_DEVICE);
+    if (Device[spiDeviceEnum].Dma.tx_dma)
+    {
+        dma_unmap_single(Device[spiDeviceEnum].spiDevice->controller->dev.parent, Device[spiDeviceEnum].Dma.tx_dma, Device[spiDeviceEnum].spiLength, DMA_TO_DEVICE);
+        Device[spiDeviceEnum].Dma.tx_dma = 0;
+    }
+
+    if (Device[spiDeviceEnum].Dma.rx_dma)
+    {
+        dma_unmap_single(Device[spiDeviceEnum].spiDevice->controller->dev.parent, Device[spiDeviceEnum].Dma.rx_dma, Device[spiDeviceEnum].spiLength, DMA_FROM_DEVICE);
+        Device[spiDeviceEnum].Dma.rx_dma = 0;
+    }
 
     return 0;
 }
@@ -284,7 +292,7 @@ void transferFpgaInput(struct work_struct *work)
     if(0x18 != rx_buf[0])
     {
         printk(KERN_ERR "[CTRL][SPI] No FPGA Preamble detected :: FPGA is Not Programed, Connected or Running properly\n");
-        charDeviceLockCtrl(DEVICE_OUTPUT, CTRL_UNLOCK);
+        charDeviceLockCtrl(DEVICE_COMMANDER, CTRL_UNLOCK);
     }
 
     /* Clear the buffers */
@@ -323,26 +331,9 @@ void transferFpgaOutput(struct work_struct *work)
         printk(KERN_INFO "[CTRL][SPI] Secondary FPGA Transfer :: Byte[%d]: [Feedback] Tx[0x%02x] [Data] Rx[0x%02x]\n", i, tx_buf[i], rx_buf[i]);
     }
 
-    /**
-     *
-     * -----===[  TODO  ]===-----
-     *
-     * Now Output is disconnected
-     * There is no feedback after
-     * Secondary SPI Transfer
-     *
-     * This require to use feedback byte
-     * from FPGA during primary transfer
-     *
-     * For now this is hardcoded to 0x18
-     * But for SPI/DMA and new offload
-     * controller 0x77 can be used !
-     *
-     */
-#if 0
-    /* Unlock OUTPUT mutex for Kernel Output Device to process */
-    charDeviceLockCtrl(DEVICE_OUTPUT, CTRL_UNLOCK);
-#endif
+    /* Unlock COMMANDER mutex for Kernel Commander Device to process */
+    charDeviceLockCtrl(DEVICE_COMMANDER, CTRL_UNLOCK);
+
     /* Clear the buffers */
     for (i = 0; i < Device[SPI_SECONDARY].spiLength; ++i)
     {
@@ -353,13 +344,6 @@ void transferFpgaOutput(struct work_struct *work)
 
 void killApplication(struct work_struct *work)
 {
-    DmaTransferType* kernelOutptData = getCharDeviceTransfer(DEVICE_OUTPUT);
-
-    kernelOutptData->TxData[0] = 0xDE;
-    kernelOutptData->TxData[1] = 0xAD;
-    kernelOutptData->size = 2;
-
-    charDeviceLockCtrl(DEVICE_OUTPUT, CTRL_UNLOCK);
     charDeviceLockCtrl(DEVICE_WATCHDOG, CTRL_UNLOCK);
 }
 
@@ -368,11 +352,19 @@ int spiInit(void)
     (void)spiBusInit(BUS_SPI0, SPI_PRIMARY);
     (void)spiBusInit(BUS_SPI1, SPI_SECONDARY);
 
-    spiDmaInit(SPI_PRIMARY, DMA_IN, true);
+    /* Only Secondary Required :: Since primary is initialised trough State Machine */
     spiDmaInit(SPI_SECONDARY, DMA_OUT, true);
 
     return 0;
 }
+
+/* CONFIG */ void enableDMAConfig(void)
+{
+    printk(KERN_INFO "[CTRL][SPI] Reconigure Primary SPI into DMA -> FPGA peripherals configuratoin\n");
+    spiDmaDestroy(SPI_PRIMARY);
+    spiDmaInit(SPI_PRIMARY, DMA_IN, true);
+}
+
 
 /* CONFIG */ void enableDMAServer(void)
 {
@@ -390,3 +382,7 @@ void spiDestroy(void)
     spi_dev_put(Device[SPI_SECONDARY].spiDevice);
     printk(KERN_INFO "[DESTROY][SPI] Destroy SPI Devices\n");
 }
+
+
+
+

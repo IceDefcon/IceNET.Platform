@@ -40,8 +40,6 @@ typedef struct
 
 typedef enum
 {
-    DEVICE_INPUT,
-    DEVICE_OUTPUT,
     DEVICE_WATCHDOG,
     DEVICE_COMMANDER,
     DEVICE_AMOUNT
