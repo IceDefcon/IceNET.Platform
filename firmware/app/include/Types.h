@@ -13,6 +13,7 @@
 #include <iomanip>  // For std::hex and std::setw
 #include <memory>
 
+const size_t CMD_LENGTH = 2;
 const size_t IO_TRANSFER_SIZE = 8;
 
 enum Status
@@ -26,6 +27,8 @@ typedef enum
 {
     CMD_FPGA_CONFIG,
     CMD_DMA_RECONFIG,
+    CMD_RAM_LOAD,
+    CMD_DMA_CLEAR,
     CMD_AMOUNT
 } commandType;
 

@@ -232,7 +232,7 @@ void prepareTransfer(ramSectorType type, bool begin, bool end)
 
     if(true == end)
     {
-        pr_info("[CTRL][RAM] Calculating Dma transfer reversed checksum\n");
+        pr_info("[CTRL][RAM] Calculate DMA Transfer Reversed Checksum\n");
         reversedChecksum = reverseChecksum(dmaTransfer->RxData, j);
 
         if (0x00 == reversedChecksum)

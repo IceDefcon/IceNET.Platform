@@ -525,7 +525,7 @@ static ssize_t commanderWrite(struct file *filep, const char __user *buffer, siz
         /* Copy failed */
         ret = -EFAULT;
     }
-    if (Device[DEVICE_COMMANDER].io_transfer.RxData[0] == 0x10 && Device[DEVICE_COMMANDER].io_transfer.RxData[1] == 0xAD)
+    if (Device[DEVICE_COMMANDER].io_transfer.RxData[0] == 0xC0 && Device[DEVICE_COMMANDER].io_transfer.RxData[1] == 0xF1)
     {
         /* Activate DMA Engine */
         printk(KERN_INFO "[CTRL][ C ] Command to Activate DMA Engine Received\n");
