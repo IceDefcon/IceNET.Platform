@@ -284,6 +284,17 @@ static ssize_t commanderWrite(struct file *filep, const char __user *buffer, siz
     int ret = 0;
     int error_count = 0;
 
+    printk(KERN_INFO "[CTRL][ C ] Enter commanderWrite \n");
+
+    Device[DEVICE_COMMANDER].io_transfer.RxData[0] = 0x00;
+    Device[DEVICE_COMMANDER].io_transfer.RxData[1] = 0x00;
+    Device[DEVICE_COMMANDER].io_transfer.RxData[2] = 0x00;
+    Device[DEVICE_COMMANDER].io_transfer.RxData[3] = 0x00;
+    Device[DEVICE_COMMANDER].io_transfer.RxData[4] = 0x00;
+    Device[DEVICE_COMMANDER].io_transfer.RxData[5] = 0x00;
+    Device[DEVICE_COMMANDER].io_transfer.RxData[6] = 0x00;
+    Device[DEVICE_COMMANDER].io_transfer.RxData[7] = 0x00;
+
     /* Copy RxData from user space to kernel space */
     error_count = copy_from_user((void *)Device[DEVICE_COMMANDER].io_transfer.RxData, buffer, len);
     if (error_count != 0)
@@ -293,13 +304,13 @@ static ssize_t commanderWrite(struct file *filep, const char __user *buffer, siz
         /* Copy failed */
         ret = -EFAULT;
     }
-    if (Device[DEVICE_COMMANDER].io_transfer.RxData[0] == 0xC0 && Device[DEVICE_COMMANDER].io_transfer.RxData[1] == 0xF1)
+    else if (Device[DEVICE_COMMANDER].io_transfer.RxData[0] == 0xC0 && Device[DEVICE_COMMANDER].io_transfer.RxData[1] == 0xF1)
     {
         /* Activate DMA Engine */
         printk(KERN_INFO "[CTRL][ C ] Activate DMA Engine\n");
         setStateMachine(SM_LONG_DMA);
     }
-    if (Device[DEVICE_COMMANDER].io_transfer.RxData[0] == 0xAE && Device[DEVICE_COMMANDER].io_transfer.RxData[1] == 0xC0)
+    else if (Device[DEVICE_COMMANDER].io_transfer.RxData[0] == 0xAE && Device[DEVICE_COMMANDER].io_transfer.RxData[1] == 0xC0)
     {
         /* Reconfigure DMA Engine */
         printk(KERN_INFO "[CTRL][ C ] Reconfigure DMA Engine\n");
@@ -312,6 +323,7 @@ static ssize_t commanderWrite(struct file *filep, const char __user *buffer, siz
         {
             printk(KERN_INFO "[CTRL][ C ] Byte[%d] %x\n", i, Device[DEVICE_COMMANDER].io_transfer.RxData[i]);
         }
+        setStateMachine(SM_SPI);
     }
     return ret;
 }

@@ -98,16 +98,6 @@ static int stateMachineThread(void *data)
                 printk(KERN_INFO "[CTRL][STM] SPI mode\n");
                 /* QUEUE :: Execution of transferFpgaInput */
                 queue_work(get_transferFpgaInput_wq(), get_transferFpgaInput_work());
-                /**
-                 *
-                 * IMPORTANT
-                 *
-                 * In here we need to wait for the
-                 * DMA Engine to launch the transfer
-                 *
-                 * Then wait for the transfer to complete
-                 * Predefined 22 Bytes of the config data
-                 */
                 setStateMachine(SM_INTERRUPT);
                 break;
 
