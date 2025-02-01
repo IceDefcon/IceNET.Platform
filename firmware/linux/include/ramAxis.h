@@ -48,6 +48,7 @@ typedef struct
 /* DESTROY */ void destroyTransfer(ramSectorType type);
 /* DESTROY */ void ramAxisDestroy(void);
 
-/* GET */  DmaTransferType* getDmaTransfer(void);
+/* GET */ DmaTransferType* getDmaTransfer(void);
+/* GET */ uint8_t getConfigBytesAmount(void);
 
 #endif // RAM_AXIS_H

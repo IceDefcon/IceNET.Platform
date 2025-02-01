@@ -13,9 +13,9 @@
 
 #include "stateMachine.h"
 #include "charDevice.h"
+#include "spiDmaCtrl.h"
 #include "watchdog.h"
 #include "isrCtrl.h"
-#include "spiCtrl.h"
 #include "spiWork.h"
 #include "ramAxis.h"
 #include "config.h"
@@ -77,8 +77,6 @@ static int stateMachineThread(void *data)
 
             case SM_LONG_DMA:
                 printk(KERN_INFO "[CTRL][STM] Long Configuration DMA mode\n");
-                /* Switch to SPI/DMA @ Config */
-                enableDMAConfig();
                 /* Init pointers */
                 initTransfer(SECTOR_ENGINE);
                 initTransfer(SECTOR_BMI160);
@@ -91,6 +89,9 @@ static int stateMachineThread(void *data)
                 destroyTransfer(SECTOR_ENGINE);
                 destroyTransfer(SECTOR_BMI160);
                 destroyTransfer(SECTOR_ADXL345);
+                /* Switch to SPI/DMA @ Config */
+                enableDMAConfig();
+                /* Schedule Work Queue for SPI/DMA transfer */
                 setStateMachine(SM_SPI);
                 break;
 

@@ -13,7 +13,7 @@
 #include "stateMachine.h"
 #include "dmaControl.h"
 #include "charDevice.h"
-#include "spiCtrl.h"
+#include "spiDmaCtrl.h"
 #include "ramAxis.h"
 #include "types.h"
 #include "config.h"
@@ -168,12 +168,12 @@ static int spiDmaInit(spiDeviceType spiDeviceEnum, dmaControlType dmaControl, bo
         if(SPI_PRIMARY == spiDeviceEnum)
         {
             printk(KERN_ERR "[INIT][SPI] SPI/DMA FPGA Config\n");
-            Device[spiDeviceEnum].spiLength = 22;
+            Device[spiDeviceEnum].spiLength = getConfigBytesAmount();
         }
         else if(SPI_SECONDARY == spiDeviceEnum)
         {
             printk(KERN_ERR "[INIT][SPI] SPI/DMA Feedback\n");
-            Device[spiDeviceEnum].spiLength = 1;
+            Device[spiDeviceEnum].spiLength = FEEDBACK_DMA_TRANSFER_SIZE;
         }
         else
         {
@@ -187,12 +187,12 @@ static int spiDmaInit(spiDeviceType spiDeviceEnum, dmaControlType dmaControl, bo
         if(SPI_PRIMARY == spiDeviceEnum)
         {
             printk(KERN_ERR "[INIT][SPI] SPI/DMA Server Config\n");
-            Device[spiDeviceEnum].spiLength = 4;
+            Device[spiDeviceEnum].spiLength = MANUAL_DMA_TRANSFER_SIZE;
         }
         else if(SPI_SECONDARY == spiDeviceEnum)
         {
             printk(KERN_ERR "[INIT][SPI] SPI/DMA Feedback\n");
-            Device[spiDeviceEnum].spiLength = 1;
+            Device[spiDeviceEnum].spiLength = FEEDBACK_DMA_TRANSFER_SIZE;
         }
         else
         {
@@ -360,7 +360,7 @@ int spiInit(void)
 
 /* CONFIG */ void enableDMAConfig(void)
 {
-    printk(KERN_INFO "[CTRL][SPI] Reconigure Primary SPI into DMA -> FPGA peripherals configuratoin\n");
+    printk(KERN_INFO "[CTRL][SPI] Conigure Primary SPI into DMA -> FPGA peripherals configuratoin\n");
     spiDmaDestroy(SPI_PRIMARY);
     spiDmaInit(SPI_PRIMARY, DMA_IN, true);
 }
@@ -368,7 +368,7 @@ int spiInit(void)
 
 /* CONFIG */ void enableDMAServer(void)
 {
-    printk(KERN_INFO "[CTRL][SPI] Reconigure Primary SPI into DMA Server Mode\n");
+    printk(KERN_INFO "[CTRL][SPI] Conigure Primary SPI into DMA Server Mode\n");
     spiDmaDestroy(SPI_PRIMARY);
     spiDmaInit(SPI_PRIMARY, DMA_IN, false);
 }

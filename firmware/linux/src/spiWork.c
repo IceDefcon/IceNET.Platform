@@ -5,8 +5,8 @@
  * 
  */
 
+#include "spiDmaCtrl.h"
 #include "spiWork.h"
-#include "spiCtrl.h"
 
 //////////////////////
 //                  //

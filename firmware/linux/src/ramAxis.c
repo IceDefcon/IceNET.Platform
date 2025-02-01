@@ -31,7 +31,7 @@ static ramAxisType ramAxis[SECTOR_AMOUNT] =
     },
 };
 
-static uint8_t j;
+static uint8_t configBytesAmount;
 static DmaTransferType* dmaTransfer;
 
 void initTransfer(ramSectorType type)
@@ -109,11 +109,6 @@ void printSector(ramSectorType type)
 
     pr_info("%s\n", output);
     kfree(output);
-}
-
-DmaTransferType* getDmaTransfer(void)
-{
-    return dmaTransfer;
 }
 
 static void allocateTransfer(void)
@@ -221,19 +216,19 @@ void prepareTransfer(ramSectorType type, bool begin, bool end)
     if(true == begin)
     {
         pr_info("[CTRL][RAM] Concatenate DMA Transfer\n");
-        j = 0;
+        configBytesAmount = 0;
     }
 
     for (i = 0; i < ((char *)ramAxis[type].sectorAddress)[0]; i++)
     {
-        dmaTransfer->RxData[j] = ((char *)ramAxis[type].sectorAddress)[i];
-        j++;
+        dmaTransfer->RxData[configBytesAmount] = ((char *)ramAxis[type].sectorAddress)[i];
+        configBytesAmount++;
     }
 
     if(true == end)
     {
         pr_info("[CTRL][RAM] Calculate DMA Transfer Reversed Checksum\n");
-        reversedChecksum = reverseChecksum(dmaTransfer->RxData, j);
+        reversedChecksum = reverseChecksum(dmaTransfer->RxData, configBytesAmount);
 
         if (0x00 == reversedChecksum)
         {
@@ -244,7 +239,7 @@ void prepareTransfer(ramSectorType type, bool begin, bool end)
             pr_err("[ERNO][RAM] Checksum ERROR :: 0x%02X \n", reversedChecksum);
         }
 
-        j = 0;
+        pr_info("[CTRL][RAM] Assembled total of %d Bytes \n", configBytesAmount);
     }
 }
 
@@ -256,4 +251,14 @@ void* getSectorAddress(ramSectorType type)
 void destroyTransfer(ramSectorType type)
 {
     ramDiskReleasePointer(ramAxis[type].sectorAddress);
+}
+
+/* GET */ DmaTransferType* getDmaTransfer(void)
+{
+    return dmaTransfer;
+}
+
+/* GET */ uint8_t getConfigBytesAmount(void)
+{
+    return configBytesAmount;
 }
