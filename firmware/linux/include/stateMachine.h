@@ -21,6 +21,7 @@
 typedef enum 
 {
     SM_IDLE = 0,
+    SM_LONG_DMA,
     SM_DMA,
     SM_SPI,
     SM_INTERRUPT,

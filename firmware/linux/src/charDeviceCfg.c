@@ -51,7 +51,7 @@ static void charDeviceDataInit(charDeviceType DeviceType)
 
     getCharDevice()[DeviceType].io_transfer.RxData = RxData;
     getCharDevice()[DeviceType].io_transfer.TxData = TxData;
-    getCharDevice()[DeviceType].io_transfer.length = IO_BUFFER_SIZE;
+    getCharDevice()[DeviceType].io_transfer.size = IO_BUFFER_SIZE;
 }
 
 static void charDeviceConfig(charDeviceType DeviceType)
@@ -133,7 +133,7 @@ void charDeviceInit(void)
 
     printk(KERN_ALERT "[INIT][ C ] Initialize Kernel Mutexes\n");
 
-    for (DeviceType = DEVICE_INPUT; DeviceType < DEVICE_AMOUNT; DeviceType++)
+    for (DeviceType = DEVICE_WATCHDOG; DeviceType < DEVICE_AMOUNT; DeviceType++)
     {
         charDeviceMutexCtrl(DeviceType, MUTEX_CTRL_INIT);
         charDeviceDataInit(DeviceType);
@@ -145,7 +145,7 @@ void charDeviceDestroy(void)
 {
     charDeviceType DeviceType;
 
-    for (DeviceType = DEVICE_INPUT; DeviceType < DEVICE_AMOUNT; DeviceType++)
+    for (DeviceType = DEVICE_WATCHDOG; DeviceType < DEVICE_AMOUNT; DeviceType++)
     {
         charDeviceConfigDestroy(DeviceType);
         charDeviceMutexCtrl(DeviceType, MUTEX_CTRL_DESTROY);

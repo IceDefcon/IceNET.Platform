@@ -39,13 +39,6 @@ typedef struct
     char transfer[];
 } ramAxisType;
 
-typedef struct
-{
-    uint8_t size;
-    uint8_t* RxData;
-    uint8_t* TxData;
-}dmaTransferType;
-
 /* INIT */ void ramAxisInit(void);
 /* INIT */ void initTransfer(ramSectorType type);
 /* CHECK */ dmaEngineType checkEngine(void);
@@ -55,6 +48,6 @@ typedef struct
 /* DESTROY */ void destroyTransfer(ramSectorType type);
 /* DESTROY */ void ramAxisDestroy(void);
 
-/* GET */  dmaTransferType* getDmaTransfer(void);
+/* GET */  DmaTransferType* getDmaTransfer(void);
 
 #endif // RAM_AXIS_H

@@ -23,22 +23,22 @@ Commander::Commander() :
     m_Rx_CommanderVector(std::make_shared<std::vector<char>>(IO_TRANSFER_SIZE)),
     m_Tx_CommanderVector(std::make_shared<std::vector<char>>(IO_TRANSFER_SIZE)),
     m_IO_CommanderState(std::make_shared<ioStateType>(IO_IDLE)),
-    m_commandMatrix(4, std::vector<char>(2, 0))  // Initialize a 4x2 matrix of zeros
+    m_commandMatrix(CMD_AMOUNT, std::vector<char>(CMD_LENGTH, 0))  // Initialized with zeros
 {
     std::cout << "[INFO] [CONSTRUCTOR] " << this << " :: Instantiate Commander" << std::endl;
 
     /* Activate DMA transfer to send config to FPGA */
-    m_commandMatrix[0][0] = 0x10;
-    m_commandMatrix[0][1] = 0xAD;
+    m_commandMatrix[CMD_FPGA_CONFIG][0] = 0xC0;
+    m_commandMatrix[CMD_FPGA_CONFIG][1] = 0xF1;
+    /* Reconfigure DMA Engine to work with single tramsfer */
+    m_commandMatrix[CMD_DMA_RECONFIG][0] = 0xAE;
+    m_commandMatrix[CMD_DMA_RECONFIG][1] = 0xC0;
     /* Load Device config to RAM Disk Sectors */
-    m_commandMatrix[1][0] = 0x10;
-    m_commandMatrix[1][1] = 0xAD;
-    /* Clear RamDisk */
-    m_commandMatrix[2][0] = 0xC1;
-    m_commandMatrix[2][1] = 0xEA;
-    /* Additional Empty Command */
-    m_commandMatrix[3][0] = 0x00;
-    m_commandMatrix[3][1] = 0x00;
+    m_commandMatrix[CMD_RAM_LOAD][0] = 0x10;
+    m_commandMatrix[CMD_RAM_LOAD][1] = 0xAD;
+    /* Clear Ram Disk Sectors */
+    m_commandMatrix[CMD_DMA_CLEAR][0] = 0xC1;
+    m_commandMatrix[CMD_DMA_CLEAR][1] = 0xEA;
 }
 
 Commander::~Commander()
@@ -96,38 +96,19 @@ int Commander::dataTX()
     return OK;
 }
 
-void Commander::sendCommand()
-{
-    /**
-     *
-     * TODO
-     *
-     */
-}
-
-
-void Commander::reconfigureEngine()
-{
-    /**
-     *
-     * TODO
-     *
-     * Need
-     */
-}
-
-int Commander::activateConfig()
+int Commander::sendCommand(commandType cmd)
 {
     int ret = -1;
-    std::vector<char>* loadCommand = new std::vector<char>(IO_TRANSFER_SIZE);
+    std::vector<char>* command = new std::vector<char>(IO_TRANSFER_SIZE);
 
     std::cout << "[INFO] [CMD] Command Received :: Sending to Kernel" << std::endl;
 
-    (*loadCommand)[0] = 0x10;
-    (*loadCommand)[1] = 0xAD;
-    ret = write(m_file_descriptor, loadCommand->data(), 2);
+    (*command)[0] = m_commandMatrix[cmd][0];
+    (*command)[1] = m_commandMatrix[cmd][1];
 
-    delete loadCommand;
+    ret = write(m_file_descriptor, command->data(), CMD_LENGTH);
+
+    delete command;
 
     if (ret == -1)
     {

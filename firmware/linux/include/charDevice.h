@@ -32,7 +32,7 @@ typedef struct
     struct mutex read_Mutex;
     bool isLocked;
     int tryLock;
-    DataTransfer io_transfer;
+    DmaTransferType io_transfer;
     struct file_operations fops;
     char* name;
     char* nameClass;;
@@ -40,8 +40,6 @@ typedef struct
 
 typedef enum
 {
-    DEVICE_INPUT,
-    DEVICE_OUTPUT,
     DEVICE_WATCHDOG,
     DEVICE_COMMANDER,
     DEVICE_AMOUNT
@@ -65,7 +63,7 @@ typedef enum
 } CtrlType;
 
 /* GET */ charDeviceData* getCharDevice(void);
-/* GET */ DataTransfer* getCharDeviceTransfer(charDeviceType charDevice);
+/* GET */ DmaTransferType* getCharDeviceTransfer(charDeviceType charDevice);
 /* MUTEX */ void charDeviceMutexCtrl(charDeviceType charDevice, MutexCtrlType mutexCtrl);
 /* FLAG */ void charDeviceLockCtrl(charDeviceType charDevice, CtrlType Ctrl);
 

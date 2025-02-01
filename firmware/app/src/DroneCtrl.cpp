@@ -73,9 +73,8 @@ std::string DroneCtrl::getCtrlStateString(ctrlType state)
     {
         "CTRL_INIT",
         "CTRL_CONFIG",
-        "CTRL_IDLE",
-        "CTRL_COMMANDER",
-        "CTRL_SERVER",
+        "CTRL_RECONFIG_DMA",
+        "CTRL_MAIN",
     };
 
     if (state >= 0 && state < CTRL_AMOUNT)
@@ -94,7 +93,7 @@ void DroneCtrl::sendFpgaConfig()
     m_instanceRamDisk->assembleConfig();
     m_instanceRamDisk->sendConfig();
     std::cout << "[INFO] [ D ] Watchdog ready :: Activate DMA Engine" << std::endl;
-    m_instanceCommander->activateConfig();
+    m_instanceCommander->sendCommand(CMD_FPGA_CONFIG);
 }
 
 void DroneCtrl::droneCtrlMain()
@@ -124,11 +123,18 @@ void DroneCtrl::droneCtrlMain()
 
         case CTRL_CONFIG:
             sendFpgaConfig();
+            m_ctrlState = CTRL_RECONFIG_DMA;
+            break;
+
+        case CTRL_RECONFIG_DMA:
+            std::cout << "[INFO] [ D ] CTRL_RECONFIG_DMA :: Delay Start" << std::endl;
+            std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+            std::cout << "[INFO] [ D ] CTRL_RECONFIG_DMA :: Delay Stop" << std::endl;
+            m_instanceCommander->sendCommand(CMD_DMA_RECONFIG);
             m_ctrlState = CTRL_MAIN;
             break;
 
         case CTRL_MAIN:
-            m_instanceCommander->reconfigureEngine();
             /* TODO :: Main Function */
             break;
 

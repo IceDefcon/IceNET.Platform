@@ -43,7 +43,7 @@ void watchdog_unlockWatchdogMutex(void)
 /* Kernel state machine */
 static int watchdogThread(void *data)
 {
-    DataTransfer* watchdogData;
+    DmaTransferType* watchdogData;
     msleep(500); /* Wait for the watchdog capture from FPGA */
 
     while (!kthread_should_stop())
@@ -56,10 +56,10 @@ static int watchdogThread(void *data)
         watchdogData = getCharDeviceTransfer(DEVICE_WATCHDOG);
         watchdogData->TxData[0] = Process.indicatorPrevious;
         watchdogData->TxData[1] = Process.indicatorCurrent;
-        watchdogData->length = 2;
+        watchdogData->size = 2;
         charDeviceLockCtrl(DEVICE_WATCHDOG, CTRL_UNLOCK);
 
-        if( Process.indicatorPrevious != Process.indicatorCurrent)
+        if(Process.indicatorPrevious != Process.indicatorCurrent)
         {
             if(Process.indicatorFPGA == false)
             {
@@ -74,9 +74,7 @@ static int watchdogThread(void *data)
         else
         {
             printk(KERN_INFO "[CTRL][WDG] Watchdog Dead [%x|%x] ERROR: Please check if FPGA binary is loaded\n", Process.indicatorPrevious, Process.indicatorCurrent);
-#if 0 /* TODO :: Check spiCtrl.c Line:300 */
-            charDeviceLockCtrl(DEVICE_OUTPUT, CTRL_UNLOCK);
-#endif
+            charDeviceLockCtrl(DEVICE_COMMANDER, CTRL_UNLOCK);
             Process.indicatorFPGA = false;
         }
 
