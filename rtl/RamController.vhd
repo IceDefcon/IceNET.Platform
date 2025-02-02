@@ -102,13 +102,27 @@ begin
     LDQM      <= '0'; -- Assume full-width access for simplicity
     UDQM      <= '0';
 
-    process (CLK_200MHz, RESET, memory_state, READ_EN, WRITE_EN, init_counter, refresh_counter)
+    process (CLK_200MHz, RESET)
     begin
-
         if RESET = '1' then
+            -- State machine reset
+            memory_state <= SDRAM_INIT;
+
+            -- Reset counters
             init_counter <= 0;
             refresh_counter <= 0;
+            delay_op <= (others => '0');
+            delay_mode <= (others => '0');
+            delay_ras_to_cas <= (others => '0');
+
+            -- Reset control signals
+            process_read <= '0';
+            process_write <= '0';
             command <= CMD_NOP;
+
+            -- Ensure data outputs are stable
+            DATA_OUT <= (others => '0');
+
         elsif rising_edge(CLK_200MHz) then
 
             case memory_state is
