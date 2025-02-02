@@ -3,7 +3,12 @@ use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.STD_LOGIC_ARITH.ALL;
 use IEEE.STD_LOGIC_UNSIGNED.ALL;
 
-entity SDRAM_Controller is
+--
+-- SDRAM Controller
+-- HY57V2562GTR
+-- Chip
+--
+entity RamController is
 Port
 (
     CLK_200MHz  : in  std_logic;
@@ -32,9 +37,9 @@ Port
     WRITE_EN    : in  std_logic;
     BUSY       : out std_logic
 );
-end SDRAM_Controller;
+end RamController;
 
-architecture rtl of SDRAM_Controller is
+architecture rtl of RamController is
 
     -- State definitions
     type SDRAM_STATE is

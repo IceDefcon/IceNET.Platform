@@ -127,6 +127,17 @@ void DroneCtrl::droneCtrlMain()
             break;
 
         case CTRL_RECONFIG_DMA:
+            /**
+             * TODO
+             *
+             * This cannot be delayed by 1000ms
+             *
+             * The best solution would be feedback from Kernel Commander
+             * Compare return values against the configuration
+             *
+             * Must be the same
+             *
+             */
             std::cout << "[INFO] [ D ] CTRL_RECONFIG_DMA :: Delay Start" << std::endl;
             std::this_thread::sleep_for(std::chrono::milliseconds(1000));
             std::cout << "[INFO] [ D ] CTRL_RECONFIG_DMA :: Delay Stop" << std::endl;

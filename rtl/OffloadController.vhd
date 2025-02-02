@@ -6,6 +6,7 @@ entity OffloadController is
 port
 (    
     CLOCK_50MHz : in std_logic;
+    OFFLOAD_RESET : in std_logic;
 
     OFFLOAD_INTERRUPT : in std_logic;
     FIFO_DATA : in std_logic_vector(7 downto 0);
@@ -84,7 +85,9 @@ begin
 offload_process:
 process (CLOCK_50MHz)
 begin
-    if rising_edge(CLOCK_50MHz) then
+    if OFFLOAD_RESET = '1' then
+
+    elsif rising_edge(CLOCK_50MHz) then
         case offload_state is
 
             when IDLE =>

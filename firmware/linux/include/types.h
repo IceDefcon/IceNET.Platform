@@ -23,6 +23,9 @@
 
 #define TRANSFER_BUFFER_SIZE 32
 
+#define MANUAL_DMA_TRANSFER_SIZE 8
+#define FEEDBACK_DMA_TRANSFER_SIZE 1
+
 typedef struct
 {
     uint8_t* RxData;
