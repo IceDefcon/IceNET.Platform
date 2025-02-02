@@ -405,7 +405,7 @@ port
 );
 end component;
 
-component SDRAM_Controller
+component RamController
 Port
 (
     CLK_200MHz  : in  std_logic;
@@ -440,6 +440,7 @@ component OffloadController
 port
 (
     CLOCK_50MHz : in std_logic;
+    OFFLOAD_RESET : in std_logic;
 
     OFFLOAD_INTERRUPT : in std_logic;
     FIFO_DATA : in std_logic_vector(7 downto 0);
@@ -660,7 +661,7 @@ port map
     EMPTY => primary_fifo_empty
 );
 
-SDRAM_Controller_module: SDRAM_Controller
+RamController_module: RamController
 port map
 (
     CLK_200MHz => CLOCK_200MHz,
@@ -732,6 +733,7 @@ OffloadController_module: OffloadController
 port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
+    OFFLOAD_RESET => '0',
 
     OFFLOAD_INTERRUPT => offload_interrupt,
     FIFO_DATA => primary_fifo_data_out,

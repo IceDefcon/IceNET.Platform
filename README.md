@@ -38,6 +38,8 @@
 	08. Upgrade Console for the functions with arguments
 	09. Upgrade TCP/IP server to DMA Server
 	10. Architecture Upgrade ---> charDevice Commander + ramDisk DMA Engine
+	11. Add Diagnostic object in DroneCtrl to monitor memory allocation
+	12. Add a Number of Drone Arm Instances in the DroneCtrl unit
 
 # Testing Hardware Modules
 
