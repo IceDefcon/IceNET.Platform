@@ -942,9 +942,9 @@ end process;
 --NRF905_TRX_CE <= '0';
 --NRF905_TX_EN <= 'Z';
 
-process (CLOCK_200MHz, test_ram_state)
+process (CLOCK_100MHz, test_ram_state)
 begin
-    if rising_edge(CLOCK_200MHz) then
+    if rising_edge(CLOCK_100MHz) then
 
         case (test_ram_state) is
 
@@ -963,36 +963,20 @@ begin
                 TEST_WRITE_EN <= '0';
                 if TEST_BUSY = '0' then
                     if test_flag = '0' then
-                        if test_ops = "0011" then
-                            test_ops <= "0000";
-                            test_flag <= '1';
-                            test_ram_state <= TEST_CONFIG;
-                            TEST_ADDR <= "000000000000000000000000";
-                        else
-                            test_ops <= test_ops + '1';
-                            test_ram_state <= TEST_WRITE;
-                        end if;
+                        test_flag <= '1';
+                        TEST_ADDR <= "000000000000000000000000";
+                        test_ram_state <= TEST_READ;
                     elsif test_flag = '1' then
-                        if test_ops = "0100" then
-                            test_ops <= "0000";
-                            test_flag <= '0';
-                            test_ram_state <= TEST_DONE;
-                        else
-                            test_ops <= test_ops + '1';
-                            test_ram_state <= TEST_READ;
-                        end if;
+                        test_ram_state <= TEST_DONE;
                     end if;
                 end if;
 
             when TEST_WRITE =>
                 TEST_WRITE_EN <= '1';
-                TEST_DATA_IN <= TEST_DATA_IN + '1';
-                TEST_ADDR <= TEST_ADDR + '1';
                 test_ram_state <= TEST_WAIT;
 
             when TEST_READ =>
                 TEST_READ_EN <= '1';
-                TEST_ADDR <= TEST_ADDR + '1';
                 test_ram_state <= TEST_WAIT;
 
             when TEST_WAIT =>

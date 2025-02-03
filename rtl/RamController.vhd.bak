@@ -3,12 +3,6 @@ use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.STD_LOGIC_ARITH.ALL;
 use IEEE.STD_LOGIC_UNSIGNED.ALL;
 
---
--- SDRAM Controller
--- HY57V2562GTR
--- Chip
---
-
 entity RamController is
 Port
 (
@@ -49,6 +43,8 @@ architecture rtl of RamController is
         SDRAM_ACTIVE,
         SDRAM_WRITE_CMD,
         SDRAM_READ_CMD,
+        SDRAM_PRECHARGE_WRITE,
+        SDRAM_PRECHARGE_READ,
         SDRAM_READ_DATA,
         SDRAM_REFRESH,
         SDRAM_DONE
@@ -58,31 +54,28 @@ architecture rtl of RamController is
     -- Internal signals
     signal init_counter : integer range 0 to 10000 := 0; -- Increased delay
     signal refresh_counter : integer range 0 to 8192 := 0;
-    signal command : std_logic_vector(4 downto 0);
+    signal command : std_logic_vector(3 downto 0);
     signal process_read : std_logic := '0';
     signal process_write : std_logic := '0';
 
-    signal tRCD_counter : integer range 0 to 8 := 0; -- Row Address to Column Address Delay
-    signal tRAS_counter : integer range 0 to 8 := 0; -- Row Address to Column Address Delay
-    signal tCL_counter : integer range 0 to 8 := 0; -- Clock cycles to return data after a READ command is issued
+    signal tRCD_counter : integer range 0 to 3 := 3; -- Row Address to Column Address Delay
+    signal tRAS_counter : integer range 0 to 3 := 3; -- Row Address to Column Address Delay
+    signal tCL_counter : integer range 0 to 3 := 3; -- Clock cycles to return data after a READ command is issued
 
     -- Command definitions
-    constant CMD_INIT       : std_logic_vector(4 downto 0) := "01111";
-    constant CMD_MODE       : std_logic_vector(4 downto 0) := "10000";
-    constant CMD_NOP        : std_logic_vector(4 downto 0) := "10111";
-    constant CMD_ACTIVE     : std_logic_vector(4 downto 0) := "10011";
-    constant CMD_WRITE      : std_logic_vector(4 downto 0) := "10100";
-    constant CMD_READ       : std_logic_vector(4 downto 0) := "10101";
-    constant CMD_BURST_STOP : std_logic_vector(4 downto 0) := "10110";
-    constant CMD_PRECHARGE  : std_logic_vector(4 downto 0) := "10010";
-    constant CMD_REFRESH    : std_logic_vector(4 downto 0) := "10001";
+    constant CMD_MODE       : std_logic_vector(3 downto 0) := "0000";
+    constant CMD_NOP        : std_logic_vector(3 downto 0) := "0111";
+    constant CMD_ACTIVE     : std_logic_vector(3 downto 0) := "0011";
+    constant CMD_WRITE      : std_logic_vector(3 downto 0) := "0100";
+    constant CMD_READ       : std_logic_vector(3 downto 0) := "0101";
+    constant CMD_REFRESH    : std_logic_vector(3 downto 0) := "0001";
 
     -- SDRAM Mode Register Configuration
-    constant MODE_REG : std_logic_vector(12 downto 0) := "000" & "0" & "00" & "010" & "0" & "000"; -- CAS Latency 3
+    constant MODE_REG : std_logic_vector(12 downto 0) := "000" & "0" & "00" & "011" & "0" & "000"; -- CAS Latency 3
 
 begin
     CLK_SDRAM <= CLK_100MHz;
-    CKE <= command(4);
+    CKE <= '1';
     CS <= command(3);
     RAS <= command(2);
     CAS <= command(1);
@@ -103,7 +96,7 @@ begin
 
             case memory_state is
                 when SDRAM_INIT =>
-                    command <= CMD_INIT;
+                    command <= CMD_NOP;
                     if init_counter = 10000 then
                         memory_state <= SDRAM_MODE;
                     else
@@ -137,16 +130,15 @@ begin
                     elsif process_read = '1' then
                         memory_state <= SDRAM_READ_CMD;
                     end if;
-                    tRCD_counter <= 8;
+                    tRCD_counter <= 3;
 
                 when SDRAM_WRITE_CMD =>
                     if tRCD_counter = 0 then
                         command <= CMD_WRITE;
                         DQ <= DATA_IN;
                         A(8 downto 0) <= ADDR(8 downto 0);
-                        A(10) <= '1';
-                        --tRAS_counter <= 3;
-                        memory_state <= SDRAM_DONE;
+                        tRAS_counter <= 3;
+                        memory_state <= SDRAM_PRECHARGE_WRITE;
                     else
                         command <= CMD_NOP;
                         tRCD_counter <= tRCD_counter - 1;
@@ -157,19 +149,36 @@ begin
                         command <= CMD_READ;
                         DQ <= (others => 'Z');
                         A(8 downto 0) <= ADDR(8 downto 0);
-                        A(10) <= '1';
-                        --tRAS_counter <= 3;
-                        memory_state <= SDRAM_READ_DATA;
+                        tRAS_counter <= 3;
+                        memory_state <= SDRAM_PRECHARGE_READ;
                     else
                         command <= CMD_NOP;
                         tRCD_counter <= tRCD_counter - 1;
                     end if;
 
+                when SDRAM_PRECHARGE_WRITE =>
+                    if tRAS_counter = 0 then
+                        A(10) <= '1';
+                        memory_state <= SDRAM_DONE;
+                    else
+                        command <= CMD_NOP;
+                        tRAS_counter <= tRAS_counter - 1;
+                    end if;
+
+                when SDRAM_PRECHARGE_READ =>
+                    if tRAS_counter = 0 then
+                        A(10) <= '1';
+                        tCL_counter <= 3
+                        memory_state <= SDRAM_READ_DATA;
+                    else
+                        command <= CMD_NOP;
+                        tRAS_counter <= tRAS_counter - 1;
+                    end if;
+
                 when SDRAM_READ_DATA =>
                     command <= CMD_NOP;
                     if tCL_counter = 0 then
-                        DATA_OUT <= (others => '0');
-                        --DATA_OUT <= DQ;
+                        DATA_OUT <= DQ;
                         memory_state <= SDRAM_DONE;
                     else
                         tCL_counter <= tCL_counter - 1;
