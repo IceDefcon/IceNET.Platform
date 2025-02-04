@@ -6,9 +6,26 @@ use IEEE.STD_LOGIC_UNSIGNED.ALL;
 entity RamController is
 Port
 (
-    CLK_133MHz  : in  std_logic;
-    CLK_800MHz  : in  std_logic;
+    CLOCK_266MHz : in  std_logic;
+    CLOCK_133MHz : in  std_logic;
     RESET       : in  std_logic;
+
+    --
+    --  rising edge [0]
+    --       |
+    --       |        [1]        [2]
+    --       V____      ____      ____
+    --       |    |    |    |    |    |
+    --   ____|    |____|    |____|    |____     133Mhz
+    --
+    --
+    --     rising edge [0]
+    --            |
+    --            |        [1]       [2]
+    --            V____      ____      ____
+    --            |    |    |    |    |    |
+    --        ____|    |____|    |____|    |____    133Mhz @ 180° Forward
+    --
 
     -- SDRAM Interface
     A           : out std_logic_vector(12 downto 0);
@@ -58,15 +75,13 @@ architecture rtl of RamController is
 
     signal init_counter : integer range 0 to 13300 := 0;
     signal refresh_counter : integer range 0 to 8192 := 0;
+    signal AR_counter : integer range 0 to 2 := 0;
     signal tRP_counter : integer range 0 to 16 := 0;
     signal tMRD_counter : integer range 0 to 16 := 0;
     signal tRRC_counter : integer range 0 to 16 := 0;
     signal tRCD_counter : integer range 0 to 16 := 0;
     signal tRAS_counter : integer range 0 to 16 := 0;
     signal tCL_counter : integer range 0 to 16 := 0;
-
-    signal ar_counter : integer range 0 to 2 := 0;
-
 
     constant CMD_INIT       : std_logic_vector(4 downto 0) := "01111"; -- 0x0F CKE DOWN :: INIT
     constant CMD_NOP        : std_logic_vector(4 downto 0) := "10111"; -- 0x17 NOP
@@ -82,18 +97,16 @@ architecture rtl of RamController is
 
 begin
 
-    CLK_SDRAM <= CLK_133MHz;
-
+    CLK_SDRAM <= not CLOCk_133MHz;
     CKE <= command(4);
     CS  <= command(3);
     RAS <= command(2);
     CAS <= command(1);
     WE  <= command(0);
-
     LDQM <= '0';
     UDQM <= '0';
 
-    process (CLK_133MHz, RESET)
+    process (CLOCK_133MHz, RESET)
     begin
         if RESET = '1' then
 
@@ -101,25 +114,17 @@ begin
             refresh_counter <= 0;
             process_read <= '0';
             process_write <= '0';
-            DATA_OUT <= (others => '0');
-
-            tRP_counter <= 3;  -- 20ns / (1/133MHz) = 2.660 cycles
-            tMRD_counter <= 1; -- 2ns  / (1/133MHz) = 2.660 cycles
-            tRRC_counter <= 9; -- 63ns / (1/133MHz) = 0.266 cycles
-            tRCD_counter <= 3; -- 20ns / (1/133MHz) = 2.660 cycles
-            tRAS_counter <= 3; -- 42ns / (1.133Mhz) = 5.586 cycles
-            --tRC_counter <= 9;  -- 63ns / (1/133MHz) = 8.379 cycles ---> tRAS + tRP = 42ns + 20ns ~ 62ns
-            tCL_counter <= 3;  -- For 133MHz Clock :: tCL × Clock Period = 3×7.5ns = 22.5ns
-
-            ar_counter <= 2; -- Interrations of auto-refresh
 
             A <= (others => '0');
             BA <= (others => '0');
+            DATA_OUT <= (others => '0');
 
             command <= CMD_INIT;
             memory_state <= SDRAM_INIT;
 
-        elsif rising_edge(CLK_133MHz) then
+            AR_counter <= 1; -- Interrations of auto-refresh
+
+        elsif rising_edge(CLOCK_133MHz) then
             case memory_state is
 
                 when SDRAM_INIT =>
@@ -135,12 +140,13 @@ begin
                     A <= (others => '1');
                     BA <= (others => '1');
                     memory_state <= SDRAM_AUTO_REFRESH;
+                    tRP_counter <= 3;  -- 20ns / (1/133MHz) = 2.660 cycles
 
                 when SDRAM_AUTO_REFRESH =>
                     if tRP_counter = 0 then
                         command <= CMD_AUTOREFRESH;
                         memory_state <= SDRAM_MODE;
-                        tRRC_counter <= 9;
+                        tRRC_counter <= 9; -- 63ns / (1/133MHz) = 0.266 cycles
                     else
                         command <= CMD_NOP;
                         tRP_counter <= tRP_counter - 1;
@@ -148,15 +154,16 @@ begin
 
                 when SDRAM_MODE =>
                     if tRRC_counter = 0 then
-                        if ar_counter = 0 then
+                        if AR_counter = 0 then
                             BA <= "00";
                             A <= MODE_REG;
                             command <= CMD_MODE;
                             memory_state <= SDRAM_IDLE;
+                            tMRD_counter <= 1; -- 2ns  / (1/133MHz) = 2.660 cycles
                          else
                             command <= CMD_NOP;
                             memory_state <= SDRAM_AUTO_REFRESH;
-                            ar_counter <= ar_counter - 1;
+                            AR_counter <= AR_counter - 1;
                         end if;
                     else
                         command <= CMD_NOP;
@@ -190,15 +197,16 @@ begin
                     elsif process_read = '1' then
                         memory_state <= SDRAM_READ_CMD;
                     end if;
-                    tRCD_counter <= 2;
+                    tRCD_counter <= 3; -- 20ns / (1/133MHz) = 2.660 cycles
 
                 when SDRAM_WRITE_CMD =>
                     if tRCD_counter = 0 then
                         command <= CMD_WRITE;
                         A(8 downto 0) <= ADDR(8 downto 0);
-                        A(10) <= '0';
+                        A(10) <= '1';
                         DQ <= DATA_IN;
                         memory_state <= SDRAM_DONE;
+                        tRAS_counter <= 6; -- 42ns / (1/133Mhz) = 5.586 cycles
                     else
                         command <= CMD_NOP;
                         tRCD_counter <= tRCD_counter - 1;
@@ -208,10 +216,10 @@ begin
                     if tRCD_counter = 0 then
                         command <= CMD_READ;
                         A(8 downto 0) <= ADDR(8 downto 0);
-                        A(10) <= '0';
-                        tCL_counter <= 2;
+                        A(10) <= '1';
                         DQ <= (others => 'Z');
                         memory_state <= SDRAM_READ_DATA;
+                        tCL_counter <= 3;  -- For 133MHz Clock :: tCL × Clock Period = 3×7.5ns = 22.5ns
                     else
                         command <= CMD_NOP;
                         tRCD_counter <= tRCD_counter - 1;
@@ -222,6 +230,7 @@ begin
                     if tCL_counter = 0 then
                         DATA_OUT <= DQ;
                         memory_state <= SDRAM_DONE;
+                        tRAS_counter <= 6; -- 42ns / (1/133Mhz) = 5.586 cycles
                     else
                         tCL_counter <= tCL_counter - 1;
                     end if;
@@ -230,6 +239,7 @@ begin
                     command <= CMD_AUTOREFRESH;
                     refresh_counter <= 0;
                     memory_state <= SDRAM_IDLE;
+                    tMRD_counter <= 1; -- 2ns  / (1/133MHz) = 2.660 cycles
 
                 when SDRAM_DONE =>
                     command <= CMD_NOP;
@@ -237,6 +247,7 @@ begin
                         process_read <= '0';
                         process_write <= '0';
                         memory_state <= SDRAM_IDLE;
+                        tMRD_counter <= 1; -- 2ns  / (1/133MHz) = 2.660 cycles
                     else
                         tRAS_counter <= tRAS_counter - 1;
                     end if;
