@@ -301,6 +301,16 @@ void ServerTCP::threadServerTCP()
 
             if(m_ioState != m_ioStatePrev)
             {
+                /**
+                 *
+                 * TODO :: GLITCH !!
+                 *
+                 * There is a litle glitch
+                 * When client is disconnected
+                 * We cannot print state update due
+                 * to the else which is not executed
+                 *
+                 */
                 std::cout << "[INFO] [TCP] State ServerTCP " << m_ioStatePrev << "->" << m_ioState << " " << getIoStateString(m_ioState) << std::endl;
                 m_ioStatePrev = m_ioState;
             }

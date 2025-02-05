@@ -49,7 +49,6 @@ type STATE is
     TRANSFER_1,
     TRANSFER_2,
     TRANSFER_READY,
-    TRANSFER_READY_SINGLE,
     TRANSFER_WAIT_1,
     TRANSFER_WAIT_2,
     TRANSFER_EXECUTE,
@@ -59,10 +58,10 @@ type STATE is
 );
 signal offload_state: STATE := IDLE;
 
-signal Byte_0 : std_logic_vector(7 downto 0) := (others => '0');
-signal Byte_1 : std_logic_vector(7 downto 0) := (others => '0');
-signal Byte_2 : std_logic_vector(7 downto 0) := (others => '0');
-signal Byte_3 : std_logic_vector(7 downto 0) := (others => '0');
+signal header_size : std_logic_vector(7 downto 0) := (others => '0');
+signal header_devices : integer := 0;
+signal header_scramble : std_logic_vector(7 downto 0) := (others => '0');
+signal header_checksum : std_logic_vector(7 downto 0) := (others => '0');
 
 signal config_devices : integer := 0;
 signal config_scramble : std_logic_vector(7 downto 0) := (others => '0');
@@ -110,53 +109,45 @@ begin
 
             ----------------------------------------------------------
             --
-            -- HEADER :: Depends on the Byte 0 Bit(7)
+            -- HEADER
             --
             ----------------------------------------------------------
-            -- BYTE 0 :: Bit(7) = 0         :: Bit(7) = 1
-            ----------------------------------------------------------
-            -- BYTE 0 :: Header Size        :: Ctrl byte
-            -- BYTE 1 :: Device Amount      :: Device ID
-            -- BYTE 2 :: Scrambling byte    :: Device Reg
-            -- BYTE 3 :: Checksum           :: Device Data
+            --
+            -- BYTE 0 :: Header Size
+            -- BYTE 1 :: Device Amount
+            -- BYTE 2 :: Scrambling byte
+            -- BYTE 3 :: Checksum
             --
             ----------------------------------------------------------
             when HEADER_1 =>
                 FIFO_READ_ENABLE <= '1';
-                Byte_0 <= FIFO_DATA;
+                header_size <= FIFO_DATA;
                 offload_state <= HEADER_2;
 
             when HEADER_2 =>
                 FIFO_READ_ENABLE <= '1';
-                Byte_1 <= FIFO_DATA;
+                header_devices <= to_integer(unsigned(FIFO_DATA));
                 offload_state <= HEADER_3;
 
             when HEADER_3 =>
                 FIFO_READ_ENABLE <= '0';
-                Byte_2 <= FIFO_DATA;
+                header_scramble <= FIFO_DATA;
                 offload_state <= HEADER_4;
 
             when HEADER_4 =>
                 FIFO_READ_ENABLE <= '0';
-                Byte_3 <= FIFO_DATA;
+                header_checksum <= FIFO_DATA;
                 offload_state <= HEADER_CONFIG;
 
             when HEADER_CONFIG =>
                 FIFO_READ_ENABLE <= '0';
-                if Byte_0(7) = '0' then
-                    config_devices <= to_integer(unsigned(Byte_1));
-                    config_scramble <= Byte_2;
-                    config_checksum <= Byte_3;
+                if header_size{7} = '0' then
+                    config_devices <= header_devices;
+                    config_scramble <= header_scramble;
+                    config_checksum <= header_checksum;
                     offload_state <= DEVICE_INIT;
                 else
-                    OFFLOAD_CTRL <= Byte_0;
-                    OFFLOAD_ID <= Byte_1(0) & Byte_1(1)
-                    & Byte_1(2) & Byte_1(3)
-                    & Byte_1(4) & Byte_1(5)
-                    & Byte_1(6);
-                    OFFLOAD_REGISTER <= Byte_2;
-                    OFFLOAD_DATA <= Byte_2;
-                    offload_state <= TRANSFER_READY_SINGLE;
+                    offload_state <= HEADER_CONFIG;
                 end if;
 
             when DEVICE_INIT =>
@@ -258,10 +249,6 @@ begin
                 OFFLOAD_READY <= '1';
                 offload_state <= TRANSFER_WAIT_1;
 
-            when TRANSFER_READY_SINGLE =>
-                OFFLOAD_READY <= '1';
-                offload_state <= DONE;
-
             when TRANSFER_WAIT_1 =>
                 OFFLOAD_READY <= '0';
                 offload_state <= TRANSFER_WAIT_2;
@@ -289,7 +276,6 @@ begin
                 offload_state <= DEVICE_INIT;
 
             when DONE =>
-                OFFLOAD_READY <= '0';
                 offload_state <= IDLE;
 
             when others =>

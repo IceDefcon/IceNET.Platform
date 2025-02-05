@@ -304,12 +304,8 @@ signal TEST_READ_EN : std_logic := '0';
 signal TEST_DATA_OUT : std_logic_vector(15 downto 0) := (others => '0');
 signal TEST_BUSY : std_logic := '0';
 -- PLL
-signal CLOCK_100MHz : std_logic := '0';
-signal CLOCK_200MHz : std_logic := '0';
-signal CLOCK_800MHz : std_logic := '0';
-
-signal CLOCK_133MHz : std_logic := '0';
-signal CLOCK_133MHz_shift : std_logic := '0';
+signal CLOCK_266MHz : std_logic := '0';
+signal CLOCk_133MHz : std_logic := '0';
 ----------------------------------------------------------------------------------------------------------------
 -- COMPONENTS DECLARATION
 ----------------------------------------------------------------------------------------------------------------
@@ -411,8 +407,8 @@ end component;
 component RamController
 Port
 (
-    CLK_133MHz  : in  std_logic;
-    CLK_800MHz  : in  std_logic;
+    CLOCK_266MHz : in  std_logic;
+    CLOCk_133MHz : in  std_logic;
     RESET       : in  std_logic;
 
     -- SDRAM Interface
@@ -519,18 +515,7 @@ port
 );
 end component;
 
-component PLL_100_200
-port
-(
-    areset  : IN STD_LOGIC  := '0';
-    inclk0  : IN STD_LOGIC  := '0';
-    c0      : OUT STD_LOGIC ;
-    c1      : OUT STD_LOGIC ;
-    locked  : OUT STD_LOGIC
-);
-end component;
-
-component PLL_SDRAM
+component PLL_RamClock
 port
 (
     areset  : IN STD_LOGIC  := '0';
@@ -677,8 +662,8 @@ port map
 RamController_module: RamController
 port map
 (
-    CLK_133MHz => CLOCK_133MHz,
-    CLK_800MHz => CLOCK_800MHz,
+    CLOCK_266MHz => CLOCK_266MHz,
+    CLOCk_133MHz => CLOCk_133MHz,
     RESET => TEST_RESET,
 
     -- SDRAM Interface
@@ -800,23 +785,13 @@ port map
     CAN_MPP_RX => CAN_MPP_RX
 );
 
-PLL_100_200_module: PLL_100_200
+PLL_RamClock_module: PLL_RamClock
 port map
 (
     areset => '0',
     inclk0 => CLOCK_50MHz,
-    c0 => CLOCK_100MHz,
-    c1 => CLOCK_200MHz,
-    locked => open
-);
-
-PLL_SDRAM_module: PLL_SDRAM
-port map
-(
-    areset => '0',
-    inclk0 => CLOCK_50MHz,
-    c0 => CLOCK_133MHz,
-    c1 => CLOCK_133MHz_shift,
+    c0 => CLOCK_266MHz,
+    c1 => CLOCK_133MHz,
     locked => open
 );
 
@@ -1033,7 +1008,6 @@ begin
     if rising_edge(CLOCK_133MHz) then
 
         case (test_ram_state) is
-
             when TEST_IDLE =>
                 if test_timer = "10111110101111000001111111111" then
                     test_ram_state <= TEST_INIT;

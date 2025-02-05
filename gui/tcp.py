@@ -210,7 +210,7 @@ class TcpManager:
             self.spi_register_data.config(state=tk.DISABLED)
 
     def i2c_assembly(self):
-        header = 0x00 # 0000 0000 Read
+        header = 0x80 # 1000 0000 Read :: Switched DMA Config
         address = int(self.i2c_device_address.get(), 16)  # Convert hex address to integer
         register = int(self.i2c_device_register.get(), 16)  # Convert hex register to integer
         if self.i2c_write_var.get():

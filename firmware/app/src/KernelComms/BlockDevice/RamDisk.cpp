@@ -140,7 +140,7 @@ int RamDisk::assembleConfig()
     m_engineConfig[0] = 0x04; /* Size of sector 0 */
     m_engineConfig[1] = 0x02; /* Number of Devices to configure */
     m_engineConfig[2] = 0x11; /* Load and Ready */
-    m_engineConfig[3] = 0x17; /* Checksum */
+    m_engineConfig[3] = calculateChecksum((char*)m_engineConfig, 3); /* Only 3 bytes for sub-checksum */
 
     char ops = 2; /* Configure 2 registers only */
 
