@@ -11,7 +11,6 @@
 #include <linux/dma-mapping.h>  // For DMA support
 
 #include "stateMachine.h"
-#include "dmaControl.h"
 #include "charDevice.h"
 #include "spiDmaCtrl.h"
 #include "ramAxis.h"
@@ -33,8 +32,6 @@ static spiDeviceData Device[SPI_AMOUNT] =
     [SPI_PRIMARY] = /* SPI 0 */
     {
         .spiDevice = NULL,
-        .spiTx = {0},
-        .spiRx = {0},
         .spiLength = 0,
 
         .Dma =
@@ -49,8 +46,6 @@ static spiDeviceData Device[SPI_AMOUNT] =
     [SPI_SECONDARY] = /* SPI 1 */
     {
         .spiDevice = NULL,
-        .spiTx = {0},
-        .spiRx = {0},
         .spiLength = 0,
 
         .Dma =
@@ -202,7 +197,7 @@ static int spiDmaInit(spiDeviceType spiDeviceEnum, dmaControlType dmaControl, bo
 
     /* Allocate DMA buffers */
     Device[spiDeviceEnum].Dma.tx_dma = dma_map_single(Device[spiDeviceEnum].spiDevice->controller->dev.parent, (void *)dmaTransfer->RxData, Device[spiDeviceEnum].spiLength, DMA_TO_DEVICE);
-    Device[spiDeviceEnum].Dma.rx_dma = dma_map_single(Device[spiDeviceEnum].spiDevice->controller->dev.parent, (void *)Device[spiDeviceEnum].spiRx, Device[spiDeviceEnum].spiLength, DMA_FROM_DEVICE);
+    Device[spiDeviceEnum].Dma.rx_dma = dma_map_single(Device[spiDeviceEnum].spiDevice->controller->dev.parent, (void *)dmaTransfer->TxData, Device[spiDeviceEnum].spiLength, DMA_FROM_DEVICE);
 
     if(dma_mapping_error(Device[spiDeviceEnum].spiDevice->controller->dev.parent, Device[spiDeviceEnum].Dma.tx_dma) ||
         dma_mapping_error(Device[spiDeviceEnum].spiDevice->controller->dev.parent, Device[spiDeviceEnum].Dma.rx_dma))
@@ -223,11 +218,11 @@ static int spiDmaInit(spiDeviceType spiDeviceEnum, dmaControlType dmaControl, bo
     if(DMA_IN == dmaControl)
     {
         Device[spiDeviceEnum].Dma.spiTransfer.tx_buf = (void *)dmaTransfer->RxData;
-        Device[spiDeviceEnum].Dma.spiTransfer.rx_buf = (void *)Device[spiDeviceEnum].spiTx;
+        Device[spiDeviceEnum].Dma.spiTransfer.rx_buf = (void *)dmaTransfer->TxData;
     }
     else if(DMA_OUT == dmaControl)
     {
-        Device[spiDeviceEnum].Dma.spiTransfer.tx_buf = (void *)Device[spiDeviceEnum].spiRx;
+        Device[spiDeviceEnum].Dma.spiTransfer.tx_buf = (void *)dmaTransfer->RxData;
         Device[spiDeviceEnum].Dma.spiTransfer.rx_buf = (void *)dmaTransfer->TxData;
     }
     else
@@ -294,13 +289,6 @@ void transferFpgaInput(struct work_struct *work)
         printk(KERN_ERR "[CTRL][SPI] No FPGA Preamble detected :: FPGA is Not Programed, Connected or Running properly\n");
         charDeviceLockCtrl(DEVICE_COMMANDER, CTRL_UNLOCK);
     }
-
-    /* Clear the buffers */
-    for (i = 0; i < Device[SPI_PRIMARY].spiLength; ++i)
-    {
-        Device[SPI_PRIMARY].spiRx[i] = 0x00;
-        Device[SPI_PRIMARY].spiTx[i] = 0x00;
-    }
 }
 
 void transferFpgaOutput(struct work_struct *work)
@@ -331,15 +319,8 @@ void transferFpgaOutput(struct work_struct *work)
         printk(KERN_INFO "[CTRL][SPI] Secondary FPGA Transfer :: Byte[%d]: [Feedback] Tx[0x%02x] [Data] Rx[0x%02x]\n", i, tx_buf[i], rx_buf[i]);
     }
 
-    /* Unlock COMMANDER mutex for Kernel Commander Device to process */
+    /* Unlock COMMANDER For Kernel Commander Device to process */
     charDeviceLockCtrl(DEVICE_COMMANDER, CTRL_UNLOCK);
-
-    /* Clear the buffers */
-    for (i = 0; i < Device[SPI_SECONDARY].spiLength; ++i)
-    {
-        Device[SPI_SECONDARY].spiRx[i] = 0x00;
-        Device[SPI_SECONDARY].spiTx[i] = 0x00;
-    }
 }
 
 void killApplication(struct work_struct *work)

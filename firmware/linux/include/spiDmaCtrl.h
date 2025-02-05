@@ -55,6 +55,13 @@ typedef enum
     SPI_AMOUNT
 }spiDeviceType;
 
+typedef enum
+{
+    DMA_IN,
+    DMA_OUT,
+    DMA_AMOUNT
+}dmaControlType;
+
 typedef struct
 {
     struct spi_message spiMessage;
@@ -66,8 +73,6 @@ typedef struct
 typedef struct
 {
     struct spi_device *spiDevice;
-    volatile uint8_t spiTx[SPI_BUFFER_SIZE];
-    volatile uint8_t spiRx[SPI_BUFFER_SIZE];
     uint8_t spiLength;
     spiDmaData Dma;
 }spiDeviceData;
