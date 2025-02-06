@@ -247,7 +247,11 @@ signal offload_data : std_logic_vector(7 downto 0) := (others => '0');
 signal offload_wait : std_logic := '0';
 -- PacketSwitch
 signal switch_i2c_ready : std_logic := '0';
+signal switch_spi_ready : std_logic := '0';
 signal switch_pwm_ready : std_logic := '0';
+constant SWITCH_I2C : std_logic_vector(2 downto 0) := "000";
+constant SWITCH_SPI : std_logic_vector(2 downto 0) := "010";
+constant SWITCH_PWM : std_logic_vector(2 downto 0) := "100";
 -- Feedback interrupts
 signal interrupt_i2c_feedback : std_logic := '0';
 signal interrupt_pwm_feedback : std_logic := '0';
@@ -306,6 +310,14 @@ signal TEST_BUSY : std_logic := '0';
 -- PLL
 signal CLOCK_266MHz : std_logic := '0';
 signal CLOCk_133MHz : std_logic := '0';
+-- SPI Controller
+signal ctrl_CS : std_logic := '0';
+signal ctrl_SCLK : std_logic := '0';
+signal ctrl_MOSI : std_logic := '0';
+signal ctrl_parallel_MOSI : std_logic_vector(7 downto 0) := (others => '0');
+signal ctrl_parallel_MISO : std_logic_vector(7 downto 0) := (others => '0');
+signal ctrl_MISO : std_logic := '0';
+signal ctrl_COMPLETE : std_logic := '0';
 ----------------------------------------------------------------------------------------------------------------
 -- COMPONENTS DECLARATION
 ----------------------------------------------------------------------------------------------------------------
@@ -574,6 +586,21 @@ secondarySpiConverter_module: SpiConverter port map
     CONVERSION_COMPLETE => open -- out :: Not in use !
 );
 
+busSpiConverter_module: SpiConverter port map
+(
+    CLOCK => CLOCK_50MHz,
+
+    CS => ctrl_CS, -- in
+    SCLK => ctrl_SCLK, -- in
+
+    SERIAL_MOSI => ctrl_MOSI, -- in
+    PARALLEL_MOSI => ctrl_parallel_MOSI, -- out
+    PARALLEL_MISO => ctrl_parallel_MISO, -- in
+    SERIAL_MISO => ctrl_MISO, -- out
+
+    CONVERSION_COMPLETE => ctrl_COMPLETE -- out
+);
+
 -- Watchdog interrupt signal
 WatchdogInterrupt: InterruptGenerator
 generic map
@@ -800,13 +827,26 @@ process(CLOCK_50MHz)
 begin
     if rising_edge(CLOCK_50MHz) then
         if offload_ready = '1' then
-            if offload_ctrl(1) = '1' then
+            if offload_ctrl(3 downto 1) = SWITCH_I2C then
+                switch_i2c_ready <= '1';
+                switch_spi_ready <= '0';
+                switch_pwm_ready <= '0';
+            elsif offload_ctrl(3 downto 1) = SWITCH_SPI then
+                switch_i2c_ready <= '0';
+                switch_spi_ready <= '1';
+                switch_pwm_ready <= '0';
+            elsif offload_ctrl(3 downto 1) = SWITCH_PWM then
+                switch_i2c_ready <= '0';
+                switch_spi_ready <= '0';
                 switch_pwm_ready <= '1';
             else
-                switch_i2c_ready <= '1';
+                switch_i2c_ready <= '0';
+                switch_spi_ready <= '0';
+                switch_pwm_ready <= '0';
             end if;
         else
             switch_i2c_ready <= '0';
+            switch_spi_ready <= '0';
             switch_pwm_ready <= '0';
         end if;
     end if;

@@ -221,8 +221,13 @@ class TcpManager:
             data = bytes([header + 0x00, address, register, 0x00, 0x00, 0x00, 0x00, 0x00])
         return data
 
+    def spi_assembly(self):
+        header = 0x02 # 0000 0100
+        data = bytes([header, 0x00, 0x00]) + bytes.fromhex(self.spi_register_data.get()) + bytes([0x00, 0x00, 0x00, 0x00])
+        return data
+
     def pwm_set(self, value):
-        header = 0x02 # 0000 0010
+        header = 0x04 # 0000 0010
         data = bytes([header, 0x00, 0x00, value, 0x00, 0x00, 0x00, 0x00])
         self.pwm_speed.delete(0, 'end')
         self.pwm_speed.insert(0, f"{value:02X}")
@@ -235,11 +240,6 @@ class TcpManager:
         data = bytes([header, 0x00, 0x00, current, 0x00, 0x00, 0x00, 0x00])
         self.pwm_speed.delete(0, 'end')
         self.pwm_speed.insert(0, f"{current:02X}")
-        return data
-
-    def spi_assembly(self):
-        header = 0x04 # 0000 0100
-        data = bytes([header, 0x00, 0x00]) + bytes.fromhex(self.spi_register_data.get()) + bytes([0x00, 0x00, 0x00, 0x00])
         return data
 
     def tcp_execute(self, comand):
