@@ -360,14 +360,14 @@ Port
 (
     CLOCK_50MHz : in  std_logic;
 
-    OFFLOAD_INT : in std_logic;
+    INT_IN : in std_logic;
 
     MISO : in std_logic;
     MOSI : out std_logic;
     SCK : out std_logic;
     CSN : out std_logic;
 
-    FPGA_INT : out std_logic
+    INT_OUT : out std_logic
 );
 end component;
 
@@ -593,14 +593,14 @@ SpiController_module: SpiController port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
 
-    OFFLOAD_INT => switch_spi_ready,
+    INT_IN => switch_spi_ready,
     -- Master SPI interface
     MISO => '0',
-    MOSI => open,
-    SCK => open,
-    CSN => open,
+    MOSI => open
+    SCK => open
+    CSN => open
 
-    FPGA_INT => interrupt_spi_feedback
+    INT_OUT => interrupt_spi_feedback
 );
 
 secondarySpiConverter_module: SpiConverter port map
@@ -950,7 +950,9 @@ feedback_interrupts_process:
 process(CLOCK_50MHz)
 begin
     if rising_edge(CLOCK_50MHz) then
-        if interrupt_i2c_feedback = '1' or interrupt_pwm_feedback = '1' or interrupt_spi_feedback = '1' then
+        if interrupt_i2c_feedback = '1'
+        or interrupt_pwm_feedback = '1'
+        or interrupt_spi_feedback = '1' then
             if interrupt_feedback_count = "11111010" then -- 250 * 20 = 5000ns = 5us interrupt pulse back to CPU
                 INT_FROM_FPGA <= '0';
             else

@@ -222,12 +222,19 @@ class TcpManager:
         return data
 
     def spi_assembly(self):
-        header = 0x02 # 0000 0100
-        data = bytes([header, 0x00, 0x00]) + bytes.fromhex(self.spi_register_data.get()) + bytes([0x00, 0x00, 0x00, 0x00])
+        header = 0x82 # 0000 0100
+        address = int(self.spi_device_address.get(), 16)  # Convert hex address to integer
+        register = int(self.spi_device_register.get(), 16)  # Convert hex register to integer
+        if self.spi_write_var.get():
+            # 0000 0000 :: Read
+            data = bytes([header + 0x01, address, register]) + bytes.fromhex(self.spi_register_data.get()) + bytes([0x00, 0x00, 0x00, 0x00])
+        else:
+            # 0000 0001 :: Write
+            data = bytes([header + 0x00, address, register, 0x00, 0x00, 0x00, 0x00, 0x00])
         return data
 
     def pwm_set(self, value):
-        header = 0x04 # 0000 0010
+        header = 0x84 # 0000 0010
         data = bytes([header, 0x00, 0x00, value, 0x00, 0x00, 0x00, 0x00])
         self.pwm_speed.delete(0, 'end')
         self.pwm_speed.insert(0, f"{value:02X}")

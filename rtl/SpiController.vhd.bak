@@ -30,7 +30,7 @@ signal SPI_state: INTERRUPT := IDLE;
 
 begin
 
-    FPGA_INT <= OFFLOAD_INT;
+    INT_OUT <= INT_IN;
 
 
     interrupt_process: process(CLOCK_50MHz)
