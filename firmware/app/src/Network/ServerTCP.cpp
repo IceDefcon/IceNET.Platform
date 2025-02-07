@@ -315,6 +315,20 @@ void ServerTCP::threadServerTCP()
                 m_ioStatePrev = m_ioState;
             }
 
+            /**
+             *
+             * INFO
+             *
+             * Switch Pointer Shared with Commander and DroneCtrl
+             *
+             * Both state machines change
+             * states simultaneously
+             * due to share_ptr
+             *
+             * (1) Commander
+             * (2) ServerTCP
+             *
+             **/
             switch(*m_IO_ServerTCPState)
             {
                 case IO_IDLE:
@@ -349,12 +363,18 @@ void ServerTCP::threadServerTCP()
                     else if(ret == -4)
                     {
                         std::cout << "[INFO] [TCP] Transfer Data to RAM" << std::endl;
+                        //
+                        // TODO :: If Needed
+                        //
                         // m_instanceRamDisk->dataTX();
                         m_timeoutCount = 0;
                     }
                     else if(ret == -3)
                     {
                         std::cout << "[INFO] [TCP] Clear DMA Engine from RAM" << std::endl;
+                        //
+                        // TODO :: If Needed
+                        //
                         // m_instanceRamDisk->clearDma();
                         m_timeoutCount = 0;
                     }
@@ -364,12 +384,20 @@ void ServerTCP::threadServerTCP()
                     }
                     break;
 
-                case IO_COM_WRITE:
-                    /* DO NOTHING HERE */
+                case IO_COM_WRITE: /* Commander is Now Processing Data */
+                    /**
+                     *
+                     * !!! DO NOTHING HERE !!!
+                     *
+                     */
                     break;
 
-                case IO_COM_READ:
-                    /* DO NOTHING HERE */
+                case IO_COM_READ: /* Commander is Now Processing Data */
+                    /**
+                     *
+                     * !!! DO NOTHING HERE !!!
+                     *
+                     */
                     break;
 
                 case IO_TCP_WRITE:

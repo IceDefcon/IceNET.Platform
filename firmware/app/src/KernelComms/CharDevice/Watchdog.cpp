@@ -24,7 +24,6 @@ Watchdog::Watchdog() :
     m_Tx_Watchdog(new std::vector<char>(IO_TRANSFER_SIZE))
 {
     std::cout << "[INFO] [CONSTRUCTOR] " << this << " :: Instantiate Watchdog" << std::endl;
-
 }
 
 Watchdog::~Watchdog()
@@ -132,7 +131,7 @@ void Watchdog::threadWatchdog()
          * as it is hard to synchronise kernel space
          * with user space, not able to change state
          * in state machine to initiate read operation
-         * as this is happenig when FPGA data is reveived
+         * as this is happenig when FPGA reveive new data
          */
         if(dataRX() <= 0)
         {
@@ -149,7 +148,7 @@ void Watchdog::threadWatchdog()
              * And :: terminate called after throwing an instance of 'std::system_error'
              *
              * Therefore we can only set the flag if watchdog is dead or not
-             * And check this flag in main to call thread terminatino or not
+             * And check this flag in main to call thread termination or not
              * This ensure right termination sequence
              *
              */

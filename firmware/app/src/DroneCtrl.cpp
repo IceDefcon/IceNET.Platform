@@ -39,15 +39,13 @@ void DroneCtrl::droneInit()
     m_instanceCommander = this;
     m_instanceWatchdog = this;
     m_instanceRamDisk = this;
-    /* Align shared pointers */
+    /* Align shared pointers for Kernel<->ServerTCP communication and StateMachines */
     m_instanceServerTCP->setTransferPointer(m_Rx_DroneCtrlVector, m_Tx_DroneCtrlVector);
     m_instanceCommander->setTransferPointer(m_Rx_DroneCtrlVector, m_Tx_DroneCtrlVector);
     m_instanceServerTCP->setTransferState(m_IO_DroneCtrlState);
     m_instanceCommander->setTransferState(m_IO_DroneCtrlState);
-
-    /* Ram Disk Commander */
+    /* Launch Ram Disk Commander and TCP Server */
     KernelComms::initRamDiskCommander();
-    /* TCP Server */
     Network::initServerTCP();
 }
 
@@ -132,10 +130,10 @@ void DroneCtrl::droneCtrlMain()
              *
              * This cannot be delayed by 1000ms
              *
-             * The best solution would be feedback from Kernel Commander
-             * Compare return values against the configuration
+             * Proposed solution is feedback from Kernel Commander
+             * To compare with pre-defined value
              *
-             * Must be the same
+             * But for now 1000ms delay to reconfig DMA into singe mode
              *
              */
             std::cout << "[INFO] [ D ] CTRL_RECONFIG_DMA :: Delay Start" << std::endl;

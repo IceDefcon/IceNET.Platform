@@ -106,6 +106,7 @@ int Commander::sendCommand(commandType cmd)
     (*command)[0] = m_commandMatrix[cmd][0];
     (*command)[1] = m_commandMatrix[cmd][1];
 
+    /* Write command to Kernel Space :: To be processed in Kernel */
     ret = write(m_file_descriptor, command->data(), CMD_LENGTH);
 
     delete command;
@@ -168,13 +169,31 @@ void Commander::threadCommander()
             m_ioStatePrev = m_ioState;
         }
 
+        /**
+         *
+         * INFO
+         *
+         * Switch Pointer Shared with TCP Server and DroneCtrl
+         *
+         * Both state machines change
+         * states simultaneously
+         * due to share_ptr
+         *
+         * (1) Commander
+         * (2) ServerTCP
+         *
+         **/
         switch(*m_IO_CommanderState)
         {
             case IO_IDLE:
                 break;
 
-            case IO_TCP_READ:
-                /* DO NOTHING HERE */
+            case IO_TCP_READ: /* TCP Server is Now Processing Data */
+                /**
+                 *
+                 * !!! DO NOTHING HERE !!!
+                 *
+                 */
                 break;
 
             case IO_COM_WRITE:
@@ -209,7 +228,7 @@ void Commander::threadCommander()
                  *
                  * This is in blokcing mode
                  * so timeout have to be introduced
-                 * in order to unlock kernel space
+                 * here to unlock kernel space
                  *
                  * Or unlock over the timeout inside kernel space
                  *
@@ -233,8 +252,12 @@ void Commander::threadCommander()
 
                 break;
 
-            case IO_TCP_WRITE:
-                /* DO NOTHING HERE */
+            case IO_TCP_WRITE: /* TCP Server is Now Processing Data */
+                /**
+                 *
+                 * !!! DO NOTHING HERE !!!
+                 *
+                 */
                 break;
 
             case IO_LOAD:
