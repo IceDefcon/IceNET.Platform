@@ -122,7 +122,7 @@ static int interruptTimerInit(void)
     }
     else
     {
-        printk(KERN_ERR "[INIT][ISR] Register watchdogISR callback at Pin [%d] IRQ\n", GPIO_TIMER_INTERRUPT_FROM_FPGA);
+        printk(KERN_ERR "[INIT][ISR] Setup GPIO Pin [%d] Register timerISR callback\n", GPIO_TIMER_INTERRUPT_FROM_FPGA);
     }
 
     return 0;
@@ -179,7 +179,7 @@ static int interruptWatchdogInit(void)
     }
     else
     {
-        printk(KERN_ERR "[INIT][ISR] Register watchdogISR callback at Pin [%d] IRQ\n", GPIO_WATCHDOG_INTERRUPT_FROM_FPGA);
+        printk(KERN_ERR "[INIT][ISR] Setup GPIO Pin [%d] Register watchdogISR callback\n", GPIO_WATCHDOG_INTERRUPT_FROM_FPGA);
     }
 
     return 0;
@@ -265,7 +265,7 @@ static int transferFpgaOutputInit(void)
     }
     else
     {
-        printk(KERN_ERR "[INIT][ISR] Register transferFpgaOutputISR callback at Pin [%d] IRQ\n", GPIO_INTERRUPT_FROM_FPGA);
+        printk(KERN_ERR "[INIT][ISR] Setup GPIO Pin [%d] Register transferFpgaOutputISR callback\n", GPIO_INTERRUPT_FROM_FPGA);
     }
 
     return 0;

@@ -141,6 +141,21 @@ begin
                 Byte_3 <= FIFO_DATA;
                 offload_state <= HEADER_CONFIG;
 
+            ----------------------------------------------
+            -- OFFLOAD_CTRL :: 8-bits
+            ----------------------------------------------
+            --  Dma config (Auto/Manual Config)
+            --      |
+            --      |        Device (I2C, SPI, PWM)
+            --      |          ID
+            --      |          ||
+            --      V          VV
+            --    | x | xxxx | xx | x |
+            --          ΛΛΛΛ        Λ
+            --          ||||        |
+            --       burst size    R/W (I2C, SPI)
+            --       (I2C, SPI)
+            ----------------------------------------------
             when HEADER_CONFIG =>
                 FIFO_READ_ENABLE <= '0';
                 if Byte_0(7) = '0' then

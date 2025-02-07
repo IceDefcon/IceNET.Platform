@@ -9,10 +9,17 @@ Port
 
     OFFLOAD_INT : in std_logic;
 
-    MISO : in std_logic;
-    MOSI : out std_logic;
-    SCK : out std_logic;
-    CSN : out std_logic;
+    OFFLOAD_ID : in std_logic_vector(6 downto 0);
+    OFFLOAD_COTROL : in std_logic_vector(7 downto 0);
+    OFFLOAD_REGISTER : in std_logic_vector(7 downto 0);
+    OFFLOAD_DATA : in std_logic_vector(7 downto 0);
+
+    CTRL_CS : out std_logic;
+    CTRL_MISO : in std_logic;
+    CTRL_MOSI : out std_logic;
+    CTRL_SCK : out std_logic;
+
+    CTRL_MUX : out std_logic_vector(3 downto 0);
 
     FPGA_INT : out std_logic
 );
@@ -24,6 +31,7 @@ type INTERRUPT is
 (
     IDLE,
     PRODUCE,
+    MUX,
     DONE
 );
 signal SPI_state: INTERRUPT := IDLE;
@@ -41,6 +49,8 @@ begin
                 when IDLE =>
 
                 when PRODUCE =>
+
+                when MUX =>
 
                 when DONE =>
 
