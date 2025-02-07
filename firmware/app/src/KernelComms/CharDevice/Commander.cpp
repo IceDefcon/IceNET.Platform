@@ -203,8 +203,18 @@ void Commander::threadCommander()
             case IO_COM_READ:
                 std::cout << "[INFO] [CMD] Read from Kernel Commander" << std::endl;
                 std::cout << "[INFO] [CMD] Trying to read from Kernel" << std::endl;
+                /**
+                 *
+                 * TODO
+                 *
+                 * This is in blokcing mode
+                 * so timeout have to be introduced
+                 * in order to unlock kernel space
+                 *
+                 * Or unlock over the timeout inside kernel space
+                 *
+                 */
                 ret = read(m_file_descriptor, m_Rx_CommanderVector->data(), IO_TRANSFER_SIZE);
-                // ret = read(m_file_descriptor, reinterpret_cast<void*>(m_Rx_CommanderVector.get()), IO_TRANSFER_SIZE);
 
                 if(ret > 0)
                 {

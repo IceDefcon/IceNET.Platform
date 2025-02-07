@@ -25,7 +25,7 @@ static struct spi_device *spi0_device;
 static struct spi_transfer transfer;
 static uint8_t spiTx[10] = {0};
 static uint8_t spiRx[10] = {0};
-static int spiLength = 10;
+static int spiLength = 1;
 
 int spiInit(void)
 {
@@ -51,7 +51,7 @@ int spiInit(void)
     spi0_device->chip_select = 0;
     spi0_device->mode = SPI_MODE_0;       // SPI Mode 0 (CPOL=0, CPHA=0) :: For nRF905
     spi0_device->bits_per_word = 8;       // 8 bits per word
-    spi0_device->max_speed_hz = 1000000;  // 1 MHz clock speed
+    spi0_device->max_speed_hz = 5000000;  // 5 MHz clock speed
 
     ret = spi_setup(spi0_device);
     if (ret < 0)
@@ -63,6 +63,67 @@ int spiInit(void)
 
     printk(KERN_INFO "[INIT][SPI] SPI0 device setup complete.\n");
     return 0;
+}
+
+u8 nrf905_read_register(u8 reg)
+{
+    struct spi_message msg;
+    struct spi_transfer transfer;
+    int ret;
+
+    // Construct read command: 0001 AAAA
+    spiTx[0] = (0x10 | (reg & 0x0F)); // Read command (0x10) + 4-bit address
+    spiTx[1] = 0x00;  // Dummy byte to clock out data
+
+    memset(&transfer, 0, sizeof(transfer));
+    transfer.tx_buf = (void *)spiTx;
+    transfer.rx_buf = (void *)spiRx;
+    transfer.len = 2; // Sending command, receiving 1-byte response
+
+    spi_message_init(&msg);
+    spi_message_add_tail(&transfer, &msg);
+
+    ret = spi_sync(spi0_device, &msg);
+    if (ret < 0)
+    {
+        printk(KERN_ERR "[NRF905][SPI] Failed to read register 0x%02X, error %d\n", reg, ret);
+        return 0xFF; // Invalid value on error
+    }
+
+    printk(KERN_INFO "[NRF905][SPI] Register 0x%02X = 0x%02X\n", reg, spiRx[1]);
+
+    return spiRx[1];
+}
+
+
+void nrf905_read_multiple_registers(u8 start_reg, u8 num_bytes)
+{
+    struct spi_message msg;
+    struct spi_transfer transfer;
+    int ret;
+    int i;
+
+    spiTx[0] = (0x10 | (start_reg & 0x0F)); // Read command + start register
+
+    memset(&transfer, 0, sizeof(transfer));
+    transfer.tx_buf = (void *)spiTx;
+    transfer.rx_buf = (void *)spiRx;
+    transfer.len = num_bytes + 1; // Command + response bytes
+
+    spi_message_init(&msg);
+    spi_message_add_tail(&transfer, &msg);
+
+    ret = spi_sync(spi0_device, &msg);
+    if (ret < 0)
+    {
+        printk(KERN_ERR "[NRF905][SPI] Failed to read registers from 0x%02X, error %d\n", start_reg, ret);
+        return;
+    }
+
+    for (i = 1; i <= num_bytes; i++) // Skip first byte (command)
+    {
+        printk(KERN_INFO "[NRF905][SPI] Register 0x%02X = 0x%02X\n", start_reg + i - 1, spiRx[i]);
+    }
 }
 
 int readConfigRegister(void)
@@ -121,6 +182,10 @@ static int __init spi_ctrl_init(void)
     }
 
     readConfigRegister();
+
+    // nrf905_read_register(0x02);
+
+    // nrf905_read_multiple_registers(0x00, 0x0A);
 
     return 0;
 }

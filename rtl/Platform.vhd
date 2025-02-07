@@ -40,29 +40,28 @@ use work.Types.all;
 -- PIN_AB16 :: NOTUSED_07                   | PIN_AA16 :: NOTUSED_08            |
 -- PIN_AB17 :: NOTUSED_09                   | PIN_AA17 :: NOTUSED_10            |
 -- PIN_AB18 :: NOTUSED_11                   | PIN_AA18 :: NOTUSED_12            |
--- PIN_AB19 :: NOTUSED_13                   | PIN_AA19 :: NOTUSED_14            |
--- PIN_AB20 :: NOTUSED_15                   | PIN_AA20 :: NOTUSED_16            |
--- PIN_Y21  :: NOTUSED_17                   | PIN_Y22  :: NOTUSED_18            |
--- PIN_W21  :: NOTUSED_19                   | PIN_W22  :: NOTUSED_20            |
--- PIN_V21  :: NOTUSED_21                   | PIN_V22  :: NOTUSED_22            |
--- PIN_U21  :: NOTUSED_23                   | PIN_U22  :: NOTUSED_24            |
--- PIN_R21  :: NOTUSED_25                   | PIN_R22  :: NOTUSED_26            |
--- PIN_P21  :: NOTUSED_27                   | PIN_P22  :: NOTUSED_28            |
--- PIN_N21  :: NOTUSED_29                   | PIN_N22  :: NOTUSED_30            |
--- PIN_M21  :: NOTUSED_31                   | PIN_M22  :: NOTUSED_32            |
--- PIN_L21  :: NOTUSED_33                   | PIN_L22  :: NOTUSED_34            |
--- PIN_K21  :: NOTUSED_35                   | PIN_K22  :: NOTUSED_36            |
--- PIN_J21  :: NOTUSED_37                   | PIN_J22  :: NOTUSED_38            |
--- PIN_H21  :: NOTUSED_39                   | PIN_H22  :: NOTUSED_40            |
--- PIN_F21  :: NOTUSED_41                   | PIN_F22  :: NOTUSED_42            |
--- PIN_E21  :: NOTUSED_43                   | PIN_E22  :: NOTUSED_44            |
+-- PIN_AB19 :: NOTUSED_13  <-- dev 0        | PIN_AA19 :: NOTUSED_14            |
+-- PIN_AB20 :: NOTUSED_15  <-- dev 0        | PIN_AA20 :: NOTUSED_16            |
+-- PIN_Y21  :: NOTUSED_17        |          | PIN_Y22  :: NOTUSED_18            |
+-- PIN_W21  :: NOTUSED_19        |          | PIN_W22  :: NOTUSED_20            |
+-- PIN_V21  :: BMI160_CS   <-- dev 2        | PIN_V22  :: BMI160_SCLK           |
+-- PIN_U21  :: BMI160_MISO <-- dev 2        | PIN_U22  :: BMI160_MOSI           |
+-- PIN_R21  :: NOTUSED_25        |          | PIN_R22  :: NOTUSED_26            |
+-- PIN_P21  :: NOTUSED_27        |          | PIN_P22  :: NOTUSED_28            |
+-- PIN_N21  :: NOTUSED_29        |          | PIN_N22  :: NOTUSED_30            |
+-- PIN_M21  :: NOTUSED_31    32 pins For    | PIN_M22  :: NOTUSED_32            |
+-- PIN_L21  :: NOTUSED_33  8 x SPI devices  | PIN_L22  :: NOTUSED_34            |
+-- PIN_K21  :: NOTUSED_35        |          | PIN_K22  :: NOTUSED_36            |
+-- PIN_J21  :: NOTUSED_37        |          | PIN_J22  :: NOTUSED_38            |
+-- PIN_H21  :: NOTUSED_39        V          | PIN_H22  :: NOTUSED_40            |
+-- PIN_F21  :: NOTUSED_41 <--- dev 7        | PIN_F22  :: NOTUSED_42            |
+-- PIN_E21  :: NOTUSED_43 <--- dev 7        | PIN_E22  :: NOTUSED_44            |
 -- PIN_D21  :: LOGIC_CH5                    | PIN_D22  :: LOGIC_CH6             |
 -- PIN_C21  :: LOGIC_CH3                    | PIN_C22  :: LOGIC_CH4             |
 -- PIN_B21  :: LOGIC_CH1                    | PIN_B22  :: LOGIC_CH2             |
 -- PIN_N19  :: NOTUSED_51                   | PIN_N20  :: NOTUSED_52            |
 -- PIN_M19  :: NOTUSED_53                   | PIN_M20  :: NOTUSED_54            |
 ---------------------------------------------------------------------------------
-
 
 entity Platform is
 port
@@ -201,7 +200,17 @@ port
     D15 : inout std_logic; -- PIN_V11
     -- Data Mask: Controls output buffers in read mode and masks input data in write mode
     LDQM : inout std_logic; -- PIN_AA5
-    UDQM : inout std_logic -- PIN_W7
+    UDQM : inout std_logic; -- PIN_W7
+
+    --
+    -- Fast SPI bus for sensors
+    -- 32 pins for 8 x SPI Devices
+    --
+    BMI160_CS : out std_logic; -- PIN_V21
+    BMI160_MISO : in std_logic; -- PIN_U21
+    BMI160_MOSI : out std_logic; -- PIN_U22
+    BMI160_SCLK : out std_logic -- PIN_V22
+
 );
 end Platform;
 
@@ -247,12 +256,18 @@ signal offload_data : std_logic_vector(7 downto 0) := (others => '0');
 signal offload_wait : std_logic := '0';
 -- PacketSwitch
 signal switch_i2c_ready : std_logic := '0';
+signal switch_spi_ready : std_logic := '0';
 signal switch_pwm_ready : std_logic := '0';
+constant SWITCH_I2C : std_logic_vector(1 downto 0) := "00";
+constant SWITCH_SPI : std_logic_vector(1 downto 0) := "01";
+constant SWITCH_PWM : std_logic_vector(1 downto 0) := "10";
 -- Feedback interrupts
 signal interrupt_i2c_feedback : std_logic := '0';
+signal interrupt_spi_feedback : std_logic := '0';
 signal interrupt_pwm_feedback : std_logic := '0';
 -- Feedback data
 signal data_i2c_feedback : std_logic_vector(7 downto 0) := (others => '0');
+signal data_spi_feedback : std_logic_vector(7 downto 0) := "00010001";
 signal data_pwm_feedback : std_logic_vector(7 downto 0) := "11111101";
 -- Debounce signals
 signal interrupt_from_cpu : std_logic := '0';
@@ -306,6 +321,13 @@ signal TEST_BUSY : std_logic := '0';
 -- PLL
 signal CLOCK_266MHz : std_logic := '0';
 signal CLOCk_133MHz : std_logic := '0';
+-- SPI Controller
+signal spi_mux : std_logic_vector(3 downto 0) := "0000";
+signal ctrl_CS : std_logic := '0';
+signal ctrl_MISO : std_logic := '0';
+signal ctrl_MOSI : std_logic := '0';
+signal ctrl_SCLK : std_logic := '0';
+
 ----------------------------------------------------------------------------------------------------------------
 -- COMPONENTS DECLARATION
 ----------------------------------------------------------------------------------------------------------------
@@ -338,6 +360,29 @@ Port
     SERIAL_MISO : out std_logic;
 
     CONVERSION_COMPLETE : out std_logic
+);
+end component;
+
+component SpiController
+Port
+(
+    CLOCK_50MHz : in  std_logic;
+
+    OFFLOAD_INT : in std_logic;
+
+    OFFLOAD_ID : in std_logic_vector(6 downto 0);
+    OFFLOAD_REGISTER : in std_logic_vector(7 downto 0);
+    OFFLOAD_COTROL : in std_logic_vector(7 downto 0);
+    OFFLOAD_DATA : in std_logic_vector(7 downto 0);
+
+    CTRL_CS : out std_logic;
+    CTRL_MISO : in std_logic;
+    CTRL_MOSI : out std_logic;
+    CTRL_SCK : out std_logic;
+
+    CTRL_MUX : out std_logic_vector(3 downto 0);
+
+    FPGA_INT : out std_logic
 );
 end component;
 
@@ -526,9 +571,13 @@ port
 );
 end component;
 
-----------------------------------------------------------------------------------------------------------------
--- MAIN ROUTINE
-----------------------------------------------------------------------------------------------------------------
+-- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+-- //
+-- //
+-- // MAIN ROUTINE
+-- //
+-- //
+-- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 begin
 
 DebounceController_module: DebounceController
@@ -544,6 +593,13 @@ port map
     button_out => reset_button
 );
 
+-- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+-- //          //
+-- //          //
+-- // [SPI] IO //
+-- //          //
+-- //          //
+-- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 primarySpiConverter_module: SpiConverter port map
 (
 	CLOCK => CLOCK_50MHz,
@@ -574,7 +630,27 @@ secondarySpiConverter_module: SpiConverter port map
     CONVERSION_COMPLETE => open -- out :: Not in use !
 );
 
--- Watchdog interrupt signal
+feedback_data_process:
+process(CLOCK_50MHz)
+begin
+    if rising_edge(CLOCK_50MHz) then
+        if interrupt_i2c_feedback = '1'  then
+            secondary_parallel_MISO <= data_i2c_feedback;
+        elsif interrupt_pwm_feedback = '1' then
+            secondary_parallel_MISO <= data_pwm_feedback;
+        elsif interrupt_spi_feedback = '1' then
+            secondary_parallel_MISO <= data_spi_feedback;
+        end if;
+    end if;
+end process;
+
+-- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+-- //                  //
+-- //                  //
+-- // [INT] Interrupts //
+-- //                  //
+-- //                  //
+-- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 WatchdogInterrupt: InterruptGenerator
 generic map
 (
@@ -599,11 +675,32 @@ port map
     INTERRUPT_SIGNAL => TIMER_INT_FROM_FPGA
 );
 
---
--- Long interrupt signal from kernel
--- To be cut in FPGA down to 20ns pulse
---
-fifo_pre_process:
+feedback_interrupts_process:
+process(CLOCK_50MHz)
+begin
+    if rising_edge(CLOCK_50MHz) then
+        if interrupt_i2c_feedback = '1' or interrupt_pwm_feedback = '1' or interrupt_spi_feedback = '1' then
+            if interrupt_feedback_count = "11111010" then -- 250 * 20 = 5000ns = 5us interrupt pulse back to CPU
+                INT_FROM_FPGA <= '0';
+            else
+                INT_FROM_FPGA <= '1';
+                interrupt_feedback_count <= interrupt_feedback_count + '1';
+            end if;
+        else
+            INT_FROM_FPGA <= '0';
+            interrupt_feedback_count <= (others => '0');
+        end if;
+    end if;
+end process;
+
+-- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+-- //                   //
+-- //                   //
+-- // [FIFO] Controller //
+-- //                   //
+-- //                   //
+-- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+fifo_pre_process: -- Long interrupt signal from kernel to be cut in FPGA down to 20ns pulse
 process(CLOCK_50MHz, primary_parallel_MOSI, primary_conversion_complete, kernel_interrupt, interrupt_from_cpu)
 begin
     if rising_edge(CLOCK_50MHz) then
@@ -659,38 +756,42 @@ port map
     EMPTY => primary_fifo_empty
 );
 
-RamController_module: RamController
+OffloadController_module: OffloadController
 port map
 (
-    CLOCK_266MHz => CLOCK_266MHz,
-    CLOCk_133MHz => CLOCk_133MHz,
-    RESET => TEST_RESET,
+    CLOCK_50MHz => CLOCK_50MHz,
+    OFFLOAD_RESET => '0',
 
-    -- SDRAM Interface
-    A => SD_ADDRESS,
-    BA => SD_BANK,
-    CLK_SDRAM => CLK_SDRAM,
-    CKE => CKE,
-    CS => CS,
-    RAS => RAS,
-    CAS => CAS,
-    WE => WE,
-    DQ => SD_DATA,
-    LDQM => LDQM,
-    UDQM => UDQM,
+    OFFLOAD_INTERRUPT => offload_interrupt,
+    FIFO_DATA => primary_fifo_data_out,
+    FIFO_READ_ENABLE => primary_fifo_rd_en,
 
-    -- User Interface
-    ADDR => TEST_ADDR,
-    DATA_IN => TEST_DATA_IN,
-    DATA_OUT => TEST_DATA_OUT,
-    READ_EN => TEST_READ_EN,
-    WRITE_EN => TEST_WRITE_EN,
-    BUSY => TEST_BUSY
+    OFFLOAD_READY => offload_ready,
+    OFFLOAD_ID => offload_id,
+    OFFLOAD_CTRL => offload_ctrl,
+    OFFLOAD_REGISTER => offload_register,
+    OFFLOAD_DATA => offload_data,
+
+    OFFLOAD_WAIT => offload_wait
 );
 
------------------------------------------------------------------------------------------------
--- Map to output
------------------------------------------------------------------------------------------------
+-- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+-- //                  //
+-- //                  //
+-- // [RAM] Controller //
+-- //                  //
+-- //                  //
+-- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+PLL_RamClock_module: PLL_RamClock
+port map
+(
+    areset => '0',
+    inclk0 => CLOCK_50MHz,
+    c0 => CLOCK_266MHz,
+    c1 => CLOCK_133MHz,
+    locked => open
+);
 
 BA0 <= SD_BANK(0);
 BA1 <= SD_BANK(1);
@@ -726,218 +827,34 @@ D13 <= SD_DATA(13);
 D14 <= SD_DATA(14);
 D15 <= SD_DATA(15);
 
-OffloadController_module: OffloadController
+RamController_module: RamController
 port map
 (
-    CLOCK_50MHz => CLOCK_50MHz,
-    OFFLOAD_RESET => '0',
+    CLOCK_266MHz => CLOCK_266MHz,
+    CLOCk_133MHz => CLOCk_133MHz,
+    RESET => TEST_RESET,
 
-    OFFLOAD_INTERRUPT => offload_interrupt,
-    FIFO_DATA => primary_fifo_data_out,
-    FIFO_READ_ENABLE => primary_fifo_rd_en,
+    -- SDRAM Interface
+    A => SD_ADDRESS,
+    BA => SD_BANK,
+    CLK_SDRAM => CLK_SDRAM,
+    CKE => CKE,
+    CS => CS,
+    RAS => RAS,
+    CAS => CAS,
+    WE => WE,
+    DQ => SD_DATA,
+    LDQM => LDQM,
+    UDQM => UDQM,
 
-    OFFLOAD_READY => offload_ready,
-    OFFLOAD_ID => offload_id,
-    OFFLOAD_CTRL => offload_ctrl,
-    OFFLOAD_REGISTER => offload_register,
-    OFFLOAD_DATA => offload_data,
-
-    OFFLOAD_WAIT => offload_wait
+    -- User Interface
+    ADDR => TEST_ADDR,
+    DATA_IN => TEST_DATA_IN,
+    DATA_OUT => TEST_DATA_OUT,
+    READ_EN => TEST_READ_EN,
+    WRITE_EN => TEST_WRITE_EN,
+    BUSY => TEST_BUSY
 );
-
-UartDataTransfer_module: UartDataTransfer
-port map
-(
-    CLOCK_50MHz => CLOCK_50MHz,
-
-    WRITE_ENABLE => uart_write_enable,
-    WRITE_SYMBOL => uart_write_symbol,
-
-    UART_x86_TX => UART_x86_TX,
-    UART_x86_RX => UART_x86_RX,
-
-    WRITE_BUSY => uart_write_busy
-);
-
-UartDataAssembly_module: UartDataAssembly
-port map
-(
-    CLOCK_50MHz => CLOCK_50MHz,
-
-    UART_LOG_MESSAGE_ID => UART_LOG_MESSAGE_ID,
-    UART_LOG_MESSAGE_DATA => UART_LOG_MESSAGE_DATA,
-
-    WRITE_ENABLE => uart_write_enable,
-    WRITE_SYMBOL => uart_write_symbol,
-
-    WRITE_BUSY => uart_write_busy
-);
-
-CanController_module: CanController
-port map
-(
-    CLOCK_50MHz => CLOCK_50MHz,
-
-    CAN_BBB_TX => CAN_BBB_TX,
-    CAN_BBB_RX => CAN_BBB_RX,
-
-    CAN_MPP_TX => CAN_MPP_TX,
-    CAN_MPP_RX => CAN_MPP_RX
-);
-
-PLL_RamClock_module: PLL_RamClock
-port map
-(
-    areset => '0',
-    inclk0 => CLOCK_50MHz,
-    c0 => CLOCK_266MHz,
-    c1 => CLOCK_133MHz,
-    locked => open
-);
-
-PacketSwitch:
-process(CLOCK_50MHz)
-begin
-    if rising_edge(CLOCK_50MHz) then
-        if offload_ready = '1' then
-            if offload_ctrl(1) = '1' then
-                switch_pwm_ready <= '1';
-            else
-                switch_i2c_ready <= '1';
-            end if;
-        else
-            switch_i2c_ready <= '0';
-            switch_pwm_ready <= '0';
-        end if;
-    end if;
-end process;
-
-I2cController_module: I2cController port map
-(
-	CLOCK => CLOCK_50MHz,
-	RESET => reset_button,
-
-    -- in
-    OFFLOAD_INT => switch_i2c_ready, -- i2c transfer ready to begin
-    -- in
-    KERNEL_INT => '0',
-    -- out
-    FPGA_INT => interrupt_i2c_feedback, -- SM is ready for SPI.1 transfer :: 1000*20ns interrupt
-    FIFO_INT => open, -- TODO :: Store output data in secondary FIFO
-
-	I2C_SCK => I2C_SCK,
-	I2C_SDA => I2C_SDA,
-    -- in
-	OFFLOAD_ID => offload_id, -- Device ID :: BMI160@0x69=1001011 :: ADXL345@0x53=1100101
-	OFFLOAD_REGISTER => offload_register, -- Device Register
-	OFFLOAD_COTROL => offload_ctrl(0), -- For now :: Read/Write
-    OFFLOAD_DATA => offload_data, -- Write Data
-    -- out
-    OFFLOAD_WAIT => offload_wait, -- Wait between consecutive i2c transfers
-	DATA => data_i2c_feedback
-);
-
---
--- TODO :: Need Refactoring and Parametrization !!!
---
--- Hex range 0x00 ---> 0xFA
--- Dec range 0 ---> 250
---
--- Minimum pulse width ---> 1ms
--- Offset = 50000 * 20ns(clock tick) = 1ms
---
--- PWM Width = offset + vector*200
---
--- For 01100100'b = 64'h = 100'd
--- width = 50000 + 100*200 = 70000
--- 70000*10^-9 = 1.4ms
---
--- For 11111010'b = FA'h = 250'd
--- width = 50000 + 250*200 = 100000
--- 100000*10^-9 = 2ms
---
-PwmController_module: PwmController
-generic map
-(
-    BASE_PERIOD_MS => 20  -- 20ms Base Period
-)
-port map
-(
-    -- IN
-    CLOCK_50MHz => CLOCK_50MHz,
-
-    OFFLOAD_INT => switch_pwm_ready,
-    FPGA_INT => interrupt_pwm_feedback,
-
-    PWM_VECTOR => offload_data,
-    -- OUT
-    PWM_SIGNAL => PWM_SIGNAL
-);
-
-feedback_interrupts_process:
-process(CLOCK_50MHz)
-begin
-    if rising_edge(CLOCK_50MHz) then
-        if interrupt_i2c_feedback = '1' or interrupt_pwm_feedback = '1' then
-            if interrupt_feedback_count = "11111010" then -- 250 * 20 = 5000ns = 5us interrupt pulse back to CPU
-                INT_FROM_FPGA <= '0';
-            else
-                INT_FROM_FPGA <= '1';
-                interrupt_feedback_count <= interrupt_feedback_count + '1';
-            end if;
-        else
-            INT_FROM_FPGA <= '0';
-            interrupt_feedback_count <= (others => '0');
-        end if;
-    end if;
-end process;
-
-return_data_process:
-process(CLOCK_50MHz)
-begin
-    if rising_edge(CLOCK_50MHz) then
-        if interrupt_i2c_feedback = '1'  then
-            secondary_parallel_MISO <= data_i2c_feedback;
-        elsif interrupt_pwm_feedback = '1' then
-            secondary_parallel_MISO <= data_pwm_feedback;
-        end if;
-    end if;
-end process;
-
-logic_process:
-process(CLOCK_50MHz)
-begin
-    if rising_edge(CLOCK_50MHz) then
-        LOGIC_CH1 <= PRIMARY_CS;
-        LOGIC_CH2 <= PRIMARY_MOSI;
-        LOGIC_CH3 <= PRIMARY_SCLK;
-        LOGIC_CH4 <= INT_FROM_CPU;
-    end if;
-end process;
-
---uart_loopthrough_process:
---process(CLOCK_50MHz)
---begin
---    if rising_edge(CLOCK_50MHz) then
---        UART_x86_TX <= UART_BBB_TX;
---        UART_BBB_RX <= UART_x86_RX;
---    end if;
---end process;
-
---looptrough_spi_process:
---process(CLOCK_50MHz)
---begin
---    if rising_edge(CLOCK_50MHz) then
---        NRF905_CSN <= PRIMARY_CS;
---        PRIMARY_MISO <= NRF905_MISO;
---        NRF905_MOSI <= PRIMARY_MOSI;
---        NRF905_SCK <= PRIMARY_SCLK;
---    end if;
---end process;
-
---NRF905_PWR_UP <= '1';
---NRF905_TRX_CE <= '0';
---NRF905_TX_EN <= 'Z';
 
 --process (CLOCK_133MHz, test_ram_state)
 --begin
@@ -1002,7 +919,6 @@ end process;
 --    end if;
 --end process;
 
-
 process (CLOCK_133MHz, test_ram_state)
 begin
     if rising_edge(CLOCK_133MHz) then
@@ -1052,5 +968,242 @@ begin
     end if;
 end process;
 
+-- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+-- //                   //
+-- //                   //
+-- // [UART] Controller //
+-- //                   //
+-- //                   //
+-- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+UartDataTransfer_module: UartDataTransfer
+port map
+(
+    CLOCK_50MHz => CLOCK_50MHz,
+
+    WRITE_ENABLE => uart_write_enable,
+    WRITE_SYMBOL => uart_write_symbol,
+
+    UART_x86_TX => UART_x86_TX,
+    UART_x86_RX => UART_x86_RX,
+
+    WRITE_BUSY => uart_write_busy
+);
+
+UartDataAssembly_module: UartDataAssembly
+port map
+(
+    CLOCK_50MHz => CLOCK_50MHz,
+
+    UART_LOG_MESSAGE_ID => UART_LOG_MESSAGE_ID,
+    UART_LOG_MESSAGE_DATA => UART_LOG_MESSAGE_DATA,
+
+    WRITE_ENABLE => uart_write_enable,
+    WRITE_SYMBOL => uart_write_symbol,
+
+    WRITE_BUSY => uart_write_busy
+);
+
+-- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+-- //                               //
+-- //                               //
+-- // [PACKED] Interface Controller //
+-- //                               //
+-- //                               //
+-- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+PacketSwitch:
+process(CLOCK_50MHz)
+begin
+    if rising_edge(CLOCK_50MHz) then
+        if offload_ready = '1' then
+            if offload_ctrl(2 downto 1) = SWITCH_I2C then
+                switch_i2c_ready <= '1';
+                switch_spi_ready <= '0';
+                switch_pwm_ready <= '0';
+            elsif offload_ctrl(2 downto 1) = SWITCH_SPI then
+                switch_i2c_ready <= '0';
+                switch_spi_ready <= '1';
+                switch_pwm_ready <= '0';
+            elsif offload_ctrl(2 downto 1) = SWITCH_PWM then
+                switch_i2c_ready <= '0';
+                switch_spi_ready <= '0';
+                switch_pwm_ready <= '1';
+            else
+                switch_i2c_ready <= '0';
+                switch_spi_ready <= '0';
+                switch_pwm_ready <= '0';
+            end if;
+        else
+            switch_i2c_ready <= '0';
+            switch_spi_ready <= '0';
+            switch_pwm_ready <= '0';
+        end if;
+    end if;
+end process;
+
+I2cController_module: I2cController port map
+(
+    CLOCK => CLOCK_50MHz,
+    RESET => reset_button,
+
+    -- in
+    OFFLOAD_INT => switch_i2c_ready, -- i2c transfer ready to begin
+    -- in
+    KERNEL_INT => '0',
+    -- out
+    FPGA_INT => interrupt_i2c_feedback, -- SM is ready for SPI.1 transfer :: 1000*20ns interrupt
+    FIFO_INT => open, -- TODO :: Store output data in secondary FIFO
+
+    I2C_SCK => I2C_SCK,
+    I2C_SDA => I2C_SDA,
+    -- in
+    OFFLOAD_ID => offload_id, -- Device ID :: BMI160@0x69=1001011 :: ADXL345@0x53=1100101
+    OFFLOAD_REGISTER => offload_register, -- Device Register
+    OFFLOAD_COTROL => offload_ctrl(0), -- For now :: Read/Write
+    OFFLOAD_DATA => offload_data, -- Write Data
+    -- out
+    OFFLOAD_WAIT => offload_wait, -- Wait between consecutive i2c transfers
+    DATA => data_i2c_feedback
+);
+
+SpiController_module: SpiController port map
+(
+    CLOCK_50MHz => CLOCK_50MHz,
+
+    OFFLOAD_INT => switch_spi_ready,
+
+    OFFLOAD_ID => offload_id,
+    OFFLOAD_COTROL => offload_ctrl,
+    OFFLOAD_REGISTER => offload_register,
+    OFFLOAD_DATA => offload_data,
+
+    -- Master SPI interface
+    CTRL_CS => ctrl_CS,
+    CTRL_MISO => ctrl_MISO,
+    CTRL_MOSI => ctrl_MOSI,
+    CTRL_SCK => ctrl_SCLK,
+
+    CTRL_MUX => spi_mux,
+
+    FPGA_INT => interrupt_spi_feedback
+);
+
+Spi_multiplex_process:
+process(CLOCK_50MHz)
+begin
+    if rising_edge(CLOCK_50MHz) then
+
+        case spi_mux is
+
+            when "0001" => -- nRF905
+                NRF905_CSN <= ctrl_CS;
+                ctrl_MISO <= NRF905_MISO;
+                NRF905_MOSI <= ctrl_MOSI;
+                NRF905_SCK <= ctrl_SCLK;
+
+            when "0010" => -- BMI160
+                BMI160_CS <= ctrl_CS;
+                ctrl_MISO <= BMI160_MISO;
+                BMI160_MOSI <= ctrl_MOSI;
+                BMI160_SCLK <= ctrl_SCLK;
+
+            when others =>
+                -- Drive nothing
+
+        end case;
+    end if;
+end process;
+
+---------------------------------------------------------------
+-- TODO :: Need Refactoring and Parametrization !!!
+--
+-- Hex range 0x00 ---> 0xFA
+-- Dec range 0 ---> 250
+--
+-- Minimum pulse width ---> 1ms
+-- Offset = 50000 * 20ns(clock tick) = 1ms
+--
+-- PWM Width = offset + vector*200
+--
+-- For 01100100'b = 64'h = 100'd
+-- width = 50000 + 100*200 = 70000
+-- 70000*10^-9 = 1.4ms
+--
+-- For 11111010'b = FA'h = 250'd
+-- width = 50000 + 250*200 = 100000
+-- 100000*10^-9 = 2ms
+---------------------------------------------------------------
+PwmController_module: PwmController
+generic map
+(
+    BASE_PERIOD_MS => 20  -- 20ms Base Period
+)
+port map
+(
+    -- IN
+    CLOCK_50MHz => CLOCK_50MHz,
+
+    OFFLOAD_INT => switch_pwm_ready,
+    FPGA_INT => interrupt_pwm_feedback,
+
+    PWM_VECTOR => offload_data,
+    -- OUT
+    PWM_SIGNAL => PWM_SIGNAL
+);
+
+CanController_module: CanController
+port map
+(
+    CLOCK_50MHz => CLOCK_50MHz,
+
+    CAN_BBB_TX => CAN_BBB_TX,
+    CAN_BBB_RX => CAN_BBB_RX,
+
+    CAN_MPP_TX => CAN_MPP_TX,
+    CAN_MPP_RX => CAN_MPP_RX
+);
+
+------------------------------------------------------------------------------------------------------------------------------------------
+--
+--
+-- DEBUG
+--
+--
+------------------------------------------------------------------------------------------------------------------------------------------
+
+--uart_loopthrough_process:
+--process(CLOCK_50MHz)
+--begin
+--    if rising_edge(CLOCK_50MHz) then
+--        UART_x86_TX <= UART_BBB_TX;
+--        UART_BBB_RX <= UART_x86_RX;
+--    end if;
+--end process;
+
+--looptrough_spi_process:
+--process(CLOCK_50MHz)
+--begin
+--    if rising_edge(CLOCK_50MHz) then
+--        NRF905_CSN <= PRIMARY_CS;
+--        PRIMARY_MISO <= NRF905_MISO;
+--        NRF905_MOSI <= PRIMARY_MOSI;
+--        NRF905_SCK <= PRIMARY_SCLK;
+--    end if;
+--end process;
+
+--NRF905_PWR_UP <= '1';
+--NRF905_TRX_CE <= '0';
+--NRF905_TX_EN <= 'Z';
+
+logic_process:
+process(CLOCK_50MHz)
+begin
+    if rising_edge(CLOCK_50MHz) then
+        LOGIC_CH1 <= PRIMARY_CS;
+        LOGIC_CH2 <= PRIMARY_MOSI;
+        LOGIC_CH3 <= PRIMARY_SCLK;
+        LOGIC_CH4 <= INT_FROM_CPU;
+    end if;
+end process;
 
 end rtl;

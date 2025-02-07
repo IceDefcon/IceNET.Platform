@@ -1,4 +1,4 @@
-obj-m := blockRamDevice.o
+obj-m := spiBus.o
 
 KDIR := /lib/modules/$(shell uname -r)/build
 
