@@ -19,7 +19,8 @@ ServerTCP::ServerTCP() :
     m_threadKill(false),
     m_ioState(IO_IDLE),
     m_ioStatePrev(IO_IDLE),
-    m_timeoutCount(0),
+    m_timeoutConnection(0),
+    m_timeoutTransfer(0),
     m_portNumber(2555),
     m_serverSocket(-1),
     m_clientSocket(-1),
@@ -187,18 +188,19 @@ int ServerTCP::tcpRX()
             {
                 std::cout << "[INFO] [TCP] Connection closed by client" << std::endl;
             }
-            else if(10 == m_timeoutCount)
+            else if(10 == m_timeoutTransfer)
             {
-                std::cout << "\r[INFO] [TCP] Server inactive for 10s :: Shutdown TCP connection" << std::endl;
+                std::cout << "\r[INFO] [TCP] TCP Transfer timeout :: Shutdown TCP connection" << std::endl;
+                m_timeoutTransfer = 0;
                 m_clientConnected = false;
                 *m_IO_ServerTCPState = IO_IDLE;
             }
             else
             {
 #if 0
-                std::cout << "\r[INFO] [TCP] Nothing received, listening... [" << m_timeoutCount << "]" << std::endl;
+                std::cout << "\r[INFO] [TCP] Nothing received, listening... [" << m_timeoutTransfer << "]" << std::endl;
 #endif
-                m_timeoutCount++;
+                m_timeoutTransfer++;
             }
         }
     }
@@ -214,7 +216,7 @@ int ServerTCP::tcpClose()
         m_clientSocket = -1;
         m_clientConnected = false;
         *m_IO_ServerTCPState = IO_IDLE;
-        m_timeoutCount = 0;
+        m_timeoutTransfer = 0;
     }
 
     return 0;
@@ -257,9 +259,12 @@ bool ServerTCP::isClientConnected()
 {
     bool ret = false;
     socklen_t clientLength = sizeof(m_clientAddress);
-#if 0
-    std::cout << "\r[INFO] [TCP] threadServerTCP waiting for the TCP Client... [" << m_timeoutCount << "]" << std::endl;
-#endif
+
+    if(2 < m_timeoutConnection) /* TODO :: Quick workaround to avoid log entries concatenation */
+    {
+        std::cout << "\r[INFO] [TCP] threadServerTCP waiting for the TCP Client... [" << m_timeoutConnection - 2 << "]" << std::flush;
+    }
+
     /* Wait for the TCP client connection */
     m_clientSocket = accept(m_serverSocket, (struct sockaddr *)&m_clientAddress, &clientLength);
 
@@ -267,7 +272,7 @@ bool ServerTCP::isClientConnected()
     {
         if (errno == EAGAIN || errno == EWOULDBLOCK)
         {
-            m_timeoutCount++;
+            m_timeoutConnection++;
         }
         else
         {
@@ -276,8 +281,9 @@ bool ServerTCP::isClientConnected()
     }
     else
     {
+        std::cout << std::endl;
         std::cout << "[INFO] [TCP] threadServerTCP client connection established" << std::endl;
-        m_timeoutCount = 0;
+        m_timeoutConnection = 0;
         ret = true;
     }
 
@@ -347,11 +353,11 @@ void ServerTCP::threadServerTCP()
                         std::cout << "[INFO] [TCP] Client disconnected from server" << std::endl;
                         m_clientConnected = false;
                         *m_IO_ServerTCPState = IO_IDLE;
-                        m_timeoutCount = 0;
+                        m_timeoutTransfer = 0;
                     }
                     else if(ret > 0)
                     {
-                        m_timeoutCount = 0;
+                        m_timeoutTransfer = 0;
                         *m_IO_ServerTCPState = IO_COM_WRITE;
                     }
                     else if(ret == -5)
@@ -367,7 +373,7 @@ void ServerTCP::threadServerTCP()
                         // TODO :: If Needed
                         //
                         // m_instanceRamDisk->dataTX();
-                        m_timeoutCount = 0;
+                        m_timeoutTransfer = 0;
                     }
                     else if(ret == -3)
                     {
@@ -376,7 +382,7 @@ void ServerTCP::threadServerTCP()
                         // TODO :: If Needed
                         //
                         // m_instanceRamDisk->clearDma();
-                        m_timeoutCount = 0;
+                        m_timeoutTransfer = 0;
                     }
                     else
                     {
@@ -410,7 +416,7 @@ void ServerTCP::threadServerTCP()
                     else
                     {
                         std::cout << "[INFO] [TCP] Transfer complete" << std::endl;
-                        m_timeoutCount = 0;
+                        m_timeoutTransfer = 0;
                         for (size_t i = 0; i < IO_TRANSFER_SIZE; i++)
                         {
                             (*m_Rx_ServerTCPVector)[i] = 0x00;
