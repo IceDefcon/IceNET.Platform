@@ -241,7 +241,7 @@ class TcpManager:
         return data
 
     def pwm_getset(self, value):
-        header = 0x02 # 0000 0010
+        header = 0x84 # 0000 0010
         current = int(self.pwm_speed.get(), 16) + value
         current = min(current, 0xFA)
         data = bytes([header, 0x00, 0x00, current, 0x00, 0x00, 0x00, 0x00])
