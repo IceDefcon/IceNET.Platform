@@ -141,28 +141,41 @@ begin
                 Byte_3 <= FIFO_DATA;
                 offload_state <= HEADER_CONFIG;
 
-            ----------------------------------------------
+            --------------------------------------------------------------------------------
             -- OFFLOAD_CTRL :: 8-bits
-            ----------------------------------------------
+            --------------------------------------------------------------------------------
             --  Dma config (Auto/Manual Config)
             --      |
             --      |        Device (I2C, SPI, PWM)
             --      |          ID
             --      |          ||
+            --      |          ||
             --      V          VV
-            --    | x | xxxx | xx | x |
+            --    | x | xxxx | xx | x | <<<---- OFFLOAD_CTRL : std_logic_vector(6 downto 0)
             --          ΛΛΛΛ        Λ
+            --          ||||        |
+            --          ||||        |
             --          ||||        |
             --       burst size    R/W (I2C, SPI)
             --       (I2C, SPI)
-            ----------------------------------------------
+            --------------------------------------------------------------------------------
             when HEADER_CONFIG =>
                 FIFO_READ_ENABLE <= '0';
+                --------------------------------------------------------------------------------
+                --
+                -- This is Muliti-Device DMA Acive
+                --
+                --------------------------------------------------------------------------------
                 if Byte_0(7) = '0' then
                     config_devices <= to_integer(unsigned(Byte_1));
                     config_scramble <= Byte_2;
                     config_checksum <= Byte_3;
                     offload_state <= DEVICE_INIT;
+                --------------------------------------------------------------------------------
+                --
+                -- This is single I2C, SPI, CAN on PWM Transfer
+                --
+                --------------------------------------------------------------------------------
                 else
                     OFFLOAD_CTRL <= Byte_0;
                     OFFLOAD_ID <= Byte_1(0) & Byte_1(1)
@@ -170,7 +183,7 @@ begin
                     & Byte_1(4) & Byte_1(5)
                     & Byte_1(6);
                     OFFLOAD_REGISTER <= Byte_2;
-                    OFFLOAD_DATA <= Byte_2;
+                    OFFLOAD_DATA <= Byte_3;
                     offload_state <= TRANSFER_READY_SINGLE;
                 end if;
 

@@ -19,7 +19,8 @@ ServerTCP::ServerTCP() :
     m_threadKill(false),
     m_ioState(IO_IDLE),
     m_ioStatePrev(IO_IDLE),
-    m_timeoutCount(0),
+    m_timeoutConnection(0),
+    m_timeoutTransfer(0),
     m_portNumber(2555),
     m_serverSocket(-1),
     m_clientSocket(-1),
@@ -187,18 +188,22 @@ int ServerTCP::tcpRX()
             {
                 std::cout << "[INFO] [TCP] Connection closed by client" << std::endl;
             }
-            else if(10 == m_timeoutCount)
+            else if(10 == m_timeoutTransfer)
             {
-                std::cout << "\r[INFO] [TCP] Server inactive for 10s :: Shutdown TCP connection" << std::endl;
+                std::cout << "\r[INFO] [TCP] TCP Transfer timeout :: Shutdown TCP connection" << std::endl;
+                m_timeoutTransfer = 0;
                 m_clientConnected = false;
                 *m_IO_ServerTCPState = IO_IDLE;
             }
             else
             {
 #if 0
-                std::cout << "\r[INFO] [TCP] Nothing received, listening... [" << m_timeoutCount << "]" << std::endl;
+                if(0 < m_timeoutTransfer) /* TODO :: Quick workaround to avoid log entries concatenation */
+                {
+                    std::cout << "\r[INFO] [TCP] Nothing received, listening... [" << m_timeoutTransfer << "]" << std::flush;
+                }
 #endif
-                m_timeoutCount++;
+                m_timeoutTransfer++;
             }
         }
     }
@@ -214,7 +219,7 @@ int ServerTCP::tcpClose()
         m_clientSocket = -1;
         m_clientConnected = false;
         *m_IO_ServerTCPState = IO_IDLE;
-        m_timeoutCount = 0;
+        m_timeoutTransfer = 0;
     }
 
     return 0;
@@ -257,9 +262,12 @@ bool ServerTCP::isClientConnected()
 {
     bool ret = false;
     socklen_t clientLength = sizeof(m_clientAddress);
-#if 0
-    std::cout << "\r[INFO] [TCP] threadServerTCP waiting for the TCP Client... [" << m_timeoutCount << "]" << std::endl;
-#endif
+
+    if(1 < m_timeoutConnection) /* TODO :: Quick workaround to avoid log entries concatenation */
+    {
+        std::cout << "\r[INFO] [TCP] threadServerTCP waiting for the TCP Client... [" << m_timeoutConnection << "]" << std::flush;
+    }
+
     /* Wait for the TCP client connection */
     m_clientSocket = accept(m_serverSocket, (struct sockaddr *)&m_clientAddress, &clientLength);
 
@@ -267,7 +275,7 @@ bool ServerTCP::isClientConnected()
     {
         if (errno == EAGAIN || errno == EWOULDBLOCK)
         {
-            m_timeoutCount++;
+            m_timeoutConnection++;
         }
         else
         {
@@ -276,8 +284,9 @@ bool ServerTCP::isClientConnected()
     }
     else
     {
+        std::cout << std::endl;
         std::cout << "[INFO] [TCP] threadServerTCP client connection established" << std::endl;
-        m_timeoutCount = 0;
+        m_timeoutConnection = 0;
         ret = true;
     }
 
@@ -315,6 +324,20 @@ void ServerTCP::threadServerTCP()
                 m_ioStatePrev = m_ioState;
             }
 
+            /**
+             *
+             * INFO
+             *
+             * Switch Pointer Shared with Commander and DroneCtrl
+             *
+             * Both state machines change
+             * states simultaneously
+             * due to share_ptr
+             *
+             * (1) Commander
+             * (2) ServerTCP
+             *
+             **/
             switch(*m_IO_ServerTCPState)
             {
                 case IO_IDLE:
@@ -333,11 +356,11 @@ void ServerTCP::threadServerTCP()
                         std::cout << "[INFO] [TCP] Client disconnected from server" << std::endl;
                         m_clientConnected = false;
                         *m_IO_ServerTCPState = IO_IDLE;
-                        m_timeoutCount = 0;
+                        m_timeoutTransfer = 0;
                     }
                     else if(ret > 0)
                     {
-                        m_timeoutCount = 0;
+                        m_timeoutTransfer = 0;
                         *m_IO_ServerTCPState = IO_COM_WRITE;
                     }
                     else if(ret == -5)
@@ -349,14 +372,20 @@ void ServerTCP::threadServerTCP()
                     else if(ret == -4)
                     {
                         std::cout << "[INFO] [TCP] Transfer Data to RAM" << std::endl;
+                        //
+                        // TODO :: If Needed
+                        //
                         // m_instanceRamDisk->dataTX();
-                        m_timeoutCount = 0;
+                        m_timeoutTransfer = 0;
                     }
                     else if(ret == -3)
                     {
                         std::cout << "[INFO] [TCP] Clear DMA Engine from RAM" << std::endl;
+                        //
+                        // TODO :: If Needed
+                        //
                         // m_instanceRamDisk->clearDma();
-                        m_timeoutCount = 0;
+                        m_timeoutTransfer = 0;
                     }
                     else
                     {
@@ -364,12 +393,20 @@ void ServerTCP::threadServerTCP()
                     }
                     break;
 
-                case IO_COM_WRITE:
-                    /* DO NOTHING HERE */
+                case IO_COM_WRITE: /* Commander is Now Processing Data */
+                    /**
+                     *
+                     * !!! DO NOTHING HERE !!!
+                     *
+                     */
                     break;
 
-                case IO_COM_READ:
-                    /* DO NOTHING HERE */
+                case IO_COM_READ: /* Commander is Now Processing Data */
+                    /**
+                     *
+                     * !!! DO NOTHING HERE !!!
+                     *
+                     */
                     break;
 
                 case IO_TCP_WRITE:
@@ -382,7 +419,7 @@ void ServerTCP::threadServerTCP()
                     else
                     {
                         std::cout << "[INFO] [TCP] Transfer complete" << std::endl;
-                        m_timeoutCount = 0;
+                        m_timeoutTransfer = 0;
                         for (size_t i = 0; i < IO_TRANSFER_SIZE; i++)
                         {
                             (*m_Rx_ServerTCPVector)[i] = 0x00;

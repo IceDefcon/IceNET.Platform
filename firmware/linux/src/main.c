@@ -7,8 +7,6 @@
 #include <linux/init.h>        // For __init and __exit macros
 #include <linux/module.h>      // For module initialization and exit macros
 
-/* Move tcp server to applicaton */
-// #include "networkStack.h"
 #include "stateMachine.h"
 #include "charDevice.h"
 #include "spiDmaCtrl.h"

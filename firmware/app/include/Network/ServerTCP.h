@@ -27,7 +27,8 @@ class ServerTCP
         ioStateType m_ioState;
         ioStateType m_ioStatePrev;
 
-        int m_timeoutCount;
+        int m_timeoutConnection;
+        int m_timeoutTransfer;
         int m_portNumber;
         int m_serverSocket;
         int m_clientSocket;

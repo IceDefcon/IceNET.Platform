@@ -18,8 +18,6 @@ int main()
     auto instanceDroneCtrl = std::make_unique<DroneCtrl>();
     instanceDroneCtrl->droneInit();
 
-#if 1 /* Test */
-
     while (true)
     {
         instanceDroneCtrl->droneCtrlMain();
@@ -34,7 +32,6 @@ int main()
         /* Reduce consumption of CPU resources */
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
-#endif
 
     /* unique_ptr in use :: No need for deallocation */
     return 0;
