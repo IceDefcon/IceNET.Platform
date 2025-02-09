@@ -198,7 +198,10 @@ int ServerTCP::tcpRX()
             else
             {
 #if 0
-                std::cout << "\r[INFO] [TCP] Nothing received, listening... [" << m_timeoutTransfer << "]" << std::endl;
+                if(0 < m_timeoutTransfer) /* TODO :: Quick workaround to avoid log entries concatenation */
+                {
+                    std::cout << "\r[INFO] [TCP] Nothing received, listening... [" << m_timeoutTransfer << "]" << std::flush;
+                }
 #endif
                 m_timeoutTransfer++;
             }
@@ -260,9 +263,9 @@ bool ServerTCP::isClientConnected()
     bool ret = false;
     socklen_t clientLength = sizeof(m_clientAddress);
 
-    if(2 < m_timeoutConnection) /* TODO :: Quick workaround to avoid log entries concatenation */
+    if(1 < m_timeoutConnection) /* TODO :: Quick workaround to avoid log entries concatenation */
     {
-        std::cout << "\r[INFO] [TCP] threadServerTCP waiting for the TCP Client... [" << m_timeoutConnection - 2 << "]" << std::flush;
+        std::cout << "\r[INFO] [TCP] threadServerTCP waiting for the TCP Client... [" << m_timeoutConnection << "]" << std::flush;
     }
 
     /* Wait for the TCP client connection */
