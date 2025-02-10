@@ -92,15 +92,13 @@
         <trigger_in_editor/>
         <trigger_out_editor/>
       </presentation>
-      <trigger CRC="9AC75C03" attribute_mem_mode="false" gap_record="true" global_temp="1" name="trigger: 2025/02/06 07:35:26  #0" position="pre" power_up_trigger_mode="false" record_data_gap="true" segment_size="4096" storage_mode="off" storage_qualifier_disabled="no" storage_qualifier_port_is_pin="false" storage_qualifier_port_name="auto_stp_external_storage_qualifier" storage_qualifier_port_tap_mode="classic" trigger_type="circular">
+      <trigger CRC="9AC75C03" attribute_mem_mode="false" gap_record="true" global_temp="1" is_expanded="true" name="trigger: 2025/02/06 07:35:26  #0" position="pre" power_up_trigger_mode="false" record_data_gap="true" segment_size="4096" storage_mode="off" storage_qualifier_disabled="no" storage_qualifier_port_is_pin="true" storage_qualifier_port_name="auto_stp_external_storage_qualifier" storage_qualifier_port_tap_mode="classic" trigger_type="circular">
         <power_up_trigger position="pre" storage_qualifier_disabled="no"/>
         <events use_custom_flow_control="no">
-          <level editor="basic_or" enabled="yes" name="condition1" type="advanced">
-            <power_up enabled="yes">
+          <level editor="basic_or" enabled="yes" name="condition1" type="advanced"><power_up enabled="yes">
               <power_up_expression><![CDATA[(mbpm('X',{'NRF905_AM'}) && variable(1)) || (mbpm('X',{'NRF905_CD'}) && variable(1)) || (mbpm('X',{'NRF905_CSN'}) && variable(1)) || (mbpm('X',{'NRF905_DR'}) && variable(1)) || (mbpm('X',{'NRF905_MISO'}) && variable(1)) || (mbpm('X',{'NRF905_MOSI'}) && variable(1)) || (mbpm('X',{'NRF905_PWR_UP'}) && variable(1)) || (mbpm('X',{'NRF905_SCK'}) && variable(1)) || (mbpm('X',{'NRF905_TRX_CE'}) && variable(1)) || (mbpm('X',{'NRF905_TX_EN'}) && variable(1)) || (mbpm('X',{'NRF905_uCLK'}) && variable(1))]]>
               </power_up_expression>
-            </power_up>
-            <expression><![CDATA[(mbpm('X',{'NRF905_AM'}) && variable(0)) || (mbpm('X',{'NRF905_CD'}) && variable(0)) || (mbpm('X',{'NRF905_CSN'}) && variable(0)) || (mbpm('X',{'NRF905_DR'}) && variable(0)) || (mbpm('X',{'NRF905_MISO'}) && variable(0)) || (mbpm('X',{'NRF905_MOSI'}) && variable(0)) || (mbpm('X',{'NRF905_PWR_UP'}) && variable(0)) || (mbpm('R',{'NRF905_SCK'}) && variable(1)) || (mbpm('X',{'NRF905_TRX_CE'}) && variable(0)) || (mbpm('X',{'NRF905_TX_EN'}) && variable(0)) || (mbpm('X',{'NRF905_uCLK'}) && variable(0))]]>
+            </power_up><expression><![CDATA[(mbpm('X',{'NRF905_AM'}) && variable(0)) || (mbpm('X',{'NRF905_CD'}) && variable(0)) || (mbpm('X',{'NRF905_CSN'}) && variable(0)) || (mbpm('X',{'NRF905_DR'}) && variable(0)) || (mbpm('X',{'NRF905_MISO'}) && variable(0)) || (mbpm('X',{'NRF905_MOSI'}) && variable(0)) || (mbpm('X',{'NRF905_PWR_UP'}) && variable(0)) || (mbpm('R',{'NRF905_SCK'}) && variable(1)) || (mbpm('X',{'NRF905_TRX_CE'}) && variable(0)) || (mbpm('X',{'NRF905_TX_EN'}) && variable(0)) || (mbpm('X',{'NRF905_uCLK'}) && variable(0))]]>
             </expression>
             <op_node/>
           </level>

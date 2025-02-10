@@ -19,11 +19,11 @@ port
 
     OFFLOAD_ID : in std_logic_vector(6 downto 0);
     OFFLOAD_REGISTER : in std_logic_vector(7 downto 0);
-    OFFLOAD_COTROL : in std_logic;
+    OFFLOAD_CONTROL : in std_logic;
     OFFLOAD_DATA : in std_logic_vector(7 downto 0);
 
     OFFLOAD_WAIT : out std_logic;
-    DATA : out std_logic_vector(7 downto 0)
+    FEEDBACK_DATA : out std_logic_vector(7 downto 0)
 );
 end I2cController;
 
@@ -136,7 +136,7 @@ begin
                     ------------------------------------
                     when CONFIG =>
                         if config_timer = smConfigDelay then
-                            if OFFLOAD_COTROL = '0' then
+                            if OFFLOAD_CONTROL = '0' then
                                 i2c_state <= RD;
                             else
                                 i2c_state <= WR;
@@ -395,7 +395,7 @@ begin
                                 if status_sda = "1101" then -- [18500] :: Data From Register
                                     if sda_timer = "111110011" then -- Half bit time
                                         sda_timer <= (others => '0');
-                                        DATA(7 - index) <= I2C_SDA;
+                                        FEEDBACK_DATA(7 - index) <= I2C_SDA;
                                         index <= index + 1;
                                     else
                                         sda_timer <= sda_timer + '1';
@@ -626,8 +626,8 @@ begin
 
                                 if status_sda = "1010" then -- [16000] :: Stop Bit
                                     I2C_SDA <= '0';
-                                    --DATA <= "01111110"; -- 0x7e
-                                    DATA <= OFFLOAD_REGISTER;
+                                    --FEEDBACK_DATA <= "01111110"; -- 0x7e
+                                    FEEDBACK_DATA <= OFFLOAD_REGISTER;
                                     FPGA_INT <= '1';
                                 end if;
 
@@ -642,7 +642,7 @@ begin
                                 if status_sda = "1011" -- [17000] :: Final BARIER
                                 then -- BARIER :: 'Z'
                                     I2C_SDA <= 'Z';
-                                    DATA <= "00000000";
+                                    FEEDBACK_DATA <= "00000000";
                                     FPGA_INT <= '0';
                                 end if;
     ------------------------------------------------------

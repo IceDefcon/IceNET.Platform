@@ -1,9 +1,6 @@
-# IceNET.Platform :: CPU & FPGA Computer Platform
+# CPU & FPGA Embedded Computer Platform
 
-# Active :: Sub Applications
-
-	1. Artificial Inteligence Drone :: Manual Override
-	2. Network Protocol Analyser 	:: Defence Protocol
+	Artificial Inteligence Drone :: Manual Override
 
 # Current Hardware configuration
 
@@ -31,15 +28,13 @@
 	01. Fix up parametriation of I2C Controller
 	02. I2C burst mode
 	03. SPI Driver in FPGA with burst mode
-	04. UART driver in FPGA
-	05. CAN driver in FPGA
-	06. Checksum in RTL Code to be send in last byte
-	07. UART Console (DMA controller buffer)
-	08. Upgrade Console for the functions with arguments
-	09. Upgrade TCP/IP server to DMA Server
-	10. Architecture Upgrade ---> charDevice Commander + ramDisk DMA Engine
-	11. Add Diagnostic object in DroneCtrl to monitor memory allocation
-	12. Add a Number of Drone Arm Instances in the DroneCtrl unit
+	04. CAN driver in FPGA
+	05. Checksum in RTL Code to be send in last byte
+	06. UART Console (DMA controller buffer)
+	07. Upgrade Console for the functions with arguments
+	08. Upgrade TCP/IP server to DMA Server
+	09. Add Diagnostic object in DroneCtrl to monitor memory allocation
+	10. Add a Number of Drone Arm Instances in the DroneCtrl unit
 
 # Testing Hardware Modules
 
