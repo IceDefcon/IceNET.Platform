@@ -39,8 +39,12 @@ type SPI_CONTROLLER_TYPE is
 
 signal SPI_state: SPI_CONTROLLER_TYPE := SPI_IDLE;
 
-constant BREAK_START : std_logic_vector(9 downto 0) := "1000000000";
-constant BREAK_END : std_logic_vector(9 downto 0) := "0100000000";
+signal transfer_counter : integer range 0 to 1024 := 0;
+
+constant CLOCK_CYCLE : integer range 0 to 16 := 10; -- 10 cycles
+constant BREAK_START : integer range 0 to 512 := 512; -- 512 cycles
+constant BREAK_TRANSFER : integer range 0 to 128 := 80; -- 80 cycles
+constant BREAK_END : integer range 0 to 256 := 256; -- 256 cycles
 
 begin
 
@@ -52,6 +56,9 @@ begin
             case SPI_state is
 
                 when SPI_IDLE =>
+                    CTRL_CS <= '1';
+                    CTRL_MOSI <= '1';
+                    CTRL_SCK <= '0';
                     if OFFLOAD_INT = '1' then
                         SPI_state <= SPI_CONFIG;
                     end if;
@@ -60,7 +67,13 @@ begin
                     SPI_state <= SPI_PRODUCE;
 
                 when SPI_PRODUCE =>
-                    SPI_state <= SPI_MUX;
+                    if transfer_counter = BREAK_START + BREAK_TRANSFER + BREAK_END then
+                        CTRL_CS <= '1';
+                        SPI_state <= SPI_MUX;
+                    else
+                        CTRL_CS <= '0';
+                        transfer_counter <= transfer_counter + 1;
+                    end if;
 
                 when SPI_MUX =>
                     SPI_state <= SPI_DONE;

@@ -28,7 +28,7 @@ Port
     CTRL_MUX : out std_logic_vector(3 downto 0);
 
     FPGA_INT : out std_logic;
-	FEEDBACK_DATA : out std_logic_vector(7 downto 0)
+    FEEDBACK_DATA : out std_logic_vector(7 downto 0)
 );
 end component;
 
