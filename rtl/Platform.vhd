@@ -372,7 +372,7 @@ Port
 
     OFFLOAD_ID : in std_logic_vector(6 downto 0);
     OFFLOAD_REGISTER : in std_logic_vector(7 downto 0);
-    OFFLOAD_COTROL : in std_logic_vector(7 downto 0);
+    OFFLOAD_CONTROL : in std_logic_vector(7 downto 0);
     OFFLOAD_DATA : in std_logic_vector(7 downto 0);
 
     CTRL_CS : out std_logic;
@@ -382,7 +382,8 @@ Port
 
     CTRL_MUX : out std_logic_vector(3 downto 0);
 
-    FPGA_INT : out std_logic
+    FPGA_INT : out std_logic;
+    FEEDBACK_DATA : out std_logic_vector(7 downto 0)
 );
 end component;
 
@@ -415,11 +416,11 @@ port
 
     OFFLOAD_ID : in std_logic_vector(6 downto 0);
     OFFLOAD_REGISTER : in std_logic_vector(7 downto 0);
-    OFFLOAD_COTROL : in std_logic;
+    OFFLOAD_CONTROL : in std_logic;
     OFFLOAD_DATA : in std_logic_vector(7 downto 0);
 
     OFFLOAD_WAIT : out std_logic;
-    DATA : out std_logic_vector(7 downto 0)
+    FEEDBACK_DATA : out std_logic_vector(7 downto 0)
 );
 end component;
 
@@ -600,20 +601,20 @@ port map
 -- //          //
 -- //          //
 -- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-primarySpiConverter_module: SpiConverter port map
-(
-	CLOCK => CLOCK_50MHz,
+--primarySpiConverter_module: SpiConverter port map
+--(
+--	CLOCK => CLOCK_50MHz,
 
-	CS => PRIMARY_CS,
-	SCLK => PRIMARY_SCLK, -- Kernel Master always initialise SPI transfer
+--	CS => PRIMARY_CS,
+--	SCLK => PRIMARY_SCLK, -- Kernel Master always initialise SPI transfer
 
-	SERIAL_MOSI => PRIMARY_MOSI, -- in :: Data from Kernel to Serialize
-	PARALLEL_MOSI => primary_parallel_MOSI, -- out :: Serialized Data from Kernel to FIFO
-	PARALLEL_MISO => "00011000", -- in :: 0x18 Hard coded Feedback to Serialize
-	SERIAL_MISO => PRIMARY_MISO, -- out :: 0x18 Serialized Hard coded Feedback to Kernel
+--	SERIAL_MOSI => PRIMARY_MOSI, -- in :: Data from Kernel to Serialize
+--	PARALLEL_MOSI => primary_parallel_MOSI, -- out :: Serialized Data from Kernel to FIFO
+--	PARALLEL_MISO => "00011000", -- in :: 0x18 Hard coded Feedback to Serialize
+--	SERIAL_MISO => PRIMARY_MISO, -- out :: 0x18 Serialized Hard coded Feedback to Kernel
 
-    CONVERSION_COMPLETE => primary_conversion_complete -- Out :: Data byte is ready [FIFO Write Enable]
-);
+--    CONVERSION_COMPLETE => primary_conversion_complete -- Out :: Data byte is ready [FIFO Write Enable]
+--);
 
 secondarySpiConverter_module: SpiConverter port map
 (
@@ -1059,11 +1060,11 @@ I2cController_module: I2cController port map
     -- in
     OFFLOAD_ID => offload_id, -- Device ID :: BMI160@0x69=1001011 :: ADXL345@0x53=1100101
     OFFLOAD_REGISTER => offload_register, -- Device Register
-    OFFLOAD_COTROL => offload_ctrl(0), -- For now :: Read/Write
+    OFFLOAD_CONTROL => offload_ctrl(0), -- For now :: Read/Write
     OFFLOAD_DATA => offload_data, -- Write Data
     -- out
     OFFLOAD_WAIT => offload_wait, -- Wait between consecutive i2c transfers
-    DATA => data_i2c_feedback
+    FEEDBACK_DATA => data_i2c_feedback
 );
 
 SpiController_module: SpiController port map
@@ -1073,7 +1074,7 @@ SpiController_module: SpiController port map
     OFFLOAD_INT => switch_spi_ready,
 
     OFFLOAD_ID => offload_id,
-    OFFLOAD_COTROL => offload_ctrl,
+    OFFLOAD_CONTROL => offload_ctrl,
     OFFLOAD_REGISTER => offload_register,
     OFFLOAD_DATA => offload_data,
 
@@ -1085,34 +1086,35 @@ SpiController_module: SpiController port map
 
     CTRL_MUX => spi_mux,
 
-    FPGA_INT => interrupt_spi_feedback
+    FPGA_INT => interrupt_spi_feedback,
+    FEEDBACK_DATA => data_spi_feedback
 );
 
-Spi_multiplex_process:
-process(CLOCK_50MHz)
-begin
-    if rising_edge(CLOCK_50MHz) then
+--Spi_multiplex_process:
+--process(CLOCK_50MHz)
+--begin
+--    if rising_edge(CLOCK_50MHz) then
 
-        case spi_mux is
+--        case spi_mux is
 
-            when "0001" => -- nRF905
-                NRF905_CSN <= ctrl_CS;
-                ctrl_MISO <= NRF905_MISO;
-                NRF905_MOSI <= ctrl_MOSI;
-                NRF905_SCK <= ctrl_SCLK;
+--            when "0001" => -- nRF905
+--                NRF905_CSN <= ctrl_CS;
+--                ctrl_MISO <= NRF905_MISO;
+--                NRF905_MOSI <= ctrl_MOSI;
+--                NRF905_SCK <= ctrl_SCLK;
 
-            when "0010" => -- BMI160
-                BMI160_CS <= ctrl_CS;
-                ctrl_MISO <= BMI160_MISO;
-                BMI160_MOSI <= ctrl_MOSI;
-                BMI160_SCLK <= ctrl_SCLK;
+--            when "0010" => -- BMI160
+--                BMI160_CS <= ctrl_CS;
+--                ctrl_MISO <= BMI160_MISO;
+--                BMI160_MOSI <= ctrl_MOSI;
+--                BMI160_SCLK <= ctrl_SCLK;
 
-            when others =>
-                -- Drive nothing
+--            when others =>
+--                -- Drive nothing
 
-        end case;
-    end if;
-end process;
+--        end case;
+--    end if;
+--end process;
 
 ---------------------------------------------------------------
 -- TODO :: Need Refactoring and Parametrization !!!
@@ -1180,20 +1182,20 @@ port map
 --    end if;
 --end process;
 
---looptrough_spi_process:
---process(CLOCK_50MHz)
---begin
---    if rising_edge(CLOCK_50MHz) then
---        NRF905_CSN <= PRIMARY_CS;
---        PRIMARY_MISO <= NRF905_MISO;
---        NRF905_MOSI <= PRIMARY_MOSI;
---        NRF905_SCK <= PRIMARY_SCLK;
---    end if;
---end process;
+looptrough_spi_process:
+process(CLOCK_50MHz)
+begin
+    if rising_edge(CLOCK_50MHz) then
+        NRF905_CSN <= PRIMARY_CS;
+        PRIMARY_MISO <= NRF905_MISO;
+        NRF905_MOSI <= PRIMARY_MOSI;
+        NRF905_SCK <= PRIMARY_SCLK;
+    end if;
+end process;
 
---NRF905_PWR_UP <= '1';
---NRF905_TRX_CE <= '0';
---NRF905_TX_EN <= 'Z';
+NRF905_PWR_UP <= '1';
+NRF905_TRX_CE <= '0';
+NRF905_TX_EN <= 'Z';
 
 logic_process:
 process(CLOCK_50MHz)
