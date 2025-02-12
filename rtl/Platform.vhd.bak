@@ -272,7 +272,8 @@ signal data_pwm_feedback : std_logic_vector(7 downto 0) := "11111101";
 -- Debounce signals
 signal interrupt_from_cpu : std_logic := '0';
 -- Interrupts
-signal feedback_interrupt_timer : std_logic_vector(5 downto 0) := (others => '0');
+signal interrupt_feedback_signal : std_logic := '0';
+signal interrupt_feedback_count : std_logic_vector(7 downto 0) := (others => '0');
 -- UART
 signal uart_write_enable : std_logic := '0';
 signal uart_write_symbol : std_logic_vector(6 downto 0) := (others => '0');
@@ -633,7 +634,7 @@ secondarySpiConverter_module: SpiConverter port map
 feedback_data_process:
 process(CLOCK_50MHz)
 begin
-    if rising_edge(CLOCK_50MHz) then
+    if rising_edge(CLOCK_50MHz) the
         if interrupt_i2c_feedback = '1'  then
             secondary_parallel_MISO <= data_i2c_feedback;
         elsif interrupt_pwm_feedback = '1' then
@@ -679,19 +680,16 @@ feedback_interrupts_process:
 process(CLOCK_50MHz)
 begin
     if rising_edge(CLOCK_50MHz) then
-        if interrupt_i2c_feedback = '1'
-        or interrupt_pwm_feedback = '1'
-        --or interrupt_spi_feedback = '1' --- TODO !!!
-        then
-            if feedback_interrupt_timer = "110010" then -- 50 * 20 = 1000ns = 1us interrupt pulse back to CPU
+        if interrupt_i2c_feedback = '1' or interrupt_pwm_feedback = '1' or interrupt_spi_feedback = '1' then
+            if interrupt_feedback_count = "11111010" then -- 250 * 20 = 5000ns = 5us interrupt pulse back to CPU
                 INT_FROM_FPGA <= '0';
             else
                 INT_FROM_FPGA <= '1';
-                feedback_interrupt_timer <= feedback_interrupt_timer + '1';
+                interrupt_feedback_count <= interrupt_feedback_count + '1';
             end if;
         else
             INT_FROM_FPGA <= '0';
-            feedback_interrupt_timer <= (others => '0');
+            interrupt_feedback_count <= (others => '0');
         end if;
     end if;
 end process;
@@ -1199,15 +1197,15 @@ port map
 --NRF905_TRX_CE <= '0';
 --NRF905_TX_EN <= 'Z';
 
---logic_process:
---process(CLOCK_50MHz)
---begin
---    if rising_edge(CLOCK_50MHz) then
---        LOGIC_CH1 <= interrupt_i2c_feedback;
---        LOGIC_CH2 <= '0';
---        LOGIC_CH3 <= '0';
---        LOGIC_CH4 <= '0';
---    end if;
---end process;
+logic_process:
+process(CLOCK_50MHz)
+begin
+    if rising_edge(CLOCK_50MHz) then
+        LOGIC_CH1 <= PRIMARY_CS;
+        LOGIC_CH2 <= PRIMARY_MOSI;
+        LOGIC_CH3 <= PRIMARY_SCLK;
+        LOGIC_CH4 <= INT_FROM_CPU;
+    end if;
+end process;
 
 end rtl;
