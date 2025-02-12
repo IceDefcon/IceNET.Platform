@@ -34,19 +34,21 @@ type SPI_CONTROLLER_TYPE is
     SPI_IDLE,
     SPI_INIT,
     SPI_CONFIG,
-    SPI_PRODUCE,
+    SPI_PROCESS,
     SPI_MUX,
     SPI_DONE
 );
 
 signal SPI_state: SPI_CONTROLLER_TYPE := SPI_IDLE;
 
-signal transfer_counter : integer range 0 to 1024 := 0;
+signal start_counter : integer range 0 to 512 := 0;
+signal process_counter : integer range 0 to 128 := 0;
+signal stop_counter : integer range 0 to 256 := 0;
 
 constant CLOCK_CYCLE : integer range 0 to 16 := 10; -- 10 cycles
 constant TRANSFER_START : integer range 0 to 512 := 512; -- 512 cycles
-constant TRANSFER_END : integer range 0 to 128 := 80; -- 80 cycles
-constant BUS_FREE : integer range 0 to 256 := 256; -- 256 cycles
+constant TRANSFER_PROCESS : integer range 0 to 128 := 80; -- 80 cycles
+constant TRANSFER_STOP : integer range 0 to 256 := 256; -- 256 cycles
 
 signal spi_status : std_logic_vector(3 downto 0) := "0000";
 signal sck_timer : std_logic_vector(3 downto 0) := "0000";
@@ -54,6 +56,8 @@ signal sck_timer_toggle : std_logic := '0';
 signal index : integer range 0 to 15 := 0;
 signal bytes : integer range 0 to 15 := 0;
 signal bytes_count : integer range 0 to 15 := 0;
+signal first_byte : std_logic := '0';
+signal last_byte : std_logic := '0';
 
 begin
 
@@ -65,7 +69,6 @@ begin
             case SPI_state is
 
                 when SPI_IDLE =>
-                    spi_status <= "0000";
                     CTRL_CS <= '1';
                     CTRL_MOSI <= '1';
                     CTRL_SCK <= '0';
@@ -74,41 +77,84 @@ begin
                     end if;
 
                 when SPI_INIT =>
+                    spi_status <= "0000"; -- 1st byte
                     bytes <= 2; -- This can be parametrized from kernel
                     SPI_state <= SPI_CONFIG;
 
                 when SPI_CONFIG =>
+                    ------------------------------
+                    -- Finished :: Jump to MUX
+                    ------------------------------
                     if bytes_count = bytes then
                         bytes_count <= 0;
                         SPI_state <= SPI_MUX;
                     else
-                        bytes_count <= bytes_count + 1;
+                        --------------------------------
+                        -- Set flags :: Jump to PROCESS
+                        --------------------------------
+                        if bytes_count = 0 then
+                            first_byte <= '1';
+                            last_byte <= '0';
+                        elsif bytes_count = bytes - 1 then
+                            first_byte <= '0';
+                            last_byte <= '1';
+                        else
+                            first_byte <= '0';
+                            last_byte <= '0';
+                        end if;
+
                         index <= 0;
-                        SPI_state <= SPI_PRODUCE;
+                        bytes_count <= bytes_count + 1;
+                        SPI_state <= SPI_PROCESS;
                     end if;
 
-                when SPI_PRODUCE =>
-                    if transfer_counter = TRANSFER_START + TRANSFER_END + BUS_FREE then
-                        transfer_counter <= 0;
+                when SPI_PROCESS =>
+------------------------------------------------------------------------------------------------------------------------------
+-- PIPE[0] :: Transfer Counter
+------------------------------------------------------------------------------------------------------------------------------
+                    if first_byte = '1' then
+                        if start_counter = TRANSFER_START then -- 512 clock cycles
+                            spi_status <= "0010";
+                            start_counter <= 0; -- Reset Counter
+                        else
+                            spi_status <= "0001";
+                            start_counter <= start_counter + 1;
+                        end if;
+                    end if;
+
+                    if last_byte = '1' then
+                        if process_counter = TRANSFER_PROCESS then
+                            spi_status <= "0001";
+                            process_counter <= 0; -- Reset Counter
+                        else
+                            spi_status <= "0010";
+                            process_counter <= start_counter + 1;
+                        end if;
+                    else
+                        if st
+                    end if;
+
+                    if process_counter = TRANSFER_START + TRANSFER_PROCESS + TRANSFER_STOP then
+                        process_counter <= 0;
                         spi_status <= "0000";
                         sck_timer <= "0000";
                         SPI_state <= SPI_CONFIG;
                     else
-------------------------------------------------------------------------------------------------------------------------------
--- PIPE[0] :: Transfer Counter
-------------------------------------------------------------------------------------------------------------------------------
-                        if transfer_counter = TRANSFER_START then
-                            spi_status <= "0001";
-                        end if;
 
-                        if transfer_counter = TRANSFER_START + TRANSFER_END then
-                            spi_status <= "0010";
-                        end if;
 
 ------------------------------------------------------------------------------------------------------------------------------
 -- PIPE[1] :: SPI Status
 ------------------------------------------------------------------------------------------------------------------------------
-                        if spi_status = "0001" then
+                        if spi_status <= "0001" then
+                            CTRL_CS <= '0';
+                            CTRL_MOSI <= '1';
+                            CTRL_SCK <= '0';
+                        end if;
+
+                        ---------------------------------------------------
+                        -- Clock/Data Process
+                        ---------------------------------------------------
+                        if spi_status = "0010" then
 
                             if sck_timer = "0100" then -- Half bit time
                                 sck_timer_toggle <= not sck_timer_toggle;
@@ -136,7 +182,7 @@ begin
                             end if;
                         end if;
 
-                        if spi_status = "0010" then
+                        if spi_status = "0011" then
                             CTRL_MOSI <= '1';
                             CTRL_SCK <= '0';
                         end if;
@@ -144,7 +190,7 @@ begin
 ------------------------------------------------------------------------------------------------------------------------------
 -- PIPE[1] :: Increment Status Timer
 ------------------------------------------------------------------------------------------------------------------------------
-                        transfer_counter <= transfer_counter + 1;
+                        process_counter <= process_counter + 1;
                     end if;
 
                 when SPI_MUX =>
