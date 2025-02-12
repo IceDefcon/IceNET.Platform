@@ -181,11 +181,11 @@ static int __init spi_ctrl_init(void)
         return ret;
     }
 
-    readConfigRegister();
+    // readConfigRegister();
 
     // nrf905_read_register(0x02);
 
-    // nrf905_read_multiple_registers(0x00, 0x0A);
+    nrf905_read_multiple_registers(0x00, 0x0A);
 
     return 0;
 }

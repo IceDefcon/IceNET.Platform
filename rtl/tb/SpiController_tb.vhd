@@ -36,7 +36,7 @@ signal CLOCK_50MHz : std_logic := '0';
 
 signal switch_spi_ready : std_logic := '0';
 signal offload_id : std_logic_vector(6 downto 0) := "0000100";
-signal offload_ctrl : std_logic_vector(7 downto 0) := "10000010";
+signal offload_ctrl : std_logic_vector(7 downto 0) := "10111010";
 signal offload_register : std_logic_vector(7 downto 0) := "00010000";
 signal offload_data : std_logic_vector(7 downto 0) := "00000000";
 
