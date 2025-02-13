@@ -1,6 +1,5 @@
 {
     "type": "sftp",
-
     "sync_down_on_open": true,
     "sync_same_age": true,
     
