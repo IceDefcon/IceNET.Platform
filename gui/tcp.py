@@ -99,16 +99,16 @@ class TcpManager:
         # SPI
         self.spi_device_label = tk.Label(self.root, text="SPI Register Address")
         self.spi_device_label.grid(row=0, column=3, pady=5, padx=5, sticky='e')
-        self.spi_device_address = tk.Entry(self.root, width=14)
-        self.spi_device_address.grid(row=0, column=4, pady=5, padx=5, sticky='w')
-        self.spi_device_address.insert(0, "10")
+        self.spi_register_address = tk.Entry(self.root, width=14)
+        self.spi_register_address.grid(row=0, column=4, pady=5, padx=5, sticky='w')
+        self.spi_register_address.insert(0, "10")
         self.spi_exe_button = tk.Button(self.root, text="EXE", command=lambda: self.tcp_execute(7))
         self.spi_exe_button.grid(row=0, column=5, pady=5, padx=5, sticky='nsew')
-        self.spi_device_register_label = tk.Label(self.root, text="Bytes to Read")
-        self.spi_device_register_label.grid(row=1, column=3, pady=5, padx=5, sticky='e')
-        self.spi_device_register = tk.Entry(self.root, width=14)
-        self.spi_device_register.grid(row=1, column=4, pady=5, padx=5, sticky='w')
-        self.spi_device_register.insert(0, "01")
+        self.spi_burst_size_label = tk.Label(self.root, text="Bytes to Read")
+        self.spi_burst_size_label.grid(row=1, column=3, pady=5, padx=5, sticky='e')
+        self.spi_burst_size = tk.Entry(self.root, width=14)
+        self.spi_burst_size.grid(row=1, column=4, pady=5, padx=5, sticky='w')
+        self.spi_burst_size.insert(0, "01")
         self.spi_register_data_label = tk.Label(self.root, text="Write Data")
         self.spi_register_data_label.grid(row=2, column=3, pady=5, padx=5, sticky='e')
         self.spi_register_data = tk.Entry(self.root, width=14)
@@ -222,15 +222,16 @@ class TcpManager:
         return data
 
     def spi_assembly(self):
-        header = 0x82 # 0000 0100
-        address = int(self.spi_device_address.get(), 16)  # Convert hex address to integer
-        register = int(self.spi_device_register.get(), 16)  # Convert hex register to integer
+        offload_ctrl = 0x82 # 0000 0100
+        register = int(self.spi_register_address.get(), 16)  # Convert hex address to integer
+        size = int(self.spi_burst_size.get(), 16)
+        shifted_size = size << 3
         if self.spi_write_var.get():
             # 0000 0000 :: Read
-            data = bytes([header + 0x01, address, register]) + bytes.fromhex(self.spi_register_data.get()) + bytes([0x00, 0x00, 0x00, 0x00])
+            data = bytes([offload_ctrl + 0x01 + shifted_size, 0x00, register]) + bytes.fromhex(self.spi_register_data.get()) + bytes([0x00, 0x00, 0x00, 0x00])
         else:
             # 0000 0001 :: Write
-            data = bytes([header + 0x00, address, register, 0x00, 0x00, 0x00, 0x00, 0x00])
+            data = bytes([offload_ctrl + 0x00 + shifted_size, 0x00, register, 0x00, 0x00, 0x00, 0x00, 0x00])
         return data
 
     def pwm_set(self, value):

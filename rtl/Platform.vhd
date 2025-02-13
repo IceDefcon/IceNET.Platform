@@ -1118,6 +1118,10 @@ begin
     end if;
 end process;
 
+NRF905_PWR_UP <= '1';
+NRF905_TRX_CE <= '0';
+NRF905_TX_EN <= 'Z';
+
 ---------------------------------------------------------------
 -- TODO :: Need Refactoring and Parametrization !!!
 --
