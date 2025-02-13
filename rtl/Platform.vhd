@@ -630,20 +630,6 @@ secondarySpiConverter_module: SpiConverter port map
     CONVERSION_COMPLETE => open -- out :: Not in use !
 );
 
-feedback_data_process:
-process(CLOCK_50MHz)
-begin
-    if rising_edge(CLOCK_50MHz) then
-        if interrupt_i2c_feedback = '1'  then
-            secondary_parallel_MISO <= data_i2c_feedback;
-        elsif interrupt_pwm_feedback = '1' then
-            secondary_parallel_MISO <= data_pwm_feedback;
-        elsif interrupt_spi_feedback = '1' then
-            secondary_parallel_MISO <= data_spi_feedback;
-        end if;
-    end if;
-end process;
-
 -- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 -- //                  //
 -- //                  //
@@ -681,7 +667,7 @@ begin
     if rising_edge(CLOCK_50MHz) then
         if interrupt_i2c_feedback = '1'
         or interrupt_pwm_feedback = '1'
-        --or interrupt_spi_feedback = '1' --- TODO !!!
+        or interrupt_spi_feedback = '1' --- TODO !!!
         then
             if feedback_interrupt_timer = "110010" then -- 50 * 20 = 1000ns = 1us interrupt pulse back to CPU
                 INT_FROM_FPGA <= '0';
@@ -692,6 +678,20 @@ begin
         else
             INT_FROM_FPGA <= '0';
             feedback_interrupt_timer <= (others => '0');
+        end if;
+    end if;
+end process;
+
+feedback_data_process:
+process(CLOCK_50MHz)
+begin
+    if rising_edge(CLOCK_50MHz) then
+        if interrupt_i2c_feedback = '1'  then
+            secondary_parallel_MISO <= data_i2c_feedback;
+        elsif interrupt_pwm_feedback = '1' then
+            secondary_parallel_MISO <= data_pwm_feedback;
+        elsif interrupt_spi_feedback = '1' then
+            secondary_parallel_MISO <= data_spi_feedback;
         end if;
     end if;
 end process;
@@ -1117,6 +1117,10 @@ begin
         end case;
     end if;
 end process;
+
+NRF905_PWR_UP <= '1';
+NRF905_TRX_CE <= '0';
+NRF905_TX_EN <= 'Z';
 
 ---------------------------------------------------------------
 -- TODO :: Need Refactoring and Parametrization !!!

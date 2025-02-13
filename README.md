@@ -36,6 +36,7 @@
 	09. Add Diagnostic object in DroneCtrl to monitor memory allocation
 	10. Add a Number of Drone Arm Instances in the DroneCtrl unit
 	11. Synchronize lengths of feedback interrupts :: I2C, SPI, PWM
+	12. Adjust feedback preambles @ SPI transmissions between Kernel<-->FPGA
 
 # Testing Hardware Modules
 
