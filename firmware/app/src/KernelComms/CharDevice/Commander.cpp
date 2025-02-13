@@ -281,13 +281,12 @@ void Commander::threadCommander()
     std::cout << "[INFO] [WDG] Terminate threadCommander" << std::endl;
 }
 
-/* SHARE */ void Commander::setTransferPointer(std::shared_ptr<std::vector<char>> transferPointerRx, std::shared_ptr<std::vector<char>> transferPointerTx)
+/* SHARE */ void Commander::setTransferPointers(
+std::shared_ptr<std::vector<char>> transferPointerRx,
+std::shared_ptr<std::vector<char>> transferPointerTx,
+std::shared_ptr<ioStateType> transferState)
 {
     m_Rx_CommanderVector = transferPointerRx;
     m_Tx_CommanderVector = transferPointerTx;
-}
-
-/* SHARE */ void Commander::setTransferState(std::shared_ptr<ioStateType> transferStatee)
-{
-    m_IO_CommanderState = transferStatee;
+    m_IO_CommanderState = transferState;
 }

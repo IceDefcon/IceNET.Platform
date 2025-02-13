@@ -40,10 +40,8 @@ void DroneCtrl::droneInit()
     m_instanceWatchdog = this;
     m_instanceRamDisk = this;
     /* Align shared pointers for Kernel<->ServerTCP communication and StateMachines */
-    m_instanceServerTCP->setTransferPointer(m_Rx_DroneCtrlVector, m_Tx_DroneCtrlVector);
-    m_instanceCommander->setTransferPointer(m_Rx_DroneCtrlVector, m_Tx_DroneCtrlVector);
-    m_instanceServerTCP->setTransferState(m_IO_DroneCtrlState);
-    m_instanceCommander->setTransferState(m_IO_DroneCtrlState);
+    m_instanceServerTCP->setTransferPointers(m_Rx_DroneCtrlVector, m_Tx_DroneCtrlVector, m_IO_DroneCtrlState);
+    m_instanceCommander->setTransferPointers(m_Rx_DroneCtrlVector, m_Tx_DroneCtrlVector, m_IO_DroneCtrlState);
     /* Launch Ram Disk Commander and TCP Server */
     KernelComms::initRamDiskCommander();
     Network::initServerTCP();

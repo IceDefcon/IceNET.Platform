@@ -56,6 +56,8 @@ class ServerTCP
         bool isClientConnected();
         void threadServerTCP();
 
-        /* SHARE */ void setTransferPointer(std::shared_ptr<std::vector<char>> transferPointerRx, std::shared_ptr<std::vector<char>> transferPointerTx);
-        /* SHARE */ void setTransferState(std::shared_ptr<ioStateType> transferStatee);
+        /* SHARE */ void setTransferPointers(
+        std::shared_ptr<std::vector<char>> transferPointerRx,
+        std::shared_ptr<std::vector<char>> transferPointerTx,
+        std::shared_ptr<ioStateType> transferState);
 };

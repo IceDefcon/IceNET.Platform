@@ -449,13 +449,12 @@ void ServerTCP::threadServerTCP()
     std::cout << "[INFO] [TCP] Terminate threadServerTCP" << std::endl;
 }
 
-/* SHARE */ void ServerTCP::setTransferPointer(std::shared_ptr<std::vector<char>> transferPointerRx, std::shared_ptr<std::vector<char>> transferPointerTx)
+/* SHARE */ void ServerTCP::setTransferPointers(
+std::shared_ptr<std::vector<char>> transferPointerRx,
+std::shared_ptr<std::vector<char>> transferPointerTx,
+std::shared_ptr<ioStateType> transferState)
 {
     m_Rx_ServerTCPVector = transferPointerRx;
     m_Tx_ServerTCPVector = transferPointerTx;
-}
-
-/* SHARE */ void ServerTCP::setTransferState(std::shared_ptr<ioStateType> transferStatee)
-{
-    m_IO_ServerTCPState = transferStatee;
+    m_IO_ServerTCPState = transferState;
 }
