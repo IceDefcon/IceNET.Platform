@@ -60,7 +60,7 @@
  *
  * One ramDevice have 32 sectors which gives 4 pages ---> 16KB per ramDisk
  *
- * Total size of used RAM :: 2 devices * 16KB each = gives 32B
+ * Total size of used RAM :: 2 devices * 16KB each = gives 32KB
  *
  */
 

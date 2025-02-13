@@ -172,6 +172,7 @@ begin
                             spi_status <= "1100"; -- Last Byte Exit
                         elsif byte_process_timer < BYTE_BREAK + BYTE_INIT + BYTE_CLOCK + BYTE_EXIT + TRANSFER_EXIT then
                             spi_status <= "1101"; -- Transfer Exit
+                            FPGA_INT <= '1';
                         else
                             spi_status <= "1110"; -- Going Back to CONFIG -> IDLE
                         end if;
@@ -267,6 +268,9 @@ begin
 
                 when SPI_MUX =>
                     CTRL_CS <= '1';
+                    FPGA_INT <= '0';
+                    CTRL_MUX <= "0001";
+                    FEEDBACK_DATA <= "10000001";
                     SPI_state <= SPI_DONE;
 
                 when SPI_DONE =>
