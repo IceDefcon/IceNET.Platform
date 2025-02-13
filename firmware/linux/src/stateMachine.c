@@ -72,7 +72,7 @@ static int stateMachineThread(void *data)
             case SM_DMA:
                 printk(KERN_INFO "[CTRL][STM] Normal DMA mode\n");
                 enableDMAServer();
-                setStateMachine(SM_IDLE);
+                setStateMachine(SM_DONE);
                 break;
 
             case SM_LONG_DMA:
@@ -99,14 +99,14 @@ static int stateMachineThread(void *data)
                 printk(KERN_INFO "[CTRL][STM] SPI mode\n");
                 /* QUEUE :: Execution of transferFpgaInput */
                 queue_work(get_transferFpgaInput_wq(), get_transferFpgaInput_work());
-                setStateMachine(SM_INTERRUPT);
+                setStateMachine(SM_OFFLOAD);
                 break;
 
-            case SM_INTERRUPT:
-                printk(KERN_INFO "[CTRL][STM] INTERRUPT mode\n");
-                gpio_set_value(GPIO_INTERRUPT_FROM_CPU, 1);
-                gpio_set_value(GPIO_INTERRUPT_FROM_CPU, 0);
-                setStateMachine(SM_IDLE);
+            case SM_OFFLOAD:
+                printk(KERN_INFO "[CTRL][STM] Fifo data offload mode\n");
+                gpio_set_value(GPIO_SPI_INTERRUPT_FROM_CPU, 1);
+                gpio_set_value(GPIO_SPI_INTERRUPT_FROM_CPU, 0);
+                setStateMachine(SM_DONE);
                 break;
 
             case SM_KILL:
@@ -114,7 +114,7 @@ static int stateMachineThread(void *data)
                 /* QUEUE :: Execution of killApplication */
                 queue_work(get_killApplication_wq(), get_killApplication_work());
                 printk(KERN_INFO "[CTRL][STM] Back to IDLE mode\n");
-                setStateMachine(SM_IDLE);
+                setStateMachine(SM_DONE);
                 break;
 
             case SM_PRINT:
@@ -132,11 +132,16 @@ static int stateMachineThread(void *data)
                 destroyTransfer(SECTOR_ENGINE);
                 destroyTransfer(SECTOR_BMI160);
                 destroyTransfer(SECTOR_ADXL345);
-                setStateMachine(SM_IDLE);
+                setStateMachine(SM_DONE);
                 break;
 
             case SM_CMD:
                 /* TODO */
+                setStateMachine(SM_DONE);
+                break;
+
+            case SM_DONE:
+                printk(KERN_INFO "[CTRL][STM] Process Complete\n");
                 setStateMachine(SM_IDLE);
                 break;
 

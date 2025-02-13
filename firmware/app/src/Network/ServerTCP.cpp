@@ -161,18 +161,6 @@ int ServerTCP::tcpRX()
             std::cout << "[INFO] [TCP] 0xDEAD Received" << std::endl;
             return -5;
         }
-        /* LOAD :: CODE */
-        else if((*m_Tx_ServerTCPVector)[0] == 0x10 && (*m_Tx_ServerTCPVector)[1] == 0xAD && (*m_Tx_ServerTCPVector)[2] == 0xC0 && (*m_Tx_ServerTCPVector)[3] == 0xDE)
-        {
-            std::cout << "[INFO] [TCP] Send configuration to RAM" << std::endl;
-            return -4;
-        }
-        /* CLEAR :: CODE */
-        else if((*m_Tx_ServerTCPVector)[0] == 0xC1 && (*m_Tx_ServerTCPVector)[1] == 0xEA && (*m_Tx_ServerTCPVector)[2] == 0xC0 && (*m_Tx_ServerTCPVector)[3] == 0xDE)
-        {
-            std::cout << "[INFO] [TCP] Clear DMA from RAM" << std::endl;
-            return -3;
-        }
         else
         {
             if (ret > 0)
@@ -195,12 +183,12 @@ int ServerTCP::tcpRX()
                 m_clientConnected = false;
                 *m_IO_ServerTCPState = IO_IDLE;
             }
-            else
+            else /* This is ret = -1 reserved :: When nothing happen at recv timeout */
             {
-#if 0
+#if 1
                 if(0 < m_timeoutTransfer) /* TODO :: Quick workaround to avoid log entries concatenation */
                 {
-                    std::cout << "\r[INFO] [TCP] Nothing received, listening... [" << m_timeoutTransfer << "]" << std::flush;
+                    std::cout << "\r[INFO] [TCP] Nothing received, listening... [" << m_timeoutTransfer << "] " << ret << std::flush;
                 }
 #endif
                 m_timeoutTransfer++;
@@ -368,24 +356,6 @@ void ServerTCP::threadServerTCP()
                         tcpClose();
                         std::cout << "[INFO] [TCP] Ready to Kill threadServerTCP" << std::endl;
                         m_threadKill = true;
-                    }
-                    else if(ret == -4)
-                    {
-                        std::cout << "[INFO] [TCP] Transfer Data to RAM" << std::endl;
-                        //
-                        // TODO :: If Needed
-                        //
-                        // m_instanceRamDisk->dataTX();
-                        m_timeoutTransfer = 0;
-                    }
-                    else if(ret == -3)
-                    {
-                        std::cout << "[INFO] [TCP] Clear DMA Engine from RAM" << std::endl;
-                        //
-                        // TODO :: If Needed
-                        //
-                        // m_instanceRamDisk->clearDma();
-                        m_timeoutTransfer = 0;
                     }
                     else
                     {

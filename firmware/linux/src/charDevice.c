@@ -330,17 +330,17 @@ static ssize_t commanderWrite(struct file *filep, const char __user *buffer, siz
 
 /* CLOSE */ static int watchdogClose(struct inode *inodep, struct file *filep)
 {
-    printk(KERN_ALERT "[CTRL][ C ] Unlock Mutex DEVICE_WATCHDOG\n");
+    printk(KERN_ALERT "[CTRL][ C ] DEVICE_WATCHDOG Unlock Mutex\n");
     charDeviceMutexCtrl(DEVICE_WATCHDOG, MUTEX_CTRL_UNLOCK);
-    printk(KERN_INFO "[CTRL][ C ] Close DEVICE_WATCHDOG\n");
+    printk(KERN_INFO "[CTRL][ C ] DEVICE_WATCHDOG Close\n");
     return 0;
 }
 
 /* CLOSE */ static int commanderClose(struct inode *inodep, struct file *filep)
 {
-    printk(KERN_ALERT "[CTRL][ C ] Unlock Mutex DEVICE_COMMANDER\n");
+    printk(KERN_ALERT "[CTRL][ C ] DEVICE_COMMANDER Unlock Mutex\n");
     charDeviceMutexCtrl(DEVICE_COMMANDER, MUTEX_CTRL_UNLOCK);
-    printk(KERN_INFO "[CTRL][ C ] Close DEVICE_COMMANDER\n");
+    printk(KERN_INFO "[CTRL][ C ] DEVICE_COMMANDER Close\n");
     return 0;
 }
 
