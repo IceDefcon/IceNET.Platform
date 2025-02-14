@@ -22,9 +22,8 @@
 
 typedef enum
 {
-	WORK_FPGA_INPUT,
-	WORK_FPGA_OUTPUT,
-	WORK_KILL_APPLICATION,
+	WORK_MASTER_PRIMARY,
+	WORK_MASTER_SECONDARY,
 	WORK_CONFIG_FPGA,
 	WORK_AMOUNT
 }workType;
@@ -35,12 +34,10 @@ typedef struct
 	struct work_struct *workUnit;
 }workTaskData;
 
-/* GET WORK QUEUE */ struct workqueue_struct* get_transferFpgaInput_wq(void);
-/* GET WORK QUEUE */ struct workqueue_struct* get_transferFpgaOutput_wq(void);
-/* GET WORK QUEUE */ struct workqueue_struct* get_killApplication_wq(void);
-/* GET WORK */ struct work_struct* get_transferFpgaInput_work(void);
-/* GET WORK */ struct work_struct* get_transferFpgaOutput_work(void);
-/* GET WORK */ struct work_struct* get_killApplication_work(void);
+/* GET WORK QUEUE */ struct workqueue_struct* get_masterTransferPrimary_wq(void);
+/* GET WORK QUEUE */ struct workqueue_struct* get_masterTransferSecondary_wq(void);
+/* GET WORK */ struct work_struct* get_masterTransferPrimary_work(void);
+/* GET WORK */ struct work_struct* get_masterTransferSecondary_work(void);
 
 /* INIT */ void spiWorkInit(void);
 /* DESTROY */ void spiWorkDestroy(void);

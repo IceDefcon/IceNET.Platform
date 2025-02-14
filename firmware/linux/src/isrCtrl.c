@@ -65,8 +65,8 @@ static irqreturn_t InterruptFromFPGA_SpiISR(int irq, void *data)
     printk(KERN_INFO "[CTRL][ISR] Interrupt No[%d] received from FPGA @ Pin [%d] :: TODO Checksum comparsion\n", counter, GPIO_SPI_INTERRUPT_FROM_FPGA);
     counter++;
 
-    /* QUEUE :: Execution of transferFpgaOutput */
-    queue_work(get_transferFpgaOutput_wq(), get_transferFpgaOutput_work());
+    /* QUEUE :: Execution of masterTransferSecondary */
+    queue_work(get_masterTransferSecondary_wq(), get_masterTransferSecondary_work());
     return IRQ_HANDLED;
 }
 

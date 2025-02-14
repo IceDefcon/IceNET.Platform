@@ -97,8 +97,8 @@ static int stateMachineThread(void *data)
 
             case SM_SPI:
                 printk(KERN_INFO "[CTRL][STM] SPI mode\n");
-                /* QUEUE :: Execution of transferFpgaInput */
-                queue_work(get_transferFpgaInput_wq(), get_transferFpgaInput_work());
+                /* QUEUE :: Execution of masterTransferPrimary */
+                queue_work(get_masterTransferPrimary_wq(), get_masterTransferPrimary_work());
                 setStateMachine(SM_OFFLOAD);
                 break;
 
@@ -106,14 +106,6 @@ static int stateMachineThread(void *data)
                 printk(KERN_INFO "[CTRL][STM] Fifo data offload mode\n");
                 gpio_set_value(GPIO_SPI_INTERRUPT_FROM_CPU, 1);
                 gpio_set_value(GPIO_SPI_INTERRUPT_FROM_CPU, 0);
-                setStateMachine(SM_DONE);
-                break;
-
-            case SM_KILL:
-                printk(KERN_INFO "[CTRL][STM] KILL mode\n");
-                /* QUEUE :: Execution of killApplication */
-                queue_work(get_killApplication_wq(), get_killApplication_work());
-                printk(KERN_INFO "[CTRL][STM] Back to IDLE mode\n");
                 setStateMachine(SM_DONE);
                 break;
 

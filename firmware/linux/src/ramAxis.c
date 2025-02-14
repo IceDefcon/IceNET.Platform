@@ -122,6 +122,7 @@ static void allocateTransfer(void)
             pr_err("[ERNO][RAM] Failed to allocate memory for dmaTransfer\n");
             return;
         }
+        pr_info("[CTRL][RAM] Successfully allocated memory for DmaTransferType\n");
         memset(dmaTransfer, 0, sizeof(DmaTransferType));
     }
 
@@ -130,10 +131,10 @@ static void allocateTransfer(void)
         dmaTransfer->RxData = kmalloc(BUFFER_ALLOCATION_SIZE, GFP_KERNEL);
         if (!dmaTransfer->RxData)
         {
-            pr_err("[ERNO][RAM] Failed to allocate memory for dmaTransfer->RxData\n");
+            pr_err("[ERNO][RAM] Failed to allocate memory for dmaTransfer->RxData buffer\n");
             return;
         }
-        pr_info("[CTRL][RAM] Successfully allocated memory for dmaTransfer->RxData\n");
+        pr_info("[CTRL][RAM] Successfully allocated memory for dmaTransfer->RxData buffer\n");
     }
 
     if (!dmaTransfer->TxData)
@@ -141,10 +142,10 @@ static void allocateTransfer(void)
         dmaTransfer->TxData = kmalloc(BUFFER_ALLOCATION_SIZE, GFP_KERNEL);
         if (!dmaTransfer->TxData)
         {
-            pr_err("[ERNO][RAM] Failed to allocate memory for dmaTransfer->TxData\n");
+            pr_err("[ERNO][RAM] Failed to allocate memory for dmaTransfer->TxData buffer\n");
             return;
         }
-        pr_info("[CTRL][RAM] Successfully allocated memory for dmaTransfer->TxData\n");
+        pr_info("[CTRL][RAM] Successfully allocated memory for dmaTransfer->TxData buffer\n");
     }
 }
 

@@ -111,48 +111,6 @@ static int spiBusInit(spiBusType spiBusEnum, spiDeviceType spiDeviceEnum)
     return ret;
 }
 
-static int spiSlaveInit(spiBusType spiBusEnum, spiDeviceType spiDeviceEnum)
-{
-    struct spi_device *spiSlave;
-    int ret;
-
-    // Allocate an SPI slave device for the given bus
-    spiSlave = spi_alloc_device(NULL);  // No need for a master reference in slave mode
-    if (!spiSlave)
-    {
-        printk(KERN_ERR "[INIT][SPI] SPI %d Failed to Allocate Slave!\n", spiBusEnum);
-        return -ENOMEM;
-    }
-    else
-    {
-        printk(KERN_ERR "[INIT][SPI] SPI %d Slave Allocated\n", spiBusEnum);
-    }
-
-    // Set the SPI slave-specific configuration
-    spiSlave->chip_select = 0;    // Chip select is handled by the master
-    spiSlave->mode = SPI_MODE_1;   // Ensure the mode matches the master's mode
-    spiSlave->bits_per_word = 8;   // Typically 8 bits per word
-    spiSlave->max_speed_hz = 1000000; // Maximum clock speed (adjust as needed)
-
-    // Set up the slave device (assign the driver, setup callbacks if needed)
-    // You would typically set a driver here for handling the slave communication.
-    // spiSlave->dev.driver = &your_slave_driver;
-
-    ret = spi_setup(spiSlave);  // Finalize the setup for the slave device
-    if (ret < 0)
-    {
-        printk(KERN_ERR "[INIT][SPI] SPI %d Slave device Failed to setup! ret[%d]\n", spiBusEnum, ret);
-        spi_dev_put(spiSlave);  // Clean up if setup fails
-        return ret;
-    }
-    else
-    {
-        printk(KERN_ERR "[INIT][SPI] SPI %d Slave device setup\n", spiBusEnum);
-    }
-
-    return ret;
-}
-
  /*************************************************************************************************************************************************
  *
  *                                                          -----===[ FORWARD ]===-----
@@ -296,7 +254,7 @@ static int spiDmaDestroy(spiDeviceType spiDeviceEnum)
     return 0;
 }
 
-void transferFpgaInput(struct work_struct *work)
+void masterTransferPrimary(struct work_struct *work)
 {
     unsigned char *tx_buf;
     unsigned char *rx_buf;
@@ -313,7 +271,7 @@ void transferFpgaInput(struct work_struct *work)
     }
     else
     {
-        printk(KERN_INFO "[CTRL][SPI] Primary FPGA Transfer :: Signaled by transferFpgaInput over SPI.0\n");
+        printk(KERN_INFO "[CTRL][SPI] Primary FPGA Transfer :: Signaled by masterTransferPrimary over SPI.0\n");
     }
 
     /* Debug :: Dma buffer */
@@ -332,7 +290,7 @@ void transferFpgaInput(struct work_struct *work)
     }
 }
 
-void transferFpgaOutput(struct work_struct *work)
+void masterTransferSecondary(struct work_struct *work)
 {
     unsigned char *tx_buf;
     unsigned char *rx_buf;
@@ -349,7 +307,7 @@ void transferFpgaOutput(struct work_struct *work)
     }
     else
     {
-        printk(KERN_INFO "[CTRL][SPI] Secondary FPGA Transfer :: Signaled by transferFpgaOutput over SPI.1\n");
+        printk(KERN_INFO "[CTRL][SPI] Secondary FPGA Transfer :: Signaled by masterTransferSecondary over SPI.1\n");
     }
 
     /* Debug :: Dma buffer */
@@ -362,11 +320,6 @@ void transferFpgaOutput(struct work_struct *work)
 
     /* Unlock COMMANDER For Kernel Commander Device to process */
     charDeviceLockCtrl(DEVICE_COMMANDER, CTRL_UNLOCK);
-}
-
-void killApplication(struct work_struct *work)
-{
-    charDeviceLockCtrl(DEVICE_WATCHDOG, CTRL_UNLOCK);
 }
 
 int spiInit(void)

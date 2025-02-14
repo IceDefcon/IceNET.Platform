@@ -25,7 +25,6 @@ typedef enum
     SM_DMA,
     SM_SPI,
     SM_OFFLOAD,
-    SM_KILL,
     SM_PRINT,
     SM_CMD,
     SM_DONE,
