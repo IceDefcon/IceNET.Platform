@@ -423,29 +423,23 @@ port
 );
 end component;
 
---
--- Fifo cannot be state machine
--- controlled due to continuous
--- read procedure during offload
---
-component FifoController
-generic
-(
-    WIDTH : integer := 8;
-    DEPTH : integer := 16
-);
+------------------------------------------------------
+-- 8-Bit
+-- 256 Deepth
+------------------------------------------------------
+component Fifo
 port
 (
-    CLOCK_50MHz : in  std_logic;
-    RESET : in  std_logic;
-    -- In
-    DATA_IN : in  std_logic_vector(7 downto 0);
-    WRITE_EN : in  std_logic;
-    READ_EN : in  std_logic;
-    -- Out
-    DATA_OUT : out std_logic_vector(7 downto 0);
-    FULL : out std_logic;
-    EMPTY : out std_logic
+    clock : IN STD_LOGIC;
+
+    data  : IN STD_LOGIC_VECTOR (7 DOWNTO 0);
+    rdreq : IN STD_LOGIC;
+    wrreq : IN STD_LOGIC;
+
+    empty : OUT STD_LOGIC;
+    full : OUT STD_LOGIC;
+    q : OUT STD_LOGIC_VECTOR (7 DOWNTO 0);
+    usedw : OUT STD_LOGIC_VECTOR (7 DOWNTO 0)
 );
 end component;
 
@@ -727,36 +721,19 @@ begin
     end if;
 end process;
 
----------------------------------------
---
--- Fifo to store bytes from Kernel SPI
---
--- Byte[0] :: READ_CONTROL
--- Byte[1] :: READ_ID
--- Byte[2] :: READ_REGISTER
--- Byte[3] :: READ_DATA
---
--- TODO :: CHECKSUM
---
----------------------------------------
-FifoController_module: FifoController
-generic map
-(
-    WIDTH => FIFO_WIDTH,
-    DEPTH => FIFO_DEPTH
-)
+Fifo_module: Fifo
 port map
 (
-    CLOCK_50MHz => CLOCK_50MHz,
-    RESET => '0',
+    clock => CLOCK_50MHz,
     -- IN
-    DATA_IN  => primary_fifo_data_in,
-    WRITE_EN => primary_fifo_wr_en,
-    READ_EN => primary_fifo_rd_en,
+    data  => primary_fifo_data_in,
+    rdreq => primary_fifo_rd_en,
+    wrreq => primary_fifo_wr_en,
     -- OUT
-    DATA_OUT => primary_fifo_data_out,
-    FULL => primary_fifo_full,
-    EMPTY => primary_fifo_empty
+    empty => primary_fifo_empty,
+    full => primary_fifo_full,
+    q => primary_fifo_data_out,
+    usedw => open
 );
 
 OffloadController_module: OffloadController
