@@ -24,10 +24,10 @@ typedef enum
     SM_LONG_DMA,
     SM_DMA,
     SM_SPI,
-    SM_INTERRUPT,
-    SM_KILL,
+    SM_OFFLOAD,
     SM_PRINT,
     SM_CMD,
+    SM_DONE,
 } stateMachineType;
 
 typedef struct

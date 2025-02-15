@@ -36,7 +36,13 @@ typedef struct
 {
     void* sectorAddress;
     int genericSize;
-    char transfer[];
+} sectorType;
+
+typedef struct
+{
+    uint8_t configBytesAmount;
+    DmaTransferType* dmaTransfer;
+    sectorType sector[SECTOR_AMOUNT];
 } ramAxisType;
 
 /* INIT */ void ramAxisInit(void);

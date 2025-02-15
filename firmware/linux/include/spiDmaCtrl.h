@@ -80,9 +80,8 @@ typedef struct
 /* SPI */ int spiInit(void);
 /* CONFIG */ void enableDMAConfig(void);
 /* CONFIG */ void enableDMAServer(void);
-/* FPGA */ void transferFpgaInput(struct work_struct *work);
-/* FPGA */ void transferFpgaOutput(struct work_struct *work);
-/* KILL */ void killApplication(struct work_struct *work);
+/* FPGA */ void masterTransferPrimary(struct work_struct *work);
+/* FPGA */ void masterTransferSecondary(struct work_struct *work);
 /* SPI */ void spiDestroy(void);
 
 #endif // SPI_FPGA_H

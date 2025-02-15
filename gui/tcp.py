@@ -118,15 +118,6 @@ class TcpManager:
         self.spi_write_var = tk.BooleanVar() # Add a tick box (Checkbutton)
         self.spi_write_box = tk.Checkbutton(self.root, text="Write", variable=self.spi_write_var, command=self.spi_toggle_write_data_entry)
         self.spi_write_box.grid(row=2, column=5, pady=5, padx=5, sticky='w')
-        # DMA
-        self.load_button = tk.Button(self.root, text="Load", command=self.loadRam)
-        self.load_button.grid(row=0, column=7, pady=5, padx=5, sticky='we')
-        self.load_label = tk.Label(self.root, text="Device config to RAM Disk Sectors")
-        self.load_label.grid(row=0, column=8, pady=5, padx=5, sticky='w')
-        self.clear_button = tk.Button(self.root, text="Clear", command=self.clearRam)
-        self.clear_button.grid(row=1, column=7, pady=5, padx=5, sticky='we')
-        self.clear_label = tk.Label(self.root, text="RAM Disk Sectors")
-        self.clear_label.grid(row=1, column=8, pady=5, padx=5, sticky='w')
 
         # Console
         self.tcp_display = tk.Text(self.root, width=150, height=12, state=tk.DISABLED)
@@ -173,24 +164,6 @@ class TcpManager:
             data = bytes([0xB1, 0x1D, 0xC0, 0xDE, 0x00, 0x00, 0x00, 0x00])
             self.tcp_socket.sendall(data)
             self.tcp_console("[iceNET] Build data structure")
-        except Exception as e:
-            self.tcp_console(f"[iceNET] Server is Down: {e}")
-            self.tcp_socket = None
-
-    def loadRam(self):
-        try:
-            data = bytes([0x10, 0xAD, 0xC0, 0xDE, 0x00, 0x00, 0x00, 0x00])
-            self.tcp_socket.sendall(data)
-            self.tcp_console("[iceNET] Load data to RAM")
-        except Exception as e:
-            self.tcp_console(f"[iceNET] Server is Down: {e}")
-            self.tcp_socket = None
-
-    def clearRam(self):
-        try:
-            data = bytes([0xC1, 0xEA, 0xC0, 0xDE, 0x00, 0x00, 0x00, 0x00])
-            self.tcp_socket.sendall(data)
-            self.tcp_console("[iceNET] Clear RAM Disk")
         except Exception as e:
             self.tcp_console(f"[iceNET] Server is Down: {e}")
             self.tcp_socket = None

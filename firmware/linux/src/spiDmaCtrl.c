@@ -111,7 +111,6 @@ static int spiBusInit(spiBusType spiBusEnum, spiDeviceType spiDeviceEnum)
     return ret;
 }
 
-
  /*************************************************************************************************************************************************
  *
  *                                                          -----===[ FORWARD ]===-----
@@ -255,7 +254,7 @@ static int spiDmaDestroy(spiDeviceType spiDeviceEnum)
     return 0;
 }
 
-void transferFpgaInput(struct work_struct *work)
+void masterTransferPrimary(struct work_struct *work)
 {
     unsigned char *tx_buf;
     unsigned char *rx_buf;
@@ -272,7 +271,7 @@ void transferFpgaInput(struct work_struct *work)
     }
     else
     {
-        printk(KERN_INFO "[CTRL][SPI] Primary FPGA Transfer :: Signaled by transferFpgaInput over SPI.0\n");
+        printk(KERN_INFO "[CTRL][SPI] Primary FPGA Transfer :: Signaled by masterTransferPrimary over SPI.0\n");
     }
 
     /* Debug :: Dma buffer */
@@ -291,7 +290,7 @@ void transferFpgaInput(struct work_struct *work)
     }
 }
 
-void transferFpgaOutput(struct work_struct *work)
+void masterTransferSecondary(struct work_struct *work)
 {
     unsigned char *tx_buf;
     unsigned char *rx_buf;
@@ -308,7 +307,7 @@ void transferFpgaOutput(struct work_struct *work)
     }
     else
     {
-        printk(KERN_INFO "[CTRL][SPI] Secondary FPGA Transfer :: Signaled by transferFpgaOutput over SPI.1\n");
+        printk(KERN_INFO "[CTRL][SPI] Secondary FPGA Transfer :: Signaled by masterTransferSecondary over SPI.1\n");
     }
 
     /* Debug :: Dma buffer */
@@ -321,11 +320,6 @@ void transferFpgaOutput(struct work_struct *work)
 
     /* Unlock COMMANDER For Kernel Commander Device to process */
     charDeviceLockCtrl(DEVICE_COMMANDER, CTRL_UNLOCK);
-}
-
-void killApplication(struct work_struct *work)
-{
-    charDeviceLockCtrl(DEVICE_WATCHDOG, CTRL_UNLOCK);
 }
 
 int spiInit(void)

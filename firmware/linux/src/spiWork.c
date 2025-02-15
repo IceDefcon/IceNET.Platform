@@ -20,19 +20,13 @@
 
 static workTaskData workTask[WORK_AMOUNT] =
 {
-	[WORK_FPGA_INPUT] =
+	[WORK_MASTER_PRIMARY] =
 	{
 		.workQueue = NULL,
 		.workUnit = NULL,
 	},
 
-	[WORK_FPGA_OUTPUT] =
-	{
-		.workQueue = NULL,
-		.workUnit = NULL,
-	},
-
-	[WORK_KILL_APPLICATION] =
+	[WORK_MASTER_SECONDARY] =
 	{
 		.workQueue = NULL,
 		.workUnit = NULL,
@@ -45,137 +39,96 @@ static workTaskData workTask[WORK_AMOUNT] =
 	},
 };
 
-/* GET WORK QUEUE*/ struct workqueue_struct* get_transferFpgaInput_wq(void){return workTask[WORK_FPGA_INPUT].workQueue;}
-/* GET WORK QUEUE */ struct workqueue_struct* get_transferFpgaOutput_wq(void){return workTask[WORK_FPGA_OUTPUT].workQueue;}
-/* GET WORK QUEUE */ struct workqueue_struct* get_killApplication_wq(void){return workTask[WORK_KILL_APPLICATION].workQueue;}
+/* GET WORK QUEUE*/ struct workqueue_struct* get_masterTransferPrimary_wq(void){return workTask[WORK_MASTER_PRIMARY].workQueue;}
+/* GET WORK QUEUE */ struct workqueue_struct* get_masterTransferSecondary_wq(void){return workTask[WORK_MASTER_SECONDARY].workQueue;}
 
-/* GET WORK */ struct work_struct* get_transferFpgaInput_work(void){return workTask[WORK_FPGA_INPUT].workUnit;}
-/* GET WORK */ struct work_struct* get_transferFpgaOutput_work(void){return workTask[WORK_FPGA_OUTPUT].workUnit;}
-/* GET WORK */ struct work_struct* get_killApplication_work(void){return workTask[WORK_KILL_APPLICATION].workUnit;}
+/* GET WORK */ struct work_struct* get_masterTransferPrimary_work(void){return workTask[WORK_MASTER_PRIMARY].workUnit;}
+/* GET WORK */ struct work_struct* get_masterTransferSecondary_work(void){return workTask[WORK_MASTER_SECONDARY].workUnit;}
 
-static void transferFpgaInput_WorkInit(void)
+static void masterTransferPrimary_WorkInit(void)
 {
-    printk(KERN_ERR "[INIT][WRK] transferFpgaInput :: Init work unit\n");
-    workTask[WORK_FPGA_INPUT].workUnit = kmalloc(sizeof(struct work_struct), GFP_KERNEL);
-    if (!workTask[WORK_FPGA_INPUT].workUnit)
+    printk(KERN_ERR "[INIT][WRK] masterTransferPrimary :: Init work unit\n");
+    workTask[WORK_MASTER_PRIMARY].workUnit = kmalloc(sizeof(struct work_struct), GFP_KERNEL);
+    if (!workTask[WORK_MASTER_PRIMARY].workUnit)
     {
-        printk(KERN_ERR "[INIT][WRK] Failed to allocate memory for transferFpgaInput work unit: -ENOMEM\n");
+        printk(KERN_ERR "[INIT][WRK] Failed to allocate memory for masterTransferPrimary work unit: -ENOMEM\n");
     }
 	else
 	{
-		printk(KERN_ERR "[INIT][WRK] transferFpgaInput :: Memory allocattion successfully\n");
+		printk(KERN_ERR "[INIT][WRK] masterTransferPrimary :: Memory allocattion successfully\n");
 	}
 
-	INIT_WORK(workTask[WORK_FPGA_INPUT].workUnit, transferFpgaInput);
-	workTask[WORK_FPGA_INPUT].workQueue = create_singlethread_workqueue("transferFpgaInput_workqueue");
-	if (!workTask[WORK_FPGA_INPUT].workQueue)
+	INIT_WORK(workTask[WORK_MASTER_PRIMARY].workUnit, masterTransferPrimary);
+	workTask[WORK_MASTER_PRIMARY].workQueue = create_singlethread_workqueue("masterTransferPrimary_workqueue");
+	if (!workTask[WORK_MASTER_PRIMARY].workQueue)
 	{
-	    printk(KERN_ERR "[INIT][WRK] Failed to initialise single thread workqueue for transferFpgaInput: -ENOMEM\n");
+	    printk(KERN_ERR "[INIT][WRK] Failed to initialise single thread workqueue for masterTransferPrimary: -ENOMEM\n");
 	}
 	else
 	{
-		printk(KERN_ERR "[INIT][WRK] transferFpgaInput :: Single thread workqueue created successfully\n");
+		printk(KERN_ERR "[INIT][WRK] masterTransferPrimary :: Single thread workqueue created successfully\n");
 	}
 }
 
-static void transferFpgaOutput_WorkInit(void)
+static void masterTransferSecondary_WorkInit(void)
 {
-    printk(KERN_ERR "[INIT][WRK] transferFpgaOutput :: Init work unit\n");
-    workTask[WORK_FPGA_OUTPUT].workUnit = kmalloc(sizeof(struct work_struct), GFP_KERNEL);
-    if (!workTask[WORK_FPGA_OUTPUT].workUnit)
+    printk(KERN_ERR "[INIT][WRK] masterTransferSecondary :: Init work unit\n");
+    workTask[WORK_MASTER_SECONDARY].workUnit = kmalloc(sizeof(struct work_struct), GFP_KERNEL);
+    if (!workTask[WORK_MASTER_SECONDARY].workUnit)
     {
-        printk(KERN_ERR "[INIT][WRK] Failed to allocate memory for transferFpgaOutput work unit: -ENOMEM\n");
+        printk(KERN_ERR "[INIT][WRK] Failed to allocate memory for masterTransferSecondary work unit: -ENOMEM\n");
     }
 	else
 	{
-		printk(KERN_ERR "[INIT][WRK] transferFpgaOutput :: Memory allocattion successfully\n");
+		printk(KERN_ERR "[INIT][WRK] masterTransferSecondary :: Memory allocattion successfully\n");
 	}
 
-	INIT_WORK(workTask[WORK_FPGA_OUTPUT].workUnit, transferFpgaOutput);
-	workTask[WORK_FPGA_OUTPUT].workQueue = create_singlethread_workqueue("transferFpgaInput_workqueue");
-	if (!workTask[WORK_FPGA_OUTPUT].workQueue)
+	INIT_WORK(workTask[WORK_MASTER_SECONDARY].workUnit, masterTransferSecondary);
+	workTask[WORK_MASTER_SECONDARY].workQueue = create_singlethread_workqueue("masterTransferPrimary_workqueue");
+	if (!workTask[WORK_MASTER_SECONDARY].workQueue)
 	{
-	    printk(KERN_ERR "[INIT][WRK] Failed to initialise single thread workqueue for transferFpgaOutput: -ENOMEM\n");
+	    printk(KERN_ERR "[INIT][WRK] Failed to initialise single thread workqueue for masterTransferSecondary: -ENOMEM\n");
 	}
 	else
 	{
-		printk(KERN_ERR "[INIT][WRK] transferFpgaOutput :: Single thread workqueue created successfully\n");
+		printk(KERN_ERR "[INIT][WRK] masterTransferSecondary :: Single thread workqueue created successfully\n");
 	}
 }
 
-static void killApplication_WorkInit(void)
+static void masterTransferPrimary_WorkDestroy(void)
 {
-    printk(KERN_ERR "[INIT][WRK] killApplication :: Init work unit\n");
-    workTask[WORK_KILL_APPLICATION].workUnit = kmalloc(sizeof(struct work_struct), GFP_KERNEL);
-    if (!workTask[WORK_KILL_APPLICATION].workUnit)
+    cancel_work_sync(workTask[WORK_MASTER_PRIMARY].workUnit);
+    if (workTask[WORK_MASTER_PRIMARY].workQueue)
     {
-        printk(KERN_ERR "[INIT][WRK] Failed to allocate memory for killApplication work unit: -ENOMEM\n");
+        flush_workqueue(workTask[WORK_MASTER_PRIMARY].workQueue);
+        destroy_workqueue(workTask[WORK_MASTER_PRIMARY].workQueue);
+        workTask[WORK_MASTER_PRIMARY].workQueue = NULL;
     }
-	else
-	{
-		printk(KERN_ERR "[INIT][WRK] killApplication :: Memory allocattion successfully\n");
-	}
-
-	INIT_WORK(workTask[WORK_KILL_APPLICATION].workUnit, killApplication);
-	workTask[WORK_KILL_APPLICATION].workQueue = create_singlethread_workqueue("transferFpgaInput_workqueue");
-	if (!workTask[WORK_KILL_APPLICATION].workQueue)
-	{
-	    printk(KERN_ERR "[INIT][WRK] Failed to initialise single thread workqueue for killApplication: -ENOMEM\n");
-	}
-	else
-	{
-		printk(KERN_ERR "[INIT][WRK] killApplication :: Single thread workqueue created successfully\n");
-	}
+    printk(KERN_ERR "[DESTROY][WRK] Work unit :: masterTransferPrimary\n");
 }
 
-static void transferFpgaInput_WorkDestroy(void)
+static void masterTransferSecondary_WorkDestroy(void)
 {
-    cancel_work_sync(workTask[WORK_FPGA_INPUT].workUnit);
-    if (workTask[WORK_FPGA_INPUT].workQueue)
+    cancel_work_sync(workTask[WORK_MASTER_SECONDARY].workUnit);
+    if (workTask[WORK_MASTER_SECONDARY].workQueue)
     {
-        flush_workqueue(workTask[WORK_FPGA_INPUT].workQueue);
-        destroy_workqueue(workTask[WORK_FPGA_INPUT].workQueue);
-        workTask[WORK_FPGA_INPUT].workQueue = NULL;
+        flush_workqueue(workTask[WORK_MASTER_SECONDARY].workQueue);
+        destroy_workqueue(workTask[WORK_MASTER_SECONDARY].workQueue);
+        workTask[WORK_MASTER_SECONDARY].workQueue = NULL;
     }
-    printk(KERN_ERR "[DESTROY][WRK] Work unit :: transferFpgaInput\n");
-}
-
-static void transferFpgaOutput_WorkDestroy(void)
-{
-    cancel_work_sync(workTask[WORK_FPGA_OUTPUT].workUnit);
-    if (workTask[WORK_FPGA_OUTPUT].workQueue)
-    {
-        flush_workqueue(workTask[WORK_FPGA_OUTPUT].workQueue);
-        destroy_workqueue(workTask[WORK_FPGA_OUTPUT].workQueue);
-        workTask[WORK_FPGA_OUTPUT].workQueue = NULL;
-    }
-    printk(KERN_ERR "[DESTROY][WRK] Work unit :: transferFpgaOutput\n");
-}
-
-static void killApplication_WorkDestroy(void)
-{
-    cancel_work_sync(workTask[WORK_KILL_APPLICATION].workUnit);
-    if (workTask[WORK_KILL_APPLICATION].workQueue)
-    {
-        flush_workqueue(workTask[WORK_KILL_APPLICATION].workQueue);
-        destroy_workqueue(workTask[WORK_KILL_APPLICATION].workQueue);
-        workTask[WORK_KILL_APPLICATION].workQueue = NULL;
-    }
-    printk(KERN_ERR "[DESTROY][WRK] Work unit :: killApplication\n");
+    printk(KERN_ERR "[DESTROY][WRK] Work unit :: masterTransferSecondary\n");
 }
 
 void spiWorkInit(void)
 {
-	transferFpgaInput_WorkInit();
-	transferFpgaOutput_WorkInit();
-	killApplication_WorkInit();
+	masterTransferPrimary_WorkInit();
+	masterTransferSecondary_WorkInit();
 	printk(KERN_ERR "[INIT][WRK] Kernel workflow Created\n");
 }
 
 void spiWorkDestroy(void)
 {
-	transferFpgaInput_WorkDestroy();
-	transferFpgaOutput_WorkDestroy();
-	killApplication_WorkDestroy();
+	masterTransferPrimary_WorkDestroy();
+	masterTransferSecondary_WorkDestroy();
 	printk(KERN_ERR "[DESTROY][WRK] Kernel workflow destroyed\n");
 }
