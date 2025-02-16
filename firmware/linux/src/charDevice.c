@@ -51,12 +51,12 @@ static charDeviceData Device[DEVICE_AMOUNT] =
         .read_Mutex = __MUTEX_INITIALIZER(Device[DEVICE_WATCHDOG].read_Mutex),
         .isLocked = true,
         .tryLock = 0,
-        .transferSize = 2,
 
         .io_transfer =
         {
             .RxData = NULL,
             .TxData = NULL,
+            .size = 0,
         },
 
         .fops =
@@ -80,12 +80,12 @@ static charDeviceData Device[DEVICE_AMOUNT] =
         .read_Mutex = __MUTEX_INITIALIZER(Device[DEVICE_COMMANDER].read_Mutex),
         .isLocked = true,
         .tryLock = 0,
-        .transferSize = 8,
 
         .io_transfer =
         {
             .RxData = NULL,
             .TxData = NULL,
+            .size = 0,
         },
 
         .fops =
@@ -214,12 +214,12 @@ static ssize_t watchdogRead(struct file *filep, char *buffer, size_t len, loff_t
         msleep(10); /* Release 90% of CPU resources */
     }
 
-    error_count = copy_to_user(buffer, (const void *)Device[DEVICE_WATCHDOG].io_transfer.TxData, Device[DEVICE_WATCHDOG].transferSize);
+    error_count = copy_to_user(buffer, (const void *)Device[DEVICE_WATCHDOG].io_transfer.TxData, Device[DEVICE_WATCHDOG].io_transfer.size);
 
     if (error_count == 0)
     {
         /* size == Preamble + Null Terminator */
-        return Device[DEVICE_WATCHDOG].transferSize;
+        return Device[DEVICE_WATCHDOG].io_transfer.size;
     }
     else
     {
@@ -247,6 +247,7 @@ static ssize_t commanderRead(struct file *filep, char *buffer, size_t len, loff_
     int error_count = 0;
     size_t i;
 
+    Device[DEVICE_COMMANDER].io_transfer.size = 8;
 #if 1
     charDeviceLockCtrl(DEVICE_COMMANDER, CTRL_LOCK);
     while(isDeviceLocked(DEVICE_COMMANDER))
@@ -254,12 +255,12 @@ static ssize_t commanderRead(struct file *filep, char *buffer, size_t len, loff_
         msleep(10); /* Release 90% of CPU resources */
     }
 #endif
-    error_count = copy_to_user(buffer, (const void *)Device[DEVICE_COMMANDER].io_transfer.TxData, Device[DEVICE_COMMANDER].transferSize);
+    error_count = copy_to_user(buffer, (const void *)Device[DEVICE_COMMANDER].io_transfer.TxData, Device[DEVICE_COMMANDER].io_transfer.size);
 
     if (error_count == 0)
     {
-        printk(KERN_INFO "[CTRL][ C ] Sent %zu characters to user-space\n", Device[DEVICE_COMMANDER].transferSize);
-        ret = Device[DEVICE_COMMANDER].transferSize;
+        printk(KERN_INFO "[CTRL][ C ] Sent %zu characters to user-space\n", Device[DEVICE_COMMANDER].io_transfer.size);
+        ret = Device[DEVICE_COMMANDER].io_transfer.size;
     }
     else
     {
@@ -267,7 +268,7 @@ static ssize_t commanderRead(struct file *filep, char *buffer, size_t len, loff_
         ret = -EFAULT; /* Failed -- return a bad address message (i.e. -14) */
     }
 
-    for (i = 0; i < Device[DEVICE_COMMANDER].transferSize; ++i)
+    for (i = 0; i < Device[DEVICE_COMMANDER].io_transfer.size; ++i)
     {
         Device[DEVICE_COMMANDER].io_transfer.TxData[i] = 0x00;
     }

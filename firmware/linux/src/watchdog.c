@@ -56,6 +56,7 @@ static int watchdogThread(void *data)
         watchdogData = getCharDeviceTransfer(DEVICE_WATCHDOG);
         watchdogData->TxData[0] = Process.indicatorPrevious;
         watchdogData->TxData[1] = Process.indicatorCurrent;
+        watchdogData->size = 2;
         charDeviceLockCtrl(DEVICE_WATCHDOG, CTRL_UNLOCK);
 
         if(Process.indicatorPrevious != Process.indicatorCurrent)

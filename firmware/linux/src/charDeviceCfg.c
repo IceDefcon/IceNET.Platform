@@ -51,7 +51,7 @@ static void charDeviceDataInit(charDeviceType DeviceType)
 
     getCharDevice()[DeviceType].io_transfer.RxData = RxData;
     getCharDevice()[DeviceType].io_transfer.TxData = TxData;
-    getCharDevice()[DeviceType].transferSize = IO_BUFFER_SIZE;
+    getCharDevice()[DeviceType].io_transfer.size = IO_BUFFER_SIZE;
 }
 
 static void charDeviceConfig(charDeviceType DeviceType)
