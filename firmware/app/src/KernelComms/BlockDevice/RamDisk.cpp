@@ -143,8 +143,6 @@ int RamDisk::assembleConfig()
     m_engineConfig[3] = calculateChecksum((char*)m_engineConfig, 3); /* Only 3 bytes for sub-checksum */
 
     char ops = 2; /* Configure 2 registers only */
-
-    /* Temporary here before refactor */
     char regSize = ops;
     char dataSize = ops;
     char totalSize = sizeof(DeviceConfig) + regSize + dataSize;
@@ -159,15 +157,21 @@ int RamDisk::assembleConfig()
 
     uint8_t* BMI160 = m_BMI160config->payload;
 
-    BMI160[0] = 0x7E;    /* CMD */
-    BMI160[1] = 0x11;    /* Set PMU mode of accelerometer to normal */
-    BMI160[2] = 0x40;    /* ACC_CONF */
-    BMI160[3] = 0x2C;    /* acc_bwp = 0x2 normal mode + acc_od = 0xC 1600Hz r*/
+    BMI160[0] = 0x7E; /* CMD */
+    BMI160[1] = 0x11; /* Set PMU mode of accelerometer to normal */
+    BMI160[2] = 0x40; /* ACC_CONF */
+    BMI160[3] = 0x2C; /* acc_bwp = 0x2 normal mode + acc_od = 0xC 1600Hz r*/
 
     BMI160[4] = calculateChecksum((char*)m_BMI160config, totalSize); /* totalSize is always 1 less than checksum :: since it was removed from DeviceConfig */
 
+    /* This need parametrization */
+    char ADXL_ops = 5;
+    char ADXL_regSize = ops;
+    char ADXL_dataSize = ops;
+    char ADXL_totalSize = sizeof(DeviceConfig) + ADXL_regSize + ADXL_dataSize;
+
     // [2] Sector
-    m_ADXL345config = createOperation(0x53, 0x01, ops);
+    m_ADXL345config = createOperation(0x53, 0x01, ADXL_ops);
     if (!m_ADXL345config)
     {
         perror("Failed to allocate operation");
@@ -177,12 +181,18 @@ int RamDisk::assembleConfig()
 
     uint8_t* ADXL345 = m_ADXL345config->payload;
 
-    ADXL345[0] = 0x2D;    /* CMD */
-    ADXL345[1] = 0x08;    /* Set PMU mode of accelerometer to normal */
-    ADXL345[2] = 0x31;    /* ACC_CONF */
-    ADXL345[3] = 0x00;    /* acc_bwp = 0x2 normal mode + acc_od = 0xC 1600Hz r*/
-
-    ADXL345[4] = calculateChecksum((char*)m_ADXL345config, totalSize); /* totalSize is always 1 less than checksum :: since it was removed from DeviceConfig */
+    /* 5 * ops */
+    ADXL345[0] = 0x31; /* DATA_FORMAT */
+    ADXL345[1] = 0x08; /* Full Resolution | SPI 4 wire | INT_INVERT = active high | FULL_RES = enabled | Justify = unsigned | ±2 g */
+    ADXL345[2] = 0x2E; /* INT_ENABLE Register */
+    ADXL345[3] = 0x08; /* 0x80 = 1000 0000 (Enable only Data Ready interrupt) */
+    ADXL345[4] = 0x2F; /* INT_MAP Register */
+    ADXL345[5] = 0x00; /* 0x00 = 0000 0000 (Map Data Ready to INT1)*/
+    ADXL345[6] = 0x2D; /* POWER_CTL Register */
+    ADXL345[7] = 0x08; /* 0x08 = 0000 1000 (Enable measurement mode) */
+    ADXL345[8] = 0x2C; /* BW_RATE Register */
+    ADXL345[9] = 0x0F; /* 0x0F = 00001111 (Set ODR to 3200 Hz) */
+    ADXL345[10] = calculateChecksum((char*)m_ADXL345config, ADXL_totalSize); /* totalSize is always 1 less than checksum :: since it was removed from DeviceConfig */
 
     if(m_BMI160config->size > MAX_DMA_TRANSFER_SIZE)
     {

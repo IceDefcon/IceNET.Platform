@@ -31,6 +31,7 @@ typedef struct
     int openCount;
     struct mutex read_Mutex;
     bool isLocked;
+    size_t transferSize;
     int tryLock;
     DmaTransferType io_transfer;
     struct file_operations fops;
