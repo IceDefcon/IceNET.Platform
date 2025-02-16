@@ -32,6 +32,7 @@ typedef struct
     struct mutex read_Mutex;
     bool isLocked;
     int tryLock;
+    size_t transferSize;
     DmaTransferType io_transfer;
     struct file_operations fops;
     char* name;

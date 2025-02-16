@@ -30,7 +30,6 @@ typedef struct
 {
     uint8_t* RxData;
     uint8_t* TxData;
-    size_t size;
 } DmaTransferType;
 
 #endif // TYPES_H
