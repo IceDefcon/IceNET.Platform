@@ -15,6 +15,11 @@
 
 #include "Types.h"
 
+#define DEVICE_PATH "/dev/IceNETDisk0"
+#define SECTOR_SIZE 512
+#define HEADER_SIZE 0x04
+#define SCRAMBLE_BYTE 0x77
+
 typedef enum
 {
     CONFIG_ENGINE,
@@ -23,14 +28,21 @@ typedef enum
     CONFIG_AMOUNT
 }DeviceType;
 
-struct DeviceConfig
+typedef struct
 {
     uint8_t size;       // Total bytes of single Device config connected through FPGA bus
     uint8_t ctrl;       // Interface (I2C, SPI, PWM), Read or Write
     uint8_t id;         // Device ID (In case of I2C)
     uint8_t ops;        // Number of Read or Write operations
     uint8_t payload[];  // Combined register addresses and write data
-};
+}DeviceConfigType;
+
+typedef struct
+{
+    uint8_t id;  // Device ID (e.g., I2C address)
+    uint8_t ctrl; // OFFLOAD_CTRL :: 8-bits
+    std::vector<std::pair<uint8_t, uint8_t>> registers;
+}SensorConfigType;
 
 class RamDisk
 {
@@ -40,13 +52,9 @@ class RamDisk
 
         RamDisk* m_instance;
 
-        uint8_t* m_engineConfig;
-        DeviceConfig* m_BMI160config;
-        DeviceConfig* m_ADXL345config;
-
-        static constexpr const char* DEVICE_PATH = "/dev/IceNETDisk0";
-        static constexpr size_t MAX_DMA_TRANSFER_SIZE = 100;
-        static constexpr size_t SECTOR_SIZE = 512;
+        std::vector<uint8_t> m_engineConfig;
+        std::vector<SensorConfigType> m_devices;
+        std::vector<DeviceConfigType*> m_deviceConfigs; // Stores multiple device configurations
 
 	public:
 
@@ -58,8 +66,8 @@ class RamDisk
         int dataRX();
         int closeDEV();
 
-        char calculateChecksum(const char* data, size_t size);
-		DeviceConfig* createOperation(char devId, char ctrl, char ops);
+        uint8_t calculateChecksum(const uint8_t* data, size_t size);
+		DeviceConfigType* createOperation(uint8_t id, uint8_t ctrl, uint8_t ops);
 		int assembleConfig();
         int sendConfig();
         void clearDma();

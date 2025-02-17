@@ -12,10 +12,55 @@
 
 RamDisk::RamDisk() :
 m_fileDescriptor(-1),
-m_instance(this),
-m_engineConfig{0}
+m_instance(this)
 {
     std::cout << "[INFO] [CONSTRUCTOR] " << m_instance << " :: Instantiate RamDisk" << std::endl;
+
+    ////////////////////////////////////////////////////////////////////////////////
+    //
+    // OFFLOAD_CTRL :: 8-bits
+    //
+    ////////////////////////////////////////////////////////////////////////////////
+    //
+    //  Dma config (Auto/Manual Config)
+    //      |
+    //      |        Device (I2C, SPI, PWM)
+    //      |          ID
+    //      |          ||
+    //      |          ||
+    //      V          VV
+    //    | x | xxxx | xx | x | <<<---- OFFLOAD_CTRL : std_logic_vector(6 downto 0)
+    //          ΛΛΛΛ        Λ
+    //          ||||        |
+    //          ||||        |
+    //          ||||        |
+    //       burst size    R/W (I2C, SPI)
+    //       (I2C, SPI)
+    //
+    ////////////////////////////////////////////////////////////////////////////////
+
+    m_devices =
+    {
+        {
+            0x69, /* BMI160 */
+            0x01, /* OFFLOAD_CTRL :: DmaConfig(Auto=0) BurstSize(0) Device(I2C=0) Write(1) */
+            {
+                {0x7E, 0x11}, /* Soft reset */
+                {0x40, 0x2C}  /* Accelerometer config */
+            }
+        },
+        {
+            0x53, /* ADXL345 */
+            0x01, /* OFFLOAD_CTRL :: DmaConfig(Auto=0) BurstSize(0) Device(I2C=0) Write(1) */
+            {
+                {0x31, 0x08}, /* Data format */
+                {0x2E, 0x08}, /* Interrupt enable */
+                {0x2F, 0x00}, /* Interrupt mapping */
+                {0x2D, 0x08}, /* Power control */
+                {0x2C, 0x0F}  /* Output Data Rate */
+            }
+        }
+    };
 }
 
 RamDisk::~RamDisk()
@@ -25,9 +70,6 @@ RamDisk::~RamDisk()
     {
         closeDEV();
     }
-
-    free(m_BMI160config);
-    free(m_ADXL345config);
 }
 
 int RamDisk::openDEV()
@@ -74,9 +116,9 @@ int RamDisk::closeDEV()
     return OK;
 }
 
-char RamDisk::calculateChecksum(const char* data, size_t size)
+uint8_t RamDisk::calculateChecksum(const uint8_t* data, size_t size)
 {
-    char checksum = 0;
+    uint8_t checksum = 0;
     for (size_t i = 0; i < size; i++)
     {
         checksum ^= data[i];
@@ -84,24 +126,65 @@ char RamDisk::calculateChecksum(const char* data, size_t size)
     return checksum;
 }
 
-DeviceConfig* RamDisk::createOperation(char id, char ctrl, char ops)
+DeviceConfigType* RamDisk::createOperation(uint8_t id, uint8_t ctrl, uint8_t ops)
 {
-    char totalSize = sizeof(DeviceConfig) + (2 * ops); /* 2x ---> Regs + Data */
-
-    DeviceConfig* op = (DeviceConfig*)malloc(totalSize);
-
+    /**
+     *
+     * Total Size
+     *
+     * 4 Bytes ---> DeviceConfigType = size + ctrl + id + ops :: Without flex payload[]
+     * 2 x ops ---> (Reg + Data) x ops
+     * 1 For checksum
+     *
+     */
+    size_t totalSize = sizeof(DeviceConfigType) + (2 * ops) + 1;
+    DeviceConfigType* op = (DeviceConfigType*)malloc(totalSize);
     if (!op)
     {
         perror("Failed to allocate operation");
-        return NULL;
+        return nullptr;
     }
 
-    op->size = (char)totalSize + 1; /* Bytes to send to FPGA + 1 for checksum */
-    op->ctrl = ctrl;                /* 0:i2c 1:Write */
-    op->id = id;                    /* BMI160 Id */
-    op->ops = ops;                  /* Number of read/writes */
+    // std::cout << "[DEBUG] [ICE] totalSize: " << static_cast<int>(totalSize) << std::endl;
 
-    memset(op->payload, 0, totalSize - sizeof(DeviceConfig));
+    op->size = totalSize;
+    ////////////////////////////////////////////////////////////////////////////////
+    //
+    // OFFLOAD_CTRL :: 8-bits
+    //
+    ////////////////////////////////////////////////////////////////////////////////
+    //
+    //  Dma config (Auto/Manual Config)
+    //      |
+    //      |        Device (I2C, SPI, PWM)
+    //      |          ID
+    //      |          ||
+    //      |          ||
+    //      V          VV
+    //    | x | xxxx | xx | x | <<<---- OFFLOAD_CTRL : std_logic_vector(6 downto 0)
+    //          ΛΛΛΛ        Λ
+    //          ||||        |
+    //          ||||        |
+    //          ||||        |
+    //       burst size    R/W (I2C, SPI)
+    //       (I2C, SPI)
+    //
+    ////////////////////////////////////////////////////////////////////////////////
+    op->ctrl = ctrl;  /* 0: I2C, 1: Write */
+    op->id = id;      /* BMI160 ID */
+    op->ops = ops;    /* Number of read/writes */
+
+    /**
+     *
+     * Zero the payload
+     *
+     * Ex. Size = 9(tota) - 4(DeviceConfigType) - 1(checksum) = 4
+     *
+     */
+    size_t payloadSize = totalSize - sizeof(DeviceConfigType) - 1;
+    memset(op->payload, 0, payloadSize);
+
+    // std::cout << "[DEBUG] [ICE] payloadSize: " << static_cast<int>(payloadSize) << std::endl;
 
     return op;
 }
@@ -125,87 +208,38 @@ DeviceConfig* RamDisk::createOperation(char id, char ctrl, char ops)
  */
 int RamDisk::assembleConfig()
 {
-    // [0] Sector
-    size_t config_size = 4;
 
-    /* Allocate only 4 bytes */
-    m_engineConfig = (uint8_t*)malloc(config_size);
+    /* Sector [0] */
+    m_engineConfig.clear();
+    /* [0] */ m_engineConfig.push_back(HEADER_SIZE);
+    /* [1] */ m_engineConfig.push_back(static_cast<uint8_t>(m_devices.size()));
+    /* [2] */ m_engineConfig.push_back(SCRAMBLE_BYTE);
+    uint8_t checksum = calculateChecksum(&m_engineConfig[0], 3);
+    /* [3] */ m_engineConfig.push_back(checksum);
 
-    if (m_engineConfig == NULL)
+    for (const auto& device : m_devices)
     {
-        perror("Failed to allocate operation");
-    }
+        DeviceConfigType* allocatedConfig = createOperation(device.id, device.ctrl, device.registers.size());
 
-    /* TODO :: Need parametrization */
-    m_engineConfig[0] = 0x04; /* Size of sector 0 */
-    m_engineConfig[1] = 0x02; /* Number of Devices to configure */
-    m_engineConfig[2] = 0x11; /* Load and Ready */
-    m_engineConfig[3] = calculateChecksum((char*)m_engineConfig, 3); /* Only 3 bytes for sub-checksum */
+        if (!allocatedConfig)
+        {
+            perror("Failed to allocate device configuration");
+            return EXIT_FAILURE;
+        }
 
-    char ops = 2; /* Configure 2 registers only */
-    char regSize = ops;
-    char dataSize = ops;
-    char totalSize = sizeof(DeviceConfig) + regSize + dataSize;
+        // Fill the payload with register-value pairs
+        uint8_t* payload = allocatedConfig->payload;
+        size_t i = 0;
+        for (const auto& reg : device.registers)
+        {
+            payload[i++] = reg.first;
+            payload[i++] = reg.second;
+        }
 
-    // [1] Sector
-    m_BMI160config = createOperation(0x69, 0x01, ops);
-    if (!m_BMI160config)
-    {
-        perror("Failed to allocate operation");
-        return EXIT_FAILURE;
-    }
+        payload[i] = calculateChecksum(reinterpret_cast<uint8_t*>(allocatedConfig), sizeof(DeviceConfigType) + i);
 
-    uint8_t* BMI160 = m_BMI160config->payload;
-
-    BMI160[0] = 0x7E; /* CMD */
-    BMI160[1] = 0x11; /* Set PMU mode of accelerometer to normal */
-    BMI160[2] = 0x40; /* ACC_CONF */
-    BMI160[3] = 0x2C; /* acc_bwp = 0x2 normal mode + acc_od = 0xC 1600Hz r*/
-
-    BMI160[4] = calculateChecksum((char*)m_BMI160config, totalSize); /* totalSize is always 1 less than checksum :: since it was removed from DeviceConfig */
-
-    /* This need parametrization */
-    char ADXL_ops = 5;
-    char ADXL_regSize = ops;
-    char ADXL_dataSize = ops;
-    char ADXL_totalSize = sizeof(DeviceConfig) + ADXL_regSize + ADXL_dataSize;
-
-    // [2] Sector
-    m_ADXL345config = createOperation(0x53, 0x01, ADXL_ops);
-    if (!m_ADXL345config)
-    {
-        perror("Failed to allocate operation");
-        free(m_BMI160config);
-        return EXIT_FAILURE;
-    }
-
-    uint8_t* ADXL345 = m_ADXL345config->payload;
-
-    /* 5 * ops */
-    ADXL345[0] = 0x31; /* DATA_FORMAT */
-    ADXL345[1] = 0x08; /* Full Resolution | SPI 4 wire | INT_INVERT = active high | FULL_RES = enabled | Justify = unsigned | ±2 g */
-    ADXL345[2] = 0x2E; /* INT_ENABLE Register */
-    ADXL345[3] = 0x08; /* 0x80 = 1000 0000 (Enable only Data Ready interrupt) */
-    ADXL345[4] = 0x2F; /* INT_MAP Register */
-    ADXL345[5] = 0x00; /* 0x00 = 0000 0000 (Map Data Ready to INT1)*/
-    ADXL345[6] = 0x2D; /* POWER_CTL Register */
-    ADXL345[7] = 0x08; /* 0x08 = 0000 1000 (Enable measurement mode) */
-    ADXL345[8] = 0x2C; /* BW_RATE Register */
-    ADXL345[9] = 0x0F; /* 0x0F = 00001111 (Set ODR to 3200 Hz) */
-    ADXL345[10] = calculateChecksum((char*)m_ADXL345config, ADXL_totalSize); /* totalSize is always 1 less than checksum :: since it was removed from DeviceConfig */
-
-    if(m_BMI160config->size > MAX_DMA_TRANSFER_SIZE)
-    {
-        fprintf(stderr, "Device 0 operation size exceeds half sector size :: %d bytes\n", m_BMI160config->size);
-        free(m_BMI160config);
-        return EXIT_FAILURE;
-    }
-
-    if(m_ADXL345config->size > MAX_DMA_TRANSFER_SIZE)
-    {
-        fprintf(stderr, "Device 1 operation size exceeds half sector size :: %d bytes\n", m_ADXL345config->size);
-        free(m_ADXL345config);
-        return EXIT_FAILURE;
+        // Push back the device configuration
+        m_deviceConfigs.push_back(allocatedConfig);
     }
 
     return EXIT_SUCCESS;
@@ -217,47 +251,47 @@ int RamDisk::sendConfig()
 
     openDEV();
 
-    /* Write to sector 0 */
+    // Write to sector 0 (DMA Engine Configuration)
     lseek(m_fileDescriptor, 0, SEEK_SET);
-    bytes = write(m_fileDescriptor, m_engineConfig, sizeof(m_engineConfig));
+    bytes = write(m_fileDescriptor, &m_engineConfig[0], HEADER_SIZE);
     if (bytes < 0)
     {
         perror("Failed to write to block device");
         close(m_fileDescriptor);
-        free(m_BMI160config);
-        free(m_ADXL345config);
         return EXIT_FAILURE;
     }
-    printf("[INFO] [RAM] Write %d Bytes to ramDisk to Sector 0\n", bytes);
+    std::cout << "[INFO] [RAM] Write " << bytes << " Bytes to ramDisk to Sector 0" << std::endl;
 
-    /* Write to sector 1 */
-    lseek(m_fileDescriptor, SECTOR_SIZE * 1, SEEK_SET);
-    bytes = write(m_fileDescriptor, m_BMI160config, m_BMI160config->size);
-    if (bytes < 0)
+    // Write device configurations to their respective sectors
+    for (size_t i = 0; i < m_deviceConfigs.size(); i++)
     {
-        perror("Failed to write to sector 1");
-        close(m_fileDescriptor);
-        free(m_BMI160config);
-        free(m_ADXL345config);
-        return EXIT_FAILURE;
-    }
-    printf("[INFO] [RAM] Write %d Bytes to ramDisk to Sector 1\n", bytes);
+        lseek(m_fileDescriptor, SECTOR_SIZE * (i + 1), SEEK_SET);
+        bytes = write(m_fileDescriptor, m_deviceConfigs[i], m_deviceConfigs[i]->size);
+        if (bytes < 0)
+        {
+            perror("Failed to write to sector");
+            close(m_fileDescriptor);
 
+            // Free previously allocated device configs
+            for (auto& config : m_deviceConfigs)
+            {
+                free(config);
+            }
+            m_deviceConfigs.clear();
 
-    /* Write to sector 2 */
-    lseek(m_fileDescriptor, SECTOR_SIZE * 2, SEEK_SET);
-    bytes = write(m_fileDescriptor, m_ADXL345config, m_ADXL345config->size);
-    if (bytes < 0)
-    {
-        perror("Failed to write to sector 2");
-        close(m_fileDescriptor);
-        free(m_BMI160config);
-        free(m_ADXL345config);
-        return EXIT_FAILURE;
+            return EXIT_FAILURE;
+        }
+        std::cout << "[INFO] [RAM] Write " << bytes << " Bytes to ramDisk to Sector " << (i + 1) << std::endl;
     }
-    printf("[INFO] [RAM] Write %d Bytes to ramDisk to Sector 2\n", bytes);
 
     closeDEV();
+
+    // Free allocated memory for device configurations
+    for (auto& config : m_deviceConfigs)
+    {
+        free(config);
+    }
+    m_deviceConfigs.clear();
 
     return EXIT_SUCCESS;
 }
@@ -269,7 +303,7 @@ void RamDisk::clearDma()
     const size_t totalSectors = CONFIG_AMOUNT;
     const size_t sectorSize = SECTOR_SIZE;
 
-    char zeroBuffer[SECTOR_SIZE] = {0}; // Buffer filled with zeroes
+    uint8_t zeroBuffer[SECTOR_SIZE] = {0}; // Buffer filled with zeroes
 
     for (size_t i = 0; i < totalSectors; i++)
     {
