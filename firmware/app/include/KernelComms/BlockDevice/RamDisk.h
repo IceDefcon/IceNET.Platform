@@ -66,7 +66,7 @@ class RamDisk
         int dataRX();
         int closeDEV();
 
-        char calculateChecksum(const char* data, size_t size);
+        uint8_t calculateChecksum(const uint8_t* data, size_t size);
 		DeviceConfigType* createOperation(char devId, char ctrl, char ops);
 		int assembleConfig();
         int sendConfig();

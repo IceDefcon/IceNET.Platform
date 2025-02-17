@@ -116,9 +116,9 @@ int RamDisk::closeDEV()
     return OK;
 }
 
-char RamDisk::calculateChecksum(const char* data, size_t size)
+uint8_t RamDisk::calculateChecksum(const uint8_t* data, size_t size)
 {
-    char checksum = 0;
+    uint8_t checksum = 0;
     for (size_t i = 0; i < size; i++)
     {
         checksum ^= data[i];
@@ -214,7 +214,7 @@ int RamDisk::assembleConfig()
     /* [0] */ m_engineConfig.push_back(HEADER_SIZE);
     /* [1] */ m_engineConfig.push_back(static_cast<uint8_t>(m_devices.size()));
     /* [2] */ m_engineConfig.push_back(SCRAMBLE_BYTE);
-    uint8_t checksum = calculateChecksum(reinterpret_cast<char*>(&m_engineConfig[0]), 3);
+    uint8_t checksum = calculateChecksum(&m_engineConfig[0], 3);
     /* [3] */ m_engineConfig.push_back(checksum);
 
     for (const auto& device : m_devices)
@@ -236,7 +236,7 @@ int RamDisk::assembleConfig()
             payload[i++] = reg.second;
         }
 
-        payload[i] = calculateChecksum(reinterpret_cast<char*>(allocatedConfig), sizeof(DeviceConfigType) + i);
+        payload[i] = calculateChecksum(reinterpret_cast<uint8_t*>(allocatedConfig), sizeof(DeviceConfigType) + i);
 
         // Push back the device configuration
         m_deviceConfigs.push_back(allocatedConfig);
