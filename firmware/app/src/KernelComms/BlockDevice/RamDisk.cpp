@@ -132,17 +132,26 @@ char RamDisk::calculateChecksum(const char* data, size_t size)
 
 DeviceConfig* RamDisk::createOperation(char id, char ctrl, char ops)
 {
-    char totalSize = sizeof(DeviceConfig) + (2 * ops); /* 2x ---> Regs + Data */
-
+    /**
+     *
+     * Total Size
+     *
+     * 4 Bytes ---> DeviceConfig = size + ctrl + id + ops :: Without flex payload[]
+     * 2 x ops ---> (Reg + Data) x ops
+     * 1 For checksum
+     *
+     */
+    size_t totalSize = sizeof(DeviceConfig) + (2 * ops) + 1;
     DeviceConfig* op = (DeviceConfig*)malloc(totalSize);
-
     if (!op)
     {
         perror("Failed to allocate operation");
         return NULL;
     }
 
-    op->size = (char)totalSize + 1; /* Bytes to send to FPGA + 1 for checksum */
+    // std::cout << "[DEBUG] [ICE] totalSize: " << static_cast<int>(totalSize) << std::endl;
+
+    op->size = static_cast<uint8_t>(totalSize);
     ////////////////////////////////////////////////////////////////////////////////
     //
     // OFFLOAD_CTRL :: 8-bits
@@ -165,11 +174,21 @@ DeviceConfig* RamDisk::createOperation(char id, char ctrl, char ops)
     //       (I2C, SPI)
     //
     ////////////////////////////////////////////////////////////////////////////////
-    op->ctrl = ctrl;                /* 0:i2c 1:Write */
-    op->id = id;                    /* BMI160 Id */
-    op->ops = ops;                  /* Number of read/writes */
+    op->ctrl = ctrl;  /* 0: I2C, 1: Write */
+    op->id = id;      /* BMI160 ID */
+    op->ops = ops;    /* Number of read/writes */
 
-    memset(op->payload, 0, totalSize - sizeof(DeviceConfig));
+    /**
+     *
+     * Zero the payload
+     *
+     * Ex. Size = 9(tota) - 4(DeviceConfig) - 1(checksum) = 4
+     *
+     */
+    size_t payloadSize = totalSize - sizeof(DeviceConfig) - 1;
+    memset(op->payload, 0, payloadSize);
+
+    // std::cout << "[DEBUG] [ICE] payloadSize: " << static_cast<int>(payloadSize) << std::endl;
 
     return op;
 }
@@ -210,7 +229,7 @@ int RamDisk::assembleConfig()
     m_engineConfig[2] = SCRAMBLE_BYTE; /* Load and Ready */
     m_engineConfig[3] = calculateChecksum((char*)m_engineConfig, 3); /* Only 3 bytes for sub-checksum */
 
-#if 0 /* Test code */
+#if 1 /* Test code */
     ////////////////////////////////////////////////////////////////////////
     //
     // TEST :: CODE
@@ -220,8 +239,9 @@ int RamDisk::assembleConfig()
     ////////////////////////////////////////////////////////////////////////
     for (const auto& device : m_devices)
     {
-        DeviceConfig* config = createOperation(device.id, device.ctrl, device.registers.size());
-        if (!config)
+        DeviceConfig* allocatedConfig = createOperation(device.id, device.ctrl, device.registers.size());
+
+        if (!allocatedConfig)
         {
             perror("Failed to allocate device configuration");
             free(m_engineConfig);
@@ -229,7 +249,7 @@ int RamDisk::assembleConfig()
         }
 
         // Fill the payload with register-value pairs
-        uint8_t* payload = config->payload;
+        uint8_t* payload = allocatedConfig->payload;
         size_t i = 0;
         for (const auto& reg : device.registers)
         {
@@ -237,20 +257,17 @@ int RamDisk::assembleConfig()
             payload[i++] = reg.second;
         }
 
-        payload[i] = calculateChecksum((char*)config, sizeof(DeviceConfig) + i);
+        payload[i] = calculateChecksum((char*)allocatedConfig, sizeof(DeviceConfig) + i);
 
-        m_deviceConfigs.push_back(config);
-
-#if 0 /* Print Device Config Bytes */
-        std::cout << "Device ID: " << std::hex << (int)device.id << std::endl; // Print ID as hexadecimal
-        uint8_t* bytePtr = reinterpret_cast<uint8_t*>(config);  // Use the current config pointer
-        for (size_t i = 0; i < (int)bytePtr[0]; ++i)
-        {
-            std::cout << "Byte " << i << ": " << std::hex << (int)bytePtr[i] << std::endl;
-        }
-#endif
+        /**
+         *
+         * Push Back pointers to vector
+         * That point to the allocated data
+         *
+         */
+        m_deviceConfigs.push_back(allocatedConfig);
     }
-#endif
+#else
 
     char BMI160_ops = 2; /* Configure 2 registers only */
     char BMI160_regSize = BMI160_ops;
@@ -316,6 +333,7 @@ int RamDisk::assembleConfig()
         free(m_ADXL345config);
         return EXIT_FAILURE;
     }
+#endif
 
     return EXIT_SUCCESS;
 }
@@ -341,7 +359,7 @@ int RamDisk::sendConfig()
 
     /* Write to sector 1 */
     lseek(m_fileDescriptor, SECTOR_SIZE * 1, SEEK_SET);
-    bytes = write(m_fileDescriptor, m_BMI160config, m_BMI160config->size);
+    bytes = write(m_fileDescriptor, m_deviceConfigs[0], m_deviceConfigs[0]->size);
     if (bytes < 0)
     {
         perror("Failed to write to sector 1");
@@ -355,7 +373,7 @@ int RamDisk::sendConfig()
 
     /* Write to sector 2 */
     lseek(m_fileDescriptor, SECTOR_SIZE * 2, SEEK_SET);
-    bytes = write(m_fileDescriptor, m_ADXL345config, m_ADXL345config->size);
+    bytes = write(m_fileDescriptor, m_deviceConfigs[1], m_deviceConfigs[1]->size);
     if (bytes < 0)
     {
         perror("Failed to write to sector 2");
