@@ -16,6 +16,52 @@ m_instance(this),
 m_engineConfig{0}
 {
     std::cout << "[INFO] [CONSTRUCTOR] " << m_instance << " :: Instantiate RamDisk" << std::endl;
+
+    ////////////////////////////////////////////////////////////////////////////////
+    //
+    // OFFLOAD_CTRL :: 8-bits
+    //
+    ////////////////////////////////////////////////////////////////////////////////
+    //
+    //  Dma config (Auto/Manual Config)
+    //      |
+    //      |        Device (I2C, SPI, PWM)
+    //      |          ID
+    //      |          ||
+    //      |          ||
+    //      V          VV
+    //    | x | xxxx | xx | x | <<<---- OFFLOAD_CTRL : std_logic_vector(6 downto 0)
+    //          ΛΛΛΛ        Λ
+    //          ||||        |
+    //          ||||        |
+    //          ||||        |
+    //       burst size    R/W (I2C, SPI)
+    //       (I2C, SPI)
+    //
+    ////////////////////////////////////////////////////////////////////////////////
+
+    m_devices =
+    {
+        {
+            0x69, /* BMI160 */
+            0x01, /* OFFLOAD_CTRL :: DmaConfig(Auto=0) BurstSize(0) Device(I2C=0) Write(1) */
+            {
+                {0x7E, 0x11}, /* Soft reset */
+                {0x40, 0x2C}  /* Accelerometer config */
+            }
+        },
+        {
+            0x53, /* ADXL345 */
+            0x01, /* OFFLOAD_CTRL :: DmaConfig(Auto=0) BurstSize(0) Device(I2C=0) Write(1) */
+            {
+                {0x31, 0x08}, /* Data format */
+                {0x2E, 0x08}, /* Interrupt enable */
+                {0x2F, 0x00}, /* Interrupt mapping */
+                {0x2D, 0x08}, /* Power control */
+                {0x2C, 0x0F}  /* Output Data Rate */
+            }
+        }
+    };
 }
 
 RamDisk::~RamDisk()
@@ -97,6 +143,28 @@ DeviceConfig* RamDisk::createOperation(char id, char ctrl, char ops)
     }
 
     op->size = (char)totalSize + 1; /* Bytes to send to FPGA + 1 for checksum */
+    ////////////////////////////////////////////////////////////////////////////////
+    //
+    // OFFLOAD_CTRL :: 8-bits
+    //
+    ////////////////////////////////////////////////////////////////////////////////
+    //
+    //  Dma config (Auto/Manual Config)
+    //      |
+    //      |        Device (I2C, SPI, PWM)
+    //      |          ID
+    //      |          ||
+    //      |          ||
+    //      V          VV
+    //    | x | xxxx | xx | x | <<<---- OFFLOAD_CTRL : std_logic_vector(6 downto 0)
+    //          ΛΛΛΛ        Λ
+    //          ||||        |
+    //          ||||        |
+    //          ||||        |
+    //       burst size    R/W (I2C, SPI)
+    //       (I2C, SPI)
+    //
+    ////////////////////////////////////////////////////////////////////////////////
     op->ctrl = ctrl;                /* 0:i2c 1:Write */
     op->id = id;                    /* BMI160 Id */
     op->ops = ops;                  /* Number of read/writes */
@@ -125,11 +193,11 @@ DeviceConfig* RamDisk::createOperation(char id, char ctrl, char ops)
  */
 int RamDisk::assembleConfig()
 {
-    // [0] Sector
-    size_t config_size = 4;
+    constexpr uint8_t HEADER_SIZE = 0x04;
+    constexpr uint8_t SCRAMBLE_BYTE = 0x77;
 
-    /* Allocate only 4 bytes */
-    m_engineConfig = (uint8_t*)malloc(config_size);
+    // [0] Sector
+    m_engineConfig = (uint8_t*)malloc(HEADER_SIZE);
 
     if (m_engineConfig == NULL)
     {
@@ -137,18 +205,60 @@ int RamDisk::assembleConfig()
     }
 
     /* TODO :: Need parametrization */
-    m_engineConfig[0] = 0x04; /* Size of sector 0 */
-    m_engineConfig[1] = 0x02; /* Number of Devices to configure */
-    m_engineConfig[2] = 0x11; /* Load and Ready */
+    m_engineConfig[0] = HEADER_SIZE; /* Size of sector 0 */
+    m_engineConfig[1] = m_devices.size(); /* Number of Devices to configure */
+    m_engineConfig[2] = SCRAMBLE_BYTE; /* Load and Ready */
     m_engineConfig[3] = calculateChecksum((char*)m_engineConfig, 3); /* Only 3 bytes for sub-checksum */
 
-    char ops = 2; /* Configure 2 registers only */
-    char regSize = ops;
-    char dataSize = ops;
-    char totalSize = sizeof(DeviceConfig) + regSize + dataSize;
+#if 0 /* Test code */
+    ////////////////////////////////////////////////////////////////////////
+    //
+    // TEST :: CODE
+    //
+    // Iterate over m_devices and create configuration for each
+    //
+    ////////////////////////////////////////////////////////////////////////
+    for (const auto& device : m_devices)
+    {
+        DeviceConfig* config = createOperation(device.id, device.ctrl, device.registers.size());
+        if (!config)
+        {
+            perror("Failed to allocate device configuration");
+            free(m_engineConfig);
+            return EXIT_FAILURE;
+        }
+
+        // Fill the payload with register-value pairs
+        uint8_t* payload = config->payload;
+        size_t i = 0;
+        for (const auto& reg : device.registers)
+        {
+            payload[i++] = reg.first;
+            payload[i++] = reg.second;
+        }
+
+        payload[i] = calculateChecksum((char*)config, sizeof(DeviceConfig) + i);
+
+        m_deviceConfigs.push_back(config);
+
+#if 0 /* Print Device Config Bytes */
+        std::cout << "Device ID: " << std::hex << (int)device.id << std::endl; // Print ID as hexadecimal
+        uint8_t* bytePtr = reinterpret_cast<uint8_t*>(config);  // Use the current config pointer
+        for (size_t i = 0; i < (int)bytePtr[0]; ++i)
+        {
+            std::cout << "Byte " << i << ": " << std::hex << (int)bytePtr[i] << std::endl;
+        }
+#endif
+    }
+#endif
+
+    char BMI160_ops = 2; /* Configure 2 registers only */
+    char BMI160_regSize = BMI160_ops;
+    char BMI160_dataSize = BMI160_ops;
+    char BMI160_totalSize = sizeof(DeviceConfig) + BMI160_regSize + BMI160_dataSize;
 
     // [1] Sector
-    m_BMI160config = createOperation(0x69, 0x01, ops);
+    m_BMI160config = createOperation(0x69, 0x01, BMI160_ops);
     if (!m_BMI160config)
     {
         perror("Failed to allocate operation");
@@ -162,12 +272,12 @@ int RamDisk::assembleConfig()
     BMI160[2] = 0x40; /* ACC_CONF */
     BMI160[3] = 0x2C; /* acc_bwp = 0x2 normal mode + acc_od = 0xC 1600Hz r*/
 
-    BMI160[4] = calculateChecksum((char*)m_BMI160config, totalSize); /* totalSize is always 1 less than checksum :: since it was removed from DeviceConfig */
+    BMI160[4] = calculateChecksum((char*)m_BMI160config, BMI160_totalSize); /* totalSize is always 1 less than checksum :: since it was removed from DeviceConfig */
 
     /* This need parametrization */
     char ADXL_ops = 5;
-    char ADXL_regSize = ops;
-    char ADXL_dataSize = ops;
+    char ADXL_regSize = ADXL_ops;
+    char ADXL_dataSize = ADXL_ops;
     char ADXL_totalSize = sizeof(DeviceConfig) + ADXL_regSize + ADXL_dataSize;
 
     // [2] Sector
@@ -181,7 +291,6 @@ int RamDisk::assembleConfig()
 
     uint8_t* ADXL345 = m_ADXL345config->payload;
 
-    /* 5 * ops */
     ADXL345[0] = 0x31; /* DATA_FORMAT */
     ADXL345[1] = 0x08; /* Full Resolution | SPI 4 wire | INT_INVERT = active high | FULL_RES = enabled | Justify = unsigned | ±2 g */
     ADXL345[2] = 0x2E; /* INT_ENABLE Register */
