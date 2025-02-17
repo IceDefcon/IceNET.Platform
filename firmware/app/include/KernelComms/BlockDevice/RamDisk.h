@@ -39,8 +39,8 @@ typedef struct
 
 typedef struct
 {
-    char id;  // Device ID (e.g., I2C address)
-    char ctrl; // OFFLOAD_CTRL :: 8-bits
+    uint8_t id;  // Device ID (e.g., I2C address)
+    uint8_t ctrl; // OFFLOAD_CTRL :: 8-bits
     std::vector<std::pair<uint8_t, uint8_t>> registers;
 }SensorConfigType;
 
@@ -67,7 +67,7 @@ class RamDisk
         int closeDEV();
 
         uint8_t calculateChecksum(const uint8_t* data, size_t size);
-		DeviceConfigType* createOperation(char devId, char ctrl, char ops);
+		DeviceConfigType* createOperation(uint8_t id, uint8_t ctrl, uint8_t ops);
 		int assembleConfig();
         int sendConfig();
         void clearDma();

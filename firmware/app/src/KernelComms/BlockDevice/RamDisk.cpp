@@ -126,7 +126,7 @@ uint8_t RamDisk::calculateChecksum(const uint8_t* data, size_t size)
     return checksum;
 }
 
-DeviceConfigType* RamDisk::createOperation(char id, char ctrl, char ops)
+DeviceConfigType* RamDisk::createOperation(uint8_t id, uint8_t ctrl, uint8_t ops)
 {
     /**
      *
@@ -142,12 +142,12 @@ DeviceConfigType* RamDisk::createOperation(char id, char ctrl, char ops)
     if (!op)
     {
         perror("Failed to allocate operation");
-        return NULL;
+        return nullptr;
     }
 
     // std::cout << "[DEBUG] [ICE] totalSize: " << static_cast<int>(totalSize) << std::endl;
 
-    op->size = static_cast<uint8_t>(totalSize);
+    op->size = totalSize;
     ////////////////////////////////////////////////////////////////////////////////
     //
     // OFFLOAD_CTRL :: 8-bits
@@ -303,7 +303,7 @@ void RamDisk::clearDma()
     const size_t totalSectors = CONFIG_AMOUNT;
     const size_t sectorSize = SECTOR_SIZE;
 
-    char zeroBuffer[SECTOR_SIZE] = {0}; // Buffer filled with zeroes
+    uint8_t zeroBuffer[SECTOR_SIZE] = {0}; // Buffer filled with zeroes
 
     for (size_t i = 0; i < totalSectors; i++)
     {
