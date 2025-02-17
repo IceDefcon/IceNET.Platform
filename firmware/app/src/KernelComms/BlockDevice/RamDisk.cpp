@@ -12,8 +12,7 @@
 
 RamDisk::RamDisk() :
 m_fileDescriptor(-1),
-m_instance(this),
-m_engineConfig{0}
+m_instance(this)
 {
     std::cout << "[INFO] [CONSTRUCTOR] " << m_instance << " :: Instantiate RamDisk" << std::endl;
 
@@ -71,9 +70,6 @@ RamDisk::~RamDisk()
     {
         closeDEV();
     }
-
-    free(m_BMI160config);
-    free(m_ADXL345config);
 }
 
 int RamDisk::openDEV()
@@ -130,19 +126,19 @@ char RamDisk::calculateChecksum(const char* data, size_t size)
     return checksum;
 }
 
-DeviceConfig* RamDisk::createOperation(char id, char ctrl, char ops)
+DeviceConfigType* RamDisk::createOperation(char id, char ctrl, char ops)
 {
     /**
      *
      * Total Size
      *
-     * 4 Bytes ---> DeviceConfig = size + ctrl + id + ops :: Without flex payload[]
+     * 4 Bytes ---> DeviceConfigType = size + ctrl + id + ops :: Without flex payload[]
      * 2 x ops ---> (Reg + Data) x ops
      * 1 For checksum
      *
      */
-    size_t totalSize = sizeof(DeviceConfig) + (2 * ops) + 1;
-    DeviceConfig* op = (DeviceConfig*)malloc(totalSize);
+    size_t totalSize = sizeof(DeviceConfigType) + (2 * ops) + 1;
+    DeviceConfigType* op = (DeviceConfigType*)malloc(totalSize);
     if (!op)
     {
         perror("Failed to allocate operation");
@@ -182,10 +178,10 @@ DeviceConfig* RamDisk::createOperation(char id, char ctrl, char ops)
      *
      * Zero the payload
      *
-     * Ex. Size = 9(tota) - 4(DeviceConfig) - 1(checksum) = 4
+     * Ex. Size = 9(tota) - 4(DeviceConfigType) - 1(checksum) = 4
      *
      */
-    size_t payloadSize = totalSize - sizeof(DeviceConfig) - 1;
+    size_t payloadSize = totalSize - sizeof(DeviceConfigType) - 1;
     memset(op->payload, 0, payloadSize);
 
     // std::cout << "[DEBUG] [ICE] payloadSize: " << static_cast<int>(payloadSize) << std::endl;
@@ -212,28 +208,22 @@ DeviceConfig* RamDisk::createOperation(char id, char ctrl, char ops)
  */
 int RamDisk::assembleConfig()
 {
-    // [0] Sector
-    m_engineConfig = (uint8_t*)malloc(HEADER_SIZE);
 
-    if (m_engineConfig == NULL)
-    {
-        perror("Failed to allocate operation");
-    }
-
-    /* TODO :: Need parametrization */
-    m_engineConfig[0] = HEADER_SIZE; /* Size of sector 0 */
-    m_engineConfig[1] = m_devices.size(); /* Number of Devices to configure */
-    m_engineConfig[2] = SCRAMBLE_BYTE; /* Load and Ready */
-    m_engineConfig[3] = calculateChecksum((char*)m_engineConfig, 3); /* Only 3 bytes for sub-checksum */
+    /* Sector [0] */
+    m_engineConfig.clear();
+    /* [0] */ m_engineConfig.push_back(HEADER_SIZE);
+    /* [1] */ m_engineConfig.push_back(static_cast<uint8_t>(m_devices.size()));
+    /* [2] */ m_engineConfig.push_back(SCRAMBLE_BYTE);
+    uint8_t checksum = calculateChecksum(reinterpret_cast<char*>(&m_engineConfig[0]), 3);
+    /* [3] */ m_engineConfig.push_back(checksum);
 
     for (const auto& device : m_devices)
     {
-        DeviceConfig* allocatedConfig = createOperation(device.id, device.ctrl, device.registers.size());
+        DeviceConfigType* allocatedConfig = createOperation(device.id, device.ctrl, device.registers.size());
 
         if (!allocatedConfig)
         {
             perror("Failed to allocate device configuration");
-            free(m_engineConfig);
             return EXIT_FAILURE;
         }
 
@@ -246,14 +236,9 @@ int RamDisk::assembleConfig()
             payload[i++] = reg.second;
         }
 
-        payload[i] = calculateChecksum((char*)allocatedConfig, sizeof(DeviceConfig) + i);
+        payload[i] = calculateChecksum(reinterpret_cast<char*>(allocatedConfig), sizeof(DeviceConfigType) + i);
 
-        /**
-         *
-         * Push Back pointers to vector
-         * That point to the allocated data
-         *
-         */
+        // Push back the device configuration
         m_deviceConfigs.push_back(allocatedConfig);
     }
 
@@ -266,19 +251,18 @@ int RamDisk::sendConfig()
 
     openDEV();
 
-    /* Write to sector 0 */
+    // Write to sector 0 (DMA Engine Configuration)
     lseek(m_fileDescriptor, 0, SEEK_SET);
-    bytes = write(m_fileDescriptor, m_engineConfig, HEADER_SIZE);
+    bytes = write(m_fileDescriptor, &m_engineConfig[0], HEADER_SIZE);
     if (bytes < 0)
     {
         perror("Failed to write to block device");
         close(m_fileDescriptor);
-        free(m_engineConfig);
         return EXIT_FAILURE;
     }
     std::cout << "[INFO] [RAM] Write " << bytes << " Bytes to ramDisk to Sector 0" << std::endl;
 
-    /* Write device configurations */
+    // Write device configurations to their respective sectors
     for (size_t i = 0; i < m_deviceConfigs.size(); i++)
     {
         lseek(m_fileDescriptor, SECTOR_SIZE * (i + 1), SEEK_SET);
@@ -287,8 +271,8 @@ int RamDisk::sendConfig()
         {
             perror("Failed to write to sector");
             close(m_fileDescriptor);
-            free(m_engineConfig);
 
+            // Free previously allocated device configs
             for (auto& config : m_deviceConfigs)
             {
                 free(config);
@@ -302,7 +286,7 @@ int RamDisk::sendConfig()
 
     closeDEV();
 
-    free(m_engineConfig);
+    // Free allocated memory for device configurations
     for (auto& config : m_deviceConfigs)
     {
         free(config);
