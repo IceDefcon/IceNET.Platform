@@ -212,9 +212,6 @@ DeviceConfig* RamDisk::createOperation(char id, char ctrl, char ops)
  */
 int RamDisk::assembleConfig()
 {
-    constexpr uint8_t HEADER_SIZE = 0x04;
-    constexpr uint8_t SCRAMBLE_BYTE = 0x77;
-
     // [0] Sector
     m_engineConfig = (uint8_t*)malloc(HEADER_SIZE);
 
@@ -229,14 +226,6 @@ int RamDisk::assembleConfig()
     m_engineConfig[2] = SCRAMBLE_BYTE; /* Load and Ready */
     m_engineConfig[3] = calculateChecksum((char*)m_engineConfig, 3); /* Only 3 bytes for sub-checksum */
 
-#if 1 /* Test code */
-    ////////////////////////////////////////////////////////////////////////
-    //
-    // TEST :: CODE
-    //
-    // Iterate over m_devices and create configuration for each
-    //
-    ////////////////////////////////////////////////////////////////////////
     for (const auto& device : m_devices)
     {
         DeviceConfig* allocatedConfig = createOperation(device.id, device.ctrl, device.registers.size());
@@ -267,73 +256,6 @@ int RamDisk::assembleConfig()
          */
         m_deviceConfigs.push_back(allocatedConfig);
     }
-#else
-
-    char BMI160_ops = 2; /* Configure 2 registers only */
-    char BMI160_regSize = BMI160_ops;
-    char BMI160_dataSize = BMI160_ops;
-    char BMI160_totalSize = sizeof(DeviceConfig) + BMI160_regSize + BMI160_dataSize;
-
-    // [1] Sector
-    m_BMI160config = createOperation(0x69, 0x01, BMI160_ops);
-    if (!m_BMI160config)
-    {
-        perror("Failed to allocate operation");
-        return EXIT_FAILURE;
-    }
-
-    uint8_t* BMI160 = m_BMI160config->payload;
-
-    BMI160[0] = 0x7E; /* CMD */
-    BMI160[1] = 0x11; /* Set PMU mode of accelerometer to normal */
-    BMI160[2] = 0x40; /* ACC_CONF */
-    BMI160[3] = 0x2C; /* acc_bwp = 0x2 normal mode + acc_od = 0xC 1600Hz r*/
-
-    BMI160[4] = calculateChecksum((char*)m_BMI160config, BMI160_totalSize); /* totalSize is always 1 less than checksum :: since it was removed from DeviceConfig */
-
-    /* This need parametrization */
-    char ADXL_ops = 5;
-    char ADXL_regSize = ADXL_ops;
-    char ADXL_dataSize = ADXL_ops;
-    char ADXL_totalSize = sizeof(DeviceConfig) + ADXL_regSize + ADXL_dataSize;
-
-    // [2] Sector
-    m_ADXL345config = createOperation(0x53, 0x01, ADXL_ops);
-    if (!m_ADXL345config)
-    {
-        perror("Failed to allocate operation");
-        free(m_BMI160config);
-        return EXIT_FAILURE;
-    }
-
-    uint8_t* ADXL345 = m_ADXL345config->payload;
-
-    ADXL345[0] = 0x31; /* DATA_FORMAT */
-    ADXL345[1] = 0x08; /* Full Resolution | SPI 4 wire | INT_INVERT = active high | FULL_RES = enabled | Justify = unsigned | ±2 g */
-    ADXL345[2] = 0x2E; /* INT_ENABLE Register */
-    ADXL345[3] = 0x08; /* 0x80 = 1000 0000 (Enable only Data Ready interrupt) */
-    ADXL345[4] = 0x2F; /* INT_MAP Register */
-    ADXL345[5] = 0x00; /* 0x00 = 0000 0000 (Map Data Ready to INT1)*/
-    ADXL345[6] = 0x2D; /* POWER_CTL Register */
-    ADXL345[7] = 0x08; /* 0x08 = 0000 1000 (Enable measurement mode) */
-    ADXL345[8] = 0x2C; /* BW_RATE Register */
-    ADXL345[9] = 0x0F; /* 0x0F = 00001111 (Set ODR to 3200 Hz) */
-    ADXL345[10] = calculateChecksum((char*)m_ADXL345config, ADXL_totalSize); /* totalSize is always 1 less than checksum :: since it was removed from DeviceConfig */
-
-    if(m_BMI160config->size > MAX_DMA_TRANSFER_SIZE)
-    {
-        fprintf(stderr, "Device 0 operation size exceeds half sector size :: %d bytes\n", m_BMI160config->size);
-        free(m_BMI160config);
-        return EXIT_FAILURE;
-    }
-
-    if(m_ADXL345config->size > MAX_DMA_TRANSFER_SIZE)
-    {
-        fprintf(stderr, "Device 1 operation size exceeds half sector size :: %d bytes\n", m_ADXL345config->size);
-        free(m_ADXL345config);
-        return EXIT_FAILURE;
-    }
-#endif
 
     return EXIT_SUCCESS;
 }
@@ -346,45 +268,46 @@ int RamDisk::sendConfig()
 
     /* Write to sector 0 */
     lseek(m_fileDescriptor, 0, SEEK_SET);
-    bytes = write(m_fileDescriptor, m_engineConfig, sizeof(m_engineConfig));
+    bytes = write(m_fileDescriptor, m_engineConfig, HEADER_SIZE);
     if (bytes < 0)
     {
         perror("Failed to write to block device");
         close(m_fileDescriptor);
-        free(m_BMI160config);
-        free(m_ADXL345config);
+        free(m_engineConfig);
         return EXIT_FAILURE;
     }
-    printf("[INFO] [RAM] Write %d Bytes to ramDisk to Sector 0\n", bytes);
+    std::cout << "[INFO] [RAM] Write " << bytes << " Bytes to ramDisk to Sector 0" << std::endl;
 
-    /* Write to sector 1 */
-    lseek(m_fileDescriptor, SECTOR_SIZE * 1, SEEK_SET);
-    bytes = write(m_fileDescriptor, m_deviceConfigs[0], m_deviceConfigs[0]->size);
-    if (bytes < 0)
+    /* Write device configurations */
+    for (size_t i = 0; i < m_deviceConfigs.size(); i++)
     {
-        perror("Failed to write to sector 1");
-        close(m_fileDescriptor);
-        free(m_BMI160config);
-        free(m_ADXL345config);
-        return EXIT_FAILURE;
-    }
-    printf("[INFO] [RAM] Write %d Bytes to ramDisk to Sector 1\n", bytes);
+        lseek(m_fileDescriptor, SECTOR_SIZE * (i + 1), SEEK_SET);
+        bytes = write(m_fileDescriptor, m_deviceConfigs[i], m_deviceConfigs[i]->size);
+        if (bytes < 0)
+        {
+            perror("Failed to write to sector");
+            close(m_fileDescriptor);
+            free(m_engineConfig);
 
+            for (auto& config : m_deviceConfigs)
+            {
+                free(config);
+            }
+            m_deviceConfigs.clear();
 
-    /* Write to sector 2 */
-    lseek(m_fileDescriptor, SECTOR_SIZE * 2, SEEK_SET);
-    bytes = write(m_fileDescriptor, m_deviceConfigs[1], m_deviceConfigs[1]->size);
-    if (bytes < 0)
-    {
-        perror("Failed to write to sector 2");
-        close(m_fileDescriptor);
-        free(m_BMI160config);
-        free(m_ADXL345config);
-        return EXIT_FAILURE;
+            return EXIT_FAILURE;
+        }
+        std::cout << "[INFO] [RAM] Write " << bytes << " Bytes to ramDisk to Sector " << (i + 1) << std::endl;
     }
-    printf("[INFO] [RAM] Write %d Bytes to ramDisk to Sector 2\n", bytes);
 
     closeDEV();
+
+    free(m_engineConfig);
+    for (auto& config : m_deviceConfigs)
+    {
+        free(config);
+    }
+    m_deviceConfigs.clear();
 
     return EXIT_SUCCESS;
 }

@@ -47,8 +47,7 @@ class RamDisk
 
         RamDisk* m_instance;
 
-        uint8_t* m_engineConfig;
-        DeviceConfig* m_BMI160config;
+        DeviceConfig* m_BMI160config;uint8_t* m_engineConfig;
         DeviceConfig* m_ADXL345config;
 
         /* Test code */
@@ -58,6 +57,8 @@ class RamDisk
         static constexpr const char* DEVICE_PATH = "/dev/IceNETDisk0";
         static constexpr size_t MAX_DMA_TRANSFER_SIZE = 100;
         static constexpr size_t SECTOR_SIZE = 512;
+        static constexpr uint8_t HEADER_SIZE = 0x04;
+        static constexpr uint8_t SCRAMBLE_BYTE = 0x77;
 
 	public:
 
