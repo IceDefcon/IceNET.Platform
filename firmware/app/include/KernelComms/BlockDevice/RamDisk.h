@@ -16,9 +16,10 @@
 #include "Types.h"
 
 #define DEVICE_PATH "/dev/IceNETDisk0"
-#define SECTOR_SIZE 512
-#define HEADER_SIZE 0x04
+#define CONFIGURED_DEVICES 0x02
 #define SCRAMBLE_BYTE 0x77
+#define HEADER_SIZE 0x04
+#define SECTOR_SIZE 512
 
 typedef enum
 {

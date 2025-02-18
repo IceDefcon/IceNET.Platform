@@ -208,15 +208,14 @@ DeviceConfigType* RamDisk::createOperation(uint8_t id, uint8_t ctrl, uint8_t ops
  */
 int RamDisk::assembleConfig()
 {
-
     /* Sector [0] */
     m_engineConfig.clear();
     /* [0] */ m_engineConfig.push_back(HEADER_SIZE);
-    /* [1] */ m_engineConfig.push_back(static_cast<uint8_t>(m_devices.size()));
+    /* [1] */ m_engineConfig.push_back(CONFIGURED_DEVICES);
     /* [2] */ m_engineConfig.push_back(SCRAMBLE_BYTE);
-    uint8_t checksum = calculateChecksum(&m_engineConfig[0], 3);
-    /* [3] */ m_engineConfig.push_back(checksum);
+    /* [3] */ m_engineConfig.push_back(calculateChecksum(&m_engineConfig[0], 3));
 
+    /* Device configuration sectors */
     for (const auto& device : m_devices)
     {
         DeviceConfigType* allocatedConfig = createOperation(device.id, device.ctrl, device.registers.size());
