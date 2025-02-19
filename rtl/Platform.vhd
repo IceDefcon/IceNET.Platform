@@ -34,8 +34,8 @@ use work.Types.all;
 -- PIN_A19 :: P9_39 :: UNUSED_29            | PIN_B19 :: P9_40 :: UNUSED_30         |
 -- PIN_A20 :: P9_41 :: WDG_INT_FROM_FPGA    | PIN_B20 :: P9_42 :: UNUSED_32         |
 -------------------------------------------------------------------------------------
--- PIN_AB13 :: NOTUSED_01                   | PIN_AA13 :: NOTUSED_02            |
--- PIN_AB14 :: NOTUSED_03                   | PIN_AA14 :: NOTUSED_04            |
+-- PIN_AB13 :: I2C_SDA                      | PIN_AA13 :: I2C_SCK               |
+-- PIN_AB14 :: ADXL_INT1                    | PIN_AA14 :: ADXL_INT2             |
 -- PIN_AB15 :: NOTUSED_05                   | PIN_AA15 :: NOTUSED_06            |
 -- PIN_AB16 :: NOTUSED_07                   | PIN_AA16 :: NOTUSED_08            |
 -- PIN_AB17 :: NOTUSED_09                   | PIN_AA17 :: NOTUSED_10            |
@@ -100,6 +100,9 @@ port
     -- I2C BMI160 + ADXL345
     I2C_SDA : inout std_logic; -- PIN_AB13
     I2C_SCK : inout std_logic; -- PIN_AA13
+    -- ADXL INTERRUPTS
+    ADXL_INT1 : in std_logic; -- PIN_AB14
+    ADXL_INT2 : in std_logic; -- PIN_AA14
     -- Current Debug SPI Driver
     NRF905_TX_EN : out std_logic;   -- PIN_F1
     NRF905_TRX_CE : out std_logic;  -- PIN_H2
@@ -1021,6 +1024,13 @@ begin
     end if;
 end process;
 
+-------------------------------------------------
+-- Burst read is required
+-- In order to read 6 Bytes
+-- Starting from 0x32 ending
+-- At 0x37 for x, y and z
+-- Total Time: 67.5 + 135 = 202.5µs
+-------------------------------------------------
 I2cController_module: I2cController port map
 (
     CLOCK => CLOCK_50MHz,

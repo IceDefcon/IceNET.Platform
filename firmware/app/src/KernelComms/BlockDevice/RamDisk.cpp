@@ -53,11 +53,11 @@ m_instance(this)
             0x53, /* ADXL345 */
             0x01, /* OFFLOAD_CTRL :: DmaConfig(Auto=0) BurstSize(0) Device(I2C=0) Write(1) */
             {
-                {0x31, 0x08}, /* Data format */
-                {0x2E, 0x08}, /* Interrupt enable */
+                {0x31, 0x08}, /* Data format :: Full Resolution */
+                {0x2E, 0x80}, /* Interrupt enable */
                 {0x2F, 0x00}, /* Interrupt mapping */
-                {0x2D, 0x08}, /* Power control */
-                {0x2C, 0x0F}  /* Output Data Rate */
+                {0x2D, 0x08}, /* Power control :: Measure mode */
+                {0x2C, 0x0E}  /* Output Data Rate :: 3200Hz */
             }
         }
     };
