@@ -1070,14 +1070,14 @@ I2cController_module: I2cController port map
 
 spi_mux_process:
 process(CLOCK_50MHz)
-begin
+begin:
     if rising_edge(CLOCK_50MHz) then
         if switch_spi_ready = '1' then
-            switch_spi_BMI_ready <= '1';
-            switch_spi_RF_ready <= '1';
+            switch_spi_BMI_ready <= '1'
+            switch_spi_RF_ready <= '1'
         else
-            switch_spi_BMI_ready <= '0';
-            switch_spi_RF_ready <= '0';
+            switch_spi_BMI_ready <= '0'
+            switch_spi_RF_ready <= '0'
         end if;
     end if;
 end process;
@@ -1100,11 +1100,11 @@ SpiController_BMI_module: SpiController port map
     CTRL_MOSI => ctrl_BMI_MOSI,
     CTRL_SCK => ctrl_BMI_SCLK,
 
-    FPGA_INT => open,--interrupt_spi_feedback,
-    FEEDBACK_DATA => open--data_spi_feedback
+    FPGA_INT => interrupt_spi_feedback,
+    FEEDBACK_DATA => data_spi_feedback
 );
 
-SpiController_RF_module: SpiController port map
+SpiController_BMI_module: SpiController port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
 

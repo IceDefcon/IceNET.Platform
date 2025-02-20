@@ -20,8 +20,6 @@ Port
     CTRL_MOSI : out std_logic;
     CTRL_SCK : out std_logic;
 
-    CTRL_MUX : out std_logic_vector(3 downto 0);
-
     FPGA_INT : out std_logic;
     FEEDBACK_DATA : out std_logic_vector(7 downto 0)
 );
@@ -35,7 +33,6 @@ type SPI_CONTROLLER_TYPE is
     SPI_INIT,
     SPI_CONFIG,
     SPI_PROCESS,
-    SPI_MUX,
     SPI_DONE
 );
 signal SPI_state: SPI_CONTROLLER_TYPE := SPI_IDLE;
@@ -95,7 +92,7 @@ begin
                     -- Finished :: Jump to MUX
                     ------------------------------
                     if bytes_count = bytes_amount then
-                        SPI_state <= SPI_MUX;
+                        SPI_state <= SPI_DONE;
                     else
                         --------------------------------
                         -- Set flags :: Jump to PROCESS
@@ -172,7 +169,13 @@ begin
                             spi_status <= "1100"; -- Last Byte Exit
                         elsif byte_process_timer < BYTE_BREAK + BYTE_INIT + BYTE_CLOCK + BYTE_EXIT + TRANSFER_EXIT then
                             spi_status <= "1101"; -- Transfer Exit
+                            --------------------------------------
+                            --
+                            -- TODO :: Feedback Data !!!
+                            --
+                            --------------------------------------
                             FPGA_INT <= '1';
+                            FEEDBACK_DATA <= "10000001";
                         else
                             spi_status <= "1110"; -- Going Back to CONFIG -> IDLE
                         end if;
@@ -266,14 +269,9 @@ begin
                         byte_process_timer <= byte_process_timer + 1;
                     end if;
 
-                when SPI_MUX =>
+                when SPI_DONE =>
                     CTRL_CS <= '1';
                     FPGA_INT <= '0';
-                    CTRL_MUX <= "0001";
-                    FEEDBACK_DATA <= "10000001";
-                    SPI_state <= SPI_DONE;
-
-                when SPI_DONE =>
                     SPI_state <= SPI_IDLE;
 
                 when others =>
