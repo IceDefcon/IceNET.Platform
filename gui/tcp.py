@@ -69,6 +69,9 @@ class TcpManager:
         self.i2c_device_register = tk.Entry(self.root, width=14)
         self.i2c_device_register.grid(row=6, column=1, pady=5, padx=5, sticky='w')
         self.i2c_device_register.insert(0, "00")
+        self.i2c_burst_size = tk.Entry(self.root, width=6)
+        self.i2c_burst_size.grid(row=6, column=2, pady=5, padx=5, sticky='w')
+        self.i2c_burst_size.insert(0, "00")
         self.i2c_register_data_label = tk.Label(self.root, text="Write Data")
         self.i2c_register_data_label.grid(row=7, column=0, pady=5, padx=5, sticky='e')
         self.i2c_register_data = tk.Entry(self.root, width=14)
@@ -76,7 +79,7 @@ class TcpManager:
         self.i2c_register_data.insert(0, "00")
         self.i2c_register_data.config(state=tk.DISABLED)
         self.i2c_write_var = tk.BooleanVar()
-        self.i2c_write_box = tk.Checkbutton(self.root, text="Write", variable=self.i2c_write_var, command=self.i2c_toggle_write_data_entry)
+        self.i2c_write_box = tk.Checkbutton(self.root, text="WR", variable=self.i2c_write_var, command=self.i2c_toggle_write_data_entry)
         self.i2c_write_box.grid(row=7, column=2, pady=5, padx=5, sticky='w')
         # PWM
         self.pwm_speed_label = tk.Label(root, text="PWM Speed [Hex]")
@@ -97,18 +100,21 @@ class TcpManager:
         self.pwm_100_button = tk.Button(self.root, text="100%", command=lambda: self.tcp_execute(6))
         self.pwm_100_button.grid(row=7, column=7, pady=5, padx=5, sticky='nsew')
         # SPI
-        self.spi_device_label = tk.Label(self.root, text="SPI Register Address")
+        self.spi_device_label = tk.Label(self.root, text="SPI Device Address")
         self.spi_device_label.grid(row=0, column=3, pady=5, padx=5, sticky='e')
-        self.spi_register_address = tk.Entry(self.root, width=14)
-        self.spi_register_address.grid(row=0, column=4, pady=5, padx=5, sticky='w')
-        self.spi_register_address.insert(0, "10")
+        self.spi_device_address = tk.Entry(self.root, width=14)
+        self.spi_device_address.grid(row=0, column=4, pady=5, padx=5, sticky='w')
+        self.spi_device_address.insert(0, "10")
         self.spi_exe_button = tk.Button(self.root, text="EXE", command=lambda: self.tcp_execute(7))
         self.spi_exe_button.grid(row=0, column=5, pady=5, padx=5, sticky='nsew')
-        self.spi_burst_size_label = tk.Label(self.root, text="Bytes to Read")
+        self.spi_burst_size_label = tk.Label(self.root, text="Register Address")
         self.spi_burst_size_label.grid(row=1, column=3, pady=5, padx=5, sticky='e')
-        self.spi_burst_size = tk.Entry(self.root, width=14)
-        self.spi_burst_size.grid(row=1, column=4, pady=5, padx=5, sticky='w')
-        self.spi_burst_size.insert(0, "01")
+        self.spi_register_address = tk.Entry(self.root, width=14)
+        self.spi_register_address.grid(row=1, column=4, pady=5, padx=5, sticky='w')
+        self.spi_register_address.insert(0, "00")
+        self.spi_burst_size = tk.Entry(self.root, width=6)
+        self.spi_burst_size.grid(row=1, column=5, pady=5, padx=5, sticky='w')
+        self.spi_burst_size.insert(0, "00")
         self.spi_register_data_label = tk.Label(self.root, text="Write Data")
         self.spi_register_data_label.grid(row=2, column=3, pady=5, padx=5, sticky='e')
         self.spi_register_data = tk.Entry(self.root, width=14)
@@ -116,7 +122,7 @@ class TcpManager:
         self.spi_register_data.insert(0, "00")
         self.spi_register_data.config(state=tk.DISABLED) # Initialize "Write Data" entry as disabled
         self.spi_write_var = tk.BooleanVar() # Add a tick box (Checkbutton)
-        self.spi_write_box = tk.Checkbutton(self.root, text="Write", variable=self.spi_write_var, command=self.spi_toggle_write_data_entry)
+        self.spi_write_box = tk.Checkbutton(self.root, text="WR", variable=self.spi_write_var, command=self.spi_toggle_write_data_entry)
         self.spi_write_box.grid(row=2, column=5, pady=5, padx=5, sticky='w')
 
         # Console
@@ -195,27 +201,30 @@ class TcpManager:
         return data
 
     def spi_assembly(self):
-        offload_ctrl = 0x82 # 0000 0100
+        offload_ctrl = 0x82 # 1000 0010
+        address = int(self.spi_device_address.get(), 16)  # Convert hex address to integer
         register = int(self.spi_register_address.get(), 16)  # Convert hex address to integer
         size = int(self.spi_burst_size.get(), 16)
         shifted_size = size << 3
+        write = 0x01
+        read = 0x00
         if self.spi_write_var.get():
             # 0000 0000 :: Read
-            data = bytes([offload_ctrl + 0x01 + shifted_size, 0x00, register]) + bytes.fromhex(self.spi_register_data.get()) + bytes([0x00, 0x00, 0x00, 0x00])
+            data = bytes([offload_ctrl + write + shifted_size, address, register]) + bytes.fromhex(self.spi_register_data.get()) + bytes([0x00, 0x00, 0x00, 0x00])
         else:
             # 0000 0001 :: Write
-            data = bytes([offload_ctrl + 0x00 + shifted_size, 0x00, register, 0x00, 0x00, 0x00, 0x00, 0x00])
+            data = bytes([offload_ctrl + read + shifted_size, address, register, 0x00, 0x00, 0x00, 0x00, 0x00])
         return data
 
     def pwm_set(self, value):
-        header = 0x84 # 0000 0010
+        header = 0x84 # 1000 0100
         data = bytes([header, 0x00, 0x00, value, 0x00, 0x00, 0x00, 0x00])
         self.pwm_speed.delete(0, 'end')
         self.pwm_speed.insert(0, f"{value:02X}")
         return data
 
     def pwm_getset(self, value):
-        header = 0x84 # 0000 0010
+        header = 0x84 # 1000 0100
         current = int(self.pwm_speed.get(), 16) + value
         current = min(current, 0xFA)
         data = bytes([header, 0x00, 0x00, current, 0x00, 0x00, 0x00, 0x00])
