@@ -1089,7 +1089,11 @@ SpiController_BMI_module: SpiController port map
 
     OFFLOAD_INT => switch_spi_BMI_ready,
 
-    OFFLOAD_ID => offload_id,
+    OFFLOAD_ID => offload_id(0) & offload_id(1) &
+                offload_id(2) & offload_id(3) &
+                offload_id(4) & offload_id(5) &
+                offload_id(6), -- Turn back around for SPI
+
     OFFLOAD_CONTROL => offload_ctrl,
     OFFLOAD_REGISTER => offload_register,
     OFFLOAD_DATA => offload_data,
@@ -1110,7 +1114,11 @@ SpiController_RF_module: SpiController port map
 
     OFFLOAD_INT => switch_spi_RF_ready,
 
-    OFFLOAD_ID => offload_id,
+    OFFLOAD_ID => offload_id(0) & offload_id(1) &
+                offload_id(2) & offload_id(3) &
+                offload_id(4) & offload_id(5) &
+                offload_id(6), -- Turn back around for SPI
+
     OFFLOAD_CONTROL => offload_ctrl,
     OFFLOAD_REGISTER => offload_register,
     OFFLOAD_DATA => offload_data,
