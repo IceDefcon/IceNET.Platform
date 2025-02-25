@@ -6,8 +6,8 @@
     entity RamController is
     Port
     (
-        CLOCK_266MHz : in  std_logic;
         CLOCK_133MHz : in  std_logic;
+        CLOCK_266MHz : in  std_logic;
         RESET       : in  std_logic;
 
         --
@@ -126,30 +126,18 @@
 
         constant MODE_REG : std_logic_vector(12 downto 0) := "00" & "00" & "00" & "010" & "0" & "000";
 
-        --------------------------
-        --
-        -- Pipeline Signals
-        --
-        --------------------------
-        signal write_flag, read_flag : std_logic;
-        -- Registers for OUT
-        signal A0_reg, A1_reg, A2_reg, A3_reg, A4_reg, A5_reg, A6_reg, A7_reg, A8_reg, A9_reg, A10_reg, A11_reg, A12_reg : std_logic;
-        signal BA0_reg, BA1_reg : std_logic;
-        signal CLK_SDRAM_reg, CKE_reg, CS_reg, RAS_reg, CAS_reg, WE_reg : std_logic;
-        signal command_reg : std_logic_vector(4 downto 0);
-        -- Registers for INOUT(IN)
-        signal DQ0_I_reg, DQ1_I_reg, DQ2_I_reg, DQ3_I_reg, DQ4_I_reg, DQ5_I_reg, DQ6_I_reg, DQ7_I_reg : std_logic;
-        signal DQ8_I_reg, DQ9_I_reg, DQ10_I_reg, DQ11_I_reg, DQ12_I_reg, DQ13_I_reg, DQ14_I_reg, DQ15_I_reg : std_logic;
-        -- Registers for INOUT(OUT)
-        signal DQ0_O_reg, DQ1_O_reg, DQ2_O_reg, DQ3_O_reg, DQ4_O_reg, DQ5_O_reg, DQ6_O_reg, DQ7_O_reg : std_logic;
-        signal DQ8_O_reg, DQ9_O_reg, DQ10_O_reg, DQ11_O_reg, DQ12_O_reg, DQ13_O_reg, DQ14_O_reg, DQ15_O_reg : std_logic;
-
     begin
+
+        process(CLOCK_266MHz)
+        begin
+            if rising_edge(CLOCK_266MHz) then
+                CLK_SDRAM <= CLOCK_133MHz;
+            end if;
+        end process;
 
         process (CLOCK_133MHz)
         begin
             if rising_edge(CLOCK_133MHz) then
-                CLK_SDRAM <= not CLOCK_133MHz;
                 CKE <= command(4);
                 CS  <= command(3);
                 RAS <= command(2);

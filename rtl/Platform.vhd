@@ -213,7 +213,6 @@ port
     BMI160_MISO : in std_logic;  -- PIN_U21 :: Orange
     BMI160_SCLK : out std_logic; -- PIN_V22 :: Green
     BMI160_MOSI : out std_logic  -- PIN_U22 :: Bue
-
 );
 end Platform;
 
@@ -457,8 +456,8 @@ end component;
 component RamController
 Port
 (
-    CLOCK_266MHz : in  std_logic;
     CLOCK_133MHz : in  std_logic;
+    CLOCK_266MHz : in  std_logic;
     RESET       : in  std_logic;
 
     -- SDRAM Interface
@@ -600,11 +599,11 @@ end component;
 component PLL_RamClock
 port
 (
-    areset  : IN STD_LOGIC  := '0';
-    inclk0  : IN STD_LOGIC  := '0';
-    c0      : OUT STD_LOGIC ;
-    c1      : OUT STD_LOGIC ;
-    locked  : OUT STD_LOGIC
+	areset : IN STD_LOGIC  := '0';
+	inclk0 : IN STD_LOGIC  := '0';
+    c0 : OUT STD_LOGIC ;
+	c1 : OUT STD_LOGIC ;
+	locked : OUT STD_LOGIC
 );
 end component;
 
@@ -811,16 +810,16 @@ port map
 (
     areset => '0',
     inclk0 => CLOCK_50MHz,
-    c0 => CLOCK_266MHz,
-    c1 => CLOCK_133MHz,
+    c0 => CLOCK_133MHz,
+    c1 => CLOCK_266MHz,
     locked => open
 );
 
 RamController_module: RamController
 port map
 (
-    CLOCK_266MHz => CLOCK_266MHz,
     CLOCK_133MHz => CLOCK_133MHz,
+    CLOCK_266MHz => CLOCK_266MHz,
     RESET => TEST_RESET,
 
     A0 => A0,
@@ -876,74 +875,12 @@ port map
     BUSY => TEST_BUSY
 );
 
---process (CLOCK_133MHz, test_ram_state)
---begin
---    if rising_edge(CLOCK_133MHz) then
-
---        case (test_ram_state) is
-
---            when TEST_IDLE =>
---                if test_timer = "10111110101111000001111111111" then
---                    test_ram_state <= TEST_INIT;
---                else
---                    test_timer <= test_timer + '1';
---                end if;
-
---            when TEST_INIT =>
---                test_ram_state <= TEST_WRITE;
-
---            when TEST_CONFIG =>
---                TEST_READ_EN <= '0';
---                TEST_WRITE_EN <= '0';
---                if TEST_BUSY = '0' then
---                    if test_flag = '0' then
---                        if test_ops = "0011" then
---                            test_ops <= "0000";
---                            test_flag <= '1';
---                            test_ram_state <= TEST_CONFIG;
---                            TEST_ADDR <= "000000000000000000000000";
---                        else
---                            test_ops <= test_ops + '1';
---                            test_ram_state <= TEST_WRITE;
---                        end if;
---                    elsif test_flag = '1' then
---                        if test_ops = "0100" then
---                            test_ops <= "0000";
---                            test_flag <= '0';
---                            test_ram_state <= TEST_DONE;
---                        else
---                            test_ops <= test_ops + '1';
---                            test_ram_state <= TEST_READ;
---                        end if;
---                    end if;
---                end if;
-
---            when TEST_WRITE =>
---                TEST_WRITE_EN <= '1';
---                TEST_DATA_IN <= TEST_DATA_IN + '1';
---                TEST_ADDR <= TEST_ADDR + '1';
---                test_ram_state <= TEST_WAIT;
-
---            when TEST_READ =>
---                TEST_READ_EN <= '1';
---                TEST_ADDR <= TEST_ADDR + '1';
---                test_ram_state <= TEST_WAIT;
-
---            when TEST_WAIT =>
---                test_ram_state <= TEST_CONFIG;
-
---            when TEST_DONE =>
---                test_ram_state <= TEST_DONE;
-
---        end case;
---    end if;
---end process;
-
 process (CLOCK_133MHz, test_ram_state)
 begin
     if rising_edge(CLOCK_133MHz) then
 
         case (test_ram_state) is
+
             when TEST_IDLE =>
                 if test_timer = "10111110101111000001111111111" then
                     test_ram_state <= TEST_INIT;
@@ -962,20 +899,36 @@ begin
                 TEST_WRITE_EN <= '0';
                 if TEST_BUSY = '0' then
                     if test_flag = '0' then
-                        test_flag <= '1';
-                        TEST_ADDR <= "000000000000000000000000";
-                        test_ram_state <= TEST_READ;
+                        if test_ops = "0011" then
+                            test_ops <= "0000";
+                            test_flag <= '1';
+                            test_ram_state <= TEST_CONFIG;
+                            TEST_ADDR <= "000000000000000000000000";
+                        else
+                            test_ops <= test_ops + '1';
+                            test_ram_state <= TEST_WRITE;
+                        end if;
                     elsif test_flag = '1' then
-                        test_ram_state <= TEST_DONE;
+                        if test_ops = "0100" then
+                            test_ops <= "0000";
+                            test_flag <= '0';
+                            test_ram_state <= TEST_DONE;
+                        else
+                            test_ops <= test_ops + '1';
+                            test_ram_state <= TEST_READ;
+                        end if;
                     end if;
                 end if;
 
             when TEST_WRITE =>
                 TEST_WRITE_EN <= '1';
+                TEST_DATA_IN <= TEST_DATA_IN + '1';
+                TEST_ADDR <= TEST_ADDR + '1';
                 test_ram_state <= TEST_WAIT;
 
             when TEST_READ =>
                 TEST_READ_EN <= '1';
+                TEST_ADDR <= TEST_ADDR + '1';
                 test_ram_state <= TEST_WAIT;
 
             when TEST_WAIT =>
@@ -987,6 +940,55 @@ begin
         end case;
     end if;
 end process;
+
+--process (CLOCK_133MHz, test_ram_state)
+--begin
+--    if rising_edge(CLOCK_133MHz) then
+
+--        case (test_ram_state) is
+--            when TEST_IDLE =>
+--                if test_timer = "10111110101111000001111111111" then
+--                    test_ram_state <= TEST_INIT;
+--                elsif test_timer = "10111110101111000001111111111" - "1011111010111100000111111111" then
+--                    TEST_RESET <= '0';
+--                    test_timer <= test_timer + '1';
+--                else
+--                    test_timer <= test_timer + '1';
+--                end if;
+
+--            when TEST_INIT =>
+--                test_ram_state <= TEST_WRITE;
+
+--            when TEST_CONFIG =>
+--                TEST_READ_EN <= '0';
+--                TEST_WRITE_EN <= '0';
+--                if TEST_BUSY = '0' then
+--                    if test_flag = '0' then
+--                        test_flag <= '1';
+--                        TEST_ADDR <= "000000000000000000000000";
+--                        test_ram_state <= TEST_READ;
+--                    elsif test_flag = '1' then
+--                        test_ram_state <= TEST_DONE;
+--                    end if;
+--                end if;
+
+--            when TEST_WRITE =>
+--                TEST_WRITE_EN <= '1';
+--                test_ram_state <= TEST_WAIT;
+
+--            when TEST_READ =>
+--                TEST_READ_EN <= '1';
+--                test_ram_state <= TEST_WAIT;
+
+--            when TEST_WAIT =>
+--                test_ram_state <= TEST_CONFIG;
+
+--            when TEST_DONE =>
+--                test_ram_state <= TEST_DONE;
+
+--        end case;
+--    end if;
+--end process;
 
 -- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 -- //                   //
