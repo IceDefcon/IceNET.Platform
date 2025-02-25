@@ -457,7 +457,7 @@ end component;
 component RamController
 Port
 (
-    --CLOCK_266MHz : in  std_logic;
+    CLOCK_266MHz : in  std_logic;
     CLOCK_133MHz : in  std_logic;
     RESET       : in  std_logic;
 
@@ -819,7 +819,7 @@ port map
 RamController_module: RamController
 port map
 (
-    --CLOCK_266MHz => CLOCK_266MHz,
+    CLOCK_266MHz => CLOCK_266MHz,
     CLOCK_133MHz => CLOCK_133MHz,
     RESET => TEST_RESET,
 
