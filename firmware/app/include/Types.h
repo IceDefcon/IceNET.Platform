@@ -29,8 +29,6 @@ typedef enum
 {
     CMD_FPGA_CONFIG,
     CMD_DMA_RECONFIG,
-    CMD_RAM_LOAD,
-    CMD_DMA_CLEAR,
     CMD_AMOUNT
 } commandType;
 

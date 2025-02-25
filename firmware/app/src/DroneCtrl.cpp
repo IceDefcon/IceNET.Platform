@@ -107,9 +107,9 @@ void DroneCtrl::droneCtrlMain()
             /**
              * Main Config
              *
-             * Configure chips connectd to FPGA
-             * Either I2C or SPI buses
-             * Trough the DMA
+             * Configure IMU's connectd to FPGA
+             * Via I2C or SPI buses
+             * Using SPI/DMA
              */
             if(true == KernelComms::Watchdog::getFpgaConfigReady())
             {
