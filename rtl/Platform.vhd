@@ -286,10 +286,6 @@ signal uart_write_busy : std_logic := '0';
 -- UART Test Log
 signal UART_LOG_MESSAGE_ID : UART_LOG_ID := ("0101", "1100"); -- 0x5C
 signal UART_LOG_MESSAGE_DATA : UART_LOG_DATA := ("0111", "1010", "0001", "1011"); -- 0x7A1B
--- Signals for SDRAM Address and Data Mapping
-signal SD_BANK : std_logic_vector(1 downto 0);
-signal SD_ADDRESS : std_logic_vector(12 downto 0);
-signal SD_DATA : std_logic_vector(15 downto 0);
 -- Test
 type TEST_STATE is
 (
@@ -458,35 +454,67 @@ port
 );
 end component;
 
---component RamController
---Port
---(
---    CLOCK_266MHz : in  std_logic;
---    CLOCk_133MHz : in  std_logic;
---    RESET       : in  std_logic;
+component RamController
+Port
+(
+    --CLOCK_266MHz : in  std_logic;
+    CLOCK_133MHz : in  std_logic;
+    RESET       : in  std_logic;
 
---    -- SDRAM Interface
---    A           : out std_logic_vector(12 downto 0);  -- Address Bus
---    BA          : out std_logic_vector(1 downto 0);   -- Bank Address
---    CLK_SDRAM   : out std_logic;
---    CKE         : out std_logic;
---    CS          : out std_logic;
---    RAS         : out std_logic;
---    CAS         : out std_logic;
---    WE          : out std_logic;
---    DQ          : inout std_logic_vector(15 downto 0); -- Data Bus
---    LDQM        : out std_logic;
---    UDQM        : out std_logic;
+    -- SDRAM Interface
+    A0           : out std_logic; -- Address Bus
+    A1           : out std_logic;
+    A2           : out std_logic;
+    A3           : out std_logic;
+    A4           : out std_logic;
+    A5           : out std_logic;
+    A6           : out std_logic;
+    A7           : out std_logic;
+    A8           : out std_logic;
+    A9           : out std_logic;
+    A10          : out std_logic;
+    A11          : out std_logic;
+    A12          : out std_logic;
 
---    -- User Interface
---    ADDR        : in  std_logic_vector(23 downto 0);
---    DATA_IN     : in  std_logic_vector(15 downto 0);
---    DATA_OUT    : out std_logic_vector(15 downto 0);
---    READ_EN     : in  std_logic;
---    WRITE_EN    : in  std_logic;
---    BUSY       : out std_logic
---);
---end component;
+    BA0          : out std_logic; -- Bank Address
+    BA1          : out std_logic;
+
+    CLK_SDRAM   : out std_logic;
+    CKE         : out std_logic;
+    CS          : out std_logic;
+    RAS         : out std_logic;
+    CAS         : out std_logic;
+    WE          : out std_logic;
+
+    DQ0         : inout std_logic; -- Data Bus
+    DQ1         : inout std_logic;
+    DQ2         : inout std_logic;
+    DQ3         : inout std_logic;
+    DQ4         : inout std_logic;
+    DQ5         : inout std_logic;
+    DQ6         : inout std_logic;
+    DQ7         : inout std_logic;
+    DQ8         : inout std_logic;
+    DQ9         : inout std_logic;
+    DQ10        : inout std_logic;
+    DQ11        : inout std_logic;
+    DQ12        : inout std_logic;
+    DQ13        : inout std_logic;
+    DQ14        : inout std_logic;
+    DQ15        : inout std_logic;
+
+    LDQM        : out std_logic;
+    UDQM        : out std_logic;
+
+    -- User Interface
+    ADDR        : in  std_logic_vector(23 downto 0);
+    DATA_IN     : in  std_logic_vector(15 downto 0);
+    DATA_OUT    : out std_logic_vector(15 downto 0);
+    READ_EN     : in  std_logic;
+    WRITE_EN    : in  std_logic;
+    BUSY       : out std_logic
+);
+end component;
 
 component OffloadController
 port
@@ -569,16 +597,16 @@ port
 );
 end component;
 
---component PLL_RamClock
---port
---(
---    areset  : IN STD_LOGIC  := '0';
---    inclk0  : IN STD_LOGIC  := '0';
---    c0      : OUT STD_LOGIC ;
---    c1      : OUT STD_LOGIC ;
---    locked  : OUT STD_LOGIC
---);
---end component;
+component PLL_RamClock
+port
+(
+    areset  : IN STD_LOGIC  := '0';
+    inclk0  : IN STD_LOGIC  := '0';
+    c0      : OUT STD_LOGIC ;
+    c1      : OUT STD_LOGIC ;
+    locked  : OUT STD_LOGIC
+);
+end component;
 
 -- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 -- //
@@ -778,78 +806,75 @@ port map
 -- //                  //
 -- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
---PLL_RamClock_module: PLL_RamClock
---port map
---(
---    areset => '0',
---    inclk0 => CLOCK_50MHz,
---    c0 => CLOCK_266MHz,
---    c1 => CLOCK_133MHz,
---    locked => open
---);
+PLL_RamClock_module: PLL_RamClock
+port map
+(
+    areset => '0',
+    inclk0 => CLOCK_50MHz,
+    c0 => CLOCK_266MHz,
+    c1 => CLOCK_133MHz,
+    locked => open
+);
 
---BA0 <= SD_BANK(0);
---BA1 <= SD_BANK(1);
+RamController_module: RamController
+port map
+(
+    --CLOCK_266MHz => CLOCK_266MHz,
+    CLOCK_133MHz => CLOCK_133MHz,
+    RESET => TEST_RESET,
 
---A0 <= SD_ADDRESS(0);
---A1 <= SD_ADDRESS(1);
---A2 <= SD_ADDRESS(2);
---A3 <= SD_ADDRESS(3);
---A4 <= SD_ADDRESS(4);
---A5 <= SD_ADDRESS(5);
---A6 <= SD_ADDRESS(6);
---A7 <= SD_ADDRESS(7);
---A8 <= SD_ADDRESS(8);
---A9 <= SD_ADDRESS(9);
---A10 <= SD_ADDRESS(10);
---A11 <= SD_ADDRESS(11);
---A12 <= SD_ADDRESS(12);
+    A0 => A0,
+    A1 => A1,
+    A2 => A2,
+    A3 => A3,
+    A4 => A4,
+    A5 => A5,
+    A6 => A6,
+    A7 => A7,
+    A8 => A8,
+    A9 => A9,
+    A10 => A10,
+    A11 => A11,
+    A12 => A12,
 
---D0 <= SD_DATA(0);
---D1 <= SD_DATA(1);
---D2 <= SD_DATA(2);
---D3 <= SD_DATA(3);
---D4 <= SD_DATA(4);
---D5 <= SD_DATA(5);
---D6 <= SD_DATA(6);
---D7 <= SD_DATA(7);
---D8 <= SD_DATA(8);
---D9 <= SD_DATA(9);
---D10 <= SD_DATA(10);
---D11 <= SD_DATA(11);
---D12 <= SD_DATA(12);
---D13 <= SD_DATA(13);
---D14 <= SD_DATA(14);
---D15 <= SD_DATA(15);
+    BA0 => BA0,
+    BA1 => BA1,
 
---RamController_module: RamController
---port map
---(
---    CLOCK_266MHz => CLOCK_266MHz,
---    CLOCk_133MHz => CLOCk_133MHz,
---    RESET => TEST_RESET,
+    CLK_SDRAM => CLK_SDRAM,
+    CKE => CKE,
+    CS => CS,
+    RAS => RAS,
+    CAS => CAS,
+    WE => WE,
 
---    -- SDRAM Interface
---    A => SD_ADDRESS,
---    BA => SD_BANK,
---    CLK_SDRAM => CLK_SDRAM,
---    CKE => CKE,
---    CS => CS,
---    RAS => RAS,
---    CAS => CAS,
---    WE => WE,
---    DQ => SD_DATA,
---    LDQM => LDQM,
---    UDQM => UDQM,
+    DQ0 => D0,
+    DQ1 => D1,
+    DQ2 => D2,
+    DQ3 => D3,
+    DQ4 => D4,
+    DQ5 => D5,
+    DQ6 => D6,
+    DQ7 => D7,
+    DQ8 => D8,
+    DQ9 => D9,
+    DQ10 => D10,
+    DQ11 => D11,
+    DQ12 => D12,
+    DQ13 => D13,
+    DQ14 => D14,
+    DQ15 => D15,
 
---    -- User Interface
---    ADDR => TEST_ADDR,
---    DATA_IN => TEST_DATA_IN,
---    DATA_OUT => TEST_DATA_OUT,
---    READ_EN => TEST_READ_EN,
---    WRITE_EN => TEST_WRITE_EN,
---    BUSY => TEST_BUSY
---);
+    LDQM => LDQM,
+    UDQM => UDQM,
+
+    -- User Interface
+    ADDR => TEST_ADDR,
+    DATA_IN => TEST_DATA_IN,
+    DATA_OUT => TEST_DATA_OUT,
+    READ_EN => TEST_READ_EN,
+    WRITE_EN => TEST_WRITE_EN,
+    BUSY => TEST_BUSY
+);
 
 --process (CLOCK_133MHz, test_ram_state)
 --begin
@@ -1276,5 +1301,14 @@ port map
 --     Decimal: 87
 --
 ------------------------------------------------------------------------------------------------------------------------------------------
+
+LED_1 <= '0';
+LED_2 <= '1';
+LED_3 <= '0';
+LED_4 <= '1';
+LED_5 <= '0';
+LED_6 <= '1';
+LED_7 <= '0';
+LED_8 <= '1';
 
 end rtl;

@@ -1,54 +1,36 @@
-####################################################################################################################################
-# Clock 50MHz
-####################################################################################################################################
-
-set MIN_I_DELAY_50MHz  0
-set MAX_I_DELAY_50MHz  2
-
-set MIN_O_DELAY_50MHz  0
-set MAX_O_DELAY_50MHz  2
-
-set MIN_I_DELAY_200MHz 0
-set MAX_I_DELAY_200MHz 0.5
-
-set MIN_O_DELAY_200MHz 0
-set MAX_O_DELAY_200MHz 0.5
-
-# create_clock -name {CLOCK_50MHz} -period 20 CLOCK_50MHz
-create_clock -name {CLOCK_50MHz} -period 20 -waveform {0.000 10.000} [get_ports {CLOCK_50MHz}]
-
-set_input_delay -clock [get_clocks CLOCK_50MHz] -max $MAX_I_DELAY_50MHz -rise [get_nets CLOCK_50MHz]
-set_input_delay -clock [get_clocks CLOCK_50MHz] -max $MAX_I_DELAY_50MHz -fall [get_nets CLOCK_50MHz]
-set_input_delay -clock [get_clocks CLOCK_50MHz] -min $MIN_I_DELAY_50MHz -rise [get_nets CLOCK_50MHz]
-set_input_delay -clock [get_clocks CLOCK_50MHz] -min $MIN_I_DELAY_50MHz -fall [get_nets CLOCK_50MHz]
-
-set_clock_uncertainty 0.2 -rise_from [get_clocks {CLOCK_50MHz}] -to [get_clocks {CLOCK_50MHz}]
-set_clock_uncertainty 0.1 -fall_from [get_clocks {CLOCK_50MHz}] -to [get_clocks {CLOCK_50MHz}]
-
 ###########################################################################################################################
-# Clock 50MHz - Derived from PLL
+# Timing Constants [ns]
 ###########################################################################################################################
 
-# create_clock -name {CLOCk_133MHz} -period 5 -waveform {0.000 2.500} [get_nets {CLOCk_133MHz}]
+# The signal is expected to arrive no later than 5.0 ns after the clock edge
+set MAX_I_DELAY_50MHz  5.0
+# The signal must arrive no earlier than 2.0 ns after the clock edge
+set MIN_I_DELAY_50MHz  2.0
 
-# set_input_delay -clock [get_clocks CLOCk_133MHz] -max $MAX_I_DELAY_200MHz -rise [get_nets CLOCk_133MHz]
-# set_input_delay -clock [get_clocks CLOCk_133MHz] -max $MAX_I_DELAY_200MHz -fall [get_nets CLOCk_133MHz]
-# set_input_delay -clock [get_clocks CLOCk_133MHz] -min $MIN_I_DELAY_200MHz -rise [get_nets CLOCk_133MHz]
-# set_input_delay -clock [get_clocks CLOCk_133MHz] -min $MIN_I_DELAY_200MHz -fall [get_nets CLOCk_133MHz]
+# This specifies how long after the clock edge the signal is allowed to change
+set MAX_O_DELAY_50MHz  5.0
+# Indicating the earliest time the signal can change after the clock edge
+set MIN_O_DELAY_50MHz  2.0
 
-# set_clock_uncertainty 0.2 -rise_from [get_clocks {CLOCk_133MHz}] -to [get_clocks {CLOCk_133MHz}]
-# set_clock_uncertainty 0.1 -fall_from [get_clocks {CLOCk_133MHz}] -to [get_clocks {CLOCk_133MHz}]
+# It means that output signals can change no later than 3.0 ns after the rising edge of CLOCK_133MHz
+set MAX_O_DELAY_133MHz 3.0
+# The output can change no sooner than 1.0 ns after the rising edge of CLOCK_133MHz
+set MIN_O_DELAY_133MHz 1.0
 
 ###########################################################################################################################
-# SDRAM
+# Clock 50MHz :: Base
 ###########################################################################################################################
 
-# set_output_delay -clock [get_clocks CLOCk_133MHz] -max $MAX_O_DELAY_200MHz [get_ports {A0 A1 A2 A3 A4 A5 A6 A7 A8 A9 A10 A11 A12}]
-# set_output_delay -clock [get_clocks CLOCk_133MHz] -min $MIN_O_DELAY_200MHz [get_ports {A0 A1 A2 A3 A4 A5 A6 A7 A8 A9 A10 A11 A12}]
-# set_output_delay -clock [get_clocks CLOCk_133MHz] -max $MAX_O_DELAY_200MHz [get_ports {D0 D1 D2 D3 D4 D5 D6 D7 D8 D9 D10 D11 D12 D13 D14 D15}]
-# set_output_delay -clock [get_clocks CLOCk_133MHz] -min $MIN_O_DELAY_200MHz [get_ports {D0 D1 D2 D3 D4 D5 D6 D7 D8 D9 D10 D11 D12 D13 D14 D15}]
-# set_output_delay -clock [get_clocks CLOCk_133MHz] -max $MAX_O_DELAY_200MHz [get_ports {CLK_SDRAM BA0 BA1 CAS CKE RAS WE CS LDQM UDQM}]
-# set_output_delay -clock [get_clocks CLOCk_133MHz] -min $MIN_O_DELAY_200MHz [get_ports {CLK_SDRAM BA0 BA1 CAS CKE RAS WE CS LDQM UDQM}]
+create_clock -name CLOCK_50MHz -period 20.0 -waveform {0.000 10.000} [get_ports CLOCK_50MHz]
+
+set_clock_uncertainty 0.15 -setup -to [get_clocks CLOCK_50MHz]
+set_clock_uncertainty 0.10 -hold -to [get_clocks CLOCK_50MHz]
+
+###########################################################################################################################
+# Deriving PLL Clocks Automatically (for 133MHz and 266MHz)
+###########################################################################################################################
+
+derive_pll_clocks
 
 ###########################################################################################################################
 # Input Constraints :: relative to the CLOCK_50MHz
@@ -67,8 +49,8 @@ set_input_delay -clock [get_clocks CLOCK_50MHz] -max $MAX_I_DELAY_50MHz [get_por
 set_input_delay -clock [get_clocks CLOCK_50MHz] -min $MIN_I_DELAY_50MHz [get_ports {SECONDARY_CS SECONDARY_MOSI SECONDARY_SCLK}]
 
 # SPI BMI160 Sensor
-set_input_delay -clock [get_clocks CLOCK_50MHz] -max $MAX_I_DELAY_50MHz [get_ports {BMI160_CS BMI160_MOSI BMI160_SCLK}]
-set_input_delay -clock [get_clocks CLOCK_50MHz] -min $MIN_I_DELAY_50MHz [get_ports {BMI160_CS BMI160_MOSI BMI160_SCLK}]
+set_input_delay -clock [get_clocks CLOCK_50MHz] -max $MAX_I_DELAY_50MHz [get_ports BMI160_MISO]
+set_input_delay -clock [get_clocks CLOCK_50MHz] -min $MIN_I_DELAY_50MHz [get_ports BMI160_MISO]
 
 # UART inputs
 set_input_delay -clock [get_clocks CLOCK_50MHz] -max $MAX_I_DELAY_50MHz [get_ports {UART_BBB_TX UART_x86_RX}]
@@ -81,6 +63,10 @@ set_input_delay -clock [get_clocks CLOCK_50MHz] -min $MIN_I_DELAY_50MHz [get_por
 # Other inputs
 set_input_delay -clock [get_clocks CLOCK_50MHz] -max $MAX_I_DELAY_50MHz [get_ports {INT_FROM_CPU WDG_INT_FROM_CPU}]
 set_input_delay -clock [get_clocks CLOCK_50MHz] -min $MIN_I_DELAY_50MHz [get_ports {INT_FROM_CPU WDG_INT_FROM_CPU}]
+
+# Altera
+set_input_delay -clock [get_clocks CLOCK_50MHz] -max $MAX_I_DELAY_50MHz [get_ports {altera_reserved_tdi altera_reserved_tms}]
+set_input_delay -clock [get_clocks CLOCK_50MHz] -min $MIN_I_DELAY_50MHz [get_ports {altera_reserved_tdi altera_reserved_tms}]
 
 ###########################################################################################################################
 # Output Constraints
@@ -97,6 +83,10 @@ set_output_delay -clock [get_clocks CLOCK_50MHz] -min $MIN_O_DELAY_50MHz [get_po
 # SPI secondary outputs
 set_output_delay -clock [get_clocks CLOCK_50MHz] -max $MAX_O_DELAY_50MHz [get_ports {SECONDARY_MISO}]
 set_output_delay -clock [get_clocks CLOCK_50MHz] -min $MIN_O_DELAY_50MHz [get_ports {SECONDARY_MISO}]
+
+# SPI BMI160 Sensor
+set_output_delay -clock [get_clocks CLOCK_50MHz] -max $MAX_I_DELAY_50MHz [get_ports {BMI160_CS BMI160_MOSI BMI160_SCLK}]
+set_output_delay -clock [get_clocks CLOCK_50MHz] -min $MIN_I_DELAY_50MHz [get_ports {BMI160_CS BMI160_MOSI BMI160_SCLK}]
 
 # UART outputs
 set_output_delay -clock [get_clocks CLOCK_50MHz] -max $MAX_O_DELAY_50MHz [get_ports {UART_BBB_RX UART_x86_TX}]
@@ -117,6 +107,14 @@ set_output_delay -clock [get_clocks CLOCK_50MHz] -min $MIN_O_DELAY_50MHz [get_po
 # Other outputs
 set_output_delay -clock [get_clocks CLOCK_50MHz] -max $MAX_O_DELAY_50MHz [get_ports {INT_FROM_FPGA WDG_INT_FROM_FPGA}]
 set_output_delay -clock [get_clocks CLOCK_50MHz] -min $MIN_O_DELAY_50MHz [get_ports {INT_FROM_FPGA WDG_INT_FROM_FPGA}]
+
+# PWM output
+set_output_delay -clock [get_clocks CLOCK_50MHz] -max $MAX_O_DELAY_50MHz [get_ports TIMER_INT_FROM_FPGA]
+set_output_delay -clock [get_clocks CLOCK_50MHz] -min $MIN_O_DELAY_50MHz [get_ports TIMER_INT_FROM_FPGA]
+
+# Altera
+set_output_delay -clock [get_clocks CLOCK_50MHz] -max $MAX_O_DELAY_50MHz [get_ports altera_reserved_tdo]
+set_output_delay -clock [get_clocks CLOCK_50MHz] -min $MIN_O_DELAY_50MHz [get_ports altera_reserved_tdo]
 
 ###########################################################################################################################
 # I2C Constraints
@@ -141,4 +139,27 @@ set_input_delay -clock [get_clocks CLOCK_50MHz] -min $MIN_I_DELAY_50MHz [get_por
 
 set_output_delay -clock [get_clocks CLOCK_50MHz] -max $MAX_O_DELAY_50MHz [get_ports {NRF905_TX_EN NRF905_TRX_CE NRF905_PWR_UP NRF905_MOSI NRF905_SCK NRF905_CSN}]
 set_output_delay -clock [get_clocks CLOCK_50MHz] -min $MIN_O_DELAY_50MHz [get_ports {NRF905_TX_EN NRF905_TRX_CE NRF905_PWR_UP NRF905_MOSI NRF905_SCK NRF905_CSN}]
+
+###########################################################################################################################
+# SDRAM @ CLOCK_133MHz
+###########################################################################################################################
+
+set CLOCK_133MHz [get_clocks PLL_RamClock_module|altpll_component|auto_generated|pll1|clk[1]]
+set CLOCK_266MHz [get_clocks PLL_RamClock_module|altpll_component|auto_generated|pll1|clk[0]]
+
+set_clock_uncertainty 0.15 -setup -to $CLOCK_133MHz
+set_clock_uncertainty 0.10 -hold -to $CLOCK_133MHz
+
+# For {A0, A1, A2, ... A12}
+set_output_delay -clock $CLOCK_133MHz -max $MAX_O_DELAY_133MHz [get_ports {A0 A1 A2 A3 A4 A5 A6 A7 A8 A9 A10 A11 A12}]
+set_output_delay -clock $CLOCK_133MHz -min $MIN_O_DELAY_133MHz [get_ports {A0 A1 A2 A3 A4 A5 A6 A7 A8 A9 A10 A11 A12}]
+
+# For {D0, D1, D2, ... D15}
+set_output_delay -clock $CLOCK_133MHz -max $MAX_O_DELAY_133MHz [get_ports {D0 D1 D2 D3 D4 D5 D6 D7 D8 D9 D10 D11 D12 D13 D14 D15}]
+set_output_delay -clock $CLOCK_133MHz -min $MIN_O_DELAY_133MHz [get_ports {D0 D1 D2 D3 D4 D5 D6 D7 D8 D9 D10 D11 D12 D13 D14 D15}]
+
+# For {CLK_SDRAM, BA0, BA1, ...}
+set_output_delay -clock $CLOCK_133MHz -max $MAX_O_DELAY_133MHz [get_ports {CLK_SDRAM BA0 BA1 CAS CKE RAS WE CS LDQM UDQM}]
+set_output_delay -clock $CLOCK_133MHz -min $MIN_O_DELAY_133MHz [get_ports {CLK_SDRAM BA0 BA1 CAS CKE RAS WE CS LDQM UDQM}]
+
 
