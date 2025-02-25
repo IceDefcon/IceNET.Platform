@@ -27,12 +27,8 @@ Commander::Commander() :
 {
     std::cout << "[INFO] [CONSTRUCTOR] " << this << " :: Instantiate Commander" << std::endl;
 
-    /* Activate DMA transfer to send config to FPGA */
-    m_commandMatrix[CMD_FPGA_CONFIG][0] = 0xC0;
-    m_commandMatrix[CMD_FPGA_CONFIG][1] = 0xF1;
-    /* Reconfigure DMA Engine to work with single tramsfer */
-    m_commandMatrix[CMD_DMA_RECONFIG][0] = 0xAE;
-    m_commandMatrix[CMD_DMA_RECONFIG][1] = 0xC0;
+    m_commandMatrix[CMD_FPGA_CONFIG] = {0xC0, 0xF1}; /* Activate DMA transfer to send IMU's config to FPGA */
+    m_commandMatrix[CMD_DMA_RECONFIG] = {0xAE, 0xC0}; /* Reconfigure DMA Engine to work with single tramsfer */
 }
 
 Commander::~Commander()
