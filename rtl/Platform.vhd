@@ -211,18 +211,18 @@ port
     --
     S1_BMI160_CS : out std_logic;   -- PIN_Y21 :: Orange
     S1_BMI160_MISO : in std_logic;  -- PIN_W21 :: Yellow
+    S1_BMI160_MOSI : out std_logic; -- PIN_W22 :: Red
     S1_BMI160_SCLK : out std_logic; -- PIN_Y22 :: Orange
-    S1_BMI160_MOSI : out std_logic;  -- PIN_W22 :: Red
 
     S2_BMI160_CS : out std_logic;   -- PIN_V21 :: Green
     S2_BMI160_MISO : in std_logic;  -- PIN_U21 :: Blue
+    S2_BMI160_MOSI : out std_logic; -- PIN_U22 :: Purple
     S2_BMI160_SCLK : out std_logic; -- PIN_V22 :: Grey
-    S2_BMI160_MOSI : out std_logic;  -- PIN_U22 :: Purple
 
     S3_BMI160_CS : out std_logic;   -- PIN_R21 :: Purple
     S3_BMI160_MISO : in std_logic;  -- PIN_P21 :: Blue
-    S3_BMI160_SCLK : out std_logic; -- PIN_R22 :: Green
-    S3_BMI160_MOSI : out std_logic  -- PIN_P22 :: Yellow
+    S3_BMI160_MOSI : out std_logic; -- PIN_P22 :: Yellow
+    S3_BMI160_SCLK : out std_logic  -- PIN_R22 :: Green
 );
 end Platform;
 
@@ -277,17 +277,23 @@ constant SWITCH_I2C : std_logic_vector(1 downto 0) := "00";
 constant SWITCH_SPI : std_logic_vector(1 downto 0) := "01";
 constant SWITCH_PWM : std_logic_vector(1 downto 0) := "10";
 -- SPI Mux
-constant SWITCH_BMI160_S1 : std_logic_vector(6 downto 0) := "0010001";
-constant SWITCH_BMI160_S2 : std_logic_vector(6 downto 0) := "0010010";
-constant SWITCH_BMI160_S3 : std_logic_vector(6 downto 0) := "0010011";
-constant SWITCH_nRF905 : std_logic_vector(6 downto 0) := "0010100";
+constant SWITCH_BMI160_S1 : std_logic_vector(6 downto 0) := "1000100"; -- "0010001"; -- Must be upside down :: Due to offload_id for i2c
+constant SWITCH_BMI160_S2 : std_logic_vector(6 downto 0) := "0100100"; -- "0010010"; -- Must be upside down :: Due to offload_id for i2c
+constant SWITCH_BMI160_S3 : std_logic_vector(6 downto 0) := "1100100"; -- "0010011"; -- Must be upside down :: Due to offload_id for i2c
+constant SWITCH_nRF905 : std_logic_vector(6 downto 0) := "0010100"; -- Must be upside down :: Same as upside down
 -- Feedback interrupts
 signal interrupt_i2c_feedback : std_logic := '0';
-signal interrupt_spi_feedback : std_logic := '0';
+signal interrupt_spi_rf_feedback : std_logic := '0';
+signal interrupt_spi_bmi160_s1_feedback : std_logic := '0';
+signal interrupt_spi_bmi160_s2_feedback : std_logic := '0';
+signal interrupt_spi_bmi160_s3_feedback : std_logic := '0';
 signal interrupt_pwm_feedback : std_logic := '0';
 -- Feedback data
 signal data_i2c_feedback : std_logic_vector(7 downto 0) := (others => '0');
-signal data_spi_feedback : std_logic_vector(7 downto 0) := "00010001";
+signal data_spi_rf_feedback : std_logic_vector(7 downto 0) := "00010001";
+signal data_spi_bmi160_s1_feedback : std_logic_vector(7 downto 0) := "00010101";
+signal data_spi_bmi160_s2_feedback : std_logic_vector(7 downto 0) := "00010110";
+signal data_spi_bmi160_s3_feedback : std_logic_vector(7 downto 0) := "00010111";
 signal data_pwm_feedback : std_logic_vector(7 downto 0) := "11111101";
 -- Debounce signals
 signal interrupt_from_cpu : std_logic := '0';
@@ -739,7 +745,10 @@ begin
     if rising_edge(CLOCK_50MHz) then
         if interrupt_i2c_feedback = '1'
         or interrupt_pwm_feedback = '1'
-        or interrupt_spi_feedback = '1' --- TODO !!!
+        or interrupt_spi_bmi160_s1_feedback = '1'
+        or interrupt_spi_bmi160_s2_feedback = '1'
+        or interrupt_spi_bmi160_s3_feedback = '1'
+        or interrupt_spi_rf_feedback = '1'
         then
             if feedback_interrupt_timer = "110010" then -- 50 * 20 = 1000ns = 1us interrupt pulse back to CPU
                 INT_FROM_FPGA <= '0';
@@ -762,8 +771,14 @@ begin
             secondary_parallel_MISO <= data_i2c_feedback;
         elsif interrupt_pwm_feedback = '1' then
             secondary_parallel_MISO <= data_pwm_feedback;
-        elsif interrupt_spi_feedback = '1' then
-            secondary_parallel_MISO <= data_spi_feedback;
+        elsif interrupt_spi_bmi160_s1_feedback = '1' then
+            secondary_parallel_MISO <= data_spi_bmi160_s1_feedback;
+        elsif interrupt_spi_bmi160_s2_feedback = '1' then
+            secondary_parallel_MISO <= data_spi_bmi160_s2_feedback;
+        elsif interrupt_spi_bmi160_s3_feedback = '1' then
+            secondary_parallel_MISO <= data_spi_bmi160_s3_feedback;
+        elsif interrupt_spi_rf_feedback = '1' then
+            secondary_parallel_MISO <= data_spi_rf_feedback;
         end if;
     end if;
 end process;
@@ -1046,29 +1061,14 @@ begin
         if offload_ready = '1' then
             if offload_ctrl(2 downto 1) = SWITCH_I2C then
                 switch_i2c_ready <= '1';
-                switch_pwm_ready <= '0';
             elsif offload_ctrl(2 downto 1) = SWITCH_SPI then
-                switch_i2c_ready <= '0';
-                switch_pwm_ready <= '0';
                 if offload_id = SWITCH_BMI160_S1 then
                     switch_bmi160_s1_ready <= '1';
-                    switch_bmi160_s2_ready <= '0';
-                    switch_bmi160_s3_ready <= '0';
-                    switch_spi_RF_ready <= '0';
                 elsif offload_id = SWITCH_BMI160_S2 then
-                    switch_bmi160_s1_ready <= '0';
                     switch_bmi160_s2_ready <= '1';
-                    switch_bmi160_s3_ready <= '0';
-                    switch_spi_RF_ready <= '0';
                 elsif offload_id = SWITCH_BMI160_S3 then
-                    switch_bmi160_s1_ready <= '0';
-                    switch_bmi160_s2_ready <= '0';
                     switch_bmi160_s3_ready <= '1';
-                    switch_spi_RF_ready <= '0';
                 elsif offload_id = SWITCH_nRF905 then
-                    switch_bmi160_s1_ready <= '0';
-                    switch_bmi160_s2_ready <= '0';
-                    switch_bmi160_s3_ready <= '0';
                     switch_spi_RF_ready <= '1';
                 else
                     switch_bmi160_s1_ready <= '0';
@@ -1077,15 +1077,22 @@ begin
                     switch_spi_RF_ready <= '0';
                 end if;
             elsif offload_ctrl(2 downto 1) = SWITCH_PWM then
-                switch_i2c_ready <= '0';
                 switch_pwm_ready <= '1';
             else
                 switch_i2c_ready <= '0';
                 switch_pwm_ready <= '0';
+                switch_bmi160_s1_ready <= '0';
+                switch_bmi160_s2_ready <= '0';
+                switch_bmi160_s3_ready <= '0';
+                switch_spi_RF_ready <= '0';
             end if;
         else
             switch_i2c_ready <= '0';
             switch_pwm_ready <= '0';
+            switch_bmi160_s1_ready <= '0';
+            switch_bmi160_s2_ready <= '0';
+            switch_bmi160_s3_ready <= '0';
+            switch_spi_RF_ready <= '0';
         end if;
     end if;
 end process;
@@ -1143,8 +1150,8 @@ SpiController_BMI160_S1_module: SpiController port map
     CTRL_MOSI => ctrl_BMI160_S1_MOSI,
     CTRL_SCK => ctrl_BMI160_S1_SCLK,
 
-    FPGA_INT => open,--interrupt_spi_feedback,
-    FEEDBACK_DATA => open--data_spi_feedback
+    FPGA_INT => interrupt_spi_bmi160_s1_feedback,
+    FEEDBACK_DATA => data_spi_bmi160_s1_feedback
 );
 
 SpiController_BMI160_S2_module: SpiController port map
@@ -1168,8 +1175,8 @@ SpiController_BMI160_S2_module: SpiController port map
     CTRL_MOSI => ctrl_BMI160_S2_MOSI,
     CTRL_SCK => ctrl_BMI160_S2_SCLK,
 
-    FPGA_INT => open,--interrupt_spi_feedback,
-    FEEDBACK_DATA => open--data_spi_feedback
+    FPGA_INT => interrupt_spi_bmi160_s2_feedback,
+    FEEDBACK_DATA => data_spi_bmi160_s2_feedback
 );
 
 SpiController_BMI160_S3_module: SpiController port map
@@ -1193,8 +1200,8 @@ SpiController_BMI160_S3_module: SpiController port map
     CTRL_MOSI => ctrl_BMI160_S3_MOSI,
     CTRL_SCK => ctrl_BMI160_S3_SCLK,
 
-    FPGA_INT => open,--interrupt_spi_feedback,
-    FEEDBACK_DATA => open--data_spi_feedback
+    FPGA_INT => interrupt_spi_bmi160_s3_feedback,
+    FEEDBACK_DATA => data_spi_bmi160_s3_feedback
 );
 
 SpiController_RF_module: SpiController port map
@@ -1218,8 +1225,8 @@ SpiController_RF_module: SpiController port map
     CTRL_MOSI => ctrl_RF_MOSI,
     CTRL_SCK => ctrl_RF_SCLK,
 
-    FPGA_INT => interrupt_spi_feedback,
-    FEEDBACK_DATA => data_spi_feedback
+    FPGA_INT => interrupt_spi_rf_feedback,
+    FEEDBACK_DATA => data_spi_rf_feedback
 );
 
 -------------------------------------
@@ -1239,6 +1246,12 @@ NRF905_TX_EN <= 'Z';
 -------------------------------------
 --
 -- BMI160
+--
+-- CS :: CS
+-- SAO :: MISO
+-- SDX :: MOSI
+-- SCX :: SCK
+--
 --
 -------------------------------------
 S1_BMI160_CS <= ctrl_BMI160_S1_CS;
