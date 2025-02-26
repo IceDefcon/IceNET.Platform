@@ -17,8 +17,13 @@ set MAX_O_DELAY_133MHz 3.0
 # The output can change no sooner than 1.0 ns after the rising edge of CLOCK_133MHz
 set MIN_O_DELAY_133MHz 1.0
 
+# 40% of 266MHz clock ---> 1.504ns :: Setup time
 set MAX_O_DELAY_266MHz 1.5
+# 13% of 266MHz clock ---> 0.488ns :: HOLD time
 set MIN_O_DELAY_266MHz 0.5
+
+set MAX_O_DELAY_1GHz 0.4
+set MIN_O_DELAY_1GHz 0.13
 
 ###########################################################################################################################
 # Clock 50MHz :: Base
@@ -31,6 +36,7 @@ derive_clock_uncertainty
 
 set CLOCK_133MHz [get_clocks PLL_RamClock_module|altpll_component|auto_generated|pll1|clk[0]]
 set CLOCK_266MHz [get_clocks PLL_RamClock_module|altpll_component|auto_generated|pll1|clk[1]]
+set CLOCK_1GHz [get_clocks PLL_FastClock_module|altpll_component|auto_generated|pll1|clk[0]]
 
 ###########################################################################################################################
 # Input Constraints :: relative to the CLOCK_50MHz
