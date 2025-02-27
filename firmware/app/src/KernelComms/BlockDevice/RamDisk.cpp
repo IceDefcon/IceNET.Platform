@@ -250,7 +250,15 @@ int RamDisk::sendConfig()
 
     openDEV();
 
+    /////////////////////////////////////////////////////////////////////////////////
+    //
+    // TODO
+    //
     // Write to sector 0 (DMA Engine Configuration)
+    //
+    // Plus all device configuraton in consecutive byte stream
+    //
+    /////////////////////////////////////////////////////////////////////////////////
     lseek(m_fileDescriptor, 0, SEEK_SET);
     bytes = write(m_fileDescriptor, &m_engineConfig[0], HEADER_SIZE);
     if (bytes < 0)
@@ -264,6 +272,15 @@ int RamDisk::sendConfig()
     // Write device configurations to their respective sectors
     for (size_t i = 0; i < m_deviceConfigs.size(); i++)
     {
+        /////////////////////////////////////////////////////////////////////////////////
+        //
+        // TODO :: Move everyting into Sector 0
+        //
+        // So we dont change the position of the m_fileDescriptor
+        //
+        // lseek(m_fileDescriptor, SECTOR_SIZE * (i + 1), SEEK_SET);
+        //
+        /////////////////////////////////////////////////////////////////////////////////
         lseek(m_fileDescriptor, SECTOR_SIZE * (i + 1), SEEK_SET);
         bytes = write(m_fileDescriptor, m_deviceConfigs[i], m_deviceConfigs[i]->size);
         if (bytes < 0)

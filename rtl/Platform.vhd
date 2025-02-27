@@ -1396,6 +1396,6 @@ LED_4 <= '1';
 LED_5 <= '0';
 LED_6 <= '1';
 LED_7 <= '0';
-LED_8 <= CLOCK_1GHz;
+LED_8 <= '1';
 
 end rtl;
