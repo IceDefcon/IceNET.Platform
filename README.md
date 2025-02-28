@@ -37,6 +37,8 @@
 	10. Add a Number of Drone Arm Instances in the DroneCtrl unit
 	11. Synchronize lengths of feedback interrupts :: I2C, SPI, PWM
 	12. Adjust feedback preambles @ SPI transmissions between Kernel<-->FPGA
+	13. Remove concatenation of bytes :: Use single Sector 0 for SPI/DMI configuration
+	14. New concept of Ram Disk Commander :: Command ---> Sector number + data size + operation + etc...
 
 # Testing Hardware Modules
 

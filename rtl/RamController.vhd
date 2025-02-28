@@ -7,8 +7,7 @@
     Port
     (
         CLOCK_133MHz : in  std_logic;
-        CLOCK_266MHz : in  std_logic;
-        RESET       : in  std_logic;
+        RESET : in  std_logic;
 
         --
         --  rising edge [0]
@@ -44,7 +43,6 @@
         BA0          : out std_logic; -- Bank Address
         BA1          : out std_logic;
 
-        CLK_SDRAM   : out std_logic;
         CKE         : out std_logic;
         CS          : out std_logic;
         RAS         : out std_logic;
@@ -127,13 +125,6 @@
         constant MODE_REG : std_logic_vector(12 downto 0) := "00" & "00" & "00" & "010" & "0" & "000";
 
     begin
-
-        process(CLOCK_266MHz)
-        begin
-            if rising_edge(CLOCK_266MHz) then
-                CLK_SDRAM <= CLOCK_133MHz;
-            end if;
-        end process;
 
         process (CLOCK_133MHz)
         begin

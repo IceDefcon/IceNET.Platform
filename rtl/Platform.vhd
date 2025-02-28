@@ -209,10 +209,20 @@ port
     -- Fast SPI bus for sensors
     -- 32 pins for 8 x SPI Devices
     --
-    BMI160_CS : out std_logic;   -- PIN_V21 :: Yellow
-    BMI160_MISO : in std_logic;  -- PIN_U21 :: Orange
-    BMI160_SCLK : out std_logic; -- PIN_V22 :: Green
-    BMI160_MOSI : out std_logic  -- PIN_U22 :: Bue
+    S1_BMI160_CS : out std_logic;   -- PIN_Y21 :: Orange
+    S1_BMI160_MISO : in std_logic;  -- PIN_W21 :: Yellow
+    S1_BMI160_MOSI : out std_logic; -- PIN_W22 :: Red
+    S1_BMI160_SCLK : out std_logic; -- PIN_Y22 :: Orange
+
+    S2_BMI160_CS : out std_logic;   -- PIN_V21 :: Green
+    S2_BMI160_MISO : in std_logic;  -- PIN_U21 :: Blue
+    S2_BMI160_MOSI : out std_logic; -- PIN_U22 :: Purple
+    S2_BMI160_SCLK : out std_logic; -- PIN_V22 :: Grey
+
+    S3_BMI160_CS : out std_logic;   -- PIN_R21 :: Purple
+    S3_BMI160_MISO : in std_logic;  -- PIN_P21 :: Blue
+    S3_BMI160_MOSI : out std_logic; -- PIN_P22 :: Yellow
+    S3_BMI160_SCLK : out std_logic  -- PIN_R22 :: Green
 );
 end Platform;
 
@@ -258,21 +268,32 @@ signal offload_data : std_logic_vector(7 downto 0) := (others => '0');
 signal offload_wait : std_logic := '0';
 -- PacketSwitch
 signal switch_i2c_ready : std_logic := '0';
-signal switch_spi_ready : std_logic := '0';
+signal switch_bmi160_s1_ready : std_logic := '0';
+signal switch_bmi160_s2_ready : std_logic := '0';
+signal switch_bmi160_s3_ready : std_logic := '0';
+signal switch_spi_RF_ready : std_logic := '0';
 signal switch_pwm_ready : std_logic := '0';
 constant SWITCH_I2C : std_logic_vector(1 downto 0) := "00";
 constant SWITCH_SPI : std_logic_vector(1 downto 0) := "01";
 constant SWITCH_PWM : std_logic_vector(1 downto 0) := "10";
 -- SPI Mux
-signal switch_spi_BMI_ready : std_logic := '0';
-signal switch_spi_RF_ready : std_logic := '0';
+constant SWITCH_BMI160_S1 : std_logic_vector(6 downto 0) := "1000100"; -- "0010001"; -- Must be upside down :: Due to offload_id for i2c
+constant SWITCH_BMI160_S2 : std_logic_vector(6 downto 0) := "0100100"; -- "0010010"; -- Must be upside down :: Due to offload_id for i2c
+constant SWITCH_BMI160_S3 : std_logic_vector(6 downto 0) := "1100100"; -- "0010011"; -- Must be upside down :: Due to offload_id for i2c
+constant SWITCH_nRF905 : std_logic_vector(6 downto 0) := "0010100"; -- Must be upside down :: Same as upside down
 -- Feedback interrupts
 signal interrupt_i2c_feedback : std_logic := '0';
-signal interrupt_spi_feedback : std_logic := '0';
+signal interrupt_spi_rf_feedback : std_logic := '0';
+signal interrupt_spi_bmi160_s1_feedback : std_logic := '0';
+signal interrupt_spi_bmi160_s2_feedback : std_logic := '0';
+signal interrupt_spi_bmi160_s3_feedback : std_logic := '0';
 signal interrupt_pwm_feedback : std_logic := '0';
 -- Feedback data
 signal data_i2c_feedback : std_logic_vector(7 downto 0) := (others => '0');
-signal data_spi_feedback : std_logic_vector(7 downto 0) := "00010001";
+signal data_spi_rf_feedback : std_logic_vector(7 downto 0) := "00010001";
+signal data_spi_bmi160_s1_feedback : std_logic_vector(7 downto 0) := "00010101";
+signal data_spi_bmi160_s2_feedback : std_logic_vector(7 downto 0) := "00010110";
+signal data_spi_bmi160_s3_feedback : std_logic_vector(7 downto 0) := "00010111";
 signal data_pwm_feedback : std_logic_vector(7 downto 0) := "11111101";
 -- Debounce signals
 signal interrupt_from_cpu : std_logic := '0';
@@ -321,6 +342,7 @@ signal TEST_BUSY : std_logic := '0';
 -- PLL
 signal CLOCK_266MHz : std_logic := '0';
 signal CLOCk_133MHz : std_logic := '0';
+signal CLOCk_1GHz : std_logic := '0';
 -- SPI Controller
 signal spi_mux : std_logic_vector(3 downto 0) := "0000";
 signal ctrl_CS : std_logic := '0';
@@ -334,11 +356,18 @@ signal ctrl_RF_MISO : std_logic := '0';
 signal ctrl_RF_MOSI : std_logic := '0';
 signal ctrl_RF_SCLK : std_logic := '0';
 -- SPI :: BMI160
-signal ctrl_BMI_CS : std_logic := '0';
-signal ctrl_BMI_MISO : std_logic := '0';
-signal ctrl_BMI_MOSI : std_logic := '0';
-signal ctrl_BMI_SCLK : std_logic := '0';
-
+signal ctrl_BMI160_S1_CS : std_logic := '0';
+signal ctrl_BMI160_S1_MISO : std_logic := '0';
+signal ctrl_BMI160_S1_MOSI : std_logic := '0';
+signal ctrl_BMI160_S1_SCLK : std_logic := '0';
+signal ctrl_BMI160_S2_CS : std_logic := '0';
+signal ctrl_BMI160_S2_MISO : std_logic := '0';
+signal ctrl_BMI160_S2_MOSI : std_logic := '0';
+signal ctrl_BMI160_S2_SCLK : std_logic := '0';
+signal ctrl_BMI160_S3_CS : std_logic := '0';
+signal ctrl_BMI160_S3_MISO : std_logic := '0';
+signal ctrl_BMI160_S3_MOSI : std_logic := '0';
+signal ctrl_BMI160_S3_SCLK : std_logic := '0';
 ----------------------------------------------------------------------------------------------------------------
 -- COMPONENTS DECLARATION
 ----------------------------------------------------------------------------------------------------------------
@@ -457,8 +486,7 @@ component RamController
 Port
 (
     CLOCK_133MHz : in  std_logic;
-    CLOCK_266MHz : in  std_logic;
-    RESET       : in  std_logic;
+    RESET : in  std_logic;
 
     -- SDRAM Interface
     A0           : out std_logic; -- Address Bus
@@ -478,7 +506,6 @@ Port
     BA0          : out std_logic; -- Bank Address
     BA1          : out std_logic;
 
-    CLK_SDRAM   : out std_logic;
     CKE         : out std_logic;
     CS          : out std_logic;
     RAS         : out std_logic;
@@ -599,11 +626,12 @@ end component;
 component PLL_RamClock
 port
 (
-	areset : IN STD_LOGIC  := '0';
-	inclk0 : IN STD_LOGIC  := '0';
-    c0 : OUT STD_LOGIC ;
-	c1 : OUT STD_LOGIC ;
-	locked : OUT STD_LOGIC
+	areset : in STD_LOGIC  := '0';
+	inclk0 : in STD_LOGIC  := '0';
+    c0 : out STD_LOGIC ;
+    c1 : out STD_LOGIC ;
+	c2 : out STD_LOGIC ;
+	locked : out STD_LOGIC
 );
 end component;
 
@@ -614,6 +642,7 @@ end component;
 -- //
 -- //
 -- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 begin
 
 DebounceController_module: DebounceController
@@ -636,6 +665,7 @@ port map
 -- //          //
 -- //          //
 -- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 primarySpiConverter_module: SpiConverter port map
 (
 	CLOCK => CLOCK_50MHz,
@@ -673,6 +703,7 @@ secondarySpiConverter_module: SpiConverter port map
 -- //                  //
 -- //                  //
 -- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 WatchdogInterrupt: InterruptGenerator
 generic map
 (
@@ -703,7 +734,10 @@ begin
     if rising_edge(CLOCK_50MHz) then
         if interrupt_i2c_feedback = '1'
         or interrupt_pwm_feedback = '1'
-        or interrupt_spi_feedback = '1' --- TODO !!!
+        or interrupt_spi_bmi160_s1_feedback = '1'
+        or interrupt_spi_bmi160_s2_feedback = '1'
+        or interrupt_spi_bmi160_s3_feedback = '1'
+        or interrupt_spi_rf_feedback = '1'
         then
             if feedback_interrupt_timer = "110010" then -- 50 * 20 = 1000ns = 1us interrupt pulse back to CPU
                 INT_FROM_FPGA <= '0';
@@ -726,8 +760,14 @@ begin
             secondary_parallel_MISO <= data_i2c_feedback;
         elsif interrupt_pwm_feedback = '1' then
             secondary_parallel_MISO <= data_pwm_feedback;
-        elsif interrupt_spi_feedback = '1' then
-            secondary_parallel_MISO <= data_spi_feedback;
+        elsif interrupt_spi_bmi160_s1_feedback = '1' then
+            secondary_parallel_MISO <= data_spi_bmi160_s1_feedback;
+        elsif interrupt_spi_bmi160_s2_feedback = '1' then
+            secondary_parallel_MISO <= data_spi_bmi160_s2_feedback;
+        elsif interrupt_spi_bmi160_s3_feedback = '1' then
+            secondary_parallel_MISO <= data_spi_bmi160_s3_feedback;
+        elsif interrupt_spi_rf_feedback = '1' then
+            secondary_parallel_MISO <= data_spi_rf_feedback;
         end if;
     end if;
 end process;
@@ -739,6 +779,7 @@ end process;
 -- //                //
 -- //                //
 -- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 fifo_pre_process: -- Long interrupt signal from kernel to be cut in FPGA down to 20ns pulse
 process(CLOCK_50MHz, primary_parallel_MOSI, primary_conversion_complete, kernel_interrupt, interrupt_from_cpu)
 begin
@@ -810,8 +851,9 @@ port map
 (
     areset => '0',
     inclk0 => CLOCK_50MHz,
-    c0 => CLOCK_133MHz,
-    c1 => CLOCK_266MHz,
+    c0 => open, -- Unused 266Mhz Clock
+    c1 => CLOCK_133MHz,
+    c2 => CLK_SDRAM, -- 133MHz Shifted by 180°
     locked => open
 );
 
@@ -819,7 +861,6 @@ RamController_module: RamController
 port map
 (
     CLOCK_133MHz => CLOCK_133MHz,
-    CLOCK_266MHz => CLOCK_266MHz,
     RESET => TEST_RESET,
 
     A0 => A0,
@@ -839,7 +880,6 @@ port map
     BA0 => BA0,
     BA1 => BA1,
 
-    CLK_SDRAM => CLK_SDRAM,
     CKE => CKE,
     CS => CS,
     RAS => RAS,
@@ -899,7 +939,7 @@ begin
                 TEST_WRITE_EN <= '0';
                 if TEST_BUSY = '0' then
                     if test_flag = '0' then
-                        if test_ops = "0011" then
+                        if test_ops = "1001" then
                             test_ops <= "0000";
                             test_flag <= '1';
                             test_ram_state <= TEST_CONFIG;
@@ -909,7 +949,7 @@ begin
                             test_ram_state <= TEST_WRITE;
                         end if;
                     elsif test_flag = '1' then
-                        if test_ops = "0100" then
+                        if test_ops = "1010" then
                             test_ops <= "0000";
                             test_flag <= '0';
                             test_ram_state <= TEST_DONE;
@@ -941,55 +981,6 @@ begin
     end if;
 end process;
 
---process (CLOCK_133MHz, test_ram_state)
---begin
---    if rising_edge(CLOCK_133MHz) then
-
---        case (test_ram_state) is
---            when TEST_IDLE =>
---                if test_timer = "10111110101111000001111111111" then
---                    test_ram_state <= TEST_INIT;
---                elsif test_timer = "10111110101111000001111111111" - "1011111010111100000111111111" then
---                    TEST_RESET <= '0';
---                    test_timer <= test_timer + '1';
---                else
---                    test_timer <= test_timer + '1';
---                end if;
-
---            when TEST_INIT =>
---                test_ram_state <= TEST_WRITE;
-
---            when TEST_CONFIG =>
---                TEST_READ_EN <= '0';
---                TEST_WRITE_EN <= '0';
---                if TEST_BUSY = '0' then
---                    if test_flag = '0' then
---                        test_flag <= '1';
---                        TEST_ADDR <= "000000000000000000000000";
---                        test_ram_state <= TEST_READ;
---                    elsif test_flag = '1' then
---                        test_ram_state <= TEST_DONE;
---                    end if;
---                end if;
-
---            when TEST_WRITE =>
---                TEST_WRITE_EN <= '1';
---                test_ram_state <= TEST_WAIT;
-
---            when TEST_READ =>
---                TEST_READ_EN <= '1';
---                test_ram_state <= TEST_WAIT;
-
---            when TEST_WAIT =>
---                test_ram_state <= TEST_CONFIG;
-
---            when TEST_DONE =>
---                test_ram_state <= TEST_DONE;
-
---        end case;
---    end if;
---end process;
-
 -- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 -- //                   //
 -- //                   //
@@ -997,6 +988,7 @@ end process;
 -- //                   //
 -- //                   //
 -- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 UartDataTransfer_module: UartDataTransfer
 port map
 (
@@ -1040,25 +1032,38 @@ begin
         if offload_ready = '1' then
             if offload_ctrl(2 downto 1) = SWITCH_I2C then
                 switch_i2c_ready <= '1';
-                switch_spi_ready <= '0';
-                switch_pwm_ready <= '0';
             elsif offload_ctrl(2 downto 1) = SWITCH_SPI then
-                switch_i2c_ready <= '0';
-                switch_spi_ready <= '1';
-                switch_pwm_ready <= '0';
+                if offload_id = SWITCH_BMI160_S1 then
+                    switch_bmi160_s1_ready <= '1';
+                elsif offload_id = SWITCH_BMI160_S2 then
+                    switch_bmi160_s2_ready <= '1';
+                elsif offload_id = SWITCH_BMI160_S3 then
+                    switch_bmi160_s3_ready <= '1';
+                elsif offload_id = SWITCH_nRF905 then
+                    switch_spi_RF_ready <= '1';
+                else
+                    switch_bmi160_s1_ready <= '0';
+                    switch_bmi160_s2_ready <= '0';
+                    switch_bmi160_s3_ready <= '0';
+                    switch_spi_RF_ready <= '0';
+                end if;
             elsif offload_ctrl(2 downto 1) = SWITCH_PWM then
-                switch_i2c_ready <= '0';
-                switch_spi_ready <= '0';
                 switch_pwm_ready <= '1';
             else
                 switch_i2c_ready <= '0';
-                switch_spi_ready <= '0';
                 switch_pwm_ready <= '0';
+                switch_bmi160_s1_ready <= '0';
+                switch_bmi160_s2_ready <= '0';
+                switch_bmi160_s3_ready <= '0';
+                switch_spi_RF_ready <= '0';
             end if;
         else
             switch_i2c_ready <= '0';
-            switch_spi_ready <= '0';
             switch_pwm_ready <= '0';
+            switch_bmi160_s1_ready <= '0';
+            switch_bmi160_s2_ready <= '0';
+            switch_bmi160_s3_ready <= '0';
+            switch_spi_RF_ready <= '0';
         end if;
     end if;
 end process;
@@ -1095,26 +1100,11 @@ I2cController_module: I2cController port map
     FEEDBACK_DATA => data_i2c_feedback
 );
 
-spi_mux_process:
-process(CLOCK_50MHz)
-begin
-    if rising_edge(CLOCK_50MHz) then
-        if switch_spi_ready = '1' then
-            switch_spi_BMI_ready <= '1';
-            switch_spi_RF_ready <= '1';
-        else
-            switch_spi_BMI_ready <= '0';
-            switch_spi_RF_ready <= '0';
-        end if;
-    end if;
-end process;
-
-
-SpiController_BMI_module: SpiController port map
+SpiController_BMI160_S1_module: SpiController port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
 
-    OFFLOAD_INT => switch_spi_BMI_ready,
+    OFFLOAD_INT => switch_bmi160_s1_ready,
 
     OFFLOAD_ID => offload_id(0) & offload_id(1) &
                 offload_id(2) & offload_id(3) &
@@ -1126,13 +1116,63 @@ SpiController_BMI_module: SpiController port map
     OFFLOAD_DATA => offload_data,
 
     -- Master SPI interface
-    CTRL_CS => ctrl_BMI_CS,
-    CTRL_MISO => ctrl_BMI_MISO,
-    CTRL_MOSI => ctrl_BMI_MOSI,
-    CTRL_SCK => ctrl_BMI_SCLK,
+    CTRL_CS => ctrl_BMI160_S1_CS,
+    CTRL_MISO => ctrl_BMI160_S1_MISO,
+    CTRL_MOSI => ctrl_BMI160_S1_MOSI,
+    CTRL_SCK => ctrl_BMI160_S1_SCLK,
 
-    FPGA_INT => open,--interrupt_spi_feedback,
-    FEEDBACK_DATA => open--data_spi_feedback
+    FPGA_INT => interrupt_spi_bmi160_s1_feedback,
+    FEEDBACK_DATA => data_spi_bmi160_s1_feedback
+);
+
+SpiController_BMI160_S2_module: SpiController port map
+(
+    CLOCK_50MHz => CLOCK_50MHz,
+
+    OFFLOAD_INT => switch_bmi160_s2_ready,
+
+    OFFLOAD_ID => offload_id(0) & offload_id(1) &
+                offload_id(2) & offload_id(3) &
+                offload_id(4) & offload_id(5) &
+                offload_id(6), -- Turn back around for SPI
+
+    OFFLOAD_CONTROL => offload_ctrl,
+    OFFLOAD_REGISTER => offload_register,
+    OFFLOAD_DATA => offload_data,
+
+    -- Master SPI interface
+    CTRL_CS => ctrl_BMI160_S2_CS,
+    CTRL_MISO => ctrl_BMI160_S2_MISO,
+    CTRL_MOSI => ctrl_BMI160_S2_MOSI,
+    CTRL_SCK => ctrl_BMI160_S2_SCLK,
+
+    FPGA_INT => interrupt_spi_bmi160_s2_feedback,
+    FEEDBACK_DATA => data_spi_bmi160_s2_feedback
+);
+
+SpiController_BMI160_S3_module: SpiController port map
+(
+    CLOCK_50MHz => CLOCK_50MHz,
+
+    OFFLOAD_INT => switch_bmi160_s3_ready,
+
+    OFFLOAD_ID => offload_id(0) & offload_id(1) &
+                offload_id(2) & offload_id(3) &
+                offload_id(4) & offload_id(5) &
+                offload_id(6), -- Turn back around for SPI
+
+    OFFLOAD_CONTROL => offload_ctrl,
+    OFFLOAD_REGISTER => offload_register,
+    OFFLOAD_DATA => offload_data,
+
+    -- Master SPI interface
+    CTRL_CS => ctrl_BMI160_S3_CS,
+    CTRL_MISO => ctrl_BMI160_S3_MISO,
+    CTRL_MOSI => ctrl_BMI160_S3_MOSI,
+    CTRL_SCK => ctrl_BMI160_S3_SCLK,
+
+    FPGA_INT => interrupt_spi_bmi160_s3_feedback,
+    FEEDBACK_DATA => data_spi_bmi160_s3_feedback
 );
 
 SpiController_RF_module: SpiController port map
@@ -1156,8 +1196,8 @@ SpiController_RF_module: SpiController port map
     CTRL_MOSI => ctrl_RF_MOSI,
     CTRL_SCK => ctrl_RF_SCLK,
 
-    FPGA_INT => interrupt_spi_feedback,
-    FEEDBACK_DATA => data_spi_feedback
+    FPGA_INT => interrupt_spi_rf_feedback,
+    FEEDBACK_DATA => data_spi_rf_feedback
 );
 
 -------------------------------------
@@ -1178,11 +1218,27 @@ NRF905_TX_EN <= 'Z';
 --
 -- BMI160
 --
+-- CS :: CS
+-- SAO :: MISO
+-- SDX :: MOSI
+-- SCX :: SCK
+--
+--
 -------------------------------------
-BMI160_CS <= ctrl_BMI_CS;
-ctrl_BMI_MISO <= BMI160_MISO;
-BMI160_MOSI <= ctrl_BMI_MOSI;
-BMI160_SCLK <= ctrl_BMI_SCLK;
+S1_BMI160_CS <= ctrl_BMI160_S1_CS;
+ctrl_BMI160_S1_MISO <= S1_BMI160_MISO;
+S1_BMI160_MOSI <= ctrl_BMI160_S1_MOSI;
+S1_BMI160_SCLK <= ctrl_BMI160_S1_SCLK;
+
+S2_BMI160_CS <= ctrl_BMI160_S2_CS;
+ctrl_BMI160_S2_MISO <= S2_BMI160_MISO;
+S2_BMI160_MOSI <= ctrl_BMI160_S2_MOSI;
+S2_BMI160_SCLK <= ctrl_BMI160_S2_SCLK;
+
+S3_BMI160_CS <= ctrl_BMI160_S3_CS;
+ctrl_BMI160_S3_MISO <= S3_BMI160_MISO;
+S3_BMI160_MOSI <= ctrl_BMI160_S3_MOSI;
+S3_BMI160_SCLK <= ctrl_BMI160_S3_SCLK;
 
 ---------------------------------------------------------------
 -- TODO :: Need Refactoring and Parametrization !!!
