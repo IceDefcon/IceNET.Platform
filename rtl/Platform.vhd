@@ -340,9 +340,7 @@ signal TEST_READ_EN : std_logic := '0';
 signal TEST_DATA_OUT : std_logic_vector(15 downto 0) := (others => '0');
 signal TEST_BUSY : std_logic := '0';
 -- PLL
-signal CLOCK_266MHz : std_logic := '0';
 signal CLOCk_133MHz : std_logic := '0';
-signal CLOCk_1GHz : std_logic := '0';
 -- SPI Controller
 signal spi_mux : std_logic_vector(3 downto 0) := "0000";
 signal ctrl_CS : std_logic := '0';
@@ -630,7 +628,6 @@ port
 	inclk0 : in STD_LOGIC  := '0';
     c0 : out STD_LOGIC ;
     c1 : out STD_LOGIC ;
-	c2 : out STD_LOGIC ;
 	locked : out STD_LOGIC
 );
 end component;
@@ -851,9 +848,8 @@ port map
 (
     areset => '0',
     inclk0 => CLOCK_50MHz,
-    c0 => open, -- Unused 266Mhz Clock
-    c1 => CLOCK_133MHz,
-    c2 => CLK_SDRAM, -- 133MHz Shifted by 180°
+    c0 => CLOCK_133MHz,
+    c1 => CLK_SDRAM, -- 133MHz Shifted by 180°
     locked => open
 );
 
@@ -906,7 +902,7 @@ port map
     LDQM => LDQM,
     UDQM => UDQM,
 
-    -- User Interface
+    -- User Interface :: TODO ??? Timing Issue
     ADDR => TEST_ADDR,
     DATA_IN => TEST_DATA_IN,
     DATA_OUT => TEST_DATA_OUT,
@@ -915,71 +911,71 @@ port map
     BUSY => TEST_BUSY
 );
 
-process (CLOCK_133MHz, test_ram_state)
-begin
-    if rising_edge(CLOCK_133MHz) then
+--process (CLOCK_133MHz, test_ram_state)
+--begin
+--    if rising_edge(CLOCK_133MHz) then
 
-        case (test_ram_state) is
+--        case (test_ram_state) is
 
-            when TEST_IDLE =>
-                if test_timer = "10111110101111000001111111111" then
-                    test_ram_state <= TEST_INIT;
-                elsif test_timer = "10111110101111000001111111111" - "1011111010111100000111111111" then
-                    TEST_RESET <= '0';
-                    test_timer <= test_timer + '1';
-                else
-                    test_timer <= test_timer + '1';
-                end if;
+--            when TEST_IDLE =>
+--                if test_timer = "10111110101111000001111111111" then
+--                    test_ram_state <= TEST_INIT;
+--                elsif test_timer = "10111110101111000001111111111" - "1011111010111100000111111111" then
+--                    TEST_RESET <= '0';
+--                    test_timer <= test_timer + '1';
+--                else
+--                    test_timer <= test_timer + '1';
+--                end if;
 
-            when TEST_INIT =>
-                test_ram_state <= TEST_WRITE;
+--            when TEST_INIT =>
+--                test_ram_state <= TEST_WRITE;
 
-            when TEST_CONFIG =>
-                TEST_READ_EN <= '0';
-                TEST_WRITE_EN <= '0';
-                if TEST_BUSY = '0' then
-                    if test_flag = '0' then
-                        if test_ops = "1001" then
-                            test_ops <= "0000";
-                            test_flag <= '1';
-                            test_ram_state <= TEST_CONFIG;
-                            TEST_ADDR <= "000000000000000000000000";
-                        else
-                            test_ops <= test_ops + '1';
-                            test_ram_state <= TEST_WRITE;
-                        end if;
-                    elsif test_flag = '1' then
-                        if test_ops = "1010" then
-                            test_ops <= "0000";
-                            test_flag <= '0';
-                            test_ram_state <= TEST_DONE;
-                        else
-                            test_ops <= test_ops + '1';
-                            test_ram_state <= TEST_READ;
-                        end if;
-                    end if;
-                end if;
+--            when TEST_CONFIG =>
+--                TEST_READ_EN <= '0';
+--                TEST_WRITE_EN <= '0';
+--                if TEST_BUSY = '0' then
+--                    if test_flag = '0' then
+--                        if test_ops = "1001" then
+--                            test_ops <= "0000";
+--                            test_flag <= '1';
+--                            test_ram_state <= TEST_CONFIG;
+--                            TEST_ADDR <= "000000000000000000000000";
+--                        else
+--                            test_ops <= test_ops + '1';
+--                            test_ram_state <= TEST_WRITE;
+--                        end if;
+--                    elsif test_flag = '1' then
+--                        if test_ops = "1010" then
+--                            test_ops <= "0000";
+--                            test_flag <= '0';
+--                            test_ram_state <= TEST_DONE;
+--                        else
+--                            test_ops <= test_ops + '1';
+--                            test_ram_state <= TEST_READ;
+--                        end if;
+--                    end if;
+--                end if;
 
-            when TEST_WRITE =>
-                TEST_WRITE_EN <= '1';
-                TEST_DATA_IN <= TEST_DATA_IN + '1';
-                TEST_ADDR <= TEST_ADDR + '1';
-                test_ram_state <= TEST_WAIT;
+--            when TEST_WRITE =>
+--                TEST_WRITE_EN <= '1';
+--                TEST_DATA_IN <= TEST_DATA_IN + '1';
+--                TEST_ADDR <= TEST_ADDR + '1';
+--                test_ram_state <= TEST_WAIT;
 
-            when TEST_READ =>
-                TEST_READ_EN <= '1';
-                TEST_ADDR <= TEST_ADDR + '1';
-                test_ram_state <= TEST_WAIT;
+--            when TEST_READ =>
+--                TEST_READ_EN <= '1';
+--                TEST_ADDR <= TEST_ADDR + '1';
+--                test_ram_state <= TEST_WAIT;
 
-            when TEST_WAIT =>
-                test_ram_state <= TEST_CONFIG;
+--            when TEST_WAIT =>
+--                test_ram_state <= TEST_CONFIG;
 
-            when TEST_DONE =>
-                test_ram_state <= TEST_DONE;
+--            when TEST_DONE =>
+--                test_ram_state <= TEST_DONE;
 
-        end case;
-    end if;
-end process;
+--        end case;
+--    end if;
+--end process;
 
 -- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 -- //                   //
