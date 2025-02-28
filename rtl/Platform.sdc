@@ -6,7 +6,6 @@
 set MAX_I_DELAY_50MHz  5.0
 # The signal must arrive no earlier than 2.0 ns after the clock edge
 set MIN_I_DELAY_50MHz  2.0
-
 # This specifies how long after the clock edge the signal is allowed to change
 set MAX_O_DELAY_50MHz  5.0
 # Indicating the earliest time the signal can change after the clock edge
@@ -16,13 +15,12 @@ set MIN_O_DELAY_50MHz  2.0
 set MAX_O_DELAY_133MHz 3.0
 # The output can change no sooner than 1.0 ns after the rising edge of CLOCK_133MHz
 set MIN_O_DELAY_133MHz 1.0
+set MAX_I_DELAY_133MHz 3.0
+set MIN_I_DELAY_133MHz 1.0
 
-# 40% of 266MHz clock ---> 1.504ns :: Setup time
-set MAX_O_DELAY_266MHz 1.5
-# 13% of 266MHz clock ---> 0.488ns :: HOLD time
-set MIN_O_DELAY_266MHz 0.5
-
+# 40% of 1Hz clock ---> 0.400ns :: Setup time
 set MAX_O_DELAY_1GHz 0.4
+# 13% of 1Hz clock ---> 0.130ns :: HOLD time
 set MIN_O_DELAY_1GHz 0.13
 
 ###########################################################################################################################
@@ -30,13 +28,14 @@ set MIN_O_DELAY_1GHz 0.13
 ###########################################################################################################################
 
 create_clock -name CLOCK_MAIN -period 20.000 [get_ports CLOCK_50MHz]
+create_clock -name CLOCK_133MHz -period 7.516
 
 derive_pll_clocks
 derive_clock_uncertainty
 
-set CLOCK_133MHz [get_clocks PLL_RamClock_module|altpll_component|auto_generated|pll1|clk[0]]
-set CLOCK_266MHz [get_clocks PLL_RamClock_module|altpll_component|auto_generated|pll1|clk[1]]
-set CLOCK_1GHz [get_clocks PLL_FastClock_module|altpll_component|auto_generated|pll1|clk[0]]
+# set CLOCK_133MHz [get_clocks PLL_RamClock_module|altpll_component|auto_generated|pll1|clk[0]]
+# set CLOCK_266MHz [get_clocks PLL_RamClock_module|altpll_component|auto_generated|pll1|clk[1]]
+# set CLOCK_1GHz [get_clocks PLL_FastClock_module|altpll_component|auto_generated|pll1|clk[0]]
 
 ###########################################################################################################################
 # Input Constraints :: relative to the CLOCK_50MHz
@@ -132,13 +131,13 @@ set_output_delay -clock CLOCK_MAIN -min $MIN_O_DELAY_50MHz [get_ports altera_res
 
 set_input_delay -clock CLOCK_MAIN -max $MAX_I_DELAY_50MHz [get_ports I2C_SDA]
 set_input_delay -clock CLOCK_MAIN -min $MIN_I_DELAY_50MHz [get_ports I2C_SDA]
-set_output_delay -clock CLOCK_MAIN -max $MAX_I_DELAY_50MHz [get_ports I2C_SDA]
-set_output_delay -clock CLOCK_MAIN -min $MIN_I_DELAY_50MHz [get_ports I2C_SDA]
+set_output_delay -clock CLOCK_MAIN -max $MAX_O_DELAY_50MHz [get_ports I2C_SDA]
+set_output_delay -clock CLOCK_MAIN -min $MIN_O_DELAY_50MHz [get_ports I2C_SDA]
 
+set_input_delay -clock CLOCK_MAIN -max $MAX_I_DELAY_50MHz [get_ports I2C_SCK]
+set_input_delay -clock CLOCK_MAIN -min $MIN_I_DELAY_50MHz [get_ports I2C_SCK]
 set_output_delay -clock CLOCK_MAIN -max $MAX_O_DELAY_50MHz [get_ports I2C_SCK]
 set_output_delay -clock CLOCK_MAIN -min $MIN_O_DELAY_50MHz [get_ports I2C_SCK]
-set_output_delay -clock CLOCK_MAIN -max $MAX_I_DELAY_50MHz [get_ports I2C_SCK]
-set_output_delay -clock CLOCK_MAIN -min $MIN_I_DELAY_50MHz [get_ports I2C_SCK]
 
 ###########################################################################################################################
 # NRF905 Constraints
@@ -154,17 +153,16 @@ set_output_delay -clock CLOCK_MAIN -min $MIN_O_DELAY_50MHz [get_ports {NRF905_TX
 # SDRAM @ CLOCK_133MHz
 ###########################################################################################################################
 
-# For {A0, A1, A2, ... A12}
-set_output_delay -clock $CLOCK_133MHz -max $MAX_O_DELAY_133MHz [get_ports {A0 A1 A2 A3 A4 A5 A6 A7 A8 A9 A10 A11 A12}]
-set_output_delay -clock $CLOCK_133MHz -min $MIN_O_DELAY_133MHz [get_ports {A0 A1 A2 A3 A4 A5 A6 A7 A8 A9 A10 A11 A12}]
+set_output_delay -clock CLOCK_133MHz -max $MAX_O_DELAY_133MHz [get_ports {A0 A1 A2 A3 A4 A5 A6 A7 A8 A9 A10 A11 A12}]
+set_output_delay -clock CLOCK_133MHz -min $MIN_O_DELAY_133MHz [get_ports {A0 A1 A2 A3 A4 A5 A6 A7 A8 A9 A10 A11 A12}]
 
-# For {D0, D1, D2, ... D15}
-set_input_delay -clock $CLOCK_133MHz -max $MAX_I_DELAY_50MHz [get_ports {D0 D1 D2 D3 D4 D5 D6 D7 D8 D9 D10 D11 D12 D13 D14 D15}]
-set_input_delay -clock $CLOCK_133MHz -min $MIN_I_DELAY_50MHz [get_ports {D0 D1 D2 D3 D4 D5 D6 D7 D8 D9 D10 D11 D12 D13 D14 D15}]
-set_output_delay -clock $CLOCK_133MHz -max $MAX_O_DELAY_133MHz [get_ports {D0 D1 D2 D3 D4 D5 D6 D7 D8 D9 D10 D11 D12 D13 D14 D15}]
-set_output_delay -clock $CLOCK_133MHz -min $MIN_O_DELAY_133MHz [get_ports {D0 D1 D2 D3 D4 D5 D6 D7 D8 D9 D10 D11 D12 D13 D14 D15}]
+set_input_delay -clock CLOCK_133MHz -max $MAX_I_DELAY_133MHz [get_ports {D0 D1 D2 D3 D4 D5 D6 D7 D8 D9 D10 D11 D12 D13 D14 D15}]
+set_input_delay -clock CLOCK_133MHz -min $MAX_I_DELAY_133MHz [get_ports {D0 D1 D2 D3 D4 D5 D6 D7 D8 D9 D10 D11 D12 D13 D14 D15}]
+set_output_delay -clock CLOCK_133MHz -max $MAX_O_DELAY_133MHz [get_ports {D0 D1 D2 D3 D4 D5 D6 D7 D8 D9 D10 D11 D12 D13 D14 D15}]
+set_output_delay -clock CLOCK_133MHz -min $MIN_O_DELAY_133MHz [get_ports {D0 D1 D2 D3 D4 D5 D6 D7 D8 D9 D10 D11 D12 D13 D14 D15}]
 
+set_output_delay -clock CLOCK_133MHz -max $MAX_O_DELAY_133MHz [get_ports {CLK_SDRAM BA0 BA1 CAS CKE RAS WE CS LDQM UDQM}]
+set_output_delay -clock CLOCK_133MHz -min $MIN_O_DELAY_133MHz [get_ports {CLK_SDRAM BA0 BA1 CAS CKE RAS WE CS LDQM UDQM}]
 
-# For {CLK_SDRAM, BA0, BA1, ...}
-set_output_delay -clock $CLOCK_133MHz -max $MAX_O_DELAY_133MHz [get_ports {CLK_SDRAM BA0 BA1 CAS CKE RAS WE CS LDQM UDQM}]
-set_output_delay -clock $CLOCK_133MHz -min $MIN_O_DELAY_133MHz [get_ports {CLK_SDRAM BA0 BA1 CAS CKE RAS WE CS LDQM UDQM}]
+# This is a 133Mhz clock shfited by 180° directly taken from PLL output
+set_false_path -to [get_ports CLK_SDRAM]

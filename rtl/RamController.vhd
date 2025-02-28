@@ -6,9 +6,7 @@
     entity RamController is
     Port
     (
-        CLOCK_266MHz : in  std_logic;
         CLOCK_133MHz : in  std_logic;
-        CLOCK_1GHz : in  std_logic;
         RESET : in  std_logic;
 
         --
@@ -45,7 +43,6 @@
         BA0          : out std_logic; -- Bank Address
         BA1          : out std_logic;
 
-        CLK_SDRAM   : out std_logic;
         CKE         : out std_logic;
         CS          : out std_logic;
         RAS         : out std_logic;
@@ -128,13 +125,6 @@
         constant MODE_REG : std_logic_vector(12 downto 0) := "00" & "00" & "00" & "010" & "0" & "000";
 
     begin
-
-        process(CLOCK_1GHz)
-        begin
-            if rising_edge(CLOCK_1GHz) then
-                CLK_SDRAM <= not CLOCK_133MHz;
-            end if;
-        end process;
 
         process (CLOCK_133MHz)
         begin

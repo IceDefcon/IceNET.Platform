@@ -485,9 +485,7 @@ end component;
 component RamController
 Port
 (
-    CLOCK_266MHz : in  std_logic;
     CLOCK_133MHz : in  std_logic;
-    CLOCK_1GHz : in  std_logic;
     RESET : in  std_logic;
 
     -- SDRAM Interface
@@ -508,7 +506,6 @@ Port
     BA0          : out std_logic; -- Bank Address
     BA1          : out std_logic;
 
-    CLK_SDRAM   : out std_logic;
     CKE         : out std_logic;
     CS          : out std_logic;
     RAS         : out std_logic;
@@ -626,23 +623,14 @@ port
 );
 end component;
 
-component PLL_FastClock
-PORT
-(
-    areset : in STD_LOGIC  := '0';
-    inclk0 : in STD_LOGIC  := '0';
-    c0 : out STD_LOGIC ;
-    locked : out STD_LOGIC
-);
-end component;
-
 component PLL_RamClock
 port
 (
 	areset : in STD_LOGIC  := '0';
 	inclk0 : in STD_LOGIC  := '0';
     c0 : out STD_LOGIC ;
-	c1 : out STD_LOGIC ;
+    c1 : out STD_LOGIC ;
+	c2 : out STD_LOGIC ;
 	locked : out STD_LOGIC
 );
 end component;
@@ -863,17 +851,16 @@ port map
 (
     areset => '0',
     inclk0 => CLOCK_50MHz,
-    c0 => CLOCK_133MHz,
-    c1 => CLOCK_266MHz,
+    c0 => open, -- Unused 266Mhz Clock
+    c1 => CLOCK_133MHz,
+    c2 => CLK_SDRAM, -- 133MHz Shifted by 180°
     locked => open
 );
 
 RamController_module: RamController
 port map
 (
-    CLOCK_266MHz => CLOCK_266MHz,
     CLOCK_133MHz => CLOCK_133MHz,
-    CLOCK_1GHz => CLOCK_1GHz,
     RESET => TEST_RESET,
 
     A0 => A0,
@@ -893,7 +880,6 @@ port map
     BA0 => BA0,
     BA1 => BA1,
 
-    CLK_SDRAM => CLK_SDRAM,
     CKE => CKE,
     CS => CS,
     RAS => RAS,
@@ -994,23 +980,6 @@ begin
         end case;
     end if;
 end process;
-
--- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
--- //                      //
--- //                      //
--- // [Measure] Controller //
--- //                      //
--- //                      //
--- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-PLL_FastClock_module: PLL_FastClock
-port map
-(
-    areset => '0',
-    inclk0 => CLOCK_50MHz,
-    c0 => CLOCK_1GHz,
-    locked => open
-);
 
 -- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 -- //                   //
