@@ -485,9 +485,10 @@ end component;
 component RamController
 Port
 (
-    CLOCK_133MHz : in  std_logic;
     CLOCK_266MHz : in  std_logic;
-    RESET       : in  std_logic;
+    CLOCK_133MHz : in  std_logic;
+    CLOCK_1GHz : in  std_logic;
+    RESET : in  std_logic;
 
     -- SDRAM Interface
     A0           : out std_logic; -- Address Bus
@@ -870,8 +871,9 @@ port map
 RamController_module: RamController
 port map
 (
-    CLOCK_133MHz => CLOCK_133MHz,
     CLOCK_266MHz => CLOCK_266MHz,
+    CLOCK_133MHz => CLOCK_133MHz,
+    CLOCK_1GHz => CLOCK_1GHz,
     RESET => TEST_RESET,
 
     A0 => A0,
@@ -951,7 +953,7 @@ begin
                 TEST_WRITE_EN <= '0';
                 if TEST_BUSY = '0' then
                     if test_flag = '0' then
-                        if test_ops = "0011" then
+                        if test_ops = "1001" then
                             test_ops <= "0000";
                             test_flag <= '1';
                             test_ram_state <= TEST_CONFIG;
@@ -961,7 +963,7 @@ begin
                             test_ram_state <= TEST_WRITE;
                         end if;
                     elsif test_flag = '1' then
-                        if test_ops = "0100" then
+                        if test_ops = "1010" then
                             test_ops <= "0000";
                             test_flag <= '0';
                             test_ram_state <= TEST_DONE;
