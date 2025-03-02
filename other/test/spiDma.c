@@ -23,9 +23,9 @@
 ////////////////////////
 
 static struct spi_device *spi_device_primary = NULL;
-static u8 spi_rx_buf[4] = {0};
-static u8 spi_tx_buf[4] = {0x00, 0x69, 0x00, 0x00};
-static const int spi_length = 4;
+static u8 spi_rx_buf[2] = {0};  // Buffer to store received data (chip ID)
+static u8 spi_tx_buf[2] = {0x00, 0x00};  // Buffer to send, 0x00 for read operation
+static const int spi_length = 2;  // Buffer size
 
 int spiInit(void)
 {
@@ -54,14 +54,8 @@ int spiInit(void)
         printk(KERN_ERR "[INIT][SPI] SPI0 Allocated\n");
     }
 
-    /*!
-     * The mode is set to 1 to pass the
-     * High clock control signal to FPGA
-     *
-     * Only required when talking to FPGA
-     */
     spi_device_primary->chip_select = 0;
-    spi_device_primary->mode = SPI_MODE_1; /* For Kernel <=> FPGA Communication */
+    spi_device_primary->mode = SPI_MODE_1;  // SPI mode 1
     spi_device_primary->bits_per_word = 8;
     spi_device_primary->max_speed_hz = 1000000;
 
@@ -99,8 +93,15 @@ static int __init spi_module_init(void)
         return ret;
     }
 
-    /* Perform SPI transfer during initialization as a test */
+    /* Read chip ID from address 0x00 (assuming the device responds with the chip ID at this address) */
     memset(&transfer, 0, sizeof(transfer));
+
+    // Setup for reading from register 0x00
+    spi_tx_buf[0] = 0x00;  // The address you want to read from (chip ID register at 0x00)
+    spi_tx_buf[1] = 0x00;  // You can fill the next byte with 0 for the read operation
+    spi_tx_buf[2] = 0x00;  // Dummy byte for read operation (this might vary based on the sensor protocol)
+    spi_tx_buf[3] = 0x00;  // Dummy byte (again, depending on the protocol)
+
     transfer.tx_buf = (void *)spi_tx_buf;
     transfer.rx_buf = (void *)spi_rx_buf;
     transfer.len = spi_length;
@@ -119,10 +120,9 @@ static int __init spi_module_init(void)
         printk(KERN_INFO "[CTRL][SPI] Primary FPGA Transfer completed during initialization\n");
     }
 
-    for (i = 0; i < spi_length; ++i)
-    {
-        printk(KERN_INFO "[CTRL][SPI] Primary FPGA Transfer :: Byte[%d]: [Tx 0x%02x] [Rx 0x%02x]\n", i, spi_tx_buf[i], spi_rx_buf[i]);
-    }
+    /* Read chip ID response from the device */
+    printk(KERN_INFO "[CTRL][SPI] Chip ID Read Response: 0x%02x 0x%02x 0x%02x 0x%02x\n",
+            spi_rx_buf[0], spi_rx_buf[1], spi_rx_buf[2], spi_rx_buf[3]);
 
     /* Clear the buffers */
     for (i = 0; i < spi_length; ++i)
