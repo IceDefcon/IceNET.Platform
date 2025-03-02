@@ -166,6 +166,11 @@ set_output_delay -clock CLOCK_133MHz -min $MIN_O_DELAY_50MHz [get_ports {CLK_SDR
 
 # This is a 133Mhz clock shfited by 180° directly taken from PLL output
 set_false_path -to [get_ports CLK_SDRAM]
+
+###########################################################################################################################
+# Debug
+###########################################################################################################################
+
 # set_false_path -to [get_ports {A0 A1 A2 A3 A4 A5 A6 A7 A8 A9 A10 A11 A12}]
 # set_false_path -to [get_ports {D0 D1 D2 D3 D4 D5 D6 D7 D8 D9 D10 D11 D12 D13 D14 D15}]
 # set_false_path -to [get_ports {BA0 BA1 CAS CKE RAS WE CS LDQM UDQM}]
