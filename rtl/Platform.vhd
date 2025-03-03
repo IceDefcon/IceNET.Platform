@@ -663,20 +663,20 @@ port map
 -- //          //
 -- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-primarySpiConverter_module: SpiConverter port map
-(
-	CLOCK => CLOCK_50MHz,
+--primarySpiConverter_module: SpiConverter port map
+--(
+--	CLOCK => CLOCK_50MHz,
 
-	CS => PRIMARY_CS,
-	SCLK => PRIMARY_SCLK, -- Kernel Master always initialise SPI transfer
+--	CS => PRIMARY_CS,
+--	SCLK => PRIMARY_SCLK, -- Kernel Master always initialise SPI transfer
 
-	SERIAL_MOSI => PRIMARY_MOSI, -- in :: Data from Kernel to Serialize
-	PARALLEL_MOSI => primary_parallel_MOSI, -- out :: Serialized Data from Kernel to FIFO
-	PARALLEL_MISO => "00011000", -- in :: 0x18 Hard coded Feedback to Serialize
-	SERIAL_MISO => PRIMARY_MISO, -- out :: 0x18 Serialized Hard coded Feedback to Kernel
+--	SERIAL_MOSI => PRIMARY_MOSI, -- in :: Data from Kernel to Serialize
+--	PARALLEL_MOSI => primary_parallel_MOSI, -- out :: Serialized Data from Kernel to FIFO
+--	PARALLEL_MISO => "00011000", -- in :: 0x18 Hard coded Feedback to Serialize
+--	SERIAL_MISO => PRIMARY_MISO, -- out :: 0x18 Serialized Hard coded Feedback to Kernel
 
-    CONVERSION_COMPLETE => primary_conversion_complete -- Out :: Data byte is ready [FIFO Write Enable]
-);
+--    CONVERSION_COMPLETE => primary_conversion_complete -- Out :: Data byte is ready [FIFO Write Enable]
+--);
 
 secondarySpiConverter_module: SpiConverter port map
 (
@@ -1221,10 +1221,10 @@ NRF905_TX_EN <= 'Z';
 --
 --
 -------------------------------------
-S1_BMI160_CS <= ctrl_BMI160_S1_CS;
-ctrl_BMI160_S1_MISO <= S1_BMI160_MISO;
-S1_BMI160_MOSI <= ctrl_BMI160_S1_MOSI;
-S1_BMI160_SCLK <= ctrl_BMI160_S1_SCLK;
+--S1_BMI160_CS <= ctrl_BMI160_S1_CS;
+--ctrl_BMI160_S1_MISO <= S1_BMI160_MISO;
+--S1_BMI160_MOSI <= ctrl_BMI160_S1_MOSI;
+--S1_BMI160_SCLK <= ctrl_BMI160_S1_SCLK;
 
 S2_BMI160_CS <= ctrl_BMI160_S2_CS;
 ctrl_BMI160_S2_MISO <= S2_BMI160_MISO;
@@ -1312,6 +1312,11 @@ port map
 --        NRF905_SCK <= PRIMARY_SCLK;
 --    end if;
 --end process;
+
+S1_BMI160_CS <= PRIMARY_CS;
+PRIMARY_MISO <= S1_BMI160_MISO;
+S1_BMI160_MOSI <= PRIMARY_MOSI;
+S1_BMI160_SCLK <= PRIMARY_SCLK;
 
 --NRF905_PWR_UP <= '1';
 --NRF905_TRX_CE <= '0';
