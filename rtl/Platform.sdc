@@ -1,15 +1,88 @@
 ###########################################################################################################################
 # Timing Constants [ns]
 ###########################################################################################################################
+#
+#
+#                               Hold Time Control (Maximum Output Delay): 40% of the clock period
+# -max (Maximum Output Delay):  The maximum delay after the clock edge at which the signal can change without violating any timing requirements at the receiving device.
+#                               This is used to ensure that the signal doesn't change too late, violating the hold time at the receiving end.
+#
+#
+#                          Max 40% of period
+#                          For the Hold time
+#                                  |
+#                                  |
+#                                  |
+#                                __V____         _______         _______
+#                               |  |    |       |       |       |       |
+#                        _______|  |    |_______|       |_______|       |_______
+#                                  |
+#                                  |
+#                For 50Mhz clock is 20n Period its 8ns
+#               So the maximum hold time after the edge
+#                Of the clock cannot be more than 8ns
+#           The signal can change up to 8 ns after the clock edge without violating the hold time.
+#
+#
+#
+#                               SETUP TIME Control (Minimum Output Delay): 13% of the clock time
+# -min (Minimum Output Delay):  The minimum delay after the clock edge at which the signal can change.
+#                               This ensures that the output signal is stable long enough to meet the setup time requirement of the receiving register.
+#
+#
+#                      Min 13% of period
+#                      For the Setup time
+#                              |
+#                              |
+#                              |
+#                              V  _____         _______         _______
+#                              | |     |       |       |       |       |
+#                        ______|_|     |_______|       |_______|       |_______
+#                              |
+#                              |
+#           For 50Mhz clock is 20n Period is the 2.6ns
+#            So the signal must be stable 3ns before
+#                     The next clock edge
+#
+#
+#
+#
+###########################################################################################################################
+#
+#
+#
+#
+#
+#                 ____V_____V____________
+#                |    |     |            |
+#     Input      |    |     |            |
+#                |    |     |            |
+#           _____|   13%    |            |______________
+#                   Setup   |
+#                     |    40%
+#                     |    Hold
+#                     |     |
+#                     |  ___V_______             ___________             ___________
+#                     | |           |           |           |           |           |
+#                     | |           |           |           |           |           |
+#                     | |           |           |           |           |           |
+#           __________V_|           |___________|           |___________|           |____________
+#
+#
+#
+#
+#
+#
+###########################################################################################################################
 
 # The signal is expected to arrive no later than 5.0 ns after the clock edge
-set MAX_I_DELAY_50MHz  5.0
+set MAX_I_DELAY_50MHz  8.0
 # The signal must arrive no earlier than 2.0 ns after the clock edge
-set MIN_I_DELAY_50MHz  2.0
+set MIN_I_DELAY_50MHz  3.0
 # This specifies how long after the clock edge the signal is allowed to change
-set MAX_O_DELAY_50MHz  5.0
+set MAX_O_DELAY_50MHz  8.0
 # Indicating the earliest time the signal can change after the clock edge
-set MIN_O_DELAY_50MHz  2.0
+set MIN_O_DELAY_50MHz  3.0
 
 # It means that output signals can change no later than 3.0 ns after the rising edge of CLOCK_133MHz
 set MAX_O_DELAY_133MHz 3.0
@@ -18,9 +91,10 @@ set MIN_O_DELAY_133MHz 1.0
 set MAX_I_DELAY_133MHz 3.0
 set MIN_I_DELAY_133MHz 1.0
 
-# 40% of 1Hz clock ---> 0.400ns :: Setup time
+# 40% of 1Hz clock ---> 0.400ns :: Hold time
 set MAX_O_DELAY_1GHz 0.4
-# 13% of 1Hz clock ---> 0.130ns :: HOLD time
+
+# 13% of 1Hz clock ---> 0.130ns :: Setup time
 set MIN_O_DELAY_1GHz 0.13
 
 ###########################################################################################################################
@@ -90,12 +164,12 @@ set_output_delay -clock CLOCK_MAIN -max $MAX_O_DELAY_50MHz [get_ports {SECONDARY
 set_output_delay -clock CLOCK_MAIN -min $MIN_O_DELAY_50MHz [get_ports {SECONDARY_MISO}]
 
 # SPI BMI160 Sensor
-set_output_delay -clock CLOCK_MAIN -max $MAX_I_DELAY_50MHz [get_ports {S1_BMI160_CS S1_BMI160_MOSI S1_BMI160_SCLK}]
-set_output_delay -clock CLOCK_MAIN -min $MIN_I_DELAY_50MHz [get_ports {S1_BMI160_CS S1_BMI160_MOSI S1_BMI160_SCLK}]
-set_output_delay -clock CLOCK_MAIN -max $MAX_I_DELAY_50MHz [get_ports {S2_BMI160_CS S2_BMI160_MOSI S2_BMI160_SCLK}]
-set_output_delay -clock CLOCK_MAIN -min $MIN_I_DELAY_50MHz [get_ports {S2_BMI160_CS S2_BMI160_MOSI S2_BMI160_SCLK}]
-set_output_delay -clock CLOCK_MAIN -max $MAX_I_DELAY_50MHz [get_ports {S3_BMI160_CS S3_BMI160_MOSI S3_BMI160_SCLK}]
-set_output_delay -clock CLOCK_MAIN -min $MIN_I_DELAY_50MHz [get_ports {S3_BMI160_CS S3_BMI160_MOSI S3_BMI160_SCLK}]
+set_output_delay -clock CLOCK_MAIN -max $MAX_O_DELAY_50MHz [get_ports {S1_BMI160_CS S1_BMI160_MOSI S1_BMI160_SCLK}]
+set_output_delay -clock CLOCK_MAIN -min $MIN_O_DELAY_50MHz [get_ports {S1_BMI160_CS S1_BMI160_MOSI S1_BMI160_SCLK}]
+set_output_delay -clock CLOCK_MAIN -max $MAX_O_DELAY_50MHz [get_ports {S2_BMI160_CS S2_BMI160_MOSI S2_BMI160_SCLK}]
+set_output_delay -clock CLOCK_MAIN -min $MIN_O_DELAY_50MHz [get_ports {S2_BMI160_CS S2_BMI160_MOSI S2_BMI160_SCLK}]
+set_output_delay -clock CLOCK_MAIN -max $MAX_O_DELAY_50MHz [get_ports {S3_BMI160_CS S3_BMI160_MOSI S3_BMI160_SCLK}]
+set_output_delay -clock CLOCK_MAIN -min $MIN_O_DELAY_50MHz [get_ports {S3_BMI160_CS S3_BMI160_MOSI S3_BMI160_SCLK}]
 
 # UART outputs
 set_output_delay -clock CLOCK_MAIN -max $MAX_O_DELAY_50MHz [get_ports {UART_BBB_RX UART_x86_TX}]
@@ -153,16 +227,16 @@ set_output_delay -clock CLOCK_MAIN -min $MIN_O_DELAY_50MHz [get_ports {NRF905_TX
 # SDRAM @ CLOCK_133MHz
 ###########################################################################################################################
 
-set_output_delay -clock CLOCK_133MHz -max $MAX_O_DELAY_50MHz [get_ports {A0 A1 A2 A3 A4 A5 A6 A7 A8 A9 A10 A11 A12}]
-set_output_delay -clock CLOCK_133MHz -min $MIN_O_DELAY_50MHz [get_ports {A0 A1 A2 A3 A4 A5 A6 A7 A8 A9 A10 A11 A12}]
+set_output_delay -clock CLOCK_133MHz -max $MAX_O_DELAY_133MHz [get_ports {A0 A1 A2 A3 A4 A5 A6 A7 A8 A9 A10 A11 A12}]
+set_output_delay -clock CLOCK_133MHz -min $MIN_O_DELAY_133MHz [get_ports {A0 A1 A2 A3 A4 A5 A6 A7 A8 A9 A10 A11 A12}]
 
-set_input_delay -clock CLOCK_133MHz -max $MAX_I_DELAY_50MHz [get_ports {D0 D1 D2 D3 D4 D5 D6 D7 D8 D9 D10 D11 D12 D13 D14 D15}]
-set_input_delay -clock CLOCK_133MHz -min $MAX_I_DELAY_50MHz [get_ports {D0 D1 D2 D3 D4 D5 D6 D7 D8 D9 D10 D11 D12 D13 D14 D15}]
-set_output_delay -clock CLOCK_133MHz -max $MAX_O_DELAY_50MHz [get_ports {D0 D1 D2 D3 D4 D5 D6 D7 D8 D9 D10 D11 D12 D13 D14 D15}]
-set_output_delay -clock CLOCK_133MHz -min $MIN_O_DELAY_50MHz [get_ports {D0 D1 D2 D3 D4 D5 D6 D7 D8 D9 D10 D11 D12 D13 D14 D15}]
+set_input_delay -clock CLOCK_133MHz -max $MAX_I_DELAY_133MHz [get_ports {D0 D1 D2 D3 D4 D5 D6 D7 D8 D9 D10 D11 D12 D13 D14 D15}]
+set_input_delay -clock CLOCK_133MHz -min $MIN_I_DELAY_133MHz [get_ports {D0 D1 D2 D3 D4 D5 D6 D7 D8 D9 D10 D11 D12 D13 D14 D15}]
+set_output_delay -clock CLOCK_133MHz -max $MAX_O_DELAY_133MHz [get_ports {D0 D1 D2 D3 D4 D5 D6 D7 D8 D9 D10 D11 D12 D13 D14 D15}]
+set_output_delay -clock CLOCK_133MHz -min $MIN_O_DELAY_133MHz [get_ports {D0 D1 D2 D3 D4 D5 D6 D7 D8 D9 D10 D11 D12 D13 D14 D15}]
 
-set_output_delay -clock CLOCK_133MHz -max $MAX_O_DELAY_50MHz [get_ports {CLK_SDRAM BA0 BA1 CAS CKE RAS WE CS LDQM UDQM}]
-set_output_delay -clock CLOCK_133MHz -min $MIN_O_DELAY_50MHz [get_ports {CLK_SDRAM BA0 BA1 CAS CKE RAS WE CS LDQM UDQM}]
+set_output_delay -clock CLOCK_133MHz -max $MAX_O_DELAY_133MHz [get_ports {CLK_SDRAM BA0 BA1 CAS CKE RAS WE CS LDQM UDQM}]
+set_output_delay -clock CLOCK_133MHz -min $MIN_O_DELAY_133MHz [get_ports {CLK_SDRAM BA0 BA1 CAS CKE RAS WE CS LDQM UDQM}]
 
 # This is a 133Mhz clock shfited by 180° directly taken from PLL output
 set_false_path -to [get_ports CLK_SDRAM]
@@ -174,3 +248,15 @@ set_false_path -to [get_ports CLK_SDRAM]
 # set_false_path -to [get_ports {A0 A1 A2 A3 A4 A5 A6 A7 A8 A9 A10 A11 A12}]
 # set_false_path -to [get_ports {D0 D1 D2 D3 D4 D5 D6 D7 D8 D9 D10 D11 D12 D13 D14 D15}]
 # set_false_path -to [get_ports {BA0 BA1 CAS CKE RAS WE CS LDQM UDQM}]
+
+set_input_delay -clock CLOCK_MAIN -max $MAX_I_DELAY_50MHz [get_ports {OUT_MISO TEST_CS TEST_MOSI TEST_CLK}]
+set_input_delay -clock CLOCK_MAIN -min $MIN_I_DELAY_50MHz [get_ports {OUT_MISO TEST_CS TEST_MOSI TEST_CLK}]
+set_output_delay -clock CLOCK_MAIN -max $MAX_O_DELAY_50MHz [get_ports {TEST_MISO OUT_CS OUT_MOSI OUT_CLK}]
+set_output_delay -clock CLOCK_MAIN -min $MIN_O_DELAY_50MHz [get_ports {TEST_MISO OUT_CS OUT_MOSI OUT_CLK}]
+
+
+
+
+
+
+

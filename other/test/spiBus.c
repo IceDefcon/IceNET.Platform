@@ -45,7 +45,7 @@ int spiInit(void)
     }
 
     spi0_device->chip_select = 0;
-    spi0_device->mode = SPI_MODE_0;       // SPI Mode 0 (CPOL=0, CPHA=0) for BMI160
+    spi0_device->mode = SPI_MODE_1;       // SPI Mode 0 (CPOL=0, CPHA=0) for BMI160
     spi0_device->bits_per_word = 8;       // 8 bits per word
     spi0_device->max_speed_hz = 5000000;  // 5 MHz clock speed
 
