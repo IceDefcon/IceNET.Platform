@@ -1,98 +1,95 @@
+/*!
+ *
+ * Author: Ice.Marek
+ * IceNET Technology 2025
+ *
+ */
+
 #include <linux/module.h>
+#include <linux/kernel.h>
 #include <linux/spi/spi.h>
-#include <linux/delay.h>
+#include <linux/slab.h>
 
-#define BMI160_REG_CHIP_ID  0x00
-#define BMI160_CHIP_ID_VAL  0xD1
+#define SPI_BUS 0
+#define SPI_CHIP_SELECT 0
+#define SPI_MAX_SPEED 1000000
+#define BMI160_CHIP_ID_REG 0x00
+#define CHIP_ID_LEN 1
 
-static struct spi_device *bmi160_spi;
+static struct spi_device *spi_dev;
 
-/* Function to read a register from BMI160 */
-static int bmi160_read_reg(struct spi_device *spi, u8 reg, u8 *val)
+static int spi_read_chip_id(void)
 {
-    struct spi_transfer xfers[2];
-    u8 tx_buf = reg | 0x80;  // MSB=1 for read
-    u8 rx_buf = 0;
+    unsigned char tx_buf[2] = {BMI160_CHIP_ID_REG, 0x00};
+    unsigned char rx_buf[2] = {0};
+    struct spi_transfer t = {
+        .tx_buf = tx_buf,
+        .rx_buf = rx_buf,
+        .len = 2,
+        .speed_hz = SPI_MAX_SPEED,
+        .cs_change = 1,
+    };
+    struct spi_message m;
 
-    memset(xfers, 0, sizeof(xfers));
+    spi_message_init(&m);
+    spi_message_add_tail(&t, &m);
 
-    xfers[0].tx_buf = &tx_buf;
-    xfers[0].rx_buf = NULL;
-    xfers[0].len = 1;
-
-    xfers[1].tx_buf = NULL;
-    xfers[1].rx_buf = &rx_buf;
-    xfers[1].len = 1;
-
-    spi_sync_transfer(spi, xfers, 2);
-
-    *val = rx_buf;
-    return 0;
-}
-
-/* Probe function - called when the device is found */
-static int bmi160_probe(struct spi_device *spi)
-{
-    u8 chip_id;
-
-    bmi160_spi = spi;
-
-    /* Read the Chip ID */
-    if (bmi160_read_reg(spi, BMI160_REG_CHIP_ID, &chip_id)) {
-        dev_err(&spi->dev, "Failed to read chip ID\n");
+    if (spi_sync(spi_dev, &m) < 0)
+    {
+        printk(KERN_ERR "[SPI] Failed to read BMI160 Chip ID\n");
         return -EIO;
     }
 
-    if (chip_id == BMI160_CHIP_ID_VAL) {
-        dev_info(&spi->dev, "BMI160 detected! Chip ID: 0x%X\n", chip_id);
-    } else {
-        dev_err(&spi->dev, "Invalid Chip ID: 0x%X (Expected: 0xD1)\n", chip_id);
+    printk(KERN_INFO "[SPI] BMI160 Chip ID: 0x%02X\n", rx_buf[1]);
+    return 0;
+}
+
+static int __init spi_init(void)
+{
+    struct spi_master *master;
+
+    master = spi_busnum_to_master(SPI_BUS);
+    if (!master)
+    {
+        printk(KERN_ERR "[INIT][SPI] SPI Master Bus not found!\n");
         return -ENODEV;
     }
 
-    return 0;
+    spi_dev = spi_alloc_device(master);
+    if (!spi_dev)
+    {
+        printk(KERN_ERR "[INIT][SPI] SPI Device Allocation Failed!\n");
+        return -ENOMEM;
+    }
+
+    spi_dev->chip_select = SPI_CHIP_SELECT;
+    spi_dev->mode = SPI_MODE_0;
+    spi_dev->bits_per_word = 8;
+    spi_dev->max_speed_hz = SPI_MAX_SPEED;
+
+    if (spi_setup(spi_dev) < 0)
+    {
+        printk(KERN_ERR "[INIT][SPI] SPI Device Setup Failed!\n");
+        spi_dev_put(spi_dev);
+        return -EIO;
+    }
+
+    printk(KERN_INFO "[INIT][SPI] SPI Device Initialized Successfully\n");
+    return spi_read_chip_id();
 }
 
-/* Remove function - cleanup */
-static int bmi160_remove(struct spi_device *spi)
+static void __exit spi_exit(void)
 {
-    dev_info(&spi->dev, "BMI160 SPI module removed\n");
-    return 0;
+    if (spi_dev)
+    {
+        spi_dev_put(spi_dev);
+        printk(KERN_INFO "[EXIT][SPI] SPI Device Released\n");
+    }
 }
 
-/* SPI Device ID Table */
-static const struct of_device_id bmi160_dt_ids[] = {
-    { .compatible = "bosch,bmi160" },
-    { }
-};
-MODULE_DEVICE_TABLE(of, bmi160_dt_ids);
-
-/* SPI Driver Structure */
-static struct spi_driver bmi160_driver = {
-    .driver = {
-        .name = "bmi160_spi",
-        .of_match_table = bmi160_dt_ids,
-    },
-    .probe  = bmi160_probe,
-    .remove = bmi160_remove,
-};
-
-/* Module Initialization */
-static int __init bmi160_init(void)
-{
-    return spi_register_driver(&bmi160_driver);
-}
-
-/* Module Exit */
-static void __exit bmi160_exit(void)
-{
-    spi_unregister_driver(&bmi160_driver);
-}
+module_init(spi_init);
+module_exit(spi_exit);
 
 MODULE_LICENSE("GPL");
-MODULE_AUTHOR("Your Name");
-MODULE_DESCRIPTION("BMI160 SPI Driver for BeagleBone Black");
-MODULE_VERSION("0.1");
-
-module_init(bmi160_init);
-module_exit(bmi160_exit);
+MODULE_AUTHOR("Ice.Marek");
+MODULE_DESCRIPTION("SPI Kernel Module to Read BMI160 Chip ID");

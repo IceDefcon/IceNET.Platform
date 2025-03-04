@@ -32,7 +32,7 @@ int spiInit(void)
     struct spi_master *spi_master_primary;
     int ret;
 
-    spi_master_primary = spi_busnum_to_master(0);
+    spi_master_primary = spi_busnum_to_master(1);
     if (!spi_master_primary)
     {
         printk(KERN_ERR "[INIT][SPI] SPI Master at BUS 0 not found!\n");
@@ -55,7 +55,7 @@ int spiInit(void)
     }
 
     spi_device_primary->chip_select = 0;
-    spi_device_primary->mode = SPI_MODE_1;  // SPI mode 1
+    spi_device_primary->mode = SPI_MODE_0;
     spi_device_primary->bits_per_word = 8;
     spi_device_primary->max_speed_hz = 1000000;
 
@@ -97,10 +97,8 @@ static int __init spi_module_init(void)
     memset(&transfer, 0, sizeof(transfer));
 
     // Setup for reading from register 0x00
-    spi_tx_buf[0] = 0x00;  // The address you want to read from (chip ID register at 0x00)
+    spi_tx_buf[0] = 0x80;  // The address you want to read from (chip ID register at 0x00)
     spi_tx_buf[1] = 0x00;  // You can fill the next byte with 0 for the read operation
-    spi_tx_buf[2] = 0x00;  // Dummy byte for read operation (this might vary based on the sensor protocol)
-    spi_tx_buf[3] = 0x00;  // Dummy byte (again, depending on the protocol)
 
     transfer.tx_buf = (void *)spi_tx_buf;
     transfer.rx_buf = (void *)spi_rx_buf;
@@ -121,8 +119,7 @@ static int __init spi_module_init(void)
     }
 
     /* Read chip ID response from the device */
-    printk(KERN_INFO "[CTRL][SPI] Chip ID Read Response: 0x%02x 0x%02x 0x%02x 0x%02x\n",
-            spi_rx_buf[0], spi_rx_buf[1], spi_rx_buf[2], spi_rx_buf[3]);
+    printk(KERN_INFO "[CTRL][SPI] Chip ID Read Response: 0x%02x 0x%02x \n", spi_rx_buf[0], spi_rx_buf[1]);
 
     /* Clear the buffers */
     for (i = 0; i < spi_length; ++i)
