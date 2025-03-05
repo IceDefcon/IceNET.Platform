@@ -6,9 +6,7 @@
 
 	Quartus :: 22.1std.1.917 :: SC Lite Edition
 	Cyclone IV :: EP4CE15F23C8N
-	Cortex-A8 :: User Space Application
-	Cortex A8 :: Kernel Space Module
-	x86 :: Master Control Application
+	Cortex-A57 :: Kernel Module, User Application and GUI for Master Control
 
 # TODO Hardware
 

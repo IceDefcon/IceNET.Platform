@@ -6,6 +6,9 @@
 APP         = app
 GCC         = g++
 CFLAGS      = -Wall -Wextra -std=c++14 -O2 -g -pthread
+MAKEFLAGS  += -j4
+
+VERBOSE     := @
 
 CPP_SOURCES = $(shell find . -name "*.cpp")
 CPP_OBJECTS = $(CPP_SOURCES:.cpp=.o)
@@ -23,13 +26,17 @@ CFLAGS += $(addprefix -I, $(INCLUDES))
 all: $(APP)
 
 $(APP): $(CPP_OBJECTS)
-	$(GCC) $(CFLAGS) $^ -o $@
-	size $(APP)
+	@echo " LINKING  $(APP)"
+	$(VERBOSE) $(GCC) $(CFLAGS) $^ -o $@
+	@size $(APP)
 
 %.o: %.cpp
-	$(GCC) $(CFLAGS) -c -o $@ $<
+	@echo " COMPILE  $<"
+	$(VERBOSE) $(GCC) $(CFLAGS) -c -o $@ $<
 
 clean:
+	@echo " CLEAN"
 	rm -f $(APP) $(CPP_OBJECTS)
 
 .PHONY: all clean
+
