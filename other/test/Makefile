@@ -1,4 +1,4 @@
-obj-m := canBus.o
+obj-m := spiDma.o
 
 KDIR := /lib/modules/$(shell uname -r)/build
 
