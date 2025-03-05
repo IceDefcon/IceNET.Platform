@@ -22,7 +22,7 @@ static watchdogProcess Process =
     .indicatorCurrent = 0x00,
     .indicatorPrevious = 0x00,
     .threadHandle = NULL,
-    .watchdogMutex = __MUTEX_INITIALIZER(Process.watchdogMutex),
+    .irq_flags = 0,
 };
 
 watchdogProcess* watchdog_getProcess(void)
@@ -30,14 +30,16 @@ watchdogProcess* watchdog_getProcess(void)
 	return &Process;
 }
 
-void watchdog_lockWatchdogMutex(void)
+void watchdog_spinLockCtrl(CtrlType ctrl)
 {
-	mutex_lock(&Process.watchdogMutex);
-}
-
-void watchdog_unlockWatchdogMutex(void)
-{
-	mutex_unlock(&Process.watchdogMutex);
+    if(CTRL_LOCK == ctrl)
+    {
+        spin_lock_irqsave(&Process.watchdogSpinlock, Process.irq_flags);
+    }
+    else if(CTRL_UNLOCK == ctrl)
+    {
+        spin_unlock_irqrestore(&Process.watchdogSpinlock, Process.irq_flags);
+    }
 }
 
 /* Kernel state machine */
@@ -48,7 +50,7 @@ static int watchdogThread(void *data)
 
     while (!kthread_should_stop())
     {
-        watchdog_lockWatchdogMutex();
+        watchdog_spinLockCtrl(CTRL_LOCK);
 
 #if 1 /* Hack :: If Fpga is not flashed */
         Process.indicatorCurrent++;
@@ -79,7 +81,7 @@ static int watchdogThread(void *data)
 
         /* Update indicator and unlock Watchdog Mutex */
    		Process.indicatorPrevious = Process.indicatorCurrent;
-        watchdog_unlockWatchdogMutex();
+        watchdog_spinLockCtrl(CTRL_UNLOCK);
 
         /**
          *
@@ -97,6 +99,8 @@ static int watchdogThread(void *data)
 
 void watchdogInit(void)
 {
+    spin_lock_init(&Process.watchdogSpinlock);
+
     Process.threadHandle = kthread_create(watchdogThread, NULL, "iceWatchdog");
 
     if (IS_ERR(Process.threadHandle))

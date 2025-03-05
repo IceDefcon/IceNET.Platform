@@ -41,7 +41,7 @@ static irqreturn_t InterruptFromFPGA_WatchdogISR(int irq, void *data)
 {
     watchdogProcess* tmpProcess = watchdog_getProcess();
 
-    watchdog_lockWatchdogMutex();
+    watchdog_spinLockCtrl(CTRL_LOCK);
     if(tmpProcess->indicatorCurrent == 0xFA)
     {
         tmpProcess->indicatorCurrent = 0x00;
@@ -50,7 +50,7 @@ static irqreturn_t InterruptFromFPGA_WatchdogISR(int irq, void *data)
     {
         tmpProcess->indicatorCurrent++;
     }
-    watchdog_unlockWatchdogMutex();
+    watchdog_spinLockCtrl(CTRL_UNLOCK);
 
     gpio_set_value(GPIO_WATCHDOG_INTERRUPT_FROM_CPU, 1);
     gpio_set_value(GPIO_WATCHDOG_INTERRUPT_FROM_CPU, 0);

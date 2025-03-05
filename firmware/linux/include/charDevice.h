@@ -56,13 +56,6 @@ typedef enum
     MUTEX_CTRL_AMOUNT
 } MutexCtrlType;
 
-typedef enum
-{
-    CTRL_LOCK,
-    CTRL_UNLOCK,
-    CTRL_AMOUNT
-} CtrlType;
-
 /* GET */ charDeviceData* getCharDevice(void);
 /* GET */ DmaTransferType* getCharDeviceTransfer(charDeviceType charDevice);
 /* MUTEX */ void charDeviceMutexCtrl(charDeviceType charDevice, MutexCtrlType mutexCtrl);

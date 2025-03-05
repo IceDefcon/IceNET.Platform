@@ -32,4 +32,11 @@ typedef struct
     uint8_t* TxData;
 } DmaTransferType;
 
+typedef enum
+{
+    CTRL_LOCK,
+    CTRL_UNLOCK,
+    CTRL_AMOUNT
+} CtrlType;
+
 #endif // TYPES_H
