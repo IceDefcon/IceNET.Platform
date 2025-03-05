@@ -7,9 +7,9 @@
 
 #include <linux/kernel.h>
 #include <linux/kthread.h>
+#include <linux/spinlock.h>
 #include <linux/delay.h> // For msleep
 #include <linux/gpio.h>
-#include <linux/mutex.h>
 
 #include "stateMachine.h"
 #include "charDevice.h"
@@ -34,23 +34,22 @@ static stateMachineProcess Process =
 {
     .currentState = SM_IDLE,
     .threadHandle = NULL,
-    .stateMutex = __MUTEX_INITIALIZER(Process.stateMutex),
-    .dmaStop = false,
+    .irqFlags = 0,
 };
 
 /* SET */ void setStateMachine(stateMachineType newState)
 {
-    mutex_lock(&Process.stateMutex);
+    spin_lock_irqsave(&Process.smSpinlock, Process.irqFlags);
     Process.currentState = newState;
-    mutex_unlock(&Process.stateMutex);
+    spin_unlock_irqrestore(&Process.smSpinlock, Process.irqFlags);
 }
 
 /* GET */ stateMachineType getStateMachine(void)
 {
     stateMachineType state;
-    mutex_lock(&Process.stateMutex);
+    spin_lock_irqsave(&Process.smSpinlock, Process.irqFlags);
     state = Process.currentState;
-    mutex_unlock(&Process.stateMutex);
+    spin_unlock_irqrestore(&Process.smSpinlock, Process.irqFlags);
     return state;
 }
 
@@ -158,6 +157,7 @@ static int stateMachineThread(void *data)
 
 void stateMachineInit(void)
 {
+    spin_lock_init(&Process.smSpinlock);
     setStateMachine(SM_IDLE);
 
     Process.threadHandle = kthread_create(stateMachineThread, NULL, "iceStateMachine");

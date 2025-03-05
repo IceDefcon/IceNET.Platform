@@ -29,7 +29,7 @@ typedef struct
     struct class *deviceClass;
     struct device *nodeDevice;
     int openCount;
-    struct mutex read_Mutex;
+    struct mutex deviceMutex;
     bool isLocked;
     size_t transferSize;
     int tryLock;

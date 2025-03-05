@@ -7,10 +7,11 @@
 
 #include <linux/module.h>      // For module macros
 #include <linux/kernel.h>      // For kernel functions and logging
-#include <linux/mutex.h>       // For mutex operations
 #include <linux/sched.h>       // For struct task_struct
-#include <linux/kthread.h>      // For kthread functions
-#include <linux/delay.h>        // For msleep
+#include <linux/spinlock.h>    // For spinlocks
+#include <linux/kthread.h>     // For kthread functions
+#include <linux/delay.h>       // For msleep
+
 #include "charDevice.h"
 #include "watchdog.h"
 #include "console.h"
@@ -22,7 +23,7 @@ static watchdogProcess Process =
     .indicatorCurrent = 0x00,
     .indicatorPrevious = 0x00,
     .threadHandle = NULL,
-    .irq_flags = 0,
+    .irqflags = 0,
 };
 
 watchdogProcess* watchdog_getProcess(void)
@@ -34,11 +35,11 @@ void watchdog_spinLockCtrl(CtrlType ctrl)
 {
     if(CTRL_LOCK == ctrl)
     {
-        spin_lock_irqsave(&Process.watchdogSpinlock, Process.irq_flags);
+        spin_lock_irqsave(&Process.watchdogSpinlock, Process.irqflags);
     }
     else if(CTRL_UNLOCK == ctrl)
     {
-        spin_unlock_irqrestore(&Process.watchdogSpinlock, Process.irq_flags);
+        spin_unlock_irqrestore(&Process.watchdogSpinlock, Process.irqflags);
     }
 }
 

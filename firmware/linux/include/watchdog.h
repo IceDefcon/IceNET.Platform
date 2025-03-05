@@ -20,7 +20,7 @@ typedef struct
     char indicatorPrevious;
     struct task_struct *threadHandle;
     spinlock_t watchdogSpinlock;
-    unsigned long irq_flags;
+    unsigned long irqflags;
 } watchdogProcess;
 
 void watchdog_spinLockCtrl(CtrlType ctrl);

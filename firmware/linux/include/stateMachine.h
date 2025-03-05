@@ -34,8 +34,8 @@ typedef struct
 {
     stateMachineType currentState;
     struct task_struct *threadHandle;
-    struct mutex stateMutex;
-    bool dmaStop;
+    spinlock_t smSpinlock;
+    unsigned long irqFlags;
 } stateMachineProcess;
 
 /* SET */ void setStateMachine(stateMachineType newState);
