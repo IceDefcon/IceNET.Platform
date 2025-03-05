@@ -1,4 +1,4 @@
-obj-m := slaveSpi.o
+obj-m := canBus.o
 
 KDIR := /lib/modules/$(shell uname -r)/build
 
