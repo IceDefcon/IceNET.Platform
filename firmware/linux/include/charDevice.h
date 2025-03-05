@@ -29,7 +29,7 @@ typedef struct
     struct class *deviceClass;
     struct device *nodeDevice;
     int openCount;
-    struct mutex read_Mutex;
+    struct mutex deviceMutex;
     bool isLocked;
     size_t transferSize;
     int tryLock;
@@ -55,13 +55,6 @@ typedef enum
     MUTEX_CTRL_DESTROY,
     MUTEX_CTRL_AMOUNT
 } MutexCtrlType;
-
-typedef enum
-{
-    CTRL_LOCK,
-    CTRL_UNLOCK,
-    CTRL_AMOUNT
-} CtrlType;
 
 /* GET */ charDeviceData* getCharDevice(void);
 /* GET */ DmaTransferType* getCharDeviceTransfer(charDeviceType charDevice);

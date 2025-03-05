@@ -11,17 +11,19 @@
 #include <linux/mutex.h>       // For struct mutex
 #include <linux/sched.h>       // For struct task_struct
 
+#include "types.h"
+
 typedef struct
 {
     bool indicatorFPGA;
     char indicatorCurrent;
     char indicatorPrevious;
     struct task_struct *threadHandle;
-    struct mutex watchdogMutex;
+    spinlock_t watchdogSpinlock;
+    unsigned long irqflags;
 } watchdogProcess;
 
-void watchdog_lockWatchdogMutex(void);
-void watchdog_unlockWatchdogMutex(void);
+void watchdog_spinLockCtrl(CtrlType ctrl);
 watchdogProcess* watchdog_getProcess(void);
 
 void watchdogInit(void);

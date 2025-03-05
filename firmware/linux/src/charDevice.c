@@ -48,7 +48,7 @@ static charDeviceData Device[DEVICE_AMOUNT] =
         .deviceClass = NULL,
         .nodeDevice = NULL,
         .openCount = 0,
-        .read_Mutex = __MUTEX_INITIALIZER(Device[DEVICE_WATCHDOG].read_Mutex),
+        .deviceMutex = __MUTEX_INITIALIZER(Device[DEVICE_WATCHDOG].deviceMutex),
         .isLocked = true,
         .tryLock = 0,
         .transferSize = 2,
@@ -77,7 +77,7 @@ static charDeviceData Device[DEVICE_AMOUNT] =
         .deviceClass = NULL,
         .nodeDevice = NULL,
         .openCount = 0,
-        .read_Mutex = __MUTEX_INITIALIZER(Device[DEVICE_COMMANDER].read_Mutex),
+        .deviceMutex = __MUTEX_INITIALIZER(Device[DEVICE_COMMANDER].deviceMutex),
         .isLocked = true,
         .tryLock = 0,
         .transferSize = 8,
@@ -107,38 +107,38 @@ static charDeviceData Device[DEVICE_AMOUNT] =
     {
         case MUTEX_CTRL_INIT:
         {
-            mutex_init(&Device[charDevice].read_Mutex);
+            mutex_init(&Device[charDevice].deviceMutex);
             break;
         };
 
         case MUTEX_CTRL_LOCK:
         {
-            mutex_lock(&Device[charDevice].read_Mutex);
+            mutex_lock(&Device[charDevice].deviceMutex);
             break;
         };
 
         case MUTEX_CTRL_TRYLOCK:
         {
-            Device[charDevice].tryLock = mutex_trylock(&Device[charDevice].read_Mutex);
+            Device[charDevice].tryLock = mutex_trylock(&Device[charDevice].deviceMutex);
             break;
         };
 
         case MUTEX_CTRL_UNLOCK:
         {
-            mutex_unlock(&Device[charDevice].read_Mutex);
+            mutex_unlock(&Device[charDevice].deviceMutex);
             break;
         };
 
         case MUTEX_CTRL_DESTROY:
         {
-            Device[charDevice].tryLock = mutex_trylock(&Device[charDevice].read_Mutex);
+            Device[charDevice].tryLock = mutex_trylock(&Device[charDevice].deviceMutex);
 
             if (Device[charDevice].tryLock  == 0)
             {
-                mutex_unlock(&Device[charDevice].read_Mutex);
+                mutex_unlock(&Device[charDevice].deviceMutex);
             }
 
-            mutex_destroy(&Device[charDevice].read_Mutex);
+            mutex_destroy(&Device[charDevice].deviceMutex);
 
             break;
         };
