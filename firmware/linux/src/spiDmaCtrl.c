@@ -125,8 +125,8 @@ static int spiBusInit(spiBusType spiBusEnum, spiDeviceType spiDeviceEnum)
  *                           V                                  |                                                                            |
  * FPGA <------------------ [0] DMA_IN                          |                                                                            |
  *                                                              V                                                                            V
- * Device[SPI_PRIMARY].Dma.tx_dma = dma_map_single(Device[SPI_PRIMARY].spiDevice->controller->dev.parent, (void *)getCharDeviceTransfer(DEVICE_COMMANDER)->RxData, Device[SPI_PRIMARY].spiLength, DMA_TO_DEVICE);
- * Device[SPI_PRIMARY].Dma.rx_dma = dma_map_single(Device[SPI_PRIMARY].spiDevice->controller->dev.parent, (void *)Device[SPI_PRIMARY].spiRx, Device[SPI_PRIMARY].spiLength, DMA_FROM_DEVICE);
+ * Device[SPI_PRIMARY].Dma.tx_dma = dma_map_single(Device[SPI_PRIMARY].spiDevice->master->dev.parent, (void *)getCharDeviceTransfer(DEVICE_COMMANDER)->RxData, Device[SPI_PRIMARY].spiLength, DMA_TO_DEVICE);
+ * Device[SPI_PRIMARY].Dma.rx_dma = dma_map_single(Device[SPI_PRIMARY].spiDevice->master->dev.parent, (void *)Device[SPI_PRIMARY].spiRx, Device[SPI_PRIMARY].spiLength, DMA_FROM_DEVICE);
  *
  */
 
@@ -146,8 +146,8 @@ static int spiBusInit(spiBusType spiBusEnum, spiDeviceType spiDeviceEnum)
  *                           |                                    |                                                                               |
  * FPGA ------------------> [1] DMA_OUT                           |                                                                               |
  *                                                                |                                                                               |
- * Device[SPI_SECONDARY].Dma.tx_dma = dma_map_single(Device[SPI_SECONDARY].spiDevice->controller->dev.parent, (void *)getCharDeviceTransfer(DEVICE_COMMANDER)->RxData, Device[SPI_SECONDARY].spiLength, DMA_TO_DEVICE);
- * Device[SPI_SECONDARY].Dma.rx_dma = dma_map_single(Device[SPI_SECONDARY].spiDevice->controller->dev.parent, (void *)Device[SPI_SECONDARY].spiRx, Device[SPI_SECONDARY].spiLength, DMA_FROM_DEVICE);
+ * Device[SPI_SECONDARY].Dma.tx_dma = dma_map_single(Device[SPI_SECONDARY].spiDevice->master->dev.parent, (void *)getCharDeviceTransfer(DEVICE_COMMANDER)->RxData, Device[SPI_SECONDARY].spiLength, DMA_TO_DEVICE);
+ * Device[SPI_SECONDARY].Dma.rx_dma = dma_map_single(Device[SPI_SECONDARY].spiDevice->master->dev.parent, (void *)Device[SPI_SECONDARY].spiRx, Device[SPI_SECONDARY].spiLength, DMA_FROM_DEVICE);
  *
  */
 
@@ -195,11 +195,11 @@ static int spiDmaInit(spiDeviceType spiDeviceEnum, dmaControlType dmaControl, bo
     }
 
     /* Allocate DMA buffers */
-    Device[spiDeviceEnum].Dma.tx_dma = dma_map_single(Device[spiDeviceEnum].spiDevice->controller->dev.parent, (void *)dmaTransfer->RxData, Device[spiDeviceEnum].spiLength, DMA_TO_DEVICE);
-    Device[spiDeviceEnum].Dma.rx_dma = dma_map_single(Device[spiDeviceEnum].spiDevice->controller->dev.parent, (void *)dmaTransfer->TxData, Device[spiDeviceEnum].spiLength, DMA_FROM_DEVICE);
+    Device[spiDeviceEnum].Dma.tx_dma = dma_map_single(Device[spiDeviceEnum].spiDevice->master->dev.parent, (void *)dmaTransfer->RxData, Device[spiDeviceEnum].spiLength, DMA_TO_DEVICE);
+    Device[spiDeviceEnum].Dma.rx_dma = dma_map_single(Device[spiDeviceEnum].spiDevice->master->dev.parent, (void *)dmaTransfer->TxData, Device[spiDeviceEnum].spiLength, DMA_FROM_DEVICE);
 
-    if(dma_mapping_error(Device[spiDeviceEnum].spiDevice->controller->dev.parent, Device[spiDeviceEnum].Dma.tx_dma) ||
-        dma_mapping_error(Device[spiDeviceEnum].spiDevice->controller->dev.parent, Device[spiDeviceEnum].Dma.rx_dma))
+    if(dma_mapping_error(Device[spiDeviceEnum].spiDevice->master->dev.parent, Device[spiDeviceEnum].Dma.tx_dma) ||
+        dma_mapping_error(Device[spiDeviceEnum].spiDevice->master->dev.parent, Device[spiDeviceEnum].Dma.rx_dma))
     {
         printk(KERN_ERR "[INIT][SPI] DMA mapping failed for SPI %d\n", spiDeviceEnum);
         return -1;
@@ -241,13 +241,13 @@ static int spiDmaDestroy(spiDeviceType spiDeviceEnum)
 {
     if (Device[spiDeviceEnum].Dma.tx_dma)
     {
-        dma_unmap_single(Device[spiDeviceEnum].spiDevice->controller->dev.parent, Device[spiDeviceEnum].Dma.tx_dma, Device[spiDeviceEnum].spiLength, DMA_TO_DEVICE);
+        dma_unmap_single(Device[spiDeviceEnum].spiDevice->master->dev.parent, Device[spiDeviceEnum].Dma.tx_dma, Device[spiDeviceEnum].spiLength, DMA_TO_DEVICE);
         Device[spiDeviceEnum].Dma.tx_dma = 0;
     }
 
     if (Device[spiDeviceEnum].Dma.rx_dma)
     {
-        dma_unmap_single(Device[spiDeviceEnum].spiDevice->controller->dev.parent, Device[spiDeviceEnum].Dma.rx_dma, Device[spiDeviceEnum].spiLength, DMA_FROM_DEVICE);
+        dma_unmap_single(Device[spiDeviceEnum].spiDevice->master->dev.parent, Device[spiDeviceEnum].Dma.rx_dma, Device[spiDeviceEnum].spiLength, DMA_FROM_DEVICE);
         Device[spiDeviceEnum].Dma.rx_dma = 0;
     }
 

@@ -129,13 +129,13 @@ ssize_t uart_write(const char *buf, size_t len)
     oldfs = get_fs();
     set_fs(KERNEL_DS);  // Change address limit for kernel space write
 
-    ret = kernel_write(process.uartFile, buf, len, &process.uartFile->f_pos);
+    ret = kernel_write(process.uartFile, buf, len, process.uartFile->f_pos);
 
     set_fs(oldfs);  // Restore address limit
 
     if (ret < 0)
     {
-        printk(KERN_ERR "[CTRL][CON] UART write failed: %d\n", ret);  // Changed %ld to %d
+        printk(KERN_ERR "[CTRL][CON] UART write failed: %ld\n", (long)ret);
     }
 
     return ret;
