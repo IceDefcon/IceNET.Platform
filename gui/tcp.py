@@ -107,6 +107,8 @@ class TcpManager:
         self.spi_device_address.insert(0, "10")
         self.spi_exe_button = tk.Button(self.root, text="EXE", command=lambda: self.tcp_execute(7))
         self.spi_exe_button.grid(row=0, column=5, pady=5, padx=5, sticky='nsew')
+        self.spi_test_button = tk.Button(self.root, text="TEST", command=lambda: self.tcp_execute(8))
+        self.spi_test_button.grid(row=0, column=7, pady=5, padx=5, sticky='nsew')
         self.spi_burst_size_label = tk.Label(self.root, text="Register Address")
         self.spi_burst_size_label.grid(row=1, column=3, pady=5, padx=5, sticky='e')
         self.spi_register_address = tk.Entry(self.root, width=14)
@@ -216,6 +218,10 @@ class TcpManager:
             data = bytes([offload_ctrl + read + shifted_size, address, register, 0x00, 0x00, 0x00, 0x00, 0x00])
         return data
 
+    def spi_test_assembly(self):
+        data = bytes([0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00])
+        return data
+
     def pwm_set(self, value):
         header = 0x84 # 1000 0100
         data = bytes([header, 0x00, 0x00, value, 0x00, 0x00, 0x00, 0x00])
@@ -250,6 +256,8 @@ class TcpManager:
                 data = self.pwm_set(0xFA) # 100%
             elif comand == 7:
                 data = self.spi_assembly()
+            elif comand == 8:
+                data = self.spi_test_assembly()
             else:
                 header = 0x05
                 data = bytes([header, 0x00, 0x00, 0xF0, 0x00, 0x00, 0x00, 0x00])
