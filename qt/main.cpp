@@ -1,76 +1,110 @@
 #include <QApplication>
-#include <QWidget>
-#include <QLineEdit>
 #include <QPushButton>
 #include <QVBoxLayout>
+#include <QMessageBox>
+#include <QLineEdit>
+#include <QCheckBox>
+#include <QPainter>
+#include <QWidget>
 #include <QLabel>
 #include <QDebug>
-#include <QMessageBox>
-#include <QHBoxLayout>
+
+typedef struct
+{
+    unsigned int x0;
+    unsigned int y0;
+    unsigned int yGap;
+    unsigned int ySize;
+    unsigned int textSize;
+    unsigned int separatorSize;
+}dimentionsType;
+
+static dimentionsType dim =
+{
+    .x0 = 10,
+    .y0 = 10,
+    .yGap = 30,
+    .ySize = 25,
+    .textSize = 120,
+    .separatorSize = 2,
+};
+
+typedef enum
+{
+    ROW_0 = 0,
+    ROW_1,
+    ROW_2,
+    ROW_3,
+    ROW_4,
+    ROW_5,
+    ROW_6,
+    ROW_7,
+    ROW_8,
+    ROW_9,
+} rowType;
 
 class WindowDesign : public QWidget
 {
 public:
+
 WindowDesign()
 {
     setWindowTitle("IceNET Platform");
-    QVBoxLayout *mainLayout = new QVBoxLayout(this);
+    setFixedSize(800, 600); // Set fixed window size
 
-    // I2C Device Address Row
-    QHBoxLayout *addressRow = new QHBoxLayout();
-    QLabel *addressLabel = new QLabel("I2C Device Address:", this);
+    // Address Row
+    QLabel *addressLabel = new QLabel("I2C Device Address", this);
+    addressLabel->setGeometry(dim.x0, dim.y0 + dim.yGap*ROW_0, dim.textSize, dim.ySize);
     addressField = new QLineEdit(this);
+    addressField->setGeometry(180, dim.y0 + dim.yGap*ROW_0, 80, dim.ySize);
     addressField->setPlaceholderText("7-bit Hex");
-
+    addressField->setText("0x69");
     QPushButton *exeButton = new QPushButton("EXE", this);
-    exeButton->setFixedWidth(50); // Set button width
+    exeButton->setGeometry(270, dim.y0 + dim.yGap*ROW_0, 50, dim.ySize);
     connect(exeButton, &QPushButton::clicked, this, &WindowDesign::i2c_execute);
 
-    // Set fixed size for label and input field
-    addressLabel->setFixedSize(120, 25);
-    addressField->setFixedSize(80, 25);
-
-    // Set QSizePolicy for fixed behavior
-    addressField->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-    addressLabel->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-
-    addressRow->addWidget(addressLabel);
-    addressRow->addWidget(addressField);
-    addressRow->addWidget(exeButton);
-
-    // Align addressRow to the left
-    addressRow->setAlignment(Qt::AlignLeft);  // Align to the left
-
-    mainLayout->addLayout(addressRow);
-
-    // Register Address Row
-    QHBoxLayout *registerRow = new QHBoxLayout();
-    QLabel *registerLabel = new QLabel("Register Address:", this);
+    // Register Row
+    QLabel *registerLabel = new QLabel("Register Address", this);
+    registerLabel->setGeometry(dim.x0, dim.y0 + dim.yGap*ROW_1, dim.textSize, dim.ySize);
     registerField = new QLineEdit(this);
+    registerField->setGeometry(180, dim.y0 + dim.yGap, 80, dim.ySize);
     registerField->setPlaceholderText("8-bit Hex");
+    registerField->setText("0x00");
 
-    // Set fixed size for label and input field
-    registerLabel->setFixedSize(120, 25);
-    registerField->setFixedSize(80, 25);
+    QLabel *dataLabel = new QLabel("Write Data", this);
+    dataLabel->setGeometry(dim.x0, dim.y0 + dim.yGap*ROW_2, dim.textSize, dim.ySize);
+    dataField = new QLineEdit(this);
+    dataField->setGeometry(180, dim.y0 + dim.yGap*2, 80, dim.ySize);
+    dataField->setPlaceholderText("8-bit Hex");
+    dataField->setText("0x00");
+    dataField->setDisabled(true);
 
-    // Set QSizePolicy for fixed behavior
-    registerField->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-    registerLabel->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+    QCheckBox *writeEnableCheck = new QCheckBox("WR", this);
+    writeEnableCheck->setGeometry(270, dim.y0 + dim.yGap*2, 100, dim.ySize);
+    connect(writeEnableCheck, &QCheckBox::toggled, dataField, &QLineEdit::setEnabled);
 
-    registerRow->addWidget(registerLabel);
-    registerRow->addWidget(registerField);
+    // Separator (Horizontal Line)
+    QFrame *hLine1 = new QFrame(this);
+    hLine1->setGeometry(dim.x0, 100, 320, dim.separatorSize);
+    hLine1->setFrameShape(QFrame::HLine);
+    hLine1->setFrameShadow(QFrame::Sunken);
 
-    // Align registerRow to the left
-    registerRow->setAlignment(Qt::AlignLeft);  // Align to the left
+    QFrame *hLine2 = new QFrame(this);
+    hLine2->setGeometry(dim.x0, 200, 320, dim.separatorSize);
+    hLine2->setFrameShape(QFrame::HLine);
+    hLine2->setFrameShadow(QFrame::Sunken);
 
-    mainLayout->addLayout(registerRow);
+    QFrame *hLine3 = new QFrame(this);
+    hLine3->setGeometry(dim.x0, 300, 320, dim.separatorSize);
+    hLine3->setFrameShape(QFrame::HLine);
+    hLine3->setFrameShadow(QFrame::Sunken);
 
-    // Set layout
-    setLayout(mainLayout);
-    adjustSize();
+    // Separator (Vertical Line between fields)
+    QFrame *vLine1 = new QFrame(this);
+    vLine1->setGeometry(330, 10, 2, 290);
+    vLine1->setFrameShape(QFrame::VLine);
+    vLine1->setFrameShadow(QFrame::Sunken);
 }
-
-
 
 private slots:
     void i2c_execute()
@@ -97,6 +131,7 @@ private slots:
 private:
     QLineEdit *addressField;
     QLineEdit *registerField;
+    QLineEdit *dataField;
 };
 
 int main(int argc, char *argv[])
