@@ -77,21 +77,22 @@ static int stateMachineThread(void *data)
             case SM_LONG_DMA:
                 printk(KERN_INFO "[CTRL][STM] Long Configuration DMA mode\n");
                 /* Init pointers */
-                initTransfer(SECTOR_ENGINE);
-                initTransfer(SECTOR_BMI160);
-                initTransfer(SECTOR_ADXL345);
+                // initTransfer(SECTOR_ENGINE);
+                // initTransfer(SECTOR_BMI160);
+                // initTransfer(SECTOR_ADXL345);
                 /* Prepare DMA Transfer */
-                prepareTransfer(SECTOR_ENGINE, true, false);
-                prepareTransfer(SECTOR_BMI160, false, false);
-                prepareTransfer(SECTOR_ADXL345, false, true);
+                // prepareTransfer(SECTOR_ENGINE, true, false);
+                // prepareTransfer(SECTOR_BMI160, false, false);
+                // prepareTransfer(SECTOR_ADXL345, false, true);
                 /* Destroy life-time pointers */
-                destroyTransfer(SECTOR_ENGINE);
-                destroyTransfer(SECTOR_BMI160);
-                destroyTransfer(SECTOR_ADXL345);
+                // destroyTransfer(SECTOR_ENGINE);
+                // destroyTransfer(SECTOR_BMI160);
+                // destroyTransfer(SECTOR_ADXL345);
                 /* Switch to SPI/DMA @ Config */
-                enableDMAConfig();
+                // enableDMAConfig();
                 /* Schedule Work Queue for SPI/DMA transfer */
-                setStateMachine(SM_SPI);
+                // setStateMachine(SM_SPI);
+                setStateMachine(SM_IDLE);
                 break;
 
             case SM_SPI:

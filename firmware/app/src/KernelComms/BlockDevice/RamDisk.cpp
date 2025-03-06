@@ -318,14 +318,22 @@ void RamDisk::clearDma()
 
     const size_t totalSectors = CONFIG_AMOUNT;
     const size_t sectorSize = SECTOR_SIZE;
+    ssize_t result = 0;
 
     uint8_t zeroBuffer[SECTOR_SIZE] = {0}; // Buffer filled with zeroes
 
     for (size_t i = 0; i < totalSectors; i++)
     {
         lseek(m_fileDescriptor, i * sectorSize, SEEK_SET);
-        write(m_fileDescriptor, zeroBuffer, sectorSize);
-        printf("[INFO] [RAM] Cleared sector %d\n", i);
+        result = write(m_fileDescriptor, zeroBuffer, sectorSize);
+        if (result != sectorSize)
+        {
+            perror("[ERNO] [RAM] Write failed");
+        }
+        else
+        {
+            printf("[INFO] [RAM] Cleared sector %zu\n", i);
+        }
     }
 
     closeDEV();
