@@ -1,12 +1,17 @@
-#include "worker.h"
+/*!
+ *
+ * Author: Ice.Marek
+ * IceNET Technology 2025
+ *
+ */
+#include "Worker.h"
 #include "DroneCtrl.h"
 
-worker::worker()
-{
+Worker::Worker(QObject *parent) : QObject(parent) {}
 
-}
+Worker::~Worker() {}
 
-void worker::doWork()
+void Worker::doWork()
 {
     qDebug() << "Working in thread: " << QThread::currentThread();
 

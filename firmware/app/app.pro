@@ -5,8 +5,8 @@ TEMPLATE = app
 
 SOURCES += main.cpp \
            gui/gui.cpp \
-           worker/worker.cpp \
            system/src/DroneCtrl.cpp \
+           system/src/Worker/Worker.cpp \
            system/src/KernelComms/KernelComms.cpp \
            system/src/KernelComms/BlockDevice/RamDisk.cpp \
            system/src/KernelComms/CharDevice/Commander.cpp \
@@ -15,10 +15,10 @@ SOURCES += main.cpp \
            system/src/Network/ServerTCP.cpp
 
 HEADERS += gui/gui.h \
-           worker/worker.h \
            system/include/Core.h \
-           system/include/DroneCtrl.h \
            system/include/Types.h \
+           system/include/DroneCtrl.h \
+           system/include/Worker/Worker.h \
            system/include/KernelComms/KernelComms.h \
            system/include/KernelComms/BlockDevice/RamDisk.h \
            system/include/KernelComms/CharDevice/Commander.h \
@@ -27,8 +27,8 @@ HEADERS += gui/gui.h \
            system/include/Network/ServerTCP.h \
 
 INCLUDEPATH += gui \
-               worker \
                system/include \
+               system/include/Worker \
                system/include/KernelComms \
                system/include/KernelComms/BlockDevice \
                system/include/KernelComms/CharDevice \
