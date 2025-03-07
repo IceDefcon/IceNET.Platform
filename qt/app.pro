@@ -1,5 +1,11 @@
-TEMPLATE = app
-TARGET = app
 QT += core gui widgets
 
-SOURCES += main.cpp
+TARGET = app
+TEMPLATE = app
+
+SOURCES += main.cpp \
+           gui/Gui.cpp \
+           worker/worker.cpp
+
+HEADERS += gui/Gui.h \
+           worker/worker.h
