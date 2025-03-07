@@ -1,5 +1,5 @@
-#include "gui/gui.h"
-#include "worker/worker.h"
+#include "gui.h"
+#include "worker.h"
 
 int main(int argc, char *argv[])
 {

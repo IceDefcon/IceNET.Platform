@@ -1,4 +1,5 @@
-#include "worker/worker.h"
+#include "worker.h"
+#include "DroneCtrl.h"
 
 worker::worker()
 {
@@ -8,10 +9,10 @@ worker::worker()
 void worker::doWork()
 {
     qDebug() << "Working in thread: " << QThread::currentThread();
-    //
-    // Wait
-    //
-    QThread::sleep(2);
+
+    DroneCtrl ctrl;
+    ctrl.applicationStart();
+
     qDebug() << "Work finished";
     emit workFinished(); // Emit signal when work is finished
 }
