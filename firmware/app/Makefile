@@ -15,7 +15,7 @@ CXX           = g++
 DEFINES       = -DQT_NO_DEBUG -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_CORE_LIB
 CFLAGS        = -pipe -O2 -Wall -W -D_REENTRANT -fPIC $(DEFINES)
 CXXFLAGS      = -pipe -O2 -Wall -W -D_REENTRANT -fPIC $(DEFINES)
-INCPATH       = -I. -Igui -Iworker -Isystem/include -Isystem/include/KernelComms -Isystem/include/KernelComms/BlockDevice -Isystem/include/KernelComms/CharDevice -Isystem/include/Network -isystem /usr/include/aarch64-linux-gnu/qt5 -isystem /usr/include/aarch64-linux-gnu/qt5/QtWidgets -isystem /usr/include/aarch64-linux-gnu/qt5/QtGui -isystem /usr/include/aarch64-linux-gnu/qt5/QtCore -I. -I/usr/lib/aarch64-linux-gnu/qt5/mkspecs/linux-g++
+INCPATH       = -I. -Igui -Isystem/include -Isystem/include/Worker -Isystem/include/KernelComms -Isystem/include/KernelComms/BlockDevice -Isystem/include/KernelComms/CharDevice -Isystem/include/Network -isystem /usr/include/aarch64-linux-gnu/qt5 -isystem /usr/include/aarch64-linux-gnu/qt5/QtWidgets -isystem /usr/include/aarch64-linux-gnu/qt5/QtGui -isystem /usr/include/aarch64-linux-gnu/qt5/QtCore -I. -I/usr/lib/aarch64-linux-gnu/qt5/mkspecs/linux-g++
 QMAKE         = /usr/bin/qmake
 DEL_FILE      = rm -f
 CHK_DIR_EXISTS= test -d
@@ -52,19 +52,19 @@ OBJECTS_DIR   = ./
 
 SOURCES       = main.cpp \
 		gui/gui.cpp \
-		worker/worker.cpp \
 		system/src/DroneCtrl.cpp \
+		system/src/Worker/Worker.cpp \
 		system/src/KernelComms/KernelComms.cpp \
 		system/src/KernelComms/BlockDevice/RamDisk.cpp \
 		system/src/KernelComms/CharDevice/Commander.cpp \
 		system/src/KernelComms/CharDevice/Watchdog.cpp \
 		system/src/Network/Network.cpp \
 		system/src/Network/ServerTCP.cpp moc_gui.cpp \
-		moc_worker.cpp
+		moc_Worker.cpp
 OBJECTS       = main.o \
 		gui.o \
-		worker.o \
 		DroneCtrl.o \
+		Worker.o \
 		KernelComms.o \
 		RamDisk.o \
 		Commander.o \
@@ -72,7 +72,7 @@ OBJECTS       = main.o \
 		Network.o \
 		ServerTCP.o \
 		moc_gui.o \
-		moc_worker.o
+		moc_Worker.o
 DIST          = /usr/lib/aarch64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		/usr/lib/aarch64-linux-gnu/qt5/mkspecs/common/unix.conf \
 		/usr/lib/aarch64-linux-gnu/qt5/mkspecs/common/linux.conf \
@@ -146,10 +146,10 @@ DIST          = /usr/lib/aarch64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		/usr/lib/aarch64-linux-gnu/qt5/mkspecs/features/yacc.prf \
 		/usr/lib/aarch64-linux-gnu/qt5/mkspecs/features/lex.prf \
 		app.pro gui/gui.h \
-		worker/worker.h \
 		system/include/Core.h \
-		system/include/DroneCtrl.h \
 		system/include/Types.h \
+		system/include/DroneCtrl.h \
+		system/include/Worker/Worker.h \
 		system/include/KernelComms/KernelComms.h \
 		system/include/KernelComms/BlockDevice/RamDisk.h \
 		system/include/KernelComms/CharDevice/Commander.h \
@@ -157,8 +157,8 @@ DIST          = /usr/lib/aarch64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		system/include/Network/Network.h \
 		system/include/Network/ServerTCP.h main.cpp \
 		gui/gui.cpp \
-		worker/worker.cpp \
 		system/src/DroneCtrl.cpp \
+		system/src/Worker/Worker.cpp \
 		system/src/KernelComms/KernelComms.cpp \
 		system/src/KernelComms/BlockDevice/RamDisk.cpp \
 		system/src/KernelComms/CharDevice/Commander.cpp \
@@ -344,8 +344,8 @@ distdir: FORCE
 	@test -d $(DISTDIR) || mkdir -p $(DISTDIR)
 	$(COPY_FILE) --parents $(DIST) $(DISTDIR)/
 	$(COPY_FILE) --parents /usr/lib/aarch64-linux-gnu/qt5/mkspecs/features/data/dummy.cpp $(DISTDIR)/
-	$(COPY_FILE) --parents gui/gui.h worker/worker.h system/include/Core.h system/include/DroneCtrl.h system/include/Types.h system/include/KernelComms/KernelComms.h system/include/KernelComms/BlockDevice/RamDisk.h system/include/KernelComms/CharDevice/Commander.h system/include/KernelComms/CharDevice/Watchdog.h system/include/Network/Network.h system/include/Network/ServerTCP.h $(DISTDIR)/
-	$(COPY_FILE) --parents main.cpp gui/gui.cpp worker/worker.cpp system/src/DroneCtrl.cpp system/src/KernelComms/KernelComms.cpp system/src/KernelComms/BlockDevice/RamDisk.cpp system/src/KernelComms/CharDevice/Commander.cpp system/src/KernelComms/CharDevice/Watchdog.cpp system/src/Network/Network.cpp system/src/Network/ServerTCP.cpp $(DISTDIR)/
+	$(COPY_FILE) --parents gui/gui.h system/include/Core.h system/include/Types.h system/include/DroneCtrl.h system/include/Worker/Worker.h system/include/KernelComms/KernelComms.h system/include/KernelComms/BlockDevice/RamDisk.h system/include/KernelComms/CharDevice/Commander.h system/include/KernelComms/CharDevice/Watchdog.h system/include/Network/Network.h system/include/Network/ServerTCP.h $(DISTDIR)/
+	$(COPY_FILE) --parents main.cpp gui/gui.cpp system/src/DroneCtrl.cpp system/src/Worker/Worker.cpp system/src/KernelComms/KernelComms.cpp system/src/KernelComms/BlockDevice/RamDisk.cpp system/src/KernelComms/CharDevice/Commander.cpp system/src/KernelComms/CharDevice/Watchdog.cpp system/src/Network/Network.cpp system/src/Network/ServerTCP.cpp $(DISTDIR)/
 
 
 clean: compiler_clean 
@@ -377,18 +377,18 @@ compiler_moc_predefs_clean:
 moc_predefs.h: /usr/lib/aarch64-linux-gnu/qt5/mkspecs/features/data/dummy.cpp
 	g++ -pipe -O2 -Wall -W -dM -E -o moc_predefs.h /usr/lib/aarch64-linux-gnu/qt5/mkspecs/features/data/dummy.cpp
 
-compiler_moc_header_make_all: moc_gui.cpp moc_worker.cpp
+compiler_moc_header_make_all: moc_gui.cpp moc_Worker.cpp
 compiler_moc_header_clean:
-	-$(DEL_FILE) moc_gui.cpp moc_worker.cpp
+	-$(DEL_FILE) moc_gui.cpp moc_Worker.cpp
 moc_gui.cpp: gui/gui.h \
 		moc_predefs.h \
 		/usr/lib/qt5/bin/moc
-	/usr/lib/qt5/bin/moc $(DEFINES) --include ./moc_predefs.h -I/usr/lib/aarch64-linux-gnu/qt5/mkspecs/linux-g++ -I/home/ice/code.lab/IceNET.Platform/firmware/app -I/home/ice/code.lab/IceNET.Platform/firmware/app/gui -I/home/ice/code.lab/IceNET.Platform/firmware/app/worker -I/home/ice/code.lab/IceNET.Platform/firmware/app/system/include -I/home/ice/code.lab/IceNET.Platform/firmware/app/system/include/KernelComms -I/home/ice/code.lab/IceNET.Platform/firmware/app/system/include/KernelComms/BlockDevice -I/home/ice/code.lab/IceNET.Platform/firmware/app/system/include/KernelComms/CharDevice -I/home/ice/code.lab/IceNET.Platform/firmware/app/system/include/Network -I/usr/include/aarch64-linux-gnu/qt5 -I/usr/include/aarch64-linux-gnu/qt5/QtWidgets -I/usr/include/aarch64-linux-gnu/qt5/QtGui -I/usr/include/aarch64-linux-gnu/qt5/QtCore -I/usr/include/c++/7 -I/usr/include/aarch64-linux-gnu/c++/7 -I/usr/include/c++/7/backward -I/usr/lib/gcc/aarch64-linux-gnu/7/include -I/usr/local/include -I/usr/lib/gcc/aarch64-linux-gnu/7/include-fixed -I/usr/include/aarch64-linux-gnu -I/usr/include gui/gui.h -o moc_gui.cpp
+	/usr/lib/qt5/bin/moc $(DEFINES) --include ./moc_predefs.h -I/usr/lib/aarch64-linux-gnu/qt5/mkspecs/linux-g++ -I/home/ice/code.lab/IceNET.Platform/firmware/app -I/home/ice/code.lab/IceNET.Platform/firmware/app/gui -I/home/ice/code.lab/IceNET.Platform/firmware/app/system/include -I/home/ice/code.lab/IceNET.Platform/firmware/app/system/include/Worker -I/home/ice/code.lab/IceNET.Platform/firmware/app/system/include/KernelComms -I/home/ice/code.lab/IceNET.Platform/firmware/app/system/include/KernelComms/BlockDevice -I/home/ice/code.lab/IceNET.Platform/firmware/app/system/include/KernelComms/CharDevice -I/home/ice/code.lab/IceNET.Platform/firmware/app/system/include/Network -I/usr/include/aarch64-linux-gnu/qt5 -I/usr/include/aarch64-linux-gnu/qt5/QtWidgets -I/usr/include/aarch64-linux-gnu/qt5/QtGui -I/usr/include/aarch64-linux-gnu/qt5/QtCore -I/usr/include/c++/7 -I/usr/include/aarch64-linux-gnu/c++/7 -I/usr/include/c++/7/backward -I/usr/lib/gcc/aarch64-linux-gnu/7/include -I/usr/local/include -I/usr/lib/gcc/aarch64-linux-gnu/7/include-fixed -I/usr/include/aarch64-linux-gnu -I/usr/include gui/gui.h -o moc_gui.cpp
 
-moc_worker.cpp: worker/worker.h \
+moc_Worker.cpp: system/include/Worker/Worker.h \
 		moc_predefs.h \
 		/usr/lib/qt5/bin/moc
-	/usr/lib/qt5/bin/moc $(DEFINES) --include ./moc_predefs.h -I/usr/lib/aarch64-linux-gnu/qt5/mkspecs/linux-g++ -I/home/ice/code.lab/IceNET.Platform/firmware/app -I/home/ice/code.lab/IceNET.Platform/firmware/app/gui -I/home/ice/code.lab/IceNET.Platform/firmware/app/worker -I/home/ice/code.lab/IceNET.Platform/firmware/app/system/include -I/home/ice/code.lab/IceNET.Platform/firmware/app/system/include/KernelComms -I/home/ice/code.lab/IceNET.Platform/firmware/app/system/include/KernelComms/BlockDevice -I/home/ice/code.lab/IceNET.Platform/firmware/app/system/include/KernelComms/CharDevice -I/home/ice/code.lab/IceNET.Platform/firmware/app/system/include/Network -I/usr/include/aarch64-linux-gnu/qt5 -I/usr/include/aarch64-linux-gnu/qt5/QtWidgets -I/usr/include/aarch64-linux-gnu/qt5/QtGui -I/usr/include/aarch64-linux-gnu/qt5/QtCore -I/usr/include/c++/7 -I/usr/include/aarch64-linux-gnu/c++/7 -I/usr/include/c++/7/backward -I/usr/lib/gcc/aarch64-linux-gnu/7/include -I/usr/local/include -I/usr/lib/gcc/aarch64-linux-gnu/7/include-fixed -I/usr/include/aarch64-linux-gnu -I/usr/include worker/worker.h -o moc_worker.cpp
+	/usr/lib/qt5/bin/moc $(DEFINES) --include ./moc_predefs.h -I/usr/lib/aarch64-linux-gnu/qt5/mkspecs/linux-g++ -I/home/ice/code.lab/IceNET.Platform/firmware/app -I/home/ice/code.lab/IceNET.Platform/firmware/app/gui -I/home/ice/code.lab/IceNET.Platform/firmware/app/system/include -I/home/ice/code.lab/IceNET.Platform/firmware/app/system/include/Worker -I/home/ice/code.lab/IceNET.Platform/firmware/app/system/include/KernelComms -I/home/ice/code.lab/IceNET.Platform/firmware/app/system/include/KernelComms/BlockDevice -I/home/ice/code.lab/IceNET.Platform/firmware/app/system/include/KernelComms/CharDevice -I/home/ice/code.lab/IceNET.Platform/firmware/app/system/include/Network -I/usr/include/aarch64-linux-gnu/qt5 -I/usr/include/aarch64-linux-gnu/qt5/QtWidgets -I/usr/include/aarch64-linux-gnu/qt5/QtGui -I/usr/include/aarch64-linux-gnu/qt5/QtCore -I/usr/include/c++/7 -I/usr/include/aarch64-linux-gnu/c++/7 -I/usr/include/c++/7/backward -I/usr/lib/gcc/aarch64-linux-gnu/7/include -I/usr/local/include -I/usr/lib/gcc/aarch64-linux-gnu/7/include-fixed -I/usr/include/aarch64-linux-gnu -I/usr/include system/include/Worker/Worker.h -o moc_Worker.cpp
 
 compiler_moc_source_make_all:
 compiler_moc_source_clean:
@@ -404,23 +404,11 @@ compiler_clean: compiler_moc_predefs_clean compiler_moc_header_clean
 
 ####### Compile
 
-main.o: main.cpp gui/gui.h \
-		worker/worker.h
+main.o: main.cpp gui/gui.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o main.o main.cpp
 
 gui.o: gui/gui.cpp gui/gui.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o gui.o gui/gui.cpp
-
-worker.o: worker/worker.cpp worker/worker.h \
-		system/include/DroneCtrl.h \
-		system/include/KernelComms/KernelComms.h \
-		system/include/KernelComms/CharDevice/Watchdog.h \
-		system/include/KernelComms/BlockDevice/RamDisk.h \
-		system/include/Types.h \
-		system/include/KernelComms/CharDevice/Commander.h \
-		system/include/Network/Network.h \
-		system/include/Network/ServerTCP.h
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o worker.o worker/worker.cpp
 
 DroneCtrl.o: system/src/DroneCtrl.cpp system/include/DroneCtrl.h \
 		system/include/KernelComms/KernelComms.h \
@@ -431,6 +419,17 @@ DroneCtrl.o: system/src/DroneCtrl.cpp system/include/DroneCtrl.h \
 		system/include/Network/Network.h \
 		system/include/Network/ServerTCP.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o DroneCtrl.o system/src/DroneCtrl.cpp
+
+Worker.o: system/src/Worker/Worker.cpp system/include/Worker/Worker.h \
+		system/include/DroneCtrl.h \
+		system/include/KernelComms/KernelComms.h \
+		system/include/KernelComms/CharDevice/Watchdog.h \
+		system/include/KernelComms/BlockDevice/RamDisk.h \
+		system/include/Types.h \
+		system/include/KernelComms/CharDevice/Commander.h \
+		system/include/Network/Network.h \
+		system/include/Network/ServerTCP.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o Worker.o system/src/Worker/Worker.cpp
 
 KernelComms.o: system/src/KernelComms/KernelComms.cpp system/include/KernelComms/KernelComms.h \
 		system/include/KernelComms/CharDevice/Watchdog.h \
@@ -469,8 +468,8 @@ ServerTCP.o: system/src/Network/ServerTCP.cpp system/include/Network/ServerTCP.h
 moc_gui.o: moc_gui.cpp 
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o moc_gui.o moc_gui.cpp
 
-moc_worker.o: moc_worker.cpp 
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o moc_worker.o moc_worker.cpp
+moc_Worker.o: moc_Worker.cpp 
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o moc_Worker.o moc_Worker.cpp
 
 ####### Install
 
