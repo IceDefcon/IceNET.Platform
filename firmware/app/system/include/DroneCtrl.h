@@ -44,4 +44,6 @@ class DroneCtrl :
 
         void sendFpgaConfig();
         void droneCtrlMain();
+
+        int applicationStart();
 };
