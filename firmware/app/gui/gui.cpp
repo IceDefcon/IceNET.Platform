@@ -117,7 +117,7 @@ void gui::setupSPI()
     spi_label->setFont(spi_labelFont);
     spi_label->setGeometry(dev.xGap, dev.yGap*6 + dev.yLogo + dev.yUnit*3, dev.xLogo, dev.yLogo);
     /* SPI :: Row[1] */
-    QLabel *spi_addressLabel = new QLabel("Device Address", this);
+    QLabel *spi_addressLabel = new QLabel("FPGA Device ID", this);
     spi_addressLabel->setGeometry(dev.xGap, dev.yGap*7 + dev.yLogo*2 + dev.yUnit*3, dev.xText, dev.yUnit);
     m_spi_addressField = new QLineEdit(this);
     m_spi_addressField->setGeometry(dev.xGap*2 + dev.xText, dev.yGap*7 + dev.yLogo*2 + dev.yUnit*3, dev.xUnit, dev.yUnit);

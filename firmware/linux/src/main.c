@@ -59,9 +59,9 @@ static int __init fpga_driver_init(void)
     /* Initialize scheduler */
     schedulerInit();
 
-    printk(KERN_INFO "----------------------------------\n");
-    printk(KERN_INFO "[READY] Driver loaded successfuly \n");
-    printk(KERN_INFO "----------------------------------\n");
+    printk(KERN_INFO "--------------------------------------\n");
+    printk(KERN_INFO "[READY] FPGA Driver loaded successfuly \n");
+    printk(KERN_INFO "--------------------------------------\n");
 
     return ret;
 }
@@ -75,6 +75,9 @@ static int __init fpga_driver_init(void)
 //////////////////////////
 static void __exit fpga_driver_exit(void)
 {
+    printk(KERN_INFO "-------------------------------------------------\n");
+    printk(KERN_INFO "[TERMINATE] Initialize termination of FPGA driver \n");
+    printk(KERN_INFO "-------------------------------------------------\n");
     /* Destroy everything */
     schedulerDestroy();
     watchdogDestroy();
