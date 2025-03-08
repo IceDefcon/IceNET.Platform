@@ -1,3 +1,10 @@
+/*!
+ *
+ * Author: Ice.Marek
+ * IceNET Technology 2025
+ *
+ */
+
 #include "gui.h"
 
 static const deviceType dev =
@@ -21,16 +28,46 @@ static const consoleType console =
     .ySize = dev.yGap*14 + dev.yLogo*3 + dev.yUnit*9+1, // Last Horizontal Separator
 };
 
-gui::gui()
+gui::gui() : m_threadKill(false)
+{
+    qDebug() << "[MAIN] [CONSTRUCTOR]" << this << "::  gui";
+
+    setupWindow();
+    setupConsole();
+
+    setupI2C();
+    setupSPI();
+    setupPWM();
+
+    setupSeparators();
+    setupProcess();
+}
+
+gui::~gui()
+{
+    qDebug() << "[MAIN] [DESTRUCTOR]" << this << ":: gui ";
+    if(false == m_threadKill)
+    {
+        shutdownThread();
+    }
+}
+
+void gui::setupWindow()
 {
     setWindowTitle("IceNET Platform");
     setFixedSize(800, 600);
+}
 
-    consoleOutput = new QPlainTextEdit(this);
-    consoleOutput->setReadOnly(true);
-    consoleOutput->setGeometry(console.xPosition, console.yPosition, console.xSize, console.ySize);
-    consoleOutput->setPlainText("Console Initialized...\n");
+void gui::setupConsole()
+{
+    m_consoleOutput = new QPlainTextEdit(this);
+    m_consoleOutput->setReadOnly(true);
+    m_consoleOutput->setGeometry(console.xPosition, console.yPosition, console.xSize, console.ySize);
+    m_consoleOutput->setPlainText("Console Initialized...\n");
+}
 
+void gui::setupI2C()
+{
     /* I2C :: Row[0] */
     QLabel *i2c_label = new QLabel("I2C", this);
     QFont i2c_labelFont;
@@ -42,100 +79,89 @@ gui::gui()
     /* I2C :: Row[1] */
     QLabel *i2c_addressLabel = new QLabel("Device Address", this);
     i2c_addressLabel->setGeometry(dev.xGap, dev.yGap*2 + dev.yLogo, dev.xText, dev.yUnit);
-    i2c_addressField = new QLineEdit(this);
-    i2c_addressField->setGeometry(dev.xGap*2 + dev.xText, dev.yGap*2 + dev.yLogo, dev.xUnit, dev.yUnit);
-    i2c_addressField->setText("0x69");
+    m_i2c_addressField = new QLineEdit(this);
+    m_i2c_addressField->setGeometry(dev.xGap*2 + dev.xText, dev.yGap*2 + dev.yLogo, dev.xUnit, dev.yUnit);
+    m_i2c_addressField->setText("0x69");
     QPushButton *i2c_exeButton = new QPushButton("EXE", this);
     i2c_exeButton->setGeometry(dev.xGap*3 + dev.xText + dev.xUnit, dev.yGap*2 + dev.yLogo, dev.xUnit, dev.yUnit);
     connect(i2c_exeButton, &QPushButton::clicked, this, &gui::i2c_execute);
     /* I2C :: Row[2] */
     QLabel *i2c_registerLabel = new QLabel("Register Address", this);
     i2c_registerLabel->setGeometry(dev.xGap, dev.yGap*3 + dev.yLogo + dev.yUnit, dev.xText, dev.yUnit);
-    i2c_registerField = new QLineEdit(this);
-    i2c_registerField->setGeometry(dev.xGap*2 + dev.xText, dev.yGap*3 + dev.yLogo + dev.yUnit, dev.xUnit, dev.yUnit);
-    i2c_registerField->setText("0x00");
-    i2c_burstField = new QLineEdit(this);
-    i2c_burstField->setGeometry(dev.xGap*3 + dev.xText + dev.xUnit, dev.yGap*3 + dev.yLogo + dev.yUnit, dev.xUnit, dev.yUnit);
-    i2c_burstField->setText("0x01");
+    m_i2c_registerField = new QLineEdit(this);
+    m_i2c_registerField->setGeometry(dev.xGap*2 + dev.xText, dev.yGap*3 + dev.yLogo + dev.yUnit, dev.xUnit, dev.yUnit);
+    m_i2c_registerField->setText("0x00");
+    m_i2c_burstField = new QLineEdit(this);
+    m_i2c_burstField->setGeometry(dev.xGap*3 + dev.xText + dev.xUnit, dev.yGap*3 + dev.yLogo + dev.yUnit, dev.xUnit, dev.yUnit);
+    m_i2c_burstField->setText("0x01");
     /* I2C :: Row[3] */
     QLabel *i2c_dataLabel = new QLabel("Write Data", this);
     i2c_dataLabel->setGeometry(dev.xGap, dev.yGap*4 + dev.yLogo + dev.yUnit*2, dev.xText, dev.yUnit);
-    i2c_dataField = new QLineEdit(this);
-    i2c_dataField->setGeometry(dev.xGap*2 + dev.xText , dev.yGap*4 + dev.yLogo + dev.yUnit*2, dev.xUnit, dev.yUnit);
-    i2c_dataField->setText("0x00");
-    i2c_dataField->setDisabled(true);
+    m_i2c_dataField = new QLineEdit(this);
+    m_i2c_dataField->setGeometry(dev.xGap*2 + dev.xText , dev.yGap*4 + dev.yLogo + dev.yUnit*2, dev.xUnit, dev.yUnit);
+    m_i2c_dataField->setText("0x00");
+    m_i2c_dataField->setDisabled(true);
     QCheckBox *i2c_writeTick = new QCheckBox("WR", this);
     i2c_writeTick->setGeometry(dev.xGap*3 + dev.xText + dev.xUnit, dev.yGap*4 + dev.yLogo + dev.yUnit*2, dev.xUnit, dev.yUnit);
-    connect(i2c_writeTick, &QCheckBox::toggled, i2c_dataField, &QLineEdit::setEnabled);
+    connect(i2c_writeTick, &QCheckBox::toggled, m_i2c_dataField, &QLineEdit::setEnabled);
+}
 
-    /* Vertical Separator */
-    QFrame *vLine1 = new QFrame(this);
-    vLine1->setGeometry(dev.xGap*4 + dev.xText + dev.xUnit*2, dev.yGap, dev.separatorWidth , dev.yGap*14 + dev.yLogo*3 + dev.yUnit*9);
-    vLine1->setFrameShape(QFrame::VLine);
-    vLine1->setFrameShadow(QFrame::Sunken);
-    /* Horizontal Separator */
-    QFrame *hLine1 = new QFrame(this);
-    hLine1->setGeometry(dev.xGap, dev.yGap*5 + dev.yLogo + dev.yUnit*3, dev.xGap*3 + dev.xText + dev.xUnit*2, dev.separatorWidth);
-    hLine1->setFrameShape(QFrame::HLine);
-    hLine1->setFrameShadow(QFrame::Sunken);
-
+void gui::setupSPI()
+{
     /* SPI :: Row[0] */
     QLabel *spi_label = new QLabel("SPI", this);
     QFont spi_labelFont;
     spi_labelFont.setPointSize(30);
     spi_labelFont.setItalic(true);
     spi_labelFont.setBold(true);
-    spi_label->setFont(i2c_labelFont);
+    spi_label->setFont(spi_labelFont);
     spi_label->setGeometry(dev.xGap, dev.yGap*6 + dev.yLogo + dev.yUnit*3, dev.xLogo, dev.yLogo);
     /* SPI :: Row[1] */
     QLabel *spi_addressLabel = new QLabel("Device Address", this);
     spi_addressLabel->setGeometry(dev.xGap, dev.yGap*7 + dev.yLogo*2 + dev.yUnit*3, dev.xText, dev.yUnit);
-    spi_addressField = new QLineEdit(this);
-    spi_addressField->setGeometry(dev.xGap*2 + dev.xText, dev.yGap*7 + dev.yLogo*2 + dev.yUnit*3, dev.xUnit, dev.yUnit);
-    spi_addressField->setText("0x11");
+    m_spi_addressField = new QLineEdit(this);
+    m_spi_addressField->setGeometry(dev.xGap*2 + dev.xText, dev.yGap*7 + dev.yLogo*2 + dev.yUnit*3, dev.xUnit, dev.yUnit);
+    m_spi_addressField->setText("0x11");
     QPushButton *spi_exeButton = new QPushButton("EXE", this);
     spi_exeButton->setGeometry(dev.xGap*3 + dev.xText + dev.xUnit, dev.yGap*7 + dev.yLogo*2 + dev.yUnit*3, dev.xUnit, dev.yUnit);
     connect(spi_exeButton, &QPushButton::clicked, this, &gui::spi_execute);
     /* SPI :: Row[2] */
     QLabel *spi_registerLabel = new QLabel("Register Address", this);
     spi_registerLabel->setGeometry(dev.xGap, dev.yGap*8 + dev.yLogo*2 + dev.yUnit*4, dev.xText, dev.yUnit);
-    spi_registerField = new QLineEdit(this);
-    spi_registerField->setGeometry(dev.xGap*2 + dev.xText, dev.yGap*8 + dev.yLogo*2 + dev.yUnit*4, dev.xUnit, dev.yUnit);
-    spi_registerField->setText("0x00");
-    spi_burstField = new QLineEdit(this);
-    spi_burstField->setGeometry(dev.xGap*3 + dev.xText + dev.xUnit, dev.yGap*8 + dev.yLogo*2 + dev.yUnit*4, dev.xUnit, dev.yUnit);
-    spi_burstField->setText("0x01");
+    m_spi_registerField = new QLineEdit(this);
+    m_spi_registerField->setGeometry(dev.xGap*2 + dev.xText, dev.yGap*8 + dev.yLogo*2 + dev.yUnit*4, dev.xUnit, dev.yUnit);
+    m_spi_registerField->setText("0x00");
+    m_spi_burstField = new QLineEdit(this);
+    m_spi_burstField->setGeometry(dev.xGap*3 + dev.xText + dev.xUnit, dev.yGap*8 + dev.yLogo*2 + dev.yUnit*4, dev.xUnit, dev.yUnit);
+    m_spi_burstField->setText("0x01");
     /* SPI :: Row[3] */
     QLabel *spi_dataLabel = new QLabel("Write Data", this);
     spi_dataLabel->setGeometry(dev.xGap, dev.yGap*9 + dev.yLogo*2 + dev.yUnit*5, dev.xText, dev.yUnit);
-    spi_dataField = new QLineEdit(this);
-    spi_dataField->setGeometry(dev.xGap*2 + dev.xText, dev.yGap*9 + dev.yLogo*2 + dev.yUnit*5, dev.xUnit, dev.yUnit);
-    spi_dataField->setText("0x00");
-    spi_dataField->setDisabled(true);
+    m_spi_dataField = new QLineEdit(this);
+    m_spi_dataField->setGeometry(dev.xGap*2 + dev.xText, dev.yGap*9 + dev.yLogo*2 + dev.yUnit*5, dev.xUnit, dev.yUnit);
+    m_spi_dataField->setText("0x00");
+    m_spi_dataField->setDisabled(true);
     QCheckBox *spi_writeTick = new QCheckBox("WR", this);
     spi_writeTick->setGeometry(dev.xGap*3 + dev.xText + dev.xUnit, dev.yGap*9 + dev.yLogo*2 + dev.yUnit*5, dev.xUnit, dev.yUnit);
-    connect(spi_writeTick, &QCheckBox::toggled, spi_dataField, &QLineEdit::setEnabled);
+    connect(spi_writeTick, &QCheckBox::toggled, m_spi_dataField, &QLineEdit::setEnabled);
+}
 
-    /* Horizontal Separator */
-    QFrame *hLine2 = new QFrame(this);
-    hLine2->setGeometry(dev.xGap, dev.yGap*10 + dev.yLogo*2 + dev.yUnit*6, dev.xGap*3 + dev.xText + dev.xUnit*2, dev.separatorWidth);
-    hLine2->setFrameShape(QFrame::HLine);
-    hLine2->setFrameShadow(QFrame::Sunken);
-
+void gui::setupPWM()
+{
     /* PWM :: Row[0] */
     QLabel *pwm_label = new QLabel("PWM", this);
     QFont pwm_labelFont;
     pwm_labelFont.setPointSize(30);
     pwm_labelFont.setItalic(true);
     pwm_labelFont.setBold(true);
-    pwm_label->setFont(i2c_labelFont);
+    pwm_label->setFont(pwm_labelFont);
     pwm_label->setGeometry(dev.xGap, dev.yGap*11 + dev.yLogo*2 + dev.yUnit*6, dev.xLogo, dev.yLogo);
     /* PWM :: Row[1] */
     QLabel *pwm_speedLabel = new QLabel("Speed [Hex]", this);
     pwm_speedLabel->setGeometry(dev.xGap, dev.yGap*12 + dev.yLogo*3 + dev.yUnit*6, dev.xText, dev.yUnit);
-    pwm_dataField = new QLineEdit(this);
-    pwm_dataField->setGeometry(dev.xGap*2 + dev.xText, dev.yGap*12 + dev.yLogo*3 + dev.yUnit*6, dev.xUnit, dev.yUnit);
-    pwm_dataField->setText("0x00");
+    m_pwm_dataField = new QLineEdit(this);
+    m_pwm_dataField->setGeometry(dev.xGap*2 + dev.xText, dev.yGap*12 + dev.yLogo*3 + dev.yUnit*6, dev.xUnit, dev.yUnit);
+    m_pwm_dataField->setText("0x00");
     QPushButton *pwm_exeButton = new QPushButton("EXE", this);
     pwm_exeButton->setGeometry(dev.xGap*3 + dev.xText + dev.xUnit, dev.yGap*12 + dev.yLogo*3 + dev.yUnit*6, dev.xUnit, dev.yUnit);
     connect(pwm_exeButton, &QPushButton::clicked, this, &gui::pwm_execute);
@@ -147,6 +173,26 @@ gui::gui()
     QPushButton *pwm_downButton = new QPushButton("DOWN", this);
     pwm_downButton->setGeometry(dev.xGap*3 + dev.xText + dev.xUnit, dev.yGap*14 + dev.yLogo*3 + dev.yUnit*8, dev.xUnit, dev.yUnit);
     connect(pwm_downButton, &QPushButton::clicked, this, &gui::pwm_down);
+}
+
+
+void gui::setupSeparators()
+{
+    /* Vertical Separator */
+    QFrame *vLine1 = new QFrame(this);
+    vLine1->setGeometry(dev.xGap*4 + dev.xText + dev.xUnit*2, dev.yGap, dev.separatorWidth , dev.yGap*14 + dev.yLogo*3 + dev.yUnit*9);
+    vLine1->setFrameShape(QFrame::VLine);
+    vLine1->setFrameShadow(QFrame::Sunken);
+    /* Horizontal Separator */
+    QFrame *hLine1 = new QFrame(this);
+    hLine1->setGeometry(dev.xGap, dev.yGap*5 + dev.yLogo + dev.yUnit*3, dev.xGap*3 + dev.xText + dev.xUnit*2, dev.separatorWidth);
+    hLine1->setFrameShape(QFrame::HLine);
+    hLine1->setFrameShadow(QFrame::Sunken);
+    /* Horizontal Separator */
+    QFrame *hLine2 = new QFrame(this);
+    hLine2->setGeometry(dev.xGap, dev.yGap*10 + dev.yLogo*2 + dev.yUnit*6, dev.xGap*3 + dev.xText + dev.xUnit*2, dev.separatorWidth);
+    hLine2->setFrameShape(QFrame::HLine);
+    hLine2->setFrameShadow(QFrame::Sunken);
 
     /* Horizontal Separator */
     QFrame *hLine3 = new QFrame(this);
@@ -155,14 +201,57 @@ gui::gui()
     hLine3->setFrameShadow(QFrame::Sunken);
 }
 
+void gui::setupProcess()
+{
+    QPushButton *connectButton = new QPushButton("CONNECT", this);
+    connectButton->setGeometry(dev.xGap, dev.yGap * 16 + dev.yLogo * 3 + dev.yUnit * 9,dev.xUnit * 5 + dev.xGap, dev.yUnit * 2);
+    connectButton->setStyleSheet(
+        "QPushButton {"
+        "   background-color: green;"
+        "   color: white;"
+        "   font-size: 18px;"
+        "   font-weight: bold;"
+        "   border-radius: 10px;"
+        "   padding: 5px;"
+        "}"
+        "QPushButton:hover {"
+        "   background-color: darkgreen;"
+        "}"
+        "QPushButton:pressed {"
+        "   background-color: black;"
+        "}"
+    );
+    connect(connectButton, &QPushButton::clicked, this, &gui::initThread);
+
+    QPushButton *terminateButton = new QPushButton("TERMINATE", this);
+    terminateButton->setGeometry(dev.xGap, dev.yGap * 17 + dev.yLogo * 3 + dev.yUnit * 11,dev.xUnit * 5 + dev.xGap, dev.yUnit * 2);
+    terminateButton->setStyleSheet(
+        "QPushButton {"
+        "   background-color: red;"
+        "   color: white;"
+        "   font-size: 18px;"
+        "   font-weight: bold;"
+        "   border-radius: 10px;"
+        "   padding: 5px;"
+        "}"
+        "QPushButton:hover {"
+        "   background-color: darkred;"
+        "}"
+        "QPushButton:pressed {"
+        "   background-color: black;"
+        "}"
+    );
+    connect(terminateButton, &QPushButton::clicked, this, &gui::shutdownThread);
+}
+
 void gui::i2c_execute()
 {
     bool addressFlag, registerFlag;
 
-    QString addressText = i2c_addressField->text();
+    QString addressText = m_i2c_addressField->text();
     (void)addressText.toInt(&addressFlag, 16);
 
-    QString registerText = i2c_registerField->text();
+    QString registerText = m_i2c_registerField->text();
     (void)registerText.toInt(&registerFlag, 16);
 
     if (addressFlag && registerFlag)
@@ -199,5 +288,77 @@ void gui::pwm_down()
 
 void gui::printToConsole(const QString &message)
 {
-    consoleOutput->appendPlainText(message);
+    m_consoleOutput->appendPlainText(message);
+}
+
+void gui::initThread()
+{
+    /**
+     * Automatically locks the mutex when it is constructed
+     * and releases the lock when it goes out of scope
+     */
+    std::lock_guard<std::mutex> lock(m_threadMutex);
+
+    if (m_threadMain.joinable())
+    {
+        printToConsole("[GUI] threadMain is already running.");
+        return;
+    }
+
+    printToConsole("[GUI] Initialize threadMain");
+
+    m_threadKill = false;
+    m_threadMain = std::thread(&gui::threadMain, this);
+}
+
+void gui::shutdownThread()
+{
+    /**
+     * Automatically locks the mutex when it is constructed
+     * and releases the lock when it goes out of scope
+     */
+    std::lock_guard<std::mutex> lock(m_threadMutex);
+
+    if (m_threadKill)
+    {
+        printToConsole("[GUI] threadMain is already marked for shutdown.");
+        return;
+    }
+
+    printToConsole("[GUI] Shutdown threadMain");
+
+    m_threadKill = true;
+
+    if (m_threadMain.joinable())
+    {
+        m_threadMain.join();
+        printToConsole("[GUI] threadMain has been shut down.");
+    }
+}
+
+void gui::threadMain()
+{
+    /**
+     * Smart pointer for auto Heap
+     * allocation and deallocation
+     */
+    m_instanceDroneCtrl = std::make_unique<DroneCtrl>();
+    m_instanceDroneCtrl->droneInit();
+
+    while (false == m_threadKill)
+    {
+        m_instanceDroneCtrl->droneCtrlMain();
+
+        if (true == m_instanceDroneCtrl->isKilled())
+        {
+            break;
+        }
+
+        /* Reduce consumption of CPU resources */
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
+
+    m_instanceDroneCtrl->droneExit();
+    m_instanceDroneCtrl.reset(); // Reset the unique_ptr to call the destructor
+    std::cout << "[EXIT] [TERMINATE] Shutdown threadMain" << std::endl;
 }

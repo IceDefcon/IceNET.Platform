@@ -12,18 +12,15 @@
 #include <vector>
 
 #include "KernelComms.h"
-#include "Network.h"
 #include "Types.h"
 
 class DroneCtrl :
-    public Network,
     public KernelComms
 {
     private:
         ctrlType m_ctrlState;
         ctrlType m_ctrlStatePrev;
 
-        Network::ServerTCP* m_instanceServerTCP;
         KernelComms::Commander* m_instanceCommander;
         KernelComms::Watchdog* m_instanceWatchdog;
         KernelComms::RamDisk* m_instanceRamDisk;
@@ -44,6 +41,4 @@ class DroneCtrl :
 
         void sendFpgaConfig();
         void droneCtrlMain();
-
-        int applicationStart();
 };

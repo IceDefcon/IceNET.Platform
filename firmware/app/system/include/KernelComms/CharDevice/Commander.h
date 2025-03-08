@@ -10,6 +10,7 @@
 #include <thread>
 #include <atomic>
 #include <vector>
+#include <mutex>
 
 #include "Types.h"
 
@@ -18,7 +19,8 @@ class Commander
     private:
         int m_file_descriptor;
         std::thread m_threadCommander;
-        std::atomic<bool> m_threadKill;
+        std::mutex m_threadMutex;
+        bool m_threadKill;
 
         ioStateType m_ioState;
         ioStateType m_ioStatePrev;

@@ -50,6 +50,7 @@ int Watchdog::openDEV()
     if(m_file_descriptor < 0)
     {
         std::cout << "[ERNO] [WDG] Failed to open Device" << std::endl;
+        m_threadKill = true;
         return ERROR;
     } 
     else 
@@ -100,20 +101,46 @@ int Watchdog::closeDEV()
 
 void Watchdog::initThread()
 {
+    /**
+     * Automatically locks the mutex when it is constructed
+     * and releases the lock when it goes out of scope
+     */
+    std::lock_guard<std::mutex> lock(m_threadMutex);
+
+    if (m_threadWatchdog.joinable())
+    {
+        std::cout << "[INFO] [WDG] threadWatchdog is already running" << std::endl;
+        return;
+    }
+
     std::cout << "[INFO] [WDG] Initialize threadWatchdog" << std::endl;
+
+    m_threadKill = false;
     m_threadWatchdog = std::thread(&Watchdog::threadWatchdog, this);
 }
 
 void Watchdog::shutdownThread()
 {
-    if(false == m_threadKill)
+    /**
+     * Automatically locks the mutex when it is constructed
+     * and releases the lock when it goes out of scope
+     */
+    std::lock_guard<std::mutex> lock(m_threadMutex);
+
+    if (m_threadKill)
     {
-        m_threadKill = true;
+        std::cout << "[INFO] [WDG] threadWatchdog is already marked for shutdown" << std::endl;
+        return;
     }
+
+    std::cout << "[INFO] [WDG] Shutdown threadWatchdog" << std::endl;
+
+    m_threadKill = true;
 
     if (m_threadWatchdog.joinable())
     {
         m_threadWatchdog.join();
+        std::cout << "[INFO] [WDG] threadWatchdog has been shut down" << std::endl;
     }
 }
 
