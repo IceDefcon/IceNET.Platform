@@ -11,7 +11,12 @@
 #include <QThread>
 #include <QDebug>
 #include <QLabel>
+#include <QTimer>
 #include <QFont>
+
+#include "DroneCtrl.h"
+#include <thread>
+#include <mutex>
 
 typedef struct
 {
@@ -38,22 +43,50 @@ class gui : public QWidget
 {
     Q_OBJECT
 
-    QPlainTextEdit *consoleOutput;
-    QLineEdit *i2c_addressField, *i2c_registerField, *i2c_burstField, *i2c_dataField;
-    QLineEdit *spi_addressField, *spi_registerField, *spi_burstField, *spi_dataField;
-    QLineEdit *pwm_dataField;
+    QPlainTextEdit *m_consoleOutput;
+
+    QLineEdit *m_i2c_addressField;
+    QLineEdit *m_i2c_registerField;
+    QLineEdit *m_i2c_burstField;
+    QLineEdit *m_i2c_dataField;
+
+    QLineEdit *m_spi_addressField;
+    QLineEdit *m_spi_registerField;
+    QLineEdit *m_spi_burstField;
+    QLineEdit *m_spi_dataField;
+
+    QLineEdit *m_pwm_dataField;
+
+    std::unique_ptr<DroneCtrl> m_instanceDroneCtrl;
+    std::thread m_threadMain;
+    std::mutex m_threadMutex;
+    bool m_threadKill;
 
 public:
 
     gui();
+    ~gui();
+
+    void setupWindow();
+    void setupConsole();
+    void setupI2C();
+    void setupSPI();
+    void setupPWM();
+    void setupSeparators();
+    void setupProcess();
 
 private slots:
 
     void i2c_execute();
     void spi_execute();
     void pwm_execute();
+
     void pwm_up();
     void pwm_down();
+
     void printToConsole(const QString &message);
 
+    void initThread();
+    void shutdownThread();
+    void threadMain();
 };

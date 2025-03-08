@@ -13,6 +13,7 @@
 #include <thread>
 #include <atomic>
 #include <vector>
+#include <mutex>
 
 #include "RamDisk.h"
 #include "Commander.h"
@@ -23,7 +24,8 @@ class Watchdog
     private:
         int m_file_descriptor;
         std::thread m_threadWatchdog;
-        std::atomic<bool> m_threadKill;
+        std::mutex m_threadMutex;
+        bool m_threadKill;
 
         bool m_stopFlag;
         bool m_fpgaConfigReady;

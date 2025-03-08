@@ -35,32 +35,28 @@ void DroneCtrl::droneInit()
     std::cout << "[INIT] [ D ] Drone Initialization" << std::endl;
 
     /* Get control instances */
-    m_instanceServerTCP = this;
     m_instanceCommander = this;
     m_instanceWatchdog = this;
     m_instanceRamDisk = this;
     /* Align shared pointers for Kernel<->ServerTCP communication and StateMachines */
-    m_instanceServerTCP->setTransferPointers(m_Rx_DroneCtrlVector, m_Tx_DroneCtrlVector, m_IO_DroneCtrlState);
     m_instanceCommander->setTransferPointers(m_Rx_DroneCtrlVector, m_Tx_DroneCtrlVector, m_IO_DroneCtrlState);
     /* Launch Ram Disk Commander and TCP Server */
     KernelComms::initRamDiskCommander();
-    Network::initServerTCP();
 }
 
 void DroneCtrl::droneExit()
 {
     std::cout << "[INFO] [ D ] Drone Exit" << std::endl;
     KernelComms::shutdownRamDiskCommander();
-    Network::shutdownServerTCP();
 }
 
 bool DroneCtrl::isKilled()
 {
-    bool retFlag = false;
+    bool ret = false;
 
-    retFlag = KernelComms::Watchdog::isWatchdogDead() || KernelComms::Commander::isThreadKilled() || Network::ServerTCP::isThreadKilled();
+    ret = KernelComms::Watchdog::isWatchdogDead() || KernelComms::Commander::isThreadKilled();
 
-    return retFlag;
+    return ret;
 }
 
 std::string DroneCtrl::getCtrlStateString(ctrlType state)
@@ -150,32 +146,3 @@ void DroneCtrl::droneCtrlMain()
     }
 }
 
-
-
-int DroneCtrl::applicationStart()
-{
-    /**
-     * Smart pointer for auto Heap
-     * allocation and deallocation
-     */
-    auto instanceDroneCtrl = std::make_unique<DroneCtrl>();
-    instanceDroneCtrl->droneInit();
-
-    while (true)
-    {
-        instanceDroneCtrl->droneCtrlMain();
-
-        if (true == instanceDroneCtrl->isKilled()) /* Terminate Drone Application threads and Clean Memory */
-        {
-            std::cout << "[EXIT] [TERMINATE] Shutdown Application" << std::endl;
-            instanceDroneCtrl->droneExit();
-            break;
-        }
-
-        /* Reduce consumption of CPU resources */
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    }
-
-    /* unique_ptr in use :: No need for deallocation */
-    return 0;
-}

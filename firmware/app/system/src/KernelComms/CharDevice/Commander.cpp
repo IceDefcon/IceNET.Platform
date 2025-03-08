@@ -45,6 +45,7 @@ int Commander::openDEV()
     if(m_file_descriptor < 0)
     {
         std::cout << "[ERNO] [CMD] Failed to open Device" << std::endl;
+        m_threadKill = true;
         return ERROR;
     } 
     else 
@@ -123,20 +124,46 @@ int Commander::closeDEV()
 
 void Commander::initThread()
 {
+    /**
+     * Automatically locks the mutex when it is constructed
+     * and releases the lock when it goes out of scope
+     */
+    std::lock_guard<std::mutex> lock(m_threadMutex);
+
+    if (m_threadCommander.joinable())
+    {
+        std::cout << "[INFO] [CMD] threadCommander is already running" << std::endl;
+        return;
+    }
+
     std::cout << "[INFO] [CMD] Initialize threadCommander" << std::endl;
+
+    m_threadKill = false;
     m_threadCommander = std::thread(&Commander::threadCommander, this);
 }
 
 void Commander::shutdownThread()
 {
-    if(false == m_threadKill)
+    /**
+     * Automatically locks the mutex when it is constructed
+     * and releases the lock when it goes out of scope
+     */
+    std::lock_guard<std::mutex> lock(m_threadMutex);
+
+    if (m_threadKill)
     {
-        m_threadKill = true;
+        std::cout << "[INFO] [CMD] threadCommander is already marked for shutdown" << std::endl;
+        return;
     }
+
+    std::cout << "[INFO] [CMD] Shutdown threadCommander" << std::endl;
+
+    m_threadKill = true;
 
     if (m_threadCommander.joinable())
     {
         m_threadCommander.join();
+        std::cout << "[INFO] [CMD] threadCommander has been shut down" << std::endl;
     }
 }
 
@@ -268,7 +295,7 @@ void Commander::threadCommander()
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
 
-    std::cout << "[INFO] [WDG] Terminate threadCommander" << std::endl;
+    std::cout << "[INFO] [CMD] Terminate threadCommander" << std::endl;
 }
 
 /* SHARE */ void Commander::setTransferPointers(

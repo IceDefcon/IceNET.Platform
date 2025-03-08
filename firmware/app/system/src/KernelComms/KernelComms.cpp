@@ -27,8 +27,6 @@ KernelComms::~KernelComms()
 
 void KernelComms::initRamDiskCommander()
 {
-    std::cout << "[INFO] [KIO] " << "Open (C)Commander and (B)RamDisk devices" << std::endl;
-
     Commander::openDEV();
 
     Watchdog::initBuffers();
@@ -37,7 +35,6 @@ void KernelComms::initRamDiskCommander()
 
 void KernelComms::shutdownRamDiskCommander()
 {
-    std::cout << "[INFO] [KIO] " << "Shutdown (C)Commander and (B)RamDisk threads" << std::endl;
     Commander::shutdownThread();
     Watchdog::shutdownThread();
 }
