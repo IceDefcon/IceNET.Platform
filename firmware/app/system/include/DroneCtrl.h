@@ -25,10 +25,6 @@ class DroneCtrl :
         KernelComms::Watchdog* m_instanceWatchdog;
         KernelComms::RamDisk* m_instanceRamDisk;
 
-        std::shared_ptr<std::vector<char>> m_Rx_DroneCtrlVector;
-        std::shared_ptr<std::vector<char>> m_Tx_DroneCtrlVector;
-        std::shared_ptr<ioStateType> m_IO_DroneCtrlState;
-
     public:
         DroneCtrl();
         ~DroneCtrl();

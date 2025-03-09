@@ -20,10 +20,10 @@ m_file_descriptor(-1),
 m_threadKill(false),
 m_ioState(IO_IDLE),
 m_ioStatePrev(IO_IDLE),
-m_Rx_CommanderVector(std::make_shared<std::vector<char>>(IO_TRANSFER_SIZE)),
-m_Tx_CommanderVector(std::make_shared<std::vector<char>>(IO_TRANSFER_SIZE)),
+m_Rx_CommanderVector(std::make_shared<std::vector<uint8_t>>(IO_TRANSFER_SIZE)),
+m_Tx_CommanderVector(std::make_shared<std::vector<uint8_t>>(IO_TRANSFER_SIZE)),
 m_IO_CommanderState(std::make_shared<ioStateType>(IO_IDLE)),
-m_commandMatrix(CMD_AMOUNT, std::vector<char>(CMD_LENGTH, 0))  // Initialized with zeros
+m_commandMatrix(CMD_AMOUNT, std::vector<uint8_t>(CMD_LENGTH, 0))  // Initialized with zeros
 {
     std::cout << "[INFO] [CONSTRUCTOR] " << this << " :: Instantiate Commander" << std::endl;
 
@@ -273,8 +273,8 @@ void Commander::threadCommander()
 }
 
 /* SHARE */ void Commander::setTransferPointers(
-std::shared_ptr<std::vector<char>> transferPointerRx,
-std::shared_ptr<std::vector<char>> transferPointerTx,
+std::shared_ptr<std::vector<uint8_t>> transferPointerRx,
+std::shared_ptr<std::vector<uint8_t>> transferPointerTx,
 std::shared_ptr<ioStateType> transferState)
 {
     m_Rx_CommanderVector = transferPointerRx;

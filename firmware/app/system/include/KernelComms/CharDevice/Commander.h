@@ -25,11 +25,11 @@ class Commander
         ioStateType m_ioState;
         ioStateType m_ioStatePrev;
 
-        std::shared_ptr<std::vector<char>> m_Rx_CommanderVector;
-        std::shared_ptr<std::vector<char>> m_Tx_CommanderVector;
+        std::shared_ptr<std::vector<uint8_t>> m_Rx_CommanderVector;
+        std::shared_ptr<std::vector<uint8_t>> m_Tx_CommanderVector;
         std::shared_ptr<ioStateType> m_IO_CommanderState;
 
-        std::vector<std::vector<char>> m_commandMatrix;
+        std::vector<std::vector<uint8_t>> m_commandMatrix;
 
     public:
         Commander();
@@ -48,7 +48,7 @@ class Commander
         void threadCommander();
 
         /* SHARE */ void setTransferPointers(
-        std::shared_ptr<std::vector<char>> transferPointerRx,
-        std::shared_ptr<std::vector<char>> transferPointerTx,
+        std::shared_ptr<std::vector<uint8_t>> transferPointerRx,
+        std::shared_ptr<std::vector<uint8_t>> transferPointerTx,
         std::shared_ptr<ioStateType> transferState);
 };

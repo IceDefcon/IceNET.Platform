@@ -16,8 +16,6 @@
 const size_t CMD_LENGTH = 2;
 const size_t IO_TRANSFER_SIZE = 8;
 
-typedef std::shared_ptr<std::vector<char>> s_pVectorChar;
-
 enum Status
 {
 	OK,
@@ -78,7 +76,7 @@ inline void printHexBuffer(std::vector<char>* buffer)
     std::cout << std::endl;
 }
 
-inline void printSharedBuffer(std::shared_ptr<std::vector<char>> buffer)
+inline void printSharedBuffer(std::shared_ptr<std::vector<uint8_t>> buffer)
 {
     std::cout << "[INFO] [SHARED] Data in the buffer: ";
     for (size_t i = 0; i < buffer->size(); ++i)

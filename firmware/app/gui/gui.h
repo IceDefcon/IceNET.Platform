@@ -63,8 +63,8 @@ class gui : public QWidget
     std::mutex m_threadMutex;
     bool m_threadKill;
 
-    std::shared_ptr<std::vector<char>> m_Rx_GuiVector;
-    std::shared_ptr<std::vector<char>> m_Tx_GuiVector;
+    std::shared_ptr<std::vector<uint8_t>> m_Rx_GuiVector;
+    std::shared_ptr<std::vector<uint8_t>> m_Tx_GuiVector;
     std::shared_ptr<ioStateType> m_IO_GuiState;
 
     Commander* m_instanceCommander;
@@ -83,8 +83,8 @@ public:
     void setupProcess();
 
     /* SHARE */ void setTransferPointers(
-    std::shared_ptr<std::vector<char>> transferPointerRx,
-    std::shared_ptr<std::vector<char>> transferPointerTx,
+    std::shared_ptr<std::vector<uint8_t>> transferPointerRx,
+    std::shared_ptr<std::vector<uint8_t>> transferPointerTx,
     std::shared_ptr<ioStateType> transferState);
 
 private slots:

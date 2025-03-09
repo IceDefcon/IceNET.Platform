@@ -17,10 +17,7 @@
 
 DroneCtrl::DroneCtrl() :
     m_ctrlState(CTRL_INIT),
-    m_ctrlStatePrev(CTRL_INIT),
-    m_Rx_DroneCtrlVector(std::make_shared<std::vector<char>>(IO_TRANSFER_SIZE)),
-    m_Tx_DroneCtrlVector(std::make_shared<std::vector<char>>(IO_TRANSFER_SIZE)),
-    m_IO_DroneCtrlState(std::make_shared<ioStateType>(IO_IDLE))
+    m_ctrlStatePrev(CTRL_INIT)
 {
     std::cout << "[INFO] [CONSTRUCTOR] " << this << " :: Instantiate DroneCtrl" << std::endl;
 }
@@ -37,9 +34,6 @@ void DroneCtrl::setupPointers()
     m_instanceCommander = this;
     m_instanceWatchdog = this;
     m_instanceRamDisk = this;
-
-    /* Align shared pointers for Kernel<->ServerTCP communication and StateMachines */
-    // m_instanceCommander->setTransferPointers(m_Rx_DroneCtrlVector, m_Tx_DroneCtrlVector, m_IO_DroneCtrlState);
 }
 
 Commander* DroneCtrl::getCommanderInstance()

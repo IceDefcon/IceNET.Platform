@@ -29,9 +29,9 @@ static const consoleType console =
 };
 
 gui::gui() :
-m_threadKill(false),
-m_Rx_GuiVector(std::make_shared<std::vector<char>>(IO_TRANSFER_SIZE)),
-m_Tx_GuiVector(std::make_shared<std::vector<char>>(IO_TRANSFER_SIZE)),
+m_threadKill(true),
+m_Rx_GuiVector(std::make_shared<std::vector<uint8_t>>(IO_TRANSFER_SIZE)),
+m_Tx_GuiVector(std::make_shared<std::vector<uint8_t>>(IO_TRANSFER_SIZE)),
 m_IO_GuiState(std::make_shared<ioStateType>(IO_IDLE))
 {
     qDebug() << "[MAIN] [CONSTRUCTOR]" << this << "::  gui";
@@ -250,56 +250,64 @@ void gui::setupProcess()
 
 void gui::i2c_execute()
 {
-    int addressTemp, registerTemp, dataTemp;
-    bool addressFlag, registerFlag,dataFlag;
-    uint8_t addressValue, registerValue;
-
-    uint8_t headerValue = 0x80; /* I2C Header Type */
-    uint8_t dataValue = 0x00;
-
-    QString addressText = m_i2c_addressField->text();
-    QString registerText = m_i2c_registerField->text();
-
-    addressTemp = addressText.toInt(&addressFlag, 0);
-    registerTemp = registerText.toInt(&registerFlag, 0);
-
-    if(addressTemp > 127 || registerTemp > 255)
+    if(m_threadKill)
     {
-        if(addressTemp > 127) QMessageBox::warning(this, "Invalid Address", "Please enter a 7-bit Value");
-        if(registerTemp > 255) QMessageBox::warning(this, "Invalid Register", "Please enter a 8-bit Value");
-        return;
+        printToConsole("[I2C] MainThread is Down"); // Console
     }
     else
     {
-        addressValue = static_cast<uint8_t>(addressTemp);
-        registerValue = static_cast<uint8_t>(registerTemp);
-    }
+        int addressTemp, registerTemp, dataTemp;
+        bool addressFlag, registerFlag,dataFlag;
+        uint8_t addressValue, registerValue;
 
-    if (m_i2c_writeTick->isChecked())
-    {
-        qDebug() << "[I2C] chacking tick";
-        QString dataText = m_i2c_dataField->text();
-        dataTemp = dataText.toInt(&dataFlag, 0);
-        if(dataTemp > 255)
+        uint8_t headerValue = 0x80; /* I2C Header Type */
+        uint8_t dataValue = 0x00;
+
+        QString addressText = m_i2c_addressField->text();
+        QString registerText = m_i2c_registerField->text();
+
+        addressTemp = addressText.toInt(&addressFlag, 0);
+        registerTemp = registerText.toInt(&registerFlag, 0);
+
+        if(addressTemp > 127 || registerTemp > 255)
         {
-            QMessageBox::warning(this, "Invalid Data", "Please enter a 8-bit Value");
+            if(addressTemp > 127) QMessageBox::warning(this, "Invalid Address", "Please enter a 7-bit Value");
+            if(registerTemp > 255) QMessageBox::warning(this, "Invalid Register", "Please enter a 8-bit Value");
             return;
         }
         else
         {
-            headerValue += 0x01;
-            dataValue = static_cast<uint8_t>(dataTemp);
+            addressValue = static_cast<uint8_t>(addressTemp);
+            registerValue = static_cast<uint8_t>(registerTemp);
         }
+
+        if (m_i2c_writeTick->isChecked())
+        {
+            qDebug() << "[I2C] chacking tick";
+            QString dataText = m_i2c_dataField->text();
+            dataTemp = dataText.toInt(&dataFlag, 0);
+            if(dataTemp > 255)
+            {
+                QMessageBox::warning(this, "Invalid Data", "Please enter a 8-bit Value");
+                return;
+            }
+            else
+            {
+                headerValue += 0x01;
+                dataValue = static_cast<uint8_t>(dataTemp);
+            }
+        }
+
+
+        (*m_Tx_GuiVector)[0] = headerValue;
+        (*m_Tx_GuiVector)[1] = addressValue;
+        (*m_Tx_GuiVector)[2] = registerValue;
+        (*m_Tx_GuiVector)[3] = dataValue;
+        *m_IO_GuiState = IO_COM_WRITE;
+
+        printToConsole("[I2C] Done"); // Console
+        // qDebug() << "[I2C] Done"; // Terminal
     }
-
-    printToConsole("[I2C] Done"); // Console
-    qDebug() << "[I2C] Data Ready to send [" << headerValue << ", " << addressValue << ", " << registerValue << ", " << dataValue << "]" ; // Terminal
-
-    (*m_Tx_GuiVector)[0] = static_cast<char>(headerValue);
-    (*m_Tx_GuiVector)[1] = static_cast<char>(addressValue);
-    (*m_Tx_GuiVector)[2] = static_cast<char>(registerValue);
-    (*m_Tx_GuiVector)[3] = static_cast<char>(dataValue);
-    *m_IO_GuiState = IO_COM_WRITE;
 }
 
 void gui::spi_execute()
