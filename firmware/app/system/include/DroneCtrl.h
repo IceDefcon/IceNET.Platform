@@ -29,9 +29,9 @@ class DroneCtrl :
         DroneCtrl();
         ~DroneCtrl();
 
-        void setupPointers();
-        void droneInit();
-        void droneExit();
+        void initPointers();
+        void initKernelComms();
+        void shutdownKernelComms();
         bool isKilled();
 
         std::string getCtrlStateString(ctrlType state);

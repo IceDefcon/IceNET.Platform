@@ -577,49 +577,61 @@ static inline void brd_check_and_reset_par(void)
     }
 }
 
-void *ramDiskGetPointer(sector_t sector)
+static struct brd_device *get_brd_device_by_name(const char *device_name)
 {
     struct block_device *bdev;
-    struct page *page;
-    void *page_data;
-    int ret;
+    struct brd_device *brd = NULL;
 
-    bdev = blkdev_get_by_path("/dev/IceNETDisk0", FMODE_READ, NULL);
-    if (IS_ERR(bdev))
-    {
-        pr_err("Failed to open IceNETDisk0\n");
+    // Lookup the block device by name
+    bdev = blkdev_get_by_path(device_name, FMODE_READ, NULL);
+    if (IS_ERR(bdev)) {
+        pr_err("Failed to get block device: %ld\n", PTR_ERR(bdev));
         return NULL;
     }
 
-    page = alloc_page(GFP_KERNEL);
-    if (!page)
-    {
-        blkdev_put(bdev, FMODE_READ);
-        return NULL;
-    }
+    // Now, we need to find the brd_device associated with this block device.
+    // Assuming the device is a BRD device and you can get the brd_device from the block device
+    brd = bdev->bd_disk->private_data;  // This assumes that 'private_data' holds the brd_device
 
-    ret = brd_rw_page(bdev, sector, page, REQ_OP_READ);
-    if (ret)
-    {
-        pr_err("Failed to read data from sector %lu: %d\n", sector, ret);
-        __free_page(page);
-        blkdev_put(bdev, FMODE_READ);
-        return NULL;
-    }
-
-    page_data = kmap_atomic(page);
-    // Keep the page mapped; return the pointer for direct access.
+    // Don't forget to release the block device reference if you're done with it
     blkdev_put(bdev, FMODE_READ);
-    return page_data;
+
+    return brd;
 }
 
-void ramDiskReleasePointer(void *page_data)
+void *ramDiskGetPointer(sector_t sector)
 {
-    // Unmap and free the page when done.
-    if (page_data)
-    {
-        kunmap_atomic(page_data);
+    struct brd_device *brd;
+    struct page *page;
+    void *ptr;
+    unsigned int offset;
+
+    // Get the brd_device using the device name
+    brd = get_brd_device_by_name("/dev/IceNETDisk0");
+    if (!brd) {
+        pr_err("Failed to find brd_device for\n");
+        return NULL;
     }
+
+    // Calculate sector offset
+    offset = (sector & (ICE_PAGE_SECTORS - 1)) << ICE_SECTOR_SHIFT;
+
+    // Lookup the page corresponding to the sector
+    page = brd_lookup_page(brd, sector);
+    if (!page) {
+        pr_err("Failed to lookup page for sector %lu\n", sector);
+        return NULL;
+    }
+
+    // Get a kernel-mapped pointer to the page
+    ptr = kmap_atomic(page);
+    return ptr + offset;
+}
+
+void ramDiskReleasePointer(void *ptr)
+{
+    // Make sure we use kunmap_atomic to release the pointer if it was previously mapped
+    kunmap_atomic(ptr);
 }
 
 int ramDiskInit(void)

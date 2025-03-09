@@ -30,7 +30,7 @@ static const consoleType console =
 
 gui::gui() :
 m_threadKill(true),
-m_isConnected(false),
+m_isKernelConnected(false),
 m_Rx_GuiVector(std::make_shared<std::vector<uint8_t>>(IO_TRANSFER_SIZE)),
 m_Tx_GuiVector(std::make_shared<std::vector<uint8_t>>(IO_TRANSFER_SIZE)),
 m_IO_GuiState(std::make_shared<ioStateType>(IO_IDLE))
@@ -270,6 +270,10 @@ void gui::setDeadCommand()
     (*m_Tx_GuiVector)[1] = 0xAD;
     (*m_Tx_GuiVector)[2] = 0xC0;
     (*m_Tx_GuiVector)[3] = 0xD3;
+    (*m_Tx_GuiVector)[4] = 0x22;
+    (*m_Tx_GuiVector)[5] = 0x22;
+    (*m_Tx_GuiVector)[6] = 0x22;
+    (*m_Tx_GuiVector)[7] = 0x22;
 }
 
 void gui::setDummyCommand()
@@ -279,6 +283,10 @@ void gui::setDummyCommand()
     (*m_Tx_GuiVector)[1] = 0x7E;
     (*m_Tx_GuiVector)[2] = 0x7E;
     (*m_Tx_GuiVector)[3] = 0x7E;
+    (*m_Tx_GuiVector)[4] = 0x44;
+    (*m_Tx_GuiVector)[5] = 0x44;
+    (*m_Tx_GuiVector)[6] = 0x44;
+    (*m_Tx_GuiVector)[7] = 0x44;
 }
 
 void gui::i2c_execute()
@@ -290,7 +298,7 @@ void gui::i2c_execute()
     {
         printToConsole("[I2C] threadMain is Down");
     }
-    else if(!m_isConnected)
+    else if(!m_isKernelConnected)
     {
         printToConsole("[I2C] Kernel Communication is Down");
     }
@@ -345,10 +353,13 @@ void gui::i2c_execute()
         (*m_Tx_GuiVector)[1] = addressValue;
         (*m_Tx_GuiVector)[2] = registerValue;
         (*m_Tx_GuiVector)[3] = dataValue;
+        (*m_Tx_GuiVector)[4] = 0x00;
+        (*m_Tx_GuiVector)[5] = 0x00;
+        (*m_Tx_GuiVector)[6] = 0x00;
+        (*m_Tx_GuiVector)[7] = 0x00;
         *m_IO_GuiState = IO_COM_WRITE;
 
         printToConsole("[I2C] Done");
-        // qDebug() << "Done";
     }
 }
 
@@ -381,7 +392,7 @@ void gui::spi_execute()
     {
         printToConsole("[SPI] threadMain is Down");
     }
-    else if(!m_isConnected)
+    else if(!m_isKernelConnected)
     {
         printToConsole("[SPI] Kernel Communication is Down");
     }
@@ -444,10 +455,13 @@ void gui::spi_execute()
         (*m_Tx_GuiVector)[1] = addressValue;
         (*m_Tx_GuiVector)[2] = registerValue;
         (*m_Tx_GuiVector)[3] = dataValue;
+        (*m_Tx_GuiVector)[4] = 0x00;
+        (*m_Tx_GuiVector)[5] = 0x00;
+        (*m_Tx_GuiVector)[6] = 0x00;
+        (*m_Tx_GuiVector)[7] = 0x00;
         *m_IO_GuiState = IO_COM_WRITE;
 
         printToConsole("[SPI] Done");
-        // qDebug() << "[SPI] Done";
     }
 }
 
@@ -460,7 +474,7 @@ void gui::pwm_execute(pwmType type)
     {
         printToConsole("[PWM] threadMain is Down");
     }
-    else if(!m_isConnected)
+    else if(!m_isKernelConnected)
     {
         printToConsole("[PWM] Kernel Communication is Down");
     }
@@ -530,10 +544,13 @@ void gui::pwm_execute(pwmType type)
         (*m_Tx_GuiVector)[1] = 0x00;
         (*m_Tx_GuiVector)[2] = 0x00;
         (*m_Tx_GuiVector)[3] = dataValue;
+        (*m_Tx_GuiVector)[4] = 0x00;
+        (*m_Tx_GuiVector)[5] = 0x00;
+        (*m_Tx_GuiVector)[6] = 0x00;
+        (*m_Tx_GuiVector)[7] = 0x00;
         *m_IO_GuiState = IO_COM_WRITE;
 
         printToConsole("[PWM] Done");
-        // qDebug() << "[PWM] Done";
     }
 }
 
@@ -598,12 +615,12 @@ void gui::threadMain()
 
     /* 1st :: Make unique DroneCtrl */
     m_instanceDroneCtrl = std::make_unique<DroneCtrl>();
-    /* 2st :: Init pointers */
-    m_instanceDroneCtrl->setupPointers();
+    /* 2st :: Initialise DroneCtrl pointers */
+    m_instanceDroneCtrl->initPointers();
     /* 3nd :: Push transfer pointers to Commander */
     m_instanceDroneCtrl->getCommanderInstance()->setTransferPointers(m_Rx_GuiVector, m_Tx_GuiVector, m_IO_GuiState);
     /* 4th :: Init RamDisk Commander */
-    m_instanceDroneCtrl->droneInit();
+    m_instanceDroneCtrl->initKernelComms();
 
     while (false == m_threadKill)
     {
@@ -611,19 +628,19 @@ void gui::threadMain()
 
         if (true == m_instanceDroneCtrl->isKilled())
         {
-            m_isConnected = false;
+            m_isKernelConnected = false;
             break;
         }
         else
         {
-            m_isConnected = true;
+            m_isKernelConnected = true;
         }
 
         /* Reduce consumption of CPU resources */
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
 
-    m_instanceDroneCtrl->droneExit();
+    m_instanceDroneCtrl->shutdownKernelComms();
     m_instanceDroneCtrl.reset(); // Reset the unique_ptr to call the destructor
 }
 

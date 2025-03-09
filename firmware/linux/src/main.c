@@ -76,7 +76,7 @@ static int __init fpga_driver_init(void)
 static void __exit fpga_driver_exit(void)
 {
     printk(KERN_INFO "-------------------------------------------------\n");
-    printk(KERN_INFO "[TERMINATE] Initialize termination of FPGA driver \n");
+    printk(KERN_INFO "[TERMINATE] Termination of FPGA driver \n");
     printk(KERN_INFO "-------------------------------------------------\n");
     /* Destroy everything */
     schedulerDestroy();
@@ -90,7 +90,7 @@ static void __exit fpga_driver_exit(void)
     ramDiskDestroy();
     ramAxisDestroy();
 
-    printk(KERN_INFO "[TERMINATE] Driver terminated successfully\n");
+    printk(KERN_INFO "[TERMINATE] Driver Terminated Successfully\n");
 }
 
 module_init(fpga_driver_init);
