@@ -72,7 +72,7 @@ class gui : public QWidget
     std::thread m_threadMain;
     std::mutex m_threadMutex;
     bool m_threadKill;
-    bool m_isConnected;
+    bool m_isKernelConnected;
 
     std::shared_ptr<std::vector<uint8_t>> m_Rx_GuiVector;
     std::shared_ptr<std::vector<uint8_t>> m_Tx_GuiVector;

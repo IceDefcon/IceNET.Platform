@@ -1,1 +1,0 @@
-cmd_/home/ice/code.lab/IceNET.Platform/other/test/spiDma.ko := ld -EL -r  -T ./scripts/module-common.lds -T ./arch/arm64/kernel/module.lds --build-id  -o /home/ice/code.lab/IceNET.Platform/other/test/spiDma.ko /home/ice/code.lab/IceNET.Platform/other/test/spiDma.o /home/ice/code.lab/IceNET.Platform/other/test/spiDma.mod.o ;  true

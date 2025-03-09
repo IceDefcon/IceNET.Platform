@@ -27,7 +27,7 @@ DroneCtrl::~DroneCtrl()
     std::cout << "[INFO] [DESTRUCTOR] " << this << " :: Destroy DroneCtrl" << std::endl;
 }
 
-void DroneCtrl::setupPointers()
+void DroneCtrl::initPointers()
 {
     std::cout << "[INIT] [ D ] Setup the pointers" << std::endl;
     /* Get control instances */
@@ -41,13 +41,13 @@ Commander* DroneCtrl::getCommanderInstance()
     return m_instanceCommander;
 }
 
-void DroneCtrl::droneInit()
+void DroneCtrl::initKernelComms()
 {
     std::cout << "[INIT] [ D ] Initialize RamDisk Commander" << std::endl;
     KernelComms::initRamDiskCommander();
 }
 
-void DroneCtrl::droneExit()
+void DroneCtrl::shutdownKernelComms()
 {
     std::cout << "[INFO] [ D ] Drone Exit" << std::endl;
     KernelComms::shutdownRamDiskCommander();
