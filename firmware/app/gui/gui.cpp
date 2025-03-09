@@ -28,7 +28,11 @@ static const consoleType console =
     .ySize = dev.yGap*14 + dev.yLogo*3 + dev.yUnit*9+1, // Last Horizontal Separator
 };
 
-gui::gui() : m_threadKill(false)
+gui::gui() :
+m_threadKill(false),
+m_Rx_GuiVector(std::make_shared<std::vector<char>>(IO_TRANSFER_SIZE)),
+m_Tx_GuiVector(std::make_shared<std::vector<char>>(IO_TRANSFER_SIZE)),
+m_IO_GuiState(std::make_shared<ioStateType>(IO_IDLE))
 {
     qDebug() << "[MAIN] [CONSTRUCTOR]" << this << "::  gui";
 
@@ -101,9 +105,9 @@ void gui::setupI2C()
     m_i2c_dataField->setGeometry(dev.xGap*2 + dev.xText , dev.yGap*4 + dev.yLogo + dev.yUnit*2, dev.xUnit, dev.yUnit);
     m_i2c_dataField->setText("0x00");
     m_i2c_dataField->setDisabled(true);
-    QCheckBox *i2c_writeTick = new QCheckBox("WR", this);
-    i2c_writeTick->setGeometry(dev.xGap*3 + dev.xText + dev.xUnit, dev.yGap*4 + dev.yLogo + dev.yUnit*2, dev.xUnit, dev.yUnit);
-    connect(i2c_writeTick, &QCheckBox::toggled, m_i2c_dataField, &QLineEdit::setEnabled);
+    m_i2c_writeTick = new QCheckBox("WR", this);
+    m_i2c_writeTick->setGeometry(dev.xGap*3 + dev.xText + dev.xUnit, dev.yGap*4 + dev.yLogo + dev.yUnit*2, dev.xUnit, dev.yUnit);
+    connect(m_i2c_writeTick, &QCheckBox::toggled, m_i2c_dataField, &QLineEdit::setEnabled);
 }
 
 void gui::setupSPI()
@@ -246,24 +250,56 @@ void gui::setupProcess()
 
 void gui::i2c_execute()
 {
-    bool addressFlag, registerFlag;
+    int addressTemp, registerTemp, dataTemp;
+    bool addressFlag, registerFlag,dataFlag;
+    uint8_t addressValue, registerValue;
+
+    uint8_t headerValue = 0x80; /* I2C Header Type */
+    uint8_t dataValue = 0x00;
 
     QString addressText = m_i2c_addressField->text();
-    (void)addressText.toInt(&addressFlag, 16);
-
     QString registerText = m_i2c_registerField->text();
-    (void)registerText.toInt(&registerFlag, 16);
 
-    if (addressFlag && registerFlag)
+    addressTemp = addressText.toInt(&addressFlag, 0);
+    registerTemp = registerText.toInt(&registerFlag, 0);
+
+    if(addressTemp > 127 || registerTemp > 255)
     {
-        qDebug() << "[ADD, REG] = [" << addressText << "," << registerText << "]";
+        if(addressTemp > 127) QMessageBox::warning(this, "Invalid Address", "Please enter a 7-bit Value");
+        if(registerTemp > 255) QMessageBox::warning(this, "Invalid Register", "Please enter a 8-bit Value");
+        return;
     }
     else
     {
-        if(!addressFlag) QMessageBox::warning(this, "Invalid Input", "Please enter a valid Device Address");
-        else if(!registerFlag) QMessageBox::warning(this, "Invalid Input", "Please enter a valid Register Address");
+        addressValue = static_cast<uint8_t>(addressTemp);
+        registerValue = static_cast<uint8_t>(registerTemp);
     }
-    printToConsole("[I2C] Execute");
+
+    if (m_i2c_writeTick->isChecked())
+    {
+        qDebug() << "[I2C] chacking tick";
+        QString dataText = m_i2c_dataField->text();
+        dataTemp = dataText.toInt(&dataFlag, 0);
+        if(dataTemp > 255)
+        {
+            QMessageBox::warning(this, "Invalid Data", "Please enter a 8-bit Value");
+            return;
+        }
+        else
+        {
+            headerValue += 0x01;
+            dataValue = static_cast<uint8_t>(dataTemp);
+        }
+    }
+
+    printToConsole("[I2C] Done"); // Console
+    qDebug() << "[I2C] Data Ready to send [" << headerValue << ", " << addressValue << ", " << registerValue << ", " << dataValue << "]" ; // Terminal
+
+    (*m_Tx_GuiVector)[0] = static_cast<char>(headerValue);
+    (*m_Tx_GuiVector)[1] = static_cast<char>(addressValue);
+    (*m_Tx_GuiVector)[2] = static_cast<char>(registerValue);
+    (*m_Tx_GuiVector)[3] = static_cast<char>(dataValue);
+    *m_IO_GuiState = IO_COM_WRITE;
 }
 
 void gui::spi_execute()
@@ -339,10 +375,19 @@ void gui::shutdownThread()
 void gui::threadMain()
 {
     /**
+     *
      * Smart pointer for auto Heap
      * allocation and deallocation
+     *
      */
+
+    /* 1st :: Make unique DroneCtrl */
     m_instanceDroneCtrl = std::make_unique<DroneCtrl>();
+    /* 2st :: Init pointers */
+    m_instanceDroneCtrl->setupPointers();
+    /* 3nd :: Push transfer pointers to Commander */
+    m_instanceDroneCtrl->getCommanderInstance()->setTransferPointers(m_Rx_GuiVector, m_Tx_GuiVector, m_IO_GuiState);
+    /* 4th :: Init RamDisk Commander */
     m_instanceDroneCtrl->droneInit();
 
     while (false == m_threadKill)
@@ -362,3 +407,4 @@ void gui::threadMain()
     m_instanceDroneCtrl.reset(); // Reset the unique_ptr to call the destructor
     std::cout << "[EXIT] [TERMINATE] Shutdown threadMain" << std::endl;
 }
+

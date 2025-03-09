@@ -30,17 +30,26 @@ DroneCtrl::~DroneCtrl()
     std::cout << "[INFO] [DESTRUCTOR] " << this << " :: Destroy DroneCtrl" << std::endl;
 }
 
-void DroneCtrl::droneInit()
+void DroneCtrl::setupPointers()
 {
-    std::cout << "[INIT] [ D ] Drone Initialization" << std::endl;
-
+    std::cout << "[INIT] [ D ] Setup the pointers" << std::endl;
     /* Get control instances */
     m_instanceCommander = this;
     m_instanceWatchdog = this;
     m_instanceRamDisk = this;
+
     /* Align shared pointers for Kernel<->ServerTCP communication and StateMachines */
-    m_instanceCommander->setTransferPointers(m_Rx_DroneCtrlVector, m_Tx_DroneCtrlVector, m_IO_DroneCtrlState);
-    /* Launch Ram Disk Commander and TCP Server */
+    // m_instanceCommander->setTransferPointers(m_Rx_DroneCtrlVector, m_Tx_DroneCtrlVector, m_IO_DroneCtrlState);
+}
+
+Commander* DroneCtrl::getCommanderInstance()
+{
+    return m_instanceCommander;
+}
+
+void DroneCtrl::droneInit()
+{
+    std::cout << "[INIT] [ D ] Initialize RamDisk Commander" << std::endl;
     KernelComms::initRamDiskCommander();
 }
 
@@ -61,7 +70,7 @@ bool DroneCtrl::isKilled()
 
 std::string DroneCtrl::getCtrlStateString(ctrlType state)
 {
-    static const std::array<std::string, IO_AMOUNT> ctrlStateStrings =
+    static const std::array<std::string, CTRL_AMOUNT> ctrlStateStrings =
     {
         "CTRL_INIT",
         "CTRL_CONFIG",

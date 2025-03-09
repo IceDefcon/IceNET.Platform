@@ -85,3 +85,19 @@ typedef struct
 /* SPI */ void spiDestroy(void);
 
 #endif // SPI_FPGA_H
+
+/**
+ *
+ * BMI160 Connected
+ *
+ * SPI0_MOSI :: H40-19 :: SDA :: OUT
+ * SPI0_MISO :: H40-21 :: SAO :: IN
+ * SPI0_SCLK :: H40-23 :: SCL :: OUT
+ * SPI0_CS0  :: H40-24 :: CS  :: OUT
+ *
+ * SPI0_MOSI :: H40-37
+ * SPI0_MISO :: H40-22
+ * SPI0_SCLK :: H40-13
+ * SPI0_CS0  :: H40-18
+ *
+ */

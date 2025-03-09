@@ -49,6 +49,7 @@ class gui : public QWidget
     QLineEdit *m_i2c_registerField;
     QLineEdit *m_i2c_burstField;
     QLineEdit *m_i2c_dataField;
+    QCheckBox *m_i2c_writeTick;
 
     QLineEdit *m_spi_addressField;
     QLineEdit *m_spi_registerField;
@@ -62,6 +63,12 @@ class gui : public QWidget
     std::mutex m_threadMutex;
     bool m_threadKill;
 
+    std::shared_ptr<std::vector<char>> m_Rx_GuiVector;
+    std::shared_ptr<std::vector<char>> m_Tx_GuiVector;
+    std::shared_ptr<ioStateType> m_IO_GuiState;
+
+    Commander* m_instanceCommander;
+
 public:
 
     gui();
@@ -74,6 +81,11 @@ public:
     void setupPWM();
     void setupSeparators();
     void setupProcess();
+
+    /* SHARE */ void setTransferPointers(
+    std::shared_ptr<std::vector<char>> transferPointerRx,
+    std::shared_ptr<std::vector<char>> transferPointerTx,
+    std::shared_ptr<ioStateType> transferState);
 
 private slots:
 

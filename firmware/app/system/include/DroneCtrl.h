@@ -33,6 +33,7 @@ class DroneCtrl :
         DroneCtrl();
         ~DroneCtrl();
 
+        void setupPointers();
         void droneInit();
         void droneExit();
         bool isKilled();
@@ -41,4 +42,6 @@ class DroneCtrl :
 
         void sendFpgaConfig();
         void droneCtrlMain();
+
+        Commander* getCommanderInstance();
 };

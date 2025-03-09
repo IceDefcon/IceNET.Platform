@@ -35,12 +35,8 @@ typedef enum
 typedef enum 
 {
     IO_IDLE = 0,
-    IO_TCP_READ,
     IO_COM_WRITE,
     IO_COM_READ,
-    IO_TCP_WRITE,
-    IO_LOAD,
-    IO_CLEAR,
     IO_AMOUNT
 } ioStateType;
 
@@ -58,12 +54,8 @@ inline std::string getIoStateString(ioStateType state)
     static const std::array<std::string, IO_AMOUNT> ioStateStrings =
     {
         "IO_IDLE",
-        "IO_TCP_READ",
         "IO_COM_WRITE",
         "IO_COM_READ",
-        "IO_TCP_WRITE",
-        "IO_LOAD",
-        "IO_CLEAR"
     };
 
     if (state >= 0 && state < IO_AMOUNT)

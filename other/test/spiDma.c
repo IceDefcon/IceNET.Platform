@@ -32,7 +32,7 @@ int spiInit(void)
     struct spi_master *spi_master_primary;
     int ret;
 
-    spi_master_primary = spi_busnum_to_master(1);
+    spi_master_primary = spi_busnum_to_master(0);
     if (!spi_master_primary)
     {
         printk(KERN_ERR "[INIT][SPI] SPI Master at BUS 0 not found!\n");
