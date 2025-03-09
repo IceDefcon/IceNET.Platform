@@ -1,0 +1,38 @@
+//
+// Enable SPI
+//
+copy device tree blob into: /boot/nano-spi.dtb
+
+
+//
+// Check GPIO
+//
+cat /sys/kernel/debug/gpio
+
+
+/**
+ *
+ * BMI160 Connected
+ *
+ * SPI0_MOSI :: H40-19 :: SDA :: OUT
+ * SPI0_MISO :: H40-21 :: SAO :: IN
+ * SPI0_SCLK :: H40-23 :: SCL :: OUT
+ * SPI0_CS0  :: H40-24 :: CS  :: OUT
+ *
+ * SPI0_MOSI :: H40-37
+ * SPI0_MISO :: H40-22
+ * SPI0_SCLK :: H40-13
+ * SPI0_CS0  :: H40-18
+ *
+ */
+
+
+
+//
+// Linux Env variables
+//
+cd /home/ice/code.lab/IceNET.Platform/firmware/linux
+alias push_droneAI="git push origin droneAI"
+export XDG_RUNTIME_DIR="/tmp/runtime-root"
+export ICE="$(whoami) $ "
+

@@ -662,7 +662,7 @@ int ramDiskInit(void)
     blk_register_region(MKDEV(ICE_RAM_DISK_MAJOR, 0), 1UL << MINORBITS,
                   THIS_MODULE, brd_probe, NULL, NULL);
 
-    pr_info("brd: module loaded\n");
+    pr_info("[INIT][RAM] Ram Disk Initialised successfully\n");
     return 0;
 
 out_free:

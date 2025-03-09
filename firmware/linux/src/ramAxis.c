@@ -111,7 +111,7 @@ static void allocateTransfer(void)
             pr_err("[ERNO][RAM] Failed to allocate memory for ramAxis.dmaTransfer\n");
             return;
         }
-        pr_info("[CTRL][RAM] Successfully allocated memory for DmaTransferType\n");
+        pr_info("[INIT][RAM] Successfully allocated memory for DmaTransferType\n");
         memset(ramAxis.dmaTransfer, 0, sizeof(DmaTransferType));
     }
 
@@ -123,7 +123,7 @@ static void allocateTransfer(void)
             pr_err("[ERNO][RAM] Failed to allocate memory for ramAxis.dmaTransfer->RxData buffer\n");
             return;
         }
-        pr_info("[CTRL][RAM] Successfully allocated memory for ramAxis.dmaTransfer->RxData buffer\n");
+        pr_info("[INIT][RAM] Successfully allocated memory for ramAxis.dmaTransfer->RxData buffer\n");
     }
 
     if (!ramAxis.dmaTransfer->TxData)
@@ -134,7 +134,7 @@ static void allocateTransfer(void)
             pr_err("[ERNO][RAM] Failed to allocate memory for ramAxis.dmaTransfer->TxData buffer\n");
             return;
         }
-        pr_info("[CTRL][RAM] Successfully allocated memory for ramAxis.dmaTransfer->TxData buffer\n");
+        pr_info("[INIT][RAM] Successfully allocated memory for ramAxis.dmaTransfer->TxData buffer\n");
     }
 }
 

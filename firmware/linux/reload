@@ -1,4 +1,4 @@
 rmmod iceDriver
 make clean
-make
+make -j
 insmod iceDriver.ko

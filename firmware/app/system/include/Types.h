@@ -16,8 +16,6 @@
 const size_t CMD_LENGTH = 2;
 const size_t IO_TRANSFER_SIZE = 8;
 
-typedef std::shared_ptr<std::vector<char>> s_pVectorChar;
-
 enum Status
 {
 	OK,
@@ -35,12 +33,8 @@ typedef enum
 typedef enum 
 {
     IO_IDLE = 0,
-    IO_TCP_READ,
     IO_COM_WRITE,
     IO_COM_READ,
-    IO_TCP_WRITE,
-    IO_LOAD,
-    IO_CLEAR,
     IO_AMOUNT
 } ioStateType;
 
@@ -53,17 +47,21 @@ typedef enum
     CTRL_AMOUNT,
 } ctrlType;
 
+typedef enum
+{
+   PWM_EXE,
+   PWM_UP,
+   PWM_DOWN,
+   PWM_AMOUNT
+}pwmType;
+
 inline std::string getIoStateString(ioStateType state)
 {
     static const std::array<std::string, IO_AMOUNT> ioStateStrings =
     {
         "IO_IDLE",
-        "IO_TCP_READ",
         "IO_COM_WRITE",
         "IO_COM_READ",
-        "IO_TCP_WRITE",
-        "IO_LOAD",
-        "IO_CLEAR"
     };
 
     if (state >= 0 && state < IO_AMOUNT)
@@ -86,7 +84,7 @@ inline void printHexBuffer(std::vector<char>* buffer)
     std::cout << std::endl;
 }
 
-inline void printSharedBuffer(std::shared_ptr<std::vector<char>> buffer)
+inline void printSharedBuffer(std::shared_ptr<std::vector<uint8_t>> buffer)
 {
     std::cout << "[INFO] [SHARED] Data in the buffer: ";
     for (size_t i = 0; i < buffer->size(); ++i)

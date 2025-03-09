@@ -28,7 +28,12 @@ static const consoleType console =
     .ySize = dev.yGap*14 + dev.yLogo*3 + dev.yUnit*9+1, // Last Horizontal Separator
 };
 
-gui::gui() : m_threadKill(false)
+gui::gui() :
+m_threadKill(true),
+m_isConnected(false),
+m_Rx_GuiVector(std::make_shared<std::vector<uint8_t>>(IO_TRANSFER_SIZE)),
+m_Tx_GuiVector(std::make_shared<std::vector<uint8_t>>(IO_TRANSFER_SIZE)),
+m_IO_GuiState(std::make_shared<ioStateType>(IO_IDLE))
 {
     qDebug() << "[MAIN] [CONSTRUCTOR]" << this << "::  gui";
 
@@ -101,9 +106,9 @@ void gui::setupI2C()
     m_i2c_dataField->setGeometry(dev.xGap*2 + dev.xText , dev.yGap*4 + dev.yLogo + dev.yUnit*2, dev.xUnit, dev.yUnit);
     m_i2c_dataField->setText("0x00");
     m_i2c_dataField->setDisabled(true);
-    QCheckBox *i2c_writeTick = new QCheckBox("WR", this);
-    i2c_writeTick->setGeometry(dev.xGap*3 + dev.xText + dev.xUnit, dev.yGap*4 + dev.yLogo + dev.yUnit*2, dev.xUnit, dev.yUnit);
-    connect(i2c_writeTick, &QCheckBox::toggled, m_i2c_dataField, &QLineEdit::setEnabled);
+    m_i2c_writeTick = new QCheckBox("WR", this);
+    m_i2c_writeTick->setGeometry(dev.xGap*3 + dev.xText + dev.xUnit, dev.yGap*4 + dev.yLogo + dev.yUnit*2, dev.xUnit, dev.yUnit);
+    connect(m_i2c_writeTick, &QCheckBox::toggled, m_i2c_dataField, &QLineEdit::setEnabled);
 }
 
 void gui::setupSPI()
@@ -117,7 +122,7 @@ void gui::setupSPI()
     spi_label->setFont(spi_labelFont);
     spi_label->setGeometry(dev.xGap, dev.yGap*6 + dev.yLogo + dev.yUnit*3, dev.xLogo, dev.yLogo);
     /* SPI :: Row[1] */
-    QLabel *spi_addressLabel = new QLabel("Device Address", this);
+    QLabel *spi_addressLabel = new QLabel("FPGA Device ID", this);
     spi_addressLabel->setGeometry(dev.xGap, dev.yGap*7 + dev.yLogo*2 + dev.yUnit*3, dev.xText, dev.yUnit);
     m_spi_addressField = new QLineEdit(this);
     m_spi_addressField->setGeometry(dev.xGap*2 + dev.xText, dev.yGap*7 + dev.yLogo*2 + dev.yUnit*3, dev.xUnit, dev.yUnit);
@@ -141,9 +146,9 @@ void gui::setupSPI()
     m_spi_dataField->setGeometry(dev.xGap*2 + dev.xText, dev.yGap*9 + dev.yLogo*2 + dev.yUnit*5, dev.xUnit, dev.yUnit);
     m_spi_dataField->setText("0x00");
     m_spi_dataField->setDisabled(true);
-    QCheckBox *spi_writeTick = new QCheckBox("WR", this);
-    spi_writeTick->setGeometry(dev.xGap*3 + dev.xText + dev.xUnit, dev.yGap*9 + dev.yLogo*2 + dev.yUnit*5, dev.xUnit, dev.yUnit);
-    connect(spi_writeTick, &QCheckBox::toggled, m_spi_dataField, &QLineEdit::setEnabled);
+    m_spi_writeTick = new QCheckBox("WR", this);
+    m_spi_writeTick->setGeometry(dev.xGap*3 + dev.xText + dev.xUnit, dev.yGap*9 + dev.yLogo*2 + dev.yUnit*5, dev.xUnit, dev.yUnit);
+    connect(m_spi_writeTick, &QCheckBox::toggled, m_spi_dataField, &QLineEdit::setEnabled);
 }
 
 void gui::setupPWM()
@@ -164,16 +169,30 @@ void gui::setupPWM()
     m_pwm_dataField->setText("0x00");
     QPushButton *pwm_exeButton = new QPushButton("EXE", this);
     pwm_exeButton->setGeometry(dev.xGap*3 + dev.xText + dev.xUnit, dev.yGap*12 + dev.yLogo*3 + dev.yUnit*6, dev.xUnit, dev.yUnit);
-    connect(pwm_exeButton, &QPushButton::clicked, this, &gui::pwm_execute);
+    connect(pwm_exeButton, &QPushButton::clicked, this, [this]()
+    {
+        pwm_execute(PWM_EXE);
+    });
     /* PWM :: Row[2] */
     QPushButton *pwm_upButton = new QPushButton("UP", this);
     pwm_upButton->setGeometry(dev.xGap*3 + dev.xText + dev.xUnit, dev.yGap*13 + dev.yLogo*3 + dev.yUnit*7, dev.xUnit, dev.yUnit);
-    connect(pwm_upButton, &QPushButton::clicked, this, &gui::pwm_up);
+    connect(pwm_upButton, &QPushButton::clicked, this, [this]()
+    {
+        pwm_execute(PWM_UP);
+    });
     /* PWM :: Row[3] */
     QPushButton *pwm_downButton = new QPushButton("DOWN", this);
     pwm_downButton->setGeometry(dev.xGap*3 + dev.xText + dev.xUnit, dev.yGap*14 + dev.yLogo*3 + dev.yUnit*8, dev.xUnit, dev.yUnit);
-    connect(pwm_downButton, &QPushButton::clicked, this, &gui::pwm_down);
+    connect(pwm_downButton, &QPushButton::clicked, this, [this]()
+    {
+        pwm_execute(PWM_DOWN);
+    });
 }
+
+
+
+
+
 
 
 void gui::setupSeparators()
@@ -244,46 +263,278 @@ void gui::setupProcess()
     connect(terminateButton, &QPushButton::clicked, this, &gui::shutdownThread);
 }
 
+void gui::setDeadCommand()
+{
+    /* Dead Code :: In case if something happen */
+    (*m_Tx_GuiVector)[0] = 0xDE;
+    (*m_Tx_GuiVector)[1] = 0xAD;
+    (*m_Tx_GuiVector)[2] = 0xC0;
+    (*m_Tx_GuiVector)[3] = 0xD3;
+}
+
+void gui::setDummyCommand()
+{
+    /* 0x7E Code :: In case if something happen */
+    (*m_Tx_GuiVector)[0] = 0x7E;
+    (*m_Tx_GuiVector)[1] = 0x7E;
+    (*m_Tx_GuiVector)[2] = 0x7E;
+    (*m_Tx_GuiVector)[3] = 0x7E;
+}
+
 void gui::i2c_execute()
 {
-    bool addressFlag, registerFlag;
+    /* Dead Command :: In case if something happen */
+    setDeadCommand();
 
-    QString addressText = m_i2c_addressField->text();
-    (void)addressText.toInt(&addressFlag, 16);
-
-    QString registerText = m_i2c_registerField->text();
-    (void)registerText.toInt(&registerFlag, 16);
-
-    if (addressFlag && registerFlag)
+    if(m_threadKill)
     {
-        qDebug() << "[ADD, REG] = [" << addressText << "," << registerText << "]";
+        printToConsole("[I2C] threadMain is Down");
+    }
+    else if(!m_isConnected)
+    {
+        printToConsole("[I2C] Kernel Communication is Down");
     }
     else
     {
-        if(!addressFlag) QMessageBox::warning(this, "Invalid Input", "Please enter a valid Device Address");
-        else if(!registerFlag) QMessageBox::warning(this, "Invalid Input", "Please enter a valid Register Address");
+        /* Dummy Command :: In case if something happen */
+        setDummyCommand();
+
+        int addressTemp, registerTemp, dataTemp;
+        bool addressFlag, registerFlag,dataFlag;
+        uint8_t addressValue, registerValue;
+
+        uint8_t headerValue = 0x80; /* I2C Header Type */
+        uint8_t dataValue = 0x00;
+
+        QString addressText = m_i2c_addressField->text();
+        QString registerText = m_i2c_registerField->text();
+
+        addressTemp = addressText.toInt(&addressFlag, 0);
+        registerTemp = registerText.toInt(&registerFlag, 0);
+
+        if(addressTemp > 127 || registerTemp > 255)
+        {
+            if(addressTemp > 127) QMessageBox::warning(this, "Invalid Address", "Please enter a 7-bit Value");
+            if(registerTemp > 255) QMessageBox::warning(this, "Invalid Register", "Please enter a 8-bit Value");
+            return;
+        }
+        else
+        {
+            addressValue = static_cast<uint8_t>(addressTemp);
+            registerValue = static_cast<uint8_t>(registerTemp);
+        }
+
+        if (m_i2c_writeTick->isChecked())
+        {
+            QString dataText = m_i2c_dataField->text();
+            dataTemp = dataText.toInt(&dataFlag, 0);
+            if(dataTemp > 255)
+            {
+                QMessageBox::warning(this, "Invalid Data", "Please enter a 8-bit Value");
+                return;
+            }
+            else
+            {
+                headerValue += 0x01;
+                dataValue = static_cast<uint8_t>(dataTemp);
+            }
+        }
+
+
+        (*m_Tx_GuiVector)[0] = headerValue;
+        (*m_Tx_GuiVector)[1] = addressValue;
+        (*m_Tx_GuiVector)[2] = registerValue;
+        (*m_Tx_GuiVector)[3] = dataValue;
+        *m_IO_GuiState = IO_COM_WRITE;
+
+        printToConsole("[I2C] Done");
+        // qDebug() << "Done";
     }
-    printToConsole("[I2C] Execute");
 }
 
+//////////////////////////////////////////////////////////////////////////////
+//
+//  OFFLOAD_CTRL :: 8-bits
+//
+//  Dma config (Auto/Manual Config)
+//      |
+//      |        Device (I2C, SPI, PWM)
+//      |          ID
+//      |          ||
+//      |          ||
+//      V          VV
+//    | x | xxxx | xx | x | << OFFLOAD_CTRL : std_logic_vector(7 downto 0)
+//          ΛΛΛΛ        Λ
+//          ||||        |
+//          ||||        |
+//          ||||        |
+//       burst size    R/W (I2C, SPI)
+//       (I2C, SPI)
+//
+//////////////////////////////////////////////////////////////////////////////
 void gui::spi_execute()
 {
-    printToConsole("[SPI] Execute");
+    /* Dead Command :: In case if something happen */
+    setDeadCommand();
+
+    if(m_threadKill)
+    {
+        printToConsole("[SPI] threadMain is Down");
+    }
+    else if(!m_isConnected)
+    {
+        printToConsole("[SPI] Kernel Communication is Down");
+    }
+    else
+    {
+        /* Dummy Command :: In case if something happen */
+        setDummyCommand();
+
+        int addressTemp, registerTemp, dataTemp, burstTemp;
+        bool addressFlag, registerFlag, dataFlag, burstFlag;
+        uint8_t addressValue, registerValue, burstValue;
+
+        uint8_t headerValue = 0x82; /* SPI Header Type */
+        uint8_t dataValue = 0x00;
+
+        QString addressText = m_spi_addressField->text();
+        QString registerText = m_spi_registerField->text();
+        QString burstText = m_spi_burstField->text();
+
+        addressTemp = addressText.toInt(&addressFlag, 0);
+        registerTemp = registerText.toInt(&registerFlag, 0);
+        burstTemp = burstText.toInt(&burstFlag, 0);
+
+        if((addressTemp < 17 || addressTemp > 20) || registerTemp > 255)
+        {
+            if(addressTemp > 127) QMessageBox::warning(this, "Invalid Address", "Please Range between 0x11 and 0x14");
+            if(registerTemp > 255) QMessageBox::warning(this, "Invalid Register", "Please enter a 8-bit Value");
+            return;
+        }
+        else
+        {
+            addressValue = static_cast<uint8_t>(addressTemp);
+            registerValue = static_cast<uint8_t>(registerTemp);
+        }
+
+        if (m_spi_writeTick->isChecked())
+        {
+            QString dataText = m_spi_dataField->text();
+            dataTemp = dataText.toInt(&dataFlag, 0);
+            if(dataTemp > 255)
+            {
+                QMessageBox::warning(this, "Invalid Data", "Please enter a 8-bit Value");
+                return;
+            }
+            else if(burstTemp > 15)
+            {
+                QMessageBox::warning(this, "Invalid Burst Size", "Burst lergth up to 15 supported");
+            }
+            else
+            {
+                headerValue += 0x01;
+                dataValue = static_cast<uint8_t>(dataTemp);
+                burstValue = static_cast<uint8_t>(burstTemp);
+                burstValue <<= 3;
+                headerValue += burstValue;
+            }
+        }
+
+        (*m_Tx_GuiVector)[0] = headerValue;
+        (*m_Tx_GuiVector)[1] = addressValue;
+        (*m_Tx_GuiVector)[2] = registerValue;
+        (*m_Tx_GuiVector)[3] = dataValue;
+        *m_IO_GuiState = IO_COM_WRITE;
+
+        printToConsole("[SPI] Done");
+        // qDebug() << "[SPI] Done";
+    }
 }
 
-void gui::pwm_execute()
+void gui::pwm_execute(pwmType type)
 {
-    printToConsole("[PWM] Execute");
-}
+    /* Dead Command :: In case if something happen */
+    setDeadCommand();
 
-void gui::pwm_up()
-{
-    printToConsole("[PWM] Up");
-}
+    if(m_threadKill)
+    {
+        printToConsole("[PWM] threadMain is Down");
+    }
+    else if(!m_isConnected)
+    {
+        printToConsole("[PWM] Kernel Communication is Down");
+    }
+    else
+    {
+        /* Dummy Command :: In case if something happen */
+        setDummyCommand();
 
-void gui::pwm_down()
-{
-    printToConsole("[PWM] Down");
+        uint8_t headerValue = 0x84; /* PWM Header Type */
+        uint8_t dataValue = 0x00;
+
+        int dataTemp;
+        bool dataFlag;
+        QString dataText;
+        dataText = m_pwm_dataField->text();
+        dataTemp = dataText.toInt(&dataFlag, 0);
+
+        if(dataTemp > 255)
+        {
+            QMessageBox::warning(this, "Invalid Data", "Please enter a 8-bit Value");
+            return;
+        }
+        else
+        {
+            switch(type)
+            {
+                case PWM_EXE:
+                    dataValue = static_cast<uint8_t>(dataTemp);
+                    printToConsole("[PWM] Execute");
+                    break;
+
+                case PWM_UP:
+                    dataValue = static_cast<uint8_t>(dataTemp);
+                    if(dataValue >= 0xF5)
+                    {
+                        dataValue = 0xFA;
+                    }
+                    else
+                    {
+                        dataValue += 0x05;
+                    }
+                    m_pwm_dataField->setText(QString("0x%1").arg(dataValue, 2, 16, QChar('0')).toLower());
+                    printToConsole("[PWM] Up");
+                    break;
+
+                case PWM_DOWN:
+                    dataValue = static_cast<uint8_t>(dataTemp);
+                    if(dataValue <= 0x05)
+                    {
+                        dataValue = 0x00;
+                    }
+                    else
+                    {
+                        dataValue -= 0x05;
+                    }
+                    m_pwm_dataField->setText(QString("0x%1").arg(dataValue, 2, 16, QChar('0')).toLower());
+                    printToConsole("[PWM] Down");
+                    break;
+
+                default:
+                    printToConsole("[PWM] Unknown type of operation");
+                    break;
+            };
+        }
+
+        (*m_Tx_GuiVector)[0] = headerValue;
+        (*m_Tx_GuiVector)[1] = 0x00;
+        (*m_Tx_GuiVector)[2] = 0x00;
+        (*m_Tx_GuiVector)[3] = dataValue;
+        *m_IO_GuiState = IO_COM_WRITE;
+
+        printToConsole("[PWM] Done");
+        // qDebug() << "[PWM] Done";
+    }
 }
 
 void gui::printToConsole(const QString &message)
@@ -293,22 +544,20 @@ void gui::printToConsole(const QString &message)
 
 void gui::initThread()
 {
-    /**
-     * Automatically locks the mutex when it is constructed
-     * and releases the lock when it goes out of scope
-     */
     std::lock_guard<std::mutex> lock(m_threadMutex);
 
     if (m_threadMain.joinable())
     {
-        printToConsole("[GUI] threadMain is already running.");
+        printToConsole("[THR] threadMain is already running.");
         return;
     }
 
-    printToConsole("[GUI] Initialize threadMain");
+    printToConsole("[THR] Initialize threadMain");
 
     m_threadKill = false;
     m_threadMain = std::thread(&gui::threadMain, this);
+
+    qDebug() << "[INIT] [THR] Initialize threadMain";
 }
 
 void gui::shutdownThread()
@@ -321,28 +570,39 @@ void gui::shutdownThread()
 
     if (m_threadKill)
     {
-        printToConsole("[GUI] threadMain is already marked for shutdown.");
+        printToConsole("[THR] threadMain is already marked for shutdown.");
         return;
     }
 
-    printToConsole("[GUI] Shutdown threadMain");
+    printToConsole("[THR] Shutdown threadMain");
 
     m_threadKill = true;
 
     if (m_threadMain.joinable())
     {
         m_threadMain.join();
-        printToConsole("[GUI] threadMain has been shut down.");
+        printToConsole("[THR] threadMain has been shut down.");
     }
+
+    qDebug() << "[EXIT] [THR] Terminate threadMain";
 }
 
 void gui::threadMain()
 {
     /**
+     *
      * Smart pointer for auto Heap
      * allocation and deallocation
+     *
      */
+
+    /* 1st :: Make unique DroneCtrl */
     m_instanceDroneCtrl = std::make_unique<DroneCtrl>();
+    /* 2st :: Init pointers */
+    m_instanceDroneCtrl->setupPointers();
+    /* 3nd :: Push transfer pointers to Commander */
+    m_instanceDroneCtrl->getCommanderInstance()->setTransferPointers(m_Rx_GuiVector, m_Tx_GuiVector, m_IO_GuiState);
+    /* 4th :: Init RamDisk Commander */
     m_instanceDroneCtrl->droneInit();
 
     while (false == m_threadKill)
@@ -351,7 +611,12 @@ void gui::threadMain()
 
         if (true == m_instanceDroneCtrl->isKilled())
         {
+            m_isConnected = false;
             break;
+        }
+        else
+        {
+            m_isConnected = true;
         }
 
         /* Reduce consumption of CPU resources */
@@ -360,5 +625,5 @@ void gui::threadMain()
 
     m_instanceDroneCtrl->droneExit();
     m_instanceDroneCtrl.reset(); // Reset the unique_ptr to call the destructor
-    std::cout << "[EXIT] [TERMINATE] Shutdown threadMain" << std::endl;
 }
+

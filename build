@@ -1,0 +1,6 @@
+cd firmware/linux/
+make -j
+cd ../app/
+qmake
+make -j
+cd ../../

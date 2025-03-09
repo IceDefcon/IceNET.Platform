@@ -29,7 +29,7 @@ m_instance(this)
     //      |          ||
     //      |          ||
     //      V          VV
-    //    | x | xxxx | xx | x | <<<---- OFFLOAD_CTRL : std_logic_vector(6 downto 0)
+    //    | x | xxxx | xx | x | <<<---- OFFLOAD_CTRL : std_logic_vector(7 downto 0)
     //          ΛΛΛΛ        Λ
     //          ||||        |
     //          ||||        |
@@ -161,7 +161,7 @@ DeviceConfigType* RamDisk::createOperation(uint8_t id, uint8_t ctrl, uint8_t ops
     //      |          ||
     //      |          ||
     //      V          VV
-    //    | x | xxxx | xx | x | <<<---- OFFLOAD_CTRL : std_logic_vector(6 downto 0)
+    //    | x | xxxx | xx | x | <<<---- OFFLOAD_CTRL : std_logic_vector(7 downto 0)
     //          ΛΛΛΛ        Λ
     //          ||||        |
     //          ||||        |

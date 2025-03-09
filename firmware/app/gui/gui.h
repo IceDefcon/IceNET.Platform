@@ -1,3 +1,12 @@
+/*!
+ *
+ * Author: Ice.Marek
+ * IceNET Technology 2025
+ *
+ */
+
+#pragma once
+
 #include <QPlainTextEdit>
 #include <QApplication>
 #include <QPushButton>
@@ -49,11 +58,13 @@ class gui : public QWidget
     QLineEdit *m_i2c_registerField;
     QLineEdit *m_i2c_burstField;
     QLineEdit *m_i2c_dataField;
+    QCheckBox *m_i2c_writeTick;
 
     QLineEdit *m_spi_addressField;
     QLineEdit *m_spi_registerField;
     QLineEdit *m_spi_burstField;
     QLineEdit *m_spi_dataField;
+    QCheckBox *m_spi_writeTick;
 
     QLineEdit *m_pwm_dataField;
 
@@ -61,6 +72,13 @@ class gui : public QWidget
     std::thread m_threadMain;
     std::mutex m_threadMutex;
     bool m_threadKill;
+    bool m_isConnected;
+
+    std::shared_ptr<std::vector<uint8_t>> m_Rx_GuiVector;
+    std::shared_ptr<std::vector<uint8_t>> m_Tx_GuiVector;
+    std::shared_ptr<ioStateType> m_IO_GuiState;
+
+    Commander* m_instanceCommander;
 
 public:
 
@@ -75,14 +93,18 @@ public:
     void setupSeparators();
     void setupProcess();
 
+    /* SHARE */ void setTransferPointers(
+    std::shared_ptr<std::vector<uint8_t>> transferPointerRx,
+    std::shared_ptr<std::vector<uint8_t>> transferPointerTx,
+    std::shared_ptr<ioStateType> transferState);
+
 private slots:
 
+    void setDeadCommand();
+    void setDummyCommand();
     void i2c_execute();
     void spi_execute();
-    void pwm_execute();
-
-    void pwm_up();
-    void pwm_down();
+    void pwm_execute(pwmType type);
 
     void printToConsole(const QString &message);
 

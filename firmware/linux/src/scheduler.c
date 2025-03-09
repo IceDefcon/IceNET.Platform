@@ -71,12 +71,13 @@ static int schedulerThread(void *data)
         switch(state)
         {
             case SCH_IDLE:
-                // printk(KERN_INFO "[INIT][SCH] :: SCH_IDLE\n");
+                // printk(KERN_INFO "[CTRL][SCH] :: SCH_IDLE\n");
                 /* Nothing here :: Just wait for state change */
                 break;
 
             case SCH_INIT:
-                printk(KERN_INFO "[INIT][SCH] :: SCH_INIT\n");
+                msleep(100); /* Delay for __init to print everything */
+                printk(KERN_INFO "[CTRL][SCH] SCH_INIT\n");
                 //
                 // TODO
                 //
@@ -84,16 +85,16 @@ static int schedulerThread(void *data)
                 break;
 
             case SCH_CONFIG:
-                printk(KERN_INFO "[INIT][SCH] :: SCH_CONFIG\n");
+                printk(KERN_INFO "[CTRL][SCH] SCH_CONFIG\n");
                 //
                 // TODO
                 //
                 Process.configDone = true;
-                setScheduler(SCH_IDLE);
+                setScheduler(SCH_MAIN_20MS);
                 break;
 
             case SCH_MAIN_20MS:
-                printk(KERN_INFO "[INIT][SCH] :: SCH_MAIN\n");
+                printk(KERN_INFO "[CTRL][SCH] SCH_MAIN_20MS\n");
                 /**
                  *
                  * TODO

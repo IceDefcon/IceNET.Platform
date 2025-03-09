@@ -25,14 +25,11 @@ class DroneCtrl :
         KernelComms::Watchdog* m_instanceWatchdog;
         KernelComms::RamDisk* m_instanceRamDisk;
 
-        std::shared_ptr<std::vector<char>> m_Rx_DroneCtrlVector;
-        std::shared_ptr<std::vector<char>> m_Tx_DroneCtrlVector;
-        std::shared_ptr<ioStateType> m_IO_DroneCtrlState;
-
     public:
         DroneCtrl();
         ~DroneCtrl();
 
+        void setupPointers();
         void droneInit();
         void droneExit();
         bool isKilled();
@@ -41,4 +38,6 @@ class DroneCtrl :
 
         void sendFpgaConfig();
         void droneCtrlMain();
+
+        Commander* getCommanderInstance();
 };
