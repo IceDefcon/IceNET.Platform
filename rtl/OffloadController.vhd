@@ -151,7 +151,7 @@ begin
             --      |          ||
             --      |          ||
             --      V          VV
-            --    | x | xxxx | xx | x | <<<---- OFFLOAD_CTRL : std_logic_vector(6 downto 0)
+            --    | x | xxxx | xx | x | <<<---- OFFLOAD_CTRL : std_logic_vector(7 downto 0)
             --          ΛΛΛΛ        Λ
             --          ||||        |
             --          ||||        |

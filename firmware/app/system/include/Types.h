@@ -47,6 +47,14 @@ typedef enum
     CTRL_AMOUNT,
 } ctrlType;
 
+typedef enum
+{
+   PWM_EXE,
+   PWM_UP,
+   PWM_DOWN,
+   PWM_AMOUNT
+}pwmType;
+
 inline std::string getIoStateString(ioStateType state)
 {
     static const std::array<std::string, IO_AMOUNT> ioStateStrings =
