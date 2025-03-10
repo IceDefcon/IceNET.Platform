@@ -36,3 +36,23 @@ alias push_droneAI="git push origin droneAI"
 export XDG_RUNTIME_DIR="/tmp/runtime-root"
 export ICE="$(whoami) $ "
 
+
+//
+// GPIO
+//
+
+Change state to high:
+
+echo 79 > /sys/class/gpio/export
+echo out > /sys/class/gpio/gpio79/direction
+echo 1 > /sys/class/gpio/gpio79/value
+
+Change state to low:
+
+echo 79 > /sys/class/gpio/export
+echo out > /sys/class/gpio/gpio79/direction
+echo 0 > /sys/class/gpio/gpio79/value
+
+Read the GPIO value:
+
+cat /sys/class/gpio/gpio79/value

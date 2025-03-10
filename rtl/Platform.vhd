@@ -96,6 +96,9 @@ port
     ---------------------------------------------------------------------------------------------------
     -- Interrupts
     INT_FROM_CPU : in std_logic;    -- PIN_A5 :: P9_15
+
+
+    !!! This is now Low Active for the Tegra Kernel
     INT_FROM_FPGA : out std_logic;  -- PIN_A9 :: P9_23
 
     -- BBB SPI0
@@ -130,7 +133,13 @@ port
     SECONDARY_MOSI : in std_logic;  -- PIN_B14 :: P9_30 :: SPI1_D1
     SECONDARY_SCLK : in std_logic;  -- PIN_A15 :: P9_31 :: SPI1_SCLK
     -- Watchdog signal
+
+
+    !!! This is now Low Active for the Tegra Kernel
     TIMER_INT_FROM_FPGA : out std_logic; -- PIN_A13 :: P9_41
+
+
+    !!! This is now Low Active for the Tegra Kernel
     WDG_INT_FROM_FPGA : out std_logic; -- PIN_A20 :: P9_41
     WDG_INT_FROM_CPU : in std_logic; -- PIN_B4 :: P9_12
 

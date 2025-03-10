@@ -73,11 +73,10 @@ static irqreturn_t InterruptFromFPGA_SpiISR(int irq, void *data)
 /* INIT */
 static int InterruptFromFPGA_TimerInit(void)
 {
-
     int irq_kernel;
     int result;
 
-    result = gpio_request(GPIO_TIMER_INTERRUPT_FROM_FPGA, "   TimerIn");
+    result = gpio_request(GPIO_TIMER_INTERRUPT_FROM_FPGA, "TIMER_INT_FROM_FPGA");
     if (result < 0)
     {
         printk(KERN_ERR "[INIT][ISR] Failed GPIO Request :: Pin [%d]\n", GPIO_TIMER_INTERRUPT_FROM_FPGA);
@@ -99,6 +98,8 @@ static int InterruptFromFPGA_TimerInit(void)
     {
         printk(KERN_ERR "[INIT][ISR] Setup GPIO Pin [%d] Input\n", GPIO_TIMER_INTERRUPT_FROM_FPGA);
     }
+
+    gpio_set_value(GPIO_TIMER_INTERRUPT_FROM_FPGA, 0);
 
     irq_kernel = gpio_to_irq(GPIO_TIMER_INTERRUPT_FROM_FPGA);
     if (irq_kernel < 0)
@@ -129,11 +130,10 @@ static int InterruptFromFPGA_TimerInit(void)
 
 static int InterruptFromFPGA_WatchdogInit(void)
 {
-
     int irq_kernel;
     int result;
 
-    result = gpio_request(GPIO_WATCHDOG_INTERRUPT_FROM_FPGA, "   WatchdogIn");
+    result = gpio_request(GPIO_WATCHDOG_INTERRUPT_FROM_FPGA, "WDG_INT_FROM_FPGA");
     if (result < 0)
     {
         printk(KERN_ERR "[INIT][ISR] Failed GPIO Request :: Pin [%d]\n", GPIO_WATCHDOG_INTERRUPT_FROM_FPGA);
@@ -156,6 +156,7 @@ static int InterruptFromFPGA_WatchdogInit(void)
         printk(KERN_ERR "[INIT][ISR] Setup GPIO Pin [%d] Input\n", GPIO_WATCHDOG_INTERRUPT_FROM_FPGA);
     }
 
+    gpio_set_value(GPIO_WATCHDOG_INTERRUPT_FROM_FPGA, 0);
 
     irq_kernel = gpio_to_irq(GPIO_WATCHDOG_INTERRUPT_FROM_FPGA);
     if (irq_kernel < 0)
@@ -188,7 +189,7 @@ static int InterruptFromCPU_SpiInit(void)
 {
     int result;
 
-    result = gpio_request(GPIO_SPI_INTERRUPT_FROM_CPU, "   SpiOut");
+    result = gpio_request(GPIO_SPI_INTERRUPT_FROM_CPU, "SPI_INT_FROM_CPU");
     if (result < 0)
     {
         printk(KERN_ERR "[INIT][ISR] Failed GPIO Request :: Pin [%d]\n", GPIO_SPI_INTERRUPT_FROM_CPU);
@@ -214,11 +215,10 @@ static int InterruptFromCPU_SpiInit(void)
 
 static int InterruptFromFPGA_SpiInit(void)
 {
-
     int irq_kernel;
     int result;
 
-    result = gpio_request(GPIO_SPI_INTERRUPT_FROM_FPGA, "   SpiIn");
+    result = gpio_request(GPIO_SPI_INTERRUPT_FROM_FPGA, "SPI_INT_FROM_FPGA");
     if (result < 0)
     {
         printk(KERN_ERR "[INIT][ISR] Failed GPIO Request :: Pin [%d]\n", GPIO_SPI_INTERRUPT_FROM_FPGA);
@@ -241,6 +241,7 @@ static int InterruptFromFPGA_SpiInit(void)
         printk(KERN_ERR "[INIT][ISR] Setup GPIO Pin [%d] Input\n", GPIO_SPI_INTERRUPT_FROM_FPGA);
     }
 
+    gpio_set_value(GPIO_SPI_INTERRUPT_FROM_FPGA, 0);
 
     irq_kernel = gpio_to_irq(GPIO_SPI_INTERRUPT_FROM_FPGA);
     if (irq_kernel < 0)
@@ -273,7 +274,7 @@ static int InterruptFromCPU_WatchdogInit(void)
 {
     int result;
 
-    result = gpio_request(GPIO_WATCHDOG_INTERRUPT_FROM_CPU, "   WatchdogOut");
+    result = gpio_request(GPIO_WATCHDOG_INTERRUPT_FROM_CPU, "WDG_INT_FROM_CPU");
     if (result < 0)
     {
         printk(KERN_ERR "[INIT][ISR] Failed GPIO Request :: Pin [%d]\n", GPIO_WATCHDOG_INTERRUPT_FROM_CPU);
