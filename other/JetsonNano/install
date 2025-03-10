@@ -1,5 +1,0 @@
-//
-// jtop
-//
-sudo -H pip install --no-cache-dir -U jetson-stats
-
