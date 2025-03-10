@@ -19,11 +19,19 @@
 //                      //
 //////////////////////////
 
-#define GPIO_TIMER_INTERRUPT_FROM_FPGA 216      // HEADER_PIN_07 :: GPIO09_LS
-#define GPIO_SPI_INTERRUPT_FROM_CPU 79          // HEADER_PIN_15 :: GPIO12_LS
-#define GPIO_SPI_INTERRUPT_FROM_FPGA 150        // HEADER_PIN_29 :: GPIO01_LS
-#define GPIO_WATCHDOG_INTERRUPT_FROM_FPGA 200   // HEADER_PIN_31 :: GPIO11_LS
-#define GPIO_WATCHDOG_INTERRUPT_FROM_CPU 168    // HEADER_PIN_33 :: GPIO13_LS
+/* Top two */
+#define GPIO_TIMER_INTERRUPT_FROM_FPGA 216      // HEADER_PIN_07 :: GPIO09 :: PIN_07
+#define GPIO_SPI_INTERRUPT_FROM_CPU 194         // HEADER_PIN_15 :: GPIO12 :: PIN_15
+/* Bottom three */
+#define GPIO_SPI_INTERRUPT_FROM_FPGA 149        // HEADER_PIN_29 :: GPIO01 :: PIN_29
+#define GPIO_WATCHDOG_INTERRUPT_FROM_FPGA 200   // HEADER_PIN_31 :: GPIO11 :: PIN_31
+#define GPIO_WATCHDOG_INTERRUPT_FROM_CPU 38     // HEADER_PIN_33 :: GPIO13 :: PIN_33
+
+// gpio-38  (GPIO13              |WDG_INT_FROM_CPU    ) out lo
+// gpio-149 (GPIO01              |SPI_INT_FROM_FPGA   ) in  hi IRQ
+// gpio-194 (GPIO12              |SPI_INT_FROM_CPU    ) out lo
+// gpio-200 (GPIO11              |WDG_INT_FROM_FPGA   ) in  hi IRQ
+// gpio-216 (GPIO09              |TIMER_INT_FROM_FPGA ) in  hi IRQ
 
 void isrGpioInit(void);
 void isrGpioDestroy(void);
