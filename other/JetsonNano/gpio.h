@@ -1,14 +1,8 @@
-//
-// Enable SPI
-//
-copy device tree blob into: /boot/nano-spi.dtb
-
 
 //
 // Check GPIO
 //
 cat /sys/kernel/debug/gpio
-
 
 /**
  *
@@ -25,17 +19,6 @@ cat /sys/kernel/debug/gpio
  * SPI0_CS0  :: H40-18
  *
  */
-
-
-
-//
-// Linux Env variables
-//
-cd /home/ice/code.lab/IceNET.Platform/firmware/linux
-alias push_droneAI="git push origin droneAI"
-export XDG_RUNTIME_DIR="/tmp/runtime-root"
-export ICE="$(whoami) $ "
-
 
 //
 // GPIO
