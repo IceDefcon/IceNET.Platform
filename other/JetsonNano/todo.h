@@ -40,12 +40,17 @@ git config --global credential.helper 'store --file ~/.git-credentials'
 //
 sudo apt update
 sudo apt install qt5-qmake qtbase5-dev
-export PATH=/usr/lib/qt5/bin:$PATH
+
+//
+// Install
+//
+apt-get install guake nano
 
 //
 // Bash
 //
-Create folder /tmp/runtime-root
+mkdir /tmp/runtime-root
+chmod 777 /tmp/runtime-root -R
 
 cd /home/ice/code.lab/IceNET.Platform
 alias push_droneAI="git push origin droneAI"
@@ -55,9 +60,5 @@ export PATH=/usr/lib/qt5/bin:$PATH
 //
 // Enable SPI trough device tree
 //
-copy into /boot/nano-spi.dtb
+cp nano-spi.dtb /boot/
 
-//
-// Install
-//
-apt-get install guake nano
