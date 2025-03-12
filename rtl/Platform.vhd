@@ -99,6 +99,11 @@ port
     PRIMARY_MISO : out std_logic; -- PIN_A8 :: P9_21 :: SPI0_D0
     PRIMARY_MOSI : in std_logic;  -- PIN_B6 :: P9_18 :: SPI0_D1
     PRIMARY_SCLK : in std_logic;  -- PIN_B8 :: P9_22 :: SPI0_SCLK
+    -- BBB SPI1
+    SECONDARY_CS : in std_logic;    -- PIN_B13 :: P9_28 :: SPI1_CS0
+    SECONDARY_MISO : out std_logic; -- PIN_A14 :: P9_29 :: SPI1_D0
+    SECONDARY_MOSI : in std_logic;  -- PIN_B14 :: P9_30 :: SPI1_D1
+    SECONDARY_SCLK : in std_logic;  -- PIN_A15 :: P9_31 :: SPI1_SCLK
     -- I2C BMI160 + ADXL345
     I2C_SDA : inout std_logic; -- PIN_AB13
     I2C_SCK : inout std_logic; -- PIN_AA13
@@ -120,12 +125,7 @@ port
     NRF905_CSN : out std_logic;     -- PIN_P1
     -- PWM
     PWM_SIGNAL : out std_logic; -- PIN_R1
-    -- BBB SPI1
-    SECONDARY_CS : in std_logic;    -- PIN_B13 :: P9_28 :: SPI1_CS0
-    SECONDARY_MISO : out std_logic; -- PIN_A14 :: P9_29 :: SPI1_D0
-    SECONDARY_MOSI : in std_logic;  -- PIN_B14 :: P9_30 :: SPI1_D1
-    SECONDARY_SCLK : in std_logic;  -- PIN_A15 :: P9_31 :: SPI1_SCLK
-
+    -- UART Looptrough
     UART_BBB_TX : in std_logic;  -- PIN_B9 :: P9_24
     UART_BBB_RX : out std_logic; -- PIN_B10 :: P9_26
     UART_x86_TX : out std_logic; -- PIN_N19 :: FTDI Rx
