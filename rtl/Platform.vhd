@@ -19,11 +19,11 @@ use work.Types.all;
 -------------------------------------------------------------------------------------
 -- PIN_A4  :: P9_11 :: UNUSED_01            | PIN_B4  :: P9_12 :: WDG_INT_FROM_CPU  |
 -- PIN_C3  :: P9_13 :: UNUSED_03            | PIN_C4  :: P9_14 :: UNUSED_04         |
--- PIN_A5  :: P9_15 :: INT_FROM_CPU         | PIN_B5  :: P9_16 :: UNUSED_06         |
+-- PIN_A5  :: P9_15 :: SPI_INT_FROM_CPU     | PIN_B5  :: P9_16 :: UNUSED_06         |
 -- PIN_A6  :: P9_17 :: SPI0_CS0             | PIN_B6  :: P9_18 :: SPI0_D1           |
 -- PIN_A7  :: P9_19 :: CAN_BBB_RX           | PIN_B7  :: P9_20 :: CAN_BBB_TX        |
 -- PIN_A8  :: P9_21 :: SPI0_D0              | PIN_B8  :: P9_22 :: SPI0_SCLK         |
--- PIN_A9  :: P9_23 :: INT_FROM_FPGA        | PIN_B9  :: P9_24 :: UART_BBB_TX       |
+-- PIN_A9  :: P9_23 :: SPI_INT_FROM_FPGA    | PIN_B9  :: P9_24 :: UART_BBB_TX       |
 -- PIN_A10 :: P9_25 :: UNUSED_15            | PIN_B10 :: P9_26 :: UART_BBB_RX       |
 -- PIN_A13 :: P9_27 :: TIMER_INT_FROM_FPGA  | PIN_B13 :: P9_28 :: SPI1_CS0          |
 -- PIN_A14 :: P9_29 :: SPI1_D0              | PIN_B14 :: P9_30 :: SPI1_D1           |
@@ -88,19 +88,12 @@ port
     BUTTON_2 : in std_logic; -- PIN_K19
     BUTTON_3 : in std_logic; -- PIN_J18
     BUTTON_4 : in std_logic; -- PIN_K18
-
-    ---------------------------------------------------------------------------------------------------
-    --
-    -- Line 0
-    --
-    ---------------------------------------------------------------------------------------------------
     -- Interrupts
-    INT_FROM_CPU : in std_logic;    -- PIN_A5 :: P9_15
-
-
-    !!! This is now Low Active for the Tegra Kernel
-    INT_FROM_FPGA : out std_logic;  -- PIN_A9 :: P9_23
-
+    SPI_INT_FROM_CPU : in std_logic; -- PIN_A5 :: GPIO12 :: HEADER_PIN_15
+    SPI_INT_FROM_FPGA : out std_logic; -- PIN_A9 :: GPIO01 :: HEADER_PIN_29
+    TIMER_INT_FROM_FPGA : out std_logic; -- PIN_A13 :: GPIO09 :: HEADER_PIN_07
+    WDG_INT_FROM_FPGA : out std_logic; -- PIN_A20 :: GPIO11 :: HEADER_PIN_31
+    WDG_INT_FROM_CPU : in std_logic; -- PIN_B4 :: GPIO13 :: HEADER_PIN_33
     -- BBB SPI0
     PRIMARY_CS : in std_logic;    -- PIN_A6 :: P9_17 :: SPI0_CS0
     PRIMARY_MISO : out std_logic; -- PIN_A8 :: P9_21 :: SPI0_D0
@@ -132,16 +125,6 @@ port
     SECONDARY_MISO : out std_logic; -- PIN_A14 :: P9_29 :: SPI1_D0
     SECONDARY_MOSI : in std_logic;  -- PIN_B14 :: P9_30 :: SPI1_D1
     SECONDARY_SCLK : in std_logic;  -- PIN_A15 :: P9_31 :: SPI1_SCLK
-    -- Watchdog signal
-
-
-    !!! This is now Low Active for the Tegra Kernel
-    TIMER_INT_FROM_FPGA : out std_logic; -- PIN_A13 :: P9_41
-
-
-    !!! This is now Low Active for the Tegra Kernel
-    WDG_INT_FROM_FPGA : out std_logic; -- PIN_A20 :: P9_41
-    WDG_INT_FROM_CPU : in std_logic; -- PIN_B4 :: P9_12
 
     UART_BBB_TX : in std_logic;  -- PIN_B9 :: P9_24
     UART_BBB_RX : out std_logic; -- PIN_B10 :: P9_26
@@ -768,13 +751,13 @@ begin
         or interrupt_spi_rf_feedback = '1'
         then
             if feedback_interrupt_timer = "110010" then -- 50 * 20 = 1000ns = 1us interrupt pulse back to CPU
-                INT_FROM_FPGA <= '0';
+                SPI_INT_FROM_FPGA <= '0';
             else
-                INT_FROM_FPGA <= '1';
+                SPI_INT_FROM_FPGA <= '1';
                 feedback_interrupt_timer <= feedback_interrupt_timer + '1';
             end if;
         else
-            INT_FROM_FPGA <= '0';
+            SPI_INT_FROM_FPGA <= '0';
             feedback_interrupt_timer <= (others => '0');
         end if;
     end if;
@@ -814,7 +797,7 @@ begin
     if rising_edge(CLOCK_50MHz) then
 
         -- 1st
-        interrupt_from_cpu <= INT_FROM_CPU;
+        interrupt_from_cpu <= SPI_INT_FROM_CPU;
 
         -- 2nd
         if interrupt_from_cpu = '1' and kernel_interrupt_stop = '0' then
