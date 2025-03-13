@@ -4,77 +4,113 @@ use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.all;
 use work.Types.all;
 
----------------------------------------------------------------------------
+-------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------
+--
 -- Author: Ice.Marek
 -- IceNET Technology 2025
 --
 -- FPGA Chip
 -- Cyclone IV
 -- EP4CE15F23C8
----------------------------------------------------------------------------
 --
 -- Pinout Communication
 -- CPU <--> FPGA
 --
 -------------------------------------------------------------------------------------
--- PIN_A4  :: P9_11 :: UNUSED_01            | PIN_B4  :: P9_12 :: WDG_INT_FROM_CPU  |
--- PIN_C3  :: P9_13 :: UNUSED_03            | PIN_C4  :: P9_14 :: UNUSED_04         |
--- PIN_A5  :: P9_15 :: SPI_INT_FROM_CPU     | PIN_B5  :: P9_16 :: UNUSED_06         |
--- PIN_A6  :: P9_17 :: SPI0_CS0             | PIN_B6  :: P9_18 :: SPI0_D1           |
--- PIN_A7  :: P9_19 :: CAN_BBB_RX           | PIN_B7  :: P9_20 :: CAN_BBB_TX        |
--- PIN_A8  :: P9_21 :: SPI0_D0              | PIN_B8  :: P9_22 :: SPI0_SCLK         |
--- PIN_A9  :: P9_23 :: SPI_INT_FROM_FPGA    | PIN_B9  :: P9_24 :: UART_BBB_TX       |
--- PIN_A10 :: P9_25 :: UNUSED_15            | PIN_B10 :: P9_26 :: UART_BBB_RX       |
--- PIN_A13 :: P9_27 :: TIMER_INT_FROM_FPGA  | PIN_B13 :: P9_28 :: SPI1_CS0          |
--- PIN_A14 :: P9_29 :: SPI1_D0              | PIN_B14 :: P9_30 :: SPI1_D1           |
--- PIN_A15 :: P9_31 :: SPI1_SCLK            | PIN_B15 :: P9_32 :: UNUSED_22         |
--- PIN_A16 :: P9_33 :: UNUSED_23            | PIN_B16 :: P9_34 :: UNUSED_24         |
--- PIN_A17 :: P9_35 :: UNUSED_25            | PIN_B17 :: P9_36 :: UNUSED_26         |
--- PIN_A18 :: P9_37 :: UNUSED_27            | PIN_B18 :: P9_38 :: UNUSED_28         |
--- PIN_A19 :: P9_39 :: UNUSED_29            | PIN_B19 :: P9_40 :: UNUSED_30         |
--- PIN_A20 :: P9_41 :: WDG_INT_FROM_FPGA    | PIN_B20 :: P9_42 :: UNUSED_32         |
-
--- PIN_E1 :: Blue    :: TEST_CS
--- PIN_F1 :: Green   :: TEST_MISO
--- PIN_H1 :: Yellow  :: TEST_MOSO
--- PIN_J1 :: Orange  :: TEST_CLK
-
 -------------------------------------------------------------------------------------
--- PIN_AB13 :: I2C_SDA                      | PIN_AA13 :: I2C_SCK               |
--- PIN_AB14 :: ADXL_INT1                    | PIN_AA14 :: ADXL_INT2             |
--- PIN_AB15 :: NOTUSED_05                   | PIN_AA15 :: NOTUSED_06            |
--- PIN_AB16 :: NOTUSED_07                   | PIN_AA16 :: NOTUSED_08            |
--- PIN_AB17 :: NOTUSED_09                   | PIN_AA17 :: NOTUSED_10            |
--- PIN_AB18 :: NOTUSED_11                   | PIN_AA18 :: NOTUSED_12            |
--- PIN_AB19 :: NOTUSED_13  <-- dev 0        | PIN_AA19 :: NOTUSED_14            |
--- PIN_AB20 :: NOTUSED_15  <-- dev 0        | PIN_AA20 :: NOTUSED_16            |
--- PIN_Y21  :: NOTUSED_17        |          | PIN_Y22  :: NOTUSED_18            |
--- PIN_W21  :: NOTUSED_19        |          | PIN_W22  :: NOTUSED_20            |
--- PIN_V21  :: BMI160_CS   <-- dev 2        | PIN_V22  :: BMI160_SCLK           |
--- PIN_U21  :: BMI160_MISO <-- dev 2        | PIN_U22  :: BMI160_MOSI           |
--- PIN_R21  :: NOTUSED_25        |          | PIN_R22  :: NOTUSED_26            |
--- PIN_P21  :: NOTUSED_27        |          | PIN_P22  :: NOTUSED_28            |
--- PIN_N21  :: NOTUSED_29        |          | PIN_N22  :: NOTUSED_30            |
--- PIN_M21  :: NOTUSED_31    32 pins For    | PIN_M22  :: NOTUSED_32            |
--- PIN_L21  :: NOTUSED_33  8 x SPI devices  | PIN_L22  :: NOTUSED_34            |
--- PIN_K21  :: NOTUSED_35        |          | PIN_K22  :: NOTUSED_36            |
--- PIN_J21  :: NOTUSED_37        |          | PIN_J22  :: NOTUSED_38            |
--- PIN_H21  :: NOTUSED_39        V          | PIN_H22  :: NOTUSED_40            |
--- PIN_F21  :: NOTUSED_41 <--- dev 7        | PIN_F22  :: NOTUSED_42            |
--- PIN_E21  :: NOTUSED_43 <--- dev 7        | PIN_E22  :: NOTUSED_44            |
--- PIN_D21  :: LOGIC_CH5                    | PIN_D22  :: LOGIC_CH6             |
--- PIN_C21  :: LOGIC_CH3                    | PIN_C22  :: LOGIC_CH4             |
--- PIN_B21  :: LOGIC_CH1                    | PIN_B22  :: LOGIC_CH2             |
--- PIN_N19  :: NOTUSED_51                   | PIN_N20  :: NOTUSED_52            |
--- PIN_M19  :: NOTUSED_53                   | PIN_M20  :: NOTUSED_54            |
----------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------
+--
+-- VIN     :: VIN
+-- GND     :: GND
+-- PIN_A20 :: PIN_B20
+-- _________________________________________________________________________________
+--                      Λ                                           Λ
+-- PIN_A19 :: PIN_B19   | TIMER_INT_FROM_FPGA   ::                  | H7  :: H8
+-- PIN_A18 :: PIN_B18   |                       ::                  | H9  :: H10
+-- PIN_A17 :: PIN_B17   |                       ::                  | H11 :: H12
+-- PIN_A16 :: PIN_B16   | SECONDARY_SCLK        ::                  | H13 :: H14
+-- PIN_A15 :: PIN_B15   | SPI_INT_FROM_CPU      ::                  | H15 :: H16
+-- PIN_A14 :: PIN_B14   | ----===[ 3V3 ]===---- :: SECONDARY_CS     | H17 :: H18
+-- PIN_A13 :: PIN_B13   | PRIMARY_MOSI          ::                  | H19 :: H20
+-- PIN_A10 :: PIN_B10   | PRIMARY_MISO          :: SECONDARY_MISO   | H21 :: H22
+-- PIN_A9  :: PIN_B9    | PRIMARY_SCLK          :: PRIMARY_CS       | H23 :: H24
+-- PIN_A8  :: PIN_B8    |                       ::                  | H25 :: H26
+-- PIN_A7  :: PIN_B7    |                       ::                  | H27 :: H28
+-- PIN_A6  :: PIN_B6    | SPI_INT_FROM_FPGA     ::                  | H29 :: H30
+-- PIN_A5  :: PIN_B5    | WDG_INT_FROM_FPGA     ::                  | H31 :: H32
+-- PIN_C3  :: PIN_C4    | WDG_INT_FROM_CPU      ::                  | H33 :: H34
+-- PIN_A4  :: PIN_B4    |                       ::                  | H35 :: H36
+-- PIN_A3  :: PIN_B3    | SECONDARY_MOSI        ::                  | H37 :: H38
+-- PIN_B2  :: PIN_B1    |                       ::                  | H39 :: H40
+-- _____________________V___________________________________________V_______________
+--
+-- PIN_C2  :: PIN_C1
+-- PIN_D2  :: PIN_E1
+-- PIN_F2  :: PIN_F1
+-- PIN_H2  :: PIN_H1
+-- PIN_J2  :: PIN_J1
+-- PIN_M2  :: PIN_M1
+-- PIN_N2  :: PIN_N1
+-- PIN_P2  :: PIN_P1
+-- PIN_R2  :: PIN_R1
+-- GND :: GND
+-- 3V3 :: 3V3
+-- GND :: GND
+--
+--
+--
+-------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------
+--
+-- VIN      :: VIN
+-- GND      :: GND
+-- PIN_M19  :: NOTUSED_53                   | PIN_M20  :: NOTUSED_54
+-- PIN_N19  :: NOTUSED_51                   | PIN_N20  :: NOTUSED_52
+-- PIN_B21  :: LOGIC_CH1                    | PIN_B22  :: LOGIC_CH2
+-- PIN_C21  :: LOGIC_CH3                    | PIN_C22  :: LOGIC_CH4
+-- PIN_D21  :: LOGIC_CH5                    | PIN_D22  :: LOGIC_CH6
+-- PIN_E21  :: NOTUSED_43 <--- dev 7        | PIN_E22  :: NOTUSED_44
+-- PIN_F21  :: NOTUSED_41 <--- dev 7        | PIN_F22  :: NOTUSED_42
+-- PIN_H21  :: NOTUSED_39        V          | PIN_H22  :: NOTUSED_40
+-- PIN_J21  :: NOTUSED_37        |          | PIN_J22  :: NOTUSED_38
+-- PIN_K21  :: NOTUSED_35        |          | PIN_K22  :: NOTUSED_36
+-- PIN_L21  :: NOTUSED_33  8 x SPI devices  | PIN_L22  :: NOTUSED_34
+-- PIN_M21  :: NOTUSED_31    32 pins For    | PIN_M22  :: NOTUSED_32
+-- PIN_N21  :: NOTUSED_29        |          | PIN_N22  :: NOTUSED_30
+-- PIN_P21  :: NOTUSED_27        |          | PIN_P22  :: NOTUSED_28
+-- PIN_R21  :: NOTUSED_25        |          | PIN_R22  :: NOTUSED_26
+-- PIN_U21  :: BMI160_MISO <-- dev 2        | PIN_U22  :: BMI160_MOSI
+-- PIN_V21  :: BMI160_CS   <-- dev 2        | PIN_V22  :: BMI160_SCLK
+-- PIN_W21  :: NOTUSED_19        |          | PIN_W22  :: NOTUSED_20
+-- PIN_Y21  :: NOTUSED_17        |          | PIN_Y22  :: NOTUSED_18
+-- PIN_AB20 :: NOTUSED_15  <-- dev 0        | PIN_AA20 :: NOTUSED_16
+-- PIN_AB19 :: NOTUSED_13  <-- dev 0        | PIN_AA19 :: NOTUSED_14
+-- PIN_AB18 :: NOTUSED_11                   | PIN_AA18 :: NOTUSED_12
+-- PIN_AB17 :: NOTUSED_09                   | PIN_AA17 :: NOTUSED_10
+-- PIN_AB16 :: NOTUSED_07                   | PIN_AA16 :: NOTUSED_08
+-- PIN_AB15 :: NOTUSED_05                   | PIN_AA15 :: NOTUSED_06
+-- PIN_AB14 :: ADXL_INT1                    | PIN_AA14 :: ADXL_INT2
+-- PIN_AB13 :: I2C_SDA                      | PIN_AA13 :: I2C_SCK
+-- GND      :: GND
+-- 3V3      :: 3V3
+-- GND      :: GND
+--
+-------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------
+
 
 entity Platform is
 port
 (
-	-- FPGA Reference Clock
     CLOCK_50MHz : in std_logic; -- PIN_T2
-    -- Debug LED's
+
+    -----------------------------------------------------------------------------
+    -- DEBUG
+    -----------------------------------------------------------------------------
     LED_1 : out std_logic; -- PIN_U7
     LED_2 : out std_logic; -- PIN_U8
     LED_3 : out std_logic; -- PIN_R7
@@ -83,63 +119,10 @@ port
     LED_6 : out std_logic; -- PIN_P8
     LED_7 : out std_logic; -- PIN_M8
     LED_8 : out std_logic; -- PIN_N8
-    -- Debug Buttons
     BUTTON_1 : in std_logic; -- PIN_H20
     BUTTON_2 : in std_logic; -- PIN_K19
     BUTTON_3 : in std_logic; -- PIN_J18
     BUTTON_4 : in std_logic; -- PIN_K18
-    -- Interrupts
-    SPI_INT_FROM_CPU : in std_logic; -- PIN_A5 :: GPIO12 :: HEADER_PIN_15
-    SPI_INT_FROM_FPGA : out std_logic; -- PIN_A9 :: GPIO01 :: HEADER_PIN_29
-    TIMER_INT_FROM_FPGA : out std_logic; -- PIN_A13 :: GPIO09 :: HEADER_PIN_07
-    WDG_INT_FROM_FPGA : out std_logic; -- PIN_A20 :: GPIO11 :: HEADER_PIN_31
-    WDG_INT_FROM_CPU : in std_logic; -- PIN_B4 :: GPIO13 :: HEADER_PIN_33
-    -- BBB SPI0
-    PRIMARY_CS : in std_logic;    -- PIN_A6 :: P9_17 :: SPI0_CS0
-    PRIMARY_MISO : out std_logic; -- PIN_A8 :: P9_21 :: SPI0_D0
-    PRIMARY_MOSI : in std_logic;  -- PIN_B6 :: P9_18 :: SPI0_D1
-    PRIMARY_SCLK : in std_logic;  -- PIN_B8 :: P9_22 :: SPI0_SCLK
-    -- BBB SPI1
-    SECONDARY_CS : in std_logic;    -- PIN_B13 :: P9_28 :: SPI1_CS0
-    SECONDARY_MISO : out std_logic; -- PIN_A14 :: P9_29 :: SPI1_D0
-    SECONDARY_MOSI : in std_logic;  -- PIN_B14 :: P9_30 :: SPI1_D1
-    SECONDARY_SCLK : in std_logic;  -- PIN_A15 :: P9_31 :: SPI1_SCLK
-    -- I2C BMI160 + ADXL345
-    I2C_SDA : inout std_logic; -- PIN_AB13
-    I2C_SCK : inout std_logic; -- PIN_AA13
-    -- ADXL INTERRUPTS
-    ADXL_INT1 : in std_logic; -- PIN_AB14
-    ADXL_INT2 : in std_logic; -- PIN_AA14
-    -- Outer PCB Side
-    NRF905_TRX_CE : out std_logic;  -- PIN_H2
-    NRF905_uCLK : in std_logic;     -- PIN_J2
-    NRF905_AM : in std_logic;       -- PIN_M2
-    NRF905_MISO : in std_logic;     -- PIN_N2
-    NRF905_SCK : out std_logic;     -- PIN_P2
-    -- Iner PCB side
-    NRF905_TX_EN : out std_logic;   -- PIN_F1
-    NRF905_PWR_UP : out std_logic;  -- PIN_H1
-    NRF905_CD : in std_logic;       -- PIN_J1
-    NRF905_DR : in std_logic;       -- PIN_M1
-    NRF905_MOSI : out std_logic;    -- PIN_N1
-    NRF905_CSN : out std_logic;     -- PIN_P1
-    -- PWM
-    PWM_SIGNAL : out std_logic; -- PIN_R1
-    -- UART Looptrough
-    UART_BBB_TX : in std_logic;  -- PIN_B9 :: P9_24
-    UART_BBB_RX : out std_logic; -- PIN_B10 :: P9_26
-    UART_x86_TX : out std_logic; -- PIN_N19 :: FTDI Rx
-    UART_x86_RX : in std_logic;  -- PIN_M19 :: FTDI Tx
-    --
-    -- BBB to MPP
-    --
-    -- Chip CAN_H :: Blue  ---> MPP :: CAN_P :: Yellow
-    -- Chip CAN_L :: White ---> MPP :: CAN_N :: Blue
-    CAN_BBB_TX : in std_logic;  -- PIN_B7 :: P9_20
-    CAN_BBB_RX : out std_logic; -- PIN_A7 :: P9_19
-    CAN_MPP_TX : out std_logic; -- PIN_N20 :: MPP Tx
-    CAN_MPP_RX : in std_logic;  -- PIN_M20 :: MPP Rx
-    -- Locic
     LOGIC_CH1 : out std_logic; -- PIN_B21
     LOGIC_CH2 : out std_logic; -- PIN_B22
     LOGIC_CH3 : out std_logic; -- PIN_C21
@@ -147,13 +130,26 @@ port
     LOGIC_CH5 : out std_logic; -- PIN_D21
     LOGIC_CH6 : out std_logic; -- PIN_D22
 
-    -----------------------------------------------------
-    --
+    -----------------------------------------------------------------------------
+    -- Kernel Communication
+    -----------------------------------------------------------------------------
+    SPI_INT_FROM_CPU : in std_logic; -- PIN_A5 :: GPIO12 :: HEADER_PIN_15
+    SPI_INT_FROM_FPGA : out std_logic; -- PIN_A9 :: GPIO01 :: HEADER_PIN_29
+    TIMER_INT_FROM_FPGA : out std_logic; -- PIN_A13 :: GPIO09 :: HEADER_PIN_07
+    WDG_INT_FROM_FPGA : out std_logic; -- PIN_A20 :: GPIO11 :: HEADER_PIN_31
+    WDG_INT_FROM_CPU : in std_logic; -- PIN_B4 :: GPIO13 :: HEADER_PIN_33
+    PRIMARY_MOSI : in std_logic;  -- PIN_B6 :: H19 :: SPI0_MOSI
+    PRIMARY_MISO : out std_logic; -- PIN_A8 :: H21 :: SPI0_MISO
+    PRIMARY_SCLK : in std_logic;  -- PIN_B8 :: H23 :: SPI0_SCLK
+    PRIMARY_CS : in std_logic;    -- PIN_A6 :: H24 :: SPI0_CS0
+    SECONDARY_MOSI : in std_logic;  -- PIN_B14 :: P9_30 :: SPI1_D1
+    SECONDARY_MISO : out std_logic; -- PIN_A14 :: P9_29 :: SPI1_D0
+    SECONDARY_SCLK : in std_logic;  -- PIN_A15 :: P9_31 :: SPI1_SCLK
+    SECONDARY_CS : in std_logic;    -- PIN_B13 :: P9_28 :: SPI1_CS0
+
+    -----------------------------------------------------------------------------
     -- 256Mbit SDRAM
-    --
-    -----------------------------------------------------
-    -- Row Address: RA0 ~ RA12, Column Address: CA0 ~ CA8
-    -- Auto-precharge flag: A10
+    -----------------------------------------------------------------------------
     A0 : out std_logic; -- PIN_V2
     A1 : out std_logic; -- PIN_V1
     A2 : out std_logic; -- PIN_U2
@@ -167,23 +163,14 @@ port
     A10 : out std_logic; -- PIN_W1
     A11 : out std_logic; -- PIN_Y4
     A12 : out std_logic; -- PIN_V6
-    -- Main System Clock
     CLK_SDRAM : out std_logic; -- PIN_Y6
-    -- Bank Address
     BA0 : out std_logic; -- A13 :: PIN_Y1
     BA1 : out std_logic; -- A14 :: PIN_W2
-    -- When active (low): The memory controller sends the column address on the address bus
     CAS : out std_logic; -- PIN_AA4
-    -- Clock Enable:
     CKE : out std_logic; -- PIN_W6
-    -- When active (low): The memory controller sends the row address on the address bus
     RAS : out std_logic; -- PIN_AB3
-    -- When active (low): The operation is a write (data will be written to the DRAM)
-    -- When inactive (high): The operation is a read (data will be read from the DRAM)
     WE : out std_logic; -- PIN_AB4
-    -- Chip Select: Enables or disables all inputs except CLK, CKE and DQM
     CS : out std_logic; -- PIN_AA3
-    -- Data Input / Output: Multiplexed data input / output pin
     D0 : inout std_logic; -- PIN_AA10
     D1 : inout std_logic; -- PIN_AB9
     D2 : inout std_logic; -- PIN_AA9
@@ -200,43 +187,49 @@ port
     D13 : inout std_logic; -- PIN_Y10
     D14 : inout std_logic; -- PIN_W10
     D15 : inout std_logic; -- PIN_V11
-    -- Data Mask: Controls output buffers in read mode and masks input data in write mode
     LDQM : inout std_logic; -- PIN_AA5
     UDQM : inout std_logic; -- PIN_W7
 
-    --
-    -- Fast SPI bus for sensors
-    -- 32 pins for 8 x SPI Devices
-    --
+    -----------------------------------------------------------------------------
+    -- Peripheral Interfaces
+    -----------------------------------------------------------------------------
+    ADXL_INT1 : in std_logic; -- PIN_AB14
+    ADXL_INT2 : in std_logic; -- PIN_AA14
+    -- UART
+    UART_x86_TX : out std_logic; -- PIN_N19 :: FTDI Rx
+    UART_x86_RX : in std_logic;  -- PIN_M19 :: FTDI Tx
+    -- I2C Bus
+    I2C_SDA : inout std_logic; -- PIN_AB13
+    I2C_SCK : inout std_logic; -- PIN_AA13
+    -- PWM
+    PWM_SIGNAL : out std_logic; -- PIN_R1
+    -- SPI
     S1_BMI160_CS : out std_logic;   -- PIN_Y21 :: Orange
     S1_BMI160_MISO : in std_logic;  -- PIN_W21 :: Yellow
     S1_BMI160_MOSI : out std_logic; -- PIN_W22 :: Red
     S1_BMI160_SCLK : out std_logic; -- PIN_Y22 :: Orange
-
     S2_BMI160_CS : out std_logic;   -- PIN_V21 :: Green
     S2_BMI160_MISO : in std_logic;  -- PIN_U21 :: Blue
     S2_BMI160_MOSI : out std_logic; -- PIN_U22 :: Purple
     S2_BMI160_SCLK : out std_logic; -- PIN_V22 :: Grey
-
     S3_BMI160_CS : out std_logic;   -- PIN_R21 :: Purple
     S3_BMI160_MISO : in std_logic;  -- PIN_P21 :: Blue
     S3_BMI160_MOSI : out std_logic; -- PIN_P22 :: Yellow
     S3_BMI160_SCLK : out std_logic; -- PIN_R22 :: Green
+    -- Outer PCB Side
+    NRF905_TRX_CE : out std_logic;  -- PIN_H2
+    NRF905_uCLK : in std_logic;     -- PIN_J2
+    NRF905_AM : in std_logic;       -- PIN_M2
+    NRF905_MISO : in std_logic;     -- PIN_N2
+    NRF905_SCK : out std_logic;     -- PIN_P2
+    -- Iner PCB side
+    NRF905_TX_EN : out std_logic;   -- PIN_F1
+    NRF905_PWR_UP : out std_logic;  -- PIN_H1
+    NRF905_CD : in std_logic;       -- PIN_J1
+    NRF905_DR : in std_logic;       -- PIN_M1
+    NRF905_MOSI : out std_logic;    -- PIN_N1
+    NRF905_CSN : out std_logic     -- PIN_P1
 
-    ------------------------------------------------------------------------------------------------------------
-    --
-    -- DEBUG :: SPI Controller
-    --
-    ------------------------------------------------------------------------------------------------------------
-    TEST_CS   : in std_logic;  -- PIN_B3 :: P9_17 :: SPI0_CS0
-    TEST_MISO : out std_logic; -- PIN_B1 :: P9_21 :: SPI0_D0
-    TEST_MOSI : in std_logic;  -- PIN_C1 :: P9_18 :: SPI0_D1
-    TEST_CLK  : in std_logic;  -- PIN_E1 :: P9_22 :: SPI0_SCLK
-
-    OUT_CS   : out std_logic; -- PIN_A3
-    OUT_MISO : in std_logic;  -- PIN_B2
-    OUT_MOSI : out std_logic; -- PIN_C2
-    OUT_CLK  : out std_logic -- PIN_D2
 );
 end Platform;
 
@@ -619,19 +612,6 @@ port
     WRITE_SYMBOL : out std_logic_vector(6 downto 0);
 
     WRITE_BUSY : in std_logic
-);
-end component;
-
-component CanController
-port
-(
-    CLOCK_50MHz : in std_logic;
-
-    CAN_BBB_TX : in std_logic;
-    CAN_BBB_RX : out std_logic;
-
-    CAN_MPP_TX : out std_logic;
-    CAN_MPP_RX : in std_logic
 );
 end component;
 
@@ -1287,18 +1267,6 @@ port map
     PWM_SIGNAL => PWM_SIGNAL
 );
 
-CanController_module: CanController
-port map
-(
-    CLOCK_50MHz => CLOCK_50MHz,
-
-    CAN_BBB_TX => CAN_BBB_TX,
-    CAN_BBB_RX => CAN_BBB_RX,
-
-    CAN_MPP_TX => CAN_MPP_TX,
-    CAN_MPP_RX => CAN_MPP_RX
-);
-
 ------------------------------------------------------------------------------------------------------------------------------------------
 --
 --
@@ -1306,15 +1274,6 @@ port map
 --
 --
 ------------------------------------------------------------------------------------------------------------------------------------------
-
---uart_loopthrough_process:
---process(CLOCK_50MHz)
---begin
---    if rising_edge(CLOCK_50MHz) then
---        UART_x86_TX <= UART_BBB_TX;
---        UART_BBB_RX <= UART_x86_RX;
---    end if;
---end process;
 
 --looptrough_spi_process:
 --process(CLOCK_50MHz)
@@ -1385,16 +1344,5 @@ LED_5 <= '0';
 LED_6 <= '1';
 LED_7 <= '0';
 LED_8 <= '1';
-
-spi_cock_process:
-process(CLOCK_50MHz)
-begin
-    if rising_edge(CLOCK_50MHz) then
-        OUT_CS <= TEST_CS; -- CS
-        TEST_MISO <= OUT_MISO; -- SAO
-        OUT_MOSI <= TEST_MOSI; -- SDX
-        OUT_CLK <= TEST_CLK; -- SCK
-    end if;
-end process;
 
 end rtl;

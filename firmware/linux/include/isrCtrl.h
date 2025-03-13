@@ -19,11 +19,11 @@
 //                      //
 //////////////////////////
 
-#define GPIO_SPI_INTERRUPT_FROM_CPU 194         // HEADER_PIN_15 :: GPIO12 :: PIN_15
-#define GPIO_SPI_INTERRUPT_FROM_FPGA 149        // HEADER_PIN_29 :: GPIO01 :: PIN_29
-#define GPIO_TIMER_INTERRUPT_FROM_FPGA 216      // HEADER_PIN_07 :: GPIO09 :: PIN_07
-#define GPIO_WATCHDOG_INTERRUPT_FROM_FPGA 200   // HEADER_PIN_31 :: GPIO11 :: PIN_31
-#define GPIO_WATCHDOG_INTERRUPT_FROM_CPU 38     // HEADER_PIN_33 :: GPIO13 :: PIN_33
+#define GPIO_SPI_INTERRUPT_FROM_CPU 194         // HEADER_PIN_15 :: GPIO12
+#define GPIO_SPI_INTERRUPT_FROM_FPGA 149        // HEADER_PIN_29 :: GPIO01
+#define GPIO_TIMER_INTERRUPT_FROM_FPGA 216      // HEADER_PIN_07 :: GPIO09
+#define GPIO_WATCHDOG_INTERRUPT_FROM_FPGA 200   // HEADER_PIN_31 :: GPIO11
+#define GPIO_WATCHDOG_INTERRUPT_FROM_CPU 38     // HEADER_PIN_33 :: GPIO13
 
 // gpio-38  (GPIO13              |WDG_INT_FROM_CPU    ) out lo
 // gpio-149 (GPIO01              |SPI_INT_FROM_FPGA   ) in  hi IRQ
@@ -57,7 +57,7 @@ void isrGpioDestroy(void);
 // HEADER_PIN_33 :: GPIO13_LS           // HEADER_PIN_34 :: GND                 //
 // HEADER_PIN_35 :: I2S0_LRCK_LS        // HEADER_PIN_36 :: UART1_CTS_LS        //
 // HEADER_PIN_37 :: SPI1_MOSI_LS        // HEADER_PIN_38 :: I2S0_SDIO_LS        //
-// HEADER_PIN_39 :: GND                 // PIN_40 :: I2S0_SDOUT_LS              //
+// HEADER_PIN_39 :: GND                 // HEADER_PIN_40 :: I2S0_SDOUT_LS       //
 //                                      //                                      //
 //////////////////////////////////////////////////////////////////////////////////
 
@@ -69,7 +69,7 @@ void isrGpioDestroy(void);
 //     ___                                  ___
 // 01 |3V3|                             02 |5V0|
 // 03 |   |                             04 |5V0|
-// 05 |   |                             06 |GND|___________________________________
+// 05 |   |                             06 |GND|__________________________________
 // 07 | t | GPIO09(in)                  08 |   |                        Λ
 // 09 |GND|                             10 |   |                        |
 // 11 |   |                             12 |   |                        |
@@ -85,7 +85,7 @@ void isrGpioDestroy(void);
 // 31 | w | GPIO11(in)                  32 | w | GPIO13(out)            |
 // 33 |   |                             34 |GND|                        |
 // 35 |   |                             36 |   |                        |
-// 37 | 1 | SPI1_MOSI_LS                38 |   |                        v
-// 39 |GND|                             40 |___|__________________________________
+// 37 | 1 | SPI1_MOSI_LS                38 |   |                        |
+// 39 |GND|                             40 |___|________________________V_________
 //
 //////////////////////////////////////////////////////////////////////////////////
