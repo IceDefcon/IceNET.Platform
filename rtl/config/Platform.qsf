@@ -19,7 +19,7 @@
 #
 # Quartus Prime
 # Version 22.1std.1 Build 917 02/14/2023 SC Lite Edition
-# Date created = 00:15:14  listopada 29, 2023
+# Date created = 07:21:51  stycznia 29, 2025
 #
 # -------------------------------------------------------------------------- #
 #
@@ -73,8 +73,8 @@ set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to BUTTON_3
 set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
 set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
 set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
-set_global_assignment -name ENABLE_SIGNALTAP OFF
-set_global_assignment -name USE_SIGNALTAP_FILE ../IceNET/IceNET.Platform/rtl/tap/SDRAMDriver.stp
+set_global_assignment -name ENABLE_SIGNALTAP ON
+set_global_assignment -name USE_SIGNALTAP_FILE ../IceNET.Platform/rtl/tap/DebugSpi.stp
 set_location_assignment PIN_T2 -to CLOCK_50MHz
 set_location_assignment PIN_N8 -to LED_8
 set_location_assignment PIN_K18 -to BUTTON_4
@@ -83,27 +83,23 @@ set_location_assignment PIN_AB13 -to I2C_SDA
 set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to I2C_SDA
 set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to I2C_SCK
 set_location_assignment PIN_AA13 -to I2C_SCK
-set_location_assignment PIN_A6 -to PRIMARY_CS
-set_location_assignment PIN_A8 -to PRIMARY_MISO
-set_location_assignment PIN_B6 -to PRIMARY_MOSI
-set_location_assignment PIN_B8 -to PRIMARY_SCLK
+set_location_assignment PIN_B9 -to PRIMARY_CS
+set_location_assignment PIN_A10 -to PRIMARY_MISO
+set_location_assignment PIN_A13 -to PRIMARY_MOSI
+set_location_assignment PIN_A9 -to PRIMARY_SCLK
 set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to PRIMARY_CS
 set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to PRIMARY_MISO
 set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to PRIMARY_MOSI
 set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to PRIMARY_SCLK
-set_location_assignment PIN_A15 -to SECONDARY_SCLK
-set_location_assignment PIN_B14 -to SECONDARY_MOSI
-set_location_assignment PIN_A14 -to SECONDARY_MISO
-set_location_assignment PIN_B13 -to SECONDARY_CS
+set_location_assignment PIN_A16 -to SECONDARY_SCLK
+set_location_assignment PIN_A3 -to SECONDARY_MOSI
+set_location_assignment PIN_B10 -to SECONDARY_MISO
+set_location_assignment PIN_B14 -to SECONDARY_CS
 set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to SECONDARY_CS
 set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to SECONDARY_MISO
 set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to SECONDARY_MOSI
 set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to SECONDARY_SCLK
 set_location_assignment PIN_R1 -to PWM_SIGNAL
-set_location_assignment PIN_A5 -to INT_FROM_CPU
-set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to INT_FROM_CPU
-set_location_assignment PIN_A9 -to INT_FROM_FPGA
-set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to INT_FROM_FPGA
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to PWM_SIGNAL
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to LED_8
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to LED_7
@@ -111,22 +107,10 @@ set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to LED_6
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to LED_5
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to LED_3
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to CLOCK_50MHz
-set_location_assignment PIN_B9 -to UART_BBB_TX
-set_location_assignment PIN_B10 -to UART_BBB_RX
 set_location_assignment PIN_N19 -to UART_x86_TX
 set_location_assignment PIN_M19 -to UART_x86_RX
-set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to UART_BBB_TX
-set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to UART_BBB_RX
 set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to UART_x86_TX
 set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to UART_x86_RX
-set_location_assignment PIN_B7 -to CAN_BBB_TX
-set_location_assignment PIN_A7 -to CAN_BBB_RX
-set_location_assignment PIN_N20 -to CAN_MPP_TX
-set_location_assignment PIN_M20 -to CAN_MPP_RX
-set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to CAN_BBB_TX
-set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to CAN_BBB_RX
-set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to CAN_MPP_TX
-set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to CAN_MPP_RX
 set_location_assignment PIN_F1 -to NRF905_TX_EN
 set_location_assignment PIN_H2 -to NRF905_TRX_CE
 set_location_assignment PIN_H1 -to NRF905_PWR_UP
@@ -160,45 +144,37 @@ set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to NRF905_SCK
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to NRF905_TRX_CE
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to NRF905_TX_EN
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to NRF905_uCLK
-set_instance_assignment -name IO_STANDARD "3.3-V LVCMOS" -to BUTTON_1
-set_instance_assignment -name IO_STANDARD "3.3-V LVCMOS" -to BUTTON_2
-set_instance_assignment -name IO_STANDARD "3.3-V LVCMOS" -to BUTTON_3
-set_instance_assignment -name IO_STANDARD "3.3-V LVCMOS" -to BUTTON_4
-set_instance_assignment -name IO_STANDARD "3.3-V LVCMOS" -to CAN_BBB_RX
-set_instance_assignment -name IO_STANDARD "3.3-V LVCMOS" -to CAN_BBB_TX
-set_instance_assignment -name IO_STANDARD "3.3-V LVCMOS" -to CAN_MPP_RX
-set_instance_assignment -name IO_STANDARD "3.3-V LVCMOS" -to CAN_MPP_TX
-set_instance_assignment -name IO_STANDARD "3.3-V LVCMOS" -to I2C_SCK
-set_instance_assignment -name IO_STANDARD "3.3-V LVCMOS" -to I2C_SDA
-set_instance_assignment -name IO_STANDARD "3.3-V LVCMOS" -to INT_FROM_CPU
-set_instance_assignment -name IO_STANDARD "3.3-V LVCMOS" -to INT_FROM_FPGA
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to BUTTON_1
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to BUTTON_2
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to BUTTON_3
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to BUTTON_4
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to I2C_SCK
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to I2C_SDA
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to LED_1
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to LED_2
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to LED_4
-set_instance_assignment -name IO_STANDARD "3.3-V LVCMOS" -to PRIMARY_CS
-set_instance_assignment -name IO_STANDARD "3.3-V LVCMOS" -to UART_x86_TX
-set_instance_assignment -name IO_STANDARD "3.3-V LVCMOS" -to UART_x86_RX
-set_instance_assignment -name IO_STANDARD "3.3-V LVCMOS" -to UART_BBB_TX
-set_instance_assignment -name IO_STANDARD "3.3-V LVCMOS" -to UART_BBB_RX
-set_instance_assignment -name IO_STANDARD "3.3-V LVCMOS" -to SECONDARY_SCLK
-set_instance_assignment -name IO_STANDARD "3.3-V LVCMOS" -to SECONDARY_MOSI
-set_instance_assignment -name IO_STANDARD "3.3-V LVCMOS" -to SECONDARY_MISO
-set_instance_assignment -name IO_STANDARD "3.3-V LVCMOS" -to SECONDARY_CS
-set_instance_assignment -name IO_STANDARD "3.3-V LVCMOS" -to PRIMARY_SCLK
-set_instance_assignment -name IO_STANDARD "3.3-V LVCMOS" -to PRIMARY_MOSI
-set_instance_assignment -name IO_STANDARD "3.3-V LVCMOS" -to PRIMARY_MISO
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to PRIMARY_CS
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to UART_x86_TX
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to UART_x86_RX
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to SECONDARY_SCLK
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to SECONDARY_MOSI
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to SECONDARY_MISO
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to SECONDARY_CS
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to PRIMARY_SCLK
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to PRIMARY_MOSI
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to PRIMARY_MISO
 set_location_assignment PIN_B21 -to LOGIC_CH1
 set_location_assignment PIN_B22 -to LOGIC_CH2
 set_location_assignment PIN_C21 -to LOGIC_CH3
 set_location_assignment PIN_C22 -to LOGIC_CH4
 set_location_assignment PIN_D21 -to LOGIC_CH5
 set_location_assignment PIN_D22 -to LOGIC_CH6
-set_instance_assignment -name IO_STANDARD "3.3-V LVCMOS" -to LOGIC_CH1
-set_instance_assignment -name IO_STANDARD "3.3-V LVCMOS" -to LOGIC_CH2
-set_instance_assignment -name IO_STANDARD "3.3-V LVCMOS" -to LOGIC_CH3
-set_instance_assignment -name IO_STANDARD "3.3-V LVCMOS" -to LOGIC_CH4
-set_instance_assignment -name IO_STANDARD "3.3-V LVCMOS" -to LOGIC_CH5
-set_instance_assignment -name IO_STANDARD "3.3-V LVCMOS" -to LOGIC_CH6
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to LOGIC_CH1
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to LOGIC_CH2
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to LOGIC_CH3
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to LOGIC_CH4
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to LOGIC_CH5
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to LOGIC_CH6
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to A0
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to A1
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to A2
@@ -212,10 +188,6 @@ set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to A9
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to A10
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to A11
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to A12
-set_instance_assignment -name IO_STANDARD "3.3-V LVCMOS" -to altera_reserved_tck
-set_instance_assignment -name IO_STANDARD "3.3-V LVCMOS" -to altera_reserved_tdi
-set_instance_assignment -name IO_STANDARD "3.3-V LVCMOS" -to altera_reserved_tdo
-set_instance_assignment -name IO_STANDARD "3.3-V LVCMOS" -to altera_reserved_tms
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to BA0
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to BA1
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to WE
@@ -281,43 +253,184 @@ set_location_assignment PIN_V10 -to D12
 set_location_assignment PIN_Y10 -to D13
 set_location_assignment PIN_W10 -to D14
 set_location_assignment PIN_V11 -to D15
-set_location_assignment PIN_B4 -to WDG_INT_FROM_CPU
+set_location_assignment PIN_C3 -to WDG_INT_FROM_CPU
 set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to WDG_INT_FROM_CPU
-set_instance_assignment -name IO_STANDARD "3.3-V LVCMOS" -to WDG_INT_FROM_CPU
-set_location_assignment PIN_A20 -to WDG_INT_FROM_FPGA
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to WDG_INT_FROM_CPU
+set_location_assignment PIN_A5 -to WDG_INT_FROM_FPGA
 set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to WDG_INT_FROM_FPGA
-set_instance_assignment -name IO_STANDARD "3.3-V LVCMOS" -to WDG_INT_FROM_FPGA
-set_global_assignment -name QIP_FILE PLL_100_200.qip
-set_global_assignment -name VHDL_FILE ../IceNET/IceNET.Platform/rtl/Platform.vhd
-set_global_assignment -name VHDL_FILE ../IceNET/IceNET.Platform/rtl/DebounceController.vhd
-set_global_assignment -name VHDL_FILE ../IceNET/IceNET.Platform/rtl/I2cController.vhd
-set_global_assignment -name VHDL_FILE ../IceNET/IceNET.Platform/rtl/InterruptGenerator.vhd
-set_global_assignment -name VHDL_FILE ../IceNET/IceNET.Platform/rtl/OffloadController.vhd
-set_global_assignment -name VHDL_FILE ../IceNET/IceNET.Platform/rtl/PwmController.vhd
-set_global_assignment -name VHDL_FILE ../IceNET/IceNET.Platform/rtl/FifoController.vhd
-set_global_assignment -name VHDL_FILE ../IceNET/IceNET.Platform/rtl/CanController.vhd
-set_global_assignment -name VHDL_FILE ../IceNET/IceNET.Platform/rtl/SDRAM_Controller.vhd
-set_global_assignment -name VHDL_FILE ../IceNET/IceNET.Platform/rtl/SpiController.vhd
-set_global_assignment -name VHDL_FILE ../IceNET/IceNET.Platform/rtl/SpiConverter.vhd
-set_global_assignment -name VHDL_FILE ../IceNET/IceNET.Platform/rtl/UartDataTransfer.vhd
-set_global_assignment -name VHDL_FILE ../IceNET/IceNET.Platform/rtl/UartDataAssembly.vhd
-set_global_assignment -name VHDL_FILE ../IceNET/IceNET.Platform/rtl/Types.vhd
-set_global_assignment -name SDC_FILE ../IceNET/IceNET.Platform/rtl/Platform.sdc
-set_global_assignment -name SIGNALTAP_FILE ../IceNET/IceNET.Platform/rtl/tap/secondary_spi.stp
-set_global_assignment -name SIGNALTAP_FILE ../IceNET/IceNET.Platform/rtl/tap/primary_spi.stp
-set_global_assignment -name SIGNALTAP_FILE ../IceNET/IceNET.Platform/rtl/tap/i2c_SM.stp
-set_global_assignment -name SIGNALTAP_FILE ../IceNET/IceNET.Platform/rtl/tap/read_enable.stp
-set_global_assignment -name SIGNALTAP_FILE ../IceNET/IceNET.Platform/rtl/tap/bypass_spi.stp
-set_global_assignment -name SIGNALTAP_FILE ../IceNET/IceNET.Platform/rtl/tap/DebounceResetButton.stp
-set_global_assignment -name SIGNALTAP_FILE ../IceNET/IceNET.Platform/rtl/tap/pwmControl.stp
-set_global_assignment -name SIGNALTAP_FILE ../IceNET/IceNET.Platform/rtl/tap/fifoCtrl.stp
-set_global_assignment -name SIGNALTAP_FILE ../IceNET/IceNET.Platform/rtl/tap/InterruptGenerator.stp
-set_global_assignment -name SIGNALTAP_FILE ../IceNET/IceNET.Platform/rtl/tap/uartDriver.stp
-set_global_assignment -name SIGNALTAP_FILE ../IceNET/IceNET.Platform/rtl/tap/canDriver.stp
-set_global_assignment -name SIGNALTAP_FILE ../IceNET/IceNET.Platform/rtl/tap/spiLooptrough.stp
-set_global_assignment -name SIGNALTAP_FILE ../IceNET/IceNET.Platform/rtl/tap/OffloadController.stp
-set_global_assignment -name SIGNALTAP_FILE ../IceNET/IceNET.Platform/rtl/tap/debug.stp
-set_global_assignment -name SIGNALTAP_FILE ../IceNET/IceNET.Platform/rtl/tap/uartLoop.stp
-set_global_assignment -name SIGNALTAP_FILE ../IceNET/IceNET.Platform/rtl/tap/watchdog.stp
-set_global_assignment -name SIGNALTAP_FILE ../IceNET/IceNET.Platform/rtl/tap/SDRAMDriver.stp
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to WDG_INT_FROM_FPGA
+
+set_location_assignment PIN_A19 -to TIMER_INT_FROM_FPGA
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to TIMER_INT_FROM_FPGA
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to TIMER_INT_FROM_FPGA
+set_location_assignment PIN_AB14 -to ADXL_INT1
+set_location_assignment PIN_AA14 -to ADXL_INT2
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to ADXL_INT1
+set_instance_assignment -name ADV_NETLIST_OPT_SYNTH_WYSIWYG_REMAP ON -to ADXL_INT2
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to ADXL_INT1
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to ADXL_INT2
+set_location_assignment PIN_Y21 -to S1_BMI160_CS
+set_location_assignment PIN_W21 -to S1_BMI160_MISO
+set_location_assignment PIN_W22 -to S1_BMI160_MOSI
+set_location_assignment PIN_Y22 -to S1_BMI160_SCLK
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to S1_BMI160_SCLK
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to S1_BMI160_MOSI
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to S1_BMI160_MISO
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to S1_BMI160_CS
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to S1_BMI160_SCLK
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to S1_BMI160_MOSI
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to S1_BMI160_MISO
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to S1_BMI160_CS
+set_location_assignment PIN_V21 -to S2_BMI160_CS
+set_location_assignment PIN_U21 -to S2_BMI160_MISO
+set_location_assignment PIN_V22 -to S2_BMI160_SCLK
+set_location_assignment PIN_U22 -to S2_BMI160_MOSI
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to S2_BMI160_CS
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to S2_BMI160_MISO
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to S2_BMI160_SCLK
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to S2_BMI160_MOSI
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to S2_BMI160_CS
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to S2_BMI160_MISO
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to S2_BMI160_SCLK
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to S2_BMI160_MOSI
+set_location_assignment PIN_R21 -to S3_BMI160_CS
+set_location_assignment PIN_P21 -to S3_BMI160_MISO
+set_location_assignment PIN_R22 -to S3_BMI160_SCLK
+set_location_assignment PIN_P22 -to S3_BMI160_MOSI
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to S3_BMI160_CS
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to S3_BMI160_MISO
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to S3_BMI160_SCLK
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to S3_BMI160_MOSI
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to S3_BMI160_CS
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to S3_BMI160_MISO
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to S3_BMI160_SCLK
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to S3_BMI160_MOSI
+set_global_assignment -name SLD_NODE_CREATOR_ID 110 -section_id auto_signaltap_0
+set_global_assignment -name SLD_NODE_ENTITY_NAME sld_signaltap -section_id auto_signaltap_0
+set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_RAM_BLOCK_TYPE=AUTO" -section_id auto_signaltap_0
+set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_NODE_INFO=805334528" -section_id auto_signaltap_0
+set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_POWER_UP_TRIGGER=0" -section_id auto_signaltap_0
+set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_STORAGE_QUALIFIER_INVERSION_MASK_LENGTH=0" -section_id auto_signaltap_0
+set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_ATTRIBUTE_MEM_MODE=OFF" -section_id auto_signaltap_0
+set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_STATE_FLOW_USE_GENERATED=0" -section_id auto_signaltap_0
+set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_STATE_BITS=11" -section_id auto_signaltap_0
+set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_BUFFER_FULL_STOP=1" -section_id auto_signaltap_0
+set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_CURRENT_RESOURCE_WIDTH=1" -section_id auto_signaltap_0
+set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_INCREMENTAL_ROUTING=1" -section_id auto_signaltap_0
+set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[5] -to auto_signaltap_0|vcc -section_id auto_signaltap_0
+set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[6] -to auto_signaltap_0|gnd -section_id auto_signaltap_0
+set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[14] -to auto_signaltap_0|vcc -section_id auto_signaltap_0
+set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[27] -to auto_signaltap_0|gnd -section_id auto_signaltap_0
+set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[30] -to auto_signaltap_0|gnd -section_id auto_signaltap_0
+set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_TRIGGER_LEVEL=1" -section_id auto_signaltap_0
+set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_TRIGGER_IN_ENABLED=0" -section_id auto_signaltap_0
+set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_TRIGGER_PIPELINE=0" -section_id auto_signaltap_0
+set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_RAM_PIPELINE=0" -section_id auto_signaltap_0
+set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_COUNTER_PIPELINE=0" -section_id auto_signaltap_0
+set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_TRIGGER_LEVEL_PIPELINE=1" -section_id auto_signaltap_0
+set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_ENABLE_ADVANCED_TRIGGER=1" -section_id auto_signaltap_0
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_clk -to CLOCK_50MHz -section_id auto_signaltap_0
+set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[3] -to auto_signaltap_0|vcc -section_id auto_signaltap_0
+set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[7] -to auto_signaltap_0|gnd -section_id auto_signaltap_0
+set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[9] -to auto_signaltap_0|gnd -section_id auto_signaltap_0
+set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[12] -to auto_signaltap_0|gnd -section_id auto_signaltap_0
+set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[17] -to auto_signaltap_0|gnd -section_id auto_signaltap_0
+set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[18] -to auto_signaltap_0|vcc -section_id auto_signaltap_0
+set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_DATA_BITS=16" -section_id auto_signaltap_0
+set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_TRIGGER_BITS=16" -section_id auto_signaltap_0
+set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_STORAGE_QUALIFIER_BITS=16" -section_id auto_signaltap_0
+set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[1] -to auto_signaltap_0|gnd -section_id auto_signaltap_0
+set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[19] -to auto_signaltap_0|gnd -section_id auto_signaltap_0
+set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[16] -to auto_signaltap_0|vcc -section_id auto_signaltap_0
+set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[29] -to auto_signaltap_0|vcc -section_id auto_signaltap_0
+set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_INVERSION_MASK=000000000000000000000000000" -section_id auto_signaltap_0
+set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_INVERSION_MASK_LENGTH=27" -section_id auto_signaltap_0
+set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_SEGMENT_SIZE=8192" -section_id auto_signaltap_0
+set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[20] -to auto_signaltap_0|vcc -section_id auto_signaltap_0
+set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[23] -to auto_signaltap_0|vcc -section_id auto_signaltap_0
+set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[24] -to auto_signaltap_0|gnd -section_id auto_signaltap_0
+set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[25] -to auto_signaltap_0|gnd -section_id auto_signaltap_0
+set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[28] -to auto_signaltap_0|gnd -section_id auto_signaltap_0
+set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[31] -to auto_signaltap_0|vcc -section_id auto_signaltap_0
+set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_SAMPLE_DEPTH=8192" -section_id auto_signaltap_0
+set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[0] -to auto_signaltap_0|gnd -section_id auto_signaltap_0
+set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[2] -to auto_signaltap_0|vcc -section_id auto_signaltap_0
+set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[4] -to auto_signaltap_0|gnd -section_id auto_signaltap_0
+set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[8] -to auto_signaltap_0|vcc -section_id auto_signaltap_0
+set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[11] -to auto_signaltap_0|vcc -section_id auto_signaltap_0
+set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[13] -to auto_signaltap_0|vcc -section_id auto_signaltap_0
+set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[26] -to auto_signaltap_0|vcc -section_id auto_signaltap_0
+set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[10] -to auto_signaltap_0|vcc -section_id auto_signaltap_0
+set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[15] -to auto_signaltap_0|gnd -section_id auto_signaltap_0
+set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[21] -to auto_signaltap_0|gnd -section_id auto_signaltap_0
+set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[22] -to auto_signaltap_0|vcc -section_id auto_signaltap_0
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[0] -to NRF905_CSN -section_id auto_signaltap_0
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[1] -to NRF905_MISO -section_id auto_signaltap_0
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[2] -to NRF905_MOSI -section_id auto_signaltap_0
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[3] -to NRF905_SCK -section_id auto_signaltap_0
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[4] -to OUT_CLK -section_id auto_signaltap_0
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[5] -to OUT_CS -section_id auto_signaltap_0
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[6] -to OUT_MISO -section_id auto_signaltap_0
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[7] -to OUT_MOSI -section_id auto_signaltap_0
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[8] -to PRIMARY_CS -section_id auto_signaltap_0
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[9] -to PRIMARY_MISO -section_id auto_signaltap_0
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[10] -to PRIMARY_MOSI -section_id auto_signaltap_0
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[11] -to PRIMARY_SCLK -section_id auto_signaltap_0
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[12] -to TEST_CLK -section_id auto_signaltap_0
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[13] -to TEST_CS -section_id auto_signaltap_0
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[14] -to TEST_MISO -section_id auto_signaltap_0
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_trigger_in[15] -to TEST_MOSI -section_id auto_signaltap_0
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[0] -to NRF905_CSN -section_id auto_signaltap_0
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[1] -to NRF905_MISO -section_id auto_signaltap_0
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[2] -to NRF905_MOSI -section_id auto_signaltap_0
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[3] -to NRF905_SCK -section_id auto_signaltap_0
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[4] -to OUT_CLK -section_id auto_signaltap_0
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[5] -to OUT_CS -section_id auto_signaltap_0
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[6] -to OUT_MISO -section_id auto_signaltap_0
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[7] -to OUT_MOSI -section_id auto_signaltap_0
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[8] -to PRIMARY_CS -section_id auto_signaltap_0
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[9] -to PRIMARY_MISO -section_id auto_signaltap_0
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[10] -to PRIMARY_MOSI -section_id auto_signaltap_0
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[11] -to PRIMARY_SCLK -section_id auto_signaltap_0
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[12] -to TEST_CLK -section_id auto_signaltap_0
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[13] -to TEST_CS -section_id auto_signaltap_0
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[14] -to TEST_MISO -section_id auto_signaltap_0
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_data_in[15] -to TEST_MOSI -section_id auto_signaltap_0
+set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_ADVANCED_TRIGGER_ENTITY=sld_reserved_Platform_auto_signaltap_0_1_8e34," -section_id auto_signaltap_0
+set_location_assignment PIN_A15 -to SPI_INT_FROM_CPU
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to SPI_INT_FROM_CPU
+set_location_assignment PIN_A6 -to SPI_INT_FROM_FPGA
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to SPI_INT_FROM_FPGA
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to SPI_INT_FROM_CPU
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to SPI_INT_FROM_FPGA
+set_global_assignment -name VHDL_FILE ../IceNET.Platform/rtl/UartDataTransfer.vhd
+set_global_assignment -name VHDL_FILE ../IceNET.Platform/rtl/UartDataAssembly.vhd
+set_global_assignment -name VHDL_FILE ../IceNET.Platform/rtl/Types.vhd
+set_global_assignment -name VHDL_FILE ../IceNET.Platform/rtl/SpiConverter.vhd
+set_global_assignment -name VHDL_FILE ../IceNET.Platform/rtl/SpiController.vhd
+set_global_assignment -name VHDL_FILE ../IceNET.Platform/rtl/PwmController.vhd
+set_global_assignment -name VHDL_FILE ../IceNET.Platform/rtl/Platform.vhd
+set_global_assignment -name VHDL_FILE ../IceNET.Platform/rtl/OffloadController.vhd
+set_global_assignment -name VHDL_FILE ../IceNET.Platform/rtl/InterruptGenerator.vhd
+set_global_assignment -name VHDL_FILE ../IceNET.Platform/rtl/RamController.vhd
+set_global_assignment -name VHDL_FILE ../IceNET.Platform/rtl/I2cController.vhd
+set_global_assignment -name VHDL_FILE ../IceNET.Platform/rtl/DebounceController.vhd
+set_global_assignment -name SDC_FILE ../IceNET.Platform/rtl/Platform.sdc
+set_global_assignment -name QIP_FILE PLL_RamClock.qip
+set_global_assignment -name QIP_FILE Fifo.qip
+set_global_assignment -name SIGNALTAP_FILE ../IceNET.Platform/rtl/tap/i2c_SM.stp
+set_global_assignment -name SIGNALTAP_FILE ../IceNET.Platform/rtl/tap/InterruptDebug.stp
+set_global_assignment -name SIGNALTAP_FILE ../IceNET.Platform/rtl/tap/OffloadController.stp
+set_global_assignment -name SIGNALTAP_FILE ../IceNET.Platform/rtl/tap/SDRAMDriver.stp
+set_global_assignment -name SIGNALTAP_FILE ../IceNET.Platform/rtl/tap/rf905.stp
+set_global_assignment -name SIGNALTAP_FILE ../IceNET.Platform/rtl/tap/InterruptFlow.stp
+set_global_assignment -name SIGNALTAP_FILE ../IceNET.Platform/rtl/tap/SpiController_RF.stp
+set_global_assignment -name SIGNALTAP_FILE ../IceNET.Platform/rtl/tap/SpiController_BMI.stp
+set_global_assignment -name SIGNALTAP_FILE ../IceNET.Platform/rtl/tap/SpiRaw.stp
+set_global_assignment -name SIGNALTAP_FILE ../IceNET.Platform/rtl/tap/DebugSpi.stp
+set_instance_assignment -name IO_STANDARD "3.3-V LVCMOS" -to altera_reserved_tck
+set_instance_assignment -name IO_STANDARD "3.3-V LVCMOS" -to altera_reserved_tdi
+set_instance_assignment -name IO_STANDARD "3.3-V LVCMOS" -to altera_reserved_tdo
+set_instance_assignment -name IO_STANDARD "3.3-V LVCMOS" -to altera_reserved_tms
+set_global_assignment -name SLD_FILE db/DebugSpi_auto_stripped.stp
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

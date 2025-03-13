@@ -1,2 +1,2 @@
-cp ../../../../workspace.Quartus/Platform.qsf .
-cp ../../../../workspace.Quartus/Platform.qpf .
+cp ../../../IceNET.Quartus/Platform.qsf .
+cp ../../../IceNET.Quartus/Platform.qpf .
