@@ -62,3 +62,14 @@ export PATH=/usr/lib/qt5/bin:$PATH
 //
 cp nano-spi.dtb /boot/
 
+//
+// Then Modify
+//
+/boot/extlinux/extlinux.conf
+
+LABEL primary
+      MENU LABEL primary kernel
+      LINUX /boot/Image
+      INITRD /boot/initrd
+      FDT /boot/nano-spi.dtb
+      APPEND ${cbootargs} quiet root=/dev/mmcblk0p1 rw rootwait rootfstype=ext4 console=ttyS0,115200n8 console=tty0 fbcon=map:0 net.ifnames=0 sdhci_tegra.en_boot_part_access=1
