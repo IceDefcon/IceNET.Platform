@@ -69,9 +69,9 @@ use work.Types.all;
 -- GND      :: GND
 -- PIN_M19  :: NOTUSED_53                   | PIN_M20  :: NOTUSED_54
 -- PIN_N19  :: NOTUSED_51                   | PIN_N20  :: NOTUSED_52
--- PIN_B21  :: LOGIC_CH1                    | PIN_B22  :: LOGIC_CH2
--- PIN_C21  :: LOGIC_CH3                    | PIN_C22  :: LOGIC_CH4
--- PIN_D21  :: LOGIC_CH5                    | PIN_D22  :: LOGIC_CH6
+-- PIN_B21  :: NOTUSED_49                   | PIN_B22  :: NOTUSED_50
+-- PIN_C21  :: NOTUSED_47                   | PIN_C22  :: NOTUSED_48
+-- PIN_D21  :: NOTUSED_45                   | PIN_D22  :: NOTUSED_46
 -- PIN_E21  :: NOTUSED_43 <--- dev 7        | PIN_E22  :: NOTUSED_44
 -- PIN_F21  :: NOTUSED_41 <--- dev 7        | PIN_F22  :: NOTUSED_42
 -- PIN_H21  :: NOTUSED_39        V          | PIN_H22  :: NOTUSED_40
@@ -81,18 +81,18 @@ use work.Types.all;
 -- PIN_M21  :: NOTUSED_31    32 pins For    | PIN_M22  :: NOTUSED_32
 -- PIN_N21  :: NOTUSED_29        |          | PIN_N22  :: NOTUSED_30
 -- PIN_P21  :: NOTUSED_27        |          | PIN_P22  :: NOTUSED_28
--- PIN_R21  :: NOTUSED_25        |          | PIN_R22  :: NOTUSED_26
--- PIN_U21  :: BMI160_MISO <-- dev 2        | PIN_U22  :: BMI160_MOSI
--- PIN_V21  :: BMI160_CS   <-- dev 2        | PIN_V22  :: BMI160_SCLK
--- PIN_W21  :: NOTUSED_19        |          | PIN_W22  :: NOTUSED_20
--- PIN_Y21  :: NOTUSED_17        |          | PIN_Y22  :: NOTUSED_18
--- PIN_AB20 :: NOTUSED_15  <-- dev 0        | PIN_AA20 :: NOTUSED_16
--- PIN_AB19 :: NOTUSED_13  <-- dev 0        | PIN_AA19 :: NOTUSED_14
--- PIN_AB18 :: NOTUSED_11                   | PIN_AA18 :: NOTUSED_12
--- PIN_AB17 :: NOTUSED_09                   | PIN_AA17 :: NOTUSED_10
--- PIN_AB16 :: NOTUSED_07                   | PIN_AA16 :: NOTUSED_08
--- PIN_AB15 :: NOTUSED_05                   | PIN_AA15 :: NOTUSED_06
--- PIN_AB14 :: ADXL_INT1                    | PIN_AA14 :: ADXL_INT2
+-- PIN_R21  :: NOTUSED_25        |          | PIN_R22  :: S3_BMI160_MISO
+-- PIN_U21  :: NOTUSED_23        |          | PIN_U22  :: S3_BMI160_CS
+-- PIN_V21  :: NOTUSED_21        |          | PIN_V22  :: S3_BMI160_MOSI
+-- PIN_W21  :: NOTUSED_19        |          | PIN_W22  :: S3_BMI160_SCLK
+-- PIN_Y21  :: NOTUSED_17        |          | PIN_Y22  :: S2_BMI160_MISO
+-- PIN_AB20 :: NOTUSED_15  <-- dev 0        | PIN_AA20 :: S2_BMI160_CS
+-- PIN_AB19 :: NOTUSED_13  <-- dev 0        | PIN_AA19 :: S2_BMI160_MOSI
+-- PIN_AB18 :: NOTUSED_11                   | PIN_AA18 :: S2_BMI160_SCLK
+-- PIN_AB17 :: NOTUSED_09                   | PIN_AA17 :: S1_BMI160_MISO
+-- PIN_AB16 :: NOTUSED_07                   | PIN_AA16 :: S1_BMI160_CS
+-- PIN_AB15 :: NOTUSED_05                   | PIN_AA15 :: S1_BMI160_MOSI
+-- PIN_AB14 :: NOTUSED_03                   | PIN_AA14 :: S1_BMI160_SCLK
 -- PIN_AB13 :: I2C_SDA                      | PIN_AA13 :: I2C_SCK
 -- GND      :: GND
 -- 3V3      :: 3V3
@@ -101,6 +101,9 @@ use work.Types.all;
 -------------------------------------------------------------------------------------
 -------------------------------------------------------------------------------------
 -------------------------------------------------------------------------------------
+
+
+
 
 
 entity Platform is
@@ -204,18 +207,20 @@ port
     -- PWM
     PWM_SIGNAL : out std_logic; -- PIN_R1
     -- SPI
-    S1_BMI160_CS : out std_logic;   -- PIN_Y21 :: Orange
-    S1_BMI160_MISO : in std_logic;  -- PIN_W21 :: Yellow
-    S1_BMI160_MOSI : out std_logic; -- PIN_W22 :: Red
-    S1_BMI160_SCLK : out std_logic; -- PIN_Y22 :: Orange
-    S2_BMI160_CS : out std_logic;   -- PIN_V21 :: Green
-    S2_BMI160_MISO : in std_logic;  -- PIN_U21 :: Blue
-    S2_BMI160_MOSI : out std_logic; -- PIN_U22 :: Purple
-    S2_BMI160_SCLK : out std_logic; -- PIN_V22 :: Grey
-    S3_BMI160_CS : out std_logic;   -- PIN_R21 :: Purple
-    S3_BMI160_MISO : in std_logic;  -- PIN_P21 :: Blue
-    S3_BMI160_MOSI : out std_logic; -- PIN_P22 :: Yellow
-    S3_BMI160_SCLK : out std_logic; -- PIN_R22 :: Green
+    S1_BMI160_SCLK : out std_logic; -- PIN_AA14
+    S1_BMI160_MOSI : out std_logic; -- PIN_AA15
+    S1_BMI160_CS : out std_logic;   -- PIN_AA16
+    S1_BMI160_MISO : in std_logic;  -- PIN_AA17
+
+    S2_BMI160_SCLK : out std_logic; -- PIN_AA18
+    S2_BMI160_MOSI : out std_logic; -- PIN_AA19
+    S2_BMI160_CS : out std_logic;   -- PIN_AA20
+    S2_BMI160_MISO : in std_logic;  -- PIN_Y22
+
+    S3_BMI160_SCLK : out std_logic; -- PIN_W22
+    S3_BMI160_MOSI : out std_logic; -- PIN_V22
+    S3_BMI160_CS : out std_logic;   -- PIN_U22
+    S3_BMI160_MISO : in std_logic;  -- PIN_R22
     -- Outer PCB Side
     NRF905_TRX_CE : out std_logic;  -- PIN_H2
     NRF905_uCLK : in std_logic;     -- PIN_J2
@@ -234,6 +239,11 @@ port
 end Platform;
 
 architecture rtl of Platform is
+
+-- SCK
+-- MOSI
+-- CS
+-- MISO
 
 ----------------------------------------------------------------------------------------------------------------
 -- Signals
@@ -1208,10 +1218,10 @@ NRF905_TX_EN <= 'Z';
 --
 -- BMI160
 --
--- CS :: CS
+-- SCL :: SCK
+-- SDA :: MOSI
+-- CS  :: CS
 -- SAO :: MISO
--- SDX :: MOSI
--- SCX :: SCK
 --
 --
 -------------------------------------
