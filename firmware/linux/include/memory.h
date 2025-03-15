@@ -5,17 +5,22 @@
  *
  */
 
-#ifndef MEM_MONITOR_H
-#define MEM_MONITOR_H
+#ifndef MEMORY_H
+#define MEMORY_H
 
 typedef struct
 {
+    uint32_t bytesAllocated;
     uint32_t noAllocs;
     uint32_t noDeallocs;
-    uint32_t bytesAllocated;
-}allocationType;
+} allocationType;
+
+void memoryInit(void);
+void memoryDestroy(void);
 
 void* memoryAllocation(uint32_t count, uint32_t size);
 void memoryRelease(void* ptr, uint32_t count, uint32_t size);
 
-#endif // MEM_MONITOR_H
+/* GET */ allocationType* getAllocationData(void);
+
+#endif // MEMORY_H
