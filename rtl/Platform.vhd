@@ -72,28 +72,28 @@ use work.Types.all;
 -- PIN_B21  :: NOTUSED_49                   | PIN_B22  :: NOTUSED_50
 -- PIN_C21  :: NOTUSED_47                   | PIN_C22  :: NOTUSED_48
 -- PIN_D21  :: NOTUSED_45                   | PIN_D22  :: NOTUSED_46
--- PIN_E21  :: NOTUSED_43 <--- dev 7        | PIN_E22  :: NOTUSED_44
--- PIN_F21  :: NOTUSED_41 <--- dev 7        | PIN_F22  :: NOTUSED_42
--- PIN_H21  :: NOTUSED_39        V          | PIN_H22  :: NOTUSED_40
--- PIN_J21  :: NOTUSED_37        |          | PIN_J22  :: NOTUSED_38
--- PIN_K21  :: NOTUSED_35        |          | PIN_K22  :: NOTUSED_36
--- PIN_L21  :: NOTUSED_33  8 x SPI devices  | PIN_L22  :: NOTUSED_34
--- PIN_M21  :: NOTUSED_31    32 pins For    | PIN_M22  :: NOTUSED_32
--- PIN_N21  :: NOTUSED_29        |          | PIN_N22  :: NOTUSED_30
--- PIN_P21  :: NOTUSED_27        |          | PIN_P22  :: NOTUSED_28
--- PIN_R21  :: NOTUSED_25        |          | PIN_R22  :: S3_BMI160_MISO
--- PIN_U21  :: NOTUSED_23        |          | PIN_U22  :: S3_BMI160_CS
--- PIN_V21  :: NOTUSED_21        |          | PIN_V22  :: S3_BMI160_MOSI
--- PIN_W21  :: NOTUSED_19        |          | PIN_W22  :: S3_BMI160_SCLK
--- PIN_Y21  :: NOTUSED_17        |          | PIN_Y22  :: S2_BMI160_MISO
--- PIN_AB20 :: NOTUSED_15  <-- dev 0        | PIN_AA20 :: S2_BMI160_CS
--- PIN_AB19 :: NOTUSED_13  <-- dev 0        | PIN_AA19 :: S2_BMI160_MOSI
--- PIN_AB18 :: NOTUSED_11                   | PIN_AA18 :: S2_BMI160_SCLK
--- PIN_AB17 :: NOTUSED_09                   | PIN_AA17 :: S1_BMI160_MISO
--- PIN_AB16 :: NOTUSED_07                   | PIN_AA16 :: S1_BMI160_CS
--- PIN_AB15 :: NOTUSED_05                   | PIN_AA15 :: S1_BMI160_MOSI
--- PIN_AB14 :: NOTUSED_03                   | PIN_AA14 :: S1_BMI160_SCLK
--- PIN_AB13 :: I2C_SDA                      | PIN_AA13 :: I2C_SCK
+-- PIN_E21  :: NOTUSED_43                   | PIN_E22  :: NOTUSED_44
+-- PIN_F21  :: NOTUSED_41                   | PIN_F22  :: NOTUSED_42
+-- PIN_H21  :: NOTUSED_39                   | PIN_H22  :: NOTUSED_40
+-- PIN_J21  :: NOTUSED_37                   | PIN_J22  :: NOTUSED_38
+-- PIN_K21  :: NOTUSED_35                   | PIN_K22  :: NOTUSED_36
+-- PIN_L21  :: NOTUSED_33                   | PIN_L22  :: NOTUSED_34
+-- PIN_M21  :: NOTUSED_31                   | PIN_M22  :: NOTUSED_32
+-- PIN_N21  :: NOTUSED_29                   | PIN_N22  :: NOTUSED_30
+-- PIN_P21  :: NOTUSED_27                   | PIN_P22  :: NOTUSED_28
+-- PIN_R21  :: NOTUSED_25                   | PIN_R22  :: NOTUSED_26
+-- PIN_U21  :: NOTUSED_23                   | PIN_U22  :: NOTUSED_24
+-- PIN_V21  :: NOTUSED_21                   | PIN_V22  :: NOTUSED_22
+-- PIN_W21  :: NOTUSED_19                   | PIN_W22  :: NOTUSED_20
+-- PIN_Y21  :: I2C_SDA                      | PIN_Y22  :: I2C_SCK
+-- PIN_AB20 :: NOTUSED_15                   | PIN_AA20 :: S2_BMI160_MISO
+-- PIN_AB19 :: NOTUSED_13                   | PIN_AA19 :: S2_BMI160_CS
+-- PIN_AB18 :: NOTUSED_11                   | PIN_AA18 :: S2_BMI160_MOSI
+-- PIN_AB17 :: NOTUSED_09                   | PIN_AA17 :: S2_BMI160_SCLK
+-- PIN_AB16 :: NOTUSED_07                   | PIN_AA16 :: S1_BMI160_MISO
+-- PIN_AB15 :: NOTUSED_05                   | PIN_AA15 :: S1_BMI160_CS
+-- PIN_AB14 :: NOTUSED_03                   | PIN_AA14 :: S1_BMI160_MOSI
+-- PIN_AB13 :: NOTUSED_01                   | PIN_AA13 :: S1_BMI160_SCLK
 -- GND      :: GND
 -- 3V3      :: 3V3
 -- GND      :: GND
@@ -196,26 +196,26 @@ port
     -----------------------------------------------------------------------------
     -- Peripheral Interfaces
     -----------------------------------------------------------------------------
-    ADXL_INT1 : in std_logic; -- PIN_AB14
-    ADXL_INT2 : in std_logic; -- PIN_AA14
+    --ADXL_INT1 : in std_logic; -- PIN_AB14
+    --ADXL_INT2 : in std_logic; -- PIN_AA14
     -- UART
     UART_x86_TX : out std_logic; -- PIN_N19 :: FTDI Rx
     UART_x86_RX : in std_logic;  -- PIN_M19 :: FTDI Tx
     -- I2C Bus
-    I2C_SDA : inout std_logic; -- PIN_AB13
-    I2C_SCK : inout std_logic; -- PIN_AA13
+    I2C_SDA : inout std_logic; -- PIN_Y21
+    I2C_SCK : inout std_logic; -- PIN_Y22
     -- PWM
     PWM_SIGNAL : out std_logic; -- PIN_R1
     -- SPI
-    S1_BMI160_SCLK : out std_logic; -- PIN_AA14
-    S1_BMI160_MOSI : out std_logic; -- PIN_AA15
-    S1_BMI160_CS : out std_logic;   -- PIN_AA16
-    S1_BMI160_MISO : in std_logic;  -- PIN_AA17
+    S1_BMI160_SCLK : out std_logic; -- PIN_AA13
+    S1_BMI160_MOSI : out std_logic; -- PIN_AA14
+    S1_BMI160_CS : out std_logic;   -- PIN_AA15
+    S1_BMI160_MISO : in std_logic;  -- PIN_AA16
 
-    S2_BMI160_SCLK : out std_logic; -- PIN_AA18
-    S2_BMI160_MOSI : out std_logic; -- PIN_AA19
-    S2_BMI160_CS : out std_logic;   -- PIN_AA20
-    S2_BMI160_MISO : in std_logic;  -- PIN_Y22
+    S2_BMI160_SCLK : out std_logic; -- PIN_AA17
+    S2_BMI160_MOSI : out std_logic; -- PIN_AA18
+    S2_BMI160_CS : out std_logic;   -- PIN_AA19
+    S2_BMI160_MISO : in std_logic;  -- PIN_AA20
 
     S3_BMI160_SCLK : out std_logic; -- PIN_W22
     S3_BMI160_MOSI : out std_logic; -- PIN_V22
@@ -358,6 +358,7 @@ signal TEST_DATA_OUT : std_logic_vector(15 downto 0) := (others => '0');
 signal TEST_BUSY : std_logic := '0';
 -- PLL
 signal CLOCk_133MHz : std_logic := '0';
+signal CLOCK_100MHz : std_logic := '0';
 -- SPI Controller
 signal spi_mux : std_logic_vector(3 downto 0) := "0000";
 signal ctrl_CS : std_logic := '0';
@@ -422,6 +423,7 @@ component SpiController
 Port
 (
     CLOCK_50MHz : in  std_logic;
+    CLOCK_100MHz : in  std_logic;
 
     OFFLOAD_INT : in std_logic;
 
@@ -633,6 +635,16 @@ port
     c0 : out STD_LOGIC ;
     c1 : out STD_LOGIC ;
 	locked : out STD_LOGIC
+);
+end component;
+
+component PLL_FastClock
+port
+(
+    areset : in STD_LOGIC  := '0';
+    inclk0 : in STD_LOGIC  := '0';
+    c0 : out STD_LOGIC ;
+    locked : out STD_LOGIC
 );
 end component;
 
@@ -854,6 +866,15 @@ port map
     inclk0 => CLOCK_50MHz,
     c0 => CLOCK_133MHz,
     c1 => CLK_SDRAM, -- 133MHz Shifted by 180°
+    locked => open
+);
+
+PLL_FastClock_module: PLL_FastClock
+port map
+(
+    areset => '0',
+    inclk0 => CLOCK_50MHz,
+    c0 => CLOCK_100MHz,
     locked => open
 );
 
@@ -1103,6 +1124,7 @@ I2cController_module: I2cController port map
 SpiController_BMI160_S1_module: SpiController port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
+    CLOCK_100MHz => CLOCK_100MHz,
 
     OFFLOAD_INT => switch_bmi160_s1_ready,
 
@@ -1128,6 +1150,7 @@ SpiController_BMI160_S1_module: SpiController port map
 SpiController_BMI160_S2_module: SpiController port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
+    CLOCK_100MHz => CLOCK_100MHz,
 
     OFFLOAD_INT => switch_bmi160_s2_ready,
 
@@ -1153,6 +1176,7 @@ SpiController_BMI160_S2_module: SpiController port map
 SpiController_BMI160_S3_module: SpiController port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
+    CLOCK_100MHz => CLOCK_100MHz,
 
     OFFLOAD_INT => switch_bmi160_s3_ready,
 
@@ -1178,6 +1202,7 @@ SpiController_BMI160_S3_module: SpiController port map
 SpiController_RF_module: SpiController port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
+    CLOCK_100MHz => CLOCK_100MHz,
 
     OFFLOAD_INT => switch_spi_RF_ready,
 
@@ -1223,12 +1248,11 @@ NRF905_TX_EN <= 'Z';
 -- CS  :: CS
 -- SAO :: MISO
 --
---
 -------------------------------------
---S1_BMI160_CS <= ctrl_BMI160_S1_CS;
---ctrl_BMI160_S1_MISO <= S1_BMI160_MISO;
---S1_BMI160_MOSI <= ctrl_BMI160_S1_MOSI;
---S1_BMI160_SCLK <= ctrl_BMI160_S1_SCLK;
+S1_BMI160_CS <= ctrl_BMI160_S1_CS;
+ctrl_BMI160_S1_MISO <= S1_BMI160_MISO;
+S1_BMI160_MOSI <= ctrl_BMI160_S1_MOSI;
+S1_BMI160_SCLK <= ctrl_BMI160_S1_SCLK;
 
 S2_BMI160_CS <= ctrl_BMI160_S2_CS;
 ctrl_BMI160_S2_MISO <= S2_BMI160_MISO;

@@ -445,11 +445,12 @@ void gui::spi_execute()
             {
                 headerValue += 0x01;
                 dataValue = static_cast<uint8_t>(dataTemp);
-                burstValue = static_cast<uint8_t>(burstTemp);
-                burstValue <<= 3;
-                headerValue += burstValue;
             }
         }
+
+        burstValue = static_cast<uint8_t>(burstTemp);
+        burstValue <<= 3;
+        headerValue += burstValue;
 
         (*m_Tx_GuiVector)[0] = headerValue;
         (*m_Tx_GuiVector)[1] = addressValue;
