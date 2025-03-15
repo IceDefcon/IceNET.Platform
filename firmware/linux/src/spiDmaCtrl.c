@@ -7,7 +7,6 @@
 
 #include <linux/module.h>
 #include <linux/kernel.h>
-#include <linux/slab.h>  // For kmalloc and kfree
 #include <linux/dma-mapping.h>  // For DMA support
 
 #include "stateMachine.h"

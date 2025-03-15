@@ -7,6 +7,7 @@
 
 #include "spiDmaCtrl.h"
 #include "spiWork.h"
+#include "memory.h"
 
 //////////////////////
 //                  //
@@ -47,11 +48,13 @@ static workTaskData workTask[WORK_AMOUNT] =
 
 static void masterTransferPrimary_WorkInit(void)
 {
+
     printk(KERN_ERR "[INIT][WRK] masterTransferPrimary :: Init work unit\n");
-    workTask[WORK_MASTER_PRIMARY].workUnit = kmalloc(sizeof(struct work_struct), GFP_KERNEL);
+	workTask[WORK_MASTER_PRIMARY].workUnit = (struct work_struct*)memoryAllocation(1, sizeof(struct work_struct));
     if (!workTask[WORK_MASTER_PRIMARY].workUnit)
     {
         printk(KERN_ERR "[INIT][WRK] Failed to allocate memory for masterTransferPrimary work unit: -ENOMEM\n");
+		memoryRelease(workTask[WORK_MASTER_PRIMARY].workUnit, 1, sizeof(struct work_struct));
     }
 	else
 	{
@@ -73,10 +76,11 @@ static void masterTransferPrimary_WorkInit(void)
 static void masterTransferSecondary_WorkInit(void)
 {
     printk(KERN_ERR "[INIT][WRK] masterTransferSecondary :: Init work unit\n");
-    workTask[WORK_MASTER_SECONDARY].workUnit = kmalloc(sizeof(struct work_struct), GFP_KERNEL);
+	workTask[WORK_MASTER_SECONDARY].workUnit = (struct work_struct*)memoryAllocation(1, sizeof(struct work_struct));
     if (!workTask[WORK_MASTER_SECONDARY].workUnit)
     {
         printk(KERN_ERR "[INIT][WRK] Failed to allocate memory for masterTransferSecondary work unit: -ENOMEM\n");
+		memoryRelease(workTask[WORK_MASTER_SECONDARY].workUnit, 1, sizeof(struct work_struct));
     }
 	else
 	{
@@ -104,6 +108,13 @@ static void masterTransferPrimary_WorkDestroy(void)
         destroy_workqueue(workTask[WORK_MASTER_PRIMARY].workQueue);
         workTask[WORK_MASTER_PRIMARY].workQueue = NULL;
     }
+
+    if (workTask[WORK_MASTER_PRIMARY].workUnit)
+    {
+        printk(KERN_ERR "[DESTROY][WRK] Primary workUnit Deallocated\n");
+		memoryRelease(workTask[WORK_MASTER_PRIMARY].workUnit, 1, sizeof(struct work_struct));
+    }
+
     printk(KERN_ERR "[DESTROY][WRK] Work unit :: masterTransferPrimary\n");
 }
 
@@ -116,6 +127,13 @@ static void masterTransferSecondary_WorkDestroy(void)
         destroy_workqueue(workTask[WORK_MASTER_SECONDARY].workQueue);
         workTask[WORK_MASTER_SECONDARY].workQueue = NULL;
     }
+
+    if (workTask[WORK_MASTER_SECONDARY].workUnit)
+    {
+        printk(KERN_ERR "[DESTROY][WRK] Secondary workUnit Deallocated\n");
+		memoryRelease(workTask[WORK_MASTER_SECONDARY].workUnit, 1, sizeof(struct work_struct));
+    }
+
     printk(KERN_ERR "[DESTROY][WRK] Work unit :: masterTransferSecondary\n");
 }
 

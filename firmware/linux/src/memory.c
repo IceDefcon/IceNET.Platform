@@ -55,56 +55,18 @@ void memoryDestroy(void)
 {
     if(0 == Process.bytesAllocated)
     {
-        printk(KERN_INFO "[DESTROY][DIA] Memory fully deallocated\n");
-
+        printk(KERN_INFO "[DESTROY][DIA] Memory Deallocated Successfully: noAllocs[%d] noDeallocs[%d] bytesAllocated[%d] \n",
+            Process.noAllocs, Process.noDeallocs, Process.bytesAllocated);
     }
     else
     {
-        pr_err("[ERNO] [DIA] Memory lekage detecetd, Bytes left [%d] \n", Process.bytesAllocated);
+        pr_err("[ERNO] [DIA] Memory Lekage Detected: noAllocs[%d] noDeallocs[%d] bytesAllocated[%d] \n",
+            Process.noAllocs, Process.noDeallocs, Process.bytesAllocated);
     }
 }
 
-/* GET */ allocationType* getAllocationData(void)
+/* PRINT */ void showAllocation(void)
 {
-    return &Process;
+    printk(KERN_INFO "[INIT][DIA] Allocation Monitor Initilaised: noAllocs[%d] noDeallocs[%d] bytesAllocated[%d] \n",
+            Process.noAllocs, Process.noDeallocs, Process.bytesAllocated);
 }
-
-// int main()
-// {
-//     Process.noAllocs = 0;
-//     Process.noDeallocs = 0;
-//     Process.bytesAllocated = 0;
-
-//     coordinatesType* ptr1 = (coordinatesType*)memoryAllocation(20, sizeof(coordinatesType));
-//     coordinatesType* ptr2 = (coordinatesType*)memoryAllocation(5, sizeof(coordinatesType));
-//     coordinatesType* ptr3 = (coordinatesType*)memoryAllocation(1, sizeof(coordinatesType));
-
-//     if (ptr1 == NULL)
-//     {
-//         printf("Memory allocation failed\n");
-//         return 1;
-//     }
-//     if (ptr2 == NULL)
-//     {
-//         printf("Memory allocation failed\n");
-//         return 1;
-//     }
-//     if (ptr3 == NULL)
-//     {
-//         printf("Memory allocation failed\n");
-//         return 1;
-//     }
-
-//     printf("noAllocs[%d] noDeallocs[%d] bytesAllocated[%d]\n", Process.noAllocs, Process.noDeallocs, Process.bytesAllocated);
-//     memoryRelease(ptr1, 20, sizeof(coordinatesType));
-//     printf("noAllocs[%d] noDeallocs[%d] bytesAllocated[%d]\n", Process.noAllocs, Process.noDeallocs, Process.bytesAllocated);
-//     memoryRelease(ptr2, 5, sizeof(coordinatesType));
-//     printf("noAllocs[%d] noDeallocs[%d] bytesAllocated[%d]\n", Process.noAllocs, Process.noDeallocs, Process.bytesAllocated);
-//     memoryRelease(ptr3, 1, sizeof(coordinatesType));
-//     printf("noAllocs[%d] noDeallocs[%d] bytesAllocated[%d]\n", Process.noAllocs, Process.noDeallocs, Process.bytesAllocated);
-
-//     return 0;
-// }
-
-
-

@@ -61,10 +61,13 @@ static int __init fpga_driver_init(void)
     watchdogInit();
     /* Initialize scheduler */
     schedulerInit();
+    /* Print allocated resources */
+    showAllocation();
 
     printk(KERN_INFO "--------------------------------------\n");
     printk(KERN_INFO "[READY] FPGA Driver loaded successfuly \n");
     printk(KERN_INFO "--------------------------------------\n");
+
 
     return ret;
 }

@@ -21,6 +21,6 @@ void memoryDestroy(void);
 void* memoryAllocation(uint32_t count, uint32_t size);
 void memoryRelease(void* ptr, uint32_t count, uint32_t size);
 
-/* GET */ allocationType* getAllocationData(void);
+/* PRINT */ void showAllocation(void);
 
 #endif // MEMORY_H

@@ -9,13 +9,13 @@
 #include <linux/kernel.h>
 #include <linux/init.h>
 #include <linux/uaccess.h>  // Include for copy_to_user function
-#include <linux/slab.h>     // Include for kmalloc/kfree functions
 #include <linux/mutex.h>    // Include for mutex opearations
 #include <linux/device.h>   // Include for class_create
 
 #include "stateMachine.h"
 #include "charDevice.h"
 #include "spiWork.h"
+#include "memory.h"
 #include "types.h"
 
 //////////////////////
@@ -30,28 +30,25 @@
 
 static void charDeviceDataInit(charDeviceType DeviceType)
 {
-    char *RxData, *TxData;
     charDeviceData* pChar = getCharDevice();
 
     /* Allocate memory */
-    RxData = (char *)kmalloc(IO_BUFFER_SIZE * sizeof(char), GFP_KERNEL);
-    TxData = (char *)kmalloc(IO_BUFFER_SIZE * sizeof(char), GFP_KERNEL);
+    pChar[DeviceType].io_transfer.RxData = (char*)memoryAllocation(IO_BUFFER_SIZE, sizeof(char));
+    pChar[DeviceType].io_transfer.TxData = (char*)memoryAllocation(IO_BUFFER_SIZE, sizeof(char));
 
     /* Check if memory allocation was successful */
-    if (!RxData || !TxData)
+    if (!pChar[DeviceType].io_transfer.RxData || !pChar[DeviceType].io_transfer.TxData)
     {
         printk(KERN_ERR "[INIT][ C ] Memory allocation failed\n");
-        kfree(RxData);
-        kfree(TxData);
+
+        memoryRelease(pChar[DeviceType].io_transfer.RxData, IO_BUFFER_SIZE, sizeof(char));
+        memoryRelease(pChar[DeviceType].io_transfer.TxData, IO_BUFFER_SIZE, sizeof(char));
         return;
     }
     else
     {
         printk(KERN_INFO "[INIT][ C ] %s :: Memory allocated succesfully\n", pChar[DeviceType].name);
     }
-
-    pChar[DeviceType].io_transfer.RxData = RxData;
-    pChar[DeviceType].io_transfer.TxData = TxData;
 }
 
 static void charDeviceConfig(charDeviceType DeviceType)
@@ -148,11 +145,14 @@ void charDeviceInit(void)
 void charDeviceDestroy(void)
 {
     charDeviceType DeviceType;
+    charDeviceData* pChar = getCharDevice();
 
     for (DeviceType = DEVICE_WATCHDOG; DeviceType < DEVICE_AMOUNT; DeviceType++)
     {
         charDeviceConfigDestroy(DeviceType);
         charDeviceMutexCtrl(DeviceType, MUTEX_CTRL_DESTROY);
+        memoryRelease(pChar[DeviceType].io_transfer.RxData, IO_BUFFER_SIZE, sizeof(char));
+        memoryRelease(pChar[DeviceType].io_transfer.TxData, IO_BUFFER_SIZE, sizeof(char));
     }
 
     printk(KERN_INFO "[DESTROY][ C ] Kernel Mutexes destroyed\n");
