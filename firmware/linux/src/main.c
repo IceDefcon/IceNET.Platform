@@ -17,6 +17,7 @@
 #include "console.h"
 #include "ramDisk.h"
 #include "ramAxis.h"
+#include "memory.h"
 
 MODULE_VERSION("1.0");
 MODULE_LICENSE("GPL");
@@ -38,6 +39,8 @@ static int __init fpga_driver_init(void)
     printk(KERN_INFO "[BEGIN] IceNET CPU & FPGA Platform\n");
     printk(KERN_INFO "----------------------------------\n");
 
+    /* Initialise Memory Allocation Monitor */
+    memoryInit();
     /* Initialise ramAxis */
     ramAxisInit();
     /* Initialise ramDisk */
@@ -58,10 +61,13 @@ static int __init fpga_driver_init(void)
     watchdogInit();
     /* Initialize scheduler */
     schedulerInit();
+    /* Print allocated resources */
+    showAllocation();
 
     printk(KERN_INFO "--------------------------------------\n");
     printk(KERN_INFO "[READY] FPGA Driver loaded successfuly \n");
     printk(KERN_INFO "--------------------------------------\n");
+
 
     return ret;
 }
@@ -89,7 +95,7 @@ static void __exit fpga_driver_exit(void)
     stateMachineDestroy();
     ramDiskDestroy();
     ramAxisDestroy();
-
+    memoryDestroy();
     printk(KERN_INFO "[TERMINATE] Driver Terminated Successfully\n");
 }
 

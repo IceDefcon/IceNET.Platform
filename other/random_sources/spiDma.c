@@ -10,7 +10,6 @@
 #include <linux/spi/spi.h>
 #include <linux/init.h>
 #include <linux/workqueue.h>
-#include <linux/slab.h>  // For kmalloc and kfree
 
 ////////////////////////
 //                    //

@@ -9,6 +9,7 @@
 
 #include "ramAxis.h"
 #include "ramDisk.h"
+#include "memory.h"
 
 static ramAxisType ramAxis =
 {
@@ -78,7 +79,7 @@ void printSector(ramSectorType type)
         return;
     }
 
-    output = kmalloc(1024, GFP_KERNEL);
+    output = (char*)memoryAllocation(1024, sizeof(char));
     if (!output)
     {
         pr_err("[ERNO][RAM] Failed to allocate memory for output buffer\n");
@@ -97,7 +98,7 @@ void printSector(ramSectorType type)
     }
 
     pr_info("%s\n", output);
-    kfree(output);
+    memoryRelease(output, 1024, sizeof(char));
 }
 
 static void allocateTransfer(void)
@@ -105,7 +106,7 @@ static void allocateTransfer(void)
     // Allocate memory for the dmaTransfer structure itself if it hasn't been initialized
     if (!ramAxis.dmaTransfer)
     {
-        ramAxis.dmaTransfer = kmalloc(sizeof(DmaTransferType), GFP_KERNEL);
+        ramAxis.dmaTransfer = (DmaTransferType*)memoryAllocation(1, sizeof(DmaTransferType));
         if (!ramAxis.dmaTransfer)
         {
             pr_err("[ERNO][RAM] Failed to allocate memory for ramAxis.dmaTransfer\n");
@@ -117,7 +118,7 @@ static void allocateTransfer(void)
 
     if (!ramAxis.dmaTransfer->RxData)
     {
-        ramAxis.dmaTransfer->RxData = kmalloc(BUFFER_ALLOCATION_SIZE, GFP_KERNEL);
+        ramAxis.dmaTransfer->RxData = (uint8_t*)memoryAllocation(BUFFER_ALLOCATION_SIZE, sizeof(uint8_t));
         if (!ramAxis.dmaTransfer->RxData)
         {
             pr_err("[ERNO][RAM] Failed to allocate memory for ramAxis.dmaTransfer->RxData buffer\n");
@@ -128,7 +129,7 @@ static void allocateTransfer(void)
 
     if (!ramAxis.dmaTransfer->TxData)
     {
-        ramAxis.dmaTransfer->TxData = kmalloc(BUFFER_ALLOCATION_SIZE, GFP_KERNEL);
+        ramAxis.dmaTransfer->TxData = (uint8_t*)memoryAllocation(BUFFER_ALLOCATION_SIZE, sizeof(uint8_t));
         if (!ramAxis.dmaTransfer->TxData)
         {
             pr_err("[ERNO][RAM] Failed to allocate memory for ramAxis.dmaTransfer->TxData buffer\n");
@@ -144,17 +145,17 @@ static void freeTransfer(void)
     {
         if (ramAxis.dmaTransfer->RxData)
         {
-            kfree(ramAxis.dmaTransfer->RxData);
+            memoryRelease(ramAxis.dmaTransfer->RxData, BUFFER_ALLOCATION_SIZE, sizeof(char));
             ramAxis.dmaTransfer->RxData = NULL;
         }
 
         if (ramAxis.dmaTransfer->TxData)
         {
-            kfree(ramAxis.dmaTransfer->TxData);
+            memoryRelease(ramAxis.dmaTransfer->TxData, BUFFER_ALLOCATION_SIZE, sizeof(char));
             ramAxis.dmaTransfer->TxData = NULL;
         }
 
-        kfree(ramAxis.dmaTransfer);
+        memoryRelease(ramAxis.dmaTransfer, 1, sizeof(DmaTransferType));
         ramAxis.dmaTransfer = NULL;
     }
 }
