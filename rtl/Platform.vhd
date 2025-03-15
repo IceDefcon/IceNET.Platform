@@ -358,14 +358,13 @@ signal TEST_DATA_OUT : std_logic_vector(15 downto 0) := (others => '0');
 signal TEST_BUSY : std_logic := '0';
 -- PLL
 signal CLOCk_133MHz : std_logic := '0';
-signal CLOCK_100MHz : std_logic := '0';
+signal CLOCK_Fast : std_logic := '0';
 -- SPI Controller
 signal spi_mux : std_logic_vector(3 downto 0) := "0000";
 signal ctrl_CS : std_logic := '0';
 signal ctrl_MISO : std_logic := '0';
 signal ctrl_MOSI : std_logic := '0';
 signal ctrl_SCLK : std_logic := '0';
-
 -- SPI :: nRF905
 signal ctrl_RF_CS : std_logic := '0';
 signal ctrl_RF_MISO : std_logic := '0';
@@ -423,7 +422,6 @@ component SpiController
 Port
 (
     CLOCK_50MHz : in  std_logic;
-    CLOCK_100MHz : in  std_logic;
 
     OFFLOAD_INT : in std_logic;
 
@@ -635,16 +633,6 @@ port
     c0 : out STD_LOGIC ;
     c1 : out STD_LOGIC ;
 	locked : out STD_LOGIC
-);
-end component;
-
-component PLL_FastClock
-port
-(
-    areset : in STD_LOGIC  := '0';
-    inclk0 : in STD_LOGIC  := '0';
-    c0 : out STD_LOGIC ;
-    locked : out STD_LOGIC
 );
 end component;
 
@@ -866,15 +854,6 @@ port map
     inclk0 => CLOCK_50MHz,
     c0 => CLOCK_133MHz,
     c1 => CLK_SDRAM, -- 133MHz Shifted by 180°
-    locked => open
-);
-
-PLL_FastClock_module: PLL_FastClock
-port map
-(
-    areset => '0',
-    inclk0 => CLOCK_50MHz,
-    c0 => CLOCK_100MHz,
     locked => open
 );
 
@@ -1124,7 +1103,6 @@ I2cController_module: I2cController port map
 SpiController_BMI160_S1_module: SpiController port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
-    CLOCK_100MHz => CLOCK_100MHz,
 
     OFFLOAD_INT => switch_bmi160_s1_ready,
 
@@ -1150,7 +1128,6 @@ SpiController_BMI160_S1_module: SpiController port map
 SpiController_BMI160_S2_module: SpiController port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
-    CLOCK_100MHz => CLOCK_100MHz,
 
     OFFLOAD_INT => switch_bmi160_s2_ready,
 
@@ -1176,7 +1153,6 @@ SpiController_BMI160_S2_module: SpiController port map
 SpiController_BMI160_S3_module: SpiController port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
-    CLOCK_100MHz => CLOCK_100MHz,
 
     OFFLOAD_INT => switch_bmi160_s3_ready,
 
@@ -1202,7 +1178,6 @@ SpiController_BMI160_S3_module: SpiController port map
 SpiController_RF_module: SpiController port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
-    CLOCK_100MHz => CLOCK_100MHz,
 
     OFFLOAD_INT => switch_spi_RF_ready,
 

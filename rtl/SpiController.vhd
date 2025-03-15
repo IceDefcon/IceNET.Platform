@@ -7,7 +7,6 @@ entity SpiController is
 Port
 (
     CLOCK_50MHz : in  std_logic;
-    CLOCK_100MHz : in  std_logic;
 
     OFFLOAD_INT : in std_logic;
 
