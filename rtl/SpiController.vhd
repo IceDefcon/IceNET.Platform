@@ -32,7 +32,8 @@ type SPI_CONTROLLER_TYPE is
     SPI_IDLE,
     SPI_INIT,
     SPI_CONFIG,
-    SPI_PROCESS,
+    SPI_READ_PROCESS,
+    SPI_WRITE_PROCESS,
     SPI_DONE
 );
 signal SPI_state: SPI_CONTROLLER_TYPE := SPI_IDLE;
@@ -89,6 +90,19 @@ begin
 
                 when SPI_CONFIG =>
                     ------------------------------
+                    -- Reset Process Variables
+                    ------------------------------
+                    --
+                    -- ??? TODO ???
+                    --
+                    -- One clock cycle data loss
+                    -- does not realy mater
+                    -- due the existance
+                    -- on rising edge
+                    --
+                    sck_timer <= "0100";
+                    sck_timer_toggle <= '1';
+                    ------------------------------
                     -- Finished :: Jump to MUX
                     ------------------------------
                     if bytes_count = bytes_amount then
@@ -121,65 +135,65 @@ begin
                         spi_status <= "0000";
                         bytes_count <= bytes_count + 1;
                         byte_process_timer <= 0;
-                        SPI_state <= SPI_PROCESS;
+                        SPI_state <= SPI_READ_PROCESS;
                     end if;
 
-                when SPI_PROCESS =>
+                when SPI_READ_PROCESS =>
                     if byte_process_timer = 1024 then
                     else
 ------------------------------------------------------------------------------------------------------------------------------
 -- PIPE[0] :: Transfer Counter
 ------------------------------------------------------------------------------------------------------------------------------
-                    if first_byte = '1' then
-                        if byte_process_timer < TRANSFER_INIT then
-                            spi_status <= "0001"; -- Transfer Init
-                        elsif byte_process_timer < TRANSFER_INIT + BYTE_INIT then
-                            spi_status <= "0010"; -- First Byte Init
-                        elsif byte_process_timer < TRANSFER_INIT + BYTE_INIT + BYTE_CLOCK then
-                            spi_status <= "0011"; -- Generic Byte Clock Process
-                        elsif byte_process_timer < TRANSFER_INIT + BYTE_INIT + BYTE_CLOCK + BYTE_EXIT then
-                            spi_status <= "0100"; -- First Byte Exit
-                        else
-                            spi_status <= "1110"; -- Going Back to CONFIG
+                        if first_byte = '1' then
+                            if byte_process_timer < TRANSFER_INIT then
+                                spi_status <= "0001"; -- Transfer Init
+                            elsif byte_process_timer < TRANSFER_INIT + BYTE_INIT then
+                                spi_status <= "0010"; -- First Byte Init
+                            elsif byte_process_timer < TRANSFER_INIT + BYTE_INIT + BYTE_CLOCK then
+                                spi_status <= "0011"; -- Generic Byte Clock Process
+                            elsif byte_process_timer < TRANSFER_INIT + BYTE_INIT + BYTE_CLOCK + BYTE_EXIT then
+                                spi_status <= "0100"; -- First Byte Exit
+                            else
+                                spi_status <= "1110"; -- Going Back to CONFIG
+                            end if;
                         end if;
-                    end if;
 
-                    if next_byte = '1' then
-                        if byte_process_timer < BYTE_BREAK then
-                            spi_status <= "0101"; -- Break Between Bytes
-                        elsif byte_process_timer < BYTE_BREAK + BYTE_INIT then
-                            spi_status <= "0110"; -- Next Byte Init
-                        elsif byte_process_timer < BYTE_BREAK + BYTE_INIT + BYTE_CLOCK then
-                            spi_status <= "0111"; -- Generic Byte Clock Process
-                        elsif byte_process_timer < BYTE_BREAK + BYTE_INIT + BYTE_CLOCK + BYTE_EXIT then
-                            spi_status <= "1000"; -- Next Byte Exit
-                        else
-                            spi_status <= "1110"; -- Going Back to CONFIG
+                        if next_byte = '1' then
+                            if byte_process_timer < BYTE_BREAK then
+                                spi_status <= "0101"; -- Break Between Bytes
+                            elsif byte_process_timer < BYTE_BREAK + BYTE_INIT then
+                                spi_status <= "0110"; -- Next Byte Init
+                            elsif byte_process_timer < BYTE_BREAK + BYTE_INIT + BYTE_CLOCK then
+                                spi_status <= "0111"; -- Generic Byte Clock Processhn    n gfn,h@;]rt pyUNmr509xq-0,9 ij
+                            elsif byte_process_timer < BYTE_BREAK + BYTE_INIT + BYTE_CLOCK + BYTE_EXIT then
+                                spi_status <= "1000"; -- Next Byte Exit
+                            else
+                                spi_status <= "1110"; -- Going Back to CONFIG
+                            end if;
                         end if;
-                    end if;
 
-                    if last_byte = '1' then
-                        if byte_process_timer < BYTE_BREAK then
-                            spi_status <= "1001"; -- Break Between Bytes
-                        elsif byte_process_timer < BYTE_BREAK + BYTE_INIT then
-                            spi_status <= "1010"; -- Last Byte Init
-                        elsif byte_process_timer < BYTE_BREAK + BYTE_INIT + BYTE_CLOCK then
-                            spi_status <= "1011"; -- Generic Byte Clock Process
-                        elsif byte_process_timer < BYTE_BREAK + BYTE_INIT + BYTE_CLOCK + BYTE_EXIT then
-                            spi_status <= "1100"; -- Last Byte Exit
-                        elsif byte_process_timer < BYTE_BREAK + BYTE_INIT + BYTE_CLOCK + BYTE_EXIT + TRANSFER_EXIT then
-                            spi_status <= "1101"; -- Transfer Exit
-                            --------------------------------------
-                            --
-                            -- TODO :: Feedback Data !!!
-                            --
-                            --------------------------------------
-                            FPGA_INT <= '1';
-                            FEEDBACK_DATA <= "10000001";
-                        else
-                            spi_status <= "1110"; -- Going Back to CONFIG -> IDLE
+                        if last_byte = '1' then
+                            if byte_process_timer < BYTE_BREAK then
+                                spi_status <= "1001"; -- Break Between Bytes
+                            elsif byte_process_timer < BYTE_BREAK + BYTE_INIT then
+                                spi_status <= "1010"; -- Last Byte Init
+                            elsif byte_process_timer < BYTE_BREAK + BYTE_INIT + BYTE_CLOCK then
+                                spi_status <= "1011"; -- Generic Byte Clock Process
+                            elsif byte_process_timer < BYTE_BREAK + BYTE_INIT + BYTE_CLOCK + BYTE_EXIT then
+                                spi_status <= "1100"; -- Last Byte Exit
+                            elsif byte_process_timer < BYTE_BREAK + BYTE_INIT + BYTE_CLOCK + BYTE_EXIT + TRANSFER_EXIT then
+                                spi_status <= "1101"; -- Transfer Exit
+                                --------------------------------------
+                                --
+                                -- TODO :: Feedback Data !!!
+                                --
+                                --------------------------------------
+                                FPGA_INT <= '1';
+                                FEEDBACK_DATA <= "10000001";
+                            else
+                                spi_status <= "1110"; -- Going Back to CONFIG -> IDLE
+                            end if;
                         end if;
-                    end if;
 
 ------------------------------------------------------------------------------------------------------------------------------
 -- PIPE[1] :: SPI Status
@@ -188,10 +202,8 @@ begin
                         ------------------------------------------------------
                         -- TRANSFER INIT + BREAK BETWEEN BYTES + TRANSFER EXIT
                         ------------------------------------------------------
-                        if spi_status = "0001" -- Transfer Init
-                        or spi_status = "0101" -- Break Between Bytes
+                        if spi_status = "0101" -- Break Between Bytes
                         or spi_status = "1001" -- Break Between Bytes
-                        or spi_status = "1101" -- Transfer Exit
                         then
                             CTRL_CS <= '0';
                             CTRL_MOSI <= '1';
@@ -201,12 +213,14 @@ begin
                         ----------------------------
                         -- BYTE INIT + BYTE EXIT
                         ----------------------------
-                        if spi_status = "0010" -- Transfer Init
+                        if spi_status = "0001" -- Transfer Init
+                        or spi_status = "0010" -- First Byte Init
                         or spi_status = "0100" -- First Byte Exit
                         or spi_status = "0110" -- Next Byte Init
                         or spi_status = "1000" -- Next Byte Exit
                         or spi_status = "1010" -- Last Byte Init
                         or spi_status = "1100" -- Last Byte Exit
+                        or spi_status = "1101" -- Transfer Exit
                         then
                             CTRL_CS <= '0';
                             CTRL_MOSI <= '0';
@@ -229,17 +243,17 @@ begin
                                     -- CLOCK [0]
                                     -----------------------------------------
                                     CTRL_SCK <= '0';
+                                    -----------------------------------------
+                                    -- DATA @ Rising Edge of the clock !
+                                    -----------------------------------------
+                                    CTRL_MOSI <= bytes_register(7 - index);
+                                    index <= index + 1;
                                 else
                                     sck_timer <= (others => '0');
                                     -----------------------------------------
                                     -- CLOCK [1]
                                     -----------------------------------------
                                     CTRL_SCK <= '1';
-                                    -----------------------------------------
-                                    -- DATA @ Rising Edge of the clock !
-                                    -----------------------------------------
-                                    CTRL_MOSI <= bytes_register(7 - index);
-                                    index <= index + 1;
                                 end if;
                             else
                                 sck_timer <= sck_timer + '1';
@@ -263,6 +277,18 @@ begin
                             SPI_state <= SPI_CONFIG;
                         end if;
 
+------------------------------------------------------------------------------------------------------------------------------
+-- PIPE[1] :: Increment Status Timer
+------------------------------------------------------------------------------------------------------------------------------
+                        byte_process_timer <= byte_process_timer + 1;
+                    end if;
+
+                when SPI_WRITE_PROCESS =>
+                    if byte_process_timer = 1024 then
+                    else
+                        --
+                        --
+                        --
 ------------------------------------------------------------------------------------------------------------------------------
 -- PIPE[1] :: Increment Status Timer
 ------------------------------------------------------------------------------------------------------------------------------

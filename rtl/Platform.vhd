@@ -88,12 +88,12 @@ use work.Types.all;
 -- PIN_Y21  :: I2C_SDA                      | PIN_Y22  :: I2C_SCK
 -- PIN_AB20 :: NOTUSED_15                   | PIN_AA20 :: S2_BMI160_MISO
 -- PIN_AB19 :: NOTUSED_13                   | PIN_AA19 :: S2_BMI160_CS
--- PIN_AB18 :: NOTUSED_11                   | PIN_AA18 :: S2_BMI160_MOSI
--- PIN_AB17 :: NOTUSED_09                   | PIN_AA17 :: S2_BMI160_SCLK
--- PIN_AB16 :: NOTUSED_07                   | PIN_AA16 :: S1_BMI160_MISO
--- PIN_AB15 :: NOTUSED_05                   | PIN_AA15 :: S1_BMI160_CS
--- PIN_AB14 :: NOTUSED_03                   | PIN_AA14 :: S1_BMI160_MOSI
--- PIN_AB13 :: NOTUSED_01                   | PIN_AA13 :: S1_BMI160_SCLK
+-- PIN_AB18 :: S2_BMI160_INT_1              | PIN_AA18 :: S2_BMI160_MOSI
+-- PIN_AB17 :: S2_BMI160_INT_2              | PIN_AA17 :: S2_BMI160_SCLK
+-- PIN_AB16 :: S1_BMI160_INT_1              | PIN_AA16 :: S1_BMI160_MISO
+-- PIN_AB15 :: S1_BMI160_INT_2              | PIN_AA15 :: S1_BMI160_CS
+-- PIN_AB14 :: I2C_ADXL345_INT_2            | PIN_AA14 :: S1_BMI160_MOSI
+-- PIN_AB13 :: I2C_ADXL345_INT_1            | PIN_AA13 :: S1_BMI160_SCLK
 -- GND      :: GND
 -- 3V3      :: 3V3
 -- GND      :: GND
@@ -101,10 +101,6 @@ use work.Types.all;
 -------------------------------------------------------------------------------------
 -------------------------------------------------------------------------------------
 -------------------------------------------------------------------------------------
-
-
-
-
 
 entity Platform is
 port
@@ -204,6 +200,8 @@ port
     -- I2C Bus
     I2C_SDA : inout std_logic; -- PIN_Y21
     I2C_SCK : inout std_logic; -- PIN_Y22
+    I2C_ADXL345_INT_1 : in std_logic; -- PIN_AB13
+    I2C_ADXL345_INT_2 : in std_logic; -- PIN_AB14
     -- PWM
     PWM_SIGNAL : out std_logic; -- PIN_R1
     -- SPI
@@ -211,16 +209,14 @@ port
     S1_BMI160_MOSI : out std_logic; -- PIN_AA14
     S1_BMI160_CS : out std_logic;   -- PIN_AA15
     S1_BMI160_MISO : in std_logic;  -- PIN_AA16
-
+    S1_BMI160_INT_1 : in std_logic; -- PIN_AB16
+    S1_BMI160_INT_2 : in std_logic; -- PIN_AB15
     S2_BMI160_SCLK : out std_logic; -- PIN_AA17
     S2_BMI160_MOSI : out std_logic; -- PIN_AA18
     S2_BMI160_CS : out std_logic;   -- PIN_AA19
     S2_BMI160_MISO : in std_logic;  -- PIN_AA20
-
-    S3_BMI160_SCLK : out std_logic; -- PIN_W22
-    S3_BMI160_MOSI : out std_logic; -- PIN_V22
-    S3_BMI160_CS : out std_logic;   -- PIN_U22
-    S3_BMI160_MISO : in std_logic;  -- PIN_R22
+    S2_BMI160_INT_1 : in std_logic; -- PIN_AB18
+    S2_BMI160_INT_2 : in std_logic; -- PIN_AB17
     -- Outer PCB Side
     NRF905_TRX_CE : out std_logic;  -- PIN_H2
     NRF905_uCLK : in std_logic;     -- PIN_J2
@@ -379,10 +375,7 @@ signal ctrl_BMI160_S2_CS : std_logic := '0';
 signal ctrl_BMI160_S2_MISO : std_logic := '0';
 signal ctrl_BMI160_S2_MOSI : std_logic := '0';
 signal ctrl_BMI160_S2_SCLK : std_logic := '0';
-signal ctrl_BMI160_S3_CS : std_logic := '0';
-signal ctrl_BMI160_S3_MISO : std_logic := '0';
-signal ctrl_BMI160_S3_MOSI : std_logic := '0';
-signal ctrl_BMI160_S3_SCLK : std_logic := '0';
+
 ----------------------------------------------------------------------------------------------------------------
 -- COMPONENTS DECLARATION
 ----------------------------------------------------------------------------------------------------------------
@@ -1150,31 +1143,6 @@ SpiController_BMI160_S2_module: SpiController port map
     FEEDBACK_DATA => data_spi_bmi160_s2_feedback
 );
 
-SpiController_BMI160_S3_module: SpiController port map
-(
-    CLOCK_50MHz => CLOCK_50MHz,
-
-    OFFLOAD_INT => switch_bmi160_s3_ready,
-
-    OFFLOAD_ID => offload_id(0) & offload_id(1) &
-                offload_id(2) & offload_id(3) &
-                offload_id(4) & offload_id(5) &
-                offload_id(6), -- Turn back around for SPI
-
-    OFFLOAD_CONTROL => offload_ctrl,
-    OFFLOAD_REGISTER => offload_register,
-    OFFLOAD_DATA => offload_data,
-
-    -- Master SPI interface
-    CTRL_CS => ctrl_BMI160_S3_CS,
-    CTRL_MISO => ctrl_BMI160_S3_MISO,
-    CTRL_MOSI => ctrl_BMI160_S3_MOSI,
-    CTRL_SCK => ctrl_BMI160_S3_SCLK,
-
-    FPGA_INT => interrupt_spi_bmi160_s3_feedback,
-    FEEDBACK_DATA => data_spi_bmi160_s3_feedback
-);
-
 SpiController_RF_module: SpiController port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
@@ -1233,11 +1201,6 @@ S2_BMI160_CS <= ctrl_BMI160_S2_CS;
 ctrl_BMI160_S2_MISO <= S2_BMI160_MISO;
 S2_BMI160_MOSI <= ctrl_BMI160_S2_MOSI;
 S2_BMI160_SCLK <= ctrl_BMI160_S2_SCLK;
-
-S3_BMI160_CS <= ctrl_BMI160_S3_CS;
-ctrl_BMI160_S3_MISO <= S3_BMI160_MISO;
-S3_BMI160_MOSI <= ctrl_BMI160_S3_MOSI;
-S3_BMI160_SCLK <= ctrl_BMI160_S3_SCLK;
 
 ---------------------------------------------------------------
 -- TODO :: Need Refactoring and Parametrization !!!
@@ -1353,5 +1316,17 @@ LED_5 <= '0';
 LED_6 <= '1';
 LED_7 <= '0';
 LED_8 <= '1';
+
+--looptrough_process:
+--process(CLOCK_50MHz)
+--begin
+--    if rising_edge(CLOCK_50MHz) then
+--        S1_BMI160_SCLK <= PRIMARY_SCLK;
+--        S1_BMI160_MOSI <= PRIMARY_MOSI;
+--        S1_BMI160_CS <= PRIMARY_CS;
+--        PRIMARY_MISO <= S1_BMI160_MISO;
+--    end if;
+--end process;
+
 
 end rtl;
