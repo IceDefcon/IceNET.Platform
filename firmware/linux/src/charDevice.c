@@ -9,7 +9,6 @@
 #include <linux/kernel.h>
 #include <linux/init.h>
 #include <linux/uaccess.h> 	// Include for copy_to_user function
-#include <linux/slab.h> 	// Include for kmalloc/kfree functions
 #include <linux/mutex.h>    // Include for mutex opearations
 #include <linux/device.h>   // Include for class_create
 #include <linux/delay.h> // For msleep
@@ -295,8 +294,6 @@ static ssize_t commanderWrite(struct file *filep, const char __user *buffer, siz
     error_count = copy_from_user((void *)Device[DEVICE_COMMANDER].io_transfer.RxData, buffer, len);
     if (error_count != 0)
     {
-        /* Free allocated memory */
-        kfree((void *)Device[DEVICE_COMMANDER].io_transfer.RxData);
         /* Copy failed */
         ret = -EFAULT;
     }
