@@ -130,6 +130,8 @@ set_input_delay -clock CLOCK_MAIN -min $MIN_I_DELAY_50MHz [get_ports {SECONDARY_
 # SPI BMI160 Sensor
 set_input_delay -clock CLOCK_MAIN -max $MAX_I_DELAY_50MHz [get_ports {S1_BMI160_MISO S2_BMI160_MISO S3_BMI160_MISO}]
 set_input_delay -clock CLOCK_MAIN -min $MIN_I_DELAY_50MHz [get_ports {S1_BMI160_MISO S2_BMI160_MISO S3_BMI160_MISO}]
+set_input_delay -clock CLOCK_MAIN -max $MAX_I_DELAY_50MHz [get_ports {S1_BMI160_INT_1 S1_BMI160_INT_2}]
+set_input_delay -clock CLOCK_MAIN -max $MAX_I_DELAY_50MHz [get_ports {S2_BMI160_INT_1 S2_BMI160_INT_2}]
 
 # UART inputs
 set_input_delay -clock CLOCK_MAIN -max $MAX_I_DELAY_50MHz [get_ports {UART_BBB_TX UART_x86_RX}]
@@ -212,6 +214,8 @@ set_input_delay -clock CLOCK_MAIN -max $MAX_I_DELAY_50MHz [get_ports I2C_SCK]
 set_input_delay -clock CLOCK_MAIN -min $MIN_I_DELAY_50MHz [get_ports I2C_SCK]
 set_output_delay -clock CLOCK_MAIN -max $MAX_O_DELAY_50MHz [get_ports I2C_SCK]
 set_output_delay -clock CLOCK_MAIN -min $MIN_O_DELAY_50MHz [get_ports I2C_SCK]
+
+set_input_delay -clock CLOCK_MAIN -max $MAX_I_DELAY_50MHz [get_ports {I2C_ADXL345_INT_1 I2C_ADXL345_INT_2}]
 
 ###########################################################################################################################
 # NRF905 Constraints

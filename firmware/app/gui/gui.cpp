@@ -149,6 +149,26 @@ void gui::setupSPI()
     m_spi_writeTick = new QCheckBox("WR", this);
     m_spi_writeTick->setGeometry(dev.xGap*3 + dev.xText + dev.xUnit, dev.yGap*9 + dev.yLogo*2 + dev.yUnit*5, dev.xUnit, dev.yUnit);
     connect(m_spi_writeTick, &QCheckBox::toggled, m_spi_dataField, &QLineEdit::setEnabled);
+    /**
+     *
+     * connect(sender, SIGNAL(signalName(parameters)), receiver, SLOT(slotName(parameters)));
+     *
+     * sender → The object emitting the signal
+     * signalName(parameters) → The signal emitted when an event occurs
+     * receiver → The object that receives and processes the signal
+     * slotName(parameters) → The function executed when the signal is received
+     *
+     * connect(m_spi_writeTick, &QCheckBox::toggled, m_spi_burstField, &QLineEdit::setDisabled);
+     *
+     */
+    connect(m_spi_writeTick, &QCheckBox::toggled, this, [=](bool checked)
+    {
+        m_spi_burstField->setDisabled(checked); // Disable burst field when checked
+        if (checked)
+        {
+            m_spi_burstField->setText("0x01"); // Ensure value is "0x01" when checked
+        }
+    });
 }
 
 void gui::setupPWM()

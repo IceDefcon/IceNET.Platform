@@ -38,10 +38,10 @@ type STATE is
     -- DEVICE
     DEVICE_INIT,
     DEVICE_DELAY,
-    DEVICE_1,
-    DEVICE_2,
-    DEVICE_3,
-    DEVICE_4,
+    DEVICE_BYTE_1,
+    DEVICE_BYTY_2,
+    DEVICE_BYTE_3,
+    DEVICE_BYTE_4,
     DEVICE_CONFIG,
     -- TRANSFER
     TRANSFER_INIT,
@@ -199,7 +199,7 @@ begin
 
             when DEVICE_DELAY =>
                 FIFO_READ_ENABLE <= '1';
-                offload_state <= DEVICE_1;
+                offload_state <= DEVICE_BYTE_1;
 
             ----------------------------------------------------------
             --
@@ -207,31 +207,31 @@ begin
             --
             ----------------------------------------------------------
             --
-            -- DEVICE 0 :: Device Config Size
-            -- DEVICE 1 :: Device Ctrl :: 0x11 ---> I2C, Write
-            -- DEVICE 2 :: Device ID :: For I2C
-            -- DEVICE 3 :: Device config pairs
+            -- DEVICE BYTE 0 :: Device Config Size
+            -- DEVICE BYTE 1 :: Device Ctrl :: 0x11 ---> I2C, Write
+            -- DEVICE BYTE 2 :: Device ID :: For I2C
+            -- DEVICE BYTE 3 :: Device config pairs
             --
             ----------------------------------------------------------
-            when DEVICE_1 =>
+            when DEVICE_BYTE_1 =>
                 device_size <= to_integer(unsigned(FIFO_DATA));
                 FIFO_READ_ENABLE <= '1';
-                offload_state <= DEVICE_2;
+                offload_state <= DEVICE_BYTY_2;
 
-            when DEVICE_2 =>
+            when DEVICE_BYTY_2 =>
                 device_ctrl <= FIFO_DATA;
                 FIFO_READ_ENABLE <= '1';
-                offload_state <= DEVICE_3;
+                offload_state <= DEVICE_BYTE_3;
 
-            when DEVICE_3 =>
+            when DEVICE_BYTE_3 =>
                 device_id <= FIFO_DATA(0) & FIFO_DATA(1) 
                 & FIFO_DATA(2) & FIFO_DATA(3) 
                 & FIFO_DATA(4) & FIFO_DATA(5) 
                 & FIFO_DATA(6); -- Device ID :: Reverse concatenation
                 FIFO_READ_ENABLE <= '0';
-                offload_state <= DEVICE_4;
+                offload_state <= DEVICE_BYTE_4;
 
-            when DEVICE_4 =>
+            when DEVICE_BYTE_4 =>
                 FIFO_READ_ENABLE <= '0';
                 device_pairs <= to_integer(unsigned(FIFO_DATA));
                 offload_state <= DEVICE_CONFIG;
