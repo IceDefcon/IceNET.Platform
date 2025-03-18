@@ -48,6 +48,9 @@ constant BYTE_CLOCK : integer range 0 to 128 := 80;
 constant BYTE_EXIT : integer range 0 to 16   := 10;
 constant BYTE_BREAK : integer range 0 to 64  := 0;
 constant TRANSFER_EXIT : integer range 0 to 256 := 250;
+constant WRITE_DELAY : integer range 0 to 5000000 := 5000000;
+
+signal write_couter : integer range 0 to 5000000 := 0;
 
 signal spi_status : std_logic_vector(3 downto 0) := "0000";
 signal sck_timer : std_logic_vector(3 downto 0) := "0000";
@@ -113,7 +116,17 @@ begin
                     -- Finished :: Jump to MUX
                     ------------------------------
                     if bytes_count = bytes_amount then
-                        SPI_state <= SPI_DONE;
+                        if write_flag = '1' then
+                            if write_couter = WRITE_DELAY then
+                                write_couter <= 0;
+                                write_flag <= '0';
+                                SPI_state <= SPI_DONE;
+                            else
+                                write_couter <= write_couter + 1;
+                            end if;
+                        else
+                            SPI_state <= SPI_DONE;
+                        end if;
                     else
                         --------------------------------
                         -- Set flags :: Jump to PROCESS
@@ -148,9 +161,9 @@ begin
                         bytes_count <= bytes_count + 1;
                         byte_process_timer <= 0;
                         if write_flag = '1' then
-                            SPI_state <= SPI_READ_PROCESS;
-                        else
                             SPI_state <= SPI_WRITE_PROCESS;
+                        else
+                            SPI_state <= SPI_READ_PROCESS;
                         end if;
                     end if;
 
