@@ -10,6 +10,7 @@
 #include <linux/spi/spi.h>
 #include <linux/init.h>
 #include <linux/workqueue.h>
+#include <linux/delay.h>\
 
 ////////////////////////
 //                    //
@@ -132,7 +133,7 @@ static int __init spi_module_init(void)
 {
     int ret;
     u8 chip_id;
-    // u8 accel_x_lo, accel_x_hi;
+    u8 accel_x_lo, accel_x_hi;
     // u8 accel_y_lo, accel_y_hi;
     // u8 accel_z_lo, accel_z_hi;
 
@@ -143,17 +144,21 @@ static int __init spi_module_init(void)
         return ret;
     }
 
-    ret = bmi160_write_register(0x7E, 0x11);
-    if (ret < 0)
-    {
-        return ret;
-    }
+    // Soft reset the sensor
+    bmi160_write_register(0x7E, 0xB6); // Soft reset
+    msleep(100); // Allow sensor to reset completely
 
-    ret = bmi160_write_register(0x40, 0x2C);
-    if (ret < 0)
-    {
-        return ret;
-    }
+    // Set accelerometer to normal mode
+    bmi160_write_register(0x7E, 0x11);
+    msleep(50); // Short delay
+
+    // Set gyroscope to normal mode
+    bmi160_write_register(0x7E, 0x15);
+    msleep(50); // Short delay
+
+    // Set output data rate (ODR), range, etc.
+    bmi160_write_register(0x40, 0x2C);
+    msleep(10); // Short delay before reading data
 
 
     ret = bmi160_read_register(0x00, &chip_id);
@@ -162,17 +167,17 @@ static int __init spi_module_init(void)
         return ret;
     }
 
-    // ret = bmi160_read_register(0x12, &accel_x_lo);
-    // if (ret < 0)
-    // {
-    //     return ret;
-    // }
+    ret = bmi160_read_register(0x12, &accel_x_lo);
+    if (ret < 0)
+    {
+        return ret;
+    }
 
-    // ret = bmi160_read_register(0x13, &accel_x_hi);
-    // if (ret < 0)
-    // {
-    //     return ret;
-    // }
+    ret = bmi160_read_register(0x13, &accel_x_hi);
+    if (ret < 0)
+    {
+        return ret;
+    }
 
     // ret = bmi160_read_register(0x14, &accel_y_lo);
     // if (ret < 0)
@@ -199,7 +204,7 @@ static int __init spi_module_init(void)
     // }
 
     printk(KERN_INFO "[CTRL][SPI] Chip ID = 0x%02x\n", chip_id);
-    // printk(KERN_INFO "[CTRL][SPI] Acceleration Data: X_lo=0x%02x, X_hi=0x%02x\n", accel_x_lo, accel_x_hi);
+    printk(KERN_INFO "[CTRL][SPI] Acceleration Data: X_lo=0x%02x, X_hi=0x%02x\n", accel_x_lo, accel_x_hi);
     // printk(KERN_INFO "[CTRL][SPI] Acceleration Data: Y_lo=0x%02x, Y_hi=0x%02x\n", accel_y_lo, accel_y_hi);
     // printk(KERN_INFO "[CTRL][SPI] Acceleration Data: Z_lo=0x%02x, Z_hi=0x%02x\n", accel_z_lo, accel_z_hi);
 

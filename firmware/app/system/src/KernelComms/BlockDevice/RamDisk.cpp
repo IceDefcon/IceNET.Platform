@@ -45,16 +45,20 @@ m_instance(this)
             0x11, /* Internal SPI Device ID ---> BMI160 :: BUS 0 */
             0x0B, /* OFFLOAD_CTRL :: DmaConfig(Auto=0) BurstSize(0) Device(I2C=0) Write(1) */
             {
-                {0x7E, 0x11}, /* Soft reset */
-                {0x40, 0x2C}  /* Accelerometer config */
+                {0x7E, 0xB6}, /* Soft reset the sensor */
+                {0x7E, 0x15}, /* Set gyroscope to normal mode */
+                {0x40, 0x2C}, /* Set output data rate (ODR), range, etc. */
+                {0x7E, 0x11}  /* Set accelerometer to normal mode */
             }
         },
         {
             0x12, /* Internal SPI Device ID ---> BMI160 :: BUS 1 */
             0x0B, /* OFFLOAD_CTRL :: DmaConfig(Auto=0) BurstSize(0) Device(I2C=0) Write(1) */
             {
-                {0x7E, 0x11}, /* Soft reset */
-                {0x40, 0x2C}  /* Accelerometer config */
+                {0x7E, 0xB6}, /* Soft reset the sensor */
+                {0x7E, 0x15}, /* Set gyroscope to normal mode */
+                {0x40, 0x2C}, /* Set output data rate (ODR), range, etc. */
+                {0x7E, 0x11}  /* Set accelerometer to normal mode */
             }
         },
         {
