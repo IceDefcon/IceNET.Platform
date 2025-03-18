@@ -78,15 +78,18 @@ static int stateMachineThread(void *data)
                 printk(KERN_INFO "[CTRL][STM] Long Configuration DMA mode\n");
                 /* Init pointers */
                 initTransfer(SECTOR_ENGINE);
-                initTransfer(SECTOR_BMI160);
+                initTransfer(SECTOR_BMI160_0);
+                initTransfer(SECTOR_BMI160_1);
                 initTransfer(SECTOR_ADXL345);
                 /* Prepare DMA Transfer */
                 prepareTransfer(SECTOR_ENGINE, true, false);
-                prepareTransfer(SECTOR_BMI160, false, false);
+                prepareTransfer(SECTOR_BMI160_0, false, false);
+                prepareTransfer(SECTOR_BMI160_1, false, false);
                 prepareTransfer(SECTOR_ADXL345, false, true);
                 /* Destroy life-time pointers */
                 destroyTransfer(SECTOR_ENGINE);
-                destroyTransfer(SECTOR_BMI160);
+                destroyTransfer(SECTOR_BMI160_0);
+                destroyTransfer(SECTOR_BMI160_1);
                 destroyTransfer(SECTOR_ADXL345);
                 /* Switch to SPI/DMA @ Config */
                 enableDMAConfig();
@@ -115,13 +118,16 @@ static int stateMachineThread(void *data)
                  * [2] :: DMA BMI160 Config
                  */
                 initTransfer(SECTOR_ENGINE);
-                initTransfer(SECTOR_BMI160);
+                initTransfer(SECTOR_BMI160_0);
+                initTransfer(SECTOR_BMI160_1);
                 initTransfer(SECTOR_ADXL345);
                 printSector(SECTOR_ENGINE);
-                printSector(SECTOR_BMI160);
+                printSector(SECTOR_BMI160_0);
+                printSector(SECTOR_BMI160_1);
                 printSector(SECTOR_ADXL345);
                 destroyTransfer(SECTOR_ENGINE);
-                destroyTransfer(SECTOR_BMI160);
+                destroyTransfer(SECTOR_BMI160_0);
+                destroyTransfer(SECTOR_BMI160_1);
                 destroyTransfer(SECTOR_ADXL345);
                 setStateMachine(SM_DONE);
                 break;
