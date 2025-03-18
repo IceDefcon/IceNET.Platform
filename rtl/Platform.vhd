@@ -279,6 +279,10 @@ signal offload_register : std_logic_vector(7 downto 0) := (others => '0');
 signal offload_ctrl : std_logic_vector(7 downto 0) := (others => '0');
 signal offload_data : std_logic_vector(7 downto 0) := (others => '0');
 signal offload_wait : std_logic := '0';
+signal offload_wait_i2c : std_logic := '0';
+signal offload_wait_spi_s1 : std_logic := '0';
+signal offload_wait_spi_s2 : std_logic := '0';
+signal offload_wait_spi_rf : std_logic := '0';
 -- PacketSwitch
 signal switch_i2c_ready : std_logic := '0';
 signal switch_bmi160_s1_ready : std_logic := '0';
@@ -422,6 +426,8 @@ Port
     OFFLOAD_REGISTER : in std_logic_vector(7 downto 0);
     OFFLOAD_CONTROL : in std_logic_vector(7 downto 0);
     OFFLOAD_DATA : in std_logic_vector(7 downto 0);
+
+    OFFLOAD_WAIT : out std_logic;
 
     CTRL_CS : out std_logic;
     CTRL_MISO : in std_logic;
@@ -1089,7 +1095,7 @@ I2cController_module: I2cController port map
     OFFLOAD_CONTROL => offload_ctrl(0), -- For now :: Read/Write
     OFFLOAD_DATA => offload_data, -- Write Data
     -- out
-    OFFLOAD_WAIT => offload_wait, -- Wait between consecutive i2c transfers
+    OFFLOAD_WAIT => offload_wait_i2c, -- Wait between consecutive i2c transfers
     FEEDBACK_DATA => data_i2c_feedback
 );
 
@@ -1107,6 +1113,8 @@ SpiController_BMI160_S1_module: SpiController port map
     OFFLOAD_CONTROL => offload_ctrl,
     OFFLOAD_REGISTER => offload_register,
     OFFLOAD_DATA => offload_data,
+
+    OFFLOAD_WAIT => offload_wait_spi_s1,
 
     -- Master SPI interface
     CTRL_CS => ctrl_BMI160_S1_CS,
@@ -1133,6 +1141,8 @@ SpiController_BMI160_S2_module: SpiController port map
     OFFLOAD_REGISTER => offload_register,
     OFFLOAD_DATA => offload_data,
 
+    OFFLOAD_WAIT => offload_wait_spi_s2,
+
     -- Master SPI interface
     CTRL_CS => ctrl_BMI160_S2_CS,
     CTRL_MISO => ctrl_BMI160_S2_MISO,
@@ -1158,6 +1168,8 @@ SpiController_RF_module: SpiController port map
     OFFLOAD_REGISTER => offload_register,
     OFFLOAD_DATA => offload_data,
 
+    OFFLOAD_WAIT => offload_wait_spi_rf,
+
     -- Master SPI interface
     CTRL_CS => ctrl_RF_CS,
     CTRL_MISO => ctrl_RF_MISO,
@@ -1167,6 +1179,8 @@ SpiController_RF_module: SpiController port map
     FPGA_INT => interrupt_spi_rf_feedback,
     FEEDBACK_DATA => data_spi_rf_feedback
 );
+
+offload_wait <= offload_wait_i2c or offload_wait_spi_s1 or offload_wait_spi_s2 or offload_wait_spi_rf;
 
 -------------------------------------
 --

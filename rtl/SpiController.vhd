@@ -15,6 +15,8 @@ Port
     OFFLOAD_REGISTER : in std_logic_vector(7 downto 0);
     OFFLOAD_DATA : in std_logic_vector(7 downto 0);
 
+    OFFLOAD_WAIT : out std_logic;
+
     CTRL_CS : out std_logic;
     CTRL_MISO : in std_logic;
     CTRL_MOSI : out std_logic;
@@ -44,7 +46,7 @@ constant TRANSFER_INIT : integer range 0 to 512 := 500;
 constant BYTE_INIT : integer range 0 to 16   := 10;
 constant BYTE_CLOCK : integer range 0 to 128 := 80;
 constant BYTE_EXIT : integer range 0 to 16   := 10;
-constant BYTE_BREAK : integer range 0 to 64  := 50;
+constant BYTE_BREAK : integer range 0 to 64  := 0;
 constant TRANSFER_EXIT : integer range 0 to 256 := 250;
 
 signal spi_status : std_logic_vector(3 downto 0) := "0000";
@@ -69,15 +71,17 @@ begin
     begin
         if rising_edge(CLOCK_50MHz) then
 
+            if OFFLOAD_INT = '1' then
+                OFFLOAD_WAIT <= '1';
+                SPI_state <= SPI_INIT;
+            end if;
+
             case SPI_state is
 
                 when SPI_IDLE =>
                     CTRL_CS <= '1';
                     CTRL_MOSI <= '1';
                     CTRL_SCK <= '0';
-                    if OFFLOAD_INT = '1' then
-                        SPI_state <= SPI_INIT;
-                    end if;
 
                 when SPI_INIT =>
                     bytes_count <= 0;
@@ -443,6 +447,7 @@ begin
                 when SPI_DONE =>
                     CTRL_CS <= '1';
                     FPGA_INT <= '0';
+                    OFFLOAD_WAIT <= '0';
                     SPI_state <= SPI_IDLE;
 
                 when others =>
