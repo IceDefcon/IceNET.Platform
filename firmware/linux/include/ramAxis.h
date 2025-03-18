@@ -20,7 +20,8 @@
 typedef enum
 {
     SECTOR_ENGINE,
-    SECTOR_BMI160,
+    SECTOR_BMI160_0,
+    SECTOR_BMI160_1,
     SECTOR_ADXL345,
     SECTOR_AMOUNT,
 }ramSectorType;

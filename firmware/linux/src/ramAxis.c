@@ -19,7 +19,8 @@ static ramAxisType ramAxis =
     .sector =
     {
         [SECTOR_ENGINE] = { .sectorAddress = NULL },
-        [SECTOR_BMI160] = { .sectorAddress = NULL },
+        [SECTOR_BMI160_0] = { .sectorAddress = NULL },
+        [SECTOR_BMI160_1] = { .sectorAddress = NULL },
         [SECTOR_ADXL345] = { .sectorAddress = NULL },
     }
 };
