@@ -42,8 +42,16 @@ m_instance(this)
     m_devices =
     {
         {
-            0x69, /* BMI160 */
-            0x01, /* OFFLOAD_CTRL :: DmaConfig(Auto=0) BurstSize(0) Device(I2C=0) Write(1) */
+            0x11, /* Internal SPI Device ID ---> BMI160 :: BUS 0 */
+            0x0B, /* OFFLOAD_CTRL :: DmaConfig(Auto=0) BurstSize(0) Device(I2C=0) Write(1) */
+            {
+                {0x7E, 0x11}, /* Soft reset */
+                {0x40, 0x2C}  /* Accelerometer config */
+            }
+        },
+        {
+            0x12, /* Internal SPI Device ID ---> BMI160 :: BUS 1 */
+            0x0B, /* OFFLOAD_CTRL :: DmaConfig(Auto=0) BurstSize(0) Device(I2C=0) Write(1) */
             {
                 {0x7E, 0x11}, /* Soft reset */
                 {0x40, 0x2C}  /* Accelerometer config */
@@ -214,6 +222,8 @@ int RamDisk::assembleConfig()
     /* [1] */ m_engineConfig.push_back(CONFIGURED_DEVICES);
     /* [2] */ m_engineConfig.push_back(SCRAMBLE_BYTE);
     /* [3] */ m_engineConfig.push_back(calculateChecksum(&m_engineConfig[0], 3));
+
+    std::cout << "[INFO] [DEBUG] Configure m_devices = " << m_devices.size() << std::endl;
 
     /* Device configuration sectors */
     for (const auto& device : m_devices)
