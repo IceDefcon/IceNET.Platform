@@ -7,6 +7,25 @@
 
 static allocationType Process;
 
+typedef enum
+{
+    MEMORY_ALLOCATION,
+    MEMORY_DEALLOCATION,
+    MEMORY_AMOUNT,
+} memoryAllocationType;
+
+/* PRINT */ static void modAllocation(memoryAllocationType type)
+{
+    if(MEMORY_ALLOCATION == type)
+    {
+        printk(KERN_INFO "[INFO][DIA] Allocation [%d => %d] Bytes\n", Process.prevAllocated, Process.currAllocated);
+    }
+    else if(MEMORY_DEALLOCATION == type)
+    {
+        printk(KERN_INFO "[INFO][DIA] Deallocation [%d => %d] Bytes\n", Process.prevAllocated, Process.currAllocated);
+    }
+}
+
 void* memoryAllocation(uint32_t count, uint32_t size)
 {
     void* ptr;
@@ -21,9 +40,11 @@ void* memoryAllocation(uint32_t count, uint32_t size)
 
     memset(ptr, 0, count * size);
 
-    Process.bytesAllocated += count * size;
+    Process.prevAllocated = Process.currAllocated;
+    Process.currAllocated += count * size;
     Process.noAllocs++;
 
+    modAllocation(MEMORY_ALLOCATION);
     return ptr;
 }
 
@@ -31,7 +52,8 @@ void memoryRelease(void* ptr, uint32_t count, uint32_t size)
 {
     if (ptr)
     {
-        Process.bytesAllocated -= count * size;
+        Process.prevAllocated = Process.currAllocated;
+        Process.currAllocated -= count * size;
         Process.noDeallocs++;
 
         kfree(ptr);
@@ -40,33 +62,32 @@ void memoryRelease(void* ptr, uint32_t count, uint32_t size)
     {
         pr_err("[ERNO] [DIA] No such pointer to release\n");
     }
+    modAllocation(MEMORY_DEALLOCATION);
 }
 
 void memoryInit(void)
 {
     Process.noAllocs = 0;
     Process.noDeallocs = 0;
-    Process.bytesAllocated = 0;
+    Process.currAllocated = 0;
 
     printk(KERN_INFO "[INIT][DIA] Allocation Monitor Initilaised\n");
 }
 
 void memoryDestroy(void)
 {
-    if(0 == Process.bytesAllocated)
+    if(0 == Process.currAllocated)
     {
-        printk(KERN_INFO "[DESTROY][DIA] Memory Deallocated Successfully: noAllocs[%d] noDeallocs[%d] bytesAllocated[%d] \n",
-            Process.noAllocs, Process.noDeallocs, Process.bytesAllocated);
+        printk(KERN_INFO "[DESTROY][DIA] Memory Deallocated Successfully\n");
     }
     else
     {
-        pr_err("[ERNO] [DIA] Memory Lekage Detected: noAllocs[%d] noDeallocs[%d] bytesAllocated[%d] \n",
-            Process.noAllocs, Process.noDeallocs, Process.bytesAllocated);
+        pr_err("[ERNO] [DIA] Memory Lekage Detected\n");
+        showAllocation();
     }
 }
 
 /* PRINT */ void showAllocation(void)
 {
-    printk(KERN_INFO "[INIT][DIA] Allocation Monitor Initilaised: noAllocs[%d] noDeallocs[%d] bytesAllocated[%d] \n",
-            Process.noAllocs, Process.noDeallocs, Process.bytesAllocated);
+    printk(KERN_INFO "[INFO][DIA] Allocations[%d] Deallocatios[%d] Allocated[%d] Bytes\n", Process.noAllocs, Process.noDeallocs, Process.currAllocated);
 }

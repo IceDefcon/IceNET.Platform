@@ -11,8 +11,8 @@
 #include "RamDisk.h"
 
 RamDisk::RamDisk() :
-m_fileDescriptor(-1),
-m_instance(this)
+    m_fileDescriptor(-1),
+    m_instance(this)  // This assumes m_instance is a pointer to RamDisk
 {
     std::cout << "[INFO] [CONSTRUCTOR] " << m_instance << " :: Instantiate RamDisk" << std::endl;
 
@@ -39,35 +39,42 @@ m_instance(this)
     //
     ////////////////////////////////////////////////////////////////////////////////
 
-    m_devices =
-    {
+    m_devices = {
         {
             0x11, /* Internal SPI Device ID ---> BMI160 :: BUS 0 */
-            0x0B, /* OFFLOAD_CTRL :: DmaConfig(Auto=0) BurstSize(0) Device(I2C=0) Write(1) */
+            0x0B, /* OFFLOAD_CTRL :: DmaConfig(Auto=0) BurstSize(One=0001) Device(SPI=01) Write(1) */
             {
                 {0x7E, 0xB6}, /* Soft reset the sensor */
                 {0x7E, 0x15}, /* Set gyroscope to normal mode */
                 {0x40, 0x2C}, /* Set output data rate (ODR), range, etc. */
+                {0x51, 0x10}, /* Enable Data Ready Interrupt */
+                {0x56, 0x80}, /* Map Data Ready Interrupt to INT1 */
+                {0x53, 0x0A}, /* Configure INT1 as Push-Pull, Active High */
+                {0x54, 0x20}, /* Latch interrupt until data is read */
                 {0x7E, 0x11}  /* Set accelerometer to normal mode */
             }
         },
         {
             0x12, /* Internal SPI Device ID ---> BMI160 :: BUS 1 */
-            0x0B, /* OFFLOAD_CTRL :: DmaConfig(Auto=0) BurstSize(0) Device(I2C=0) Write(1) */
+            0x0B, /* OFFLOAD_CTRL :: DmaConfig(Auto=0) BurstSize(One=0001) Device(SPI=01) Write(1) */
             {
                 {0x7E, 0xB6}, /* Soft reset the sensor */
                 {0x7E, 0x15}, /* Set gyroscope to normal mode */
                 {0x40, 0x2C}, /* Set output data rate (ODR), range, etc. */
+                {0x51, 0x10}, /* Enable Data Ready Interrupt */
+                {0x56, 0x80}, /* Map Data Ready Interrupt to INT1 */
+                {0x53, 0x0A}, /* Configure INT1 as Push-Pull, Active High */
+                {0x54, 0x20}, /* Latch interrupt until data is read */
                 {0x7E, 0x11}  /* Set accelerometer to normal mode */
             }
         },
         {
             0x53, /* ADXL345 */
-            0x01, /* OFFLOAD_CTRL :: DmaConfig(Auto=0) BurstSize(0) Device(I2C=0) Write(1) */
+            0x01, /* OFFLOAD_CTRL :: DmaConfig(Auto=0) BurstSize(None=0000) Device(I2C=00) Write(1) */
             {
                 {0x31, 0x08}, /* Data format :: Full Resolution */
-                {0x2E, 0x80}, /* Interrupt enable */
-                {0x2F, 0x00}, /* Interrupt mapping */
+                {0x2E, 0x80}, /* Interrupt enable :: Data Ready */
+                {0x2F, 0x00}, /* Interrupt mapping :: All to INT1 */
                 {0x2D, 0x08}, /* Power control :: Measure mode */
                 {0x2C, 0x0E}  /* Output Data Rate :: 3200Hz */
             }
@@ -227,7 +234,7 @@ int RamDisk::assembleConfig()
     /* [2] */ m_engineConfig.push_back(SCRAMBLE_BYTE);
     /* [3] */ m_engineConfig.push_back(calculateChecksum(&m_engineConfig[0], 3));
 
-    std::cout << "[INFO] [DEBUG] Configure m_devices = " << m_devices.size() << std::endl;
+    // std::cout << "[INFO] [DEBUG] Configure m_devices = " << m_devices.size() << std::endl;
 
     /* Device configuration sectors */
     for (const auto& device : m_devices)

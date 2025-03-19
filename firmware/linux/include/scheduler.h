@@ -8,6 +8,10 @@
 #ifndef SCHEDULER_H
 #define SCHEDULER_H
 
+#define SCHEDULE_DELAY(x)       (x * 50) /* 20ms * 50 = 1000ms */
+#define ALLOCATION_DELAY        (300) /* Allocation Delay in Seconds */
+#define ALLOCATION_PRINT_DELAY  (SCHEDULE_DELAY(ALLOCATION_DELAY))
+
 typedef enum
 {
     SCH_INIT = 0,
@@ -23,6 +27,7 @@ typedef struct
     struct task_struct *threadHandle;
     struct mutex stateMutex;
     bool configDone;
+    uint32_t allocationTimer;
 } schedulerProcess;
 
 /* SET */ void setScheduler(schedulerType newState);
