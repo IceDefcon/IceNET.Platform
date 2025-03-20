@@ -10,7 +10,8 @@
 
 typedef struct
 {
-    uint32_t bytesAllocated;
+    uint32_t currAllocated;
+    uint32_t prevAllocated;
     uint32_t noAllocs;
     uint32_t noDeallocs;
 } allocationType;

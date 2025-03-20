@@ -119,7 +119,7 @@ static void allocateTransfer(void)
 
     if (!ramAxis.dmaTransfer->RxData)
     {
-        ramAxis.dmaTransfer->RxData = (uint8_t*)memoryAllocation(BUFFER_ALLOCATION_SIZE, sizeof(uint8_t));
+        ramAxis.dmaTransfer->RxData = (uint8_t*)memoryAllocation(DMA_BUFFER_ALLOCATION_SIZE, sizeof(uint8_t));
         if (!ramAxis.dmaTransfer->RxData)
         {
             pr_err("[ERNO][RAM] Failed to allocate memory for ramAxis.dmaTransfer->RxData buffer\n");
@@ -130,7 +130,7 @@ static void allocateTransfer(void)
 
     if (!ramAxis.dmaTransfer->TxData)
     {
-        ramAxis.dmaTransfer->TxData = (uint8_t*)memoryAllocation(BUFFER_ALLOCATION_SIZE, sizeof(uint8_t));
+        ramAxis.dmaTransfer->TxData = (uint8_t*)memoryAllocation(DMA_BUFFER_ALLOCATION_SIZE, sizeof(uint8_t));
         if (!ramAxis.dmaTransfer->TxData)
         {
             pr_err("[ERNO][RAM] Failed to allocate memory for ramAxis.dmaTransfer->TxData buffer\n");
@@ -146,13 +146,13 @@ static void freeTransfer(void)
     {
         if (ramAxis.dmaTransfer->RxData)
         {
-            memoryRelease(ramAxis.dmaTransfer->RxData, BUFFER_ALLOCATION_SIZE, sizeof(char));
+            memoryRelease(ramAxis.dmaTransfer->RxData, DMA_BUFFER_ALLOCATION_SIZE, sizeof(char));
             ramAxis.dmaTransfer->RxData = NULL;
         }
 
         if (ramAxis.dmaTransfer->TxData)
         {
-            memoryRelease(ramAxis.dmaTransfer->TxData, BUFFER_ALLOCATION_SIZE, sizeof(char));
+            memoryRelease(ramAxis.dmaTransfer->TxData, DMA_BUFFER_ALLOCATION_SIZE, sizeof(char));
             ramAxis.dmaTransfer->TxData = NULL;
         }
 
@@ -231,7 +231,15 @@ void prepareTransfer(ramSectorType type, bool begin, bool end)
             pr_err("[ERNO][RAM] Checksum ERROR :: 0x%02X \n", reversedChecksum);
         }
 
-        pr_info("[CTRL][RAM] Assembled total of %d Bytes \n", ramAxis.configBytesAmount);
+        if(ramAxis.configBytesAmount > DMA_BUFFER_ALLOCATION_SIZE)
+        {
+            pr_info("[CTRL][RAM] Assembled DMA Data [%d] Bytes \n", ramAxis.configBytesAmount);
+            pr_err("[ERNO][RAM] Assembled DMA bigger than allocated buffer [%d] Bytes\n", DMA_BUFFER_ALLOCATION_SIZE);
+        }
+        else
+        {
+            pr_info("[CTRL][RAM] Assembled DMA Data [%d] Bytes \n", ramAxis.configBytesAmount);
+        }
     }
 }
 

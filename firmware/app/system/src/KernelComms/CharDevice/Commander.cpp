@@ -190,14 +190,14 @@ void Commander::threadCommander()
          *
          * INFO
          *
-         * Switch Pointer Shared with TCP Server and DroneCtrl
+         * Shared Pointer Switch
          *
          * Both state machines change
          * states simultaneously
          * due to share_ptr
          *
-         * (1) Commander
-         * (2) ServerTCP
+         * [1] Commander
+         * [2] DroneCtrl
          *
          **/
         switch(*m_IO_CommanderState)

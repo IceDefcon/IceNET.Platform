@@ -12,6 +12,7 @@
 #include <linux/mutex.h>
 
 #include "scheduler.h"
+#include "memory.h"
 
 ////////////////////////
 //                    //
@@ -29,6 +30,7 @@ static schedulerProcess Process =
     .threadHandle = NULL,
     .stateMutex = __MUTEX_INITIALIZER(Process.stateMutex),
     .configDone = false,
+    .allocationTimer = 0,
 };
 
 /* SET */ void setScheduler(schedulerType newState)
@@ -94,17 +96,13 @@ static int schedulerThread(void *data)
                 break;
 
             case SCH_MAIN_20MS:
-                printk(KERN_INFO "[CTRL][SCH] SCH_MAIN_20MS\n");
-                /**
-                 *
-                 * TODO
-                 *
-                 * Main 10ms loop and
-                 * go back to SCH_IDLE state
-                 * wait for another 10ms interrupt
-                 *
-                 */
-                setScheduler(SCH_IDLE);
+                /* Chacking currently allocated resources */
+                Process.allocationTimer++;
+                if(ALLOCATION_PRINT_DELAY == Process.allocationTimer)
+                {
+                    showAllocation();
+                    Process.allocationTimer = 0;
+                }
                 break;
 
             default:
@@ -128,7 +126,7 @@ static int schedulerThread(void *data)
 
 void schedulerInit(void)
 {
-
+    Process.allocationTimer = 0;
     Process.threadHandle = kthread_create(schedulerThread, NULL, "iceScehduler");
 
     if (IS_ERR(Process.threadHandle))
