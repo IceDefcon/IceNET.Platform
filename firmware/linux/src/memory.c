@@ -18,11 +18,11 @@ typedef enum
 {
     if(MEMORY_ALLOCATION == type)
     {
-        printk(KERN_INFO "[INFO][DIA] Allocation [%d => %d] Bytes\n", Process.prevAllocated, Process.currAllocated);
+        printk(KERN_INFO "[INIT][DIA] Allocation [%d => %d] Bytes\n", Process.prevAllocated, Process.currAllocated);
     }
     else if(MEMORY_DEALLOCATION == type)
     {
-        printk(KERN_INFO "[INFO][DIA] Deallocation [%d => %d] Bytes\n", Process.prevAllocated, Process.currAllocated);
+        printk(KERN_INFO "[DESTROY][DIA] Deallocation [%d => %d] Bytes\n", Process.prevAllocated, Process.currAllocated);
     }
 }
 
