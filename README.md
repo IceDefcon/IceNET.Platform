@@ -6,7 +6,8 @@
 
 	Quartus :: 22.1std.1.917 :: SC Lite Edition
 	Cyclone IV :: EP4CE15F23C8N
-	Cortex-A57 :: Kernel Module, User Application and GUI for Master Control
+	Cortex-A57 :: 4.9.253-tegra Kernel Module
+	Cortex-A57 :: Qt5 GUI & System Application for Master Control
 
 # TODO Hardware
 
