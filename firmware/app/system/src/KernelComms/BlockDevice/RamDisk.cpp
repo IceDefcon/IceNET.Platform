@@ -12,7 +12,8 @@
 
 RamDisk::RamDisk() :
     m_fileDescriptor(-1),
-    m_instance(this)  // This assumes m_instance is a pointer to RamDisk
+    m_instance(this),
+    m_devices(DEVICE_AMOUNT)
 {
     std::cout << "[INFO] [CONSTRUCTOR] " << m_instance << " :: Instantiate RamDisk" << std::endl;
 
@@ -39,10 +40,13 @@ RamDisk::RamDisk() :
     //
     ////////////////////////////////////////////////////////////////////////////////
 
-    m_devices = {
+    m_devices =
+    {
+        [DEVICE_BMI160_SPI_1] =
         {
-            0x11, /* Internal SPI Device ID ---> BMI160 :: BUS 0 */
-            0x0B, /* OFFLOAD_CTRL :: DmaConfig(Auto=0) BurstSize(One=0001) Device(SPI=01) Write(1) */
+            .id = 0x11, /* Internal SPI Device ID ---> BMI160 :: BUS 0 */
+            .ctrl = 0x0B, /* OFFLOAD_CTRL :: DmaConfig(Auto=0) BurstSize(One=0001) Device(SPI=01) Write(1) */
+            .registers =
             {
                 {0x7E, 0xB6}, /* Soft reset the sensor */
                 {0x7E, 0x15}, /* Set gyroscope to normal mode */
@@ -54,9 +58,12 @@ RamDisk::RamDisk() :
                 {0x7E, 0x11}  /* Set accelerometer to normal mode */
             }
         },
+
+        [DEVICE_BMI160_SPI_2] =
         {
-            0x12, /* Internal SPI Device ID ---> BMI160 :: BUS 1 */
-            0x0B, /* OFFLOAD_CTRL :: DmaConfig(Auto=0) BurstSize(One=0001) Device(SPI=01) Write(1) */
+            .id = 0x12, /* Internal SPI Device ID ---> BMI160 :: BUS 1 */
+            .ctrl = 0x0B, /* OFFLOAD_CTRL :: DmaConfig(Auto=0) BurstSize(One=0001) Device(SPI=01) Write(1) */
+            .registers =
             {
                 {0x7E, 0xB6}, /* Soft reset the sensor */
                 {0x7E, 0x15}, /* Set gyroscope to normal mode */
@@ -68,9 +75,12 @@ RamDisk::RamDisk() :
                 {0x7E, 0x11}  /* Set accelerometer to normal mode */
             }
         },
+
+        [DEVICE_ADXL345_I2C] =
         {
-            0x53, /* ADXL345 */
-            0x01, /* OFFLOAD_CTRL :: DmaConfig(Auto=0) BurstSize(None=0000) Device(I2C=00) Write(1) */
+            .id = 0x53, /* ADXL345 */
+            .ctrl = 0x01, /* OFFLOAD_CTRL :: DmaConfig(Auto=0) BurstSize(None=0000) Device(I2C=00) Write(1) */
+            .registers =
             {
                 {0x31, 0x08}, /* Data format :: Full Resolution */
                 {0x2E, 0x80}, /* Interrupt enable :: Data Ready */
@@ -138,6 +148,7 @@ int RamDisk::closeDEV()
 uint8_t RamDisk::calculateChecksum(const uint8_t* data, size_t size)
 {
     uint8_t checksum = 0;
+    /* Xor each byte to calculate chacksum */
     for (size_t i = 0; i < size; i++)
     {
         checksum ^= data[i];
@@ -337,7 +348,7 @@ void RamDisk::clearDma()
 {
     openDEV();
 
-    const size_t totalSectors = CONFIG_AMOUNT;
+    const size_t totalSectors = DEVICE_AMOUNT + 1; /* Amount of Densor Devices + DMA Engine Sector */
     const size_t sectorSize = SECTOR_SIZE;
     ssize_t result = 0;
 

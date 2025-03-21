@@ -45,6 +45,9 @@ constant smConfigDelay : std_logic_vector(15 downto 0):= "0000000000110001"; -- 
 constant smReadDelay   : std_logic_vector(15 downto 0):= "0110000110100111"; -- 500us
 constant smWriteDelay  : std_logic_vector(15 downto 0):= "0110000110100111"; -- 500us
 constant smDoneDelay   : std_logic_vector(15 downto 0):= "0000000000110001"; -- 1us
+-- Write Delay Process
+signal write_couter : integer range 0 to 5000000 := 0;
+constant WRITE_DELAY : integer range 0 to 5000000 := 5000000;
 
 -- SM Status Register
 signal status_sck : std_logic_vector(3 downto 0) := "0000";
@@ -656,24 +659,46 @@ begin
                     -- State Machine :: DONE
                     ------------------------------------
                     when DONE =>
-                        if done_timer = smDoneDelay then
-                            -- Reset Timers
-                            status_timer <= (others => '0');
-                            sda_timer <= (others => '0');
-                            sck_timer <= (others => '0');
-                            init_timer <= (others => '0');
-                            config_timer <= (others => '0');
-                            send_timer <= (others => '0');
-                            done_timer <= (others => '0');
-                            -- Reset Status registers
-                            status_sck <= "0000";
-                            status_sda <= "0000";
-                            -- Switch to IDLE
-                            i2c_state <= IDLE;
-                            -- Rest fifo interrupt flag
-                            fifo_flag <= '0';
+                        if OFFLOAD_CONTROL = '0' then
+                            if done_timer = smDoneDelay then
+                                -- Reset Timers
+                                status_timer <= (others => '0');
+                                sda_timer <= (others => '0');
+                                sck_timer <= (others => '0');
+                                init_timer <= (others => '0');
+                                config_timer <= (others => '0');
+                                send_timer <= (others => '0');
+                                done_timer <= (others => '0');
+                                -- Reset Status registers
+                                status_sck <= "0000";
+                                status_sda <= "0000";
+                                -- Switch to IDLE
+                                i2c_state <= IDLE;
+                                -- Rest fifo interrupt flag
+                                fifo_flag <= '0';
+                            else
+                                done_timer <= done_timer + '1';
+                            end if;
                         else
-                            done_timer <= done_timer + '1';
+                            if write_couter = WRITE_DELAY then
+                                write_couter <= 0;
+                                -- Reset Timers
+                                status_timer <= (others => '0');
+                                sda_timer <= (others => '0');
+                                sck_timer <= (others => '0');
+                                init_timer <= (others => '0');
+                                config_timer <= (others => '0');
+                                send_timer <= (others => '0');
+                                -- Reset Status registers
+                                status_sck <= "0000";
+                                status_sda <= "0000";
+                                -- Switch to IDLE
+                                i2c_state <= IDLE;
+                                -- Rest fifo interrupt flag
+                                fifo_flag <= '0';
+                            else
+                                write_couter <= write_couter + 1;
+                            end if;
                         end if;
 
                     when others =>

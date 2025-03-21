@@ -23,11 +23,18 @@
 
 typedef enum
 {
-    CONFIG_ENGINE,
-    CONFIG_BMI160,
-    CONFIG_ADXL345,
-    CONFIG_AMOUNT
+    DEVICE_BMI160_SPI_1,
+    DEVICE_BMI160_SPI_2,
+    DEVICE_ADXL345_I2C,
+    DEVICE_AMOUNT
 }DeviceType;
+
+typedef struct
+{
+    uint8_t id;  /* I2C Device Address, SPI Internal ID) */
+    uint8_t ctrl; /* OFFLOAD_CTRL :: Check RamDisk.cpp for more info */
+    std::vector<std::pair<uint8_t, uint8_t>> registers; /* Register and Data to set */
+}SensorConfigType;
 
 typedef struct
 {
@@ -37,13 +44,6 @@ typedef struct
     uint8_t ops;        // Number of Read or Write operations
     uint8_t payload[];  // Combined register addresses and write data
 }DeviceConfigType;
-
-typedef struct
-{
-    uint8_t id;  // Device ID (e.g., I2C address)
-    uint8_t ctrl; // OFFLOAD_CTRL :: 8-bits
-    std::vector<std::pair<uint8_t, uint8_t>> registers;
-}SensorConfigType;
 
 class RamDisk
 {
