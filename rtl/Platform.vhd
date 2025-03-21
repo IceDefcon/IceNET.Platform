@@ -40,7 +40,7 @@ use work.Types.all;
 -- PIN_A7  :: PIN_B7    |                       ::                  | H27 :: H28
 -- PIN_A6  :: PIN_B6    | SPI_INT_FROM_FPGA     ::                  | H29 :: H30
 -- PIN_A5  :: PIN_B5    | WDG_INT_FROM_FPGA     ::                  | H31 :: H32
--- PIN_C3  :: PIN_C4    | WDG_INT_FROM_CPU      ::                  | H33 :: H34
+-- PIN_C3  :: PIN_C4    | CONF_DONE_FROM_CPU    ::                  | H33 :: H34
 -- PIN_A4  :: PIN_B4    |                       ::                  | H35 :: H36
 -- PIN_A3  :: PIN_B3    | SECONDARY_MOSI        ::                  | H37 :: H38
 -- PIN_B2  :: PIN_B1    |                       ::                  | H39 :: H40
@@ -136,7 +136,7 @@ port
     SPI_INT_FROM_FPGA : out std_logic; -- PIN_A9 :: GPIO01 :: HEADER_PIN_29
     TIMER_INT_FROM_FPGA : out std_logic; -- PIN_A13 :: GPIO09 :: HEADER_PIN_07
     WDG_INT_FROM_FPGA : out std_logic; -- PIN_A20 :: GPIO11 :: HEADER_PIN_31
-    WDG_INT_FROM_CPU : in std_logic; -- PIN_B4 :: GPIO13 :: HEADER_PIN_33
+    CONF_DONE_FROM_CPU : in std_logic; -- PIN_B4 :: GPIO13 :: HEADER_PIN_33
     PRIMARY_MOSI : in std_logic;  -- PIN_B6 :: H19 :: SPI0_MOSI
     PRIMARY_MISO : out std_logic; -- PIN_A8 :: H21 :: SPI0_MISO
     PRIMARY_SCLK : in std_logic;  -- PIN_B8 :: H23 :: SPI0_SCLK
@@ -632,6 +632,19 @@ port
     c0 : out STD_LOGIC ;
     c1 : out STD_LOGIC ;
 	locked : out STD_LOGIC
+);
+end component;
+
+component PulseController
+generic
+(
+    PULSE_LENGTH : integer := 1
+);
+Port
+(
+    CLOCK_50MHz : in  std_logic;
+    INPUT_PULSE : in std_logic;
+    OUTPUT_PULSE : out std_logic
 );
 end component;
 
@@ -1251,6 +1264,26 @@ port map
     PWM_VECTOR => offload_data,
     -- OUT
     PWM_SIGNAL => PWM_SIGNAL
+);
+
+-- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+-- //                          //
+-- //                          //
+-- // [SENSOR] Data Processing //
+-- //                          //
+-- //                          //
+-- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+PulseController_module: PulseController
+generic map
+(
+    PULSE_LENGTH => 1 -- 1*20ns Pulse
+)
+port map
+(
+    CLOCK_50MHz => CLOCK_50MHz,
+    INPUT_PULSE => S1_BMI160_INT_1,
+    OUTPUT_PULSE => open
 );
 
 ------------------------------------------------------------------------------------------------------------------------------------------
