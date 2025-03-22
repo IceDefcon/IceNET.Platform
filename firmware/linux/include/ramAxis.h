@@ -44,6 +44,8 @@ typedef struct
     uint8_t configBytesAmount;
     DmaTransferType* dmaTransfer;
     sectorType sector[SECTOR_AMOUNT];
+    uint8_t payloadBytes;
+    bool payloadReady;
 } ramAxisType;
 
 /* INIT */ void ramAxisInit(void);
@@ -57,5 +59,7 @@ typedef struct
 
 /* GET */ DmaTransferType* getDmaTransfer(void);
 /* GET */ uint8_t getConfigBytesAmount(void);
+/* GET */ uint8_t getPayloadBytesAmount(void);
+/* IS */ bool isPayloadReady(void);
 
 #endif // RAM_AXIS_H

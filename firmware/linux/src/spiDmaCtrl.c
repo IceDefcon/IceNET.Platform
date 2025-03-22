@@ -26,6 +26,13 @@
 //                    //
 ////////////////////////
 
+static dmaCtrlType dmaCtrl =
+{
+    .configCount = 0,
+    .configDone = false,
+    .configDone = false,
+};
+
 static spiDeviceData Device[SPI_AMOUNT] =
 {
     [SPI_PRIMARY] = /* SPI 0 */
@@ -289,6 +296,44 @@ void masterTransferPrimary(struct work_struct *work)
     }
 }
 
+/* RESET */ void resetLongDma(void)
+{
+    dmaCtrl.configCount = 0;
+    dmaCtrl.configDone = false;
+}
+
+/* GET */ bool isConfigDone(void)
+{
+    return dmaCtrl.configDone;
+}
+
+/* TEST */ static bool isConfDone(void)
+{
+    bool ret = false;
+
+    if(false == dmaCtrl.configDone)
+    {
+        if(isPayloadReady())
+        {
+            dmaCtrl.configCount++; /* Register */
+            dmaCtrl.configCount++; /* Data */
+
+            if(dmaCtrl.configCount == getPayloadBytesAmount())
+            {
+                printk(KERN_INFO "[CTRL][SPI] FPGA Devices responded Successfully\n");
+                dmaCtrl.configDone = true;
+                ret = true;
+            }
+            else
+            {
+                printk(KERN_INFO "[CTRL][SPI] FPGA Devices count[%d] vs [%d]\n", dmaCtrl.configCount, getPayloadBytesAmount());
+            }
+        }
+    }
+
+    return ret;
+}
+
 void masterTransferSecondary(struct work_struct *work)
 {
     unsigned char *tx_buf;
@@ -317,6 +362,9 @@ void masterTransferSecondary(struct work_struct *work)
         printk(KERN_INFO "[CTRL][SPI] Secondary FPGA Transfer :: Byte[%d]: [Feedback] Tx[0x%02x] [Data] Rx[0x%02x]\n", i, tx_buf[i], rx_buf[i]);
     }
 
+    /* TODO :: Process the return */
+    (void)isConfDone();
+
     /* Unlock COMMANDER For Kernel Commander Device to process */
     charDeviceLockCtrl(DEVICE_COMMANDER, CTRL_UNLOCK);
 }
@@ -340,9 +388,9 @@ int spiInit(void)
 }
 
 
-/* CONFIG */ void enableDMAServer(void)
+/* CONFIG */ void enableDMASingle(void)
 {
-    printk(KERN_INFO "[CTRL][SPI] Conigure Primary SPI into DMA Server Mode\n");
+    printk(KERN_INFO "[CTRL][SPI] Conigure Primary SPI into DMA -> Single Transfer Mode\n");
     spiDmaDestroy(SPI_PRIMARY);
     spiDmaInit(SPI_PRIMARY, DMA_IN, false);
 }

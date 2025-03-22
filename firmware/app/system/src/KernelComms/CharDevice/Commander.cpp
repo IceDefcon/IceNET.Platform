@@ -29,6 +29,7 @@ m_commandMatrix(CMD_AMOUNT, std::vector<uint8_t>(CMD_LENGTH, 0))  // Initialized
 
     m_commandMatrix[CMD_FPGA_CONFIG] = {0xC0, 0xF1};  /* 0xC0F1(COFI) :: Activate DMA transfer to send IMU's config to FPGA */
     m_commandMatrix[CMD_DMA_RECONFIG] = {0xAE, 0xC0}; /* 0x4ECO(RECO) :: Reconfigure DMA Engine to work with single tramsfer */
+    m_commandMatrix[CMD_DMA_CLEAR] = {0xC1, 0xEA}; /* 0xC1EA(CLEA) :: Clear DMA variables used for verification of IMU's config */
 }
 
 Commander::~Commander()

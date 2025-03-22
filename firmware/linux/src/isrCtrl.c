@@ -52,9 +52,6 @@ static irqreturn_t InterruptFromFPGA_WatchdogISR(int irq, void *data)
     }
     watchdog_spinLockCtrl(CTRL_UNLOCK);
 
-    gpio_set_value(GPIO_WATCHDOG_INTERRUPT_FROM_CPU, 1);
-    gpio_set_value(GPIO_WATCHDOG_INTERRUPT_FROM_CPU, 0);
-
     return IRQ_HANDLED;
 }
 
@@ -270,40 +267,40 @@ static int InterruptFromFPGA_SpiInit(void)
     return 0;
 }
 
-static int InterruptFromCPU_WatchdogInit(void)
+static int InterruptFromCPU_ConfDoneInit(void)
 {
     int result;
 
-    result = gpio_request(GPIO_WATCHDOG_INTERRUPT_FROM_CPU, "WDG_INT_FROM_CPU");
+    result = gpio_request(GPIO_CONF_DONE_INTERRUPT_FROM_CPU, "WDG_INT_FROM_CPU");
     if (result < 0)
     {
-        printk(KERN_ERR "[INIT][ISR] Failed GPIO Request :: Pin [%d]\n", GPIO_WATCHDOG_INTERRUPT_FROM_CPU);
+        printk(KERN_ERR "[INIT][ISR] Failed GPIO Request :: Pin [%d]\n", GPIO_CONF_DONE_INTERRUPT_FROM_CPU);
     }
     else
     {
-        printk(KERN_ERR "[INIT][ISR] Setup GPIO Pin [%d] Request\n", GPIO_WATCHDOG_INTERRUPT_FROM_CPU);
+        printk(KERN_ERR "[INIT][ISR] Setup GPIO Pin [%d] Request\n", GPIO_CONF_DONE_INTERRUPT_FROM_CPU);
     }
 
-    result = gpio_direction_output(GPIO_WATCHDOG_INTERRUPT_FROM_CPU, 0); // Write low (0) to sink current to ground
+    result = gpio_direction_output(GPIO_CONF_DONE_INTERRUPT_FROM_CPU, 0); // Write low (0) to sink current to ground
     if (result < 0)
     {
-        printk(KERN_ERR "[INIT][ISR] Failed to set GPIO direction :: Pin [%d]\n", GPIO_WATCHDOG_INTERRUPT_FROM_CPU);
-        gpio_free(GPIO_WATCHDOG_INTERRUPT_FROM_CPU);
+        printk(KERN_ERR "[INIT][ISR] Failed to set GPIO direction :: Pin [%d]\n", GPIO_CONF_DONE_INTERRUPT_FROM_CPU);
+        gpio_free(GPIO_CONF_DONE_INTERRUPT_FROM_CPU);
     }
     else
     {
-        printk(KERN_ERR "[INIT][ISR] Setup GPIO Pin [%d] Output\n", GPIO_WATCHDOG_INTERRUPT_FROM_CPU);
+        printk(KERN_ERR "[INIT][ISR] Setup GPIO Pin [%d] Output\n", GPIO_CONF_DONE_INTERRUPT_FROM_CPU);
     }
 
     return result;
 }
 
 /* DESTROY */
-static void InterruptFromCPU_WatchdogDestroy(void)
+static void InterruptFromCPU_ConfDoneDestroy(void)
 {
-    gpio_free(GPIO_WATCHDOG_INTERRUPT_FROM_CPU);
+    gpio_free(GPIO_CONF_DONE_INTERRUPT_FROM_CPU);
 
-    printk(KERN_INFO "[DESTROY][ISR] Destroy GPIO Pin [%d]\n", GPIO_WATCHDOG_INTERRUPT_FROM_CPU);
+    printk(KERN_INFO "[DESTROY][ISR] Destroy GPIO Pin [%d]\n", GPIO_CONF_DONE_INTERRUPT_FROM_CPU);
 }
 
 static void InterruptFromFPGA_SpiDestroy(void)
@@ -353,12 +350,12 @@ void isrGpioInit(void)
     (void)InterruptFromFPGA_SpiInit();
 
     (void)InterruptFromCPU_SpiInit();
-    (void)InterruptFromCPU_WatchdogInit();
+    (void)InterruptFromCPU_ConfDoneInit();
 }
 
 void isrGpioDestroy(void)
 {
-    InterruptFromCPU_WatchdogDestroy();
+    InterruptFromCPU_ConfDoneDestroy();
     InterruptFromCPU_SpiDestroy();
 
     InterruptFromFPGA_SpiDestroy();

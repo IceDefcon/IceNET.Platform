@@ -27,6 +27,7 @@ typedef enum
 {
     CMD_FPGA_CONFIG,
     CMD_DMA_RECONFIG,
+    CMD_DMA_CLEAR,
     CMD_AMOUNT
 } commandType;
 
@@ -41,8 +42,8 @@ typedef enum
 typedef enum
 {
     CTRL_INIT = 0,
-    CTRL_CONFIG,
-    CTRL_RECONFIG_DMA,
+    CTRL_DMA_LONG,
+    CTRL_DMA_SINGLE,
     CTRL_MAIN,
     CTRL_AMOUNT,
 } ctrlType;
