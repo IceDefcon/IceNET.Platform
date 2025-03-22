@@ -68,13 +68,19 @@ static int stateMachineThread(void *data)
                 /* Nothing here :: Just wait */
                 break;
 
-            case SM_DMA:
-                printk(KERN_INFO "[CTRL][STM] Normal DMA mode\n");
-                enableDMAServer();
-                setStateMachine(SM_DONE);
+            case SM_DMA_SINGLE:
+                if(isConfigDone())
+                {
+                    printk(KERN_INFO "[CTRL][STM] Normal DMA mode\n");
+                    enableDMASingle();
+                    /* Let notiffy FPGA that Perfiperal devices feedback is received */
+                    gpio_set_value(GPIO_CONF_DONE_INTERRUPT_FROM_CPU, 1);
+                    gpio_set_value(GPIO_CONF_DONE_INTERRUPT_FROM_CPU, 0);
+                    setStateMachine(SM_DONE);
+                }
                 break;
 
-            case SM_LONG_DMA:
+            case SM_DMA_LONG:
                 printk(KERN_INFO "[CTRL][STM] Long Configuration DMA mode\n");
                 /* Init pointers */
                 initTransfer(SECTOR_ENGINE);
@@ -95,6 +101,12 @@ static int stateMachineThread(void *data)
                 enableDMAConfig();
                 /* Schedule Work Queue for SPI/DMA transfer */
                 setStateMachine(SM_SPI);
+                break;
+
+            case SM_DMA_CLEAR:
+                resetLongDma();
+                printk(KERN_INFO "[CTRL][ C ] [1] Clear DMA variables used for verification of IMU's config\n");
+                setStateMachine(SM_DONE);
                 break;
 
             case SM_SPI:

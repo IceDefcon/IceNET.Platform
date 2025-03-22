@@ -67,8 +67,8 @@ std::string DroneCtrl::getCtrlStateString(ctrlType state)
     static const std::array<std::string, CTRL_AMOUNT> ctrlStateStrings =
     {
         "CTRL_INIT",
-        "CTRL_CONFIG",
-        "CTRL_RECONFIG_DMA",
+        "CTRL_DMA_LONG",
+        "CTRL_DMA_SINGLE",
         "CTRL_MAIN",
     };
 
@@ -112,30 +112,30 @@ void DroneCtrl::droneCtrlMain()
              */
             if(true == KernelComms::Watchdog::getFpgaConfigReady())
             {
-                m_ctrlState = CTRL_CONFIG;
+                m_ctrlState = CTRL_DMA_LONG;
             }
             break;
 
-        case CTRL_CONFIG:
+        case CTRL_DMA_LONG:
             sendFpgaConfig();
-            m_ctrlState = CTRL_RECONFIG_DMA;
+            m_ctrlState = CTRL_DMA_SINGLE;
             break;
 
-        case CTRL_RECONFIG_DMA:
+        case CTRL_DMA_SINGLE:
             /**
              * TODO
              *
-             * This cannot be delayed by 1000ms
+             * This cannot be delayed by 3000ms
              *
              * Proposed solution is feedback from Kernel Commander
              * To compare with pre-defined value
              *
-             * But for now 1000ms delay to reconfig DMA into singe mode
+             * But for now 3000ms delay to reconfig DMA into singe mode
              *
              */
-            std::cout << "[INFO] [ D ] CTRL_RECONFIG_DMA :: Delay Start" << std::endl;
-            std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-            std::cout << "[INFO] [ D ] CTRL_RECONFIG_DMA :: Delay Stop" << std::endl;
+            std::cout << "[INFO] [ D ] Waiting " << static_cast<uint32_t>(FPGA_DELAY) << "ms for the FPGA to configure Peripherals..." << std::endl;
+            std::this_thread::sleep_for(std::chrono::milliseconds(3000));
+            std::cout << "[INFO] [ D ] Configuration Done :: Switch DMA into a Single Mode" << std::endl;
             m_instanceCommander->sendCommand(CMD_DMA_RECONFIG);
             m_ctrlState = CTRL_MAIN;
             break;

@@ -25,6 +25,8 @@ class DroneCtrl :
         KernelComms::Watchdog* m_instanceWatchdog;
         KernelComms::RamDisk* m_instanceRamDisk;
 
+        static constexpr uint32_t FPGA_DELAY = 3000;
+
     public:
         DroneCtrl();
         ~DroneCtrl();

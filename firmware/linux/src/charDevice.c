@@ -301,13 +301,18 @@ static ssize_t commanderWrite(struct file *filep, const char __user *buffer, siz
     {
         /* Activate DMA Engine */
         printk(KERN_INFO "[CTRL][ C ] Activate DMA Engine\n");
-        setStateMachine(SM_LONG_DMA);
+        setStateMachine(SM_DMA_LONG);
     }
     else if (Device[DEVICE_COMMANDER].io_transfer.RxData[0] == 0xAE && Device[DEVICE_COMMANDER].io_transfer.RxData[1] == 0xC0)
     {
         /* Reconfigure DMA Engine */
-        printk(KERN_INFO "[CTRL][ C ] Reconfigure DMA Engine\n");
-        setStateMachine(SM_DMA);
+        printk(KERN_INFO "[CTRL][ C ] Reconfigure DMA Engine into single mode\n");
+        setStateMachine(SM_DMA_SINGLE);
+    }
+    else if (Device[DEVICE_COMMANDER].io_transfer.RxData[0] == 0xC1 && Device[DEVICE_COMMANDER].io_transfer.RxData[1] == 0xEA)
+    {
+        printk(KERN_INFO "[CTRL][ C ] [0] Clear DMA variables used for verification of IMU's config\n");
+        setStateMachine(SM_DMA_CLEAR);
     }
     else
     {

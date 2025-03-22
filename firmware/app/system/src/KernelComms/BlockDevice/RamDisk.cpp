@@ -1,8 +1,8 @@
 /*!
- * 
+ *
  * Author: Ice.Marek
  * iceNET Technology 2025
- * 
+ *
  */
 #include <cstring>
 #include <iostream>
@@ -175,7 +175,7 @@ DeviceConfigType* RamDisk::createOperation(uint8_t id, uint8_t ctrl, uint8_t ops
         return nullptr;
     }
 
-    // std::cout << "[DEBUG] [ICE] totalSize: " << static_cast<int>(totalSize) << std::endl;
+    // std::cout << "[INFO] [DEBUG] ID: " << static_cast<int>(id) << " TotalSize: " << static_cast<int>(totalSize) << std::endl;
 
     op->size = totalSize;
     ////////////////////////////////////////////////////////////////////////////////
@@ -208,13 +208,13 @@ DeviceConfigType* RamDisk::createOperation(uint8_t id, uint8_t ctrl, uint8_t ops
      *
      * Zero the payload
      *
-     * Ex. Size = 9(tota) - 4(DeviceConfigType) - 1(checksum) = 4
+     * Ex. Size = 9(total) - 4(DeviceConfigType) - 1(checksum) = 4
      *
      */
     size_t payloadSize = totalSize - sizeof(DeviceConfigType) - 1;
     memset(op->payload, 0, payloadSize);
 
-    // std::cout << "[DEBUG] [ICE] payloadSize: " << static_cast<int>(payloadSize) << std::endl;
+    // std::cout << "[INFO] [DEBUG] ID: " << static_cast<int>(id) << " payloadSize: " << static_cast<int>(payloadSize) << std::endl;
 
     return op;
 }
@@ -228,12 +228,13 @@ DeviceConfigType* RamDisk::createOperation(uint8_t id, uint8_t ctrl, uint8_t ops
  * about which interface they are connected through
  *
  * In this particular moment we have
- * Two sensors connected over I2C
- * So 3 memory sectors are used
+ * Three sensors connected over SPI and I2C
+ * So 4 memory sectors are used
  *
  * [0] Dma Engine Configuration
- * [1] BMI160
- * [2] ADXL345
+ * [1] SPI BMI160 S1
+ * [2] SPI BMI160 S2
+ * [3] I2C ADXL345
  *
  */
 int RamDisk::assembleConfig()
@@ -245,7 +246,7 @@ int RamDisk::assembleConfig()
     /* [2] */ m_engineConfig.push_back(SCRAMBLE_BYTE);
     /* [3] */ m_engineConfig.push_back(calculateChecksum(&m_engineConfig[0], 3));
 
-    // std::cout << "[INFO] [DEBUG] Configure m_devices = " << m_devices.size() << std::endl;
+    std::cout << "[INFO] [RAM] Assemblimg peripheral configuration for " << m_devices.size() << " devices" << std::endl;
 
     /* Device configuration sectors */
     for (const auto& device : m_devices)

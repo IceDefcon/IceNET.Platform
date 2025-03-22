@@ -22,7 +22,10 @@ static ramAxisType ramAxis =
         [SECTOR_BMI160_0] = { .sectorAddress = NULL },
         [SECTOR_BMI160_1] = { .sectorAddress = NULL },
         [SECTOR_ADXL345] = { .sectorAddress = NULL },
-    }
+    },
+
+    .payloadBytes = 0,
+    .payloadReady = false
 };
 
 void initTransfer(ramSectorType type)
@@ -197,18 +200,12 @@ void prepareTransfer(ramSectorType type, bool begin, bool end)
         return;
     }
 
-    /**
-     *
-     * TODO
-     *
-     * Fixed 22 Bytes of data 
-     * For the DMA transfer
-     *
-     */
     if(true == begin)
     {
         pr_info("[CTRL][RAM] Concatenate DMA Transfer\n");
         ramAxis.configBytesAmount = 0;
+        ramAxis.payloadBytes = 0;
+        ramAxis.payloadReady = false;
     }
 
     for (i = 0; i < ((char *)ramAxis.sector[type].sectorAddress)[0]; i++)
@@ -240,6 +237,16 @@ void prepareTransfer(ramSectorType type, bool begin, bool end)
         {
             pr_info("[CTRL][RAM] Assembled DMA Data [%d] Bytes \n", ramAxis.configBytesAmount);
         }
+
+        /**
+         * Together with payloadbytes used to verify
+         * that State Machines of I2C and SPI controllers
+         * send back the feedback data indicating process complete
+         *
+         *
+         */
+        ramAxis.payloadBytes += ramAxis.configBytesAmount - 4 - 5*(SECTOR_AMOUNT - 1);
+        ramAxis.payloadReady = true;
     }
 }
 
@@ -261,4 +268,14 @@ void destroyTransfer(ramSectorType type)
 /* GET */ uint8_t getConfigBytesAmount(void)
 {
     return ramAxis.configBytesAmount;
+}
+
+/* GET */ uint8_t getPayloadBytesAmount(void)
+{
+    return ramAxis.payloadBytes;
+}
+
+/* IS */ bool isPayloadReady(void)
+{
+    return ramAxis.payloadReady;
 }
