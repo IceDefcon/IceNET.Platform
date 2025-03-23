@@ -311,7 +311,7 @@ signal data_spi_rf_feedback : std_logic_vector(7 downto 0) := "00010001";
 signal data_spi_bmi160_s1_feedback : std_logic_vector(7 downto 0) := "00010101";
 signal data_spi_bmi160_s2_feedback : std_logic_vector(7 downto 0) := "00010110";
 signal data_spi_bmi160_s3_feedback : std_logic_vector(7 downto 0) := "00010111";
-signal data_pwm_feedback : std_logic_vector(7 downto 0) := "11111101";
+signal data_pwm_feedback : std_logic_vector(7 downto 0) := "11000011";
 -- Debounce signals
 signal interrupt_from_cpu : std_logic := '0';
 -- Interrupts

@@ -273,13 +273,13 @@ begin
                                     -- DATA @ Rising Edge of the clock !
                                     -----------------------------------------
                                     CTRL_MOSI <= transfer_byte(7 - index);
+                                    feedback_byte <= CTRL_MISO(7 - index)
                                     index <= index + 1;
                                 else
                                     sck_timer <= (others => '0');
                                     -----------------------------------------
                                     -- CLOCK [1]
                                     -----------------------------------------
-                                    feedback_byte(7 - index) <= CTRL_MISO;
                                     CTRL_SCK <= '1';
                                 end if;
                             else
