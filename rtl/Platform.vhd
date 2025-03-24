@@ -40,7 +40,7 @@ use work.Types.all;
 -- PIN_A7  :: PIN_B7    |                       ::                  | H27 :: H28
 -- PIN_A6  :: PIN_B6    | SPI_INT_FROM_FPGA     ::                  | H29 :: H30
 -- PIN_A5  :: PIN_B5    | WDG_INT_FROM_FPGA     ::                  | H31 :: H32
--- PIN_C3  :: PIN_C4    | CONF_DONE_FROM_CPU    ::                  | H33 :: H34
+-- PIN_C3  :: PIN_C4    | CFG_INT_FROM_CPU      ::                  | H33 :: H34
 -- PIN_A4  :: PIN_B4    |                       ::                  | H35 :: H36
 -- PIN_A3  :: PIN_B3    | SECONDARY_MOSI        ::                  | H37 :: H38
 -- PIN_B2  :: PIN_B1    |                       ::                  | H39 :: H40
@@ -136,7 +136,7 @@ port
     SPI_INT_FROM_FPGA : out std_logic; -- PIN_A9 :: GPIO01 :: HEADER_PIN_29
     TIMER_INT_FROM_FPGA : out std_logic; -- PIN_A13 :: GPIO09 :: HEADER_PIN_07
     WDG_INT_FROM_FPGA : out std_logic; -- PIN_A20 :: GPIO11 :: HEADER_PIN_31
-    CONF_DONE_FROM_CPU : in std_logic; -- PIN_B4 :: GPIO13 :: HEADER_PIN_33
+    CFG_INT_FROM_CPU : in std_logic; -- PIN_B4 :: GPIO13 :: HEADER_PIN_33
     PRIMARY_MOSI : in std_logic;  -- PIN_B6 :: H19 :: SPI0_MOSI
     PRIMARY_MISO : out std_logic; -- PIN_A8 :: H21 :: SPI0_MISO
     PRIMARY_SCLK : in std_logic;  -- PIN_B8 :: H23 :: SPI0_SCLK
@@ -1282,7 +1282,7 @@ generic map
 port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
-    INPUT_PULSE => S1_BMI160_INT_1,
+    INPUT_PULSE => CFG_INT_FROM_CPU,
     OUTPUT_PULSE => open
 );
 
