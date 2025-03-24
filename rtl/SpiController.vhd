@@ -67,6 +67,8 @@ signal first_byte : std_logic := '0';
 signal next_byte : std_logic := '0';
 signal last_byte : std_logic := '0';
 
+signal feedback_byte : std_logic_vector(7 downto 0) := (others => '0');
+
 begin
 
     spiControl_process:
@@ -212,13 +214,8 @@ begin
                                 spi_status <= "1100"; -- Last Byte Exit
                             elsif byte_process_timer < BYTE_BREAK + BYTE_INIT + BYTE_CLOCK + BYTE_EXIT + TRANSFER_EXIT then
                                 spi_status <= "1101"; -- Transfer Exit
-                                --------------------------------------
-                                --
-                                -- TODO :: Feedback Data !!!
-                                --
-                                --------------------------------------
                                 FPGA_INT <= '1';
-                                FEEDBACK_DATA <= "10000001";
+                                FEEDBACK_DATA <= feedback_byte;
                             else
                                 spi_status <= "1110"; -- Going Back to CONFIG -> IDLE
                             end if;
@@ -276,6 +273,7 @@ begin
                                     -- DATA @ Rising Edge of the clock !
                                     -----------------------------------------
                                     CTRL_MOSI <= transfer_byte(7 - index);
+                                    feedback_byte(8 - index) <= CTRL_MISO;
                                     index <= index + 1;
                                 else
                                     sck_timer <= (others => '0');
@@ -357,13 +355,8 @@ begin
                                 spi_status <= "1100"; -- Last Byte Exit
                             elsif byte_process_timer < BYTE_BREAK + BYTE_INIT + BYTE_CLOCK + BYTE_EXIT + TRANSFER_EXIT then
                                 spi_status <= "1101"; -- Transfer Exit
-                                --------------------------------------
-                                --
-                                -- TODO :: Feedback Data !!!
-                                --
-                                --------------------------------------
                                 FPGA_INT <= '1';
-                                FEEDBACK_DATA <= "10000001";
+                                FEEDBACK_DATA <= OFFLOAD_REGISTER;
                             else
                                 spi_status <= "1110"; -- Going Back to CONFIG -> IDLE
                             end if;

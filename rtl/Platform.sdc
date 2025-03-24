@@ -141,9 +141,9 @@ set_input_delay -clock CLOCK_MAIN -min $MIN_I_DELAY_50MHz [get_ports {UART_BBB_T
 set_input_delay -clock CLOCK_MAIN -max $MAX_I_DELAY_50MHz [get_ports {CAN_BBB_TX CAN_MPP_RX}]
 set_input_delay -clock CLOCK_MAIN -min $MIN_I_DELAY_50MHz [get_ports {CAN_BBB_TX CAN_MPP_RX}]
 
-# Other inputs
-set_input_delay -clock CLOCK_MAIN -max $MAX_I_DELAY_50MHz [get_ports {SPI_INT_FROM_CPU WDG_INT_FROM_CPU}]
-set_input_delay -clock CLOCK_MAIN -min $MIN_I_DELAY_50MHz [get_ports {SPI_INT_FROM_CPU WDG_INT_FROM_CPU}]
+# Input interrupts
+set_input_delay -clock CLOCK_MAIN -max $MAX_I_DELAY_50MHz [get_ports {SPI_INT_FROM_CPU CFG_INT_FROM_CPU}]
+set_input_delay -clock CLOCK_MAIN -min $MIN_I_DELAY_50MHz [get_ports {SPI_INT_FROM_CPU CFG_INT_FROM_CPU}]
 
 # Altera
 set_input_delay -clock CLOCK_MAIN -max $MAX_I_DELAY_50MHz [get_ports {altera_reserved_tdi altera_reserved_tms}]
@@ -189,13 +189,13 @@ set_output_delay -clock CLOCK_MAIN -min $MIN_O_DELAY_50MHz [get_ports PWM_SIGNAL
 set_output_delay -clock CLOCK_MAIN -max $MAX_O_DELAY_50MHz [get_ports {LOGIC_CH1 LOGIC_CH2 LOGIC_CH3 LOGIC_CH4 LOGIC_CH5 LOGIC_CH6}]
 set_output_delay -clock CLOCK_MAIN -min $MIN_O_DELAY_50MHz [get_ports {LOGIC_CH1 LOGIC_CH2 LOGIC_CH3 LOGIC_CH4 LOGIC_CH5 LOGIC_CH6}]
 
-# Other outputs
-set_output_delay -clock CLOCK_MAIN -max $MAX_O_DELAY_50MHz [get_ports {SPI_INT_FROM_FPGA WDG_INT_FROM_FPGA}]
-set_output_delay -clock CLOCK_MAIN -min $MIN_O_DELAY_50MHz [get_ports {SPI_INT_FROM_FPGA WDG_INT_FROM_FPGA}]
+# Output Interrupts
+set_output_delay -clock CLOCK_MAIN -max $MAX_O_DELAY_50MHz [get_ports {SPI_INT_FROM_FPGA TIMER_INT_FROM_FPGA WDG_INT_FROM_FPGA}]
+set_output_delay -clock CLOCK_MAIN -min $MIN_O_DELAY_50MHz [get_ports {SPI_INT_FROM_FPGA TIMER_INT_FROM_FPGA WDG_INT_FROM_FPGA}]
 
 # PWM output
-set_output_delay -clock CLOCK_MAIN -max $MAX_O_DELAY_50MHz [get_ports TIMER_INT_FROM_FPGA]
-set_output_delay -clock CLOCK_MAIN -min $MIN_O_DELAY_50MHz [get_ports TIMER_INT_FROM_FPGA]
+set_output_delay -clock CLOCK_MAIN -max $MAX_O_DELAY_50MHz [get_ports ]
+set_output_delay -clock CLOCK_MAIN -min $MIN_O_DELAY_50MHz [get_ports ]
 
 # Altera
 set_output_delay -clock CLOCK_MAIN -max $MAX_O_DELAY_50MHz [get_ports altera_reserved_tdo]
@@ -257,10 +257,3 @@ set_input_delay -clock CLOCK_MAIN -max $MAX_I_DELAY_50MHz [get_ports {OUT_MISO T
 set_input_delay -clock CLOCK_MAIN -min $MIN_I_DELAY_50MHz [get_ports {OUT_MISO TEST_CS TEST_MOSI TEST_CLK}]
 set_output_delay -clock CLOCK_MAIN -max $MAX_O_DELAY_50MHz [get_ports {TEST_MISO OUT_CS OUT_MOSI OUT_CLK}]
 set_output_delay -clock CLOCK_MAIN -min $MIN_O_DELAY_50MHz [get_ports {TEST_MISO OUT_CS OUT_MOSI OUT_CLK}]
-
-
-
-
-
-
-
