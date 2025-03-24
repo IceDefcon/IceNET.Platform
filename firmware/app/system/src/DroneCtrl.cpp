@@ -133,7 +133,7 @@ void DroneCtrl::droneCtrlMain()
              * But for now 3000ms delay to reconfig DMA into singe mode
              *
              */
-            std::cout << "[INFO] [ D ] Waiting " << static_cast<uint32_t>(FPGA_DELAY) << "ms for the FPGA to configure Peripherals..." << std::endl;
+            std::cout << std::dec << "[INFO] [ D ] Waiting " << static_cast<uint32_t>(FPGA_DELAY) << "ms for the FPGA to configure Peripherals..." << std::endl;
             std::this_thread::sleep_for(std::chrono::milliseconds(3000));
             std::cout << "[INFO] [ D ] Configuration Done :: Switch DMA into a Single Mode" << std::endl;
             m_instanceCommander->sendCommand(CMD_DMA_RECONFIG);

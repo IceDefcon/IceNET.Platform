@@ -40,7 +40,7 @@ use work.Types.all;
 -- PIN_A7  :: PIN_B7    |                       ::                  | H27 :: H28
 -- PIN_A6  :: PIN_B6    | SPI_INT_FROM_FPGA     ::                  | H29 :: H30
 -- PIN_A5  :: PIN_B5    | WDG_INT_FROM_FPGA     ::                  | H31 :: H32
--- PIN_C3  :: PIN_C4    | CONF_DONE_FROM_CPU    ::                  | H33 :: H34
+-- PIN_C3  :: PIN_C4    | CFG_INT_FROM_CPU      ::                  | H33 :: H34
 -- PIN_A4  :: PIN_B4    |                       ::                  | H35 :: H36
 -- PIN_A3  :: PIN_B3    | SECONDARY_MOSI        ::                  | H37 :: H38
 -- PIN_B2  :: PIN_B1    |                       ::                  | H39 :: H40
@@ -136,7 +136,7 @@ port
     SPI_INT_FROM_FPGA : out std_logic; -- PIN_A9 :: GPIO01 :: HEADER_PIN_29
     TIMER_INT_FROM_FPGA : out std_logic; -- PIN_A13 :: GPIO09 :: HEADER_PIN_07
     WDG_INT_FROM_FPGA : out std_logic; -- PIN_A20 :: GPIO11 :: HEADER_PIN_31
-    CONF_DONE_FROM_CPU : in std_logic; -- PIN_B4 :: GPIO13 :: HEADER_PIN_33
+    CFG_INT_FROM_CPU : in std_logic; -- PIN_B4 :: GPIO13 :: HEADER_PIN_33
     PRIMARY_MOSI : in std_logic;  -- PIN_B6 :: H19 :: SPI0_MOSI
     PRIMARY_MISO : out std_logic; -- PIN_A8 :: H21 :: SPI0_MISO
     PRIMARY_SCLK : in std_logic;  -- PIN_B8 :: H23 :: SPI0_SCLK
@@ -311,7 +311,7 @@ signal data_spi_rf_feedback : std_logic_vector(7 downto 0) := "00010001";
 signal data_spi_bmi160_s1_feedback : std_logic_vector(7 downto 0) := "00010101";
 signal data_spi_bmi160_s2_feedback : std_logic_vector(7 downto 0) := "00010110";
 signal data_spi_bmi160_s3_feedback : std_logic_vector(7 downto 0) := "00010111";
-signal data_pwm_feedback : std_logic_vector(7 downto 0) := "11111101";
+signal data_pwm_feedback : std_logic_vector(7 downto 0) := "11000011";
 -- Debounce signals
 signal interrupt_from_cpu : std_logic := '0';
 -- Interrupts
@@ -379,6 +379,10 @@ signal ctrl_BMI160_S2_CS : std_logic := '0';
 signal ctrl_BMI160_S2_MISO : std_logic := '0';
 signal ctrl_BMI160_S2_MOSI : std_logic := '0';
 signal ctrl_BMI160_S2_SCLK : std_logic := '0';
+--
+signal Sensor_Configuration_Complete : std_logic := '0';
+signal s1_bmi160_int_1_DataReady : std_logic := '0';
+signal s2_bmi160_int_1_DataReady : std_logic := '0';
 
 ----------------------------------------------------------------------------------------------------------------
 -- COMPONENTS DECLARATION
@@ -1274,7 +1278,19 @@ port map
 -- //                          //
 -- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-PulseController_module: PulseController
+ConfigDone_Interrupt_From_CPU: PulseController
+generic map
+(
+    PULSE_LENGTH => 1 -- 1*20ns Pulse
+)
+port map
+(
+    CLOCK_50MHz => CLOCK_50MHz,
+    INPUT_PULSE => CFG_INT_FROM_CPU,
+    OUTPUT_PULSE => Sensor_Configuration_Complete
+);
+
+Interrupt_from_bmi160_s1: PulseController
 generic map
 (
     PULSE_LENGTH => 1 -- 1*20ns Pulse
@@ -1283,7 +1299,19 @@ port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
     INPUT_PULSE => S1_BMI160_INT_1,
-    OUTPUT_PULSE => open
+    OUTPUT_PULSE => s1_bmi160_int_1_DataReady
+);
+
+Interrupt_from_bmi160_s2: PulseController
+generic map
+(
+    PULSE_LENGTH => 1 -- 1*20ns Pulse
+)
+port map
+(
+    CLOCK_50MHz => CLOCK_50MHz,
+    INPUT_PULSE => S2_BMI160_INT_1,
+    OUTPUT_PULSE => s2_bmi160_int_1_DataReady
 );
 
 ------------------------------------------------------------------------------------------------------------------------------------------

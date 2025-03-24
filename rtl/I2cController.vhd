@@ -629,7 +629,6 @@ begin
 
                                 if status_sda = "1010" then -- [16000] :: Stop Bit
                                     I2C_SDA <= '0';
-                                    --FEEDBACK_DATA <= "01111110"; -- 0x7e
                                     FEEDBACK_DATA <= OFFLOAD_REGISTER;
                                     FPGA_INT <= '1';
                                 end if;
