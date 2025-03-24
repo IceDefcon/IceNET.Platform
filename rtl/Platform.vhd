@@ -379,6 +379,10 @@ signal ctrl_BMI160_S2_CS : std_logic := '0';
 signal ctrl_BMI160_S2_MISO : std_logic := '0';
 signal ctrl_BMI160_S2_MOSI : std_logic := '0';
 signal ctrl_BMI160_S2_SCLK : std_logic := '0';
+--
+signal Sensor_Configuration_Complete : std_logic := '0';
+signal s1_bmi160_int_1_DataReady : std_logic := '0';
+signal s2_bmi160_int_1_DataReady : std_logic := '0';
 
 ----------------------------------------------------------------------------------------------------------------
 -- COMPONENTS DECLARATION
@@ -1274,7 +1278,7 @@ port map
 -- //                          //
 -- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-PulseController_module: PulseController
+ConfigDone_Interrupt_From_CPU: PulseController
 generic map
 (
     PULSE_LENGTH => 1 -- 1*20ns Pulse
@@ -1283,7 +1287,31 @@ port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
     INPUT_PULSE => CFG_INT_FROM_CPU,
-    OUTPUT_PULSE => open
+    OUTPUT_PULSE => Sensor_Configuration_Complete
+);
+
+Interrupt_from_bmi160_s1: PulseController
+generic map
+(
+    PULSE_LENGTH => 1 -- 1*20ns Pulse
+)
+port map
+(
+    CLOCK_50MHz => CLOCK_50MHz,
+    INPUT_PULSE => S1_BMI160_INT_1,
+    OUTPUT_PULSE => s1_bmi160_int_1_DataReady
+);
+
+Interrupt_from_bmi160_s2: PulseController
+generic map
+(
+    PULSE_LENGTH => 1 -- 1*20ns Pulse
+)
+port map
+(
+    CLOCK_50MHz => CLOCK_50MHz,
+    INPUT_PULSE => S2_BMI160_INT_1,
+    OUTPUT_PULSE => s2_bmi160_int_1_DataReady
 );
 
 ------------------------------------------------------------------------------------------------------------------------------------------

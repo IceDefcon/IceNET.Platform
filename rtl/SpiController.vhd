@@ -114,6 +114,7 @@ begin
                     --
                     sck_timer <= "0100";
                     sck_timer_toggle <= '1';
+                    spi_status <= "0000";
                     ------------------------------
                     -- Finished :: Jump to MUX
                     ------------------------------
@@ -159,7 +160,6 @@ begin
                         end if;
 
                         index <= 0;
-                        spi_status <= "0000";
                         bytes_count <= bytes_count + 1;
                         byte_process_timer <= 0;
                         if write_flag = '1' then
@@ -217,7 +217,7 @@ begin
                                 FPGA_INT <= '1';
                                 FEEDBACK_DATA <= feedback_byte;
                             else
-                                spi_status <= "1110"; -- Going Back to CONFIG -> IDLE
+                                spi_status <= "1111"; -- Going Back to CONFIG -> IDLE
                             end if;
                         end if;
 
@@ -358,7 +358,7 @@ begin
                                 FPGA_INT <= '1';
                                 FEEDBACK_DATA <= OFFLOAD_REGISTER;
                             else
-                                spi_status <= "1110"; -- Going Back to CONFIG -> IDLE
+                                spi_status <= "1111"; -- Going Back to CONFIG -> IDLE
                             end if;
                         end if;
 
