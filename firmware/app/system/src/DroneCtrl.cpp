@@ -136,7 +136,7 @@ void DroneCtrl::droneCtrlMain()
             std::cout << std::dec << "[INFO] [ D ] Waiting " << static_cast<uint32_t>(FPGA_DELAY) << "ms for the FPGA to configure Peripherals..." << std::endl;
             std::this_thread::sleep_for(std::chrono::milliseconds(3000));
             std::cout << "[INFO] [ D ] Configuration Done :: Switch DMA into a Single Mode" << std::endl;
-            m_instanceCommander->sendCommand(CMD_DMA_RECONFIG);
+            m_instanceCommander->sendCommand(CMD_DMA_SINGLE);
             m_ctrlState = CTRL_MAIN;
             break;
 

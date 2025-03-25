@@ -87,11 +87,12 @@ public:
 
     void setupWindow();
     void setupConsole();
+    void setupDma();
     void setupI2C();
     void setupSPI();
     void setupPWM();
     void setupSeparators();
-    void setupProcess();
+    void setupThreadProcess();
 
     /* SHARE */ void setTransferPointers(
     std::shared_ptr<std::vector<uint8_t>> transferPointerRx,
@@ -102,6 +103,7 @@ private slots:
 
     void setDeadCommand();
     void setDummyCommand();
+    void dma_execute(commandType cmd);
     void i2c_execute();
     void spi_execute();
     void pwm_execute(pwmType type);

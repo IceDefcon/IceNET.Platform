@@ -301,13 +301,19 @@ static ssize_t commanderWrite(struct file *filep, const char __user *buffer, siz
     {
         /* Activate DMA Engine */
         printk(KERN_INFO "[CTRL][ C ] Activate DMA Engine\n");
-        setStateMachine(SM_DMA_LONG);
+        setStateMachine(SM_FPGA_CONFIG);
     }
-    else if (Device[DEVICE_COMMANDER].io_transfer.RxData[0] == 0xAE && Device[DEVICE_COMMANDER].io_transfer.RxData[1] == 0xC0)
+    else if (Device[DEVICE_COMMANDER].io_transfer.RxData[0] == 0x51 && Device[DEVICE_COMMANDER].io_transfer.RxData[1] == 0x6E)
     {
         /* Reconfigure DMA Engine */
         printk(KERN_INFO "[CTRL][ C ] Reconfigure DMA Engine into single mode\n");
         setStateMachine(SM_DMA_SINGLE);
+    }
+    else if (Device[DEVICE_COMMANDER].io_transfer.RxData[0] == 0x5E && Device[DEVICE_COMMANDER].io_transfer.RxData[1] == 0x50)
+    {
+        /* Reconfigure DMA Engine */
+        printk(KERN_INFO "[CTRL][ C ] Reconfigure DMA Engine into sensor mode\n");
+        setStateMachine(SM_DMA_SENSOR);
     }
     else if (Device[DEVICE_COMMANDER].io_transfer.RxData[0] == 0xC1 && Device[DEVICE_COMMANDER].io_transfer.RxData[1] == 0xEA)
     {

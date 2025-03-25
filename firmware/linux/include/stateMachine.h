@@ -21,8 +21,9 @@
 typedef enum 
 {
     SM_IDLE = 0,
-    SM_DMA_LONG,
+    SM_FPGA_CONFIG,
     SM_DMA_SINGLE,
+    SM_DMA_SENSOR,
     SM_DMA_CLEAR,
     SM_SPI,
     SM_OFFLOAD,

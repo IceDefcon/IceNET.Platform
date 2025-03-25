@@ -23,9 +23,9 @@ static const deviceType dev =
 static const consoleType console =
 {
     .xPosition = dev.xGap*5 + dev.xText + dev.xUnit*2,  // Vertical Separator
-    .yPosition = dev.yGap,                              // Top
+    .yPosition = dev.yGap*6 + dev.yLogo + dev.yUnit*3,  // At SPI Logo
     .xSize = 800 - console.xPosition - dev.xGap,        // Obvious
-    .ySize = dev.yGap*14 + dev.yLogo*3 + dev.yUnit*9+1, // Last Horizontal Separator
+    .ySize = dev.yGap*8 + dev.yLogo*2 + dev.yUnit*6+1, // Last Horizontal Separator - yPosition + yGap
 };
 
 gui::gui() :
@@ -40,12 +40,14 @@ m_IO_GuiState(std::make_shared<ioStateType>(IO_IDLE))
     setupWindow();
     setupConsole();
 
+    setupDma();
+
     setupI2C();
     setupSPI();
     setupPWM();
 
     setupSeparators();
-    setupProcess();
+    setupThreadProcess();
 }
 
 gui::~gui()
@@ -71,6 +73,37 @@ void gui::setupConsole()
     m_consoleOutput->setPlainText("Console Initialized...\n");
 }
 
+void gui::setupDma()
+{
+    /* DMA :: Row[0] */
+    QLabel *i2c_label = new QLabel("DMA", this);
+    QFont i2c_labelFont;
+    i2c_labelFont.setPointSize(30);
+    i2c_labelFont.setItalic(true);
+    i2c_labelFont.setBold(true);
+    i2c_label->setFont(i2c_labelFont);
+    i2c_label->setGeometry(dev.xGap*5 + dev.xText + dev.xUnit*2, dev.yGap, dev.xLogo, dev.yLogo);
+    /* DMA :: Row[1] */
+    QLabel *dma_singleLabel = new QLabel("Single DMA [1] Byte", this);
+    dma_singleLabel->setGeometry(dev.xGap*5 + dev.xText + dev.xUnit*2, dev.yGap*2 + dev.yLogo, dev.xText, dev.yUnit);
+    QPushButton *dmaSingle_exeButton = new QPushButton("EXE", this);
+    dmaSingle_exeButton->setGeometry(dev.xGap*6 + dev.xText*2 + dev.xUnit*2, dev.yGap*2 + dev.yLogo, dev.xUnit, dev.yUnit);
+    connect(dmaSingle_exeButton, &QPushButton::clicked, this, [this]()
+    {
+        dma_execute(CMD_DMA_SINGLE);
+    });
+    /* DMA :: Row[2] */
+    QLabel *i2c_registerLabel = new QLabel("Axis DMA [6] Bytes", this);
+    i2c_registerLabel->setGeometry(dev.xGap*5 + dev.xText + dev.xUnit*2, dev.yGap*3 + dev.yLogo + dev.yUnit, dev.xText, dev.yUnit);
+    QPushButton *dmaSensor_exeButton = new QPushButton("EXE", this);
+    dmaSensor_exeButton->setGeometry(dev.xGap*6 + dev.xText*2 + dev.xUnit*2, dev.yGap*3 + dev.yLogo + dev.yUnit, dev.xUnit, dev.yUnit);
+    connect(dmaSensor_exeButton, &QPushButton::clicked, this, [this]()
+    {
+        dma_execute(CMD_DMA_SENSOR);
+    });
+}
+
+// CMD_DMA_SENSOR
 void gui::setupI2C()
 {
     /* I2C :: Row[0] */
@@ -209,12 +242,6 @@ void gui::setupPWM()
     });
 }
 
-
-
-
-
-
-
 void gui::setupSeparators()
 {
     /* Vertical Separator */
@@ -224,7 +251,7 @@ void gui::setupSeparators()
     vLine1->setFrameShadow(QFrame::Sunken);
     /* Horizontal Separator */
     QFrame *hLine1 = new QFrame(this);
-    hLine1->setGeometry(dev.xGap, dev.yGap*5 + dev.yLogo + dev.yUnit*3, dev.xGap*3 + dev.xText + dev.xUnit*2, dev.separatorWidth);
+    hLine1->setGeometry(dev.xGap, dev.yGap*5 + dev.yLogo + dev.yUnit*3, 800 - dev.xGap*2, dev.separatorWidth);
     hLine1->setFrameShape(QFrame::HLine);
     hLine1->setFrameShadow(QFrame::Sunken);
     /* Horizontal Separator */
@@ -235,14 +262,14 @@ void gui::setupSeparators()
 
     /* Horizontal Separator */
     QFrame *hLine3 = new QFrame(this);
-    hLine3->setGeometry(dev.xGap, dev.yGap*15 + dev.yLogo*3 + dev.yUnit*9, dev.xGap*3 + dev.xText + dev.xUnit*2, dev.separatorWidth);
+    hLine3->setGeometry(dev.xGap, dev.yGap*15 + dev.yLogo*3 + dev.yUnit*9, 800 - dev.xGap*2, dev.separatorWidth);
     hLine3->setFrameShape(QFrame::HLine);
     hLine3->setFrameShadow(QFrame::Sunken);
 }
 
-void gui::setupProcess()
+void gui::setupThreadProcess()
 {
-    QPushButton *connectButton = new QPushButton("CONNECT", this);
+    QPushButton *connectButton = new QPushButton("INITIALIZE", this);
     connectButton->setGeometry(dev.xGap, dev.yGap * 16 + dev.yLogo * 3 + dev.yUnit * 9,dev.xUnit * 5 + dev.xGap, dev.yUnit * 2);
     connectButton->setStyleSheet(
         "QPushButton {"
@@ -307,6 +334,26 @@ void gui::setDummyCommand()
     (*m_Tx_GuiVector)[5] = 0x44;
     (*m_Tx_GuiVector)[6] = 0x44;
     (*m_Tx_GuiVector)[7] = 0x44;
+}
+
+void gui::dma_execute(commandType cmd)
+{
+    if(NULL == m_instanceDroneCtrl)
+    {
+        printToConsole("[DMA] threadMain is not Running");
+    }
+    else
+    {
+        if(CMD_DMA_SINGLE == cmd || CMD_DMA_SENSOR == cmd)
+        {
+            printToConsole("[DMA] Send DMA Command to Kernel");
+            m_instanceDroneCtrl->getCommanderInstance()->sendCommand(cmd);
+        }
+        else
+        {
+            printToConsole("[DMA] Wrong DMA Command");
+        }
+    }
 }
 
 void gui::i2c_execute()
