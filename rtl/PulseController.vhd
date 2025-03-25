@@ -10,6 +10,8 @@ generic
 Port
 (
     CLOCK_50MHz : in  std_logic;
+    ENABLE_CONTROLLER : in std_logic;
+
     INPUT_PULSE : in std_logic;
     OUTPUT_PULSE : out std_logic
 );
@@ -20,12 +22,13 @@ architecture rtl of PulseController is
 type PULSE is
 (
     PULSE_IDLE,
+    PULSE_INIT,
     PULSE_PRODUCE,
-    PULSE_WAIT,
     PULSE_DONE
 );
 signal pulse_state: PULSE := PULSE_IDLE;
 signal pulse_count : integer range 0 to 64 := 0;
+signal wait_process : std_logic := '0';
 
 begin
 
@@ -38,28 +41,34 @@ begin
                     -- Duble Reset Values
                     pulse_count <= 0;
                     OUTPUT_PULSE <= '0';
+                    if ENABLE_CONTROLLER = '1' then
+                        pulse_state <= PULSE_INIT;
+                    end if;
 
-                    if INPUT_PULSE = '1' then
+                when PULSE_INIT =>
+                    -- Duble Reset Values
+                    pulse_count <= 0;
+                    OUTPUT_PULSE <= '0';
+
+                    if INPUT_PULSE = '1' and wait_process = '0' then
+                        wait_process <= '1';
                         pulse_state <= PULSE_PRODUCE;
+                    elsif INPUT_PULSE = '0' and wait_process = '1' then
+                        wait_process <= '0';
                     end if;
 
                 when PULSE_PRODUCE =>
                     OUTPUT_PULSE <= '1';
                     if PULSE_LENGTH = pulse_count + 1 then
                         pulse_count <= 0;
-                        pulse_state <= PULSE_WAIT;
+                        pulse_state <= PULSE_DONE;
                     else
                         pulse_count <= pulse_count + 1;
                     end if;
 
-                when PULSE_WAIT =>
-                    OUTPUT_PULSE <= '0';
-                    if INPUT_PULSE = '0' then
-                        pulse_state <= PULSE_DONE;
-                    end if;
-
                 when PULSE_DONE =>
-                    pulse_state <= PULSE_IDLE;
+                    OUTPUT_PULSE <= '0';
+                    pulse_state <= PULSE_INIT;
 
                 when others =>
                     pulse_state <= PULSE_IDLE;

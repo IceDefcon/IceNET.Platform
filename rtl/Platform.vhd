@@ -647,6 +647,8 @@ generic
 Port
 (
     CLOCK_50MHz : in  std_logic;
+    ENABLE_CONTROLLER : in std_logic;
+
     INPUT_PULSE : in std_logic;
     OUTPUT_PULSE : out std_logic
 );
@@ -1286,6 +1288,8 @@ generic map
 port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
+    ENABLE_CONTROLLER => '1',
+
     INPUT_PULSE => CFG_INT_FROM_CPU,
     OUTPUT_PULSE => Sensor_Configuration_Complete
 );
@@ -1298,6 +1302,8 @@ generic map
 port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
+    ENABLE_CONTROLLER => Sensor_Configuration_Complete,
+
     INPUT_PULSE => S1_BMI160_INT_1,
     OUTPUT_PULSE => s1_bmi160_int_1_DataReady
 );
@@ -1310,6 +1316,8 @@ generic map
 port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
+    ENABLE_CONTROLLER => Sensor_Configuration_Complete,
+
     INPUT_PULSE => S2_BMI160_INT_1,
     OUTPUT_PULSE => s2_bmi160_int_1_DataReady
 );
