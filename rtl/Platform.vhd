@@ -378,7 +378,8 @@ signal ctrl_BMI160_S2_SCLK : std_logic := '0';
 signal Sensor_Configuration_Complete : std_logic := '0';
 signal s1_bmi160_int_1_DataReady : std_logic := '0';
 signal s2_bmi160_int_1_DataReady : std_logic := '0';
-
+-- Debounce signals
+signal s1_denoised_interrupt_signal : std_logic := '0';
 ----------------------------------------------------------------------------------------------------------------
 -- COMPONENTS DECLARATION
 ----------------------------------------------------------------------------------------------------------------
@@ -646,6 +647,19 @@ Port
 
     INPUT_PULSE : in std_logic;
     OUTPUT_PULSE : out std_logic
+);
+end component;
+
+component NoiseController
+Port
+(
+    CLOCK_50MHz : in  std_logic;
+    RESET : in  std_logic;
+
+    INPUT_SIGNAL : in  std_logic;
+    THRESHOLD : in  integer range 0 to 255;
+
+    OUTPUT_SIGNAL  : out std_logic
 );
 end component;
 
@@ -1288,6 +1302,18 @@ port map
     OUTPUT_PULSE => Sensor_Configuration_Complete
 );
 
+s1_Interrupt_NoiseControl: NoiseController
+port map
+(
+    CLOCK_50MHz => CLOCK_50MHz,
+    RESET => '0',
+
+    INPUT_SIGNAL => S1_BMI160_INT_1,
+    THRESHOLD => 5, -- 50ns
+
+    OUTPUT_SIGNAL => s1_denoised_interrupt_signal
+);
+
 Interrupt_from_bmi160_s1: PulseController
 generic map
 (
@@ -1298,7 +1324,7 @@ port map
     CLOCK_50MHz => CLOCK_50MHz,
     ENABLE_CONTROLLER => Sensor_Configuration_Complete,
 
-    INPUT_PULSE => S1_BMI160_INT_1,
+    INPUT_PULSE => s1_denoised_interrupt_signal,
     OUTPUT_PULSE => s1_bmi160_int_1_DataReady
 );
 
