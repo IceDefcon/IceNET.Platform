@@ -268,9 +268,6 @@ signal primary_fifo_rd_en : std_logic := '0';
 signal primary_fifo_data_out : std_logic_vector(7 downto 0) := (others => '0');
 signal primary_fifo_full : std_logic := '0';
 signal primary_fifo_empty : std_logic := '0';
--- Kernel interrupt
-signal kernel_interrupt : std_logic := '0';
-signal kernel_interrupt_stop : std_logic := '0';
 -- Offload
 signal offload_interrupt : std_logic := '0';
 signal offload_ready : std_logic := '0';
@@ -312,8 +309,6 @@ signal data_spi_bmi160_s1_feedback : std_logic_vector(7 downto 0) := "00010101";
 signal data_spi_bmi160_s2_feedback : std_logic_vector(7 downto 0) := "00010110";
 signal data_spi_bmi160_s3_feedback : std_logic_vector(7 downto 0) := "00010111";
 signal data_pwm_feedback : std_logic_vector(7 downto 0) := "11000011";
--- Debounce signals
-signal interrupt_from_cpu : std_logic := '0';
 -- Interrupts
 signal feedback_interrupt_timer : std_logic_vector(5 downto 0) := (others => '0');
 -- UART
@@ -383,7 +378,8 @@ signal ctrl_BMI160_S2_SCLK : std_logic := '0';
 signal Sensor_Configuration_Complete : std_logic := '0';
 signal s1_bmi160_int_1_DataReady : std_logic := '0';
 signal s2_bmi160_int_1_DataReady : std_logic := '0';
-
+-- Debounce signals
+signal s1_denoised_interrupt_signal : std_logic := '0';
 ----------------------------------------------------------------------------------------------------------------
 -- COMPONENTS DECLARATION
 ----------------------------------------------------------------------------------------------------------------
@@ -647,8 +643,23 @@ generic
 Port
 (
     CLOCK_50MHz : in  std_logic;
+    ENABLE_CONTROLLER : in std_logic;
+
     INPUT_PULSE : in std_logic;
     OUTPUT_PULSE : out std_logic
+);
+end component;
+
+component NoiseController
+Port
+(
+    CLOCK_50MHz : in  std_logic;
+    RESET : in  std_logic;
+
+    INPUT_SIGNAL : in  std_logic;
+    THRESHOLD : in  integer range 0 to 255;
+
+    OUTPUT_SIGNAL  : out std_logic
 );
 end component;
 
@@ -797,27 +808,26 @@ end process;
 -- //                //
 -- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+SPI_Interrupt_From_CPU: PulseController
+generic map
+(
+    PULSE_LENGTH => 1 -- 1*20ns Pulse
+)
+port map
+(
+    CLOCK_50MHz => CLOCK_50MHz,
+    ENABLE_CONTROLLER => '1',
+
+    INPUT_PULSE => SPI_INT_FROM_CPU,
+    OUTPUT_PULSE => offload_interrupt
+);
+
 fifo_pre_process: -- Long interrupt signal from kernel to be cut in FPGA down to 20ns pulse
-process(CLOCK_50MHz, primary_parallel_MOSI, primary_conversion_complete, kernel_interrupt, interrupt_from_cpu)
+process(CLOCK_50MHz, primary_parallel_MOSI, primary_conversion_complete)
 begin
     if rising_edge(CLOCK_50MHz) then
-
-        -- 1st
-        interrupt_from_cpu <= SPI_INT_FROM_CPU;
-
-        -- 2nd
-        if interrupt_from_cpu = '1' and kernel_interrupt_stop = '0' then
-            kernel_interrupt <= '1';
-            kernel_interrupt_stop <= '1';
-        elsif interrupt_from_cpu = '0' then -- resest stop when debounced long interrupt from kernel goes down
-            kernel_interrupt_stop <= '0';
-        else
-            kernel_interrupt <= '0'; -- go down straight after 20ns
-        end if;
-
         primary_fifo_data_in <= primary_parallel_MOSI;
         primary_fifo_wr_en <= primary_conversion_complete;
-        offload_interrupt <= kernel_interrupt;
     end if;
 end process;
 
@@ -1286,8 +1296,22 @@ generic map
 port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
+    ENABLE_CONTROLLER => '1',
+
     INPUT_PULSE => CFG_INT_FROM_CPU,
     OUTPUT_PULSE => Sensor_Configuration_Complete
+);
+
+s1_Interrupt_NoiseControl: NoiseController
+port map
+(
+    CLOCK_50MHz => CLOCK_50MHz,
+    RESET => '0',
+
+    INPUT_SIGNAL => S1_BMI160_INT_1,
+    THRESHOLD => 5, -- 50ns
+
+    OUTPUT_SIGNAL => s1_denoised_interrupt_signal
 );
 
 Interrupt_from_bmi160_s1: PulseController
@@ -1298,7 +1322,9 @@ generic map
 port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
-    INPUT_PULSE => S1_BMI160_INT_1,
+    ENABLE_CONTROLLER => Sensor_Configuration_Complete,
+
+    INPUT_PULSE => s1_denoised_interrupt_signal,
     OUTPUT_PULSE => s1_bmi160_int_1_DataReady
 );
 
@@ -1310,6 +1336,8 @@ generic map
 port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
+    ENABLE_CONTROLLER => Sensor_Configuration_Complete,
+
     INPUT_PULSE => S2_BMI160_INT_1,
     OUTPUT_PULSE => s2_bmi160_int_1_DataReady
 );
