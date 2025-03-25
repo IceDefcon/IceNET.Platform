@@ -52,9 +52,9 @@ RamDisk::RamDisk() :
                 {0x7E, 0x15}, /* Set gyroscope to normal mode */
                 {0x40, 0x2C}, /* Set output data rate (ODR), range, etc. */
                 {0x51, 0x10}, /* Enable Data Ready Interrupt */
-                {0x56, 0x80}, /* Map Data Ready Interrupt to INT1 */
-                {0x53, 0x0A}, /* Configure INT1 as Push-Pull, Active High */
-                {0x54, 0x20}, /* Latch interrupt until data is read */
+                {0x56, 0x88}, /* Map Data Ready Interrupt to INT1 and INT2 */
+                {0x53, 0xAA}, /* Configure INT1 and INT2 as Outputs + Make them Low Active */
+                {0x54, 0x00}, /* Both INT1 and INT2 as outputs + non-latched */
                 {0x7E, 0x11}  /* Set accelerometer to normal mode */
             }
         },
@@ -69,9 +69,9 @@ RamDisk::RamDisk() :
                 {0x7E, 0x15}, /* Set gyroscope to normal mode */
                 {0x40, 0x2C}, /* Set output data rate (ODR), range, etc. */
                 {0x51, 0x10}, /* Enable Data Ready Interrupt */
-                {0x56, 0x80}, /* Map Data Ready Interrupt to INT1 */
-                {0x53, 0x0A}, /* Configure INT1 as Push-Pull, Active High */
-                {0x54, 0x20}, /* Latch interrupt until data is read */
+                {0x56, 0x88}, /* Map Data Ready Interrupt to INT1 and INT2 */
+                {0x53, 0xAA}, /* Configure INT1 and INT2 as Outputs + Make them Low Active */
+                {0x54, 0x00}, /* Both INT1 and INT2 as outputs + non-latched */
                 {0x7E, 0x11}  /* Set accelerometer to normal mode */
             }
         },
