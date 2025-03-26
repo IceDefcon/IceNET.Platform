@@ -72,7 +72,7 @@ static int stateMachineThread(void *data)
                 if(isConfigDone())
                 {
                     printk(KERN_INFO "[CTRL][STM] Normal DMA mode\n");
-                    enableDMASingle();
+                    configDMASingle();
                     /* Let notiffy FPGA that Perfiperal devices feedback is received */
                     gpio_set_value(GPIO_CONF_DONE_INTERRUPT_FROM_CPU, 1);
                     gpio_set_value(GPIO_CONF_DONE_INTERRUPT_FROM_CPU, 0);
@@ -105,13 +105,20 @@ static int stateMachineThread(void *data)
                 destroyTransfer(SECTOR_BMI160_1);
                 destroyTransfer(SECTOR_ADXL345);
                 /* Switch to SPI/DMA @ Config */
-                enableDMAConfig();
+                configDMAPeripherals();
                 /* Schedule Work Queue for SPI/DMA transfer */
                 setStateMachine(SM_SPI);
                 break;
 
             case SM_DMA_SENSOR:
                 printk(KERN_INFO "[CTRL][STM] Sensor Configuration DMA mode\n");
+                configDMASensor();
+                setStateMachine(SM_DONE);
+                break;
+
+            case SM_DMA_FEEDBACK:
+                printk(KERN_INFO "[CTRL][STM] Single Byte Feedback Configuration DMA mode\n");
+                configDMAFeedback();
                 setStateMachine(SM_DONE);
                 break;
 

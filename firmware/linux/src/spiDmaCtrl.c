@@ -192,7 +192,7 @@ static int spiDmaInit(spiDeviceType spiDeviceEnum, dmaControlType dmaControl, bo
         else if(SPI_SECONDARY == spiDeviceEnum)
         {
             printk(KERN_ERR "[INIT][SPI] SPI/DMA Feedback\n");
-            Device[spiDeviceEnum].spiLength = FEEDBACK_DMA_TRANSFER_SIZE;
+            Device[spiDeviceEnum].spiLength = SENSOR_DMA_TRANSFER_SIZE;
         }
         else
         {
@@ -384,24 +384,37 @@ int spiInit(void)
     (void)spiBusInit(BUS_SPI1, SPI_SECONDARY);
 
     /* Only Secondary Required :: Since primary is initialised trough State Machine */
-    spiDmaInit(SPI_SECONDARY, DMA_OUT, true);
+    configDMAFeedback();
 
     return 0;
 }
 
-/* CONFIG */ void enableDMAConfig(void)
+/* CONFIG */ void configDMAPeripherals(void)
 {
-    printk(KERN_INFO "[CTRL][SPI] Conigure Primary SPI into DMA -> FPGA peripherals configuratoin\n");
+    printk(KERN_INFO "[CTRL][SPI] Configure Primary SPI into DMA -> FPGA peripherals configuratoin\n");
     spiDmaDestroy(SPI_PRIMARY);
     spiDmaInit(SPI_PRIMARY, DMA_IN, true);
 }
 
-
-/* CONFIG */ void enableDMASingle(void)
+/* CONFIG */ void configDMASingle(void)
 {
-    printk(KERN_INFO "[CTRL][SPI] Conigure Primary SPI into DMA -> Single Transfer Mode\n");
+    printk(KERN_INFO "[CTRL][SPI] Configure Primary SPI into DMA -> Single Transfer Mode\n");
     spiDmaDestroy(SPI_PRIMARY);
     spiDmaInit(SPI_PRIMARY, DMA_IN, false);
+}
+
+/* CONFIG */ void configDMAFeedback(void)
+{
+    printk(KERN_INFO "[CTRL][SPI] Configure Secondary SPI into DMA -> Single Transfer Mode\n");
+    spiDmaDestroy(SPI_SECONDARY);
+    spiDmaInit(SPI_SECONDARY, DMA_OUT, true);
+}
+
+/* CONFIG */ void configDMASensor(void)
+{
+    printk(KERN_INFO "[CTRL][SPI] Configure Secondary SPI into DMA -> Sensor Transfer Mode\n");
+    spiDmaDestroy(SPI_SECONDARY);
+    spiDmaInit(SPI_SECONDARY, DMA_OUT, false);
 }
 
 void spiDestroy(void)

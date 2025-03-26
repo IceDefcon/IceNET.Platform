@@ -24,6 +24,7 @@ typedef enum
     SM_FPGA_CONFIG,
     SM_DMA_SINGLE,
     SM_DMA_SENSOR,
+    SM_DMA_FEEDBACK,
     SM_DMA_CLEAR,
     SM_SPI,
     SM_OFFLOAD,

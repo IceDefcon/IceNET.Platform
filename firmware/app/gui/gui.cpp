@@ -90,7 +90,7 @@ void gui::setupDma()
     dmaSingle_exeButton->setGeometry(dev.xGap*6 + dev.xText*2 + dev.xUnit*2, dev.yGap*2 + dev.yLogo, dev.xUnit, dev.yUnit);
     connect(dmaSingle_exeButton, &QPushButton::clicked, this, [this]()
     {
-        dma_execute(CMD_DMA_SINGLE);
+        dma_execute(CMD_DMA_FEEDBACK);
     });
     /* DMA :: Row[2] */
     QLabel *i2c_registerLabel = new QLabel("Axis DMA [12] Bytes", this);
@@ -344,7 +344,7 @@ void gui::dma_execute(commandType cmd)
     }
     else
     {
-        if(CMD_DMA_SINGLE == cmd || CMD_DMA_SENSOR == cmd)
+        if(CMD_DMA_FEEDBACK == cmd || CMD_DMA_SENSOR == cmd)
         {
             printToConsole("[DMA] Send DMA Command to Kernel");
             m_instanceDroneCtrl->getCommanderInstance()->sendCommand(cmd);

@@ -84,8 +84,10 @@ typedef struct
 }dmaCtrlType;
 
 /* SPI */ int spiInit(void);
-/* CONFIG */ void enableDMAConfig(void);
-/* CONFIG */ void enableDMASingle(void);
+/* CONFIG */ void configDMAPeripherals(void);
+/* CONFIG */ void configDMASingle(void);
+/* CONFIG */ void configDMAFeedback(void);
+/* CONFIG */ void configDMASensor(void);
 /* FPGA */ void masterTransferPrimary(struct work_struct *work);
 /* FPGA */ void masterTransferSecondary(struct work_struct *work);
 /* SPI */ void spiDestroy(void);

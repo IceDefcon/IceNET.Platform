@@ -315,6 +315,12 @@ static ssize_t commanderWrite(struct file *filep, const char __user *buffer, siz
         printk(KERN_INFO "[CTRL][ C ] Reconfigure DMA Engine into sensor mode\n");
         setStateMachine(SM_DMA_SENSOR);
     }
+    else if (Device[DEVICE_COMMANDER].io_transfer.RxData[0] == 0xFE && Device[DEVICE_COMMANDER].io_transfer.RxData[1] == 0xED)
+    {
+        /* Reconfigure DMA Engine */
+        printk(KERN_INFO "[CTRL][ C ] Reconfigure DMA Engine into single byte feedback mode\n");
+        setStateMachine(SM_DMA_FEEDBACK);
+    }
     else if (Device[DEVICE_COMMANDER].io_transfer.RxData[0] == 0xC1 && Device[DEVICE_COMMANDER].io_transfer.RxData[1] == 0xEA)
     {
         printk(KERN_INFO "[CTRL][ C ] [0] Clear DMA variables used for verification of IMU's config\n");

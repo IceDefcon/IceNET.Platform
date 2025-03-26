@@ -25,6 +25,7 @@
 
 #define MANUAL_DMA_TRANSFER_SIZE 4
 #define FEEDBACK_DMA_TRANSFER_SIZE 1
+#define SENSOR_DMA_TRANSFER_SIZE 12
 
 typedef struct
 {
