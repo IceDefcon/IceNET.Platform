@@ -50,7 +50,7 @@ RamDisk::RamDisk() :
             {
                 {0x7E, 0xB6}, /* Soft reset the sensor */
                 {0x7E, 0x15}, /* Set gyroscope to normal mode */
-                {0x40, 0x2C}, /* Set output data rateok th (ODR), range, etc. */
+                {0x40, 0x2C}, /* No undersampling, Filter set 2, Output data rate 1600Hz */
                 {0x51, 0x10}, /* Enable Data Ready Interrupt */
                 {0x56, 0x88}, /* Map Data Ready Interrupt to INT1 and INT2 */
                 {0x53, 0xAA}, /* Configure INT1 and INT2 as Outputs + Make them Active High */
@@ -67,7 +67,7 @@ RamDisk::RamDisk() :
             {
                 {0x7E, 0xB6}, /* Soft reset the sensor */
                 {0x7E, 0x15}, /* Set gyroscope to normal mode */
-                {0x40, 0x2C}, /* Set output data rate (ODR), range, etc. */
+                {0x40, 0x2C}, /* No undersampling, Filter set 2, Output data rate 1600Hz */
                 {0x51, 0x10}, /* Enable Data Ready Interrupt */
                 {0x56, 0x88}, /* Map Data Ready Interrupt to INT1 and INT2 */
                 {0x53, 0xAA}, /* Configure INT1 and INT2 as Outputs + Make them Active High */

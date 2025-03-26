@@ -168,10 +168,10 @@ void gui::setupSPI()
     spi_registerLabel->setGeometry(dev.xGap, dev.yGap*8 + dev.yLogo*2 + dev.yUnit*4, dev.xText, dev.yUnit);
     m_spi_registerField = new QLineEdit(this);
     m_spi_registerField->setGeometry(dev.xGap*2 + dev.xText, dev.yGap*8 + dev.yLogo*2 + dev.yUnit*4, dev.xUnit, dev.yUnit);
-    m_spi_registerField->setText("0x00");
+    m_spi_registerField->setText("0x92");
     m_spi_burstField = new QLineEdit(this);
     m_spi_burstField->setGeometry(dev.xGap*3 + dev.xText + dev.xUnit, dev.yGap*8 + dev.yLogo*2 + dev.yUnit*4, dev.xUnit, dev.yUnit);
-    m_spi_burstField->setText("0x01");
+    m_spi_burstField->setText("0x0C");
     /* SPI :: Row[3] */
     QLabel *spi_dataLabel = new QLabel("Write Data", this);
     spi_dataLabel->setGeometry(dev.xGap, dev.yGap*9 + dev.yLogo*2 + dev.yUnit*5, dev.xText, dev.yUnit);
