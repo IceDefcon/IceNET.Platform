@@ -80,7 +80,14 @@ static int stateMachineThread(void *data)
                 }
                 break;
 
-            case SM_DMA_LONG:
+            case SM_FPGA_CONFIG:
+                /**
+                 *
+                 * TODO
+                 *
+                 * This need refactoring
+                 *
+                 */
                 printk(KERN_INFO "[CTRL][STM] Long Configuration DMA mode\n");
                 /* Init pointers */
                 initTransfer(SECTOR_ENGINE);
@@ -101,6 +108,11 @@ static int stateMachineThread(void *data)
                 enableDMAConfig();
                 /* Schedule Work Queue for SPI/DMA transfer */
                 setStateMachine(SM_SPI);
+                break;
+
+            case SM_DMA_SENSOR:
+                printk(KERN_INFO "[CTRL][STM] Sensor Configuration DMA mode\n");
+                setStateMachine(SM_DONE);
                 break;
 
             case SM_DMA_CLEAR:

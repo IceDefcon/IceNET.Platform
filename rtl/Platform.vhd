@@ -247,6 +247,7 @@ architecture rtl of Platform is
 
 -- Buttons
 signal reset_button : std_logic := '0';
+signal active_button : std_logic := '0';
 -- Spi.0 Primary
 signal primary_conversion_complete : std_logic := '0';
 signal primary_parallel_MOSI : std_logic_vector(7 downto 0) := (others => '0');
@@ -380,6 +381,22 @@ signal s1_bmi160_int_1_DataReady : std_logic := '0';
 signal s2_bmi160_int_1_DataReady : std_logic := '0';
 -- Debounce signals
 signal s1_denoised_interrupt_signal : std_logic := '0';
+-- Debug
+signal test_continue_flag : std_logic := '0';
+signal test_switch_bmi160_s1_ready : std_logic := '0';
+signal test_offload_ctrl : std_logic_vector(7 downto 0) := (others => '0');
+signal test_offload_register : std_logic_vector(7 downto 0) := (others => '0');
+signal test_offload_data : std_logic_vector(7 downto 0) := (others => '0');
+signal test_counter : std_logic_vector(7 downto 0) := (others => '0');
+
+type SENSOR_STATE is
+(
+    SENSOR_IDLE,
+    SENSOR_TEST,
+    SENSOR_DONE
+);
+signal s1_state: SENSOR_STATE := SENSOR_IDLE;
+
 ----------------------------------------------------------------------------------------------------------------
 -- COMPONENTS DECLARATION
 ----------------------------------------------------------------------------------------------------------------
@@ -1055,42 +1072,61 @@ PacketSwitch:
 process(CLOCK_50MHz)
 begin
     if rising_edge(CLOCK_50MHz) then
-        if offload_ready = '1' then
-            if offload_ctrl(2 downto 1) = SWITCH_I2C then
-                switch_i2c_ready <= '1';
-            elsif offload_ctrl(2 downto 1) = SWITCH_SPI then
-                if offload_id = SWITCH_BMI160_S1 then
-                    switch_bmi160_s1_ready <= '1';
-                elsif offload_id = SWITCH_BMI160_S2 then
-                    switch_bmi160_s2_ready <= '1';
-                elsif offload_id = SWITCH_BMI160_S3 then
-                    switch_bmi160_s3_ready <= '1';
-                elsif offload_id = SWITCH_nRF905 then
-                    switch_spi_RF_ready <= '1';
-                else
-                    switch_bmi160_s1_ready <= '0';
-                    switch_bmi160_s2_ready <= '0';
-                    switch_bmi160_s3_ready <= '0';
-                    switch_spi_RF_ready <= '0';
+        case s1_state is
+            when SENSOR_IDLE =>
+                if offload_ready = '1' then
+                    if offload_ctrl(2 downto 1) = SWITCH_I2C then
+                        switch_i2c_ready <= '1';
+                    elsif offload_ctrl(2 downto 1) = SWITCH_SPI then
+                        if offload_id = SWITCH_BMI160_S1 then
+                            --switch_bmi160_s1_ready <= '1';
+                            test_switch_bmi160_s1_ready <= '1';
+                            test_offload_ctrl           <= offload_ctrl;
+                            test_offload_register       <= offload_register;
+                            test_offload_data           <= offload_data;
+                        elsif offload_id = SWITCH_BMI160_S2 then
+                            switch_bmi160_s2_ready <= '1';
+                        elsif offload_id = SWITCH_BMI160_S3 then
+                            switch_bmi160_s3_ready <= '1';
+                        elsif offload_id = SWITCH_nRF905 then
+                            switch_spi_RF_ready <= '1';
+                        else
+                            test_switch_bmi160_s1_ready <= '0';
+                            --switch_bmi160_s1_ready <= '0';
+                            switch_bmi160_s2_ready <= '0';
+                            switch_bmi160_s3_ready <= '0';
+                            switch_spi_RF_ready <= '0';
+                        end if;
+                    elsif offload_ctrl(2 downto 1) = SWITCH_PWM then
+                        switch_pwm_ready <= '1';
+                    end if;
+                    s1_state <= SENSOR_DONE;
+                elsif s1_bmi160_int_1_DataReady = '1' and active_button = '1' then
+                    s1_state <= SENSOR_TEST;
                 end if;
-            elsif offload_ctrl(2 downto 1) = SWITCH_PWM then
-                switch_pwm_ready <= '1';
-            else
+
+            when SENSOR_TEST =>
+                test_switch_bmi160_s1_ready <= '1';
+                test_offload_ctrl           <= "11100010";
+                test_offload_register       <= "10010010";
+                test_offload_data           <= "00000000";
+                s1_state <= SENSOR_DONE;
+
+            when SENSOR_DONE =>
                 switch_i2c_ready <= '0';
                 switch_pwm_ready <= '0';
-                switch_bmi160_s1_ready <= '0';
+                test_switch_bmi160_s1_ready <= '0';
+                --switch_bmi160_s1_ready <= '0';
                 switch_bmi160_s2_ready <= '0';
                 switch_bmi160_s3_ready <= '0';
                 switch_spi_RF_ready <= '0';
-            end if;
-        else
-            switch_i2c_ready <= '0';
-            switch_pwm_ready <= '0';
-            switch_bmi160_s1_ready <= '0';
-            switch_bmi160_s2_ready <= '0';
-            switch_bmi160_s3_ready <= '0';
-            switch_spi_RF_ready <= '0';
-        end if;
+                s1_state <= SENSOR_IDLE;
+
+            when others =>
+                s1_state <= SENSOR_IDLE;
+
+        end case;
+
     end if;
 end process;
 
@@ -1130,16 +1166,16 @@ SpiController_BMI160_S1_module: SpiController port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
 
-    OFFLOAD_INT => switch_bmi160_s1_ready,
+    OFFLOAD_INT => test_switch_bmi160_s1_ready,
 
     OFFLOAD_ID => offload_id(0) & offload_id(1) &
                 offload_id(2) & offload_id(3) &
                 offload_id(4) & offload_id(5) &
                 offload_id(6), -- Turn back around for SPI
 
-    OFFLOAD_CONTROL => offload_ctrl,
-    OFFLOAD_REGISTER => offload_register,
-    OFFLOAD_DATA => offload_data,
+    OFFLOAD_CONTROL => test_offload_ctrl,
+    OFFLOAD_REGISTER => test_offload_register,
+    OFFLOAD_DATA => test_offload_data,
 
     OFFLOAD_WAIT => offload_wait_spi_s1,
 
@@ -1419,6 +1455,19 @@ LED_5 <= '0';
 LED_6 <= '1';
 LED_7 <= '0';
 LED_8 <= '1';
+
+ActiveDebug_Button: DebounceController
+generic map
+(
+    PERIOD => 50000, -- 50Mhz :: 50000*20ns = 1ms
+    SM_OFFSET => 3
+)
+port map
+(
+    clock => CLOCK_50MHz,
+    button_in => BUTTON_3,
+    button_out => active_button
+);
 
 --looptrough_process:
 --process(CLOCK_50MHz)
