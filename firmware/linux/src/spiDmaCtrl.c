@@ -320,13 +320,14 @@ void masterTransferPrimary(struct work_struct *work)
 
             if(dmaCtrl.configCount == getPayloadBytesAmount())
             {
+                printk(KERN_INFO "[CTRL][SPI] FPGA Devices payload count[%d] vs [%d]\n", dmaCtrl.configCount, getPayloadBytesAmount());
                 printk(KERN_INFO "[CTRL][SPI] FPGA Devices responded Successfully\n");
                 dmaCtrl.configDone = true;
                 ret = true;
             }
             else
             {
-                printk(KERN_INFO "[CTRL][SPI] FPGA Devices count[%d] vs [%d]\n", dmaCtrl.configCount, getPayloadBytesAmount());
+                printk(KERN_INFO "[CTRL][SPI] FPGA Devices payload count[%d] vs [%d]\n", dmaCtrl.configCount, getPayloadBytesAmount());
             }
         }
     }
@@ -362,7 +363,15 @@ void masterTransferSecondary(struct work_struct *work)
         printk(KERN_INFO "[CTRL][SPI] Secondary FPGA Transfer :: Byte[%d]: [Feedback] Tx[0x%02x] [Data] Rx[0x%02x]\n", i, tx_buf[i], rx_buf[i]);
     }
 
-    /* TODO :: Process the return */
+    /**
+     *
+     * TODO
+     *
+     * Process the return
+     *
+     * But also the glitch when FPGA is beeing re-programmed
+     *
+     */
     (void)isConfDone();
 
     /* Unlock COMMANDER For Kernel Commander Device to process */
