@@ -93,7 +93,7 @@ void gui::setupDma()
         dma_execute(CMD_DMA_SINGLE);
     });
     /* DMA :: Row[2] */
-    QLabel *i2c_registerLabel = new QLabel("Axis DMA [6] Bytes", this);
+    QLabel *i2c_registerLabel = new QLabel("Axis DMA [12] Bytes", this);
     i2c_registerLabel->setGeometry(dev.xGap*5 + dev.xText + dev.xUnit*2, dev.yGap*3 + dev.yLogo + dev.yUnit, dev.xText, dev.yUnit);
     QPushButton *dmaSensor_exeButton = new QPushButton("EXE", this);
     dmaSensor_exeButton->setGeometry(dev.xGap*6 + dev.xText*2 + dev.xUnit*2, dev.yGap*3 + dev.yLogo + dev.yUnit, dev.xUnit, dev.yUnit);
