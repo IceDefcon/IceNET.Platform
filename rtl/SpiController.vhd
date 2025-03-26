@@ -46,8 +46,8 @@ constant TRANSFER_INIT : integer range 0 to 512 := 500;
 constant BYTE_INIT : integer range 0 to 16   := 10;
 constant BYTE_CLOCK : integer range 0 to 128 := 80;
 constant BYTE_EXIT : integer range 0 to 16   := 10;
-constant BYTE_BREAK : integer range 0 to 64  := 0;
-constant TRANSFER_EXIT : integer range 0 to 256 := 250;
+constant BYTE_BREAK : integer range 0 to 64  := 50;
+constant TRANSFER_EXIT : integer range 0 to 512 := 500;
 constant WRITE_DELAY : integer range 0 to 5000000 := 5000000;
 
 signal write_couter : integer range 0 to 5000000 := 0;
@@ -195,7 +195,7 @@ begin
                             elsif byte_process_timer < BYTE_BREAK + BYTE_INIT then
                                 spi_status <= "0110"; -- Next Byte Init
                             elsif byte_process_timer < BYTE_BREAK + BYTE_INIT + BYTE_CLOCK then
-                                spi_status <= "0111"; -- Generic Byte Clock Processhn    n gfn,h@;]rt pyUNmr509xq-0,9 ij
+                                spi_status <= "0111"; -- Generic Byte Clock Processing
                             elsif byte_process_timer < BYTE_BREAK + BYTE_INIT + BYTE_CLOCK + BYTE_EXIT then
                                 spi_status <= "1000"; -- Next Byte Exit
                             else
@@ -292,6 +292,9 @@ begin
                         ------------------------
                         if spi_status = "1110" then
                             SPI_state <= SPI_CONFIG;
+                            CTRL_CS <= '0';
+                            CTRL_MOSI <= '0';
+                            CTRL_SCK <= '0';
                         end if;
 
                         ------------------------
@@ -432,6 +435,9 @@ begin
                         ------------------------
                         if spi_status = "1110" then
                             SPI_state <= SPI_CONFIG;
+                            CTRL_CS <= '0';
+                            CTRL_MOSI <= '0';
+                            CTRL_SCK <= '0';
                         end if;
 
                         ------------------------
