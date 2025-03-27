@@ -173,7 +173,7 @@ static int spiDmaInit(spiDeviceType spiDeviceEnum, dmaControlType dmaControl, bo
         else if(SPI_SECONDARY == spiDeviceEnum)
         {
             printk(KERN_ERR "[INIT][SPI] SPI/DMA Feedback\n");
-            Device[spiDeviceEnum].spiLength = FEEDBACK_DMA_TRANSFER_SIZE;
+            Device[spiDeviceEnum].spiLength = SINGLE_DMA_TRANSFER_SIZE;
         }
         else
         {
@@ -383,38 +383,83 @@ int spiInit(void)
     (void)spiBusInit(BUS_SPI0, SPI_PRIMARY);
     (void)spiBusInit(BUS_SPI1, SPI_SECONDARY);
 
-    /* Only Secondary Required :: Since primary is initialised trough State Machine */
-    configDMAFeedback();
+    /* Only Secondary Required :: Default Dma Config */
+    configDMA(SPI_SECONDARY, DMA_OUT, DMA_CONFIG_FEEDBACK);
 
     return 0;
 }
 
-/* CONFIG */ void configDMAPeripherals(void)
+/**
+ *
+ * #define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
+ *
+ * This macro is already defined in:
+ * #include <linux/kernel.h>
+ *
+ */
+
+static const char* getSpiInterfaceString(spiDeviceType type)
 {
-    printk(KERN_INFO "[CTRL][SPI] Configure Primary SPI into DMA -> FPGA peripherals configuratoin\n");
-    spiDmaDestroy(SPI_PRIMARY);
-    spiDmaInit(SPI_PRIMARY, DMA_IN, true);
+    static const char* spiInterfaceStrings[] =
+    {
+        "SPI_PRIMARY",
+        "SPI_SECONDARY"
+    };
+
+    if (type >= 0 && type < ARRAY_SIZE(spiInterfaceStrings))
+    {
+        return spiInterfaceStrings[type];
+    }
+    else
+    {
+        return "UNKNOWN_SPI_INTERFACE";
+    }
 }
 
-/* CONFIG */ void configDMASingle(void)
+static const char* getDmaConfigString(dmaConfigType type)
 {
-    printk(KERN_INFO "[CTRL][SPI] Configure Primary SPI into DMA -> Single Transfer Mode\n");
-    spiDmaDestroy(SPI_PRIMARY);
-    spiDmaInit(SPI_PRIMARY, DMA_IN, false);
+    static const char* dmaConfigStrings[] =
+    {
+        "DMA_CONFIG_PERIPHERALS",
+        "DMA_CONFIG_FEEDBACK",
+        "DMA_CONFIG_SINGLE",
+        "DMA_CONFIG_SENSOR"
+    };
+
+    if (type >= 0 && type < ARRAY_SIZE(dmaConfigStrings))
+    {
+        return dmaConfigStrings[type];
+    }
+    else
+    {
+        return "UNKNOWN_DMA_TYPE";
+    }
 }
 
-/* CONFIG */ void configDMAFeedback(void)
+/**
+ *
+ * TODO
+ *
+ * This still need to be refactored
+ * On the true/false value
+ *
+ */
+/* CONFIG */ void configDMA(spiDeviceType spiDevice, dmaControlType dmaControl, dmaConfigType dmaConfig)
 {
-    printk(KERN_INFO "[CTRL][SPI] Configure Secondary SPI into DMA -> Single Transfer Mode\n");
-    spiDmaDestroy(SPI_SECONDARY);
-    spiDmaInit(SPI_SECONDARY, DMA_OUT, true);
-}
-
-/* CONFIG */ void configDMASensor(void)
-{
-    printk(KERN_INFO "[CTRL][SPI] Configure Secondary SPI into DMA -> Sensor Transfer Mode\n");
-    spiDmaDestroy(SPI_SECONDARY);
-    spiDmaInit(SPI_SECONDARY, DMA_OUT, false);
+    printk(KERN_INFO "[CTRL][SPI] Configure %s into -> %s\n", getSpiInterfaceString(spiDevice), getDmaConfigString(dmaConfig));
+    spiDmaDestroy(spiDevice);
+    if(DMA_CONFIG_PERIPHERALS == dmaConfig || DMA_CONFIG_FEEDBACK == dmaConfig)
+    {
+        spiDmaInit(spiDevice, dmaControl, true);
+    }
+    else if(DMA_CONFIG_SINGLE == dmaConfig || DMA_CONFIG_SENSOR == dmaConfig)
+    {
+        spiDmaInit(spiDevice, dmaControl, false);
+    }
+    else
+    {
+        printk(KERN_ERR "[ERNO][SPI] Invalid Dma Config [%s,%s]\n",getSpiInterfaceString(spiDevice), getDmaConfigString(dmaConfig));
+    }
 }
 
 void spiDestroy(void)

@@ -62,6 +62,15 @@ typedef enum
     DMA_AMOUNT
 }dmaControlType;
 
+typedef enum
+{
+    DMA_CONFIG_PERIPHERALS,
+    DMA_CONFIG_FEEDBACK,
+    DMA_CONFIG_SINGLE,
+    DMA_CONFIG_SENSOR,
+    DMA_CONFIG_AMOUNT,
+}dmaConfigType;
+
 typedef struct
 {
     struct spi_message spiMessage;
@@ -84,10 +93,7 @@ typedef struct
 }dmaCtrlType;
 
 /* SPI */ int spiInit(void);
-/* CONFIG */ void configDMAPeripherals(void);
-/* CONFIG */ void configDMASingle(void);
-/* CONFIG */ void configDMAFeedback(void);
-/* CONFIG */ void configDMASensor(void);
+/* CONFIG */ void configDMA(spiDeviceType spiDeviceEnum, dmaControlType dmaControl, dmaConfigType dmaConfig);
 /* FPGA */ void masterTransferPrimary(struct work_struct *work);
 /* FPGA */ void masterTransferSecondary(struct work_struct *work);
 /* SPI */ void spiDestroy(void);
