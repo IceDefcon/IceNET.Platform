@@ -72,7 +72,7 @@ static int stateMachineThread(void *data)
                 if(isConfigDone())
                 {
                     printk(KERN_INFO "[CTRL][STM] Normal DMA mode\n");
-                    configDMA(SPI_PRIMARY, DMA_IN, DMA_CONFIG_SINGLE);
+                    configDMA(SPI_PRIMARY, DMA_CONFIG_NORMAL);
                     /**
                      * Let notiffy FPGA that feedback from
                      * Perfiperal devices connected to FPGA
@@ -86,13 +86,13 @@ static int stateMachineThread(void *data)
 
             case SM_DMA_SENSOR:
                 printk(KERN_INFO "[CTRL][STM] Sensor Configuration DMA mode\n");
-                configDMA(SPI_SECONDARY, DMA_OUT, DMA_CONFIG_SENSOR);
+                configDMA(SPI_SECONDARY, DMA_CONFIG_SENSOR);
                 setStateMachine(SM_DONE);
                 break;
 
             case SM_DMA_SINGLE:
                 printk(KERN_INFO "[CTRL][STM] Single Byte Feedback Configuration DMA mode\n");
-                configDMA(SPI_SECONDARY, DMA_OUT, DMA_CONFIG_FEEDBACK);
+                configDMA(SPI_SECONDARY, DMA_CONFIG_SINGLE);
                 setStateMachine(SM_DONE);
                 break;
 
@@ -100,7 +100,7 @@ static int stateMachineThread(void *data)
                 printk(KERN_INFO "[CTRL][STM] Long Configuration DMA mode\n");
                 prepareRamDiskTransfer();
                 /* Switch to SPI/DMA @ FPGA Peripherals Config */
-                configDMA(SPI_PRIMARY, DMA_IN, DMA_CONFIG_PERIPHERALS);
+                configDMA(SPI_PRIMARY, DMA_CONFIG_RAMDISK);
                 /* Schedule Work Queue for SPI/DMA transfer */
                 setStateMachine(SM_PRIMARY_SPI);
                 break;

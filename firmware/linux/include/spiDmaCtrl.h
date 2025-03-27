@@ -64,10 +64,10 @@ typedef enum
 
 typedef enum
 {
-    DMA_CONFIG_PERIPHERALS,
-    DMA_CONFIG_FEEDBACK,
-    DMA_CONFIG_SINGLE,
+    DMA_CONFIG_NORMAL,
     DMA_CONFIG_SENSOR,
+    DMA_CONFIG_SINGLE,
+    DMA_CONFIG_RAMDISK,
     DMA_CONFIG_AMOUNT,
 }dmaConfigType;
 
@@ -93,7 +93,7 @@ typedef struct
 }dmaCtrlType;
 
 /* SPI */ int spiInit(void);
-/* CONFIG */ void configDMA(spiDeviceType spiDeviceEnum, dmaControlType dmaControl, dmaConfigType dmaConfig);
+/* CONFIG */ void configDMA(spiDeviceType spiDeviceEnum, dmaConfigType dmaConfig);
 /* FPGA */ void masterTransferPrimary(struct work_struct *work);
 /* FPGA */ void masterTransferSecondary(struct work_struct *work);
 /* SPI */ void spiDestroy(void);
