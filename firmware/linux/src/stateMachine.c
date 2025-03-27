@@ -68,46 +68,20 @@ static int stateMachineThread(void *data)
                 /* Nothing here :: Just wait */
                 break;
 
-            case SM_DMA_SINGLE:
+            case SM_DMA_NORMAL:
                 if(isConfigDone())
                 {
                     printk(KERN_INFO "[CTRL][STM] Normal DMA mode\n");
                     configDMA(SPI_PRIMARY, DMA_IN, DMA_CONFIG_SINGLE);
-                    /* Let notiffy FPGA that Perfiperal devices feedback is received */
+                    /**
+                     * Let notiffy FPGA that feedback from
+                     * Perfiperal devices connected to FPGA
+                     * is received by the kernel successfully
+                     */
                     gpio_set_value(GPIO_CONF_DONE_INTERRUPT_FROM_CPU, 1);
                     gpio_set_value(GPIO_CONF_DONE_INTERRUPT_FROM_CPU, 0);
                     setStateMachine(SM_DONE);
                 }
-                break;
-
-            case SM_FPGA_CONFIG:
-                /**
-                 *
-                 * TODO
-                 *
-                 * This need refactoring
-                 *
-                 */
-                printk(KERN_INFO "[CTRL][STM] Long Configuration DMA mode\n");
-                /* Init pointers */
-                initTransfer(SECTOR_ENGINE);
-                initTransfer(SECTOR_BMI160_0);
-                initTransfer(SECTOR_BMI160_1);
-                initTransfer(SECTOR_ADXL345);
-                /* Prepare DMA Transfer */
-                prepareTransfer(SECTOR_ENGINE, true, false);
-                prepareTransfer(SECTOR_BMI160_0, false, false);
-                prepareTransfer(SECTOR_BMI160_1, false, false);
-                prepareTransfer(SECTOR_ADXL345, false, true);
-                /* Destroy life-time pointers */
-                destroyTransfer(SECTOR_ENGINE);
-                destroyTransfer(SECTOR_BMI160_0);
-                destroyTransfer(SECTOR_BMI160_1);
-                destroyTransfer(SECTOR_ADXL345);
-                /* Switch to SPI/DMA @ Config */
-                configDMA(SPI_PRIMARY, DMA_IN, DMA_CONFIG_PERIPHERALS);
-                /* Schedule Work Queue for SPI/DMA transfer */
-                setStateMachine(SM_SPI);
                 break;
 
             case SM_DMA_SENSOR:
@@ -116,19 +90,34 @@ static int stateMachineThread(void *data)
                 setStateMachine(SM_DONE);
                 break;
 
-            case SM_DMA_FEEDBACK:
+            case SM_DMA_SINGLE:
                 printk(KERN_INFO "[CTRL][STM] Single Byte Feedback Configuration DMA mode\n");
                 configDMA(SPI_SECONDARY, DMA_OUT, DMA_CONFIG_FEEDBACK);
                 setStateMachine(SM_DONE);
                 break;
 
-            case SM_DMA_CLEAR:
+            case SM_RAMDISK_CONFIG:
+                printk(KERN_INFO "[CTRL][STM] Long Configuration DMA mode\n");
+                prepareRamDiskTransfer();
+                /* Switch to SPI/DMA @ FPGA Peripherals Config */
+                configDMA(SPI_PRIMARY, DMA_IN, DMA_CONFIG_PERIPHERALS);
+                /* Schedule Work Queue for SPI/DMA transfer */
+                setStateMachine(SM_PRIMARY_SPI);
+                break;
+
+            case SM_RAMDISK_CLEAR:
                 resetLongDma();
                 printk(KERN_INFO "[CTRL][ C ] [1] Clear DMA variables used for verification of IMU's config\n");
                 setStateMachine(SM_DONE);
                 break;
 
-            case SM_SPI:
+            case SM_RAMDISK_PRINT:
+                printk(KERN_INFO "[CTRL][STM] Ram Disk Print mode\n");
+                printRamDiskData();
+                setStateMachine(SM_DONE);
+                break;
+
+            case SM_PRIMARY_SPI:
                 printk(KERN_INFO "[CTRL][STM] SPI mode\n");
                 /* QUEUE :: Execution of masterTransferPrimary */
                 queue_work(get_masterTransferPrimary_wq(), get_masterTransferPrimary_work());
@@ -139,32 +128,6 @@ static int stateMachineThread(void *data)
                 printk(KERN_INFO "[CTRL][STM] Fifo data offload mode\n");
                 gpio_set_value(GPIO_SPI_INTERRUPT_FROM_CPU, 1);
                 gpio_set_value(GPIO_SPI_INTERRUPT_FROM_CPU, 0);
-                setStateMachine(SM_DONE);
-                break;
-
-            case SM_PRINT:
-                /*
-                 * [0] :: DMA Engine Config
-                 * [1] :: DMA BMI160 Config
-                 * [2] :: DMA BMI160 Config
-                 */
-                initTransfer(SECTOR_ENGINE);
-                initTransfer(SECTOR_BMI160_0);
-                initTransfer(SECTOR_BMI160_1);
-                initTransfer(SECTOR_ADXL345);
-                printSector(SECTOR_ENGINE);
-                printSector(SECTOR_BMI160_0);
-                printSector(SECTOR_BMI160_1);
-                printSector(SECTOR_ADXL345);
-                destroyTransfer(SECTOR_ENGINE);
-                destroyTransfer(SECTOR_BMI160_0);
-                destroyTransfer(SECTOR_BMI160_1);
-                destroyTransfer(SECTOR_ADXL345);
-                setStateMachine(SM_DONE);
-                break;
-
-            case SM_CMD:
-                /* TODO */
                 setStateMachine(SM_DONE);
                 break;
 

@@ -28,7 +28,7 @@ static ramAxisType ramAxis =
     .payloadReady = false
 };
 
-void initTransfer(ramSectorType type)
+static void initTransfer(ramSectorType type)
 {
     ramAxis.sector[type].sectorAddress = ramDiskGetPointer(type);
     if (!ramAxis.sector[type].sectorAddress)
@@ -38,39 +38,88 @@ void initTransfer(ramSectorType type)
     }
 }
 
-dmaEngineType checkEngine(void)
+static uint8_t reverseChecksum(uint8_t *data, size_t size)
 {
-    uint8_t ret = DMA_ENGINE_STOP;
-
-    initTransfer(SECTOR_ENGINE);
-
-    if (!ramAxis.sector[SECTOR_ENGINE].sectorAddress)
+    uint8_t i;
+    uint8_t checksum = 0;
+    for (i = 0; i < size; i++)
     {
-        pr_err("[ERNO][RAM] SECTOR_ENGINE address is NULL\n");
-    }
-    else
-    {
-        if(((char *)ramAxis.sector[SECTOR_ENGINE].sectorAddress)[0] != 0x00)
-        {
-            /**
-             *
-             * TODO :: Dummy clear
-             *
-             * This should be copied to the local
-             * structure :: ready for concatenation
-             *
-             */
-
-            ret = DMA_ENGINE_READY;
-        }
+        checksum ^= data[i];
+#if 0 /* Debug */
+        pr_info("[CTRL][RAM] checksum[0x%02X] Data[0x%02X]\n", checksum, data[i]);
+#endif
     }
 
-    destroyTransfer(SECTOR_ENGINE);
-
-    return ret;
+    return checksum;
 }
 
-void printSector(ramSectorType type)
+static void prepareTransfer(ramSectorType type, bool begin, bool end)
+{
+    uint8_t i;
+    uint8_t reversedChecksum;
+
+    if (!ramAxis.sector[type].sectorAddress)
+    {
+        pr_err("[ERNO][RAM] Sector %d address is NULL\n", type);
+        return;
+    }
+
+    if(true == begin)
+    {
+        pr_info("[CTRL][RAM] Concatenate DMA Transfer\n");
+        ramAxis.configBytesAmount = 0;
+        ramAxis.payloadBytes = 0;
+        ramAxis.payloadReady = false;
+    }
+
+    for (i = 0; i < ((char *)ramAxis.sector[type].sectorAddress)[0]; i++)
+    {
+        ramAxis.dmaTransfer->RxData[ramAxis.configBytesAmount] = ((char *)ramAxis.sector[type].sectorAddress)[i];
+        ramAxis.configBytesAmount++;
+    }
+
+    if(true == end)
+    {
+        pr_info("[CTRL][RAM] Calculate DMA Transfer Reversed Checksum\n");
+        reversedChecksum = reverseChecksum(ramAxis.dmaTransfer->RxData, ramAxis.configBytesAmount);
+
+        if (0x00 == reversedChecksum)
+        {
+            pr_info("[CTRL][RAM] Checksum OK\n");
+        }
+        else
+        {
+            pr_err("[ERNO][RAM] Checksum ERROR :: 0x%02X \n", reversedChecksum);
+        }
+
+        if(ramAxis.configBytesAmount > DMA_BUFFER_ALLOCATION_SIZE)
+        {
+            pr_info("[CTRL][RAM] Assembled DMA Data [%d] Bytes \n", ramAxis.configBytesAmount);
+            pr_err("[ERNO][RAM] Assembled DMA bigger than allocated buffer [%d] Bytes\n", DMA_BUFFER_ALLOCATION_SIZE);
+        }
+        else
+        {
+            pr_info("[CTRL][RAM] Assembled DMA Data [%d] Bytes \n", ramAxis.configBytesAmount);
+        }
+
+        /**
+         * Together with payloadbytes used to verify
+         * that State Machines of I2C and SPI controllers
+         * send back the feedback data indicating process complete
+         *
+         *
+         */
+        ramAxis.payloadBytes += ramAxis.configBytesAmount - 4 - 5*(SECTOR_AMOUNT - 1);
+        ramAxis.payloadReady = true;
+    }
+}
+
+static void destroyTransfer(ramSectorType type)
+{
+    ramDiskReleasePointer(ramAxis.sector[type].sectorAddress);
+}
+
+static void printSector(ramSectorType type)
 {
     int i = 0;
     char *output;
@@ -164,100 +213,59 @@ static void freeTransfer(void)
     }
 }
 
-void ramAxisInit(void)
+/* INIT */ void ramAxisInit(void)
 {
     allocateTransfer();
 }
 
-void ramAxisDestroy(void)
+/* DESTROY */ void ramAxisDestroy(void)
 {
     freeTransfer();
 }
 
-static uint8_t reverseChecksum(uint8_t *data, size_t size)
+/* PREP */ void prepareRamDiskTransfer(void)
 {
-    uint8_t i;
-    uint8_t checksum = 0;
-    for (i = 0; i < size; i++)
-    {
-        checksum ^= data[i];
-#if 0 /* Checksum debug */
-        pr_info("[CTRL][RAM] checksum[0x%02X] Data[0x%02X]\n", checksum, data[i]);
-#endif
-    }
-
-    return checksum;
+    /* Init pointers */
+    initTransfer(SECTOR_ENGINE);
+    initTransfer(SECTOR_BMI160_0);
+    initTransfer(SECTOR_BMI160_1);
+    initTransfer(SECTOR_ADXL345);
+    /* Prepare DMA Transfer */
+    prepareTransfer(SECTOR_ENGINE, true, false);
+    prepareTransfer(SECTOR_BMI160_0, false, false);
+    prepareTransfer(SECTOR_BMI160_1, false, false);
+    prepareTransfer(SECTOR_ADXL345, false, true);
+    /* Destroy life-time pointers */
+    destroyTransfer(SECTOR_ENGINE);
+    destroyTransfer(SECTOR_BMI160_0);
+    destroyTransfer(SECTOR_BMI160_1);
+    destroyTransfer(SECTOR_ADXL345);
 }
 
-void prepareTransfer(ramSectorType type, bool begin, bool end)
+/* PRINT */ void printRamDiskData(void)
 {
-    uint8_t i;
-    uint8_t reversedChecksum;
-
-    if (!ramAxis.sector[type].sectorAddress)
-    {
-        pr_err("[ERNO][RAM] Sector %d address is NULL\n", type);
-        return;
-    }
-
-    if(true == begin)
-    {
-        pr_info("[CTRL][RAM] Concatenate DMA Transfer\n");
-        ramAxis.configBytesAmount = 0;
-        ramAxis.payloadBytes = 0;
-        ramAxis.payloadReady = false;
-    }
-
-    for (i = 0; i < ((char *)ramAxis.sector[type].sectorAddress)[0]; i++)
-    {
-        ramAxis.dmaTransfer->RxData[ramAxis.configBytesAmount] = ((char *)ramAxis.sector[type].sectorAddress)[i];
-        ramAxis.configBytesAmount++;
-    }
-
-    if(true == end)
-    {
-        pr_info("[CTRL][RAM] Calculate DMA Transfer Reversed Checksum\n");
-        reversedChecksum = reverseChecksum(ramAxis.dmaTransfer->RxData, ramAxis.configBytesAmount);
-
-        if (0x00 == reversedChecksum)
-        {
-            pr_info("[CTRL][RAM] Checksum OK\n");
-        }
-        else
-        {
-            pr_err("[ERNO][RAM] Checksum ERROR :: 0x%02X \n", reversedChecksum);
-        }
-
-        if(ramAxis.configBytesAmount > DMA_BUFFER_ALLOCATION_SIZE)
-        {
-            pr_info("[CTRL][RAM] Assembled DMA Data [%d] Bytes \n", ramAxis.configBytesAmount);
-            pr_err("[ERNO][RAM] Assembled DMA bigger than allocated buffer [%d] Bytes\n", DMA_BUFFER_ALLOCATION_SIZE);
-        }
-        else
-        {
-            pr_info("[CTRL][RAM] Assembled DMA Data [%d] Bytes \n", ramAxis.configBytesAmount);
-        }
-
-        /**
-         * Together with payloadbytes used to verify
-         * that State Machines of I2C and SPI controllers
-         * send back the feedback data indicating process complete
-         *
-         *
-         */
-        ramAxis.payloadBytes += ramAxis.configBytesAmount - 4 - 5*(SECTOR_AMOUNT - 1);
-        ramAxis.payloadReady = true;
-    }
+    /*
+     * [0] :: DMA Engine Config
+     * [1] :: DMA BMI160 Config
+     * [2] :: DMA BMI160 Config
+     */
+    initTransfer(SECTOR_ENGINE);
+    initTransfer(SECTOR_BMI160_0);
+    initTransfer(SECTOR_BMI160_1);
+    initTransfer(SECTOR_ADXL345);
+    printSector(SECTOR_ENGINE);
+    printSector(SECTOR_BMI160_0);
+    printSector(SECTOR_BMI160_1);
+    printSector(SECTOR_ADXL345);
+    destroyTransfer(SECTOR_ENGINE);
+    destroyTransfer(SECTOR_BMI160_0);
+    destroyTransfer(SECTOR_BMI160_1);
+    destroyTransfer(SECTOR_ADXL345);
 }
 
-void* getSectorAddress(ramSectorType type)
+/* GET */ void* getSectorAddress(ramSectorType type)
 {
     return ramAxis.sector[type].sectorAddress;
-}
-
-void destroyTransfer(ramSectorType type)
-{
-    ramDiskReleasePointer(ramAxis.sector[type].sectorAddress);
 }
 
 /* GET */ DmaTransferType* getDmaTransfer(void)

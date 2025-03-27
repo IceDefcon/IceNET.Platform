@@ -25,11 +25,11 @@ enum Status
 
 typedef enum
 {
-    CMD_FPGA_CONFIG,
-    CMD_DMA_SINGLE,
+    CMD_DMA_NORMAL,
     CMD_DMA_SENSOR,
-    CMD_DMA_FEEDBACK,
-    CMD_DMA_CLEAR,
+    CMD_DMA_SINGLE,
+    CMD_RAMDISK_CONFIG,
+    CMD_RAMDISK_CLEAR,
     CMD_AMOUNT
 } commandType;
 

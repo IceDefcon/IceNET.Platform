@@ -27,11 +27,11 @@ m_commandMatrix(CMD_AMOUNT, std::vector<uint8_t>(CMD_LENGTH, 0))  // Initialized
 {
     std::cout << "[INFO] [CONSTRUCTOR] " << this << " :: Instantiate Commander" << std::endl;
 
-    m_commandMatrix[CMD_FPGA_CONFIG] = {0xC0, 0xF1};  /* 0xC0F1(COFI) :: Activate DMA transfer to send IMU's config to FPGA */
-    m_commandMatrix[CMD_DMA_SINGLE] = {0x51, 0x6E}; /* 0x516E(SIGE) :: Reconfigure DMA Engine to work with single tramsfer :: 1-Byte */
-    m_commandMatrix[CMD_DMA_SENSOR] = {0x5E, 0x50}; /* 0x5E50(SESO) :: Reconfigure DMA Engine to work with sensor measurement :: 12-Bytes */
-    m_commandMatrix[CMD_DMA_FEEDBACK] = {0xFE, 0xED}; /* 0xFEED(FEED) :: Reconfigure DMA Engine to work with single feedback byte :: 1-Byte */
-    m_commandMatrix[CMD_DMA_CLEAR] = {0xC1, 0xEA}; /* 0xC1EA(CLEA) :: Clear DMA variables used for verification of IMU's config */
+    m_commandMatrix[CMD_DMA_NORMAL] = {0x04, 0xA1}; /* 0x04A1(ORAL) :: Reconfigure DMA Engine :: Normal Mode 4-Byte */
+    m_commandMatrix[CMD_DMA_SENSOR] = {0x5E, 0x50}; /* 0x5E50(SESO) :: Reconfigure DMA Engine :: Sensor Mode 12-Byte */
+    m_commandMatrix[CMD_DMA_SINGLE] = {0x51, 0x6E}; /* 0x516E(SIGE) :: Reconfigure DMA Engine :: Single Mode 1-Byte */
+    m_commandMatrix[CMD_RAMDISK_CONFIG] = {0xC0, 0xF1}; /* 0xC0F1(COFI) :: Activate DMA transfer to send IMU's config to FPGA */
+    m_commandMatrix[CMD_RAMDISK_CLEAR]  = {0xC1, 0xEA}; /* 0xC1EA(CLEA) :: Clear DMA variables used for verification of IMU's config */
 }
 
 Commander::~Commander()
