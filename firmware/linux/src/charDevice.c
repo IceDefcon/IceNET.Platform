@@ -297,17 +297,11 @@ static ssize_t commanderWrite(struct file *filep, const char __user *buffer, siz
         /* Copy failed */
         ret = -EFAULT;
     }
-    else if (Device[DEVICE_COMMANDER].io_transfer.RxData[0] == 0xC0 && Device[DEVICE_COMMANDER].io_transfer.RxData[1] == 0xF1)
-    {
-        /* Activate DMA Engine */
-        printk(KERN_INFO "[CTRL][ C ] Activate DMA Engine\n");
-        setStateMachine(SM_FPGA_CONFIG);
-    }
-    else if (Device[DEVICE_COMMANDER].io_transfer.RxData[0] == 0x51 && Device[DEVICE_COMMANDER].io_transfer.RxData[1] == 0x6E)
+    else if (Device[DEVICE_COMMANDER].io_transfer.RxData[0] == 0x04 && Device[DEVICE_COMMANDER].io_transfer.RxData[1] == 0xA1)
     {
         /* Reconfigure DMA Engine */
-        printk(KERN_INFO "[CTRL][ C ] Reconfigure DMA Engine into single mode\n");
-        setStateMachine(SM_DMA_SINGLE);
+        printk(KERN_INFO "[CTRL][ C ] Reconfigure DMA Engine into normal mode\n");
+        setStateMachine(SM_DMA_NORMAL);
     }
     else if (Device[DEVICE_COMMANDER].io_transfer.RxData[0] == 0x5E && Device[DEVICE_COMMANDER].io_transfer.RxData[1] == 0x50)
     {
@@ -315,16 +309,22 @@ static ssize_t commanderWrite(struct file *filep, const char __user *buffer, siz
         printk(KERN_INFO "[CTRL][ C ] Reconfigure DMA Engine into sensor mode\n");
         setStateMachine(SM_DMA_SENSOR);
     }
-    else if (Device[DEVICE_COMMANDER].io_transfer.RxData[0] == 0xFE && Device[DEVICE_COMMANDER].io_transfer.RxData[1] == 0xED)
+    else if (Device[DEVICE_COMMANDER].io_transfer.RxData[0] == 0x51 && Device[DEVICE_COMMANDER].io_transfer.RxData[1] == 0x6E)
     {
         /* Reconfigure DMA Engine */
         printk(KERN_INFO "[CTRL][ C ] Reconfigure DMA Engine into single byte feedback mode\n");
-        setStateMachine(SM_DMA_FEEDBACK);
+        setStateMachine(SM_DMA_SINGLE);
+    }
+    else if (Device[DEVICE_COMMANDER].io_transfer.RxData[0] == 0xC0 && Device[DEVICE_COMMANDER].io_transfer.RxData[1] == 0xF1)
+    {
+        /* Activate DMA Engine */
+        printk(KERN_INFO "[CTRL][ C ] Activate DMA transfer to send IMU's config to FPGA\n");
+        setStateMachine(SM_RAMDISK_CONFIG);
     }
     else if (Device[DEVICE_COMMANDER].io_transfer.RxData[0] == 0xC1 && Device[DEVICE_COMMANDER].io_transfer.RxData[1] == 0xEA)
     {
         printk(KERN_INFO "[CTRL][ C ] [0] Clear DMA variables used for verification of IMU's config\n");
-        setStateMachine(SM_DMA_CLEAR);
+        setStateMachine(SM_RAMDISK_CLEAR);
     }
     else
     {
@@ -333,7 +333,7 @@ static ssize_t commanderWrite(struct file *filep, const char __user *buffer, siz
         {
             printk(KERN_INFO "[CTRL][ C ] Byte[%d] %x\n", i, Device[DEVICE_COMMANDER].io_transfer.RxData[i]);
         }
-        setStateMachine(SM_SPI);
+        setStateMachine(SM_PRIMARY_SPI);
     }
     return ret;
 }

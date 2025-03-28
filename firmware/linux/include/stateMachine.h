@@ -21,15 +21,14 @@
 typedef enum 
 {
     SM_IDLE = 0,
-    SM_FPGA_CONFIG,
-    SM_DMA_SINGLE,
+    SM_DMA_NORMAL,
     SM_DMA_SENSOR,
-    SM_DMA_FEEDBACK,
-    SM_DMA_CLEAR,
-    SM_SPI,
+    SM_DMA_SINGLE,
+    SM_RAMDISK_CONFIG,
+    SM_RAMDISK_CLEAR,
+    SM_RAMDISK_PRINT,
+    SM_PRIMARY_SPI,
     SM_OFFLOAD,
-    SM_PRINT,
-    SM_CMD,
     SM_DONE,
 } stateMachineType;
 

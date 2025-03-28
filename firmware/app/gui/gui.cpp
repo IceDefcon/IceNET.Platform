@@ -84,16 +84,16 @@ void gui::setupDma()
     i2c_label->setFont(i2c_labelFont);
     i2c_label->setGeometry(dev.xGap*5 + dev.xText + dev.xUnit*2, dev.yGap, dev.xLogo, dev.yLogo);
     /* DMA :: Row[1] */
-    QLabel *dma_singleLabel = new QLabel("Single DMA [1] Byte", this);
+    QLabel *dma_singleLabel = new QLabel("SECONDARY :: Single", this);
     dma_singleLabel->setGeometry(dev.xGap*5 + dev.xText + dev.xUnit*2, dev.yGap*2 + dev.yLogo, dev.xText, dev.yUnit);
     QPushButton *dmaSingle_exeButton = new QPushButton("EXE", this);
     dmaSingle_exeButton->setGeometry(dev.xGap*6 + dev.xText*2 + dev.xUnit*2, dev.yGap*2 + dev.yLogo, dev.xUnit, dev.yUnit);
     connect(dmaSingle_exeButton, &QPushButton::clicked, this, [this]()
     {
-        dma_execute(CMD_DMA_FEEDBACK);
+        dma_execute(CMD_DMA_SINGLE);
     });
     /* DMA :: Row[2] */
-    QLabel *i2c_registerLabel = new QLabel("Axis DMA [12] Bytes", this);
+    QLabel *i2c_registerLabel = new QLabel("SECONDARY :: Sensor", this);
     i2c_registerLabel->setGeometry(dev.xGap*5 + dev.xText + dev.xUnit*2, dev.yGap*3 + dev.yLogo + dev.yUnit, dev.xText, dev.yUnit);
     QPushButton *dmaSensor_exeButton = new QPushButton("EXE", this);
     dmaSensor_exeButton->setGeometry(dev.xGap*6 + dev.xText*2 + dev.xUnit*2, dev.yGap*3 + dev.yLogo + dev.yUnit, dev.xUnit, dev.yUnit);
@@ -344,7 +344,7 @@ void gui::dma_execute(commandType cmd)
     }
     else
     {
-        if(CMD_DMA_FEEDBACK == cmd || CMD_DMA_SENSOR == cmd)
+        if(CMD_DMA_SINGLE == cmd || CMD_DMA_SENSOR == cmd)
         {
             printToConsole("[DMA] Send DMA Command to Kernel");
             m_instanceDroneCtrl->getCommanderInstance()->sendCommand(cmd);
@@ -708,7 +708,7 @@ void gui::threadMain()
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
 
-    m_instanceDroneCtrl->getCommanderInstance()->sendCommand(CMD_DMA_CLEAR);
+    m_instanceDroneCtrl->getCommanderInstance()->sendCommand(CMD_RAMDISK_CLEAR);
     m_instanceDroneCtrl->shutdownKernelComms();
     m_instanceDroneCtrl.reset(); // Reset the unique_ptr to call the destructor
 }

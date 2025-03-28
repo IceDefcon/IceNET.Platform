@@ -88,7 +88,7 @@ void DroneCtrl::sendFpgaConfig()
     m_instanceRamDisk->assembleConfig();
     m_instanceRamDisk->sendConfig();
     std::cout << "[INFO] [ D ] Watchdog ready :: Activate DMA Engine" << std::endl;
-    m_instanceCommander->sendCommand(CMD_FPGA_CONFIG);
+    m_instanceCommander->sendCommand(CMD_RAMDISK_CONFIG);
 }
 
 void DroneCtrl::droneCtrlMain()
@@ -135,8 +135,8 @@ void DroneCtrl::droneCtrlMain()
              */
             std::cout << std::dec << "[INFO] [ D ] Waiting " << static_cast<uint32_t>(FPGA_DELAY) << "ms for the FPGA to configure Peripherals..." << std::endl;
             std::this_thread::sleep_for(std::chrono::milliseconds(3000));
-            std::cout << "[INFO] [ D ] Configuration Done :: Switch DMA into a Single Mode" << std::endl;
-            m_instanceCommander->sendCommand(CMD_DMA_SINGLE);
+            std::cout << "[INFO] [ D ] Configuration Done :: Switch DMA into a Normal Mode" << std::endl;
+            m_instanceCommander->sendCommand(CMD_DMA_NORMAL);
             m_ctrlState = CTRL_MAIN;
             break;
 

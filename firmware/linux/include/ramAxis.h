@@ -49,16 +49,14 @@ typedef struct
 } ramAxisType;
 
 /* INIT */ void ramAxisInit(void);
-/* INIT */ void initTransfer(ramSectorType type);
-/* CHECK */ dmaEngineType checkEngine(void);
-/* PRINT */ void printSector(ramSectorType type);
-/* PREP */ void prepareTransfer(ramSectorType type, bool begin, bool end);
-/* GET */ void* getSectorAddress(ramSectorType type);
-/* DESTROY */ void destroyTransfer(ramSectorType type);
 /* DESTROY */ void ramAxisDestroy(void);
 
-/* GET */ DmaTransferType* getDmaTransfer(void);
-/* GET */ uint8_t getConfigBytesAmount(void);
+/* PREP */ void prepareRamDiskTransfer(void);
+/* PRINT */ void printRamDiskData(void);
+
+/* GET */ void* getSectorAddress(ramSectorType type);
+/* GET */ DmaTransferType* getRamdiskDmaTransfer(void);
+/* GET */ uint8_t getRamdiskConfigTransferSize(void);
 /* GET */ uint8_t getPayloadBytesAmount(void);
 /* IS */ bool isPayloadReady(void);
 
