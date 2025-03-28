@@ -1,0 +1,621 @@
+{
+    "name": "Solarized :: ICE",
+    "author": "Ice Marek",
+    "variables":
+    {
+        "background" : "#002b36", // Background
+        "Variables"  : "#3080A0", // Variables
+        "Comment"    : "#A0A0A0", // Comment
+        "Scope"      : "#FFFFFF", // Scope line
+        "functions"  : "#FFFFFF", // Functions
+        "operators1" : "#0050FF", // Operators1
+        "operators2" : "#0050FF", // endl \n
+        "numbers"    : "#00FFFF", // Numbers
+        "types"      : "#00AFFF", // Types
+        "text"       : "#00FFFF", // String text
+        "system"     : "#0050FF", // System functions *&
+        "unknown01"  : "#FFFFFF",
+        "unknown02"  : "#FFFFFF",
+        "unknown03"  : "#FFFFFF",
+        "unknown04"  : "#FFFFFF",
+    },
+    "globals":
+    {
+        "background": "var(background)",
+        "foreground": "var(Variables)",
+        "line_highlight": "var(Scope)",
+
+        "gutter": "var(002b36)",
+        "gutter_foreground": "var(Comment)",
+        "gutter_foreground_highlight": "var(Variables)",
+
+        "minimap_border": "var(Scope)",
+
+        "caret": "var(unknown01)",
+        "block_caret": "var(background)",
+        "invisibles": "var(Comment)",
+        "misspelling": "var(operators2)",
+
+        "highlight": "var(Comment)",
+        "find_highlight": "var(Scope)",
+        "find_highlight_foreground": "var(background)",
+
+        "accent": "var(functions)",
+        "fold_marker": "var(functions)",
+
+        "guide": "var(Scope)",
+        "active_guide": "color(var(Comment) blend(var(Scope) 80%))",
+        "stack_guide": "color(var(Comment) blend(var(Scope) 40%))",
+
+        "selection": "color(var(Comment) blend(var(unknown03) 25%))",
+        "selection_border": "color(var(Comment) blend(var(unknown03) 50%))",
+        "inactive_selection": "var(Scope)",
+        "inactive_selection_border": "color(var(Comment) blend(var(unknown03) 50%))",
+
+        "brackets_options": "underline",
+        "brackets_foreground": "var(system)",
+        "bracket_contents_options": "stippled_underline",
+        "bracket_contents_foreground": "var(system)",
+        "tags_options": "stippled_underline",
+        "tags_foreground": "var(system)",
+
+        "shadow": "var(Comment)",
+        "shadow_width": "4",
+
+        "line_diff_added" : "var(system)",
+        "line_diff_modified" : "var(functions)"
+    },
+    "rules":
+    [
+        {
+            "name": "Comment",
+            "scope": "comment, meta.documentation",
+            "foreground": "var(Comment)"
+        },
+        {
+            "name": "String",
+            "scope": "string",
+            "foreground": "var(text)"
+        },
+        {
+            "name": "Regexp",
+            "scope": "string.regexp",
+            "foreground": "var(text)"
+        },
+        {
+            "name": "Escape \\ char",
+            "scope": "constant.character.escape",
+            "foreground": "var(operators2)"
+        },
+        {
+            "name": "Number",
+            "scope": "constant.numeric",
+            "foreground": "var(numbers)"
+        },
+        {
+            "name": "Variable",
+            "scope": "variable",
+            "foreground": "var(types)"
+        },
+        {
+            "name": "Variable Function",
+            "scope": "variable.function",
+            "foreground": "var(functions)"
+        },
+        {
+            "name": "Variable Language",
+            "scope": "variable.language",
+            "foreground": "var(unknown04)"
+        },
+        {
+            "name": "Keyword",
+            "scope": "keyword",
+            "foreground": "var(system)"
+        },
+        {
+            "name": "Import",
+            "scope": "meta.import keyword, keyword.control.import, keyword.control.import.from, keyword.other.import, keyword.control.at-rule.include, keyword.control.at-rule.import",
+            "foreground": "var(operators1)"
+        },
+        {
+            "name": "Assignment, Comparision Operators1",
+            "scope": "keyword.operator.comparison, keyword.operator.assignment",
+            "foreground": "var(Variables)"
+        },
+        {
+            "name": "Arithmetical Operators1",
+            "scope": "keyword.operator.arithmetic",
+            "foreground": "var(operators1)"
+        },
+        {
+            "name": "Storage",
+            "scope": "storage",
+            "foreground": "var(system)"
+        },
+        {
+            "name": "Storage modifier",
+            "scope": "storage.modifier",
+            "foreground": "var(unknown02)"
+        },
+        {
+            "name": "Class",
+            "scope": "keyword.control.class, entity.name, entity.name.class, entity.name.type.class",
+            "foreground": "var(functions)"
+        },
+        {
+            "name": "Inherited Class",
+            "scope": "entity.other.inherited-class",
+            "foreground": "var(types)"
+        },
+        {
+            "name": "Attribute",
+            "scope": "entity.other.attribute-name",
+            "foreground": "var(functions)"
+        },
+        {
+            "name": "Library class",
+            "scope": "support, support.type, support.class",
+            "foreground": "var(system)"
+        },
+        {
+            "name": "Function name",
+            "scope": "entity.name.function",
+            "foreground": "var(functions)"
+        },
+        {
+            "name": "Variable start",
+            "scope": "punctuation.definition.variable",
+            "foreground": "var(system)"
+        },
+        {
+            "name": "Built-in constant",
+            "scope": "constant, constant.language, meta.preprocessor",
+            "foreground": "var(functions)"
+        },
+        {
+            "scope": "entity.name.section",
+            "foreground": "var(operators1)"
+        },
+        {
+            "name": "Support.construct",
+            "scope": "support.function.construct, keyword.other.new",
+            "foreground": "var(operators2)"
+        },
+        {
+            "name": "User-defined constant",
+            "scope": "constant.character, constant.other",
+            "foreground": "var(operators1)"
+        },
+        {
+            "name": "Tag name",
+            "scope": "entity.name.tag",
+            "foreground": "var(types)"
+        },
+        {
+            "name": "Tag start/end",
+            "scope": "punctuation.definition.tag.html, punctuation.definition.tag.begin, punctuation.definition.tag.end",
+            "foreground": "var(Comment)"
+        },
+        {
+            "name": "Library function",
+            "scope": "support.function",
+            "foreground": "var(system)"
+        },
+        {
+            "name": "Continuation",
+            "scope": "punctuation.separator.continuation",
+            "foreground": "var(operators2)"
+        },
+        {
+            "name": "Storage Type",
+            "scope": "storage.type",
+            "foreground": "var(types)"
+        },
+        {
+            "name": "Exception",
+            "scope": "support.type.exception",
+            "foreground": "var(operators1)"
+        },
+        {
+            "name": "Special",
+            "scope": "keyword.other.special-method",
+            "foreground": "var(operators1)"
+        },
+        {
+            "name": "Invalid",
+            "scope": "invalid",
+            "background": "color(var(operators2) blend(var(unknown03) 30%))",
+            "foreground": "var(operators2)"
+        },
+        {
+            "name": "Quoted String",
+            "scope": "string.quoted.double, string.quoted.single",
+            "foreground": "var(text)"
+        },
+        {
+            "name": "Quotes",
+            "scope": "punctuation.definition.string",
+            "foreground": "var(Variables)"
+        },
+        {
+            "name": "[]",
+            "scope": "meta.brace.square, punctuation.section.brackets",
+            "foreground": "var(types)"
+        },
+        {
+            "name": "(),{}",
+            "scope": "meta.brace.round, meta.brace.curly, punctuation.section, punctuation.section.block, punctuation.definition.parameters, punctuation.section.group",
+            "foreground": "var(Variables)"
+        },
+        {
+            "name": "CSS: Standard color value",
+            "scope": "support.constant.color, invalid.deprecated.color.w3c-non-standard-color-name.scss",
+            "foreground": "var(functions)"
+        },
+        {
+            "name": "CSS: Selector > [] and non-spec tags",
+            "scope": "meta.selector.css",
+            "foreground": "var(Variables)"
+        },
+        {
+            "name": "CSS: Tag",
+            "scope": "entity.name.tag.css, entity.name.tag.scss, source.less keyword.control.html.elements, source.sass keyword.control.untitled",
+            "foreground": "var(functions)"
+        },
+        {
+            "name": "CSS .class",
+            "scope": "entity.other.attribute-name.class",
+            "foreground": "var(functions)"
+        },
+        {
+            "name": "CSS: #id",
+            "scope": "entity.other.attribute-name.id",
+            "foreground": "var(functions)"
+        },
+        {
+            "name": "CSS :pseudo",
+            "scope": "entity.other.attribute-name.pseudo-element, entity.other.attribute-name.tag.pseudo-element, entity.other.attribute-name.pseudo-class, entity.other.attribute-name.tag.pseudo-class",
+            "foreground": "var(types)"
+        },
+        {
+            "name": "CSS: @-rule",
+            "scope": "keyword.control.at-rule",
+            "foreground": "var(operators1)"
+        },
+        {
+            "name": "Haskell: Variable",
+            "scope": "source.haskell variable",
+            "foreground": "var(functions)"
+        },
+        {
+            "name": "HTML: =",
+            "scope": "text.html.basic meta.tag.other.html, text.html.basic meta.tag.any.html, text.html.basic meta.tag.block.any, text.html.basic meta.tag.inline.any, text.html.basic meta.tag.structure.any.html, text.html.basic source.js.embedded.html, punctuation.separator.key-value.html",
+            "foreground": "var(Variables)"
+        },
+        {
+            "name": "HTML: something=",
+            "scope": "text.html.basic entity.other.attribute-name.html, meta.tag.xml entity.other.attribute-name",
+            "foreground": "var(functions)"
+        },
+        {
+            "name": "Ruby: Special Method",
+            "scope": "keyword.other.special-method.ruby",
+            "foreground": "var(system)"
+        },
+        {
+            "name": "Ruby: Constant Other",
+            "scope": "variable.other.constant.ruby",
+            "foreground": "var(functions)"
+        },
+        {
+            "name": "Ruby: :symbol",
+            "scope": "constant.other.symbol.ruby",
+            "foreground": "var(text)"
+        },
+        {
+            "name": "Ruby: Special Method",
+            "scope": "keyword.other.special-method.ruby",
+            "foreground": "var(operators1)"
+        },
+        {
+            "name": "PHP: Array()",
+            "scope": "meta.array support.function.construct.php",
+            "foreground": "var(functions)"
+        },
+        {
+            "name": "C: Preprocessor",
+            "scope": "entity.name.function.preprocessor.c, meta.preprocessor.c.include, meta.preprocessor.macro.c",
+            "foreground": "var(operators1)"
+        },
+        {
+            "name": "C: include",
+            "scope": "meta.preprocessor.c.include string.quoted.other.lt-gt.include.c, meta.preprocessor.c.include punctuation.definition.string.begin.c, meta.preprocessor.c.include punctuation.definition.string.end.c",
+            "foreground": "var(text)"
+        },
+        {
+            "name": "Other: Removal",
+            "scope": "other.package.exclude, other.remove",
+            "foreground": "var(operators2)"
+        },
+        {
+            "name": "Other: Add",
+            "scope": "other.add",
+            "foreground": "var(text)"
+        },
+        {
+            "name": "Tex: {}",
+            "scope": "punctuation.section.group.tex , punctuation.definition.arguments.begin.latex, punctuation.definition.arguments.end.latex, punctuation.definition.arguments.latex",
+            "foreground": "var(operators2)"
+        },
+        {
+            "name": "Tex: {text}",
+            "scope": "meta.group.braces.tex",
+            "foreground": "var(functions)"
+        },
+        {
+            "name": "Tex: Other Math",
+            "scope": "string.other.math.tex",
+            "foreground": "var(functions)"
+        },
+        {
+            "name": "Tex: {var}",
+            "scope": "variable.parameter.function.latex",
+            "foreground": "var(operators1)"
+        },
+        {
+            "name": "Tex: Math \\\\",
+            "scope": "punctuation.definition.constant.math.tex",
+            "foreground": "var(operators2)"
+        },
+        {
+            "name": "Tex: Constant Math",
+            "scope": "text.tex.latex constant.other.math.tex, constant.other.general.math.tex, constant.other.general.math.tex, constant.character.math.tex",
+            "foreground": "var(text)"
+        },
+        {
+            "name": "Tex: Other Math String",
+            "scope": "string.other.math.tex",
+            "foreground": "var(functions)"
+        },
+        {
+            "name": "Tex: $",
+            "scope": "punctuation.definition.string.begin.tex, punctuation.definition.string.end.tex",
+            "foreground": "var(operators2)"
+        },
+        {
+            "name": "Tex: \\label",
+            "scope": "keyword.control.label.latex, text.tex.latex constant.other.general.math.tex",
+            "foreground": "var(text)"
+        },
+        {
+            "name": "Tex: \\label { }",
+            "scope": "variable.parameter.definition.label.latex",
+            "foreground": "var(operators2)"
+        },
+        {
+            "name": "Tex: Function",
+            "scope": "support.function.be.latex",
+            "foreground": "var(system)"
+        },
+        {
+            "name": "Tex: Support Function Section",
+            "scope": "support.function.section.latex",
+            "foreground": "var(operators1)"
+        },
+        {
+            "name": "Tex: Support Function",
+            "scope": "support.function.general.tex",
+            "foreground": "var(text)"
+        },
+        {
+            "name": "Tex: Reference Label",
+            "scope": "keyword.control.ref.latex",
+            "foreground": "var(text)"
+        },
+        {
+            "name": "Python: storage",
+            "scope": "storage.type.class.python, storage.type.function.python, storage.modifier.global.python",
+            "foreground": "var(system)"
+        },
+        {
+            "name": "Python: Support.exception",
+            "scope": "support.type.exception.python",
+            "foreground": "var(functions)"
+        },
+        {
+            "name": "Shell: meta scope in loop",
+            "scope": "meta.scope.for-in-loop.shell, variable.other.loop.shell",
+            "foreground": "var(unknown02)"
+        },
+        {
+            "name": "Shell: Meta Block",
+            "scope": "meta.scope.case-block.shell, meta.scope.case-body.shell",
+            "foreground": "var(unknown02)"
+        },
+        {
+            "name": "Shell: []",
+            "scope": "punctuation.definition.logical-expression.shell",
+            "foreground": "var(operators2)"
+        },
+        {
+            "name": "Storage",
+            "scope": "storage.modifier.c++",
+            "foreground": "var(system)"
+        },
+        {
+            "name": "Perl: functions",
+            "scope": "support.function.perl",
+            "foreground": "var(types)"
+        },
+        {
+            "name": "diff: header",
+            "scope": "meta.diff, meta.diff.header",
+            "foreground": "var(Comment)"
+        },
+        {
+            "name": "diff: range",
+            "scope": "meta.diff.range",
+            "foreground": "var(types)"
+        },
+        {
+            "name": "diff: deleted",
+            "scope": "markup.deleted",
+            "foreground": "var(operators2)"
+        },
+        {
+            "name": "diff: changed",
+            "scope": "markup.changed",
+            "foreground": "var(functions)"
+        },
+        {
+            "name": "diff: inserted",
+            "scope": "markup.inserted",
+            "foreground": "var(system)"
+        },
+        {
+            "name": "Warning",
+            "scope": "markup.warning",
+            "foreground": "var(functions)"
+        },
+        {
+            "name": "Error",
+            "scope": "markup.error",
+            "foreground": "var(operators2)"
+        },
+        {
+            "scope": "markup.heading, punctuation.definition.heading.markdown",
+            "foreground": "var(functions)",
+            "font_style": "bold"
+        },
+        {
+            "name": "Markdown quote",
+            "scope": "markup.quote",
+            "foreground": "var(system)"
+        },
+        {
+            "name": "Markdown em",
+            "scope": "markup.italic",
+            "font_style": "italic"
+        },
+        {
+            "scope": "markup.bold",
+            "font_style": "bold"
+        },
+        {
+            "scope": "markup.underline.link.markdown, meta.link.reference constant.other.reference.link.markdown",
+            "foreground": "var(text)"
+        },
+        {
+            "scope": "constant.other.reference.link.markdown",
+            "foreground": "var(numbers)"
+        },
+        {
+            "scope": "meta.paragraph.markdown meta.dummy.line-break",
+            "background": "var(Comment)"
+        },
+        {
+            "name": "SublimeBracketHighlighter",
+            "scope": "brackethighlighter.all",
+            "foreground": "var(Comment)"
+        },
+        {
+            "name": "Find In Files: File Name",
+            "scope": "entity.name.filename.find-in-files",
+            "foreground": "var(text)"
+        },
+        {
+            "name": "Find In Files: Line numbers",
+            "scope": "constant.numeric.line-number.find-in-files",
+            "foreground": "var(Comment)"
+        },
+        {
+            "name": "JavaScript Variables",
+            "scope": "variable.other.readwrite.js, variable.other.object.js, variable.other.constant.js",
+            "foreground": "var(Variables)"
+        },
+
+        // Sublime Merge
+        {
+            "scope": "diff.deleted",
+            "background": "color(var(operators2) alpha(0.1))",
+            "foreground_adjust": "l(- 5%)"
+        },
+        {
+            "scope": "diff.deleted.char",
+            "background": "color(var(operators2) alpha(0.2))",
+            "foreground_adjust": "l(- 10%)"
+        },
+        {
+            "scope": "diff.inserted",
+            "background": "color(var(system) alpha(0.1))",
+            "foreground_adjust": "l(- 5%)"
+        },
+        {
+            "scope": "diff.inserted.char",
+            "background": "color(var(system) alpha(0.2))",
+            "foreground_adjust": "l(- 10%)"
+        },
+        {
+            "scope": "diff.deleted.side-by-side",
+            "background": "color(var(operators2) alpha(0.1))",
+            "foreground_adjust": "l(- 5%)"
+        },
+        {
+            "scope": "diff.inserted.side-by-side",
+            "background": "color(var(system) alpha(0.1))",
+            "foreground_adjust": "l(- 5%)"
+        },
+        {
+            "scope": "diff.fill",
+            "background": "color(var(unknown03) alpha(0.2))",
+        },
+        {
+            "scope": "diff.inserted.merge-left",
+            "background": "color(var(system) alpha(0.1))",
+            "foreground_adjust": "l(- 5%)"
+        },
+        {
+            "scope": "diff.inserted.char.merge-left",
+            "background": "color(var(operators2) alpha(0.2))",
+            "foreground_adjust": "l(- 10%)"
+        },
+        {
+            "scope": "diff.border.merge-left",
+            "background": "color(var(types) alpha(0.5))",
+        },
+        {
+            "scope": "diff.inserted.merge-right",
+            "background": "color(var(system) alpha(0.1))",
+            "foreground_adjust": "l(- 5%)"
+        },
+        {
+            "scope": "diff.inserted.char.merge-right",
+            "background": "color(var(unknown03) alpha(0.2))",
+            "foreground_adjust": "l(- 10%)"
+        },
+        {
+            "scope": "diff.border.merge-right",
+            "background": "color(var(types) alpha(0.5))",
+        },
+        {
+            "scope": "diff.border.merge-conflict",
+            "background": "color(var(operators2) alpha(0.5))",
+        },
+        {
+            "scope": "diff.border.merge-merged",
+            "background": "color(var(functions) alpha(0.5))",
+        },
+        {
+            "scope": "blame.border",
+            "background": "color(var(text) alpha(0.5))",
+        },
+        {
+            "scope": "blame.age-icon",
+            "foreground": "color(var(unknown01) alpha(1))",
+        },
+        {
+            "scope": "source.sublime-merge.preferences.git_binary",
+            "foreground": "color(var(unknown01) alpha(1))",
+        }
+    ]
+}
