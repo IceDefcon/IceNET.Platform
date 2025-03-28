@@ -268,12 +268,12 @@ static void freeTransfer(void)
     return ramAxis.sector[type].sectorAddress;
 }
 
-/* GET */ DmaTransferType* getDmaTransfer(void)
+/* GET */ DmaTransferType* getRamdiskDmaTransfer(void)
 {
     return ramAxis.dmaTransfer;
 }
 
-/* GET */ uint8_t getConfigBytesAmount(void)
+/* GET */ uint8_t getRamdiskConfigTransferSize(void)
 {
     return ramAxis.configBytesAmount;
 }

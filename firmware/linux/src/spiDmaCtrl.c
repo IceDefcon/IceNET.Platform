@@ -157,48 +157,44 @@ static int spiBusInit(spiBusType spiBusEnum, spiDeviceType spiDeviceEnum)
  *
  */
 
-static int spiDmaInit(spiDeviceType spiDeviceEnum, bool fpgaConfig)
+
+
+
+
+
+
+static int spiDmaInit(spiDeviceType spiDeviceEnum, dmaConfigType dmaConfig)
 {
     DmaTransferType* dmaTransfer;
+    dmaTransfer = getRamdiskDmaTransfer();
 
-    if(true == fpgaConfig)
+    switch(dmaConfig)
     {
-        dmaTransfer = getDmaTransfer();
+        case DMA_CONFIG_NORMAL:
+            dmaTransfer = getCharDeviceTransfer(DEVICE_COMMANDER);
+            printk(KERN_ERR "[INIT][SPI] Primary SPI/DMA -> Normal Mode\n");
+            Device[spiDeviceEnum].spiLength = NORMAL_DMA_TRANSFER_SIZE;
+            break;
 
-        if(SPI_PRIMARY == spiDeviceEnum)
-        {
-            printk(KERN_ERR "[INIT][SPI] SPI/DMA FPGA Config\n");
-            Device[spiDeviceEnum].spiLength = getConfigBytesAmount();
-        }
-        else if(SPI_SECONDARY == spiDeviceEnum)
-        {
-            printk(KERN_ERR "[INIT][SPI] SPI/DMA Feedback\n");
-            Device[spiDeviceEnum].spiLength = SINGLE_DMA_TRANSFER_SIZE;
-        }
-        else
-        {
-            printk(KERN_ERR "[INIT][SPI] Wrong SPI Device\n");
-        }
-    }
-    else if(false == fpgaConfig)
-    {
-        dmaTransfer = getCharDeviceTransfer(DEVICE_COMMANDER);
-
-        if(SPI_PRIMARY == spiDeviceEnum)
-        {
-            printk(KERN_ERR "[INIT][SPI] SPI/DMA Server Config\n");
-            Device[spiDeviceEnum].spiLength = MANUAL_DMA_TRANSFER_SIZE;
-        }
-        else if(SPI_SECONDARY == spiDeviceEnum)
-        {
-            printk(KERN_ERR "[INIT][SPI] SPI/DMA Feedback\n");
+        case DMA_CONFIG_SENSOR:
+            printk(KERN_ERR "[INIT][SPI] Secondary SPI/DMA -> Sensor Mode\n");
             Device[spiDeviceEnum].spiLength = SENSOR_DMA_TRANSFER_SIZE;
-        }
-        else
-        {
-            printk(KERN_ERR "[INIT][SPI] Wrong SPI Device\n");
-        }
-    }
+            break;
+
+        case DMA_CONFIG_SINGLE:
+            printk(KERN_ERR "[INIT][SPI] Secondary SPI/DMA -> Single Mode\n");
+            Device[spiDeviceEnum].spiLength = SINGLE_DMA_TRANSFER_SIZE;
+            break;
+
+        case DMA_CONFIG_RAMDISK:
+            printk(KERN_ERR "[INIT][SPI] Primary SPI/DMA -> RamDisk Mode\n");
+            Device[spiDeviceEnum].spiLength = getRamdiskConfigTransferSize();
+            break;
+
+        default:
+            printk(KERN_ERR "[INIT][SPI] Unknown type of the dmaConfig\n");
+            break;
+    };
 
     /* Allocate DMA buffers */
     Device[spiDeviceEnum].Dma.tx_dma = dma_map_single(Device[spiDeviceEnum].spiDevice->master->dev.parent, (void *)dmaTransfer->RxData, Device[spiDeviceEnum].spiLength, DMA_TO_DEVICE);
@@ -414,32 +410,14 @@ static const char* getDmaConfigString(dmaConfigType type)
     }
 }
 
-#if 0
-case SM_DMA_NORMAL: configDMA(SPI_PRIMARY, DMA_CONFIG_NORMAL);
-case SM_DMA_SENSOR: configDMA(SPI_SECONDARY, DMA_CONFIG_SENSOR);
-case SM_DMA_SINGLE: configDMA(SPI_SECONDARY, DMA_CONFIG_SINGLE);
-case SM_RAMDISK_CONFIG: configDMA(SPI_PRIMARY, DMA_CONFIG_RAMDISK);
-#endif
-
-/**
- *
- * TODO
- *
- * This still need to be refactored
- * On the true/false value
- *
- */
 /* CONFIG */ void configDMA(spiDeviceType spiDevice, dmaConfigType dmaConfig)
 {
     printk(KERN_INFO "[CTRL][SPI] Configure %s into -> %s\n", getSpiInterfaceString(spiDevice), getDmaConfigString(dmaConfig));
     spiDmaDestroy(spiDevice);
-    if(DMA_CONFIG_RAMDISK == dmaConfig || DMA_CONFIG_SINGLE == dmaConfig)
+
+    if(dmaConfig >= 0 && dmaConfig < DMA_CONFIG_AMOUNT)
     {
-        spiDmaInit(spiDevice, true);
-    }
-    else if(DMA_CONFIG_NORMAL == dmaConfig || DMA_CONFIG_SENSOR == dmaConfig)
-    {
-        spiDmaInit(spiDevice, false);
+        spiDmaInit(spiDevice, dmaConfig);
     }
     else
     {

@@ -55,8 +55,8 @@ typedef struct
 /* PRINT */ void printRamDiskData(void);
 
 /* GET */ void* getSectorAddress(ramSectorType type);
-/* GET */ DmaTransferType* getDmaTransfer(void);
-/* GET */ uint8_t getConfigBytesAmount(void);
+/* GET */ DmaTransferType* getRamdiskDmaTransfer(void);
+/* GET */ uint8_t getRamdiskConfigTransferSize(void);
 /* GET */ uint8_t getPayloadBytesAmount(void);
 /* IS */ bool isPayloadReady(void);
 
