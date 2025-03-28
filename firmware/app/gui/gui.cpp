@@ -713,3 +713,66 @@ void gui::threadMain()
     m_instanceDroneCtrl.reset(); // Reset the unique_ptr to call the destructor
 }
 
+void gui::initUart()
+{
+    m_serialPort = new QSerialPort(this);
+
+    m_uartPortName = "/dev/ttyTHS1";
+    m_serialPort->setPortName(m_uartPortName);
+    m_serialPort->setBaudRate(QSerialPort::Baud9600);
+    m_serialPort->setDataBits(QSerialPort::Data8);
+    m_serialPort->setParity(QSerialPort::NoParity);
+    m_serialPort->setStopBits(QSerialPort::OneStop);
+    m_serialPort->setFlowControl(QSerialPort::NoFlowControl);
+
+    if (m_serialPort->open(QIODevice::ReadWrite))
+    {
+        m_uartIsConnected = true;
+        printToConsole("[UART] Connection established");
+    }
+    else
+    {
+        m_uartIsConnected = false;
+        printToConsole("[UART] Failed to open port");
+    }
+
+    connect(m_serialPort, &QSerialPort::readyRead, this, &gui::readUartData);
+}
+
+void gui::readUartData()
+{
+    if (m_uartIsConnected && m_serialPort->isOpen())
+    {
+        m_readBuffer.append(m_serialPort->readAll());
+        printToConsole("[UART] Data received: " + QString(m_readBuffer));
+    }
+}
+
+void gui::writeToUart(const QString &data)
+{
+    if (m_uartIsConnected && m_serialPort->isOpen())
+    {
+        m_serialPort->write(data.toUtf8());
+        printToConsole("[UART] Sent: " + data);
+    }
+    else
+    {
+        printToConsole("[UART] UART is not connected.");
+    }
+}
+
+void gui::onUartInput()
+{
+    QString inputData = m_uartInput->text();
+    writeToUart(inputData);
+    m_uartInput->clear();
+}
+
+void gui::shutdownUart()
+{
+    if (m_uartIsConnected && m_serialPort->isOpen())
+    {
+        m_serialPort->close();
+        printToConsole("[UART] Connection closed");
+    }
+}

@@ -7,8 +7,10 @@
 
 #pragma once
 
+#include <QSerialPortInfo>
 #include <QPlainTextEdit>
 #include <QApplication>
+#include <QSerialPort>
 #include <QPushButton>
 #include <QVBoxLayout>
 #include <QMessageBox>
@@ -80,6 +82,11 @@ class gui : public QWidget
 
     Commander* m_instanceCommander;
 
+    QSerialPort *m_serialPort;         // Pointer to serial port
+    QByteArray m_readBuffer;           // Buffer for incoming data
+    QString m_uartPortName;            // Port name (e.g., COM1, /dev/ttyUSB0)
+    bool m_uartIsConnected;            // Flag to track if UART is connected
+
 public:
 
     gui();
@@ -98,6 +105,12 @@ public:
     std::shared_ptr<std::vector<uint8_t>> transferPointerRx,
     std::shared_ptr<std::vector<uint8_t>> transferPointerTx,
     std::shared_ptr<ioStateType> transferState);
+
+    void initUart();
+    void readUartData();
+    void writeToUart(const QString &data);
+    void onUartInput();
+    void shutdownUart();
 
 private slots:
 
