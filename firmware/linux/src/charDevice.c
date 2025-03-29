@@ -273,6 +273,13 @@ static ssize_t commanderRead(struct file *filep, char *buffer, size_t len, loff_
     return ret;
 }
 
+static uint8_t customDmaSize = 1;
+uint8_t getCustomDmaSize(void)
+{
+    return customDmaSize;
+}
+
+
 static ssize_t commanderWrite(struct file *filep, const char __user *buffer, size_t len, loff_t *offset)
 {
     int i = 0;
@@ -314,6 +321,14 @@ static ssize_t commanderWrite(struct file *filep, const char __user *buffer, siz
         /* Reconfigure DMA Engine */
         printk(KERN_INFO "[CTRL][ C ] Reconfigure DMA Engine into single byte feedback mode\n");
         setStateMachine(SM_DMA_SINGLE);
+    }
+    else if (Device[DEVICE_COMMANDER].io_transfer.RxData[0] == 0xC5 && Device[DEVICE_COMMANDER].io_transfer.RxData[1] == 0x70)
+    {
+        /* Reconfigure DMA Engine */
+        customDmaSize = Device[DEVICE_COMMANDER].io_transfer.RxData[2];
+        printk(KERN_INFO "[CTRL][ C ] Reconfigure DMA Engine into custom %d Byte feedback mode\n", customDmaSize);
+        setStateMachine(SM_DMA_CUSTOM);
+
     }
     else if (Device[DEVICE_COMMANDER].io_transfer.RxData[0] == 0xC0 && Device[DEVICE_COMMANDER].io_transfer.RxData[1] == 0xF1)
     {

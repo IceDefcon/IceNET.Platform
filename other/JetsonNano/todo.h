@@ -40,6 +40,7 @@ git config --global credential.helper 'store --file ~/.git-credentials'
 //
 sudo apt update
 sudo apt install qt5-qmake qtbase5-dev
+sudo apt-get install libqt5serialport5-dev
 
 //
 // Install

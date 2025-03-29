@@ -157,12 +157,6 @@ static int spiBusInit(spiBusType spiBusEnum, spiDeviceType spiDeviceEnum)
  *
  */
 
-
-
-
-
-
-
 static int spiDmaInit(spiDeviceType spiDeviceEnum, dmaConfigType dmaConfig)
 {
     DmaTransferType* dmaTransfer;
@@ -184,6 +178,11 @@ static int spiDmaInit(spiDeviceType spiDeviceEnum, dmaConfigType dmaConfig)
         case DMA_CONFIG_SINGLE:
             printk(KERN_ERR "[INIT][SPI] Secondary SPI/DMA -> Single Mode\n");
             Device[spiDeviceEnum].spiLength = SINGLE_DMA_TRANSFER_SIZE;
+            break;
+
+        case DMA_CONFIG_CUSTOM:
+            printk(KERN_ERR "[INIT][SPI] Secondary SPI/DMA -> Custom Mode\n");
+            Device[spiDeviceEnum].spiLength = getCustomDmaSize();
             break;
 
         case DMA_CONFIG_RAMDISK:
@@ -397,6 +396,7 @@ static const char* getDmaConfigString(dmaConfigType type)
         "DMA_CONFIG_NORMAL",
         "DMA_CONFIG_SENSOR",
         "DMA_CONFIG_SINGLE",
+        "DMA_CONFIG_CUSTOM",
         "DMA_CONFIG_RAMDISK"
     };
 

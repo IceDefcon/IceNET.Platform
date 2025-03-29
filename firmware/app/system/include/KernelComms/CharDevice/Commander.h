@@ -31,6 +31,8 @@ class Commander
 
         std::vector<std::vector<uint8_t>> m_commandMatrix;
 
+        uint8_t m_customDmaSize;
+
     public:
         Commander();
         ~Commander();
@@ -40,6 +42,9 @@ class Commander
         int dataRX();
         int closeDEV();
 
+        std::string commandToString(commandType cmd);
+
+        void setDmaCustom(uint8_t size);
         int sendCommand(commandType cmd);
 
         void initThread();

@@ -23,13 +23,15 @@ m_ioStatePrev(IO_IDLE),
 m_Rx_CommanderVector(std::make_shared<std::vector<uint8_t>>(IO_TRANSFER_SIZE)),
 m_Tx_CommanderVector(std::make_shared<std::vector<uint8_t>>(IO_TRANSFER_SIZE)),
 m_IO_CommanderState(std::make_shared<ioStateType>(IO_IDLE)),
-m_commandMatrix(CMD_AMOUNT, std::vector<uint8_t>(CMD_LENGTH, 0))  // Initialized with zeros
+m_commandMatrix(CMD_AMOUNT, std::vector<uint8_t>(CMD_LENGTH, 0)),
+m_customDmaSize(0)
 {
     std::cout << "[INFO] [CONSTRUCTOR] " << this << " :: Instantiate Commander" << std::endl;
 
     m_commandMatrix[CMD_DMA_NORMAL] = {0x04, 0xA1}; /* 0x04A1(ORAL) :: Reconfigure DMA Engine :: Normal Mode 4-Byte */
     m_commandMatrix[CMD_DMA_SENSOR] = {0x5E, 0x50}; /* 0x5E50(SESO) :: Reconfigure DMA Engine :: Sensor Mode 12-Byte */
     m_commandMatrix[CMD_DMA_SINGLE] = {0x51, 0x6E}; /* 0x516E(SIGE) :: Reconfigure DMA Engine :: Single Mode 1-Byte */
+    m_commandMatrix[CMD_DMA_CUSTOM] = {0xC5, 0x70}; /* 0xC570(CSTO) :: Reconfigure DMA Engine :: Custom Mode x-Byte */
     m_commandMatrix[CMD_RAMDISK_CONFIG] = {0xC0, 0xF1}; /* 0xC0F1(COFI) :: Activate DMA transfer to send IMU's config to FPGA */
     m_commandMatrix[CMD_RAMDISK_CLEAR]  = {0xC1, 0xEA}; /* 0xC1EA(CLEA) :: Clear DMA variables used for verification of IMU's config */
 }
@@ -90,18 +92,46 @@ int Commander::dataTX()
     return OK;
 }
 
+void Commander::setDmaCustom(uint8_t size)
+{
+    m_customDmaSize = size;
+}
+
+
+std::string Commander::commandToString(commandType cmd)
+{
+    switch (cmd)
+    {
+    case CMD_DMA_NORMAL:     return "CMD_DMA_NORMAL";
+    case CMD_DMA_SENSOR:     return "CMD_DMA_SENSOR";
+    case CMD_DMA_SINGLE:     return "CMD_DMA_SINGLE";
+    case CMD_DMA_CUSTOM:     return "CMD_DMA_CUSTOM";
+    case CMD_RAMDISK_CONFIG: return "CMD_RAMDISK_CONFIG";
+    case CMD_RAMDISK_CLEAR:  return "CMD_RAMDISK_CLEAR";
+    default:                 return "UNKNOWN_CMD";
+    }
+}
+
 int Commander::sendCommand(commandType cmd)
 {
     int ret = -1;
     std::vector<char>* command = new std::vector<char>(IO_TRANSFER_SIZE);
 
-    std::cout << "[INFO] [CMD] Command Received :: Sending to Kernel" << std::endl;
+    std::cout << "[INFO] [CMD] Command Received :: " << commandToString(cmd) << std::endl;
 
     (*command)[0] = m_commandMatrix[cmd][0];
     (*command)[1] = m_commandMatrix[cmd][1];
 
-    /* Write command to Kernel Space :: To be processed in Kernel */
-    ret = write(m_file_descriptor, command->data(), CMD_LENGTH);
+    if(CMD_DMA_CUSTOM == cmd)
+    {
+        (*command)[2] = static_cast<char>(m_customDmaSize);
+        ret = write(m_file_descriptor, command->data(), CMD_LENGTH + 1);
+    }
+    else
+    {
+        /* Write command to Kernel Space :: To be processed in Kernel */
+        ret = write(m_file_descriptor, command->data(), CMD_LENGTH);
+    }
 
     delete command;
 

@@ -7,11 +7,14 @@
 
 #pragma once
 
+#include <QSerialPortInfo>
 #include <QPlainTextEdit>
 #include <QApplication>
+#include <QSerialPort>
 #include <QPushButton>
 #include <QVBoxLayout>
 #include <QMessageBox>
+#include <QDateTime>
 #include <QLineEdit>
 #include <QCheckBox>
 #include <QPainter>
@@ -52,7 +55,8 @@ class gui : public QWidget
 {
     Q_OBJECT
 
-    QPlainTextEdit *m_consoleOutput;
+    QPlainTextEdit *m_mainConsoleOutput;
+    QPlainTextEdit *m_uartConsoleOutput;
 
     QLineEdit *m_i2c_addressField;
     QLineEdit *m_i2c_registerField;
@@ -67,6 +71,7 @@ class gui : public QWidget
     QCheckBox *m_spi_writeTick;
 
     QLineEdit *m_pwm_dataField;
+    QLineEdit *m_dmaCustom_dataField;
 
     std::unique_ptr<DroneCtrl> m_instanceDroneCtrl;
     std::thread m_threadMain;
@@ -80,13 +85,22 @@ class gui : public QWidget
 
     Commander* m_instanceCommander;
 
+    QSerialPort *m_serialPort;
+    QByteArray m_readBuffer;
+    QString m_uartPortName;
+    QLineEdit *m_uartInput;
+    bool m_uartIsConnected;
+
+    QString m_currentTime;
+
 public:
 
     gui();
     ~gui();
 
     void setupWindow();
-    void setupConsole();
+    void setupMainConsole();
+    void setupUartConsole();
     void setupDma();
     void setupI2C();
     void setupSPI();
@@ -99,6 +113,12 @@ public:
     std::shared_ptr<std::vector<uint8_t>> transferPointerTx,
     std::shared_ptr<ioStateType> transferState);
 
+    void setupUart();
+    void readUartData();
+    void writeToUart(const QString &data);
+    void onUartInput();
+    void shutdownUart();
+
 private slots:
 
     void setDeadCommand();
@@ -108,7 +128,8 @@ private slots:
     void spi_execute();
     void pwm_execute(pwmType type);
 
-    void printToConsole(const QString &message);
+    void printToMainConsole(const QString &message);
+    void printToUartConsole(const QString &message);
 
     void initThread();
     void shutdownThread();
