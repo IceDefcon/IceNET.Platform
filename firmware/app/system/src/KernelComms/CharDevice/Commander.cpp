@@ -34,6 +34,7 @@ m_customDmaSize(0)
     m_commandMatrix[CMD_DMA_CUSTOM] = {0xC5, 0x70}; /* 0xC570(CSTO) :: Reconfigure DMA Engine :: Custom Mode x-Byte */
     m_commandMatrix[CMD_RAMDISK_CONFIG] = {0xC0, 0xF1}; /* 0xC0F1(COFI) :: Activate DMA transfer to send IMU's config to FPGA */
     m_commandMatrix[CMD_RAMDISK_CLEAR]  = {0xC1, 0xEA}; /* 0xC1EA(CLEA) :: Clear DMA variables used for verification of IMU's config */
+    m_commandMatrix[CMD_FPGA_RESET] = {0x4E,0x5E}; /* 0x4E5E(RESE) :: Global Reset to FPGA */
 }
 
 Commander::~Commander()

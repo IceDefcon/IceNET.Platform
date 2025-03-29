@@ -6,6 +6,7 @@ package Types is
 
     subtype UART_ASCII is std_logic_vector(6 downto 0);
     type UART_LOG_ID is array (0 to 1) of std_logic_vector(3 downto 0);
+    type UART_LOG_KEY is array (0 to 1) of std_logic_vector(3 downto 0);
     type UART_LOG_DATA is array (0 to 3) of std_logic_vector(3 downto 0);
 
     function CONVERT_TO_ASCII

@@ -11,8 +11,8 @@ port
     WRITE_ENABLE : in std_logic;
     WRITE_SYMBOL : in std_logic_vector(6 downto 0);
 
-    UART_x86_TX : out std_logic;
-    UART_x86_RX : in std_logic;
+    FPGA_UART_TX : out std_logic;
+    FPGA_UART_RX : in std_logic;
 
     WRITE_BUSY : out std_logic
 );
@@ -108,7 +108,7 @@ begin
 
         end case;
 
-        UART_x86_TX <= uart_output;
+        FPGA_UART_TX <= uart_output;
 
     end if;
 end process;
