@@ -25,7 +25,7 @@ static const consoleType console =
     .xPosition = dev.xGap*5 + dev.xText + dev.xUnit*2,  // Vertical Separator
     .yPosition = dev.yGap*6 + dev.yLogo + dev.yUnit*3,  // At SPI Logo
     .xSize = 800 - console.xPosition - dev.xGap,        // Obvious
-    .ySize = dev.yGap*8 + dev.yLogo*2 + dev.yUnit*6+1, // Last Horizontal Separator - yPosition + yGap
+    .ySize = dev.yGap*8 + dev.yLogo*2 + dev.yUnit*6+1,  // Last Horizontal Separator - yPosition + yGap
 };
 
 gui::gui() :
@@ -38,7 +38,9 @@ m_IO_GuiState(std::make_shared<ioStateType>(IO_IDLE))
     qDebug() << "[MAIN] [CONSTRUCTOR]" << this << "::  gui";
 
     setupWindow();
-    setupConsole();
+    setupMainConsole();
+    setupUartConsole();
+    setupUart();
 
     setupDma();
 
@@ -53,6 +55,9 @@ m_IO_GuiState(std::make_shared<ioStateType>(IO_IDLE))
 gui::~gui()
 {
     qDebug() << "[MAIN] [DESTRUCTOR]" << this << ":: gui ";
+
+    shutdownUart();
+
     if(false == m_threadKill)
     {
         shutdownThread();
@@ -65,12 +70,28 @@ void gui::setupWindow()
     setFixedSize(800, 600);
 }
 
-void gui::setupConsole()
+void gui::setupMainConsole()
 {
-    m_consoleOutput = new QPlainTextEdit(this);
-    m_consoleOutput->setReadOnly(true);
-    m_consoleOutput->setGeometry(console.xPosition, console.yPosition, console.xSize, console.ySize);
-    m_consoleOutput->setPlainText("Console Initialized...\n");
+    m_mainConsoleOutput = new QPlainTextEdit(this);
+    m_mainConsoleOutput->setReadOnly(true);
+    m_mainConsoleOutput->setGeometry(console.xPosition, console.yPosition, console.xSize, console.ySize);
+    m_mainConsoleOutput->setPlainText("[INIT] Console Initialized...\n");
+}
+
+void gui::setupUartConsole()
+{
+    // Create UART console output
+    m_uartConsoleOutput = new QPlainTextEdit(this);
+    m_uartConsoleOutput->setReadOnly(true);
+    m_uartConsoleOutput->setGeometry(console.xPosition, dev.yGap*16 + dev.yLogo*3 + dev.yUnit*9, console.xSize, 600 - dev.yGap*17 - dev.yUnit*10 - dev.yLogo*3);
+    m_uartConsoleOutput->setPlainText("[INIT] Console Initialized");
+
+    // Create UART input field
+    m_uartInput = new QLineEdit(this);
+    m_uartInput->setGeometry(console.xPosition, 600 - dev.yGap - dev.yUnit, console.xSize, dev.yUnit);
+
+    // Connect the input field to handle UART input on Enter key press
+    connect(m_uartInput, &QLineEdit::returnPressed, this, &gui::onUartInput);
 }
 
 void gui::setupDma()
@@ -82,28 +103,39 @@ void gui::setupDma()
     i2c_labelFont.setItalic(true);
     i2c_labelFont.setBold(true);
     i2c_label->setFont(i2c_labelFont);
-    i2c_label->setGeometry(dev.xGap*5 + dev.xText + dev.xUnit*2, dev.yGap, dev.xLogo, dev.yLogo);
+    i2c_label->setGeometry(dev.xGap, dev.yGap*16 + dev.yLogo*3 + dev.yUnit*9, dev.xLogo, dev.yLogo);
     /* DMA :: Row[1] */
-    QLabel *dma_singleLabel = new QLabel("SECONDARY :: Single", this);
-    dma_singleLabel->setGeometry(dev.xGap*5 + dev.xText + dev.xUnit*2, dev.yGap*2 + dev.yLogo, dev.xText, dev.yUnit);
-    QPushButton *dmaSingle_exeButton = new QPushButton("EXE", this);
-    dmaSingle_exeButton->setGeometry(dev.xGap*6 + dev.xText*2 + dev.xUnit*2, dev.yGap*2 + dev.yLogo, dev.xUnit, dev.yUnit);
-    connect(dmaSingle_exeButton, &QPushButton::clicked, this, [this]()
+    QLabel *dma_customLabel = new QLabel("[FPGA->CPU] Custom", this);
+    dma_customLabel->setGeometry(dev.xGap, dev.yGap*16 + dev.yLogo*4 + dev.yUnit*9, dev.xText, dev.yUnit);
+    m_dmaCustom_dataField = new QLineEdit(this);
+    m_dmaCustom_dataField->setGeometry(dev.xGap*2 + dev.xText, dev.yGap*16 + dev.yLogo*4 + dev.yUnit*9, dev.xUnit, dev.yUnit);
+    m_dmaCustom_dataField->setText("0x01");
+    QPushButton *dma_custom_exeButton = new QPushButton("EXE", this);
+    dma_custom_exeButton->setGeometry(dev.xGap*3 + dev.xText + dev.xUnit, dev.yGap*16 + dev.yLogo*4 + dev.yUnit*9, dev.xUnit, dev.yUnit);
+    connect(dma_custom_exeButton, &QPushButton::clicked, this, [this]()
+    {
+        dma_execute(CMD_DMA_CUSTOM);
+    });
+    /* DMA :: Row[2] */
+    QLabel *dma_singleLabel = new QLabel("[FPGA->CPU] Single", this);
+    dma_singleLabel->setGeometry(dev.xGap, dev.yGap*17 + dev.yLogo*4 + dev.yUnit*10, dev.xText, dev.yUnit);
+    QPushButton *dma_single_exeButton = new QPushButton("EXE", this);
+    dma_single_exeButton->setGeometry(dev.xGap*3 + dev.xText + dev.xUnit, dev.yGap*17 + dev.yLogo*4 + dev.yUnit*10, dev.xUnit, dev.yUnit);
+    connect(dma_single_exeButton, &QPushButton::clicked, this, [this]()
     {
         dma_execute(CMD_DMA_SINGLE);
     });
-    /* DMA :: Row[2] */
-    QLabel *i2c_registerLabel = new QLabel("SECONDARY :: Sensor", this);
-    i2c_registerLabel->setGeometry(dev.xGap*5 + dev.xText + dev.xUnit*2, dev.yGap*3 + dev.yLogo + dev.yUnit, dev.xText, dev.yUnit);
+    /* DMA :: Row[3] */
+    QLabel *i2c_registerLabel = new QLabel("[FPGA->CPU] Sensor", this);
+    i2c_registerLabel->setGeometry(dev.xGap, dev.yGap*18 + dev.yLogo*4 + dev.yUnit*11, dev.xText, dev.yUnit);
     QPushButton *dmaSensor_exeButton = new QPushButton("EXE", this);
-    dmaSensor_exeButton->setGeometry(dev.xGap*6 + dev.xText*2 + dev.xUnit*2, dev.yGap*3 + dev.yLogo + dev.yUnit, dev.xUnit, dev.yUnit);
+    dmaSensor_exeButton->setGeometry(dev.xGap*3 + dev.xText + dev.xUnit, dev.yGap*18 + dev.yLogo*4 + dev.yUnit*11, dev.xUnit, dev.yUnit);
     connect(dmaSensor_exeButton, &QPushButton::clicked, this, [this]()
     {
         dma_execute(CMD_DMA_SENSOR);
     });
 }
 
-// CMD_DMA_SENSOR
 void gui::setupI2C()
 {
     /* I2C :: Row[0] */
@@ -246,7 +278,7 @@ void gui::setupSeparators()
 {
     /* Vertical Separator */
     QFrame *vLine1 = new QFrame(this);
-    vLine1->setGeometry(dev.xGap*4 + dev.xText + dev.xUnit*2, dev.yGap, dev.separatorWidth , dev.yGap*14 + dev.yLogo*3 + dev.yUnit*9);
+    vLine1->setGeometry(dev.xGap*4 + dev.xText + dev.xUnit*2, dev.yGap, dev.separatorWidth , 600 - dev.yGap*2);
     vLine1->setFrameShape(QFrame::VLine);
     vLine1->setFrameShadow(QFrame::Sunken);
     /* Horizontal Separator */
@@ -259,18 +291,31 @@ void gui::setupSeparators()
     hLine2->setGeometry(dev.xGap, dev.yGap*10 + dev.yLogo*2 + dev.yUnit*6, dev.xGap*3 + dev.xText + dev.xUnit*2, dev.separatorWidth);
     hLine2->setFrameShape(QFrame::HLine);
     hLine2->setFrameShadow(QFrame::Sunken);
-
     /* Horizontal Separator */
     QFrame *hLine3 = new QFrame(this);
     hLine3->setGeometry(dev.xGap, dev.yGap*15 + dev.yLogo*3 + dev.yUnit*9, 800 - dev.xGap*2, dev.separatorWidth);
     hLine3->setFrameShape(QFrame::HLine);
     hLine3->setFrameShadow(QFrame::Sunken);
+    /* Vertical Separator */
+    QFrame *vLine2 = new QFrame(this);
+    vLine2->setGeometry(dev.xGap*4 + dev.xText + dev.xUnit*2, dev.yGap, dev.separatorWidth , 600 - dev.yGap*2);
+    vLine2->setGeometry(800 - dev.xGap*3 - dev.xUnit*4 , dev.yGap, dev.separatorWidth, dev.yGap*4 + dev.yLogo + dev.yUnit*3);
+    vLine2->setFrameShape(QFrame::VLine);
+    vLine2->setFrameShadow(QFrame::Sunken);
 }
 
 void gui::setupThreadProcess()
 {
+    QLabel *thread_label = new QLabel("THREAD", this);
+    QFont thread_labelFont;
+    thread_labelFont.setPointSize(30);
+    thread_labelFont.setItalic(true);
+    thread_labelFont.setBold(true);
+    thread_label->setFont(thread_labelFont);
+    thread_label->setGeometry(800 - dev.xGap*2 - dev.xUnit*4 , dev.yGap, dev.xLogo, dev.yLogo);
+
     QPushButton *connectButton = new QPushButton("INITIALIZE", this);
-    connectButton->setGeometry(dev.xGap, dev.yGap * 16 + dev.yLogo * 3 + dev.yUnit * 9,dev.xUnit * 5 + dev.xGap, dev.yUnit * 2);
+    connectButton->setGeometry(800 - dev.xGap*2 - dev.xUnit*4, dev.yGap*2 + dev.yLogo, dev.xUnit*4 + dev.xGap, dev.yUnit);
     connectButton->setStyleSheet(
         "QPushButton {"
         "   background-color: green;"
@@ -290,7 +335,7 @@ void gui::setupThreadProcess()
     connect(connectButton, &QPushButton::clicked, this, &gui::initThread);
 
     QPushButton *terminateButton = new QPushButton("TERMINATE", this);
-    terminateButton->setGeometry(dev.xGap, dev.yGap * 17 + dev.yLogo * 3 + dev.yUnit * 11,dev.xUnit * 5 + dev.xGap, dev.yUnit * 2);
+    terminateButton->setGeometry(800 - dev.xGap*2 - dev.xUnit*4, dev.yGap*3 + dev.yUnit*3, dev.xUnit*4 + dev.xGap, dev.yUnit);
     terminateButton->setStyleSheet(
         "QPushButton {"
         "   background-color: red;"
@@ -336,22 +381,34 @@ void gui::setDummyCommand()
     (*m_Tx_GuiVector)[7] = 0x44;
 }
 
+#include <iostream>
 void gui::dma_execute(commandType cmd)
 {
     if(NULL == m_instanceDroneCtrl)
     {
-        printToConsole("[DMA] threadMain is not Running");
+        printToMainConsole("[DMA] threadMain is not Running");
     }
     else
     {
-        if(CMD_DMA_SINGLE == cmd || CMD_DMA_SENSOR == cmd)
+        if(CMD_DMA_CUSTOM == cmd)
         {
-            printToConsole("[DMA] Send DMA Command to Kernel");
+            printToMainConsole("[DMA] Send DMA Command to Kernel");
+
+            bool ok;
+            QString dataText = m_dmaCustom_dataField->text();
+            uint8_t dmaSize = static_cast<uint8_t>(dataText.toUInt(&ok, 16));
+
+            m_instanceDroneCtrl->getCommanderInstance()->setDmaCustom(dmaSize);
+            m_instanceDroneCtrl->getCommanderInstance()->sendCommand(cmd);
+        }
+        else if(CMD_DMA_SINGLE == cmd || CMD_DMA_SENSOR == cmd)
+        {
+            printToMainConsole("[DMA] Send DMA Command to Kernel");
             m_instanceDroneCtrl->getCommanderInstance()->sendCommand(cmd);
         }
         else
         {
-            printToConsole("[DMA] Wrong DMA Command");
+            printToMainConsole("[DMA] Wrong DMA Command");
         }
     }
 }
@@ -363,11 +420,11 @@ void gui::i2c_execute()
 
     if(m_threadKill)
     {
-        printToConsole("[I2C] threadMain is Down");
+        printToMainConsole("[I2C] threadMain is Down");
     }
     else if(!m_isKernelConnected)
     {
-        printToConsole("[I2C] Kernel Communication is Down");
+        printToMainConsole("[I2C] Kernel Communication is Down");
     }
     else
     {
@@ -426,7 +483,7 @@ void gui::i2c_execute()
         (*m_Tx_GuiVector)[7] = 0x00;
         *m_IO_GuiState = IO_COM_WRITE;
 
-        printToConsole("[I2C] Done");
+        printToMainConsole("[I2C] Done");
     }
 }
 
@@ -457,11 +514,11 @@ void gui::spi_execute()
 
     if(m_threadKill)
     {
-        printToConsole("[SPI] threadMain is Down");
+        printToMainConsole("[SPI] threadMain is Down");
     }
     else if(!m_isKernelConnected)
     {
-        printToConsole("[SPI] Kernel Communication is Down");
+        printToMainConsole("[SPI] Kernel Communication is Down");
     }
     else
     {
@@ -529,7 +586,7 @@ void gui::spi_execute()
         (*m_Tx_GuiVector)[7] = 0x00;
         *m_IO_GuiState = IO_COM_WRITE;
 
-        printToConsole("[SPI] Done");
+        printToMainConsole("[SPI] Done");
     }
 }
 
@@ -540,11 +597,11 @@ void gui::pwm_execute(pwmType type)
 
     if(m_threadKill)
     {
-        printToConsole("[PWM] threadMain is Down");
+        printToMainConsole("[PWM] threadMain is Down");
     }
     else if(!m_isKernelConnected)
     {
-        printToConsole("[PWM] Kernel Communication is Down");
+        printToMainConsole("[PWM] Kernel Communication is Down");
     }
     else
     {
@@ -571,7 +628,7 @@ void gui::pwm_execute(pwmType type)
             {
                 case PWM_EXE:
                     dataValue = static_cast<uint8_t>(dataTemp);
-                    printToConsole("[PWM] Execute");
+                    printToMainConsole("[PWM] Execute");
                     break;
 
                 case PWM_UP:
@@ -585,7 +642,7 @@ void gui::pwm_execute(pwmType type)
                         dataValue += 0x05;
                     }
                     m_pwm_dataField->setText(QString("0x%1").arg(dataValue, 2, 16, QChar('0')).toLower());
-                    printToConsole("[PWM] Up");
+                    printToMainConsole("[PWM] Up");
                     break;
 
                 case PWM_DOWN:
@@ -599,11 +656,11 @@ void gui::pwm_execute(pwmType type)
                         dataValue -= 0x05;
                     }
                     m_pwm_dataField->setText(QString("0x%1").arg(dataValue, 2, 16, QChar('0')).toLower());
-                    printToConsole("[PWM] Down");
+                    printToMainConsole("[PWM] Down");
                     break;
 
                 default:
-                    printToConsole("[PWM] Unknown type of operation");
+                    printToMainConsole("[PWM] Unknown type of operation");
                     break;
             };
         }
@@ -618,13 +675,18 @@ void gui::pwm_execute(pwmType type)
         (*m_Tx_GuiVector)[7] = 0x00;
         *m_IO_GuiState = IO_COM_WRITE;
 
-        printToConsole("[PWM] Done");
+        printToMainConsole("[PWM] Done");
     }
 }
 
-void gui::printToConsole(const QString &message)
+void gui::printToMainConsole(const QString &message)
 {
-    m_consoleOutput->appendPlainText(message);
+    m_mainConsoleOutput->appendPlainText(message);
+}
+
+void gui::printToUartConsole(const QString &message)
+{
+    m_uartConsoleOutput->appendPlainText(message);
 }
 
 void gui::initThread()
@@ -633,11 +695,11 @@ void gui::initThread()
 
     if (m_threadMain.joinable())
     {
-        printToConsole("[THR] threadMain is already running.");
+        printToMainConsole("[THR] threadMain is already running.");
         return;
     }
 
-    printToConsole("[THR] Initialize threadMain");
+    printToMainConsole("[THR] Initialize threadMain");
 
     m_threadKill = false;
     m_threadMain = std::thread(&gui::threadMain, this);
@@ -655,18 +717,18 @@ void gui::shutdownThread()
 
     if (m_threadKill)
     {
-        printToConsole("[THR] threadMain is already marked for shutdown.");
+        printToMainConsole("[THR] threadMain is already marked for shutdown.");
         return;
     }
 
-    printToConsole("[THR] Shutdown threadMain");
+    printToMainConsole("[THR] Shutdown threadMain");
 
     m_threadKill = true;
 
     if (m_threadMain.joinable())
     {
         m_threadMain.join();
-        printToConsole("[THR] threadMain has been shut down.");
+        printToMainConsole("[THR] threadMain has been shut down.");
     }
 
     qDebug() << "[EXIT] [THR] Terminate threadMain";
@@ -713,13 +775,14 @@ void gui::threadMain()
     m_instanceDroneCtrl.reset(); // Reset the unique_ptr to call the destructor
 }
 
-void gui::initUart()
+
+void gui::setupUart()
 {
     m_serialPort = new QSerialPort(this);
 
     m_uartPortName = "/dev/ttyTHS1";
     m_serialPort->setPortName(m_uartPortName);
-    m_serialPort->setBaudRate(QSerialPort::Baud9600);
+    m_serialPort->setBaudRate(2000000);
     m_serialPort->setDataBits(QSerialPort::Data8);
     m_serialPort->setParity(QSerialPort::NoParity);
     m_serialPort->setStopBits(QSerialPort::OneStop);
@@ -728,12 +791,12 @@ void gui::initUart()
     if (m_serialPort->open(QIODevice::ReadWrite))
     {
         m_uartIsConnected = true;
-        printToConsole("[UART] Connection established");
+        printToUartConsole("[INIT] Connection established");
     }
     else
     {
         m_uartIsConnected = false;
-        printToConsole("[UART] Failed to open port");
+        printToUartConsole("[INIT] Failed to open port");
     }
 
     connect(m_serialPort, &QSerialPort::readyRead, this, &gui::readUartData);
@@ -744,35 +807,51 @@ void gui::readUartData()
     if (m_uartIsConnected && m_serialPort->isOpen())
     {
         m_readBuffer.append(m_serialPort->readAll());
-        printToConsole("[UART] Data received: " + QString(m_readBuffer));
+
+        const int messageLength = 8;
+
+        while (m_readBuffer.size() >= messageLength)
+        {
+            QByteArray completeMessage = m_readBuffer.left(messageLength);
+            m_readBuffer.remove(0, messageLength);
+
+            m_currentTime = QDateTime::currentDateTime().toString("HH:mm:ss");
+
+            printToUartConsole("[" + m_currentTime + "] Rx: " + completeMessage);
+        }
     }
 }
 
 void gui::writeToUart(const QString &data)
 {
+    m_currentTime = QDateTime::currentDateTime().toString("HH:mm:ss");
     if (m_uartIsConnected && m_serialPort->isOpen())
     {
         m_serialPort->write(data.toUtf8());
-        printToConsole("[UART] Sent: " + data);
+        printToUartConsole("[" + m_currentTime + "] Tx: " + data);
     }
     else
     {
-        printToConsole("[UART] UART is not connected.");
+        printToUartConsole("[" + m_currentTime + "] UART is not connected.");
     }
 }
 
 void gui::onUartInput()
 {
     QString inputData = m_uartInput->text();
-    writeToUart(inputData);
-    m_uartInput->clear();
+    if (!inputData.isEmpty())
+    {
+        writeToUart(inputData);
+        m_uartInput->clear();
+    }
 }
+
 
 void gui::shutdownUart()
 {
     if (m_uartIsConnected && m_serialPort->isOpen())
     {
         m_serialPort->close();
-        printToConsole("[UART] Connection closed");
+        printToUartConsole("[EXIT] Connection closed");
     }
 }

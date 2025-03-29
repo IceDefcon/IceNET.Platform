@@ -96,6 +96,12 @@ static int stateMachineThread(void *data)
                 setStateMachine(SM_DONE);
                 break;
 
+            case SM_DMA_CUSTOM:
+                printk(KERN_INFO "[CTRL][STM] Custom Size Feedback Configuration DMA mode\n");
+                configDMA(SPI_SECONDARY, DMA_CONFIG_CUSTOM);
+                setStateMachine(SM_DONE);
+                break;
+
             case SM_RAMDISK_CONFIG:
                 printk(KERN_INFO "[CTRL][STM] Long Configuration DMA mode\n");
                 prepareRamDiskTransfer();
