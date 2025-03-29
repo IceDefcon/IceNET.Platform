@@ -194,8 +194,6 @@ port
     -----------------------------------------------------------------------------
     -- Peripheral Interfaces
     -----------------------------------------------------------------------------
-    --ADXL_INT1 : in std_logic; -- PIN_AB14
-    --ADXL_INT2 : in std_logic; -- PIN_AA14
     -- UART
     FPGA_UART_RX : in std_logic;  -- PIN_B19 :: H8  -> JetsonNano UART1_TXD
     FPGA_UART_TX : out std_logic; -- PIN_B18 :: H10 -> JetsonNano UART1_RXD
@@ -238,13 +236,8 @@ end Platform;
 
 architecture rtl of Platform is
 
--- SCK
--- MOSI
--- CS
--- MISO
-
 ----------------------------------------------------------------------------------------------------------------
--- Asynchronic Input Signals
+-- Synced :: Asynchronic Input Signals
 ----------------------------------------------------------------------------------------------------------------
 
 -- PRIMARY SPI
@@ -255,7 +248,8 @@ signal synced_PRIMARY_CS : std_logic := '0';
 signal synced_SECONDARY_MOSI : std_logic := '0';
 signal synced_SECONDARY_SCLK : std_logic := '0';
 signal synced_SECONDARY_CS : std_logic := '0';
-
+-- Main UART
+signal synced_FPGA_UART_RX : std_logic := '0';
 
 
 
@@ -269,16 +263,9 @@ signal primary_conversion_complete : std_logic := '0';
 signal primary_parallel_MOSI : std_logic_vector(7 downto 0) := (others => '0');
 -- Spi.1 Secondary
 signal secondary_parallel_MISO : std_logic_vector(7 downto 0) := (others => '0');
--- BMI160 Gyroscope registers
-signal mag_z_15_8 : std_logic_vector(7 downto 0):= (others => '0');
-signal mag_z_7_0 : std_logic_vector(7 downto 0):= (others => '0');
-signal mag_y_15_8 : std_logic_vector(7 downto 0):= (others => '0');
-signal mag_y_7_0 : std_logic_vector(7 downto 0):= (others => '0');
-signal mag_x_15_8 : std_logic_vector(7 downto 0):= (others => '0');
-signal mag_x_7_0 : std_logic_vector(7 downto 0):= (others => '0');
--- FIFO
-constant FIFO_WIDTH : integer := 8;
-constant FIFO_DEPTH : integer := 32;
+
+
+
 signal primary_fifo_data_in : std_logic_vector(7 downto 0) := (others => '0');
 signal primary_fifo_wr_en : std_logic := '0';
 signal primary_fifo_rd_en : std_logic := '0';
@@ -394,10 +381,20 @@ signal ctrl_BMI160_S2_MOSI : std_logic := '0';
 signal ctrl_BMI160_S2_SCLK : std_logic := '0';
 --
 signal Sensor_Configuration_Complete : std_logic := '0';
+-- Debounced interrupt signals
+signal s1_bmi160_int1_denoised : std_logic := '0';
+signal s1_bmi160_int2_denoised : std_logic := '0';
+signal s2_bmi160_int1_denoised : std_logic := '0';
+signal s2_bmi160_int2_denoised : std_logic := '0';
+signal s3_adxl345_int1_denoised : std_logic := '0';
+signal s3_adxl345_int2_denoised : std_logic := '0';
+-- Sensor Data Ready signals
 signal s1_bmi160_int_1_DataReady : std_logic := '0';
+signal s1_bmi160_int_2_DataReady : std_logic := '0';
 signal s2_bmi160_int_1_DataReady : std_logic := '0';
--- Debounce signals
-signal s1_denoised_interrupt_signal : std_logic := '0';
+signal s2_bmi160_int_2_DataReady : std_logic := '0';
+signal s3_adxl345_int_1_DataReady : std_logic := '0';
+signal s3_adxl345_int_2_DataReady : std_logic := '0';
 -- Debug
 signal test_continue_flag : std_logic := '0';
 signal test_switch_bmi160_s1_ready : std_logic := '0';
@@ -722,6 +719,12 @@ end component;
 
 begin
 
+-- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+-- //
+-- // DEBOUNCE
+-- //
+-- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 ------------------------------------------------
 -- DEBOUNCE :: BUTTON_1
 ------------------------------------------------
@@ -737,6 +740,12 @@ port map
     button_in => BUTTON_1,
     button_out => reset_button
 );
+
+-- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+-- //
+-- // DELAY SYNCHRONISERS
+-- //
+-- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 ------------------------------------------------
 -- SYNC :: SPI_0
@@ -822,12 +831,230 @@ port map
     SYNC_OUTPUT => synced_SECONDARY_CS
 );
 
+------------------------------------------------
+-- SYNC :: UART
+------------------------------------------------
+DelaySynchroniser_UART: DelaySynchroniser
+generic map
+(
+    SYNCHRONIZATION_DEPTH => 2
+)
+port map
+(
+    CLOCK_50MHz => CLOCK_50MHz,
+
+    ASYNC_INPUT => FPGA_UART_RX,
+    SYNC_OUTPUT => synced_FPGA_UART_RX
+);
+
 -- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
--- //          //
--- //          //
--- // [SPI] IO //
--- //          //
--- //          //
+-- //
+-- // NOISE CONTROLERS :: Used to eliminate spike noise from the long pulses :: Required for breadboard + long cables
+-- //
+-- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+------------------------------------------------
+-- NOISE :: INT1_BMI160_S1
+------------------------------------------------
+s1_int1_NoiseControl: NoiseController
+port map
+(
+    CLOCK_50MHz => CLOCK_50MHz,
+    RESET => '0',
+
+    INPUT_SIGNAL => S1_BMI160_INT_1,
+    THRESHOLD => 5, -- 50ns
+
+    OUTPUT_SIGNAL => s1_bmi160_int1_denoised
+);
+
+------------------------------------------------
+-- NOISE :: INT2_BMI160_S1
+------------------------------------------------
+s1_int2_NoiseControl: NoiseController
+port map
+(
+    CLOCK_50MHz => CLOCK_50MHz,
+    RESET => '0',
+
+    INPUT_SIGNAL => S1_BMI160_INT_2,
+    THRESHOLD => 5, -- 50ns
+
+    OUTPUT_SIGNAL => s1_bmi160_int2_denoised
+);
+
+------------------------------------------------
+-- NOISE :: INT1_BMI160_S2
+------------------------------------------------
+s2_int1_NoiseControl: NoiseController
+port map
+(
+    CLOCK_50MHz => CLOCK_50MHz,
+    RESET => '0',
+
+    INPUT_SIGNAL => S2_BMI160_INT_1,
+    THRESHOLD => 5, -- 50ns
+
+    OUTPUT_SIGNAL => s2_bmi160_int1_denoised
+);
+
+------------------------------------------------
+-- NOISE :: INT2_BMI160_S2
+------------------------------------------------
+s2_int2_NoiseControl: NoiseController
+port map
+(
+    CLOCK_50MHz => CLOCK_50MHz,
+    RESET => '0',
+
+    INPUT_SIGNAL => S2_BMI160_INT_2,
+    THRESHOLD => 5, -- 50ns
+
+    OUTPUT_SIGNAL => s2_bmi160_int2_denoised
+);
+
+------------------------------------------------
+-- NOISE :: INT1_ADXL_S3
+------------------------------------------------
+s3_int1_NoiseControl: NoiseController
+port map
+(
+    CLOCK_50MHz => CLOCK_50MHz,
+    RESET => '0',
+
+    INPUT_SIGNAL => I2C_ADXL345_INT_1,
+    THRESHOLD => 5, -- 50ns
+
+    OUTPUT_SIGNAL => s3_adxl345_int1_denoised
+);
+
+------------------------------------------------
+-- NOISE :: INT2_ADXL_S3
+------------------------------------------------
+s3_int2_NoiseControl: NoiseController
+port map
+(
+    CLOCK_50MHz => CLOCK_50MHz,
+    RESET => '0',
+
+    INPUT_SIGNAL => I2C_ADXL345_INT_2,
+    THRESHOLD => 5, -- 50ns
+
+    OUTPUT_SIGNAL => s3_adxl345_int2_denoised
+);
+
+-- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+-- //
+-- // PULSE CONTROLLERS :: Used to cut the pulses to ussually -> 20ns
+-- //
+-- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+------------------------------------------------
+-- PULSE :: INT1_BMI160_S1
+------------------------------------------------
+Noise_int1_from_bmi160_s1: PulseController
+generic map
+(
+    PULSE_LENGTH => 1 -- 1*20ns Pulse
+)
+port map
+(
+    CLOCK_50MHz => CLOCK_50MHz,
+    ENABLE_CONTROLLER => Sensor_Configuration_Complete,
+
+    INPUT_PULSE => s1_bmi160_int1_denoised,
+    OUTPUT_PULSE => s1_bmi160_int_1_DataReady
+);
+
+------------------------------------------------
+-- PULSE :: INT2_BMI160_S1
+------------------------------------------------
+Noise_int2_from_bmi160_s1: PulseController
+generic map
+(
+    PULSE_LENGTH => 1 -- 1*20ns Pulse
+)
+port map
+(
+    CLOCK_50MHz => CLOCK_50MHz,
+    ENABLE_CONTROLLER => Sensor_Configuration_Complete,
+
+    INPUT_PULSE => s1_bmi160_int2_denoised,
+    OUTPUT_PULSE => s1_bmi160_int_2_DataReady
+);
+
+------------------------------------------------
+-- PULSE :: INT1_BMI160_S2
+------------------------------------------------
+Noise_int1_from_bmi160_s2: PulseController
+generic map
+(
+    PULSE_LENGTH => 1 -- 1*20ns Pulse
+)
+port map
+(
+    CLOCK_50MHz => CLOCK_50MHz,
+    ENABLE_CONTROLLER => Sensor_Configuration_Complete,
+
+    INPUT_PULSE => s2_bmi160_int1_denoised,
+    OUTPUT_PULSE => s2_bmi160_int_1_DataReady
+);
+
+------------------------------------------------
+-- PULSE :: INT1_BMI160_S2
+------------------------------------------------
+Noise_int2_from_bmi160_s2: PulseController
+generic map
+(
+    PULSE_LENGTH => 1 -- 1*20ns Pulse
+)
+port map
+(
+    CLOCK_50MHz => CLOCK_50MHz,
+    ENABLE_CONTROLLER => Sensor_Configuration_Complete,
+
+    INPUT_PULSE => s2_bmi160_int2_denoised,
+    OUTPUT_PULSE => s2_bmi160_int_2_DataReady
+);
+
+------------------------------------------------
+-- PULSE :: INT1_BMI160_S2
+------------------------------------------------
+Noise_int1_from_adxl345_s3: PulseController
+generic map
+(
+    PULSE_LENGTH => 1 -- 1*20ns Pulse
+)
+port map
+(
+    CLOCK_50MHz => CLOCK_50MHz,
+    ENABLE_CONTROLLER => Sensor_Configuration_Complete,
+
+    INPUT_PULSE => s3_adxl345_int1_denoised,
+    OUTPUT_PULSE => s3_adxl345_int_1_DataReady
+);
+
+------------------------------------------------
+-- PULSE :: INT1_BMI160_S2
+------------------------------------------------
+Noise_int2_from_adxl345_s3: PulseController
+generic map
+(
+    PULSE_LENGTH => 1 -- 1*20ns Pulse
+)
+port map
+(
+    CLOCK_50MHz => CLOCK_50MHz,
+    ENABLE_CONTROLLER => Sensor_Configuration_Complete,
+
+    INPUT_PULSE => s3_adxl345_int2_denoised,
+    OUTPUT_PULSE => s3_adxl345_int_2_DataReady
+);
+
+-- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+-- //
+-- // [SPI] Parallelization and Serialization
+-- //
 -- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 primarySpiConverter_module: SpiConverter port map
@@ -861,11 +1088,9 @@ secondarySpiConverter_module: SpiConverter port map
 );
 
 -- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
--- //                  //
--- //                  //
--- // [INT] Interrupts //
--- //                  //
--- //                  //
+-- //
+-- // Interrupts generators and Feedback interrupts
+-- //
 -- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 WatchdogInterrupt: InterruptGenerator
@@ -937,11 +1162,9 @@ begin
 end process;
 
 -- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
--- //                //
--- //                //
--- // [FIFO] Control //
--- //                //
--- //                //
+-- //
+-- // FIFO Data Flow and Offload Control
+-- //
 -- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 SPI_Interrupt_From_CPU: PulseController
@@ -1002,11 +1225,9 @@ port map
 );
 
 -- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
--- //                  //
--- //                  //
--- // [RAM] Controller //
--- //                  //
--- //                  //
+-- //
+-- // SDRAM Controller
+-- //
 -- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 PLL_RamClock_module: PLL_RamClock
@@ -1160,7 +1381,7 @@ port map
     WRITE_SYMBOL => uart_write_symbol,
 
     FPGA_UART_TX => FPGA_UART_TX,
-    FPGA_UART_RX => FPGA_UART_RX,
+    FPGA_UART_RX => synced_FPGA_UART_RX,
 
     WRITE_BUSY => uart_write_busy
 );
@@ -1458,45 +1679,7 @@ port map
     OUTPUT_PULSE => Sensor_Configuration_Complete
 );
 
-s1_Interrupt_NoiseControl: NoiseController
-port map
-(
-    CLOCK_50MHz => CLOCK_50MHz,
-    RESET => '0',
 
-    INPUT_SIGNAL => S1_BMI160_INT_1,
-    THRESHOLD => 5, -- 50ns
-
-    OUTPUT_SIGNAL => s1_denoised_interrupt_signal
-);
-
-Interrupt_from_bmi160_s1: PulseController
-generic map
-(
-    PULSE_LENGTH => 1 -- 1*20ns Pulse
-)
-port map
-(
-    CLOCK_50MHz => CLOCK_50MHz,
-    ENABLE_CONTROLLER => Sensor_Configuration_Complete,
-
-    INPUT_PULSE => s1_denoised_interrupt_signal,
-    OUTPUT_PULSE => s1_bmi160_int_1_DataReady
-);
-
-Interrupt_from_bmi160_s2: PulseController
-generic map
-(
-    PULSE_LENGTH => 1 -- 1*20ns Pulse
-)
-port map
-(
-    CLOCK_50MHz => CLOCK_50MHz,
-    ENABLE_CONTROLLER => Sensor_Configuration_Complete,
-
-    INPUT_PULSE => S2_BMI160_INT_1,
-    OUTPUT_PULSE => s2_bmi160_int_1_DataReady
-);
 
 ------------------------------------------------------------------------------------------------------------------------------------------
 --
