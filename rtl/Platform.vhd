@@ -27,8 +27,8 @@ use work.Types.all;
 -- PIN_A20 :: PIN_B20
 -- _________________________________________________________________________________
 --                      Λ                                           Λ
--- PIN_A19 :: PIN_B19   | TIMER_INT_FROM_FPGA   ::                  | H7  :: H8
--- PIN_A18 :: PIN_B18   |                       ::                  | H9  :: H10
+-- PIN_A19 :: PIN_B19   | TIMER_INT_FROM_FPGA   :: FPGA_UART_RX     | H7  :: H8
+-- PIN_A18 :: PIN_B18   |                       :: FPGA_UART_TX     | H9  :: H10
 -- PIN_A17 :: PIN_B17   |                       ::                  | H11 :: H12
 -- PIN_A16 :: PIN_B16   | SECONDARY_SCLK        ::                  | H13 :: H14
 -- PIN_A15 :: PIN_B15   | SPI_INT_FROM_CPU      ::                  | H15 :: H16
@@ -137,10 +137,12 @@ port
     TIMER_INT_FROM_FPGA : out std_logic; -- PIN_A13 :: GPIO09 :: HEADER_PIN_07
     WDG_INT_FROM_FPGA : out std_logic; -- PIN_A20 :: GPIO11 :: HEADER_PIN_31
     CFG_INT_FROM_CPU : in std_logic; -- PIN_B4 :: GPIO13 :: HEADER_PIN_33
+
     PRIMARY_MOSI : in std_logic;  -- PIN_B6 :: H19 :: SPI0_MOSI
     PRIMARY_MISO : out std_logic; -- PIN_A8 :: H21 :: SPI0_MISO
     PRIMARY_SCLK : in std_logic;  -- PIN_B8 :: H23 :: SPI0_SCLK
     PRIMARY_CS : in std_logic;    -- PIN_A6 :: H24 :: SPI0_CS0
+
     SECONDARY_MOSI : in std_logic;  -- PIN_B14 :: P9_30 :: SPI1_D1
     SECONDARY_MISO : out std_logic; -- PIN_A14 :: P9_29 :: SPI1_D0
     SECONDARY_SCLK : in std_logic;  -- PIN_A15 :: P9_31 :: SPI1_SCLK
@@ -195,8 +197,8 @@ port
     --ADXL_INT1 : in std_logic; -- PIN_AB14
     --ADXL_INT2 : in std_logic; -- PIN_AA14
     -- UART
-    UART_x86_TX : out std_logic; -- PIN_N19 :: FTDI Rx
-    UART_x86_RX : in std_logic;  -- PIN_M19 :: FTDI Tx
+    FPGA_UART_RX : in std_logic;  -- PIN_B19 :: H8  -> JetsonNano UART1_TXD
+    FPGA_UART_TX : out std_logic; -- PIN_B18 :: H10 -> JetsonNano UART1_RXD
     -- I2C Bus
     I2C_SDA : inout std_logic; -- PIN_Y21
     I2C_SCK : inout std_logic; -- PIN_Y22
@@ -242,8 +244,22 @@ architecture rtl of Platform is
 -- MISO
 
 ----------------------------------------------------------------------------------------------------------------
--- Signals
+-- Asynchronic Input Signals
 ----------------------------------------------------------------------------------------------------------------
+
+-- PRIMARY SPI
+signal synced_PRIMARY_MOSI : std_logic := '0';
+signal synced_PRIMARY_SCLK : std_logic := '0';
+signal synced_PRIMARY_CS : std_logic := '0';
+-- SECONDARY SPI
+signal synced_SECONDARY_MOSI : std_logic := '0';
+signal synced_SECONDARY_SCLK : std_logic := '0';
+signal synced_SECONDARY_CS : std_logic := '0';
+
+
+
+
+
 
 -- Buttons
 signal reset_button : std_logic := '0';
@@ -317,8 +333,9 @@ signal uart_write_enable : std_logic := '0';
 signal uart_write_symbol : std_logic_vector(6 downto 0) := (others => '0');
 signal uart_write_busy : std_logic := '0';
 -- UART Test Log
-signal UART_LOG_MESSAGE_ID : UART_LOG_ID := ("0101", "1100"); -- 0x5C
-signal UART_LOG_MESSAGE_DATA : UART_LOG_DATA := ("0111", "1010", "0001", "1011"); -- 0x7A1B
+signal UART_LOG_MESSAGE_ID : UART_LOG_ID := ("1101", "1110"); -- 0xDE
+signal UART_LOG_MESSAGE_KEY : UART_LOG_KEY := ("1010", "1101"); -- 0xAD
+signal UART_LOG_MESSAGE_DATA : UART_LOG_DATA := ("1100", "0000", "1101", "1110"); -- 0xC0DE
 -- Test
 type TEST_STATE is
 (
@@ -619,8 +636,8 @@ port
     WRITE_ENABLE : in std_logic;
     WRITE_SYMBOL : in std_logic_vector;
 
-    UART_x86_TX : out std_logic;
-    UART_x86_RX : in std_logic;
+    FPGA_UART_TX : out std_logic;
+    FPGA_UART_RX : in std_logic;
 
     WRITE_BUSY : out std_logic
 );
@@ -632,6 +649,7 @@ port
     CLOCK_50MHz : in std_logic;
 
     UART_LOG_MESSAGE_ID : in UART_LOG_ID;
+    UART_LOG_MESSAGE_KEY : in UART_LOG_KEY;
     UART_LOG_MESSAGE_DATA : in UART_LOG_DATA;
 
     WRITE_ENABLE : out std_logic;
@@ -680,6 +698,20 @@ Port
 );
 end component;
 
+component DelaySynchroniser
+generic
+(
+    SYNCHRONIZATION_DEPTH : integer := 2
+);
+Port
+(
+    CLOCK_50MHz : in  std_logic;
+
+    ASYNC_INPUT : in std_logic;
+    SYNC_OUTPUT : out std_logic
+);
+end component;
+
 -- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 -- //
 -- //
@@ -690,6 +722,9 @@ end component;
 
 begin
 
+------------------------------------------------
+-- DEBOUNCE :: BUTTON_1
+------------------------------------------------
 DebounceController_module: DebounceController
 generic map
 (
@@ -701,6 +736,90 @@ port map
     clock => CLOCK_50MHz,
     button_in => BUTTON_1,
     button_out => reset_button
+);
+
+------------------------------------------------
+-- SYNC :: SPI_0
+------------------------------------------------
+DelaySynchroniser_SPI0_MOSI: DelaySynchroniser
+generic map
+(
+    SYNCHRONIZATION_DEPTH => 2
+)
+port map
+(
+    CLOCK_50MHz => CLOCK_50MHz,
+
+    ASYNC_INPUT => PRIMARY_MOSI,
+    SYNC_OUTPUT => synced_PRIMARY_MOSI
+);
+
+DelaySynchroniser_SPI0_SCLK: DelaySynchroniser
+generic map
+(
+    SYNCHRONIZATION_DEPTH => 2
+)
+port map
+(
+    CLOCK_50MHz => CLOCK_50MHz,
+
+    ASYNC_INPUT => PRIMARY_SCLK,
+    SYNC_OUTPUT => synced_PRIMARY_SCLK
+);
+
+DelaySynchroniser_SPI0_CS: DelaySynchroniser
+generic map
+(
+    SYNCHRONIZATION_DEPTH => 2
+)
+port map
+(
+    CLOCK_50MHz => CLOCK_50MHz,
+
+    ASYNC_INPUT => PRIMARY_CS,
+    SYNC_OUTPUT => synced_PRIMARY_CS
+);
+
+------------------------------------------------
+-- SYNC :: SPI_1
+------------------------------------------------
+DelaySynchroniser_SPI1_MOSI: DelaySynchroniser
+generic map
+(
+    SYNCHRONIZATION_DEPTH => 2
+)
+port map
+(
+    CLOCK_50MHz => CLOCK_50MHz,
+
+    ASYNC_INPUT => SECONDARY_MOSI,
+    SYNC_OUTPUT => synced_SECONDARY_MOSI
+);
+
+DelaySynchroniser_SPI1_SCLK: DelaySynchroniser
+generic map
+(
+    SYNCHRONIZATION_DEPTH => 2
+)
+port map
+(
+    CLOCK_50MHz => CLOCK_50MHz,
+
+    ASYNC_INPUT => SECONDARY_SCLK,
+    SYNC_OUTPUT => synced_SECONDARY_SCLK
+);
+
+DelaySynchroniser_SPI1_CS: DelaySynchroniser
+generic map
+(
+    SYNCHRONIZATION_DEPTH => 2
+)
+port map
+(
+    CLOCK_50MHz => CLOCK_50MHz,
+
+    ASYNC_INPUT => SECONDARY_CS,
+    SYNC_OUTPUT => synced_SECONDARY_CS
 );
 
 -- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -715,10 +834,10 @@ primarySpiConverter_module: SpiConverter port map
 (
 	CLOCK => CLOCK_50MHz,
 
-	CS => PRIMARY_CS,
-	SCLK => PRIMARY_SCLK, -- Kernel Master always initialise SPI transfer
+	CS => synced_PRIMARY_CS,
+	SCLK => synced_PRIMARY_SCLK, -- Kernel Master always initialise SPI transfer
 
-	SERIAL_MOSI => PRIMARY_MOSI, -- in :: Data from Kernel to Serialize
+	SERIAL_MOSI => synced_PRIMARY_MOSI, -- in :: Data from Kernel to Serialize
 	PARALLEL_MOSI => primary_parallel_MOSI, -- out :: Serialized Data from Kernel to FIFO
 	PARALLEL_MISO => "00011000", -- in :: 0x18 Hard coded Feedback to Serialize
 	SERIAL_MISO => PRIMARY_MISO, -- out :: 0x18 Serialized Hard coded Feedback to Kernel
@@ -730,10 +849,10 @@ secondarySpiConverter_module: SpiConverter port map
 (
     CLOCK => CLOCK_50MHz,
 
-    CS => SECONDARY_CS,
-    SCLK => SECONDARY_SCLK, -- Kernel Master always initialise SPI transfer
+    CS => synced_SECONDARY_CS,
+    SCLK => synced_SECONDARY_SCLK, -- Kernel Master always initialise SPI transfer
 
-    SERIAL_MOSI => SECONDARY_MOSI, -- in :: Serialized Feedback from Kernel :: Set in Kernel to 0x81
+    SERIAL_MOSI => synced_SECONDARY_MOSI, -- in :: Serialized Feedback from Kernel :: Set in Kernel to 0x81
     PARALLEL_MOSI => open, -- out :: Not in use !
     PARALLEL_MISO => secondary_parallel_MISO, -- in :: Parallel Data from the packet switch
     SERIAL_MISO => SECONDARY_MISO, -- out :: Serialized Data from the packet switch
@@ -1040,8 +1159,8 @@ port map
     WRITE_ENABLE => uart_write_enable,
     WRITE_SYMBOL => uart_write_symbol,
 
-    UART_x86_TX => UART_x86_TX,
-    UART_x86_RX => UART_x86_RX,
+    FPGA_UART_TX => FPGA_UART_TX,
+    FPGA_UART_RX => FPGA_UART_RX,
 
     WRITE_BUSY => uart_write_busy
 );
@@ -1052,6 +1171,7 @@ port map
     CLOCK_50MHz => CLOCK_50MHz,
 
     UART_LOG_MESSAGE_ID => UART_LOG_MESSAGE_ID,
+    UART_LOG_MESSAGE_KEY => UART_LOG_MESSAGE_KEY,
     UART_LOG_MESSAGE_DATA => UART_LOG_MESSAGE_DATA,
 
     WRITE_ENABLE => uart_write_enable,
@@ -1390,10 +1510,10 @@ port map
 --process(CLOCK_50MHz)
 --begin
 --    if rising_edge(CLOCK_50MHz) then
---        NRF905_CSN <= PRIMARY_CS;
+--        NRF905_CSN <= synced_PRIMARY_CS;
 --        PRIMARY_MISO <= NRF905_MISO;
---        NRF905_MOSI <= PRIMARY_MOSI;
---        NRF905_SCK <= PRIMARY_SCLK;
+--        NRF905_MOSI <= synced_PRIMARY_MOSI;
+--        NRF905_SCK <= synced_PRIMARY_SCLK;
 --    end if;
 --end process;
 
@@ -1401,10 +1521,10 @@ port map
 --process(CLOCK_50MHz)
 --begin
 --    if rising_edge(CLOCK_50MHz) then
---        S1_BMI160_CS <= PRIMARY_CS;
+--        S1_BMI160_CS <= synced_PRIMARY_CS;
 --        PRIMARY_MISO <= S1_BMI160_MISO;
---        S1_BMI160_MOSI <= PRIMARY_MOSI;
---        S1_BMI160_SCLK <= PRIMARY_SCLK;
+--        S1_BMI160_MOSI <= synced_PRIMARY_MOSI;
+--        S1_BMI160_SCLK <= synced_PRIMARY_SCLK;
 --    end if;
 --end process;
 
@@ -1473,8 +1593,8 @@ port map
 --process(CLOCK_50MHz)
 --begin
 --    if rising_edge(CLOCK_50MHz) then
---        S1_BMI160_SCLK <= PRIMARY_SCLK;
---        S1_BMI160_MOSI <= PRIMARY_MOSI;
+--        S1_BMI160_SCLK <= synced_PRIMARY_SCLK;
+--        S1_BMI160_MOSI <= synced_PRIMARY_MOSI;
 --        S1_BMI160_CS <= PRIMARY_CS;
 --        PRIMARY_MISO <= S1_BMI160_MISO;
 --    end if;
