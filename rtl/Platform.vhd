@@ -39,7 +39,7 @@ use work.Types.all;
 -- PIN_A8  :: PIN_B8    |                       ::                  | H25 :: H26
 -- PIN_A7  :: PIN_B7    |                       ::                  | H27 :: H28
 -- PIN_A6  :: PIN_B6    | SPI_INT_FROM_FPGA     ::                  | H29 :: H30
--- PIN_A5  :: PIN_B5    | WDG_INT_FROM_FPGA     ::                  | H31 :: H32
+-- PIN_A5  :: PIN_B5    | WDG_INT_FROM_FPGA     :: RESET_FROM_CPU   | H31 :: H32
 -- PIN_C3  :: PIN_C4    | CFG_INT_FROM_CPU      ::                  | H33 :: H34
 -- PIN_A4  :: PIN_B4    |                       ::                  | H35 :: H36
 -- PIN_A3  :: PIN_B3    | SECONDARY_MOSI        ::                  | H37 :: H38
@@ -137,6 +137,7 @@ port
     TIMER_INT_FROM_FPGA : out std_logic; -- PIN_A13 :: GPIO09 :: HEADER_PIN_07
     WDG_INT_FROM_FPGA : out std_logic; -- PIN_A20 :: GPIO11 :: HEADER_PIN_31
     CFG_INT_FROM_CPU : in std_logic; -- PIN_B4 :: GPIO13 :: HEADER_PIN_33
+    RESET_FROM_CPU : in std_logic; -- PIN_B5 :: GPIO07 :: HEADER_PIN_32
 
     PRIMARY_MOSI : in std_logic;  -- PIN_B6 :: H19 :: SPI0_MOSI
     PRIMARY_MISO : out std_logic; -- PIN_A8 :: H21 :: SPI0_MISO
@@ -250,11 +251,6 @@ signal synced_SECONDARY_SCLK : std_logic := '0';
 signal synced_SECONDARY_CS : std_logic := '0';
 -- Main UART
 signal synced_FPGA_UART_RX : std_logic := '0';
-
-
-
-
-
 -- Buttons
 signal reset_button : std_logic := '0';
 signal active_button : std_logic := '0';
@@ -263,9 +259,7 @@ signal primary_conversion_complete : std_logic := '0';
 signal primary_parallel_MOSI : std_logic_vector(7 downto 0) := (others => '0');
 -- Spi.1 Secondary
 signal secondary_parallel_MISO : std_logic_vector(7 downto 0) := (others => '0');
-
-
-
+-- Fifo
 signal primary_fifo_data_in : std_logic_vector(7 downto 0) := (others => '0');
 signal primary_fifo_wr_en : std_logic := '0';
 signal primary_fifo_rd_en : std_logic := '0';
@@ -379,8 +373,9 @@ signal ctrl_BMI160_S2_CS : std_logic := '0';
 signal ctrl_BMI160_S2_MISO : std_logic := '0';
 signal ctrl_BMI160_S2_MOSI : std_logic := '0';
 signal ctrl_BMI160_S2_SCLK : std_logic := '0';
---
+-- Sensor ready
 signal Sensor_Configuration_Complete : std_logic := '0';
+signal global_reset_handler : std_logic := '0';
 -- Debounced interrupt signals
 signal s1_bmi160_int1_denoised : std_logic := '0';
 signal s1_bmi160_int2_denoised : std_logic := '0';
@@ -952,7 +947,7 @@ port map
 ------------------------------------------------
 -- PULSE :: INT1_BMI160_S1
 ------------------------------------------------
-Noise_int1_from_bmi160_s1: PulseController
+Int1_from_bmi160_s1: PulseController
 generic map
 (
     PULSE_LENGTH => 1 -- 1*20ns Pulse
@@ -969,7 +964,7 @@ port map
 ------------------------------------------------
 -- PULSE :: INT2_BMI160_S1
 ------------------------------------------------
-Noise_int2_from_bmi160_s1: PulseController
+Int2_from_bmi160_s1: PulseController
 generic map
 (
     PULSE_LENGTH => 1 -- 1*20ns Pulse
@@ -986,7 +981,7 @@ port map
 ------------------------------------------------
 -- PULSE :: INT1_BMI160_S2
 ------------------------------------------------
-Noise_int1_from_bmi160_s2: PulseController
+Int1_from_bmi160_s2: PulseController
 generic map
 (
     PULSE_LENGTH => 1 -- 1*20ns Pulse
@@ -1001,9 +996,9 @@ port map
 );
 
 ------------------------------------------------
--- PULSE :: INT1_BMI160_S2
+-- PULSE :: INT2_BMI160_S2
 ------------------------------------------------
-Noise_int2_from_bmi160_s2: PulseController
+Int2_from_bmi160_s2: PulseController
 generic map
 (
     PULSE_LENGTH => 1 -- 1*20ns Pulse
@@ -1018,9 +1013,9 @@ port map
 );
 
 ------------------------------------------------
--- PULSE :: INT1_BMI160_S2
+-- PULSE :: INT1_ADXL345_S3
 ------------------------------------------------
-Noise_int1_from_adxl345_s3: PulseController
+Int1_from_adxl345_s3: PulseController
 generic map
 (
     PULSE_LENGTH => 1 -- 1*20ns Pulse
@@ -1035,9 +1030,9 @@ port map
 );
 
 ------------------------------------------------
--- PULSE :: INT1_BMI160_S2
+-- PULSE :: INT2_ADXL345_S3
 ------------------------------------------------
-Noise_int2_from_adxl345_s3: PulseController
+Int2_from_adxl345_s3: PulseController
 generic map
 (
     PULSE_LENGTH => 1 -- 1*20ns Pulse
@@ -1049,6 +1044,57 @@ port map
 
     INPUT_PULSE => s3_adxl345_int2_denoised,
     OUTPUT_PULSE => s3_adxl345_int_2_DataReady
+);
+
+------------------------------------------------
+-- PULSE :: OFFLOAD Pulse
+------------------------------------------------
+Offload_Interrupt_From_CPU: PulseController
+generic map
+(
+    PULSE_LENGTH => 1 -- 1*20ns Pulse
+)
+port map
+(
+    CLOCK_50MHz => CLOCK_50MHz,
+    ENABLE_CONTROLLER => '1',
+
+    INPUT_PULSE => SPI_INT_FROM_CPU,
+    OUTPUT_PULSE => offload_interrupt
+);
+
+------------------------------------------------
+-- PULSE :: Configuration is Complete
+------------------------------------------------
+ConfigDone_Interrupt_From_CPU: PulseController
+generic map
+(
+    PULSE_LENGTH => 1 -- 1*20ns Pulse
+)
+port map
+(
+    CLOCK_50MHz => CLOCK_50MHz,
+    ENABLE_CONTROLLER => '1',
+
+    INPUT_PULSE => CFG_INT_FROM_CPU,
+    OUTPUT_PULSE => Sensor_Configuration_Complete
+);
+
+------------------------------------------------
+-- PULSE :: Global Reset Nuke
+------------------------------------------------
+FpgaReset_Interrupt_From_CPU: PulseController
+generic map
+(
+    PULSE_LENGTH => 1 -- 1*20ns Pulse
+)
+port map
+(
+    CLOCK_50MHz => CLOCK_50MHz,
+    ENABLE_CONTROLLER => '1',
+
+    INPUT_PULSE => RESET_FROM_CPU,
+    OUTPUT_PULSE => global_reset_handler
 );
 
 -- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1167,19 +1213,7 @@ end process;
 -- //
 -- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-SPI_Interrupt_From_CPU: PulseController
-generic map
-(
-    PULSE_LENGTH => 1 -- 1*20ns Pulse
-)
-port map
-(
-    CLOCK_50MHz => CLOCK_50MHz,
-    ENABLE_CONTROLLER => '1',
 
-    INPUT_PULSE => SPI_INT_FROM_CPU,
-    OUTPUT_PULSE => offload_interrupt
-);
 
 fifo_pre_process: -- Long interrupt signal from kernel to be cut in FPGA down to 20ns pulse
 process(CLOCK_50MHz, primary_parallel_MOSI, primary_conversion_complete)
@@ -1665,19 +1699,7 @@ port map
 -- //                          //
 -- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-ConfigDone_Interrupt_From_CPU: PulseController
-generic map
-(
-    PULSE_LENGTH => 1 -- 1*20ns Pulse
-)
-port map
-(
-    CLOCK_50MHz => CLOCK_50MHz,
-    ENABLE_CONTROLLER => '1',
 
-    INPUT_PULSE => CFG_INT_FROM_CPU,
-    OUTPUT_PULSE => Sensor_Configuration_Complete
-);
 
 
 
