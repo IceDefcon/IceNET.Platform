@@ -98,28 +98,20 @@ public:
     gui();
     ~gui();
 
+private slots:
+
     void setupWindow();
     void setupMainConsole();
     void setupUartConsole();
-    void setupDma();
+
+    void setupReset();
+    void setupThreadProcess();
+    void setupSeparators();
+
     void setupI2C();
     void setupSPI();
     void setupPWM();
-    void setupSeparators();
-    void setupThreadProcess();
-
-    /* SHARE */ void setTransferPointers(
-    std::shared_ptr<std::vector<uint8_t>> transferPointerRx,
-    std::shared_ptr<std::vector<uint8_t>> transferPointerTx,
-    std::shared_ptr<ioStateType> transferState);
-
-    void setupUart();
-    void readUartData();
-    void writeToUart(const QString &data);
-    void onUartInput();
-    void shutdownUart();
-
-private slots:
+    void setupDma();
 
     void setDeadCommand();
     void setDummyCommand();
@@ -127,6 +119,12 @@ private slots:
     void i2c_execute();
     void spi_execute();
     void pwm_execute(pwmType type);
+
+    void openUart();
+    void readUartData();
+    void writeToUart(const QString &data);
+    void onUartInput();
+    void shutdownUart();
 
     void printToMainConsole(const QString &message);
     void printToUartConsole(const QString &message);

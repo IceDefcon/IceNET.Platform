@@ -5,6 +5,7 @@
  *
  */
 
+#include <iostream>
 #include "gui.h"
 
 static const deviceType dev =
@@ -38,18 +39,19 @@ m_IO_GuiState(std::make_shared<ioStateType>(IO_IDLE))
     qDebug() << "[MAIN] [CONSTRUCTOR]" << this << "::  gui";
 
     setupWindow();
+
     setupMainConsole();
     setupUartConsole();
-    setupUart();
 
-    setupDma();
+    setupReset();
+    setupThreadProcess();
 
     setupI2C();
     setupSPI();
     setupPWM();
+    setupDma();
 
     setupSeparators();
-    setupThreadProcess();
 }
 
 gui::~gui()
@@ -75,65 +77,143 @@ void gui::setupMainConsole()
     m_mainConsoleOutput = new QPlainTextEdit(this);
     m_mainConsoleOutput->setReadOnly(true);
     m_mainConsoleOutput->setGeometry(console.xPosition, console.yPosition, console.xSize, console.ySize);
-    m_mainConsoleOutput->setPlainText("[INIT] Console Initialized...\n");
+    m_mainConsoleOutput->setPlainText("[INIT] Main Console Initialized...");
 }
 
 void gui::setupUartConsole()
 {
-    // Create UART console output
+    /* Rx window */
     m_uartConsoleOutput = new QPlainTextEdit(this);
     m_uartConsoleOutput->setReadOnly(true);
     m_uartConsoleOutput->setGeometry(console.xPosition, dev.yGap*16 + dev.yLogo*3 + dev.yUnit*9, console.xSize, 600 - dev.yGap*17 - dev.yUnit*10 - dev.yLogo*3);
-    m_uartConsoleOutput->setPlainText("[INIT] Console Initialized");
-
-    // Create UART input field
+    m_uartConsoleOutput->setPlainText("[INIT] UART Console Initialized");
+    /* Tx bar */
     m_uartInput = new QLineEdit(this);
     m_uartInput->setGeometry(console.xPosition, 600 - dev.yGap - dev.yUnit, console.xSize, dev.yUnit);
-
-    // Connect the input field to handle UART input on Enter key press
     connect(m_uartInput, &QLineEdit::returnPressed, this, &gui::onUartInput);
+    /* Open device */
+    openUart();
 }
 
-void gui::setupDma()
+void gui::setupReset()
 {
-    /* DMA :: Row[0] */
-    QLabel *i2c_label = new QLabel("DMA", this);
-    QFont i2c_labelFont;
-    i2c_labelFont.setPointSize(30);
-    i2c_labelFont.setItalic(true);
-    i2c_labelFont.setBold(true);
-    i2c_label->setFont(i2c_labelFont);
-    i2c_label->setGeometry(dev.xGap, dev.yGap*16 + dev.yLogo*3 + dev.yUnit*9, dev.xLogo, dev.yLogo);
-    /* DMA :: Row[1] */
-    QLabel *dma_customLabel = new QLabel("[FPGA->CPU] Custom", this);
-    dma_customLabel->setGeometry(dev.xGap, dev.yGap*16 + dev.yLogo*4 + dev.yUnit*9, dev.xText, dev.yUnit);
-    m_dmaCustom_dataField = new QLineEdit(this);
-    m_dmaCustom_dataField->setGeometry(dev.xGap*2 + dev.xText, dev.yGap*16 + dev.yLogo*4 + dev.yUnit*9, dev.xUnit, dev.yUnit);
-    m_dmaCustom_dataField->setText("0x01");
-    QPushButton *dma_custom_exeButton = new QPushButton("EXE", this);
-    dma_custom_exeButton->setGeometry(dev.xGap*3 + dev.xText + dev.xUnit, dev.yGap*16 + dev.yLogo*4 + dev.yUnit*9, dev.xUnit, dev.yUnit);
-    connect(dma_custom_exeButton, &QPushButton::clicked, this, [this]()
+    QLabel *reset_label = new QLabel("FPGA", this);
+    QFont reset_labelFont;
+    reset_labelFont.setPointSize(30);
+    reset_labelFont.setItalic(true);
+    reset_labelFont.setBold(true);
+    reset_label->setFont(reset_labelFont);
+    reset_label->setGeometry(dev.xGap*5 + dev.xText + dev.xUnit*2, dev.yGap, dev.xLogo, dev.yLogo);
+
+    QPushButton *resetButton = new QPushButton("RESET", this);
+    resetButton->setGeometry(dev.xGap*5 + dev.xText + dev.xUnit*2, dev.yGap*2 + dev.yLogo, dev.xUnit*2 + dev.xGap, dev.yUnit*2);
+    resetButton->setStyleSheet(
+        "QPushButton {"
+        "   background-color: blue;"
+        "   color: white;"
+        "   font-size: 18px;"
+        "   font-weight: bold;"
+        "   border-radius: 10px;"
+        "   padding: 5px;"
+        "}"
+        "QPushButton:hover {"
+        "   background-color: darkblue;"
+        "}"
+        "QPushButton:pressed {"
+        "   background-color: black;"
+        "}"
+    );
+    connect(resetButton, &QPushButton::clicked, this, [this]()
     {
-        dma_execute(CMD_DMA_CUSTOM);
+        if(NULL == m_instanceDroneCtrl)
+        {
+            printToMainConsole("[RST] threadMain is not Running");
+        }
+        else
+        {
+            m_instanceDroneCtrl->getCommanderInstance()->sendCommand(CMD_FPGA_RESET);
+        }
     });
-    /* DMA :: Row[2] */
-    QLabel *dma_singleLabel = new QLabel("[FPGA->CPU] Single", this);
-    dma_singleLabel->setGeometry(dev.xGap, dev.yGap*17 + dev.yLogo*4 + dev.yUnit*10, dev.xText, dev.yUnit);
-    QPushButton *dma_single_exeButton = new QPushButton("EXE", this);
-    dma_single_exeButton->setGeometry(dev.xGap*3 + dev.xText + dev.xUnit, dev.yGap*17 + dev.yLogo*4 + dev.yUnit*10, dev.xUnit, dev.yUnit);
-    connect(dma_single_exeButton, &QPushButton::clicked, this, [this]()
-    {
-        dma_execute(CMD_DMA_SINGLE);
-    });
-    /* DMA :: Row[3] */
-    QLabel *i2c_registerLabel = new QLabel("[FPGA->CPU] Sensor", this);
-    i2c_registerLabel->setGeometry(dev.xGap, dev.yGap*18 + dev.yLogo*4 + dev.yUnit*11, dev.xText, dev.yUnit);
-    QPushButton *dmaSensor_exeButton = new QPushButton("EXE", this);
-    dmaSensor_exeButton->setGeometry(dev.xGap*3 + dev.xText + dev.xUnit, dev.yGap*18 + dev.yLogo*4 + dev.yUnit*11, dev.xUnit, dev.yUnit);
-    connect(dmaSensor_exeButton, &QPushButton::clicked, this, [this]()
-    {
-        dma_execute(CMD_DMA_SENSOR);
-    });
+}
+
+void gui::setupThreadProcess()
+{
+    QLabel *thread_label = new QLabel("THREAD", this);
+    QFont thread_labelFont;
+    thread_labelFont.setPointSize(30);
+    thread_labelFont.setItalic(true);
+    thread_labelFont.setBold(true);
+    thread_label->setFont(thread_labelFont);
+    thread_label->setGeometry(800 - dev.xGap*2 - dev.xUnit*4 , dev.yGap, dev.xLogo, dev.yLogo);
+
+    QPushButton *connectButton = new QPushButton("INITIALIZE", this);
+    connectButton->setGeometry(800 - dev.xGap*2 - dev.xUnit*4, dev.yGap*2 + dev.yLogo, dev.xUnit*4 + dev.xGap, dev.yUnit);
+    connectButton->setStyleSheet(
+        "QPushButton {"
+        "   background-color: green;"
+        "   color: white;"
+        "   font-size: 18px;"
+        "   font-weight: bold;"
+        "   border-radius: 10px;"
+        "   padding: 5px;"
+        "}"
+        "QPushButton:hover {"
+        "   background-color: darkgreen;"
+        "}"
+        "QPushButton:pressed {"
+        "   background-color: black;"
+        "}"
+    );
+    connect(connectButton, &QPushButton::clicked, this, &gui::initThread);
+
+    QPushButton *terminateButton = new QPushButton("TERMINATE", this);
+    terminateButton->setGeometry(800 - dev.xGap*2 - dev.xUnit*4, dev.yGap*3 + dev.yUnit*3, dev.xUnit*4 + dev.xGap, dev.yUnit);
+    terminateButton->setStyleSheet(
+        "QPushButton {"
+        "   background-color: red;"
+        "   color: white;"
+        "   font-size: 18px;"
+        "   font-weight: bold;"
+        "   border-radius: 10px;"
+        "   padding: 5px;"
+        "}"
+        "QPushButton:hover {"
+        "   background-color: darkred;"
+        "}"
+        "QPushButton:pressed {"
+        "   background-color: black;"
+        "}"
+    );
+    connect(terminateButton, &QPushButton::clicked, this, &gui::shutdownThread);
+}
+
+void gui::setupSeparators()
+{
+    /* Vertical Separator */
+    QFrame *vLine1 = new QFrame(this);
+    vLine1->setGeometry(dev.xGap*4 + dev.xText + dev.xUnit*2, dev.yGap, dev.separatorWidth , 600 - dev.yGap*2);
+    vLine1->setFrameShape(QFrame::VLine);
+    vLine1->setFrameShadow(QFrame::Sunken);
+    /* Horizontal Separator */
+    QFrame *hLine1 = new QFrame(this);
+    hLine1->setGeometry(dev.xGap, dev.yGap*5 + dev.yLogo + dev.yUnit*3, 800 - dev.xGap*2, dev.separatorWidth);
+    hLine1->setFrameShape(QFrame::HLine);
+    hLine1->setFrameShadow(QFrame::Sunken);
+    /* Horizontal Separator */
+    QFrame *hLine2 = new QFrame(this);
+    hLine2->setGeometry(dev.xGap, dev.yGap*10 + dev.yLogo*2 + dev.yUnit*6, dev.xGap*3 + dev.xText + dev.xUnit*2, dev.separatorWidth);
+    hLine2->setFrameShape(QFrame::HLine);
+    hLine2->setFrameShadow(QFrame::Sunken);
+    /* Horizontal Separator */
+    QFrame *hLine3 = new QFrame(this);
+    hLine3->setGeometry(dev.xGap, dev.yGap*15 + dev.yLogo*3 + dev.yUnit*9, 800 - dev.xGap*2, dev.separatorWidth);
+    hLine3->setFrameShape(QFrame::HLine);
+    hLine3->setFrameShadow(QFrame::Sunken);
+    /* Vertical Separator */
+    QFrame *vLine2 = new QFrame(this);
+    vLine2->setGeometry(800 - dev.xGap*3 - dev.xUnit*4 , dev.yGap, dev.separatorWidth, dev.yGap*4 + dev.yLogo + dev.yUnit*3);
+    vLine2->setFrameShape(QFrame::VLine);
+    vLine2->setFrameShadow(QFrame::Sunken);
 }
 
 void gui::setupI2C()
@@ -274,85 +354,46 @@ void gui::setupPWM()
     });
 }
 
-void gui::setupSeparators()
+void gui::setupDma()
 {
-    /* Vertical Separator */
-    QFrame *vLine1 = new QFrame(this);
-    vLine1->setGeometry(dev.xGap*4 + dev.xText + dev.xUnit*2, dev.yGap, dev.separatorWidth , 600 - dev.yGap*2);
-    vLine1->setFrameShape(QFrame::VLine);
-    vLine1->setFrameShadow(QFrame::Sunken);
-    /* Horizontal Separator */
-    QFrame *hLine1 = new QFrame(this);
-    hLine1->setGeometry(dev.xGap, dev.yGap*5 + dev.yLogo + dev.yUnit*3, 800 - dev.xGap*2, dev.separatorWidth);
-    hLine1->setFrameShape(QFrame::HLine);
-    hLine1->setFrameShadow(QFrame::Sunken);
-    /* Horizontal Separator */
-    QFrame *hLine2 = new QFrame(this);
-    hLine2->setGeometry(dev.xGap, dev.yGap*10 + dev.yLogo*2 + dev.yUnit*6, dev.xGap*3 + dev.xText + dev.xUnit*2, dev.separatorWidth);
-    hLine2->setFrameShape(QFrame::HLine);
-    hLine2->setFrameShadow(QFrame::Sunken);
-    /* Horizontal Separator */
-    QFrame *hLine3 = new QFrame(this);
-    hLine3->setGeometry(dev.xGap, dev.yGap*15 + dev.yLogo*3 + dev.yUnit*9, 800 - dev.xGap*2, dev.separatorWidth);
-    hLine3->setFrameShape(QFrame::HLine);
-    hLine3->setFrameShadow(QFrame::Sunken);
-    /* Vertical Separator */
-    QFrame *vLine2 = new QFrame(this);
-    vLine2->setGeometry(dev.xGap*4 + dev.xText + dev.xUnit*2, dev.yGap, dev.separatorWidth , 600 - dev.yGap*2);
-    vLine2->setGeometry(800 - dev.xGap*3 - dev.xUnit*4 , dev.yGap, dev.separatorWidth, dev.yGap*4 + dev.yLogo + dev.yUnit*3);
-    vLine2->setFrameShape(QFrame::VLine);
-    vLine2->setFrameShadow(QFrame::Sunken);
-}
-
-void gui::setupThreadProcess()
-{
-    QLabel *thread_label = new QLabel("THREAD", this);
-    QFont thread_labelFont;
-    thread_labelFont.setPointSize(30);
-    thread_labelFont.setItalic(true);
-    thread_labelFont.setBold(true);
-    thread_label->setFont(thread_labelFont);
-    thread_label->setGeometry(800 - dev.xGap*2 - dev.xUnit*4 , dev.yGap, dev.xLogo, dev.yLogo);
-
-    QPushButton *connectButton = new QPushButton("INITIALIZE", this);
-    connectButton->setGeometry(800 - dev.xGap*2 - dev.xUnit*4, dev.yGap*2 + dev.yLogo, dev.xUnit*4 + dev.xGap, dev.yUnit);
-    connectButton->setStyleSheet(
-        "QPushButton {"
-        "   background-color: green;"
-        "   color: white;"
-        "   font-size: 18px;"
-        "   font-weight: bold;"
-        "   border-radius: 10px;"
-        "   padding: 5px;"
-        "}"
-        "QPushButton:hover {"
-        "   background-color: darkgreen;"
-        "}"
-        "QPushButton:pressed {"
-        "   background-color: black;"
-        "}"
-    );
-    connect(connectButton, &QPushButton::clicked, this, &gui::initThread);
-
-    QPushButton *terminateButton = new QPushButton("TERMINATE", this);
-    terminateButton->setGeometry(800 - dev.xGap*2 - dev.xUnit*4, dev.yGap*3 + dev.yUnit*3, dev.xUnit*4 + dev.xGap, dev.yUnit);
-    terminateButton->setStyleSheet(
-        "QPushButton {"
-        "   background-color: red;"
-        "   color: white;"
-        "   font-size: 18px;"
-        "   font-weight: bold;"
-        "   border-radius: 10px;"
-        "   padding: 5px;"
-        "}"
-        "QPushButton:hover {"
-        "   background-color: darkred;"
-        "}"
-        "QPushButton:pressed {"
-        "   background-color: black;"
-        "}"
-    );
-    connect(terminateButton, &QPushButton::clicked, this, &gui::shutdownThread);
+    /* DMA :: Row[0] */
+    QLabel *i2c_label = new QLabel("DMA", this);
+    QFont i2c_labelFont;
+    i2c_labelFont.setPointSize(30);
+    i2c_labelFont.setItalic(true);
+    i2c_labelFont.setBold(true);
+    i2c_label->setFont(i2c_labelFont);
+    i2c_label->setGeometry(dev.xGap, dev.yGap*16 + dev.yLogo*3 + dev.yUnit*9, dev.xLogo, dev.yLogo);
+    /* DMA :: Row[1] */
+    QLabel *dma_customLabel = new QLabel("[FPGA->CPU] Custom", this);
+    dma_customLabel->setGeometry(dev.xGap, dev.yGap*16 + dev.yLogo*4 + dev.yUnit*9, dev.xText, dev.yUnit);
+    m_dmaCustom_dataField = new QLineEdit(this);
+    m_dmaCustom_dataField->setGeometry(dev.xGap*2 + dev.xText, dev.yGap*16 + dev.yLogo*4 + dev.yUnit*9, dev.xUnit, dev.yUnit);
+    m_dmaCustom_dataField->setText("0x01");
+    QPushButton *dma_custom_exeButton = new QPushButton("EXE", this);
+    dma_custom_exeButton->setGeometry(dev.xGap*3 + dev.xText + dev.xUnit, dev.yGap*16 + dev.yLogo*4 + dev.yUnit*9, dev.xUnit, dev.yUnit);
+    connect(dma_custom_exeButton, &QPushButton::clicked, this, [this]()
+    {
+        dma_execute(CMD_DMA_CUSTOM);
+    });
+    /* DMA :: Row[2] */
+    QLabel *dma_singleLabel = new QLabel("[FPGA->CPU] Single", this);
+    dma_singleLabel->setGeometry(dev.xGap, dev.yGap*17 + dev.yLogo*4 + dev.yUnit*10, dev.xText, dev.yUnit);
+    QPushButton *dma_single_exeButton = new QPushButton("EXE", this);
+    dma_single_exeButton->setGeometry(dev.xGap*3 + dev.xText + dev.xUnit, dev.yGap*17 + dev.yLogo*4 + dev.yUnit*10, dev.xUnit, dev.yUnit);
+    connect(dma_single_exeButton, &QPushButton::clicked, this, [this]()
+    {
+        dma_execute(CMD_DMA_SINGLE);
+    });
+    /* DMA :: Row[3] */
+    QLabel *i2c_registerLabel = new QLabel("[FPGA->CPU] Sensor", this);
+    i2c_registerLabel->setGeometry(dev.xGap, dev.yGap*18 + dev.yLogo*4 + dev.yUnit*11, dev.xText, dev.yUnit);
+    QPushButton *dmaSensor_exeButton = new QPushButton("EXE", this);
+    dmaSensor_exeButton->setGeometry(dev.xGap*3 + dev.xText + dev.xUnit, dev.yGap*18 + dev.yLogo*4 + dev.yUnit*11, dev.xUnit, dev.yUnit);
+    connect(dmaSensor_exeButton, &QPushButton::clicked, this, [this]()
+    {
+        dma_execute(CMD_DMA_SENSOR);
+    });
 }
 
 void gui::setDeadCommand()
@@ -381,7 +422,6 @@ void gui::setDummyCommand()
     (*m_Tx_GuiVector)[7] = 0x44;
 }
 
-#include <iostream>
 void gui::dma_execute(commandType cmd)
 {
     if(NULL == m_instanceDroneCtrl)
@@ -679,6 +719,86 @@ void gui::pwm_execute(pwmType type)
     }
 }
 
+void gui::openUart()
+{
+    m_serialPort = new QSerialPort(this);
+
+    m_uartPortName = "/dev/ttyTHS1";
+    m_serialPort->setPortName(m_uartPortName);
+    m_serialPort->setBaudRate(2000000);
+    m_serialPort->setDataBits(QSerialPort::Data8);
+    m_serialPort->setParity(QSerialPort::NoParity);
+    m_serialPort->setStopBits(QSerialPort::OneStop);
+    m_serialPort->setFlowControl(QSerialPort::NoFlowControl);
+
+    if (m_serialPort->open(QIODevice::ReadWrite))
+    {
+        m_uartIsConnected = true;
+        printToUartConsole("[INIT] UART Connection established");
+    }
+    else
+    {
+        m_uartIsConnected = false;
+        printToUartConsole("[INIT] UART Failed to open port");
+    }
+
+    connect(m_serialPort, &QSerialPort::readyRead, this, &gui::readUartData);
+}
+
+void gui::readUartData()
+{
+    if (m_uartIsConnected && m_serialPort->isOpen())
+    {
+        m_readBuffer.append(m_serialPort->readAll());
+
+        const int messageLength = 8;
+
+        while (m_readBuffer.size() >= messageLength)
+        {
+            QByteArray completeMessage = m_readBuffer.left(messageLength);
+            m_readBuffer.remove(0, messageLength);
+
+            m_currentTime = QDateTime::currentDateTime().toString("HH:mm:ss");
+
+            printToUartConsole("[" + m_currentTime + "] UART Rx: " + completeMessage);
+        }
+    }
+}
+
+void gui::writeToUart(const QString &data)
+{
+    m_currentTime = QDateTime::currentDateTime().toString("HH:mm:ss");
+    if (m_uartIsConnected && m_serialPort->isOpen())
+    {
+        m_serialPort->write(data.toUtf8());
+        printToUartConsole("[" + m_currentTime + "] UART Tx: " + data);
+    }
+    else
+    {
+        printToUartConsole("[" + m_currentTime + "] UART is not connected.");
+    }
+}
+
+void gui::onUartInput()
+{
+    QString inputData = m_uartInput->text();
+    if (!inputData.isEmpty())
+    {
+        writeToUart(inputData);
+        m_uartInput->clear();
+    }
+}
+
+
+void gui::shutdownUart()
+{
+    if (m_uartIsConnected && m_serialPort->isOpen())
+    {
+        m_serialPort->close();
+        printToUartConsole("[EXIT] Connection closed");
+    }
+}
+
 void gui::printToMainConsole(const QString &message)
 {
     m_mainConsoleOutput->appendPlainText(message);
@@ -773,85 +893,4 @@ void gui::threadMain()
     m_instanceDroneCtrl->getCommanderInstance()->sendCommand(CMD_RAMDISK_CLEAR);
     m_instanceDroneCtrl->shutdownKernelComms();
     m_instanceDroneCtrl.reset(); // Reset the unique_ptr to call the destructor
-}
-
-
-void gui::setupUart()
-{
-    m_serialPort = new QSerialPort(this);
-
-    m_uartPortName = "/dev/ttyTHS1";
-    m_serialPort->setPortName(m_uartPortName);
-    m_serialPort->setBaudRate(2000000);
-    m_serialPort->setDataBits(QSerialPort::Data8);
-    m_serialPort->setParity(QSerialPort::NoParity);
-    m_serialPort->setStopBits(QSerialPort::OneStop);
-    m_serialPort->setFlowControl(QSerialPort::NoFlowControl);
-
-    if (m_serialPort->open(QIODevice::ReadWrite))
-    {
-        m_uartIsConnected = true;
-        printToUartConsole("[INIT] Connection established");
-    }
-    else
-    {
-        m_uartIsConnected = false;
-        printToUartConsole("[INIT] Failed to open port");
-    }
-
-    connect(m_serialPort, &QSerialPort::readyRead, this, &gui::readUartData);
-}
-
-void gui::readUartData()
-{
-    if (m_uartIsConnected && m_serialPort->isOpen())
-    {
-        m_readBuffer.append(m_serialPort->readAll());
-
-        const int messageLength = 8;
-
-        while (m_readBuffer.size() >= messageLength)
-        {
-            QByteArray completeMessage = m_readBuffer.left(messageLength);
-            m_readBuffer.remove(0, messageLength);
-
-            m_currentTime = QDateTime::currentDateTime().toString("HH:mm:ss");
-
-            printToUartConsole("[" + m_currentTime + "] Rx: " + completeMessage);
-        }
-    }
-}
-
-void gui::writeToUart(const QString &data)
-{
-    m_currentTime = QDateTime::currentDateTime().toString("HH:mm:ss");
-    if (m_uartIsConnected && m_serialPort->isOpen())
-    {
-        m_serialPort->write(data.toUtf8());
-        printToUartConsole("[" + m_currentTime + "] Tx: " + data);
-    }
-    else
-    {
-        printToUartConsole("[" + m_currentTime + "] UART is not connected.");
-    }
-}
-
-void gui::onUartInput()
-{
-    QString inputData = m_uartInput->text();
-    if (!inputData.isEmpty())
-    {
-        writeToUart(inputData);
-        m_uartInput->clear();
-    }
-}
-
-
-void gui::shutdownUart()
-{
-    if (m_uartIsConnected && m_serialPort->isOpen())
-    {
-        m_serialPort->close();
-        printToUartConsole("[EXIT] Connection closed");
-    }
 }

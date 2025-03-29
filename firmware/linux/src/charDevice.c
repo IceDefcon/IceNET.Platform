@@ -341,6 +341,15 @@ static ssize_t commanderWrite(struct file *filep, const char __user *buffer, siz
         printk(KERN_INFO "[CTRL][ C ] [0] Clear DMA variables used for verification of IMU's config\n");
         setStateMachine(SM_RAMDISK_CLEAR);
     }
+    else if (Device[DEVICE_COMMANDER].io_transfer.RxData[0] == 0x4E && Device[DEVICE_COMMANDER].io_transfer.RxData[1] == 0x5E)
+    {
+        printk(KERN_INFO "[CTRL][ C ] Reset everything in FPGA :: Global Discharge\n");
+        setStateMachine(SM_FPGA_RESET);
+    }
+
+
+
+
     else
     {
         printk(KERN_INFO "[CTRL][ C ] Data Received: \n");
