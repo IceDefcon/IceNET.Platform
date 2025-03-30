@@ -375,7 +375,7 @@ signal ctrl_BMI160_S2_MOSI : std_logic := '0';
 signal ctrl_BMI160_S2_SCLK : std_logic := '0';
 -- Sensor ready
 signal Sensor_Configuration_Complete : std_logic := '0';
-signal global_reset_handler : std_logic := '0';
+signal global_fpga_reset : std_logic := '0';
 -- Debounced interrupt signals
 signal s1_bmi160_int1_denoised : std_logic := '0';
 signal s1_bmi160_int2_denoised : std_logic := '0';
@@ -418,9 +418,11 @@ generic
 );
 port
 (
-    clock : in  std_logic;
-    button_in : in  std_logic;
-    button_out : out std_logic
+    CLOCK_50MHz : in  std_logic;
+    RESET : in std_logic;
+
+    BUTTON_IN : in  std_logic;
+    BUTTON_OUT : out std_logic
 );
 end component;
 
@@ -428,6 +430,7 @@ component SpiConverter
 Port
 (
     CLOCK : in  std_logic;
+    RESET : in std_logic;
 
     CS : in std_logic;
     SCLK : in std_logic;
@@ -445,6 +448,7 @@ component SpiController
 Port
 (
     CLOCK_50MHz : in  std_logic;
+    RESET : in std_logic;
 
     OFFLOAD_INT : in std_logic;
 
@@ -721,7 +725,7 @@ begin
 -- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 ------------------------------------------------
--- DEBOUNCE :: BUTTON_1
+-- BUTTON_1
 ------------------------------------------------
 DebounceController_module: DebounceController
 generic map
@@ -731,9 +735,11 @@ generic map
 )
 port map
 (
-    clock => CLOCK_50MHz,
-    button_in => BUTTON_1,
-    button_out => reset_button
+    CLOCK_50MHz => CLOCK_50MHz,
+    RESET => global_fpga_reset,
+
+    BUTTON_IN => BUTTON_1,
+    BUTTON_OUT => reset_button
 );
 
 -- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -743,7 +749,7 @@ port map
 -- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 ------------------------------------------------
--- SYNC :: SPI_0
+-- SPI_0
 ------------------------------------------------
 DelaySynchroniser_SPI0_MOSI: DelaySynchroniser
 generic map
@@ -785,7 +791,7 @@ port map
 );
 
 ------------------------------------------------
--- SYNC :: SPI_1
+-- SPI_1
 ------------------------------------------------
 DelaySynchroniser_SPI1_MOSI: DelaySynchroniser
 generic map
@@ -827,7 +833,7 @@ port map
 );
 
 ------------------------------------------------
--- SYNC :: UART
+-- UART
 ------------------------------------------------
 DelaySynchroniser_UART: DelaySynchroniser
 generic map
@@ -849,7 +855,7 @@ port map
 -- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 ------------------------------------------------
--- NOISE :: INT1_BMI160_S1
+-- INT1_BMI160_S1
 ------------------------------------------------
 s1_int1_NoiseControl: NoiseController
 port map
@@ -864,7 +870,7 @@ port map
 );
 
 ------------------------------------------------
--- NOISE :: INT2_BMI160_S1
+-- INT2_BMI160_S1
 ------------------------------------------------
 s1_int2_NoiseControl: NoiseController
 port map
@@ -879,7 +885,7 @@ port map
 );
 
 ------------------------------------------------
--- NOISE :: INT1_BMI160_S2
+-- INT1_BMI160_S2
 ------------------------------------------------
 s2_int1_NoiseControl: NoiseController
 port map
@@ -894,7 +900,7 @@ port map
 );
 
 ------------------------------------------------
--- NOISE :: INT2_BMI160_S2
+-- INT2_BMI160_S2
 ------------------------------------------------
 s2_int2_NoiseControl: NoiseController
 port map
@@ -909,7 +915,7 @@ port map
 );
 
 ------------------------------------------------
--- NOISE :: INT1_ADXL_S3
+-- INT1_ADXL_S3
 ------------------------------------------------
 s3_int1_NoiseControl: NoiseController
 port map
@@ -924,7 +930,7 @@ port map
 );
 
 ------------------------------------------------
--- NOISE :: INT2_ADXL_S3
+-- INT2_ADXL_S3
 ------------------------------------------------
 s3_int2_NoiseControl: NoiseController
 port map
@@ -945,7 +951,7 @@ port map
 -- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 ------------------------------------------------
--- PULSE :: INT1_BMI160_S1
+-- INT1_BMI160_S1
 ------------------------------------------------
 Int1_from_bmi160_s1: PulseController
 generic map
@@ -962,7 +968,7 @@ port map
 );
 
 ------------------------------------------------
--- PULSE :: INT2_BMI160_S1
+-- INT2_BMI160_S1
 ------------------------------------------------
 Int2_from_bmi160_s1: PulseController
 generic map
@@ -979,7 +985,7 @@ port map
 );
 
 ------------------------------------------------
--- PULSE :: INT1_BMI160_S2
+-- INT1_BMI160_S2
 ------------------------------------------------
 Int1_from_bmi160_s2: PulseController
 generic map
@@ -996,7 +1002,7 @@ port map
 );
 
 ------------------------------------------------
--- PULSE :: INT2_BMI160_S2
+-- INT2_BMI160_S2
 ------------------------------------------------
 Int2_from_bmi160_s2: PulseController
 generic map
@@ -1013,7 +1019,7 @@ port map
 );
 
 ------------------------------------------------
--- PULSE :: INT1_ADXL345_S3
+-- INT1_ADXL345_S3
 ------------------------------------------------
 Int1_from_adxl345_s3: PulseController
 generic map
@@ -1030,7 +1036,7 @@ port map
 );
 
 ------------------------------------------------
--- PULSE :: INT2_ADXL345_S3
+-- INT2_ADXL345_S3
 ------------------------------------------------
 Int2_from_adxl345_s3: PulseController
 generic map
@@ -1047,7 +1053,7 @@ port map
 );
 
 ------------------------------------------------
--- PULSE :: OFFLOAD Pulse
+-- OFFLOAD Pulse
 ------------------------------------------------
 Offload_Interrupt_From_CPU: PulseController
 generic map
@@ -1064,7 +1070,7 @@ port map
 );
 
 ------------------------------------------------
--- PULSE :: Configuration is Complete
+-- Configuration is Complete
 ------------------------------------------------
 ConfigDone_Interrupt_From_CPU: PulseController
 generic map
@@ -1081,7 +1087,7 @@ port map
 );
 
 ------------------------------------------------
--- PULSE :: Global Reset Nuke
+-- Global Reset Nuke
 ------------------------------------------------
 FpgaReset_Interrupt_From_CPU: PulseController
 generic map
@@ -1094,7 +1100,7 @@ port map
     ENABLE_CONTROLLER => '1',
 
     INPUT_PULSE => RESET_FROM_CPU,
-    OUTPUT_PULSE => global_reset_handler
+    OUTPUT_PULSE => global_fpga_reset
 );
 
 -- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1106,6 +1112,7 @@ port map
 primarySpiConverter_module: SpiConverter port map
 (
 	CLOCK => CLOCK_50MHz,
+    RESET => global_fpga_reset,
 
 	CS => synced_PRIMARY_CS,
 	SCLK => synced_PRIMARY_SCLK, -- Kernel Master always initialise SPI transfer
@@ -1121,6 +1128,7 @@ primarySpiConverter_module: SpiConverter port map
 secondarySpiConverter_module: SpiConverter port map
 (
     CLOCK => CLOCK_50MHz,
+    RESET => global_fpga_reset,
 
     CS => synced_SECONDARY_CS,
     SCLK => synced_SECONDARY_SCLK, -- Kernel Master always initialise SPI transfer
@@ -1540,6 +1548,7 @@ I2cController_module: I2cController port map
 SpiController_BMI160_S1_module: SpiController port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
+    RESET => global_fpga_reset,
 
     OFFLOAD_INT => test_switch_bmi160_s1_ready,
 
@@ -1567,6 +1576,7 @@ SpiController_BMI160_S1_module: SpiController port map
 SpiController_BMI160_S2_module: SpiController port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
+    RESET => global_fpga_reset,
 
     OFFLOAD_INT => switch_bmi160_s2_ready,
 
@@ -1594,6 +1604,7 @@ SpiController_BMI160_S2_module: SpiController port map
 SpiController_RF_module: SpiController port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
+    RESET => global_fpga_reset,
 
     OFFLOAD_INT => switch_spi_RF_ready,
 
@@ -1789,9 +1800,11 @@ generic map
 )
 port map
 (
-    clock => CLOCK_50MHz,
-    button_in => BUTTON_3,
-    button_out => active_button
+    CLOCK_50MHz => CLOCK_50MHz,
+    RESET => global_fpga_reset,
+
+    BUTTON_IN => BUTTON_3,
+    BUTTON_OUT => active_button
 );
 
 --looptrough_process:

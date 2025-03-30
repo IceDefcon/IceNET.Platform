@@ -4,8 +4,10 @@ use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.all;
 
 entity SpiConverter is
-Port (
+Port
+(
     CLOCK : in std_logic;
+    RESET : in std_logic;
     
     CS : in std_logic;
     SCLK : in std_logic;
@@ -30,9 +32,18 @@ signal synced_parallel_mosi : std_logic_vector(7 downto 0);
 
 begin
 
-spi_process: process(CLOCK)
+spi_process: process(CLOCK, RESET)
 begin
-    if rising_edge(CLOCK) then
+    if RESET = '1' then
+        sclk_hi <= '0';
+        sclk_lo <= '0';
+        spi_bit_count <= (others => '0');
+        index <= 0;
+        spi_conversion_complete <= '0';
+        synced_parallel_mosi <= (others => '0');
+        PARALLEL_MOSI <= (others => '0');
+        SERIAL_MISO <= '0';
+    elsif rising_edge(CLOCK) then
 
         if CS = '0' then
 
