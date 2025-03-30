@@ -252,7 +252,6 @@ signal synced_SECONDARY_CS : std_logic := '0';
 -- Main UART
 signal synced_FPGA_UART_RX : std_logic := '0';
 -- Buttons
-signal reset_button : std_logic := '0';
 signal active_button : std_logic := '0';
 -- Spi.0 Primary
 signal primary_conversion_complete : std_logic := '0';
@@ -478,6 +477,8 @@ generic
 Port
 (
     CLOCK_50MHz : in  std_logic;
+    RESET : in std_logic;
+
     INTERRUPT_SIGNAL : out std_logic
 );
 end component;
@@ -590,7 +591,7 @@ component OffloadController
 port
 (
     CLOCK_50MHz : in std_logic;
-    OFFLOAD_RESET : in std_logic;
+    RESET : in std_logic;
 
     OFFLOAD_INTERRUPT : in std_logic;
     FIFO_DATA : in std_logic_vector(7 downto 0);
@@ -614,6 +615,7 @@ generic
 port
 (
     CLOCK_50MHz : in std_logic;
+    RESET : in std_logic;
 
     OFFLOAD_INT : in std_logic;
     FPGA_INT : out std_logic;
@@ -628,6 +630,7 @@ component UartDataTransfer
 port
 (
     CLOCK_50MHz : in std_logic;
+    RESET : in std_logic;
 
     WRITE_ENABLE : in std_logic;
     WRITE_SYMBOL : in std_logic_vector;
@@ -643,6 +646,7 @@ component UartDataAssembly
 port
 (
     CLOCK_50MHz : in std_logic;
+    RESET : in std_logic;
 
     UART_LOG_MESSAGE_ID : in UART_LOG_ID;
     UART_LOG_MESSAGE_KEY : in UART_LOG_KEY;
@@ -674,6 +678,8 @@ generic
 Port
 (
     CLOCK_50MHz : in  std_logic;
+    RESET : in std_logic;
+
     ENABLE_CONTROLLER : in std_logic;
 
     INPUT_PULSE : in std_logic;
@@ -702,6 +708,7 @@ generic
 Port
 (
     CLOCK_50MHz : in  std_logic;
+    RESET : in std_logic;
 
     ASYNC_INPUT : in std_logic;
     SYNC_OUTPUT : out std_logic
@@ -727,7 +734,7 @@ begin
 ------------------------------------------------
 -- BUTTON_1
 ------------------------------------------------
-DebounceController_module: DebounceController
+ActiveDebug_Button: DebounceController
 generic map
 (
     PERIOD => 50000, -- 50Mhz :: 50000*20ns = 1ms
@@ -739,8 +746,9 @@ port map
     RESET => global_fpga_reset,
 
     BUTTON_IN => BUTTON_1,
-    BUTTON_OUT => reset_button
+    BUTTON_OUT => active_button
 );
+
 
 -- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 -- //
@@ -759,6 +767,7 @@ generic map
 port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
+    RESET => global_fpga_reset,
 
     ASYNC_INPUT => PRIMARY_MOSI,
     SYNC_OUTPUT => synced_PRIMARY_MOSI
@@ -772,6 +781,7 @@ generic map
 port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
+    RESET => global_fpga_reset,
 
     ASYNC_INPUT => PRIMARY_SCLK,
     SYNC_OUTPUT => synced_PRIMARY_SCLK
@@ -785,6 +795,7 @@ generic map
 port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
+    RESET => global_fpga_reset,
 
     ASYNC_INPUT => PRIMARY_CS,
     SYNC_OUTPUT => synced_PRIMARY_CS
@@ -801,6 +812,7 @@ generic map
 port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
+    RESET => global_fpga_reset,
 
     ASYNC_INPUT => SECONDARY_MOSI,
     SYNC_OUTPUT => synced_SECONDARY_MOSI
@@ -814,6 +826,7 @@ generic map
 port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
+    RESET => global_fpga_reset,
 
     ASYNC_INPUT => SECONDARY_SCLK,
     SYNC_OUTPUT => synced_SECONDARY_SCLK
@@ -827,6 +840,7 @@ generic map
 port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
+    RESET => global_fpga_reset,
 
     ASYNC_INPUT => SECONDARY_CS,
     SYNC_OUTPUT => synced_SECONDARY_CS
@@ -843,6 +857,7 @@ generic map
 port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
+    RESET => global_fpga_reset,
 
     ASYNC_INPUT => FPGA_UART_RX,
     SYNC_OUTPUT => synced_FPGA_UART_RX
@@ -861,7 +876,7 @@ s1_int1_NoiseControl: NoiseController
 port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
-    RESET => '0',
+    RESET => global_fpga_reset,
 
     INPUT_SIGNAL => S1_BMI160_INT_1,
     THRESHOLD => 5, -- 50ns
@@ -876,7 +891,7 @@ s1_int2_NoiseControl: NoiseController
 port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
-    RESET => '0',
+    RESET => global_fpga_reset,
 
     INPUT_SIGNAL => S1_BMI160_INT_2,
     THRESHOLD => 5, -- 50ns
@@ -891,7 +906,7 @@ s2_int1_NoiseControl: NoiseController
 port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
-    RESET => '0',
+    RESET => global_fpga_reset,
 
     INPUT_SIGNAL => S2_BMI160_INT_1,
     THRESHOLD => 5, -- 50ns
@@ -906,7 +921,7 @@ s2_int2_NoiseControl: NoiseController
 port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
-    RESET => '0',
+    RESET => global_fpga_reset,
 
     INPUT_SIGNAL => S2_BMI160_INT_2,
     THRESHOLD => 5, -- 50ns
@@ -921,7 +936,7 @@ s3_int1_NoiseControl: NoiseController
 port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
-    RESET => '0',
+    RESET => global_fpga_reset,
 
     INPUT_SIGNAL => I2C_ADXL345_INT_1,
     THRESHOLD => 5, -- 50ns
@@ -936,7 +951,7 @@ s3_int2_NoiseControl: NoiseController
 port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
-    RESET => '0',
+    RESET => global_fpga_reset,
 
     INPUT_SIGNAL => I2C_ADXL345_INT_2,
     THRESHOLD => 5, -- 50ns
@@ -961,6 +976,8 @@ generic map
 port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
+    RESET => global_fpga_reset,
+
     ENABLE_CONTROLLER => Sensor_Configuration_Complete,
 
     INPUT_PULSE => s1_bmi160_int1_denoised,
@@ -978,6 +995,8 @@ generic map
 port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
+    RESET => global_fpga_reset,
+
     ENABLE_CONTROLLER => Sensor_Configuration_Complete,
 
     INPUT_PULSE => s1_bmi160_int2_denoised,
@@ -995,6 +1014,8 @@ generic map
 port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
+    RESET => global_fpga_reset,
+
     ENABLE_CONTROLLER => Sensor_Configuration_Complete,
 
     INPUT_PULSE => s2_bmi160_int1_denoised,
@@ -1012,6 +1033,8 @@ generic map
 port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
+    RESET => global_fpga_reset,
+
     ENABLE_CONTROLLER => Sensor_Configuration_Complete,
 
     INPUT_PULSE => s2_bmi160_int2_denoised,
@@ -1029,6 +1052,8 @@ generic map
 port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
+    RESET => global_fpga_reset,
+
     ENABLE_CONTROLLER => Sensor_Configuration_Complete,
 
     INPUT_PULSE => s3_adxl345_int1_denoised,
@@ -1046,6 +1071,8 @@ generic map
 port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
+    RESET => global_fpga_reset,
+
     ENABLE_CONTROLLER => Sensor_Configuration_Complete,
 
     INPUT_PULSE => s3_adxl345_int2_denoised,
@@ -1063,6 +1090,8 @@ generic map
 port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
+    RESET => global_fpga_reset,
+
     ENABLE_CONTROLLER => '1',
 
     INPUT_PULSE => SPI_INT_FROM_CPU,
@@ -1080,6 +1109,8 @@ generic map
 port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
+    RESET => global_fpga_reset,
+
     ENABLE_CONTROLLER => '1',
 
     INPUT_PULSE => CFG_INT_FROM_CPU,
@@ -1097,6 +1128,8 @@ generic map
 port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
+    RESET => global_fpga_reset,
+
     ENABLE_CONTROLLER => '1',
 
     INPUT_PULSE => RESET_FROM_CPU,
@@ -1156,6 +1189,8 @@ generic map
 port map
 (
 	CLOCK_50MHz => CLOCK_50MHz,
+    RESET => global_fpga_reset,
+
 	INTERRUPT_SIGNAL => WDG_INT_FROM_FPGA
 );
 
@@ -1168,6 +1203,8 @@ generic map
 port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
+    RESET => global_fpga_reset,
+
     INTERRUPT_SIGNAL => TIMER_INT_FROM_FPGA
 );
 
@@ -1251,7 +1288,7 @@ OffloadController_module: OffloadController
 port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
-    OFFLOAD_RESET => '0',
+    RESET => global_fpga_reset,
 
     OFFLOAD_INTERRUPT => offload_interrupt,
     FIFO_DATA => primary_fifo_data_out,
@@ -1418,6 +1455,7 @@ UartDataTransfer_module: UartDataTransfer
 port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
+    RESET => global_fpga_reset,
 
     WRITE_ENABLE => uart_write_enable,
     WRITE_SYMBOL => uart_write_symbol,
@@ -1432,6 +1470,7 @@ UartDataAssembly_module: UartDataAssembly
 port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
+    RESET => global_fpga_reset,
 
     UART_LOG_MESSAGE_ID => UART_LOG_MESSAGE_ID,
     UART_LOG_MESSAGE_KEY => UART_LOG_MESSAGE_KEY,
@@ -1523,7 +1562,7 @@ end process;
 I2cController_module: I2cController port map
 (
     CLOCK => CLOCK_50MHz,
-    RESET => reset_button,
+    RESET => global_fpga_reset,
 
     -- in
     OFFLOAD_INT => switch_i2c_ready, -- i2c transfer ready to begin
@@ -1693,6 +1732,7 @@ port map
 (
     -- IN
     CLOCK_50MHz => CLOCK_50MHz,
+    RESET => global_fpga_reset,
 
     OFFLOAD_INT => switch_pwm_ready,
     FPGA_INT => interrupt_pwm_feedback,
@@ -1791,21 +1831,6 @@ LED_5 <= '0';
 LED_6 <= '1';
 LED_7 <= '0';
 LED_8 <= '1';
-
-ActiveDebug_Button: DebounceController
-generic map
-(
-    PERIOD => 50000, -- 50Mhz :: 50000*20ns = 1ms
-    SM_OFFSET => 3
-)
-port map
-(
-    CLOCK_50MHz => CLOCK_50MHz,
-    RESET => global_fpga_reset,
-
-    BUTTON_IN => BUTTON_3,
-    BUTTON_OUT => active_button
-);
 
 --looptrough_process:
 --process(CLOCK_50MHz)

@@ -11,6 +11,7 @@ generic
 port
 (    
     CLOCK_50MHz : in std_logic;
+    RESET : in std_logic;
 
     OFFLOAD_INT : in std_logic;
     FPGA_INT : out std_logic;
@@ -24,7 +25,9 @@ end PwmController;
 architecture rtl of PwmController is
 
 -- Default base period :: 20 * 50000clk * 20ns = 20ms
-signal defeult_period : integer := BASE_PERIOD_MS*50000 - 1;
+constant DEFAULT_PERIOD : integer := BASE_PERIOD_MS*50000 - 1;
+constant MULTIPLIER : integer := 200; -- 200*20ns = 4us Resolution :: 1ms/4us = 250 steps
+constant MIN_OFFSET : integer := 50000; -- Minimum 1ms
 
 type PWM is 
 (
@@ -38,24 +41,33 @@ signal pwm_state: PWM := IDLE;
 signal pwm_base_pulse : std_logic := '0';
 signal pwm_pulse : std_logic := '0';
 signal pwm_width : std_logic_vector(16 downto 0) := (others => '0');
-signal pwm_width_prev : std_logic_vector(16 downto 0) := "11000011010100000"; -- 100k = 2ms
 signal pwm_base_timer : std_logic_vector(19 downto 0) := (others => '0');
 signal pwm_timer : std_logic_vector(16 downto 0) := (others => '0');
 signal pwm_config : std_logic := '0';
 signal pwm_ready : std_logic := '0';
 signal pwm_data_vector : std_logic_vector(7 downto 0) := (others => '0');
 
-constant MULTIPLIER : integer := 200; -- 200*20ns = 4us Resolution :: 1ms/4us = 250 steps
-constant MIN_OFFSET : integer := 50000; -- Minimum 1ms
-
 begin
 
 pwm_process:
-process(CLOCK_50MHz)
-    variable pwm_integer : integer := 50000;
+process(CLOCK_50MHz, RESET)
+    variable pwm_integer : integer := 50000; -- This is equal to MIN_OFFSET 1ms
 begin
-    if rising_edge(CLOCK_50MHz) then
-        if pwm_base_timer = std_logic_vector(to_unsigned(defeult_period, 20)) then -- 20ms PWM Period
+    if RESET = '1' then
+        pwm_integer := 50000;
+        pwm_state <= IDLE;
+        pwm_base_pulse <= '0';
+        pwm_pulse <= '0';
+        pwm_width <= (others => '0');
+        pwm_base_timer <= (others => '0');
+        pwm_timer <= (others => '0');
+        pwm_config <= '0';
+        pwm_ready <= '0';
+        pwm_data_vector <= (others => '0');
+        FPGA_INT <= '0';
+        PWM_SIGNAL <= '0';
+    elsif rising_edge(CLOCK_50MHz) then
+        if pwm_base_timer = std_logic_vector(to_unsigned(DEFAULT_PERIOD, 20)) then -- 20ms PWM Period
             pwm_base_timer <= (others => '0');
             pwm_base_pulse <= '1';
         else
@@ -110,9 +122,6 @@ begin
                 end if;
 
             when DONE =>
-                if pwm_width_prev /= pwm_width then
-                    pwm_width_prev <= pwm_width;
-                end if;
                 pwm_state <= IDLE;
 
             when others =>

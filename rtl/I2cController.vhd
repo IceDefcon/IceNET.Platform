@@ -33,22 +33,23 @@ architecture rtl of I2cController is
 -- Signals
 ----------------------------------------------------------------------------------------------------------------
 
--- SM interrupt
-signal kernel_interrupt : std_logic := '0';
--- SM Init
-signal system_start : std_logic := '0';
---SM Parameters
-signal rw : std_logic := '0';
+
 constant smStartDelay  : std_logic_vector(15 downto 0):= "0000000000110001"; -- 1us
 constant smInitDelay   : std_logic_vector(15 downto 0):= "0000000000110001"; -- 1us
 constant smConfigDelay : std_logic_vector(15 downto 0):= "0000000000110001"; -- 1us
 constant smReadDelay   : std_logic_vector(15 downto 0):= "0110000110100111"; -- 500us
 constant smWriteDelay  : std_logic_vector(15 downto 0):= "0110000110100111"; -- 500us
 constant smDoneDelay   : std_logic_vector(15 downto 0):= "0000000000110001"; -- 1us
--- Write Delay Process
-signal write_couter : integer range 0 to 5000000 := 0;
 constant WRITE_DELAY : integer range 0 to 5000000 := 5000000;
 
+-- SM interrupt
+signal kernel_interrupt : std_logic := '0';
+-- SM Init
+signal system_start : std_logic := '0';
+--SM Parameters
+signal rw : std_logic := '0';
+-- Write Delay Process
+signal write_couter : integer range 0 to 5000000 := 0;
 -- SM Status Register
 signal status_sck : std_logic_vector(3 downto 0) := "0000";
 signal status_sda : std_logic_vector(3 downto 0) := "0000";
@@ -67,21 +68,22 @@ signal sda_timer : std_logic_vector(8 downto 0) := (others => '0');
 signal sck_timer_toggle : std_logic := '0';
 -- Parametric offset
 signal sda_offset : std_logic_vector(15 downto 0) := (others => '0');
---I2c state machine
-type STATE is 
-(
-    IDLE,
-    INIT,
-    CONFIG,
-    RD,
-    WR,
-    DONE
-);
---State machine indicators
-signal i2c_state: STATE := IDLE;
 -- fifo interrupt
 signal fifo_interrupt : std_logic := '0';
 signal fifo_flag : std_logic := '0';
+--I2c state machine
+type I2C_CONTROLER_TYPE is
+(
+    I2C_IDLE,
+    I2C_INIT,
+    I2C_CONFIG,
+    I2C_READ,
+    I2C_WRITE,
+    I2C_DONE
+);
+--State machine indicators
+signal i2c_state: I2C_CONTROLER_TYPE := I2C_IDLE;
+
 ----------------------------------------------------------------------------------------------------------------
 -- MAIN ROUTINE
 ----------------------------------------------------------------------------------------------------------------
@@ -90,7 +92,44 @@ begin
 
 state_machine_process : process(CLOCK, RESET)
 begin
-    if rising_edge(CLOCK) then
+    if RESET = '1' then
+        -- SM interrupt
+        kernel_interrupt <= '0';
+        -- SM Init
+        system_start <= '0';
+        --SM Parameters
+        rw <= '0';
+        -- Write Delay Process
+        write_couter <= 0;
+        -- SM Status Register
+        status_sck <= (others => '0');
+        status_sda <= (others => '0');
+        -- Data Index
+        index <= 0;
+        -- Delay Timers
+        system_timer <= (others => '0');
+        init_timer <= (others => '0');
+        config_timer <= (others => '0');
+        send_timer <= (others => '0');
+        done_timer <= (others => '0');
+        -- Process Timers
+        status_timer <= (others => '0');
+        sck_timer <= (others => '0');
+        sda_timer <= (others => '0');
+        sck_timer_toggle <= '0';
+        -- Parametric offset
+        sda_offset <= (others => '0');
+        -- fifo interrupt
+        fifo_interrupt <= '0';
+        fifo_flag <= '0';
+        --I2c state machine
+        i2c_state <= I2C_IDLE;
+        -- Entity Outputs
+        FPGA_INT <= '0';
+        FIFO_INT <= '0';
+        OFFLOAD_WAIT <= '0';
+        FEEDBACK_DATA <= (others => '0');
+    elsif rising_edge(CLOCK) then
 
         --------------------------------------------
         -- Interrupt Vector
@@ -104,45 +143,45 @@ begin
         if system_start = '0' then
             if system_timer = smStartDelay then
                 system_start <= '1';
-                i2c_state <= IDLE;
+                i2c_state <= I2C_IDLE;
             else
                 system_timer <= system_timer + '1';
             end if;
         else
             ----------------------------------------
-            -- State Machine :: Reset
+            -- State Machine :: Offload Interrupt
             ----------------------------------------
-            if RESET = '1' or OFFLOAD_INT = '1' then
+            if OFFLOAD_INT = '1' then
                 OFFLOAD_WAIT <= '1';
-                i2c_state <= INIT;
+                i2c_state <= I2C_INIT;
             else
 
                 case i2c_state is
                     ------------------------------------
-                    -- State Machine :: IDLE
+                    -- State Machine :: I2C_IDLE
                     ------------------------------------
-                    when IDLE =>
+                    when I2C_IDLE =>
                         OFFLOAD_WAIT <= '0';
                         I2C_SCK <= 'Z';
                         I2C_SDA <= 'Z';
                     ------------------------------------
-                    -- State Machine :: INIT
+                    -- State Machine :: I2C_INIT
                     ------------------------------------
-                    when INIT =>
+                    when I2C_INIT =>
                         if init_timer = smInitDelay then -- delay for the reset to stabilise
-                            i2c_state <= CONFIG;
+                            i2c_state <= I2C_CONFIG;
                         else
                             init_timer <= init_timer + '1';
                         end if;
                     ------------------------------------
-                    -- State Machine :: CONFIG
+                    -- State Machine :: I2C_CONFIG
                     ------------------------------------
-                    when CONFIG =>
+                    when I2C_CONFIG =>
                         if config_timer = smConfigDelay then
                             if OFFLOAD_CONTROL = '0' then
-                                i2c_state <= RD;
+                                i2c_state <= I2C_READ;
                             else
-                                i2c_state <= WR;
+                                i2c_state <= I2C_WRITE;
                             end if;
                             rw <= '0';
                             sck_timer <= "11111001"; -- Reset timer so SCK is inverted @ 1st clock cycle
@@ -152,11 +191,11 @@ begin
                             config_timer <= config_timer + '1';
                         end if;
                     ------------------------------------
-                    -- State Machine :: RD
+                    -- State Machine :: I2C_READ
                     ------------------------------------
-                    when RD =>
+                    when I2C_READ =>
                         if send_timer = smReadDelay then
-                            i2c_state <= DONE;
+                            i2c_state <= I2C_DONE;
                         else
                             if status_timer = "1111111111111111" then -- Length :: 25k clock cycles :: -----===[ RESET ]===----
                             else
@@ -441,11 +480,11 @@ begin
                             send_timer <= send_timer + '1';
                         end if;
                     ------------------------------------
-                    -- State Machine :: WR
+                    -- State Machine :: I2C_WRITE
                     ------------------------------------
-                    when WR =>
+                    when I2C_WRITE =>
                         if send_timer = smWriteDelay then
-                            i2c_state <= DONE;
+                            i2c_state <= I2C_DONE;
                         else
                             if status_timer = "1111111111111111" then -- Length :: 25k clock cycles :: -----===[ RESET ]===----
                             else
@@ -655,9 +694,9 @@ begin
                             send_timer <= send_timer + '1';
                         end if;
                     ------------------------------------
-                    -- State Machine :: DONE
+                    -- State Machine :: I2C_DONE
                     ------------------------------------
-                    when DONE =>
+                    when I2C_DONE =>
                         if OFFLOAD_CONTROL = '0' then
                             if done_timer = smDoneDelay then
                                 -- Reset Timers
@@ -671,8 +710,8 @@ begin
                                 -- Reset Status registers
                                 status_sck <= "0000";
                                 status_sda <= "0000";
-                                -- Switch to IDLE
-                                i2c_state <= IDLE;
+                                -- Switch to I2C_IDLE
+                                i2c_state <= I2C_IDLE;
                                 -- Rest fifo interrupt flag
                                 fifo_flag <= '0';
                             else
@@ -691,8 +730,8 @@ begin
                                 -- Reset Status registers
                                 status_sck <= "0000";
                                 status_sda <= "0000";
-                                -- Switch to IDLE
-                                i2c_state <= IDLE;
+                                -- Switch to I2C_IDLE
+                                i2c_state <= I2C_IDLE;
                                 -- Rest fifo interrupt flag
                                 fifo_flag <= '0';
                             else
@@ -701,7 +740,7 @@ begin
                         end if;
 
                     when others =>
-                        i2c_state <= IDLE;
+                        i2c_state <= I2C_IDLE;
 
                 end case;
             end if;

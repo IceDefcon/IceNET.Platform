@@ -5,6 +5,7 @@ entity CanController is
 port
 (
     CLOCK_50MHz : in std_logic;
+    RESET : in std_logic;
 
     CAN_BBB_TX : in std_logic;
     CAN_BBB_RX : out std_logic;
@@ -21,7 +22,9 @@ begin
 can_loopthrough_process:
 process(CLOCK_50MHz)
 begin
-    if rising_edge(CLOCK_50MHz) then
+    if RESET = '0' then
+
+    elsif rising_edge(CLOCK_50MHz) then
         CAN_MPP_TX <= CAN_BBB_TX;
         CAN_BBB_RX <= CAN_MPP_RX;
     end if;
