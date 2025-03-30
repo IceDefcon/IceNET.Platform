@@ -6,7 +6,7 @@ entity OffloadController is
 port
 (    
     CLOCK_50MHz : in std_logic;
-    OFFLOAD_RESET : in std_logic;
+    RESET : in std_logic;
 
     OFFLOAD_INTERRUPT : in std_logic;
     FIFO_DATA : in std_logic_vector(7 downto 0);
@@ -39,7 +39,7 @@ type STATE is
     DEVICE_INIT,
     DEVICE_DELAY,
     DEVICE_BYTE_1,
-    DEVICE_BYTY_2,
+    DEVICE_BYTE_2,
     DEVICE_BYTE_3,
     DEVICE_BYTE_4,
     DEVICE_CONFIG,
@@ -72,9 +72,6 @@ signal device_size : integer := 0;
 signal device_ctrl : std_logic_vector(7 downto 0) := (others => '0');
 signal device_id : std_logic_vector(6 downto 0) := (others => '0');
 signal device_pairs : integer := 0;
-signal device_register : std_logic_vector(7 downto 0) := (others => '0');
-signal device_data : std_logic_vector(7 downto 0) := (others => '0');
-signal device_checksum : std_logic_vector(7 downto 0) := (others => '0');
 
 signal transfer_pairs : integer := 0;
 
@@ -84,10 +81,28 @@ signal transfer_pairs : integer := 0;
 begin
 
 offload_process:
-process (CLOCK_50MHz)
+process (CLOCK_50MHz, RESET)
 begin
-    if OFFLOAD_RESET = '1' then
-
+    if RESET = '1' then
+        offload_state <= IDLE;
+        Byte_0 <= (others => '0');
+        Byte_1 <= (others => '0');
+        Byte_2 <= (others => '0');
+        Byte_3 <= (others => '0');
+        config_devices <= 0;
+        config_scramble <= (others => '0');
+        config_checksum <= (others => '0');
+        device_size <= 0;
+        device_ctrl <= (others => '0');
+        device_id <= (others => '0');
+        device_pairs <= 0;
+        transfer_pairs <= 0;
+        FIFO_READ_ENABLE <= '0';
+        OFFLOAD_READY <= '0';
+        OFFLOAD_ID <= (others => '0');
+        OFFLOAD_CTRL <= (others => '0');
+        OFFLOAD_REGISTER <= (others => '0');
+        OFFLOAD_DATA <= (others => '0');
     elsif rising_edge(CLOCK_50MHz) then
         case offload_state is
 
@@ -216,9 +231,9 @@ begin
             when DEVICE_BYTE_1 =>
                 device_size <= to_integer(unsigned(FIFO_DATA));
                 FIFO_READ_ENABLE <= '1';
-                offload_state <= DEVICE_BYTY_2;
+                offload_state <= DEVICE_BYTE_2;
 
-            when DEVICE_BYTY_2 =>
+            when DEVICE_BYTE_2 =>
                 device_ctrl <= FIFO_DATA;
                 FIFO_READ_ENABLE <= '1';
                 offload_state <= DEVICE_BYTE_3;

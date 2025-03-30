@@ -7,6 +7,7 @@ entity UartDataTransfer is
 port
 (
     CLOCK_50MHz : in std_logic;
+    RESET : in std_logic;
 
     WRITE_ENABLE : in std_logic;
     WRITE_SYMBOL : in std_logic_vector(6 downto 0);
@@ -41,9 +42,16 @@ signal uart_output : std_logic := '1';
 begin
 
 state_machine_process:
-process(CLOCK_50MHz)
+process(CLOCK_50MHz, RESET)
 begin
-    if rising_edge(CLOCK_50MHz) then
+    if RESET = '1' then
+        uart_state <= UART_IDLE;
+        bit_number <= 0;
+        baud_count <= (others => '0');
+        uart_output <= '1';
+        FPGA_UART_TX <= '0';
+        WRITE_BUSY <= '0';
+    elsif rising_edge(CLOCK_50MHz) then
         case uart_state is
 
             when UART_IDLE =>

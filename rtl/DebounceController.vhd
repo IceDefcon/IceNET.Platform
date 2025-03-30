@@ -11,10 +11,11 @@ generic
 );
 port 
 (    
-    clock : in std_logic;
+    CLOCK_50MHz : in std_logic;
+    RESET : in std_logic;
 
-    button_in : in std_logic;
-    button_out : out std_logic
+    BUTTON_IN : in std_logic;
+    BUTTON_OUT : out std_logic
 );
 end DebounceController;
 
@@ -22,78 +23,82 @@ architecture rtl of DebounceController is
 
     signal stable_count : integer := 0;
 
-    type DEBOUNCE is
+    type DEBOUNCE_TYPE is
     (
-        IDLE,
-        WAITING,
-        STABLE,
-        DONE
+        DEBOUNCE_IDLE,
+        DEBOUNCE_WAITING,
+        DEBOUNCE_STABLE,
+        DEBOUNCE_DONE
     );
 
-    signal debounce_state: DEBOUNCE := IDLE;
+    signal debounce_state: DEBOUNCE_TYPE := DEBOUNCE_IDLE;
 
     begin
 
-    process(clock, button_in, stable_count)
+    process(CLOCK_50MHz, RESET)
     begin
-        if rising_edge(clock) then
+        if RESET = '1' then
+            stable_count <= 0;
+            debounce_state <= DEBOUNCE_IDLE;
+            BUTTON_OUT <= '0';
+        elsif rising_edge(CLOCK_50MHz) then
 
             case debounce_state is
 
-                when IDLE =>
-                    if button_in = '0' then
-                        button_out <= '0';
-                        debounce_state <= WAITING;
+                when DEBOUNCE_IDLE =>
+                    if BUTTON_IN = '0' then
+                        BUTTON_OUT <= '0';
+                        debounce_state <= DEBOUNCE_WAITING;
                     else
-                        button_out <= '0';
-                        debounce_state <= IDLE;
+                        BUTTON_OUT <= '0';
+                        debounce_state <= DEBOUNCE_IDLE;
                     end if;
 
-                when WAITING =>
+                when DEBOUNCE_WAITING =>
                     if stable_count = (PERIOD - SM_OFFSET) then
-                        button_out <= '0';
+                        BUTTON_OUT <= '0';
                         stable_count <= 0;
-                        debounce_state <= STABLE;
+                        debounce_state <= DEBOUNCE_STABLE;
                     else
-                        if button_in = '0' then
-                            button_out <= '0';
+                        if BUTTON_IN = '0' then
+                            BUTTON_OUT <= '0';
                             stable_count <= stable_count + 1;
-                            debounce_state <= WAITING;
+                            debounce_state <= DEBOUNCE_WAITING;
                         else
-                            button_out <= '0';
+                            BUTTON_OUT <= '0';
                             stable_count <= 0;
-                            debounce_state <= IDLE;
+                            debounce_state <= DEBOUNCE_IDLE;
                         end if;
                     end if;
 
-                when STABLE =>
-                    if button_in = '0' then
-                        button_out <= '1';
-                        debounce_state <= STABLE;
+                when DEBOUNCE_STABLE =>
+                    if BUTTON_IN = '0' then
+                        BUTTON_OUT <= '1';
+                        debounce_state <= DEBOUNCE_STABLE;
                     else
-                        button_out <= '1';
-                        debounce_state <= DONE;
+                        BUTTON_OUT <= '1';
+                        debounce_state <= DEBOUNCE_DONE;
                     end if;
 
-                when DONE =>
+                when DEBOUNCE_DONE =>
                     if stable_count = (PERIOD - SM_OFFSET) then
-                        button_out <= '1';
+                        BUTTON_OUT <= '1';
                         stable_count <= 0;
-                        debounce_state <= IDLE;
+                        debounce_state <= DEBOUNCE_IDLE;
                     else
-                        if button_in = '1' then
-                            button_out <= '1';
+                        if BUTTON_IN = '1' then
+                            BUTTON_OUT <= '1';
                             stable_count <= stable_count + 1;
-                            debounce_state <= DONE;
+                            debounce_state <= DEBOUNCE_DONE;
                         else
-                            button_out <= '1';
+                            BUTTON_OUT <= '1';
                             stable_count <= 0;
-                            debounce_state <= STABLE;
+                            debounce_state <= DEBOUNCE_STABLE;
                         end if;
                     end if;
 
                 when others =>
-                    debounce_state <= IDLE;
+                    debounce_state <= DEBOUNCE_IDLE;
 
             end case;
         end if;

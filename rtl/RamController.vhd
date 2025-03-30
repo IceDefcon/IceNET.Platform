@@ -143,20 +143,52 @@
         begin
             if RESET = '1' then
 
-                init_counter <= 0;
-                refresh_counter <= 0;
+                memory_state <= SDRAM_INIT;
+
+                command <= CMD_INIT;
                 process_read <= '0';
                 process_write <= '0';
 
-                command <= CMD_INIT;
-                memory_state <= SDRAM_INIT;
+                init_counter <= 0;
+                refresh_counter <= 0;
+                AR_counter <= 0;
+                tRP_counter <= 0;
+                tMRD_counter <= 0;
+                tRRC_counter <= 0;
+                tRCD_counter <= 0;
+                tRAS_counter <= 0;
+                tCL_counter <= 0;
 
-                AR_counter <= 1; -- Interrations of auto-refresh
+                A0 <= '0';
+                A1 <= '0';
+                A2 <= '0';
+                A3 <= '0';
+                A4 <= '0';
+                A5 <= '0';
+                A6 <= '0';
+                A7 <= '0';
+                A8 <= '0';
+                A9 <= '0';
+                A10 <= '0';
+                A11 <= '0';
+                A12 <= '0';
+                BA0 <= '0';
+                BA1 <= '0';
+                --CKE <= '0';
+                --CS <= '0';
+                --RAS <= '0';
+                --CAS <= '0';
+                --WE <= '0';
+                --LDQM <= '0';
+                --UDQM <= '0';
+                DATA_OUT <= (others => '0');
+                --BUSY <= '0';
 
             elsif rising_edge(CLOCK_133MHz) then
                 case memory_state is
 
                     when SDRAM_INIT =>
+                        AR_counter <= 1; -- Interrations of auto-refresh
                         command <= CMD_NOP;
                         if init_counter = 13300 then
                             memory_state <= SDRAM_PRECHARGE;

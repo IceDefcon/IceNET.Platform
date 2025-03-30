@@ -10,6 +10,8 @@ generic
 Port
 (
     CLOCK_50MHz : in  std_logic;
+    RESET : in std_logic;
+
     ENABLE_CONTROLLER : in std_logic;
 
     INPUT_PULSE : in std_logic;
@@ -44,16 +46,18 @@ begin
     -- And INPUT_PULSE to sync_input_pulse(0)
     --
     ------------------------------------------------------------
-    sync_process: process(CLOCK_50MHz)
+    interrupt_process: process(CLOCK_50MHz, RESET)
     begin
-        if rising_edge(CLOCK_50MHz) then
-            sync_input_pulse <= sync_input_pulse(0) & INPUT_PULSE;
-        end if;
-    end process sync_process;
+        if RESET = '1' then
+            pulse_state <= PULSE_IDLE;
+            pulse_count <= 0;
+            wait_process <= '0';
+            sync_input_pulse <= (others => '0');
+            OUTPUT_PULSE <= '0';
+        elsif rising_edge(CLOCK_50MHz) then
 
-    interrupt_process: process(CLOCK_50MHz)
-    begin
-        if rising_edge(CLOCK_50MHz) then
+            sync_input_pulse <= sync_input_pulse(0) & INPUT_PULSE;
+
             case pulse_state is
                 when PULSE_IDLE =>
                     pulse_count <= 0;

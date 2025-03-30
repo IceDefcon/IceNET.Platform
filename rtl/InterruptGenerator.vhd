@@ -11,6 +11,8 @@ generic
 Port
 (
     CLOCK_50MHz : in  std_logic;
+    RESET : in std_logic;
+
     INTERRUPT_SIGNAL : out std_logic
 );
 end entity InterruptGenerator;
@@ -18,54 +20,62 @@ end entity InterruptGenerator;
 architecture rtl of InterruptGenerator is
 
     constant SM_OFFSET : integer := 4;
+
     signal period_count : integer := 0;
     signal length_count : integer := 0;
     signal pulse : std_logic := '0';
-    type INTERRUPT is
+
+    type INTERRUPT_TYPE is
     (
-        IDLE,
-        PERIOD,
-        PRODUCE,
-        DONE
+        INTERRUPT_IDLE,
+        INTERRUPT_PERIOD,
+        INTERRUPT_PRODUCE,
+        INTERRUPT_DONE
     );
-    signal interrupt_state: INTERRUPT := IDLE;
+    signal interrupt_state: INTERRUPT_TYPE := INTERRUPT_IDLE;
 
 begin
 
-    interrupt_process: process(CLOCK_50MHz)
+    interrupt_process: process(CLOCK_50MHz, RESET)
     begin
-        if rising_edge(CLOCK_50MHz) then
+        if RESET = '1' then
+            period_count <= 0;
+            length_count <= 0;
+            pulse <= '0';
+            interrupt_state <= INTERRUPT_IDLE;
+            INTERRUPT_SIGNAL <= '0';
+        elsif rising_edge(CLOCK_50MHz) then
 
             case interrupt_state is
 
-                when IDLE =>
-                    interrupt_state <= PERIOD;
+                when INTERRUPT_IDLE =>
+                    interrupt_state <= INTERRUPT_PERIOD;
 
-                when PERIOD =>
+                when INTERRUPT_PERIOD =>
                     if period_count = (PERIOD_MS * 50000 - SM_OFFSET - PULSE_LENGTH) then
                         period_count <= 0;
-                        interrupt_state <= PRODUCE;
+                        interrupt_state <= INTERRUPT_PRODUCE;
                     else
                         period_count <= period_count + 1;
-                        interrupt_state <= PERIOD;
+                        interrupt_state <= INTERRUPT_PERIOD;
                     end if;
 
-                when PRODUCE =>
+                when INTERRUPT_PRODUCE =>
                     if length_count = PULSE_LENGTH then
                         pulse <= '0';
                         length_count <= 0;
-                        interrupt_state <= DONE;
+                        interrupt_state <= INTERRUPT_DONE;
                     else
                         pulse <= '1';
                         length_count <= length_count + 1;
-                        interrupt_state <= PRODUCE;
+                        interrupt_state <= INTERRUPT_PRODUCE;
                     end if;
 
-                when DONE =>
-                    interrupt_state <= IDLE;
+                when INTERRUPT_DONE =>
+                    interrupt_state <= INTERRUPT_IDLE;
 
                 when others =>
-                    interrupt_state <= IDLE;
+                    interrupt_state <= INTERRUPT_IDLE;
 
             end case;
 

@@ -7,6 +7,7 @@ entity SpiController is
 Port
 (
     CLOCK_50MHz : in  std_logic;
+    RESET : in std_logic;
 
     OFFLOAD_INT : in std_logic;
 
@@ -72,9 +73,33 @@ signal feedback_byte : std_logic_vector(7 downto 0) := (others => '0');
 begin
 
     spiControl_process:
-    process(CLOCK_50MHz)
+    process(CLOCK_50MHz, RESET)
     begin
-        if rising_edge(CLOCK_50MHz) then
+        if RESET = '1' then
+            SPI_state <= SPI_IDLE;
+            byte_process_timer <= 0;
+            write_couter <= 0;
+            spi_status <= (others => '0');
+            sck_timer <= (others => '0');
+            sck_timer_toggle <= '0';
+            index <= 0;
+            write_flag <= '0';
+            write_data <= (others => '0');
+            bytes_amount <= 0;
+            bytes_count <= 0;
+            register_address <= (others => '0');
+            transfer_byte <= (others => '0');
+            first_byte <= '0';
+            next_byte <= '0';
+            last_byte <= '0';
+            feedback_byte <= (others => '0');
+            OFFLOAD_WAIT <= '0';
+            CTRL_CS <= '0';
+            CTRL_MOSI <= '0';
+            CTRL_SCK <= '0';
+            FPGA_INT <= '0';
+            FEEDBACK_DATA <= (others => '0');
+        elsif rising_edge(CLOCK_50MHz) then
 
             if OFFLOAD_INT = '1' then
                 OFFLOAD_WAIT <= '1';
