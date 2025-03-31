@@ -78,8 +78,8 @@ static int stateMachineThread(void *data)
                      * Perfiperal devices connected to FPGA
                      * is received by the kernel successfully
                      */
-                    gpio_set_value(GPIO_CONF_DONE_INTERRUPT_FROM_CPU, 1);
-                    gpio_set_value(GPIO_CONF_DONE_INTERRUPT_FROM_CPU, 0);
+                    gpio_set_value(GPIO_NUMBER_PERIPHERALS_CONFIG_DONE, 1);
+                    gpio_set_value(GPIO_NUMBER_PERIPHERALS_CONFIG_DONE, 0);
                     setStateMachine(SM_DONE);
                 }
                 break;
@@ -132,15 +132,15 @@ static int stateMachineThread(void *data)
 
             case SM_FPGA_RESET:
                 printk(KERN_INFO "[CTRL][STM] FPGA Reset mode\n");
-                gpio_set_value(GPIO_RESET_FROM_CPU, 1);
-                gpio_set_value(GPIO_RESET_FROM_CPU, 0);
+                gpio_set_value(GPIO_NUMBER_RESET_FPGA, 1);
+                gpio_set_value(GPIO_NUMBER_RESET_FPGA, 0);
                 setStateMachine(SM_DONE);
                 break;
 
             case SM_OFFLOAD:
                 printk(KERN_INFO "[CTRL][STM] Fifo data offload mode\n");
-                gpio_set_value(GPIO_SPI_INTERRUPT_FROM_CPU, 1);
-                gpio_set_value(GPIO_SPI_INTERRUPT_FROM_CPU, 0);
+                gpio_set_value(GPIO_NUMBER_OFFLOAD_FIFO, 1);
+                gpio_set_value(GPIO_NUMBER_OFFLOAD_FIFO, 0);
                 setStateMachine(SM_DONE);
                 break;
 
