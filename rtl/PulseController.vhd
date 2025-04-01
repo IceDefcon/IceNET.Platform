@@ -38,14 +38,6 @@ signal sync_input_pulse : std_logic_vector(1 downto 0) := "00";
 
 begin
 
-    ------------------------------------------------------------
-    --
-    -- Two stage synchroniser
-    --
-    -- Move sync_input_pulse(0) into sync_input_pulse(1)
-    -- And INPUT_PULSE to sync_input_pulse(0)
-    --
-    ------------------------------------------------------------
     interrupt_process: process(CLOCK_50MHz, RESET)
     begin
         if RESET = '1' then
@@ -56,6 +48,14 @@ begin
             OUTPUT_PULSE <= '0';
         elsif rising_edge(CLOCK_50MHz) then
 
+            ------------------------------------------------------------
+            --
+            -- Two stage synchroniser
+            --
+            -- Move sync_input_pulse(0) into sync_input_pulse(1)
+            -- And INPUT_PULSE to sync_input_pulse(0)
+            --
+            ------------------------------------------------------------
             sync_input_pulse <= sync_input_pulse(0) & INPUT_PULSE;
 
             case pulse_state is

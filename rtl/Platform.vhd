@@ -1258,25 +1258,14 @@ end process;
 -- //
 -- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
-
-fifo_pre_process: -- Long interrupt signal from kernel to be cut in FPGA down to 20ns pulse
-process(CLOCK_50MHz, primary_parallel_MOSI, primary_conversion_complete)
-begin
-    if rising_edge(CLOCK_50MHz) then
-        primary_fifo_data_in <= primary_parallel_MOSI;
-        primary_fifo_wr_en <= primary_conversion_complete;
-    end if;
-end process;
-
 Fifo_module: Fifo
 port map
 (
     clock => CLOCK_50MHz,
     -- IN
-    data  => primary_fifo_data_in,
+    data  => primary_parallel_MOSI,
     rdreq => primary_fifo_rd_en,
-    wrreq => primary_fifo_wr_en,
+    wrreq => primary_conversion_complete,
     -- OUT
     empty => primary_fifo_empty,
     full => primary_fifo_full,
