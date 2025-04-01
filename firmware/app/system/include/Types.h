@@ -32,6 +32,7 @@ typedef enum
     CMD_RAMDISK_CONFIG,
     CMD_RAMDISK_CLEAR,
     CMD_FPGA_RESET,
+    CMD_VECTOR_OFFLOAD,
     CMD_AMOUNT
 } commandType;
 
@@ -46,7 +47,9 @@ typedef enum
 typedef enum
 {
     CTRL_INIT = 0,
-    CTRL_DMA_LONG,
+    CTRL_RAMDISK_PERIPHERALS,
+    CTRL_RAMDISK_ACTIVATE_DMA,
+    CTRL_VECTOR_OFFLOAD,
     CTRL_DMA_SINGLE,
     CTRL_MAIN,
     CTRL_AMOUNT,

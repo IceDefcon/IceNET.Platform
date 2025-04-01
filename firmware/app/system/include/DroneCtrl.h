@@ -38,7 +38,7 @@ class DroneCtrl :
 
         std::string getCtrlStateString(ctrlType state);
 
-        void sendFpgaConfig();
+        void sendFpgaConfigToRamDisk();
         void droneCtrlMain();
 
         Commander* getCommanderInstance();

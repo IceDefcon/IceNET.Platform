@@ -106,7 +106,7 @@ void gui::setupFpgaCtrl()
     reset_label->setGeometry(dev.xGap*5 + dev.xText + dev.xUnit*2, dev.yGap, dev.xLogo, dev.yLogo);
 
     QPushButton *resetButton = new QPushButton("RESET", this);
-    resetButton->setGeometry(dev.xGap*5 + dev.xText + dev.xUnit*2, dev.yGap*2 + dev.yLogo, dev.xUnit*2 + dev.xGap, dev.yUnit*2);
+    resetButton->setGeometry(dev.xGap*5 + dev.xText + dev.xUnit*2, dev.yGap*2 + dev.yLogo, dev.xUnit*2 + dev.xGap, dev.yUnit);
     resetButton->setStyleSheet(
         "QPushButton {"
         "   background-color: blue;"

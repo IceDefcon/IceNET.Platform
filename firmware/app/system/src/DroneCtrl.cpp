@@ -67,7 +67,9 @@ std::string DroneCtrl::getCtrlStateString(ctrlType state)
     static const std::array<std::string, CTRL_AMOUNT> ctrlStateStrings =
     {
         "CTRL_INIT",
-        "CTRL_DMA_LONG",
+        "CTRL_RAMDISK_PERIPHERALS",
+        "CTRL_RAMDISK_ACTIVATE_DMA",
+        "CTRL_VECTOR_OFFLOAD",
         "CTRL_DMA_SINGLE",
         "CTRL_MAIN",
     };
@@ -82,13 +84,11 @@ std::string DroneCtrl::getCtrlStateString(ctrlType state)
     }
 }
 
-void DroneCtrl::sendFpgaConfig()
+void DroneCtrl::sendFpgaConfigToRamDisk()
 {
     std::cout << "[INFO] [ D ] Watchdog ready :: Load FPGA Config to DMA Engine" << std::endl;
     m_instanceRamDisk->assembleConfig();
     m_instanceRamDisk->sendConfig();
-    std::cout << "[INFO] [ D ] Watchdog ready :: Activate DMA Engine" << std::endl;
-    m_instanceCommander->sendCommand(CMD_RAMDISK_CONFIG);
 }
 
 void DroneCtrl::droneCtrlMain()
@@ -112,12 +112,26 @@ void DroneCtrl::droneCtrlMain()
              */
             if(true == KernelComms::Watchdog::getFpgaConfigReady())
             {
-                m_ctrlState = CTRL_DMA_LONG;
+                m_ctrlState = CTRL_RAMDISK_PERIPHERALS;
             }
             break;
 
-        case CTRL_DMA_LONG:
-            sendFpgaConfig();
+        case CTRL_RAMDISK_PERIPHERALS:
+            sendFpgaConfigToRamDisk();
+            m_ctrlState = CTRL_RAMDISK_ACTIVATE_DMA;
+            break;
+
+        case CTRL_RAMDISK_ACTIVATE_DMA:
+            std::cout << "[INFO] [ D ] Activating RamDisk Config DMA Engine" << std::endl;
+            std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+            m_instanceCommander->sendCommand(CMD_RAMDISK_CONFIG);
+            m_ctrlState = CTRL_VECTOR_OFFLOAD;
+            break;
+
+        case CTRL_VECTOR_OFFLOAD:
+            std::cout << "[INFO] [ D ] Activating FIFO Offload" << std::endl;
+            std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+            m_instanceCommander->sendCommand(CMD_VECTOR_OFFLOAD);
             m_ctrlState = CTRL_DMA_SINGLE;
             break;
 

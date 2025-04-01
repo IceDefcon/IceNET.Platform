@@ -35,6 +35,7 @@ m_customDmaSize(0)
     m_commandMatrix[CMD_RAMDISK_CONFIG] = {0xC0, 0xF1}; /* 0xC0F1(COFI) :: Activate DMA transfer to send IMU's config to FPGA */
     m_commandMatrix[CMD_RAMDISK_CLEAR]  = {0xC1, 0xEA}; /* 0xC1EA(CLEA) :: Clear DMA variables used for verification of IMU's config */
     m_commandMatrix[CMD_FPGA_RESET] = {0x4E,0x5E}; /* 0x4E5E(RESE) :: Global Reset to FPGA */
+    m_commandMatrix[CMD_VECTOR_OFFLOAD] = {0x10,0xAD}; /* 0x10AD(LOAD) :: Offload Interrupt Vector */
 }
 
 Commander::~Commander()
@@ -110,6 +111,7 @@ std::string Commander::commandToString(commandType cmd)
         case CMD_RAMDISK_CONFIG: return "CMD_RAMDISK_CONFIG";
         case CMD_RAMDISK_CLEAR:  return "CMD_RAMDISK_CLEAR";
         case CMD_FPGA_RESET:     return "CMD_FPGA_RESET";
+        case CMD_VECTOR_OFFLOAD: return "CMD_VECTOR_OFFLOAD";
         default:                 return "UNKNOWN_CMD";
     }
 }
