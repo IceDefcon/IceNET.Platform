@@ -104,7 +104,7 @@ private slots:
     void setupMainConsole();
     void setupUartConsole();
 
-    void setupReset();
+    void setupFpgaCtrl();
     void setupThreadProcess();
     void setupSeparators();
 

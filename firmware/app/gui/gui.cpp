@@ -43,7 +43,7 @@ m_IO_GuiState(std::make_shared<ioStateType>(IO_IDLE))
     setupMainConsole();
     setupUartConsole();
 
-    setupReset();
+    setupFpgaCtrl();
     setupThreadProcess();
 
     setupI2C();
@@ -95,9 +95,9 @@ void gui::setupUartConsole()
     openUart();
 }
 
-void gui::setupReset()
+void gui::setupFpgaCtrl()
 {
-    QLabel *reset_label = new QLabel("FPGA", this);
+    QLabel *reset_label = new QLabel("CTRL", this);
     QFont reset_labelFont;
     reset_labelFont.setPointSize(30);
     reset_labelFont.setItalic(true);
@@ -231,7 +231,7 @@ void gui::setupI2C()
     i2c_addressLabel->setGeometry(dev.xGap, dev.yGap*2 + dev.yLogo, dev.xText, dev.yUnit);
     m_i2c_addressField = new QLineEdit(this);
     m_i2c_addressField->setGeometry(dev.xGap*2 + dev.xText, dev.yGap*2 + dev.yLogo, dev.xUnit, dev.yUnit);
-    m_i2c_addressField->setText("0x69");
+    m_i2c_addressField->setText("0x53");
     QPushButton *i2c_exeButton = new QPushButton("EXE", this);
     i2c_exeButton->setGeometry(dev.xGap*3 + dev.xText + dev.xUnit, dev.yGap*2 + dev.yLogo, dev.xUnit, dev.yUnit);
     connect(i2c_exeButton, &QPushButton::clicked, this, &gui::i2c_execute);
@@ -283,7 +283,7 @@ void gui::setupSPI()
     m_spi_registerField->setText("0x92");
     m_spi_burstField = new QLineEdit(this);
     m_spi_burstField->setGeometry(dev.xGap*3 + dev.xText + dev.xUnit, dev.yGap*8 + dev.yLogo*2 + dev.yUnit*4, dev.xUnit, dev.yUnit);
-    m_spi_burstField->setText("0x0C");
+    m_spi_burstField->setText("0x01");
     /* SPI :: Row[3] */
     QLabel *spi_dataLabel = new QLabel("Write Data", this);
     spi_dataLabel->setGeometry(dev.xGap, dev.yGap*9 + dev.yLogo*2 + dev.yUnit*5, dev.xText, dev.yUnit);

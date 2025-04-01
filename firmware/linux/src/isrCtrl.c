@@ -59,7 +59,7 @@ static irqreturn_t InterruptFromFPGA_SpiISR(int irq, void *data)
 {
     static int counter = 0;
 
-    printk(KERN_INFO "[CTRL][ISR] Interrupt No[%d] received from FPGA @ Pin [%d] :: TODO Checksum comparsion\n", counter, GPIO_SPI_INTERRUPT_FROM_FPGA);
+    printk(KERN_INFO "[CTRL][ISR] Interrupt No[%d] received from FPGA @ Pin [%d] :: TODO Checksum comparsion\n", counter, GPIO_NUMBER_ACTIVATE_SECONDARY_DMA);
     counter++;
 
     /* QUEUE :: Execution of masterTransferSecondary */
@@ -75,15 +75,15 @@ static int initializeInterruptFromCPU(outputGpioType outGpio)
     switch(outGpio)
     {
         case GPIO_OUT_OFFLOAD_FIFO:
-            gpioNumber = GPIO_SPI_INTERRUPT_FROM_CPU;
+            gpioNumber = GPIO_NUMBER_OFFLOAD_FIFO;
             break;
 
         case GPIO_OUT_PERIPHERALS_CONFIG_DONE:
-            gpioNumber = GPIO_CONF_DONE_INTERRUPT_FROM_CPU;
+            gpioNumber = GPIO_NUMBER_PERIPHERALS_CONFIG_DONE;
             break;
 
         case GPIO_OUT_RESET_FPGA:
-            gpioNumber = GPIO_RESET_FROM_CPU;
+            gpioNumber = GPIO_NUMBER_RESET_FPGA;
             break;
 
         default:
@@ -122,15 +122,15 @@ static void destroyInterruptFromCPU(outputGpioType outGpio)
     switch(outGpio)
     {
         case GPIO_OUT_OFFLOAD_FIFO:
-            gpioNumber = GPIO_SPI_INTERRUPT_FROM_CPU;
+            gpioNumber = GPIO_NUMBER_OFFLOAD_FIFO;
             break;
 
         case GPIO_OUT_PERIPHERALS_CONFIG_DONE:
-            gpioNumber = GPIO_CONF_DONE_INTERRUPT_FROM_CPU;
+            gpioNumber = GPIO_NUMBER_PERIPHERALS_CONFIG_DONE;
             break;
 
         case GPIO_OUT_RESET_FPGA:
-            gpioNumber = GPIO_RESET_FROM_CPU;
+            gpioNumber = GPIO_NUMBER_RESET_FPGA;
             break;
 
         default:
@@ -153,19 +153,19 @@ static int initializeInterruptFromFpga(inputGpioType inputGpio)
     switch(inputGpio)
     {
         case GPIO_IN_ACTIVATE_SECONDARY_DMA:
-            gpioNumber = GPIO_SPI_INTERRUPT_FROM_FPGA;
+            gpioNumber = GPIO_NUMBER_ACTIVATE_SECONDARY_DMA;
             isrFunction = InterruptFromFPGA_SpiISR;
             irqProcess = "Activate SPI.1";
             break;
 
         case GPIO_IN_SCHEDULER_TIMER:
-            gpioNumber = GPIO_TIMER_INTERRUPT_FROM_FPGA;
+            gpioNumber = GPIO_NUMBER_SCHEDULER_TIMER;
             isrFunction = InterruptFromFPGA_TimerISR;
             irqProcess = "Scheduler Pulse";
             break;
 
         case GPIO_IN_WATCHDOG_TICK:
-            gpioNumber = GPIO_WATCHDOG_INTERRUPT_FROM_FPGA;
+            gpioNumber = GPIO_NUMBER_WATCHDOG_TICK;
             isrFunction = InterruptFromFPGA_WatchdogISR;
             irqProcess = "Watchdog Tick";
             break;
@@ -235,15 +235,15 @@ static void destroyInterruptFromFPGA(inputGpioType inputGpio)
     switch(inputGpio)
     {
         case GPIO_IN_ACTIVATE_SECONDARY_DMA:
-            gpioNumber = GPIO_SPI_INTERRUPT_FROM_FPGA;
+            gpioNumber = GPIO_NUMBER_ACTIVATE_SECONDARY_DMA;
             break;
 
         case GPIO_IN_SCHEDULER_TIMER:
-            gpioNumber = GPIO_TIMER_INTERRUPT_FROM_FPGA;
+            gpioNumber = GPIO_NUMBER_SCHEDULER_TIMER;
             break;
 
         case GPIO_IN_WATCHDOG_TICK:
-            gpioNumber = GPIO_WATCHDOG_INTERRUPT_FROM_FPGA;
+            gpioNumber = GPIO_NUMBER_WATCHDOG_TICK;
             break;
 
         default:

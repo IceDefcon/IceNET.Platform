@@ -103,13 +103,14 @@ std::string Commander::commandToString(commandType cmd)
 {
     switch (cmd)
     {
-    case CMD_DMA_NORMAL:     return "CMD_DMA_NORMAL";
-    case CMD_DMA_SENSOR:     return "CMD_DMA_SENSOR";
-    case CMD_DMA_SINGLE:     return "CMD_DMA_SINGLE";
-    case CMD_DMA_CUSTOM:     return "CMD_DMA_CUSTOM";
-    case CMD_RAMDISK_CONFIG: return "CMD_RAMDISK_CONFIG";
-    case CMD_RAMDISK_CLEAR:  return "CMD_RAMDISK_CLEAR";
-    default:                 return "UNKNOWN_CMD";
+        case CMD_DMA_NORMAL:     return "CMD_DMA_NORMAL";
+        case CMD_DMA_SENSOR:     return "CMD_DMA_SENSOR";
+        case CMD_DMA_SINGLE:     return "CMD_DMA_SINGLE";
+        case CMD_DMA_CUSTOM:     return "CMD_DMA_CUSTOM";
+        case CMD_RAMDISK_CONFIG: return "CMD_RAMDISK_CONFIG";
+        case CMD_RAMDISK_CLEAR:  return "CMD_RAMDISK_CLEAR";
+        case CMD_FPGA_RESET:     return "CMD_FPGA_RESET";
+        default:                 return "UNKNOWN_CMD";
     }
 }
 
