@@ -106,7 +106,7 @@ void gui::setupFpgaCtrl()
     reset_label->setGeometry(dev.xGap*5 + dev.xText + dev.xUnit*2, dev.yGap, dev.xLogo, dev.yLogo);
 
     QPushButton *resetButton = new QPushButton("RESET", this);
-    resetButton->setGeometry(dev.xGap*5 + dev.xText + dev.xUnit*2, dev.yGap*2 + dev.yLogo, dev.xUnit*2 + dev.xGap, dev.yUnit*2);
+    resetButton->setGeometry(dev.xGap*5 + dev.xText + dev.xUnit*2, dev.yGap*2 + dev.yLogo, dev.xUnit*2 + dev.xGap, dev.yUnit);
     resetButton->setStyleSheet(
         "QPushButton {"
         "   background-color: blue;"
@@ -127,11 +127,41 @@ void gui::setupFpgaCtrl()
     {
         if(NULL == m_instanceDroneCtrl)
         {
-            printToMainConsole("[RST] threadMain is not Running");
+            printToMainConsole("[CTL] threadMain is not Running");
         }
         else
         {
             m_instanceDroneCtrl->getCommanderInstance()->sendCommand(CMD_FPGA_RESET);
+        }
+    });
+
+    QPushButton *offloadButton = new QPushButton("OFFLOAD", this);
+    offloadButton->setGeometry(dev.xGap*5 + dev.xText + dev.xUnit*2, dev.yGap*3 + dev.yLogo + dev.yUnit, dev.xUnit*2 + dev.xGap, dev.yUnit);
+    offloadButton->setStyleSheet(
+        "QPushButton {"
+        "   background-color: blue;"
+        "   color: white;"
+        "   font-size: 18px;"
+        "   font-weight: bold;"
+        "   border-radius: 10px;"
+        "   padding: 5px;"
+        "}"
+        "QPushButton:hover {"
+        "   background-color: darkblue;"
+        "}"
+        "QPushButton:pressed {"
+        "   background-color: black;"
+        "}"
+    );
+    connect(offloadButton, &QPushButton::clicked, this, [this]()
+    {
+        if(NULL == m_instanceDroneCtrl)
+        {
+            printToMainConsole("[CTL] threadMain is not Running");
+        }
+        else
+        {
+            interruptVector_execute(VECTOR_OFFLOAD);
         }
     });
 }
@@ -398,11 +428,11 @@ void gui::setupDma()
 
 void gui::setDeadCommand()
 {
-    /* Dead Code :: In case if something happen */
+    /* 0xDEAD Code :: In case if something happen */
     (*m_Tx_GuiVector)[0] = 0xDE;
     (*m_Tx_GuiVector)[1] = 0xAD;
     (*m_Tx_GuiVector)[2] = 0xC0;
-    (*m_Tx_GuiVector)[3] = 0xD3;
+    (*m_Tx_GuiVector)[3] = 0xDE;
     (*m_Tx_GuiVector)[4] = 0x22;
     (*m_Tx_GuiVector)[5] = 0x22;
     (*m_Tx_GuiVector)[6] = 0x22;
@@ -420,6 +450,115 @@ void gui::setDummyCommand()
     (*m_Tx_GuiVector)[5] = 0x44;
     (*m_Tx_GuiVector)[6] = 0x44;
     (*m_Tx_GuiVector)[7] = 0x44;
+}
+
+/**
+ *
+ * TODO
+ *
+ * This need to be parametrized
+ *
+ */
+void gui::setInterruptVector(uint8_t vector)
+{
+    //////////////////////////////////////////////////////////////////////////////
+    // Vector Table
+    //////////////////////////////////////////////////////////////////////////////
+    // 0000 :: RESERVED
+    // 0001 :: OFFLOAD
+    // 0010 ::
+    // 0011 ::
+    // 0100 ::
+    // 0101 ::
+    // 0110 ::
+    // 0111 ::
+    // 1000 ::
+    // 1001 ::
+    // 1010 ::
+    // 1011 ::
+    // 1100 ::
+    // 1101 ::
+    // 1110 ::
+    // 1111 ::
+    //
+    //////////////////////////////////////////////////////////////////////////////
+    //
+    //  OFFLOAD_CTRL :: 8-bits
+    //
+    //  Dma config (Auto/Manual Config)
+    //      |
+    //      |        Device (I2C, SPI, PWM, INT)
+    //      |          ID
+    //      |  Vector  ||
+    //      |   ||||   ||
+    //      V   VVVV   VV
+    //    | x | xxxx | xx | x | << OFFLOAD_CTRL : std_logic_vector(7 downto 0)
+    //          ΛΛΛΛ        Λ
+    //          ||||        |
+    //          ||||        |
+    //          ||||        |
+    //       burst size    R/W (I2C, SPI)
+    //       (I2C, SPI)
+    //
+    //////////////////////////////////////////////////////////////////////////////
+    (*m_Tx_GuiVector)[0] = vector;
+    (*m_Tx_GuiVector)[1] = 0xAF;
+    (*m_Tx_GuiVector)[2] = 0xAE;
+    (*m_Tx_GuiVector)[3] = 0xAD;
+    (*m_Tx_GuiVector)[4] = 0x00;
+    (*m_Tx_GuiVector)[5] = 0x00;
+    (*m_Tx_GuiVector)[6] = 0x00;
+    (*m_Tx_GuiVector)[7] = 0x00;
+}
+
+std::string gui::vectorToString(interruptVectorType type)
+{
+    switch (type)
+    {
+        case VECTOR_RESERVED:   return "VECTOR_RESERVED";
+        case VECTOR_OFFLOAD:    return "VECTOR_OFFLOAD";
+        case VECTOR_UNUSED_02:  return "VECTOR_UNUSED_02";
+        case VECTOR_UNUSED_03:  return "VECTOR_UNUSED_03";
+        case VECTOR_UNUSED_04:  return "VECTOR_UNUSED_04";
+        case VECTOR_UNUSED_05:  return "VECTOR_UNUSED_05";
+        case VECTOR_UNUSED_06:  return "VECTOR_UNUSED_06";
+        case VECTOR_UNUSED_07:  return "VECTOR_UNUSED_07";
+        case VECTOR_UNUSED_08:  return "VECTOR_UNUSED_08";
+        case VECTOR_UNUSED_09:  return "VECTOR_UNUSED_09";
+        case VECTOR_UNUSED_10:  return "VECTOR_UNUSED_10";
+        case VECTOR_UNUSED_11:  return "VECTOR_UNUSED_11";
+        case VECTOR_UNUSED_12:  return "VECTOR_UNUSED_12";
+        case VECTOR_UNUSED_13:  return "VECTOR_UNUSED_13";
+        case VECTOR_UNUSED_14:  return "VECTOR_UNUSED_14";
+        case VECTOR_UNUSED_15:  return "VECTOR_UNUSED_15";
+        default:                return "UNKNOWN_VECTOR";
+    }
+}
+
+void gui::interruptVector_execute(interruptVectorType type)
+{
+    //////////////////////////////////////////////////////////////////////////////
+    //
+    //  OFFLOAD_CTRL :: Vector Base :: 0x86
+    //
+    //  Dma config (Auto/Manual Config)
+    //      |
+    //      |        Device (I2C, SPI, PWM, INT)
+    //      |          ID
+    //      |  Vector  ||
+    //      |   ||||   ||
+    //      V   VVVV   VV
+    //    | 1 | size | 11 | 0 | << OFFLOAD_CTRL : std_logic_vector(7 downto 0)
+    //
+    //////////////////////////////////////////////////////////////////////////////
+    uint8_t intVector = 0x86;
+    intVector += ((uint8_t)type << 3);
+
+    setInterruptVector(intVector);
+    std::cout << "[INFO] [INT] Set Interrupt Vector -> " << vectorToString(type) << std::endl;
+
+    *m_IO_GuiState = IO_COM_WRITE_ONLY;
+    printToMainConsole("[INT] Done");
 }
 
 void gui::dma_execute(commandType cmd)
@@ -523,6 +662,10 @@ void gui::i2c_execute()
         (*m_Tx_GuiVector)[7] = 0x00;
         *m_IO_GuiState = IO_COM_WRITE;
 
+        /* Wait for Kerenl to send data to FPGA */
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        /* Offload data from FIFO */
+        m_instanceDroneCtrl->setDroneCtrlState(CTRL_VECTOR_OFFLOAD);
         printToMainConsole("[I2C] Done");
     }
 }
@@ -626,6 +769,10 @@ void gui::spi_execute()
         (*m_Tx_GuiVector)[7] = 0x00;
         *m_IO_GuiState = IO_COM_WRITE;
 
+        /* Wait for Kerenl to send data to FPGA */
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        /* Offload data from FIFO */
+        m_instanceDroneCtrl->setDroneCtrlState(CTRL_VECTOR_OFFLOAD);
         printToMainConsole("[SPI] Done");
     }
 }
@@ -715,6 +862,10 @@ void gui::pwm_execute(pwmType type)
         (*m_Tx_GuiVector)[7] = 0x00;
         *m_IO_GuiState = IO_COM_WRITE;
 
+        /* Wait for Kerenl to send data to FPGA */
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        /* Offload data from FIFO */
+        m_instanceDroneCtrl->setDroneCtrlState(CTRL_VECTOR_OFFLOAD);
         printToMainConsole("[PWM] Done");
     }
 }

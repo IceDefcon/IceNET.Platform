@@ -62,12 +62,14 @@ bool DroneCtrl::isKilled()
     return ret;
 }
 
-std::string DroneCtrl::getCtrlStateString(ctrlType state)
+std::string DroneCtrl::getCtrlStateString(droneCtrlStateType state)
 {
     static const std::array<std::string, CTRL_AMOUNT> ctrlStateStrings =
     {
         "CTRL_INIT",
-        "CTRL_DMA_LONG",
+        "CTRL_RAMDISK_PERIPHERALS",
+        "CTRL_RAMDISK_ACTIVATE_DMA",
+        "CTRL_VECTOR_OFFLOAD",
         "CTRL_DMA_SINGLE",
         "CTRL_MAIN",
     };
@@ -82,13 +84,20 @@ std::string DroneCtrl::getCtrlStateString(ctrlType state)
     }
 }
 
-void DroneCtrl::sendFpgaConfig()
+void DroneCtrl::sendFpgaConfigToRamDisk()
 {
-    std::cout << "[INFO] [ D ] Watchdog ready :: Load FPGA Config to DMA Engine" << std::endl;
+    std::cout << "[INFO] [ D ] Peripherals configuration ready :: Loading to FPGA" << std::endl;
     m_instanceRamDisk->assembleConfig();
     m_instanceRamDisk->sendConfig();
-    std::cout << "[INFO] [ D ] Watchdog ready :: Activate DMA Engine" << std::endl;
-    m_instanceCommander->sendCommand(CMD_RAMDISK_CONFIG);
+}
+
+void DroneCtrl::setDroneCtrlState(droneCtrlStateType state)
+{
+    while(CTRL_MAIN != m_ctrlState) /* Wait until we are in CTRL_MAIN */
+    {
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
+    m_ctrlState = state;
 }
 
 void DroneCtrl::droneCtrlMain()
@@ -112,16 +121,37 @@ void DroneCtrl::droneCtrlMain()
              */
             if(true == KernelComms::Watchdog::getFpgaConfigReady())
             {
-                m_ctrlState = CTRL_DMA_LONG;
+                m_ctrlState = CTRL_RAMDISK_PERIPHERALS;
             }
             break;
 
-        case CTRL_DMA_LONG:
-            sendFpgaConfig();
+        case CTRL_RAMDISK_PERIPHERALS:
+            sendFpgaConfigToRamDisk();
+            m_ctrlState = CTRL_RAMDISK_ACTIVATE_DMA;
+            break;
+
+        case CTRL_RAMDISK_ACTIVATE_DMA:
+            std::cout << "[INFO] [ D ] Activating RamDisk Config DMA Engine" << std::endl;
+            m_instanceCommander->sendCommand(CMD_RAMDISK_CONFIG);
+            /* Wait for Kerenl to send data to FPGA */
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
             m_ctrlState = CTRL_DMA_SINGLE;
             break;
 
+        case CTRL_VECTOR_OFFLOAD:
+            std::cout << "[INFO] [ D ] Activating FIFO Offload" << std::endl;
+            m_instanceCommander->sendCommand(CMD_VECTOR_OFFLOAD);
+            m_ctrlState = CTRL_MAIN;
+            break;
+
         case CTRL_DMA_SINGLE:
+            /**
+             * This have to be done in here due to the 3000ms
+             * wait time for peripheral configuration from FPGA
+             */
+            std::cout << "[INFO] [ D ] Activating FIFO Offload" << std::endl;
+            m_instanceCommander->sendCommand(CMD_VECTOR_OFFLOAD);
+
             /**
              * TODO
              *
@@ -145,7 +175,9 @@ void DroneCtrl::droneCtrlMain()
             break;
 
         default:
-            std::cout << "[INFO] [ D ] Main State" << std::endl;
+            std::cout << "[INFO] [ D ] Unknown State" << std::endl;
     }
-}
 
+    /* Reduce consumption of CPU resources */
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+}

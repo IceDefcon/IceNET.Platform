@@ -32,13 +32,36 @@ typedef enum
     CMD_RAMDISK_CONFIG,
     CMD_RAMDISK_CLEAR,
     CMD_FPGA_RESET,
+    CMD_VECTOR_OFFLOAD,
     CMD_AMOUNT
 } commandType;
+
+typedef enum
+{
+    VECTOR_RESERVED,
+    VECTOR_OFFLOAD,
+    VECTOR_UNUSED_02,
+    VECTOR_UNUSED_03,
+    VECTOR_UNUSED_04,
+    VECTOR_UNUSED_05,
+    VECTOR_UNUSED_06,
+    VECTOR_UNUSED_07,
+    VECTOR_UNUSED_08,
+    VECTOR_UNUSED_09,
+    VECTOR_UNUSED_10,
+    VECTOR_UNUSED_11,
+    VECTOR_UNUSED_12,
+    VECTOR_UNUSED_13,
+    VECTOR_UNUSED_14,
+    VECTOR_UNUSED_15,
+    VECTOR_AMOUNT
+}interruptVectorType;
 
 typedef enum 
 {
     IO_IDLE = 0,
     IO_COM_WRITE,
+    IO_COM_WRITE_ONLY,
     IO_COM_READ,
     IO_AMOUNT
 } ioStateType;
@@ -46,11 +69,13 @@ typedef enum
 typedef enum
 {
     CTRL_INIT = 0,
-    CTRL_DMA_LONG,
+    CTRL_RAMDISK_PERIPHERALS,
+    CTRL_RAMDISK_ACTIVATE_DMA,
+    CTRL_VECTOR_OFFLOAD,
     CTRL_DMA_SINGLE,
     CTRL_MAIN,
     CTRL_AMOUNT,
-} ctrlType;
+} droneCtrlStateType;
 
 typedef enum
 {
@@ -66,6 +91,7 @@ inline std::string getIoStateString(ioStateType state)
     {
         "IO_IDLE",
         "IO_COM_WRITE",
+        "IO_COM_WRITE_ONLY",
         "IO_COM_READ",
     };
 

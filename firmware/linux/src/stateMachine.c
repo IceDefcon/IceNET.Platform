@@ -127,7 +127,7 @@ static int stateMachineThread(void *data)
                 printk(KERN_INFO "[CTRL][STM] SPI mode\n");
                 /* QUEUE :: Execution of masterTransferPrimary */
                 queue_work(get_masterTransferPrimary_wq(), get_masterTransferPrimary_work());
-                setStateMachine(SM_OFFLOAD);
+                setStateMachine(SM_DONE);
                 break;
 
             case SM_FPGA_RESET:
@@ -137,7 +137,7 @@ static int stateMachineThread(void *data)
                 setStateMachine(SM_DONE);
                 break;
 
-            case SM_OFFLOAD:
+            case SM_VECTOR_OFFLOAD:
                 printk(KERN_INFO "[CTRL][STM] Fifo data offload mode\n");
                 gpio_set_value(GPIO_NUMBER_OFFLOAD_FIFO, 1);
                 gpio_set_value(GPIO_NUMBER_OFFLOAD_FIFO, 0);

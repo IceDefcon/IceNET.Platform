@@ -258,9 +258,30 @@ signal primary_conversion_complete : std_logic := '0';
 signal primary_parallel_MOSI : std_logic_vector(7 downto 0) := (others => '0');
 -- Spi.1 Secondary
 signal secondary_parallel_MISO : std_logic_vector(7 downto 0) := (others => '0');
+-- Interrupt Vector Counter + signals
+signal REG_primary_fifo_wr_en : std_logic_vector(2047 downto 0) := (others => '0');
+signal REG_primary_parallel_MOSI_0 : std_logic_vector(2047 downto 0) := (others => '0');
+signal REG_primary_parallel_MOSI_1 : std_logic_vector(2047 downto 0) := (others => '0');
+signal REG_primary_parallel_MOSI_2 : std_logic_vector(2047 downto 0) := (others => '0');
+signal REG_primary_parallel_MOSI_3 : std_logic_vector(2047 downto 0) := (others => '0');
+signal REG_primary_parallel_MOSI_4 : std_logic_vector(2047 downto 0) := (others => '0');
+signal REG_primary_parallel_MOSI_5 : std_logic_vector(2047 downto 0) := (others => '0');
+signal REG_primary_parallel_MOSI_6 : std_logic_vector(2047 downto 0) := (others => '0');
+signal REG_primary_parallel_MOSI_7 : std_logic_vector(2047 downto 0) := (others => '0');
+-- Interrupt Vector stage signals
+signal FIFO_primary_fifo_wr_en  : std_logic := '0';
+signal FIFO_primary_parallel_MOSI : std_logic_vector(7 downto 0) := (others => '0');
+signal STAGE_1_primary_parallel_MOSI : std_logic_vector(7 downto 0) := (others => '0');
+signal STAGE_2_primary_parallel_MOSI : std_logic_vector(7 downto 0) := (others => '0');
+-- Interrupt Vector out signals
+signal interrupt_vector : std_logic_vector(3 downto 0) := (others => '0');
+signal interrupt_vector_busy : std_logic := '0';
+signal interrupt_vector_enable : std_logic := '0';
+-- Interrupt Vector signals
+signal primary_conversion_run : std_logic := '0';
+signal primary_conversion_reset : integer range 0 to 2048 := 0;
+signal primary_conversion_count : integer range 0 to 256 := 0;
 -- Fifo
-signal primary_fifo_data_in : std_logic_vector(7 downto 0) := (others => '0');
-signal primary_fifo_wr_en : std_logic := '0';
 signal primary_fifo_rd_en : std_logic := '0';
 signal primary_fifo_data_out : std_logic_vector(7 downto 0) := (others => '0');
 signal primary_fifo_full : std_logic := '0';
@@ -1254,33 +1275,97 @@ end process;
 
 -- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 -- //
+-- // Interrupt Vector
+-- //
+-- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+interrupt_vector_process:
+process(CLOCK_50MHz)
+begin
+    if rising_edge(CLOCK_50MHz) then
+
+        REG_primary_fifo_wr_en <= REG_primary_fifo_wr_en(2046 downto 0) & primary_conversion_complete;
+        REG_primary_parallel_MOSI_7 <= REG_primary_parallel_MOSI_0(2046 downto 0) & primary_parallel_MOSI(7);
+        REG_primary_parallel_MOSI_6 <= REG_primary_parallel_MOSI_1(2046 downto 0) & primary_parallel_MOSI(6);
+        REG_primary_parallel_MOSI_5 <= REG_primary_parallel_MOSI_2(2046 downto 0) & primary_parallel_MOSI(5);
+        REG_primary_parallel_MOSI_4 <= REG_primary_parallel_MOSI_3(2046 downto 0) & primary_parallel_MOSI(4);
+        REG_primary_parallel_MOSI_3 <= REG_primary_parallel_MOSI_4(2046 downto 0) & primary_parallel_MOSI(3);
+        REG_primary_parallel_MOSI_2 <= REG_primary_parallel_MOSI_5(2046 downto 0) & primary_parallel_MOSI(2);
+        REG_primary_parallel_MOSI_1 <= REG_primary_parallel_MOSI_6(2046 downto 0) & primary_parallel_MOSI(1);
+        REG_primary_parallel_MOSI_0 <= REG_primary_parallel_MOSI_7(2046 downto 0) & primary_parallel_MOSI(0);
+
+        if primary_conversion_complete = '1' or REG_primary_fifo_wr_en(2047) = '1' then
+            if primary_conversion_count < 2 then
+                STAGE_2_primary_parallel_MOSI <= primary_parallel_MOSI;
+                STAGE_1_primary_parallel_MOSI <= STAGE_2_primary_parallel_MOSI;
+            end if;
+            primary_conversion_reset <= 0;
+            primary_conversion_run <= '1';
+            primary_conversion_count <= primary_conversion_count + 1;
+        else
+            if primary_conversion_reset = 2000 then
+                interrupt_vector_busy <= '0';
+                primary_conversion_run <= '0';
+                primary_conversion_reset <= 0;
+                primary_conversion_count <= 0;
+                STAGE_2_primary_parallel_MOSI <= (others => '0');
+                STAGE_1_primary_parallel_MOSI <= (others => '0');
+            else
+                primary_conversion_reset <= primary_conversion_reset + 1;
+            end if;
+        end if;
+
+        if STAGE_1_primary_parallel_MOSI(7) =  '1'
+        and STAGE_1_primary_parallel_MOSI(2) =  '1'
+        and STAGE_1_primary_parallel_MOSI(1) =  '1'
+        and STAGE_2_primary_parallel_MOSI = "10101111"
+        and interrupt_vector_busy = '0'
+        then
+            interrupt_vector <= STAGE_1_primary_parallel_MOSI(6 downto 3);
+            interrupt_vector_enable <= '1';
+            interrupt_vector_busy <= '1';
+        else
+            interrupt_vector <= "0000";
+            interrupt_vector_enable <= '0';
+        end if;
+
+        if interrupt_vector_busy = '1' then
+            FIFO_primary_parallel_MOSI <= (others => '0');
+            FIFO_primary_fifo_wr_en <= '0';
+        else
+            FIFO_primary_parallel_MOSI <= REG_primary_parallel_MOSI_0(2047) & REG_primary_parallel_MOSI_1(2047) &
+                                            REG_primary_parallel_MOSI_2(2047) & REG_primary_parallel_MOSI_3(2047) &
+                                            REG_primary_parallel_MOSI_4(2047) & REG_primary_parallel_MOSI_5(2047) &
+                                            REG_primary_parallel_MOSI_6(2047) & REG_primary_parallel_MOSI_7(2047);
+
+            FIFO_primary_fifo_wr_en <= REG_primary_fifo_wr_en(2047);
+        end if;
+    end if;
+end process;
+
+LED_8 <= primary_conversion_run or interrupt_vector_busy or interrupt_vector_enable or
+interrupt_vector(0) or interrupt_vector(1) or interrupt_vector(2) or interrupt_vector(3);
+
+-- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+-- //
 -- // FIFO Data Flow and Offload Control
 -- //
 -- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
-
-fifo_pre_process: -- Long interrupt signal from kernel to be cut in FPGA down to 20ns pulse
-process(CLOCK_50MHz, primary_parallel_MOSI, primary_conversion_complete)
-begin
-    if rising_edge(CLOCK_50MHz) then
-        primary_fifo_data_in <= primary_parallel_MOSI;
-        primary_fifo_wr_en <= primary_conversion_complete;
-    end if;
-end process;
-
+-- FIFO Module
 Fifo_module: Fifo
-port map
-(
+port map (
     clock => CLOCK_50MHz,
     -- IN
-    data  => primary_fifo_data_in,
+    data  => FIFO_primary_parallel_MOSI,
+
     rdreq => primary_fifo_rd_en,
-    wrreq => primary_fifo_wr_en,
+    wrreq => FIFO_primary_fifo_wr_en,
+
     -- OUT
     empty => primary_fifo_empty,
-    full => primary_fifo_full,
-    q => primary_fifo_data_out,
+    full  => primary_fifo_full,
+    q     => primary_fifo_data_out,
     usedw => open
 );
 
@@ -1830,7 +1915,7 @@ LED_4 <= '1';
 LED_5 <= '0';
 LED_6 <= '1';
 LED_7 <= '0';
-LED_8 <= '1';
+--LED_8 <= '1';
 
 --looptrough_process:
 --process(CLOCK_50MHz)

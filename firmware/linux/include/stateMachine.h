@@ -30,7 +30,7 @@ typedef enum
     SM_RAMDISK_PRINT,
     SM_PRIMARY_SPI,
     SM_FPGA_RESET,
-    SM_OFFLOAD,
+    SM_VECTOR_OFFLOAD,
     SM_DONE,
 } stateMachineType;
 
