@@ -127,7 +127,7 @@ void gui::setupFpgaCtrl()
     {
         if(NULL == m_instanceDroneCtrl)
         {
-            printToMainConsole("[RST] threadMain is not Running");
+            printToMainConsole("[CTL] threadMain is not Running");
         }
         else
         {
@@ -157,7 +157,7 @@ void gui::setupFpgaCtrl()
     {
         if(NULL == m_instanceDroneCtrl)
         {
-            printToMainConsole("[RST] threadMain is not Running");
+            printToMainConsole("[CTL] threadMain is not Running");
         }
         else
         {
@@ -459,7 +459,7 @@ void gui::setDummyCommand()
  * This need to be parametrized
  *
  */
-void gui::setOffloadCommand()
+void gui::setInterruptVector(uint8_t vector)
 {
     //////////////////////////////////////////////////////////////////////////////
     // Vector Table
@@ -487,11 +487,11 @@ void gui::setOffloadCommand()
     //
     //  Dma config (Auto/Manual Config)
     //      |
-    //      |        Device (I2C, SPI, PWM)
+    //      |        Device (I2C, SPI, PWM, INT)
     //      |          ID
-    //      |          ||
-    //      |          ||
-    //      V          VV
+    //      |  Vector  ||
+    //      |   ||||   ||
+    //      V   VVVV   VV
     //    | x | xxxx | xx | x | << OFFLOAD_CTRL : std_logic_vector(7 downto 0)
     //          ΛΛΛΛ        Λ
     //          ||||        |
@@ -501,88 +501,61 @@ void gui::setOffloadCommand()
     //       (I2C, SPI)
     //
     //////////////////////////////////////////////////////////////////////////////
-    (*m_Tx_GuiVector)[0] = 0x86;
-    (*m_Tx_GuiVector)[1] = 0x7F;
-    (*m_Tx_GuiVector)[2] = 0x7F;
-    (*m_Tx_GuiVector)[3] = 0x7F;
+    (*m_Tx_GuiVector)[0] = vector;
+    (*m_Tx_GuiVector)[1] = 0xAF;
+    (*m_Tx_GuiVector)[2] = 0xAE;
+    (*m_Tx_GuiVector)[3] = 0xAD;
     (*m_Tx_GuiVector)[4] = 0x00;
     (*m_Tx_GuiVector)[5] = 0x00;
     (*m_Tx_GuiVector)[6] = 0x00;
     (*m_Tx_GuiVector)[7] = 0x00;
 }
 
-void gui::interruptVector_execute(interruptVectorType intVector)
+std::string gui::vectorToString(interruptVectorType type)
 {
-    switch(intVector)
+    switch (type)
     {
-        case VECTOR_RESERVED:
-            break;
+        case VECTOR_RESERVED:   return "VECTOR_RESERVED";
+        case VECTOR_OFFLOAD:    return "VECTOR_OFFLOAD";
+        case VECTOR_UNUSED_02:  return "VECTOR_UNUSED_02";
+        case VECTOR_UNUSED_03:  return "VECTOR_UNUSED_03";
+        case VECTOR_UNUSED_04:  return "VECTOR_UNUSED_04";
+        case VECTOR_UNUSED_05:  return "VECTOR_UNUSED_05";
+        case VECTOR_UNUSED_06:  return "VECTOR_UNUSED_06";
+        case VECTOR_UNUSED_07:  return "VECTOR_UNUSED_07";
+        case VECTOR_UNUSED_08:  return "VECTOR_UNUSED_08";
+        case VECTOR_UNUSED_09:  return "VECTOR_UNUSED_09";
+        case VECTOR_UNUSED_10:  return "VECTOR_UNUSED_10";
+        case VECTOR_UNUSED_11:  return "VECTOR_UNUSED_11";
+        case VECTOR_UNUSED_12:  return "VECTOR_UNUSED_12";
+        case VECTOR_UNUSED_13:  return "VECTOR_UNUSED_13";
+        case VECTOR_UNUSED_14:  return "VECTOR_UNUSED_14";
+        case VECTOR_UNUSED_15:  return "VECTOR_UNUSED_15";
+        default:                return "UNKNOWN_VECTOR";
+    }
+}
 
-        case VECTOR_OFFLOAD:
-            printToMainConsole("[INT] Set-up Offload interrupt vector");
-            setOffloadCommand();
-            break;
+void gui::interruptVector_execute(interruptVectorType type)
+{
+    //////////////////////////////////////////////////////////////////////////////
+    //
+    //  OFFLOAD_CTRL :: Vector Base :: 0x86
+    //
+    //  Dma config (Auto/Manual Config)
+    //      |
+    //      |        Device (I2C, SPI, PWM, INT)
+    //      |          ID
+    //      |  Vector  ||
+    //      |   ||||   ||
+    //      V   VVVV   VV
+    //    | 1 | size | 11 | 0 | << OFFLOAD_CTRL : std_logic_vector(7 downto 0)
+    //
+    //////////////////////////////////////////////////////////////////////////////
+    uint8_t intVector = 0x86;
+    intVector += ((uint8_t)type << 3);
 
-        case VECTOR_UNUSED_02:
-            setDummyCommand(); /* Unused Dummy Vector */
-            break;
-
-        case VECTOR_UNUSED_03:
-            setDummyCommand(); /* Unused Dummy Vector */
-            break;
-
-        case VECTOR_UNUSED_04:
-            setDummyCommand(); /* Unused Dummy Vector */
-            break;
-
-        case VECTOR_UNUSED_05:
-            setDummyCommand(); /* Unused Dummy Vector */
-            break;
-
-        case VECTOR_UNUSED_06:
-            setDummyCommand(); /* Unused Dummy Vector */
-            break;
-
-        case VECTOR_UNUSED_07:
-            setDummyCommand(); /* Unused Dummy Vector */
-            break;
-
-        case VECTOR_UNUSED_08:
-            setDummyCommand(); /* Unused Dummy Vector */
-            break;
-
-        case VECTOR_UNUSED_09:
-            setDummyCommand(); /* Unused Dummy Vector */
-            break;
-
-        case VECTOR_UNUSED_10:
-            setDummyCommand(); /* Unused Dummy Vector */
-            break;
-
-        case VECTOR_UNUSED_11:
-            setDummyCommand(); /* Unused Dummy Vector */
-            break;
-
-        case VECTOR_UNUSED_12:
-            setDummyCommand(); /* Unused Dummy Vector */
-            break;
-
-        case VECTOR_UNUSED_13:
-            setDummyCommand(); /* Unused Dummy Vector */
-            break;
-
-        case VECTOR_UNUSED_14:
-            setDummyCommand(); /* Unused Dummy Vector */
-            break;
-
-        case VECTOR_UNUSED_15:
-            setDummyCommand(); /* Unused Dummy Vector */
-            break;
-
-        default:
-            printToMainConsole("[INT] Unknown interrupt vector");
-            break;
-    };
+    setInterruptVector(intVector);
+    std::cout << "[INFO] [INT] Set Interrupt Vector -> " << vectorToString(type) << std::endl;
 
     *m_IO_GuiState = IO_COM_WRITE_ONLY;
     printToMainConsole("[INT] Done");
