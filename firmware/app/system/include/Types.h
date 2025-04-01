@@ -36,10 +36,32 @@ typedef enum
     CMD_AMOUNT
 } commandType;
 
+typedef enum
+{
+    VECTOR_RESERVED,
+    VECTOR_OFFLOAD,
+    VECTOR_UNUSED_02,
+    VECTOR_UNUSED_03,
+    VECTOR_UNUSED_04,
+    VECTOR_UNUSED_05,
+    VECTOR_UNUSED_06,
+    VECTOR_UNUSED_07,
+    VECTOR_UNUSED_08,
+    VECTOR_UNUSED_09,
+    VECTOR_UNUSED_10,
+    VECTOR_UNUSED_11,
+    VECTOR_UNUSED_12,
+    VECTOR_UNUSED_13,
+    VECTOR_UNUSED_14,
+    VECTOR_UNUSED_15,
+    VECTOR_AMOUNT
+}interruptVectorType;
+
 typedef enum 
 {
     IO_IDLE = 0,
     IO_COM_WRITE,
+    IO_COM_WRITE_ONLY,
     IO_COM_READ,
     IO_AMOUNT
 } ioStateType;
@@ -69,6 +91,7 @@ inline std::string getIoStateString(ioStateType state)
     {
         "IO_IDLE",
         "IO_COM_WRITE",
+        "IO_COM_WRITE_ONLY",
         "IO_COM_READ",
     };
 

@@ -262,7 +262,28 @@ void Commander::threadCommander()
 
                     *m_IO_CommanderState = IO_COM_READ;
                 }
+                break;
 
+            case IO_COM_WRITE_ONLY:
+                std::cout << "[INFO] [CMD] Write to Kernel Commander" << std::endl;
+                ret = -1;
+                std::cout << "[INFO] [CMD] Data Received :: Sending to Kernel" << std::endl;
+                printSharedBuffer(m_Tx_CommanderVector);
+                ret = write(m_file_descriptor, m_Tx_CommanderVector->data(), IO_TRANSFER_SIZE);
+
+                if (ret == -1)
+                {
+                    std::cout << "[ERNO] [CMD] Cannot write command to kernel space" << std::endl;
+                }
+                else
+                {
+                    for (size_t i = 0; i < IO_TRANSFER_SIZE; i++)
+                    {
+                        (*m_Tx_CommanderVector)[i] = 0x00;
+                    }
+
+                    *m_IO_CommanderState = IO_IDLE;
+                }
                 break;
 
             case IO_COM_READ:
@@ -272,7 +293,7 @@ void Commander::threadCommander()
                  *
                  * TODO
                  *
-                 * This is in blokcing mode
+                 * This is in blocking mode
                  * so timeout have to be introduced
                  * here to unlock kernel space
                  *

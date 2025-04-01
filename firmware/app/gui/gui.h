@@ -115,6 +115,9 @@ private slots:
 
     void setDeadCommand();
     void setDummyCommand();
+    void setOffloadCommand();
+
+    void interruptVector_execute(interruptVectorType intVector);
     void dma_execute(commandType cmd);
     void i2c_execute();
     void spi_execute();
