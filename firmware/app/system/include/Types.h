@@ -53,7 +53,7 @@ typedef enum
     CTRL_DMA_SINGLE,
     CTRL_MAIN,
     CTRL_AMOUNT,
-} ctrlType;
+} droneCtrlStateType;
 
 typedef enum
 {

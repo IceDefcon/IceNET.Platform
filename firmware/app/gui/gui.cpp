@@ -523,6 +523,10 @@ void gui::i2c_execute()
         (*m_Tx_GuiVector)[7] = 0x00;
         *m_IO_GuiState = IO_COM_WRITE;
 
+        /* Wait for Kerenl to send data to FPGA */
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        /* Offload data from FIFO */
+        m_instanceDroneCtrl->setDroneCtrlState(CTRL_VECTOR_OFFLOAD);
         printToMainConsole("[I2C] Done");
     }
 }
@@ -626,6 +630,10 @@ void gui::spi_execute()
         (*m_Tx_GuiVector)[7] = 0x00;
         *m_IO_GuiState = IO_COM_WRITE;
 
+        /* Wait for Kerenl to send data to FPGA */
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        /* Offload data from FIFO */
+        m_instanceDroneCtrl->setDroneCtrlState(CTRL_VECTOR_OFFLOAD);
         printToMainConsole("[SPI] Done");
     }
 }
@@ -715,6 +723,10 @@ void gui::pwm_execute(pwmType type)
         (*m_Tx_GuiVector)[7] = 0x00;
         *m_IO_GuiState = IO_COM_WRITE;
 
+        /* Wait for Kerenl to send data to FPGA */
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        /* Offload data from FIFO */
+        m_instanceDroneCtrl->setDroneCtrlState(CTRL_VECTOR_OFFLOAD);
         printToMainConsole("[PWM] Done");
     }
 }

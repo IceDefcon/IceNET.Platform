@@ -352,10 +352,6 @@ static ssize_t commanderWrite(struct file *filep, const char __user *buffer, siz
         printk(KERN_INFO "[CTRL][ C ] Reset everything in FPGA :: Global Discharge\n");
         setStateMachine(SM_FPGA_RESET);
     }
-
-
-
-
     else
     {
         printk(KERN_INFO "[CTRL][ C ] Data Received: \n");
