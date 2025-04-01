@@ -115,7 +115,8 @@ private slots:
 
     void setDeadCommand();
     void setDummyCommand();
-    void setOffloadCommand();
+    void setInterruptVector(uint8_t vector);
+    std::string vectorToString(interruptVectorType type);
 
     void interruptVector_execute(interruptVectorType intVector);
     void dma_execute(commandType cmd);
