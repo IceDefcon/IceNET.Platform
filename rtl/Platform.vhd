@@ -1315,7 +1315,9 @@ begin
             end if;
         end if;
 
-        if STAGE_1_primary_parallel_MOSI = "10000110"
+        if STAGE_1_primary_parallel_MOSI(7) =  '1'
+        and STAGE_1_primary_parallel_MOSI(2) =  '1'
+        and STAGE_1_primary_parallel_MOSI(1) =  '1'
         and STAGE_2_primary_parallel_MOSI = "10101111"
         and interrupt_vector_busy = '0'
         then
