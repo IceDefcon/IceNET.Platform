@@ -876,7 +876,11 @@ void gui::openUart()
 
     m_uartPortName = "/dev/ttyTHS1";
     m_serialPort->setPortName(m_uartPortName);
+#if 1
     m_serialPort->setBaudRate(2000000);
+#else
+    m_serialPort->setBaudRate(115200);
+#endif
     m_serialPort->setDataBits(QSerialPort::Data8);
     m_serialPort->setParity(QSerialPort::NoParity);
     m_serialPort->setStopBits(QSerialPort::OneStop);
@@ -902,8 +906,8 @@ void gui::readUartData()
     {
         m_readBuffer.append(m_serialPort->readAll());
 
+#if 0
         const int messageLength = 8;
-
         while (m_readBuffer.size() >= messageLength)
         {
             QByteArray completeMessage = m_readBuffer.left(messageLength);
@@ -913,6 +917,22 @@ void gui::readUartData()
 
             printToUartConsole("[" + m_currentTime + "] UART Rx: " + completeMessage);
         }
+#else
+        const QByteArray lineEnding = "\r\n";
+        while (m_readBuffer.contains(lineEnding))
+        {
+            int lineEndIndex = m_readBuffer.indexOf(lineEnding);
+            QByteArray completeMessage = m_readBuffer.left(lineEndIndex);
+
+            // Remove the processed message from the buffer
+            m_readBuffer.remove(0, lineEndIndex + lineEnding.size());
+
+            m_currentTime = QDateTime::currentDateTime().toString("HH:mm:ss");
+
+            // Print the message without the line ending characters
+            printToUartConsole("[" + m_currentTime + "] UART Rx: " + completeMessage);
+        }
+#endif
     }
 }
 
