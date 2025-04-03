@@ -67,8 +67,8 @@ use work.Types.all;
 --
 -- VIN      :: VIN
 -- GND      :: GND
--- PIN_M19  :: NOTUSED_53                   | PIN_M20  :: NOTUSED_54
--- PIN_N19  :: NOTUSED_51                   | PIN_N20  :: NOTUSED_52
+-- PIN_M19  :: GPS_UART_RX                  | PIN_M20  :: NOTUSED_54
+-- PIN_N19  :: GPS_UART_TX                  | PIN_N20  :: NOTUSED_52
 -- PIN_B21  :: NOTUSED_49                   | PIN_B22  :: NOTUSED_50
 -- PIN_C21  :: NOTUSED_47                   | PIN_C22  :: NOTUSED_48
 -- PIN_D21  :: NOTUSED_45                   | PIN_D22  :: NOTUSED_46
@@ -196,6 +196,9 @@ port
     -- Peripheral Interfaces
     -----------------------------------------------------------------------------
     -- UART
+    GPS_UART_RX : in std_logic; -- PIN_M19
+    GPS_UART_TX : out std_logic; -- PIN_N19
+
     FPGA_UART_RX : in std_logic;  -- PIN_B19 :: H8  -> JetsonNano UART1_TXD
     FPGA_UART_TX : out std_logic; -- PIN_B18 :: H10 -> JetsonNano UART1_RXD
     -- I2C Bus
