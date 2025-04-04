@@ -96,6 +96,8 @@ class gui : public QWidget
 
     void paintEvent(QPaintEvent *event) override;
 
+    bool m_isPulseControllerEnabled;;
+
 public:
 
     gui();

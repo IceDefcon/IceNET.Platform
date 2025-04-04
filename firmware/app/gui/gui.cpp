@@ -34,7 +34,8 @@ m_threadKill(true),
 m_isKernelConnected(false),
 m_Rx_GuiVector(std::make_shared<std::vector<uint8_t>>(IO_TRANSFER_SIZE)),
 m_Tx_GuiVector(std::make_shared<std::vector<uint8_t>>(IO_TRANSFER_SIZE)),
-m_IO_GuiState(std::make_shared<ioStateType>(IO_IDLE))
+m_IO_GuiState(std::make_shared<ioStateType>(IO_IDLE)),
+m_isPulseControllerEnabled(true)
 {
     qDebug() << "[MAIN] [CONSTRUCTOR]" << this << "::  gui";
 
@@ -200,6 +201,85 @@ void gui::setupFpgaCtrl()
         {
             interruptVector_execute(VECTOR_OFFLOAD);
         }
+    });
+
+    QPushButton *enableButton = new QPushButton("ENABLE", this);
+    enableButton->setGeometry(dev.xGap*5 + dev.xText + dev.xUnit*2, dev.yGap*4 + dev.yLogo + dev.yUnit*2, dev.xUnit*2 + dev.xGap, dev.yUnit);
+
+    enableButton->setStyleSheet(
+        "QPushButton {"
+        "   background-color: blue;"
+        "   color: white;"
+        "   font-size: 18px;"
+        "   font-weight: bold;"
+        "   border-radius: 10px;"
+        "   padding: 5px;"
+        "}"
+        "QPushButton:hover {"
+        "   background-color: darkblue;"
+        "}"
+        "QPushButton:pressed {"
+        "   background-color: black;"
+        "}"
+    );
+
+    connect(enableButton, &QPushButton::clicked, this, [this, enableButton]()
+    {
+        if (NULL == m_instanceDroneCtrl)
+        {
+            printToMainConsole("[CTL] threadMain is not Running");
+            return;
+        }
+
+        if (m_isPulseControllerEnabled)
+        {
+            // Switch to DISABLE (red)
+            enableButton->setText("DISABLE");
+            enableButton->setStyleSheet(
+                "QPushButton {"
+                "   background-color: red;"
+                "   color: white;"
+                "   font-size: 18px;"
+                "   font-weight: bold;"
+                "   border-radius: 10px;"
+                "   padding: 5px;"
+                "}"
+                "QPushButton:hover {"
+                "   background-color: darkred;"
+                "}"
+                "QPushButton:pressed {"
+                "   background-color: black;"
+                "}"
+            );
+
+            interruptVector_execute(VECTOR_ENABLE);
+        }
+        else
+        {
+            // Switch back to ENABLE (blue)
+            enableButton->setText("ENABLE");
+            enableButton->setStyleSheet(
+                "QPushButton {"
+                "   background-color: blue;"
+                "   color: white;"
+                "   font-size: 18px;"
+                "   font-weight: bold;"
+                "   border-radius: 10px;"
+                "   padding: 5px;"
+                "}"
+                "QPushButton:hover {"
+                "   background-color: darkblue;"
+                "}"
+                "QPushButton:pressed {"
+                "   background-color: black;"
+                "}"
+            );
+
+            interruptVector_execute(VECTOR_DISABLE);
+        }
+
+        // Toggle state
+        m_isPulseControllerEnabled = !m_isPulseControllerEnabled;
     });
 }
 
@@ -558,9 +638,9 @@ std::string gui::vectorToString(interruptVectorType type)
     switch (type)
     {
         case VECTOR_RESERVED:   return "VECTOR_RESERVED";
-        case VECTOR_OFFLOAD:    return "VECTOR_OFFLOAD";
-        case VECTOR_UNUSED_02:  return "VECTOR_UNUSED_02";
-        case VECTOR_UNUSED_03:  return "VECTOR_UNUSED_03";
+        case VECTOR_OFFLOAD:    return "VECTOR_OFFLOAD"; /* FIFO Offload chain */
+        case VECTOR_ENABLE:     return "VECTOR_ENABLE"; /* Enable Pulse Controllers */
+        case VECTOR_DISABLE:    return "VECTOR_DISABLE"; /* Disable Pulse Controllers */
         case VECTOR_UNUSED_04:  return "VECTOR_UNUSED_04";
         case VECTOR_UNUSED_05:  return "VECTOR_UNUSED_05";
         case VECTOR_UNUSED_06:  return "VECTOR_UNUSED_06";
@@ -706,8 +786,6 @@ void gui::i2c_execute()
 
         /* Wait for Kerenl to send data to FPGA */
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        /* Offload data from FIFO */
-        m_instanceDroneCtrl->setDroneCtrlState(CTRL_GPIO_OFFLOAD);
         printToMainConsole("[I2C] Done");
     }
 }
@@ -813,8 +891,6 @@ void gui::spi_execute()
 
         /* Wait for Kerenl to send data to FPGA */
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        /* Offload data from FIFO */
-        m_instanceDroneCtrl->setDroneCtrlState(CTRL_GPIO_OFFLOAD);
         printToMainConsole("[SPI] Done");
     }
 }
@@ -906,8 +982,6 @@ void gui::pwm_execute(pwmType type)
 
         /* Wait for Kerenl to send data to FPGA */
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        /* Offload data from FIFO */
-        m_instanceDroneCtrl->setDroneCtrlState(CTRL_GPIO_OFFLOAD);
         printToMainConsole("[PWM] Done");
     }
 }
@@ -1103,6 +1177,7 @@ void gui::threadMain()
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
 
+    interruptVector_execute(VECTOR_DISABLE);
     m_instanceDroneCtrl->getCommanderInstance()->sendCommand(CMD_RAMDISK_CLEAR);
     m_instanceDroneCtrl->shutdownKernelComms();
     m_instanceDroneCtrl.reset(); // Reset the unique_ptr to call the destructor

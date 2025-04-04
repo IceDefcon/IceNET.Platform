@@ -336,12 +336,6 @@ static ssize_t commanderWrite(struct file *filep, const char __user *buffer, siz
         printk(KERN_INFO "[CTRL][ C ] Activate DMA transfer to send IMU's config to FPGA\n");
         setStateMachine(SM_RAMDISK_CONFIG);
     }
-    else if (Device[DEVICE_COMMANDER].io_transfer.RxData[0] == 0x10 && Device[DEVICE_COMMANDER].io_transfer.RxData[1] == 0xAD)
-    {
-        /* Activate DMA Engine */
-        printk(KERN_INFO "[CTRL][ C ] Offload Interrupt Vector\n");
-        setStateMachine(SM_GPIO_OFFLOAD);
-    }
     else if (Device[DEVICE_COMMANDER].io_transfer.RxData[0] == 0xC1 && Device[DEVICE_COMMANDER].io_transfer.RxData[1] == 0xEA)
     {
         printk(KERN_INFO "[CTRL][ C ] [0] Clear DMA variables used for verification of IMU's config\n");
