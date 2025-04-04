@@ -340,7 +340,7 @@ static ssize_t commanderWrite(struct file *filep, const char __user *buffer, siz
     {
         /* Activate DMA Engine */
         printk(KERN_INFO "[CTRL][ C ] Offload Interrupt Vector\n");
-        setStateMachine(SM_VECTOR_OFFLOAD);
+        setStateMachine(SM_GPIO_OFFLOAD);
     }
     else if (Device[DEVICE_COMMANDER].io_transfer.RxData[0] == 0xC1 && Device[DEVICE_COMMANDER].io_transfer.RxData[1] == 0xEA)
     {

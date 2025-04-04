@@ -29,6 +29,7 @@
 #include "DroneCtrl.h"
 #include <thread>
 #include <mutex>
+#include <cmath>
 
 typedef struct
 {
@@ -92,6 +93,8 @@ class gui : public QWidget
     bool m_uartIsConnected;
 
     QString m_currentTime;
+
+    void paintEvent(QPaintEvent *event) override;
 
 public:
 

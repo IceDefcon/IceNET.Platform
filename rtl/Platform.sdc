@@ -134,20 +134,20 @@ set_input_delay -clock CLOCK_MAIN -max $MAX_I_DELAY_50MHz [get_ports {S1_BMI160_
 set_input_delay -clock CLOCK_MAIN -max $MAX_I_DELAY_50MHz [get_ports {S2_BMI160_INT_1 S2_BMI160_INT_2}]
 
 # UART inputs
-set_input_delay -clock CLOCK_MAIN -max $MAX_I_DELAY_50MHz [get_ports {UART_BBB_TX UART_x86_RX}]
-set_input_delay -clock CLOCK_MAIN -min $MIN_I_DELAY_50MHz [get_ports {UART_BBB_TX UART_x86_RX}]
+set_input_delay -clock CLOCK_MAIN -max $MAX_I_DELAY_50MHz [get_ports {FPGA_UART_RX GPS_UART_RX}]
+set_input_delay -clock CLOCK_MAIN -min $MIN_I_DELAY_50MHz [get_ports {FPGA_UART_RX GPS_UART_RX}]
 
 # CAN inputs
 set_input_delay -clock CLOCK_MAIN -max $MAX_I_DELAY_50MHz [get_ports {CAN_BBB_TX CAN_MPP_RX}]
 set_input_delay -clock CLOCK_MAIN -min $MIN_I_DELAY_50MHz [get_ports {CAN_BBB_TX CAN_MPP_RX}]
 
 # Input interrupts
-set_input_delay -clock CLOCK_MAIN -max $MAX_I_DELAY_50MHz [get_ports {SPI_INT_FROM_CPU CFG_INT_FROM_CPU RESET_FROM_CPU}]
-set_input_delay -clock CLOCK_MAIN -min $MIN_I_DELAY_50MHz [get_ports {SPI_INT_FROM_CPU CFG_INT_FROM_CPU RESET_FROM_CPU}]
+set_input_delay -clock CLOCK_MAIN -max $MAX_I_DELAY_50MHz [get_ports {CFG_INT_FROM_CPU RESET_FROM_CPU}]
+set_input_delay -clock CLOCK_MAIN -min $MIN_I_DELAY_50MHz [get_ports {CFG_INT_FROM_CPU RESET_FROM_CPU}]
 
 # Altera
-set_input_delay -clock CLOCK_MAIN -max $MAX_I_DELAY_50MHz [get_ports {altera_reserved_tdi altera_reserved_tms}]
-set_input_delay -clock CLOCK_MAIN -min $MIN_I_DELAY_50MHz [get_ports {altera_reserved_tdi altera_reserved_tms}]
+set_input_delay -clock CLOCK_MAIN -max $MAX_I_DELAY_50MHz [get_ports {altera_reserved_tck altera_reserved_tdi altera_reserved_tms}]
+set_input_delay -clock CLOCK_MAIN -min $MIN_I_DELAY_50MHz [get_ports {altera_reserved_tck altera_reserved_tdi altera_reserved_tms}]
 
 ###########################################################################################################################
 # Output Constraints
@@ -174,8 +174,8 @@ set_output_delay -clock CLOCK_MAIN -max $MAX_O_DELAY_50MHz [get_ports {S3_BMI160
 set_output_delay -clock CLOCK_MAIN -min $MIN_O_DELAY_50MHz [get_ports {S3_BMI160_CS S3_BMI160_MOSI S3_BMI160_SCLK}]
 
 # UART outputs
-set_output_delay -clock CLOCK_MAIN -max $MAX_O_DELAY_50MHz [get_ports {UART_BBB_RX UART_x86_TX}]
-set_output_delay -clock CLOCK_MAIN -min $MIN_O_DELAY_50MHz [get_ports {UART_BBB_RX UART_x86_TX}]
+set_output_delay -clock CLOCK_MAIN -max $MAX_O_DELAY_50MHz [get_ports {FPGA_UART_TX GPS_UART_TX}]
+set_output_delay -clock CLOCK_MAIN -min $MIN_O_DELAY_50MHz [get_ports {FPGA_UART_TX GPS_UART_TX}]
 
 # CAN outputs
 set_output_delay -clock CLOCK_MAIN -max $MAX_O_DELAY_50MHz [get_ports {CAN_BBB_RX CAN_MPP_TX}]
@@ -192,10 +192,6 @@ set_output_delay -clock CLOCK_MAIN -min $MIN_O_DELAY_50MHz [get_ports {LOGIC_CH1
 # Output Interrupts
 set_output_delay -clock CLOCK_MAIN -max $MAX_O_DELAY_50MHz [get_ports {SPI_INT_FROM_FPGA TIMER_INT_FROM_FPGA WDG_INT_FROM_FPGA}]
 set_output_delay -clock CLOCK_MAIN -min $MIN_O_DELAY_50MHz [get_ports {SPI_INT_FROM_FPGA TIMER_INT_FROM_FPGA WDG_INT_FROM_FPGA}]
-
-# PWM output
-set_output_delay -clock CLOCK_MAIN -max $MAX_O_DELAY_50MHz [get_ports ]
-set_output_delay -clock CLOCK_MAIN -min $MIN_O_DELAY_50MHz [get_ports ]
 
 # Altera
 set_output_delay -clock CLOCK_MAIN -max $MAX_O_DELAY_50MHz [get_ports altera_reserved_tdo]

@@ -31,7 +31,7 @@ use work.Types.all;
 -- PIN_A18 :: PIN_B18   |                       :: FPGA_UART_TX     | H9  :: H10
 -- PIN_A17 :: PIN_B17   |                       ::                  | H11 :: H12
 -- PIN_A16 :: PIN_B16   | SECONDARY_SCLK        ::                  | H13 :: H14
--- PIN_A15 :: PIN_B15   | SPI_INT_FROM_CPU      ::                  | H15 :: H16
+-- PIN_A15 :: PIN_B15   |                       ::                  | H15 :: H16
 -- PIN_A14 :: PIN_B14   | ----===[ 3V3 ]===---- :: SECONDARY_CS     | H17 :: H18
 -- PIN_A13 :: PIN_B13   | PRIMARY_MOSI          ::                  | H19 :: H20
 -- PIN_A10 :: PIN_B10   | PRIMARY_MISO          :: SECONDARY_MISO   | H21 :: H22
@@ -67,8 +67,8 @@ use work.Types.all;
 --
 -- VIN      :: VIN
 -- GND      :: GND
--- PIN_M19  :: NOTUSED_53                   | PIN_M20  :: NOTUSED_54
--- PIN_N19  :: NOTUSED_51                   | PIN_N20  :: NOTUSED_52
+-- PIN_M19  :: GPS_UART_RX                  | PIN_M20  :: NOTUSED_54
+-- PIN_N19  :: GPS_UART_TX                  | PIN_N20  :: NOTUSED_52
 -- PIN_B21  :: NOTUSED_49                   | PIN_B22  :: NOTUSED_50
 -- PIN_C21  :: NOTUSED_47                   | PIN_C22  :: NOTUSED_48
 -- PIN_D21  :: NOTUSED_45                   | PIN_D22  :: NOTUSED_46
@@ -132,7 +132,7 @@ port
     -----------------------------------------------------------------------------
     -- Kernel Communication
     -----------------------------------------------------------------------------
-    SPI_INT_FROM_CPU : in std_logic; -- PIN_A5 :: GPIO12 :: HEADER_PIN_15
+    --SPI_INT_FROM_CPU : in std_logic; -- PIN_A5 :: GPIO12 :: HEADER_PIN_15
     SPI_INT_FROM_FPGA : out std_logic; -- PIN_A9 :: GPIO01 :: HEADER_PIN_29
     TIMER_INT_FROM_FPGA : out std_logic; -- PIN_A13 :: GPIO09 :: HEADER_PIN_07
     WDG_INT_FROM_FPGA : out std_logic; -- PIN_A20 :: GPIO11 :: HEADER_PIN_31
@@ -196,6 +196,9 @@ port
     -- Peripheral Interfaces
     -----------------------------------------------------------------------------
     -- UART
+    GPS_UART_RX : in std_logic; -- PIN_M19
+    GPS_UART_TX : out std_logic; -- PIN_N19
+
     FPGA_UART_RX : in std_logic;  -- PIN_B19 :: H8  -> JetsonNano UART1_TXD
     FPGA_UART_TX : out std_logic; -- PIN_B18 :: H10 -> JetsonNano UART1_RXD
     -- I2C Bus
@@ -277,6 +280,31 @@ signal STAGE_2_primary_parallel_MOSI : std_logic_vector(7 downto 0) := (others =
 signal interrupt_vector : std_logic_vector(3 downto 0) := (others => '0');
 signal interrupt_vector_busy : std_logic := '0';
 signal interrupt_vector_enable : std_logic := '0';
+-- Interrupt vector state machine
+type VECTOR_TYPE is
+(
+    VECTOR_IDLE,
+    VECTOR_RESERVED,
+    VECTOR_OFFLOAD,  -- "0001"
+    VECTOR_UNUSED_2, -- "0010"
+    VECTOR_UNUSED_3, -- "0011"
+    VECTOR_UNUSED_4, -- "0100"
+    VECTOR_UNUSED_5, -- "0101"
+    VECTOR_UNUSED_6, -- "0110"
+    VECTOR_UNUSED_7, -- "0111"
+    VECTOR_UNUSED_8, -- "1000"
+    VECTOR_UNUSED_9, -- "1001"
+    VECTOR_UNUSED_10, -- "1010"
+    VECTOR_UNUSED_11, -- "1011"
+    VECTOR_UNUSED_12, -- "1100"
+    VECTOR_UNUSED_13, -- "1101"
+    VECTOR_UNUSED_14, -- "1110"
+    VECTOR_UNUSED_15, -- "1111"
+    VECTOR_DONE
+);
+signal vector_state: VECTOR_TYPE := VECTOR_IDLE;
+-- Interrupt vector interrupts
+signal offload_vector_interrtupt : std_logic := '0';
 -- Interrupt Vector signals
 signal primary_conversion_run : std_logic := '0';
 signal primary_conversion_reset : integer range 0 to 2048 := 0;
@@ -287,7 +315,6 @@ signal primary_fifo_data_out : std_logic_vector(7 downto 0) := (others => '0');
 signal primary_fifo_full : std_logic := '0';
 signal primary_fifo_empty : std_logic := '0';
 -- Offload
-signal offload_interrupt : std_logic := '0';
 signal offload_ready : std_logic := '0';
 signal offload_id : std_logic_vector(6 downto 0) := (others => '0');
 signal offload_register : std_logic_vector(7 downto 0) := (others => '0');
@@ -426,6 +453,8 @@ type SENSOR_STATE is
 );
 signal s1_state: SENSOR_STATE := SENSOR_IDLE;
 
+-- Debug
+signal led_7_toggle : std_logic := '0';
 ----------------------------------------------------------------------------------------------------------------
 -- COMPONENTS DECLARATION
 ----------------------------------------------------------------------------------------------------------------
@@ -617,6 +646,9 @@ port
     OFFLOAD_INTERRUPT : in std_logic;
     FIFO_DATA : in std_logic_vector(7 downto 0);
     FIFO_READ_ENABLE : out std_logic;
+
+    FIFO_FULL : in std_logic;
+    FIFO_EMPTY : in std_logic;
 
     OFFLOAD_READY : out std_logic;
     OFFLOAD_ID : out std_logic_vector(6 downto 0);
@@ -1101,25 +1133,6 @@ port map
 );
 
 ------------------------------------------------
--- OFFLOAD Pulse
-------------------------------------------------
-Offload_Interrupt_From_CPU: PulseController
-generic map
-(
-    PULSE_LENGTH => 1 -- 1*20ns Pulse
-)
-port map
-(
-    CLOCK_50MHz => CLOCK_50MHz,
-    RESET => global_fpga_reset,
-
-    ENABLE_CONTROLLER => '1',
-
-    INPUT_PULSE => SPI_INT_FROM_CPU,
-    OUTPUT_PULSE => offload_interrupt
-);
-
-------------------------------------------------
 -- Configuration is Complete
 ------------------------------------------------
 ConfigDone_Interrupt_From_CPU: PulseController
@@ -1340,11 +1353,57 @@ begin
 
             FIFO_primary_fifo_wr_en <= REG_primary_fifo_wr_en(2047);
         end if;
+
+        case vector_state is
+
+            when VECTOR_IDLE =>
+                if interrupt_vector = "0001" then
+                    vector_state <= VECTOR_OFFLOAD;
+                end if;
+
+            when VECTOR_RESERVED =>
+                vector_state <= VECTOR_DONE;
+            when VECTOR_OFFLOAD =>
+                offload_vector_interrtupt <= '1';
+                led_7_toggle <= not led_7_toggle;
+                vector_state <= VECTOR_DONE;
+            when VECTOR_UNUSED_2 =>
+                vector_state <= VECTOR_DONE;
+            when VECTOR_UNUSED_3 =>
+                vector_state <= VECTOR_DONE;
+            when VECTOR_UNUSED_4 =>
+                vector_state <= VECTOR_DONE;
+            when VECTOR_UNUSED_5 =>
+                vector_state <= VECTOR_DONE;
+            when VECTOR_UNUSED_6 =>
+                vector_state <= VECTOR_DONE;
+            when VECTOR_UNUSED_7 =>
+                vector_state <= VECTOR_DONE;
+            when VECTOR_UNUSED_8 =>
+                vector_state <= VECTOR_DONE;
+            when VECTOR_UNUSED_9 =>
+                vector_state <= VECTOR_DONE;
+            when VECTOR_UNUSED_10 =>
+                vector_state <= VECTOR_DONE;
+            when VECTOR_UNUSED_11 =>
+                vector_state <= VECTOR_DONE;
+            when VECTOR_UNUSED_12 =>
+                vector_state <= VECTOR_DONE;
+            when VECTOR_UNUSED_13 =>
+                vector_state <= VECTOR_DONE;
+            when VECTOR_UNUSED_14 =>
+                vector_state <= VECTOR_DONE;
+            when VECTOR_UNUSED_15 =>
+                vector_state <= VECTOR_DONE;
+            when VECTOR_DONE =>
+                offload_vector_interrtupt <= '0';
+                vector_state <= VECTOR_IDLE;
+            when others =>
+                vector_state <= VECTOR_IDLE;
+        end case;
+
     end if;
 end process;
-
-LED_8 <= primary_conversion_run or interrupt_vector_busy or interrupt_vector_enable or
-interrupt_vector(0) or interrupt_vector(1) or interrupt_vector(2) or interrupt_vector(3);
 
 -- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 -- //
@@ -1375,9 +1434,12 @@ port map
     CLOCK_50MHz => CLOCK_50MHz,
     RESET => global_fpga_reset,
 
-    OFFLOAD_INTERRUPT => offload_interrupt,
+    OFFLOAD_INTERRUPT => offload_vector_interrtupt,
     FIFO_DATA => primary_fifo_data_out,
     FIFO_READ_ENABLE => primary_fifo_rd_en,
+
+    FIFO_FULL => primary_fifo_full,
+    FIFO_EMPTY => primary_fifo_empty,
 
     OFFLOAD_READY => offload_ready,
     OFFLOAD_ID => offload_id,
@@ -1838,14 +1900,13 @@ port map
 
 
 
-
-------------------------------------------------------------------------------------------------------------------------------------------
---
---
--- DEBUG
---
---
-------------------------------------------------------------------------------------------------------------------------------------------
+-- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+-- //         //
+-- //         //
+-- // [DEBUG] //
+-- //         //
+-- //         //
+-- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 --looptrough_spi_process:
 --process(CLOCK_50MHz)
@@ -1914,19 +1975,8 @@ LED_3 <= '0';
 LED_4 <= '1';
 LED_5 <= '0';
 LED_6 <= '1';
-LED_7 <= '0';
---LED_8 <= '1';
-
---looptrough_process:
---process(CLOCK_50MHz)
---begin
---    if rising_edge(CLOCK_50MHz) then
---        S1_BMI160_SCLK <= synced_PRIMARY_SCLK;
---        S1_BMI160_MOSI <= synced_PRIMARY_MOSI;
---        S1_BMI160_CS <= PRIMARY_CS;
---        PRIMARY_MISO <= S1_BMI160_MISO;
---    end if;
---end process;
-
+LED_7 <= led_7_toggle;
+LED_8 <= primary_conversion_run or interrupt_vector_busy or interrupt_vector_enable or
+interrupt_vector(0) or interrupt_vector(1) or interrupt_vector(2) or interrupt_vector(3);
 
 end rtl;
