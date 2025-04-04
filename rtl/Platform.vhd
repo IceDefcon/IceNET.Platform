@@ -40,7 +40,7 @@ use work.Types.all;
 -- PIN_A7  :: PIN_B7    |                       ::                  | H27 :: H28
 -- PIN_A6  :: PIN_B6    | SPI_INT_FROM_FPGA     ::                  | H29 :: H30
 -- PIN_A5  :: PIN_B5    | WDG_INT_FROM_FPGA     :: RESET_FROM_CPU   | H31 :: H32
--- PIN_C3  :: PIN_C4    | CFG_INT_FROM_CPU      ::                  | H33 :: H34
+-- PIN_C3  :: PIN_C4    |                       ::                  | H33 :: H34
 -- PIN_A4  :: PIN_B4    |                       ::                  | H35 :: H36
 -- PIN_A3  :: PIN_B3    | SECONDARY_MOSI        ::                  | H37 :: H38
 -- PIN_B2  :: PIN_B1    |                       ::                  | H39 :: H40
@@ -136,7 +136,7 @@ port
     SPI_INT_FROM_FPGA : out std_logic; -- PIN_A9 :: GPIO01 :: HEADER_PIN_29
     TIMER_INT_FROM_FPGA : out std_logic; -- PIN_A13 :: GPIO09 :: HEADER_PIN_07
     WDG_INT_FROM_FPGA : out std_logic; -- PIN_A20 :: GPIO11 :: HEADER_PIN_31
-    CFG_INT_FROM_CPU : in std_logic; -- PIN_B4 :: GPIO13 :: HEADER_PIN_33
+    --CFG_INT_FROM_CPU : in std_logic; -- PIN_B4 :: GPIO13 :: HEADER_PIN_33
     RESET_FROM_CPU : in std_logic; -- PIN_B5 :: GPIO07 :: HEADER_PIN_32
 
     PRIMARY_MOSI : in std_logic;  -- PIN_B6 :: H19 :: SPI0_MOSI
@@ -286,8 +286,8 @@ type VECTOR_TYPE is
     VECTOR_IDLE,
     VECTOR_RESERVED,
     VECTOR_OFFLOAD,  -- "0001"
-    VECTOR_UNUSED_2, -- "0010"
-    VECTOR_UNUSED_3, -- "0011"
+    VECTOR_ENABLE,   -- "0010"
+    VECTOR_DISABLE, -- "0011"
     VECTOR_UNUSED_4, -- "0100"
     VECTOR_UNUSED_5, -- "0101"
     VECTOR_UNUSED_6, -- "0110"
@@ -305,6 +305,7 @@ type VECTOR_TYPE is
 signal vector_state: VECTOR_TYPE := VECTOR_IDLE;
 -- Interrupt vector interrupts
 signal offload_vector_interrtupt : std_logic := '0';
+signal enable_vector_interrtupt : std_logic := '0';
 -- Interrupt Vector signals
 signal primary_conversion_run : std_logic := '0';
 signal primary_conversion_reset : integer range 0 to 2048 := 0;
@@ -421,7 +422,6 @@ signal ctrl_BMI160_S2_MISO : std_logic := '0';
 signal ctrl_BMI160_S2_MOSI : std_logic := '0';
 signal ctrl_BMI160_S2_SCLK : std_logic := '0';
 -- Sensor ready
-signal Sensor_Configuration_Complete : std_logic := '0';
 signal global_fpga_reset : std_logic := '0';
 -- Debounced interrupt signals
 signal s1_bmi160_int1_denoised : std_logic := '0';
@@ -454,7 +454,7 @@ type SENSOR_STATE is
 signal s1_state: SENSOR_STATE := SENSOR_IDLE;
 
 -- Debug
-signal led_7_toggle : std_logic := '0';
+signal led_8_toggle : std_logic := '1';
 ----------------------------------------------------------------------------------------------------------------
 -- COMPONENTS DECLARATION
 ----------------------------------------------------------------------------------------------------------------
@@ -1031,7 +1031,7 @@ port map
     CLOCK_50MHz => CLOCK_50MHz,
     RESET => global_fpga_reset,
 
-    ENABLE_CONTROLLER => Sensor_Configuration_Complete,
+    ENABLE_CONTROLLER => enable_vector_interrtupt,
 
     INPUT_PULSE => s1_bmi160_int1_denoised,
     OUTPUT_PULSE => s1_bmi160_int_1_DataReady
@@ -1050,7 +1050,7 @@ port map
     CLOCK_50MHz => CLOCK_50MHz,
     RESET => global_fpga_reset,
 
-    ENABLE_CONTROLLER => Sensor_Configuration_Complete,
+    ENABLE_CONTROLLER => enable_vector_interrtupt,
 
     INPUT_PULSE => s1_bmi160_int2_denoised,
     OUTPUT_PULSE => s1_bmi160_int_2_DataReady
@@ -1069,7 +1069,7 @@ port map
     CLOCK_50MHz => CLOCK_50MHz,
     RESET => global_fpga_reset,
 
-    ENABLE_CONTROLLER => Sensor_Configuration_Complete,
+    ENABLE_CONTROLLER => enable_vector_interrtupt,
 
     INPUT_PULSE => s2_bmi160_int1_denoised,
     OUTPUT_PULSE => s2_bmi160_int_1_DataReady
@@ -1088,7 +1088,7 @@ port map
     CLOCK_50MHz => CLOCK_50MHz,
     RESET => global_fpga_reset,
 
-    ENABLE_CONTROLLER => Sensor_Configuration_Complete,
+    ENABLE_CONTROLLER => enable_vector_interrtupt,
 
     INPUT_PULSE => s2_bmi160_int2_denoised,
     OUTPUT_PULSE => s2_bmi160_int_2_DataReady
@@ -1107,7 +1107,7 @@ port map
     CLOCK_50MHz => CLOCK_50MHz,
     RESET => global_fpga_reset,
 
-    ENABLE_CONTROLLER => Sensor_Configuration_Complete,
+    ENABLE_CONTROLLER => enable_vector_interrtupt,
 
     INPUT_PULSE => s3_adxl345_int1_denoised,
     OUTPUT_PULSE => s3_adxl345_int_1_DataReady
@@ -1126,29 +1126,10 @@ port map
     CLOCK_50MHz => CLOCK_50MHz,
     RESET => global_fpga_reset,
 
-    ENABLE_CONTROLLER => Sensor_Configuration_Complete,
+    ENABLE_CONTROLLER => enable_vector_interrtupt,
 
     INPUT_PULSE => s3_adxl345_int2_denoised,
     OUTPUT_PULSE => s3_adxl345_int_2_DataReady
-);
-
-------------------------------------------------
--- Configuration is Complete
-------------------------------------------------
-ConfigDone_Interrupt_From_CPU: PulseController
-generic map
-(
-    PULSE_LENGTH => 1 -- 1*20ns Pulse
-)
-port map
-(
-    CLOCK_50MHz => CLOCK_50MHz,
-    RESET => global_fpga_reset,
-
-    ENABLE_CONTROLLER => '1',
-
-    INPUT_PULSE => CFG_INT_FROM_CPU,
-    OUTPUT_PULSE => Sensor_Configuration_Complete
 );
 
 ------------------------------------------------
@@ -1359,17 +1340,24 @@ begin
             when VECTOR_IDLE =>
                 if interrupt_vector = "0001" then
                     vector_state <= VECTOR_OFFLOAD;
+                elsif interrupt_vector = "0010" then
+                    vector_state <= VECTOR_ENABLE;
+                elsif interrupt_vector = "0011" then
+                    vector_state <= VECTOR_DISABLE;
                 end if;
 
             when VECTOR_RESERVED =>
                 vector_state <= VECTOR_DONE;
             when VECTOR_OFFLOAD =>
                 offload_vector_interrtupt <= '1';
-                led_7_toggle <= not led_7_toggle;
                 vector_state <= VECTOR_DONE;
-            when VECTOR_UNUSED_2 =>
+            when VECTOR_ENABLE =>
+                enable_vector_interrtupt <= '1';
+                led_8_toggle <= '0';
                 vector_state <= VECTOR_DONE;
-            when VECTOR_UNUSED_3 =>
+            when VECTOR_DISABLE =>
+                enable_vector_interrtupt <= '0';
+                led_8_toggle <= '1';
                 vector_state <= VECTOR_DONE;
             when VECTOR_UNUSED_4 =>
                 vector_state <= VECTOR_DONE;
@@ -1971,12 +1959,11 @@ port map
 
 LED_1 <= '0';
 LED_2 <= '1';
-LED_3 <= '0';
+LED_3 <= '1';
 LED_4 <= '1';
-LED_5 <= '0';
+LED_5 <= '1';
 LED_6 <= '1';
-LED_7 <= led_7_toggle;
-LED_8 <= primary_conversion_run or interrupt_vector_busy or interrupt_vector_enable or
-interrupt_vector(0) or interrupt_vector(1) or interrupt_vector(2) or interrupt_vector(3);
+LED_7 <= '1';
+LED_8 <= led_8_toggle;
 
 end rtl;
