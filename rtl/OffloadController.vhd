@@ -12,6 +12,9 @@ port
     FIFO_DATA : in std_logic_vector(7 downto 0);
     FIFO_READ_ENABLE : out std_logic;
 
+    FIFO_FULL : in std_logic;
+    FIFO_EMPTY : in std_logic;
+
     OFFLOAD_READY : out std_logic;
     OFFLOAD_ID : out std_logic_vector(6 downto 0);
     OFFLOAD_CTRL : out std_logic_vector(7 downto 0);

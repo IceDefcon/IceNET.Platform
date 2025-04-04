@@ -31,7 +31,7 @@ use work.Types.all;
 -- PIN_A18 :: PIN_B18   |                       :: FPGA_UART_TX     | H9  :: H10
 -- PIN_A17 :: PIN_B17   |                       ::                  | H11 :: H12
 -- PIN_A16 :: PIN_B16   | SECONDARY_SCLK        ::                  | H13 :: H14
--- PIN_A15 :: PIN_B15   |                       ::                  | H15 :: H16
+-- PIN_A15 :: PIN_B15   | SPI_INT_FROM_CPU      ::                  | H15 :: H16
 -- PIN_A14 :: PIN_B14   | ----===[ 3V3 ]===---- :: SECONDARY_CS     | H17 :: H18
 -- PIN_A13 :: PIN_B13   | PRIMARY_MOSI          ::                  | H19 :: H20
 -- PIN_A10 :: PIN_B10   | PRIMARY_MISO          :: SECONDARY_MISO   | H21 :: H22
@@ -132,7 +132,7 @@ port
     -----------------------------------------------------------------------------
     -- Kernel Communication
     -----------------------------------------------------------------------------
-    --SPI_INT_FROM_CPU : in std_logic; -- PIN_A5 :: GPIO12 :: HEADER_PIN_15
+    SPI_INT_FROM_CPU : in std_logic; -- PIN_A5 :: GPIO12 :: HEADER_PIN_15
     SPI_INT_FROM_FPGA : out std_logic; -- PIN_A9 :: GPIO01 :: HEADER_PIN_29
     TIMER_INT_FROM_FPGA : out std_logic; -- PIN_A13 :: GPIO09 :: HEADER_PIN_07
     WDG_INT_FROM_FPGA : out std_logic; -- PIN_A20 :: GPIO11 :: HEADER_PIN_31
@@ -315,6 +315,7 @@ signal primary_fifo_data_out : std_logic_vector(7 downto 0) := (others => '0');
 signal primary_fifo_full : std_logic := '0';
 signal primary_fifo_empty : std_logic := '0';
 -- Offload
+signal offload_interrupt : std_logic := '0';
 signal offload_ready : std_logic := '0';
 signal offload_id : std_logic_vector(6 downto 0) := (others => '0');
 signal offload_register : std_logic_vector(7 downto 0) := (others => '0');
@@ -646,9 +647,6 @@ port
     OFFLOAD_INTERRUPT : in std_logic;
     FIFO_DATA : in std_logic_vector(7 downto 0);
     FIFO_READ_ENABLE : out std_logic;
-
-    FIFO_FULL : in std_logic;
-    FIFO_EMPTY : in std_logic;
 
     OFFLOAD_READY : out std_logic;
     OFFLOAD_ID : out std_logic_vector(6 downto 0);
@@ -1133,6 +1131,25 @@ port map
 );
 
 ------------------------------------------------
+-- OFFLOAD Pulse
+------------------------------------------------
+Offload_Interrupt_From_CPU: PulseController
+generic map
+(
+    PULSE_LENGTH => 1 -- 1*20ns Pulse
+)
+port map
+(
+    CLOCK_50MHz => CLOCK_50MHz,
+    RESET => global_fpga_reset,
+
+    ENABLE_CONTROLLER => '1',
+
+    INPUT_PULSE => SPI_INT_FROM_CPU,
+    OUTPUT_PULSE => offload_interrupt
+);
+
+------------------------------------------------
 -- Configuration is Complete
 ------------------------------------------------
 ConfigDone_Interrupt_From_CPU: PulseController
@@ -1434,12 +1451,9 @@ port map
     CLOCK_50MHz => CLOCK_50MHz,
     RESET => global_fpga_reset,
 
-    OFFLOAD_INTERRUPT => offload_vector_interrtupt,
+    OFFLOAD_INTERRUPT => offload_interrupt; --or offload_vector_interrtupt,
     FIFO_DATA => primary_fifo_data_out,
     FIFO_READ_ENABLE => primary_fifo_rd_en,
-
-    FIFO_FULL => primary_fifo_full,
-    FIFO_EMPTY => primary_fifo_empty,
 
     OFFLOAD_READY => offload_ready,
     OFFLOAD_ID => offload_id,
