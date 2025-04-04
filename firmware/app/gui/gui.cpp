@@ -69,7 +69,44 @@ gui::~gui()
 void gui::setupWindow()
 {
     setWindowTitle("IceNET Platform");
-    setFixedSize(800, 600);
+    setFixedSize(1600, 600);
+}
+
+
+void gui::paintEvent(QPaintEvent *event)
+{
+    QPainter painter(this);
+    painter.setRenderHint(QPainter::Antialiasing);
+
+    QPen pen(Qt::blue, 2);  // Set pen color and thickness
+    painter.setPen(pen);
+
+    // Parameters for the function
+    int x_offset = 850;  // X position
+    int y_offset = 100;   // Y position
+    double scale = 50.0; // Scaling factor for visibility
+    double step = 0.1;   // Step size for smooth curve
+    double t_max = 20.0; // Max value of t
+
+    QPoint lastPoint;
+    bool firstPoint = true;
+
+    // Draw function x(t)
+    for (double t = 0; t <= t_max; t += step)
+    {
+        int x = x_offset + static_cast<int>(scale * t);
+        int y = y_offset + static_cast<int>(scale * sin(t));  // Example function: sin(t)
+
+        QPoint currentPoint(x, y);
+
+        if (!firstPoint)
+        {
+            painter.drawLine(lastPoint, currentPoint);
+        }
+
+        lastPoint = currentPoint;
+        firstPoint = false;
+    }
 }
 
 void gui::setupMainConsole()
@@ -226,7 +263,7 @@ void gui::setupSeparators()
     vLine1->setFrameShadow(QFrame::Sunken);
     /* Horizontal Separator */
     QFrame *hLine1 = new QFrame(this);
-    hLine1->setGeometry(dev.xGap, dev.yGap*5 + dev.yLogo + dev.yUnit*3, 800 - dev.xGap*2, dev.separatorWidth);
+    hLine1->setGeometry(dev.xGap, dev.yGap*5 + dev.yLogo + dev.yUnit*3, 800 - dev.xGap*1, dev.separatorWidth);
     hLine1->setFrameShape(QFrame::HLine);
     hLine1->setFrameShadow(QFrame::Sunken);
     /* Horizontal Separator */
@@ -236,7 +273,7 @@ void gui::setupSeparators()
     hLine2->setFrameShadow(QFrame::Sunken);
     /* Horizontal Separator */
     QFrame *hLine3 = new QFrame(this);
-    hLine3->setGeometry(dev.xGap, dev.yGap*15 + dev.yLogo*3 + dev.yUnit*9, 800 - dev.xGap*2, dev.separatorWidth);
+    hLine3->setGeometry(dev.xGap, dev.yGap*15 + dev.yLogo*3 + dev.yUnit*9, 800 - dev.xGap*1, dev.separatorWidth);
     hLine3->setFrameShape(QFrame::HLine);
     hLine3->setFrameShadow(QFrame::Sunken);
     /* Vertical Separator */
@@ -244,6 +281,11 @@ void gui::setupSeparators()
     vLine2->setGeometry(800 - dev.xGap*3 - dev.xUnit*4 , dev.yGap, dev.separatorWidth, dev.yGap*4 + dev.yLogo + dev.yUnit*3);
     vLine2->setFrameShape(QFrame::VLine);
     vLine2->setFrameShadow(QFrame::Sunken);
+    /* Vertical Separator */
+    QFrame *vLine3 = new QFrame(this);
+    vLine3->setGeometry(800, dev.yGap, dev.separatorWidth, 600 - dev.yGap*2);
+    vLine3->setFrameShape(QFrame::VLine);
+    vLine3->setFrameShadow(QFrame::Sunken);
 }
 
 void gui::setupI2C()
@@ -660,12 +702,12 @@ void gui::i2c_execute()
         (*m_Tx_GuiVector)[5] = 0x00;
         (*m_Tx_GuiVector)[6] = 0x00;
         (*m_Tx_GuiVector)[7] = 0x00;
-        *m_IO_GuiState = IO_COM_WRITE;
+        *m_IO_GuiState = IO_COM_WRITE_ONLY;
 
         /* Wait for Kerenl to send data to FPGA */
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
         /* Offload data from FIFO */
-        m_instanceDroneCtrl->setDroneCtrlState(CTRL_VECTOR_OFFLOAD);
+        m_instanceDroneCtrl->setDroneCtrlState(CTRL_GPIO_OFFLOAD);
         printToMainConsole("[I2C] Done");
     }
 }
@@ -767,12 +809,12 @@ void gui::spi_execute()
         (*m_Tx_GuiVector)[5] = 0x00;
         (*m_Tx_GuiVector)[6] = 0x00;
         (*m_Tx_GuiVector)[7] = 0x00;
-        *m_IO_GuiState = IO_COM_WRITE;
+        *m_IO_GuiState = IO_COM_WRITE_ONLY;
 
         /* Wait for Kerenl to send data to FPGA */
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
         /* Offload data from FIFO */
-        m_instanceDroneCtrl->setDroneCtrlState(CTRL_VECTOR_OFFLOAD);
+        m_instanceDroneCtrl->setDroneCtrlState(CTRL_GPIO_OFFLOAD);
         printToMainConsole("[SPI] Done");
     }
 }
@@ -860,12 +902,12 @@ void gui::pwm_execute(pwmType type)
         (*m_Tx_GuiVector)[5] = 0x00;
         (*m_Tx_GuiVector)[6] = 0x00;
         (*m_Tx_GuiVector)[7] = 0x00;
-        *m_IO_GuiState = IO_COM_WRITE;
+        *m_IO_GuiState = IO_COM_WRITE_ONLY;
 
         /* Wait for Kerenl to send data to FPGA */
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
         /* Offload data from FIFO */
-        m_instanceDroneCtrl->setDroneCtrlState(CTRL_VECTOR_OFFLOAD);
+        m_instanceDroneCtrl->setDroneCtrlState(CTRL_GPIO_OFFLOAD);
         printToMainConsole("[PWM] Done");
     }
 }

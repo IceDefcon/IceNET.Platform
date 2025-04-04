@@ -69,7 +69,7 @@ std::string DroneCtrl::getCtrlStateString(droneCtrlStateType state)
         "CTRL_INIT",
         "CTRL_RAMDISK_PERIPHERALS",
         "CTRL_RAMDISK_ACTIVATE_DMA",
-        "CTRL_VECTOR_OFFLOAD",
+        "CTRL_GPIO_OFFLOAD",
         "CTRL_DMA_SINGLE",
         "CTRL_MAIN",
     };
@@ -138,9 +138,9 @@ void DroneCtrl::droneCtrlMain()
             m_ctrlState = CTRL_DMA_SINGLE;
             break;
 
-        case CTRL_VECTOR_OFFLOAD:
+        case CTRL_GPIO_OFFLOAD:
             std::cout << "[INFO] [ D ] Activating FIFO Offload" << std::endl;
-            m_instanceCommander->sendCommand(CMD_VECTOR_OFFLOAD);
+            m_instanceCommander->sendCommand(CMD_GPIO_OFFLOAD);
             m_ctrlState = CTRL_MAIN;
             break;
 
@@ -150,7 +150,7 @@ void DroneCtrl::droneCtrlMain()
              * wait time for peripheral configuration from FPGA
              */
             std::cout << "[INFO] [ D ] Activating FIFO Offload" << std::endl;
-            m_instanceCommander->sendCommand(CMD_VECTOR_OFFLOAD);
+            m_instanceCommander->sendCommand(CMD_GPIO_OFFLOAD);
 
             /**
              * TODO
@@ -163,8 +163,8 @@ void DroneCtrl::droneCtrlMain()
              * But for now 3000ms delay to reconfig DMA into singe mode
              *
              */
-            std::cout << std::dec << "[INFO] [ D ] Waiting " << static_cast<uint32_t>(FPGA_DELAY) << "ms for the FPGA to configure Peripherals..." << std::endl;
-            std::this_thread::sleep_for(std::chrono::milliseconds(3000));
+            // std::cout << std::dec << "[INFO] [ D ] Waiting " << static_cast<uint32_t>(FPGA_DELAY) << "ms for the FPGA to configure Peripherals..." << std::endl;
+            // std::this_thread::sleep_for(std::chrono::milliseconds(3000));
             std::cout << "[INFO] [ D ] Configuration Done :: Switch DMA into a Normal Mode" << std::endl;
             m_instanceCommander->sendCommand(CMD_DMA_NORMAL);
             m_ctrlState = CTRL_MAIN;

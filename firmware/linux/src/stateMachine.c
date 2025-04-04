@@ -69,19 +69,9 @@ static int stateMachineThread(void *data)
                 break;
 
             case SM_DMA_NORMAL:
-                if(isConfigDone())
-                {
-                    printk(KERN_INFO "[CTRL][STM] Normal DMA mode\n");
-                    configDMA(SPI_PRIMARY, DMA_CONFIG_NORMAL);
-                    /**
-                     * Let notiffy FPGA that feedback from
-                     * Perfiperal devices connected to FPGA
-                     * is received by the kernel successfully
-                     */
-                    gpio_set_value(GPIO_NUMBER_PERIPHERALS_CONFIG_DONE, 1);
-                    gpio_set_value(GPIO_NUMBER_PERIPHERALS_CONFIG_DONE, 0);
-                    setStateMachine(SM_DONE);
-                }
+                printk(KERN_INFO "[CTRL][STM] Normal DMA mode\n");
+                configDMA(SPI_PRIMARY, DMA_CONFIG_NORMAL);
+                setStateMachine(SM_DONE);
                 break;
 
             case SM_DMA_SENSOR:
@@ -137,12 +127,28 @@ static int stateMachineThread(void *data)
                 setStateMachine(SM_DONE);
                 break;
 
-            case SM_VECTOR_OFFLOAD:
+            case SM_GPIO_OFFLOAD:
                 printk(KERN_INFO "[CTRL][STM] Fifo data offload mode\n");
-                gpio_set_value(GPIO_NUMBER_OFFLOAD_FIFO, 1);
-                gpio_set_value(GPIO_NUMBER_OFFLOAD_FIFO, 0);
+                // gpio_set_value(GPIO_NUMBER_OFFLOAD_FIFO, 1);
+                // gpio_set_value(GPIO_NUMBER_OFFLOAD_FIFO, 0);
                 setStateMachine(SM_DONE);
                 break;
+
+            case SM_SENSOR_CONFIG_DONE:
+                if(isConfigDone())
+                {
+                    printk(KERN_INFO "[CTRL][STM] Normal DMA mode\n");
+                    configDMA(SPI_PRIMARY, DMA_CONFIG_NORMAL);
+                    /**
+                     * Let notiffy FPGA that feedback from
+                     * Perfiperal devices connected to FPGA
+                     * is received by the kernel successfully
+                     */
+                    gpio_set_value(GPIO_NUMBER_PERIPHERALS_CONFIG_DONE, 1);
+                    gpio_set_value(GPIO_NUMBER_PERIPHERALS_CONFIG_DONE, 0);
+                    setStateMachine(SM_DONE);
+                }
+                printk(KERN_INFO "[CTRL][STM] Sensor Configuration DMA mode\n");
 
             case SM_DONE:
                 printk(KERN_INFO "[CTRL][STM] Process Complete\n");
