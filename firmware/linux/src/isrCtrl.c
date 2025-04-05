@@ -28,12 +28,16 @@
 /* ISR */
 static irqreturn_t InterruptFromFPGA_TimerISR(int irq, void *data)
 {
-#if 0 /* TODO :: Temporarily turned off */
     if(isShedulerReady())
     {
-        setScheduler(SCH_MAIN);
+        setScheduler(SCH_MAIN_20MS);
+        queue_work(get_scheduleTimer_wq(), get_scheduleTimer_work());
     }
-#endif
+    else
+    {
+        queue_work(get_scheduleTimer_wq(), get_scheduleTimer_work());
+    }
+
     return IRQ_HANDLED;
 }
 

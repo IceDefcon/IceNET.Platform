@@ -27,7 +27,6 @@
 static schedulerProcess Process =
 {
     .currentState = SCH_IDLE,
-    .threadHandle = NULL,
     .stateMutex = __MUTEX_INITIALIZER(Process.stateMutex),
     .configDone = false,
     .allocationTimer = 0,
@@ -61,93 +60,53 @@ static schedulerProcess Process =
     return ret;
 }
 
-/* Kernel state machine */
-static int schedulerThread(void *data)
+/* RUN */ void schedulerTimerRun(struct work_struct *work)
 {
     schedulerType state;
+    state = getScheduler();
 
-    while (!kthread_should_stop())
+    switch(state)
     {
-        state = getScheduler();
+        case SCH_IDLE:
+            printk(KERN_INFO "[CTRL][SCH] :: SCH_IDLE\n");
+            /* Nothing here :: Just wait for state change */
+            break;
 
-        switch(state)
-        {
-            case SCH_IDLE:
-                // printk(KERN_INFO "[CTRL][SCH] :: SCH_IDLE\n");
-                /* Nothing here :: Just wait for state change */
-                break;
+        case SCH_INIT:
+            msleep(100); /* Delay for __init to print everything */
+            printk(KERN_INFO "[CTRL][SCH] SCH_INIT\n");
+            setScheduler(SCH_CONFIG);
+            break;
 
-            case SCH_INIT:
-                msleep(100); /* Delay for __init to print everything */
-                printk(KERN_INFO "[CTRL][SCH] SCH_INIT\n");
-                //
-                // TODO
-                //
-                setScheduler(SCH_CONFIG);
-                break;
+        case SCH_CONFIG:
+            printk(KERN_INFO "[CTRL][SCH] SCH_CONFIG\n");
+            Process.configDone = true;
+            setScheduler(SCH_MAIN_20MS);
+            break;
 
-            case SCH_CONFIG:
-                printk(KERN_INFO "[CTRL][SCH] SCH_CONFIG\n");
-                //
-                // TODO
-                //
-                Process.configDone = true;
-                setScheduler(SCH_MAIN_20MS);
-                break;
+        case SCH_MAIN_20MS:
+            /* Chacking currently allocated resources */
+            Process.allocationTimer++;
+            if(ALLOCATION_PRINT_DELAY == Process.allocationTimer)
+            {
+                showAllocation();
+                Process.allocationTimer = 0;
+            }
+            setScheduler(SCH_IDLE);
+            break;
 
-            case SCH_MAIN_20MS:
-                /* Chacking currently allocated resources */
-                Process.allocationTimer++;
-                if(ALLOCATION_PRINT_DELAY == Process.allocationTimer)
-                {
-                    showAllocation();
-                    Process.allocationTimer = 0;
-                }
-                break;
-
-            default:
-                printk(KERN_ERR "[CTRL][SCH] Unknown mode\n");
-                return -EINVAL; // Proper error code
-        }
-
-        /**
-         *
-         * Reduce consumption of CPU resources
-         * Add a short delay to prevent
-         * busy waiting
-         *
-         */
-        msleep(10); /* Release 90% of CPU resources */
-
+        default:
+            printk(KERN_ERR "[CTRL][SCH] Unknown mode\n");
     }
-
-    return 0;
 }
 
 void schedulerInit(void)
 {
     Process.allocationTimer = 0;
-    Process.threadHandle = kthread_create(schedulerThread, NULL, "iceScehduler");
-
-    if (IS_ERR(Process.threadHandle))
-    {
-        printk(KERN_ERR "[INIT][SCH] Failed to create kernel thread. Error code: %ld\n", PTR_ERR(Process.threadHandle));
-    }
-    else
-    {
-        printk(KERN_INFO "[INIT][SCH] Created kthread for schedulerThread\n");
-        wake_up_process(Process.threadHandle);
-    }
-
     setScheduler(SCH_INIT);
 }
 
 void schedulerDestroy(void)
 {
-    if (Process.threadHandle)
-    {
-        kthread_stop(Process.threadHandle);
-        Process.threadHandle = NULL;
-    }
     printk(KERN_INFO "[DESTROY][SCH] Destroy Scheduler kthread\n");
 }

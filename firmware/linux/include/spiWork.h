@@ -24,7 +24,7 @@ typedef enum
 {
 	WORK_MASTER_PRIMARY,
 	WORK_MASTER_SECONDARY,
-	WORK_CONFIG_FPGA,
+	WORK_SCHEDULE_TIMER,
 	WORK_AMOUNT
 }workType;
 
@@ -36,8 +36,10 @@ typedef struct
 
 /* GET WORK QUEUE */ struct workqueue_struct* get_masterTransferPrimary_wq(void);
 /* GET WORK QUEUE */ struct workqueue_struct* get_masterTransferSecondary_wq(void);
+/* GET WORK QUEUE */ struct workqueue_struct* get_scheduleTimer_wq(void);
 /* GET WORK */ struct work_struct* get_masterTransferPrimary_work(void);
 /* GET WORK */ struct work_struct* get_masterTransferSecondary_work(void);
+/* GET WORK */ struct work_struct* get_scheduleTimer_work(void);
 
 /* INIT */ void spiWorkInit(void);
 /* DESTROY */ void spiWorkDestroy(void);
