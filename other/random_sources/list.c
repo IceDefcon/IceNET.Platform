@@ -1,60 +1,86 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-// Define the list_head structure
-struct list_head {
-    struct list_head *next;
-    struct list_head *prev;
-};
+typedef struct
+{
+    float x;
+    float y;
+    float z;
+} Point3D;
 
-// Initialize a list head
-#define LIST_HEAD_INIT(name) { &(name), &(name) }
-#define LIST_HEAD(name) struct list_head name = LIST_HEAD_INIT(name)
+typedef struct Node
+{
+    Point3D point;
+    struct Node* nextList;
+} iceList;
 
-// Embedded structure
-struct my_data {
-    int value;                // Example data
-    struct list_head list;    // Embedded list node
-};
+iceList* createList(float x, float y, float z)
+{
+    iceList* newList = (iceList*)malloc(sizeof(iceList));
 
-// Initialize a list
-void INIT_LIST_HEAD(struct list_head *list) {
-    list->next = list;
-    list->prev = list;
+    if (newList == NULL)
+    {
+        printf("Memory allocation failed!\n");
+        exit(1);
+    }
+    newList->point.x = x;
+    newList->point.y = y;
+    newList->point.z = z;
+    newList->nextList = NULL;
+    return newList;
 }
 
-// Add a new node to the list
-void list_add(struct list_head *new, struct list_head *head) {
-    struct list_head *next = head->next;
-    head->next = new;
-    new->prev = head;
-    new->next = next;
-    next->prev = new;
+void appendList(iceList** head, float x, float y, float z)
+{
+    iceList* newList = createList(x, y, z);
+
+    if (*head == NULL)
+    {
+        *head = newList;
+    }
+    else
+    {
+        iceList* current = *head;
+        while (current->nextList != NULL)
+        {
+            current = current->nextList;
+        }
+        current->nextList = newList;
+    }
 }
 
-// Iterate over the list
-#define list_for_each_entry(pos, head, member)                \
-    for (pos = (typeof(pos))((head)->next);                   \
-         &pos->member != (head);                              \
-         pos = (typeof(pos))(pos->member.next))
-
-int main() {
-    LIST_HEAD(my_list);  // Create and initialize a list head
-
-    // Add elements to the list
-    for (int i = 0; i < 5; i++) {
-        struct my_data *item = malloc(sizeof(*item));
-        item->value = i;  // Assign data
-        list_add(&item->list, &my_list);
-        printf("Added: %d\n", i);
+void printList(iceList* head)
+{
+    int i = 1;
+    while (head != NULL)
+    {
+        printf("Point %d: x = %.2f, y = %.2f, z = %.2f\n", i++, head->point.x, head->point.y, head->point.z);
+        head = head->nextList;
     }
+}
 
-    // Print all elements in the list
-    struct my_data *entry;
-    printf("List contents:\n");
-    list_for_each_entry(entry, &my_list, list) {
-        printf("Value: %d\n", entry->value);
+void freeList(iceList* head)
+{
+    iceList* temp;
+    while (head != NULL)
+    {
+        temp = head;
+        head = head->nextList;
+        free(temp);
     }
+}
+
+int main()
+{
+    iceList* head = NULL;
+
+    appendList(&head, 1.0, 2.0, 3.0);
+    appendList(&head, 4.0, 5.0, 6.0);
+    appendList(&head, 7.0, 8.0, 9.0);
+    appendList(&head, 10.0, 11.0, 12.0);
+
+    printList(head);
+    freeList(head);
 
     return 0;
 }

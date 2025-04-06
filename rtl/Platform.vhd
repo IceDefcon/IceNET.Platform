@@ -1212,7 +1212,7 @@ port map
 TimerInterrupt: InterruptGenerator
 generic map
 (
-    PERIOD_MS => 20, -- Every 20ms :: This could be absolutely minimum
+    PERIOD_MS => 20, -- Every 20ms
     PULSE_LENGTH => 50 -- 50 * 20ns = 1us Interrupt Pulse
 )
 port map
