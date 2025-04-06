@@ -142,8 +142,8 @@ set_input_delay -clock CLOCK_MAIN -max $MAX_I_DELAY_50MHz [get_ports {CAN_BBB_TX
 set_input_delay -clock CLOCK_MAIN -min $MIN_I_DELAY_50MHz [get_ports {CAN_BBB_TX CAN_MPP_RX}]
 
 # Input interrupts
-set_input_delay -clock CLOCK_MAIN -max $MAX_I_DELAY_50MHz [get_ports {CFG_INT_FROM_CPU RESET_FROM_CPU}]
-set_input_delay -clock CLOCK_MAIN -min $MIN_I_DELAY_50MHz [get_ports {CFG_INT_FROM_CPU RESET_FROM_CPU}]
+set_input_delay -clock CLOCK_MAIN -max $MAX_I_DELAY_50MHz [get_ports {RESET_FROM_CPU}]
+set_input_delay -clock CLOCK_MAIN -min $MIN_I_DELAY_50MHz [get_ports {RESET_FROM_CPU}]
 
 # Altera
 set_input_delay -clock CLOCK_MAIN -max $MAX_I_DELAY_50MHz [get_ports {altera_reserved_tck altera_reserved_tdi altera_reserved_tms}]

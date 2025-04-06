@@ -24,21 +24,20 @@
 #define GPIO_NUMBER_SCHEDULER_TIMER 216         // HEADER_PIN_07 :: GPIO09
 #define GPIO_NUMBER_WATCHDOG_TICK 200           // HEADER_PIN_31 :: GPIO11
 /* OUT */
-#define GPIO_NUMBER_OFFLOAD_FIFO 194            // HEADER_PIN_15 :: GPIO12
-#define GPIO_NUMBER_PERIPHERALS_CONFIG_DONE 38  // HEADER_PIN_33 :: GPIO13
 #define GPIO_NUMBER_RESET_FPGA 168              // HEADER_PIN_32 :: GPIO07
+/* FREE :: NOT IN USE */
+#define GPIO_NUMBER_UNDEFINED_GPIO12 194        // HEADER_PIN_15 :: GPIO12
+#define GPIO_NUMBER_UNDEFINED_GPIO13 38         // HEADER_PIN_33 :: GPIO13
 
-// gpio-38  (GPIO13              |WDG_INT_FROM_CPU    ) out lo
+// gpio-38  (GPIO13              )
 // gpio-149 (GPIO01              |SPI_INT_FROM_FPGA   ) in  hi IRQ
-// gpio-194 (GPIO12              |SPI_INT_FROM_CPU    ) out lo
+// gpio-194 (GPIO12              )
 // gpio-200 (GPIO11              |WDG_INT_FROM_FPGA   ) in  hi IRQ
 // gpio-216 (GPIO09              |TIMER_INT_FROM_FPGA ) in  hi IRQ
 // gpio-168 (GPIO07              )RESET_FROM_CPU      ) out lo
 
 typedef enum
 {
-    GPIO_OUT_OFFLOAD_FIFO,
-    GPIO_OUT_PERIPHERALS_CONFIG_DONE,
     GPIO_OUT_RESET_FPGA,
     GPIO_OUT_AMOUNT
 }outputGpioType;

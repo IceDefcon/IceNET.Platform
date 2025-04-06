@@ -167,7 +167,7 @@ static int consoleThread(void *data)
          * busy waiting
          *
          */
-        msleep(1); /* Release 90% of CPU resources */
+        msleep(10); /* Release 90% of CPU resources */
     }
 
     return 0;

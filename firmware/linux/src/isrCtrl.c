@@ -28,12 +28,16 @@
 /* ISR */
 static irqreturn_t InterruptFromFPGA_TimerISR(int irq, void *data)
 {
-#if 0 /* TODO :: Temporarily turned off */
     if(isShedulerReady())
     {
-        setScheduler(SCH_MAIN);
+        setScheduler(SCH_MAIN_20MS);
+        queue_work(get_scheduleTimer_wq(), get_scheduleTimer_work());
     }
-#endif
+    else
+    {
+        queue_work(get_scheduleTimer_wq(), get_scheduleTimer_work());
+    }
+
     return IRQ_HANDLED;
 }
 
@@ -74,14 +78,6 @@ static int initializeInterruptFromCPU(outputGpioType outGpio)
 
     switch(outGpio)
     {
-        case GPIO_OUT_OFFLOAD_FIFO:
-            gpioNumber = GPIO_NUMBER_OFFLOAD_FIFO;
-            break;
-
-        case GPIO_OUT_PERIPHERALS_CONFIG_DONE:
-            gpioNumber = GPIO_NUMBER_PERIPHERALS_CONFIG_DONE;
-            break;
-
         case GPIO_OUT_RESET_FPGA:
             gpioNumber = GPIO_NUMBER_RESET_FPGA;
             break;
@@ -121,14 +117,6 @@ static void destroyInterruptFromCPU(outputGpioType outGpio)
 
     switch(outGpio)
     {
-        case GPIO_OUT_OFFLOAD_FIFO:
-            gpioNumber = GPIO_NUMBER_OFFLOAD_FIFO;
-            break;
-
-        case GPIO_OUT_PERIPHERALS_CONFIG_DONE:
-            gpioNumber = GPIO_NUMBER_PERIPHERALS_CONFIG_DONE;
-            break;
-
         case GPIO_OUT_RESET_FPGA:
             gpioNumber = GPIO_NUMBER_RESET_FPGA;
             break;
@@ -147,6 +135,7 @@ static int initializeInterruptFromFpga(inputGpioType inputGpio)
     int result;
     int irq_kernel;
     char* irqProcess;
+    char* isrFunctionName;
     uint32_t gpioNumber;
     irqreturn_t (*isrFunction)(int, void *);
 
@@ -155,18 +144,21 @@ static int initializeInterruptFromFpga(inputGpioType inputGpio)
         case GPIO_IN_ACTIVATE_SECONDARY_DMA:
             gpioNumber = GPIO_NUMBER_ACTIVATE_SECONDARY_DMA;
             isrFunction = InterruptFromFPGA_SpiISR;
+            isrFunctionName = "InterruptFromFPGA_SpiISR";
             irqProcess = "Activate SPI.1";
             break;
 
         case GPIO_IN_SCHEDULER_TIMER:
             gpioNumber = GPIO_NUMBER_SCHEDULER_TIMER;
             isrFunction = InterruptFromFPGA_TimerISR;
+            isrFunctionName = "InterruptFromFPGA_TimerISR";
             irqProcess = "Scheduler Pulse";
             break;
 
         case GPIO_IN_WATCHDOG_TICK:
             gpioNumber = GPIO_NUMBER_WATCHDOG_TICK;
             isrFunction = InterruptFromFPGA_WatchdogISR;
+            isrFunctionName = "InterruptFromFPGA_WatchdogISR";
             irqProcess = "Watchdog Tick";
             break;
 
@@ -221,7 +213,7 @@ static int initializeInterruptFromFpga(inputGpioType inputGpio)
     }
     else
     {
-        printk(KERN_ERR "[INIT][ISR] Setup GPIO Pin [%d] Register callback\n", gpioNumber);
+        printk(KERN_ERR "[INIT][ISR] Setup GPIO Pin [%d] Register %s\n", gpioNumber, isrFunctionName);
     }
 
     return result;
@@ -262,18 +254,12 @@ void isrGpioInit(void)
     (void)initializeInterruptFromFpga(GPIO_IN_ACTIVATE_SECONDARY_DMA);
     (void)initializeInterruptFromFpga(GPIO_IN_SCHEDULER_TIMER);
     (void)initializeInterruptFromFpga(GPIO_IN_WATCHDOG_TICK);
-
-    (void)initializeInterruptFromCPU(GPIO_OUT_OFFLOAD_FIFO);
-    (void)initializeInterruptFromCPU(GPIO_OUT_PERIPHERALS_CONFIG_DONE);
     (void)initializeInterruptFromCPU(GPIO_OUT_RESET_FPGA);
 }
 
 void isrGpioDestroy(void)
 {
-    destroyInterruptFromCPU(GPIO_OUT_OFFLOAD_FIFO);
-    destroyInterruptFromCPU(GPIO_OUT_PERIPHERALS_CONFIG_DONE);
     destroyInterruptFromCPU(GPIO_OUT_RESET_FPGA);
-
     destroyInterruptFromFPGA(GPIO_IN_ACTIVATE_SECONDARY_DMA);
     destroyInterruptFromFPGA(GPIO_IN_SCHEDULER_TIMER);
     destroyInterruptFromFPGA(GPIO_IN_WATCHDOG_TICK);

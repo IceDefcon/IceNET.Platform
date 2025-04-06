@@ -60,17 +60,11 @@ begin
 
             case pulse_state is
                 when PULSE_IDLE =>
-                    pulse_count <= 0;
-                    OUTPUT_PULSE <= '0';
-                    wait_process <= '0';
-
                     if ENABLE_CONTROLLER = '1' then
                         pulse_state <= PULSE_INIT;
                     end if;
 
                 when PULSE_INIT =>
-                    pulse_count <= 0;
-                    OUTPUT_PULSE <= '0';
                     -------------------------------------------------------------------------------
                     --
                     -- Check against stable sync_input_pulse(1) :: Delay flip-flop doing the job
@@ -81,6 +75,7 @@ begin
                         pulse_state <= PULSE_PRODUCE;
                     elsif sync_input_pulse(1) = '0' and wait_process = '1' then
                         wait_process <= '0';
+                        pulse_state <= PULSE_DONE;
                     end if;
 
                 when PULSE_PRODUCE =>
@@ -94,13 +89,16 @@ begin
 
                 when PULSE_DONE =>
                     OUTPUT_PULSE <= '0';
-                    pulse_state <= PULSE_INIT;
+                    pulse_count <= 0;
+                    if ENABLE_CONTROLLER = '0' then
+                        pulse_state <= PULSE_IDLE;
+                    else
+                        pulse_state <= PULSE_INIT;
+                    end if;
 
                 when others =>
                     pulse_state <= PULSE_IDLE;
-                    pulse_count <= 0;
-                    OUTPUT_PULSE <= '0';
-                    wait_process <= '0';
+
             end case;
         end if;
     end process interrupt_process;
