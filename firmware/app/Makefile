@@ -381,6 +381,7 @@ moc_gui.cpp: system/include/DroneCtrl.h \
 		system/include/KernelComms/BlockDevice/RamDisk.h \
 		system/include/Types.h \
 		system/include/KernelComms/CharDevice/Commander.h \
+		meas/measList.h \
 		gui/gui.h \
 		moc_predefs.h \
 		/usr/lib/qt5/bin/moc
@@ -406,7 +407,8 @@ main.o: main.cpp gui/gui.h \
 		system/include/KernelComms/CharDevice/Watchdog.h \
 		system/include/KernelComms/BlockDevice/RamDisk.h \
 		system/include/Types.h \
-		system/include/KernelComms/CharDevice/Commander.h
+		system/include/KernelComms/CharDevice/Commander.h \
+		meas/measList.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o main.o main.cpp
 
 gui.o: gui/gui.cpp gui/gui.h \
@@ -415,7 +417,8 @@ gui.o: gui/gui.cpp gui/gui.h \
 		system/include/KernelComms/CharDevice/Watchdog.h \
 		system/include/KernelComms/BlockDevice/RamDisk.h \
 		system/include/Types.h \
-		system/include/KernelComms/CharDevice/Commander.h
+		system/include/KernelComms/CharDevice/Commander.h \
+		meas/measList.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o gui.o gui/gui.cpp
 
 measList.o: meas/measList.cpp meas/measList.h
@@ -426,7 +429,8 @@ DroneCtrl.o: system/src/DroneCtrl.cpp system/include/DroneCtrl.h \
 		system/include/KernelComms/CharDevice/Watchdog.h \
 		system/include/KernelComms/BlockDevice/RamDisk.h \
 		system/include/Types.h \
-		system/include/KernelComms/CharDevice/Commander.h
+		system/include/KernelComms/CharDevice/Commander.h \
+		meas/measList.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o DroneCtrl.o system/src/DroneCtrl.cpp
 
 KernelComms.o: system/src/KernelComms/KernelComms.cpp system/include/KernelComms/KernelComms.h \

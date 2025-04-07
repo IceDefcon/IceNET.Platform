@@ -94,9 +94,10 @@ class gui : public QWidget
 
     QString m_currentTime;
 
-    void paintEvent(QPaintEvent *event) override;
+    // void paintEvent(QPaintEvent *event) override;
 
     bool m_isPulseControllerEnabled;;
+    bool m_isStartAcquisition;;
     double m_phase;
 
 public:

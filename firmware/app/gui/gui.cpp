@@ -36,6 +36,7 @@ m_Rx_GuiVector(std::make_shared<std::vector<uint8_t>>(IO_TRANSFER_SIZE)),
 m_Tx_GuiVector(std::make_shared<std::vector<uint8_t>>(IO_TRANSFER_SIZE)),
 m_IO_GuiState(std::make_shared<ioStateType>(IO_IDLE)),
 m_isPulseControllerEnabled(true),
+m_isStartAcquisition(true),
 m_phase(0.0)
 {
     qDebug() << "[MAIN] [CONSTRUCTOR]" << this << "::  gui";
@@ -67,7 +68,21 @@ gui::~gui()
         shutdownThread();
     }
 }
+#if 1
+void gui::setupWindow()
+{
+    setWindowTitle("IceNET Platform");
+    setFixedSize(800, 600);
 
+    QTimer *timer = new QTimer(this);
+    connect(timer, &QTimer::timeout, this, [=]()
+    {
+        m_phase += 0.1;  // Adjust speed here
+        update();      // Triggers paintEvent
+    });
+    timer->start(30);  // Redraw every 30ms (~33 FPS)
+}
+#else
 void gui::setupWindow()
 {
     setWindowTitle("IceNET Platform");
@@ -242,7 +257,7 @@ void gui::paintEvent(QPaintEvent *event)
                     .arg(lastCot, 0, 'f', 2);
     painter.drawText(dataBox2.adjusted(10, 10, -10, -10), Qt::AlignLeft | Qt::AlignTop, data2);
 }
-
+#endif
 void gui::setupMainConsole()
 {
     m_mainConsoleOutput = new QPlainTextEdit(this);
@@ -366,7 +381,6 @@ void gui::setupFpgaCtrl()
 
         if (m_isPulseControllerEnabled)
         {
-            // Switch to DISABLE (red)
             enableButton->setText("DISABLE");
             enableButton->setStyleSheet(
                 "QPushButton {"
@@ -389,7 +403,6 @@ void gui::setupFpgaCtrl()
         }
         else
         {
-            // Switch back to ENABLE (blue)
             enableButton->setText("ENABLE");
             enableButton->setStyleSheet(
                 "QPushButton {"
@@ -414,6 +427,85 @@ void gui::setupFpgaCtrl()
         // Toggle state
         m_isPulseControllerEnabled = !m_isPulseControllerEnabled;
     });
+
+    QPushButton *startButton = new QPushButton("START", this);
+    startButton->setGeometry(dev.xGap*7 + dev.xText + dev.xUnit*4, dev.yGap*4 + dev.yLogo + dev.yUnit*2, dev.xUnit*2 + dev.xGap, dev.yUnit);
+
+    startButton->setStyleSheet(
+        "QPushButton {"
+        "   background-color: blue;"
+        "   color: white;"
+        "   font-size: 18px;"
+        "   font-weight: bold;"
+        "   border-radius: 10px;"
+        "   padding: 5px;"
+        "}"
+        "QPushButton:hover {"
+        "   background-color: darkblue;"
+        "}"
+        "QPushButton:pressed {"
+        "   background-color: black;"
+        "}"
+    );
+
+    connect(startButton, &QPushButton::clicked, this, [this, startButton]()
+    {
+        if (NULL == m_instanceDroneCtrl)
+        {
+            printToMainConsole("[CTL] threadMain is not Running");
+            return;
+        }
+
+        if (m_isStartAcquisition)
+        {
+            startButton->setText("STOP");
+            startButton->setStyleSheet(
+                "QPushButton {"
+                "   background-color: red;"
+                "   color: white;"
+                "   font-size: 18px;"
+                "   font-weight: bold;"
+                "   border-radius: 10px;"
+                "   padding: 5px;"
+                "}"
+                "QPushButton:hover {"
+                "   background-color: darkred;"
+                "}"
+                "QPushButton:pressed {"
+                "   background-color: black;"
+                "}"
+            );
+
+            interruptVector_execute(VECTOR_START);
+        }
+        else
+        {
+            startButton->setText("START");
+            startButton->setStyleSheet(
+                "QPushButton {"
+                "   background-color: blue;"
+                "   color: white;"
+                "   font-size: 18px;"
+                "   font-weight: bold;"
+                "   border-radius: 10px;"
+                "   padding: 5px;"
+                "}"
+                "QPushButton:hover {"
+                "   background-color: darkblue;"
+                "}"
+                "QPushButton:pressed {"
+                "   background-color: black;"
+                "}"
+            );
+
+            interruptVector_execute(VECTOR_STOP);
+        }
+
+        // Toggle state
+        m_isStartAcquisition = !m_isStartAcquisition;
+    });
+
+
 }
 
 void gui::setupThreadProcess()
@@ -771,11 +863,11 @@ std::string gui::vectorToString(interruptVectorType type)
     switch (type)
     {
         case VECTOR_RESERVED:   return "VECTOR_RESERVED";
-        case VECTOR_OFFLOAD:    return "VECTOR_OFFLOAD"; /* FIFO Offload chain */
-        case VECTOR_ENABLE:     return "VECTOR_ENABLE"; /* Enable Pulse Controllers */
-        case VECTOR_DISABLE:    return "VECTOR_DISABLE"; /* Disable Pulse Controllers */
-        case VECTOR_UNUSED_04:  return "VECTOR_UNUSED_04";
-        case VECTOR_UNUSED_05:  return "VECTOR_UNUSED_05";
+        case VECTOR_OFFLOAD:    return "VECTOR_OFFLOAD";    /* FIFO Offload chain */
+        case VECTOR_ENABLE:     return "VECTOR_ENABLE";     /* Enable Pulse Controllers */
+        case VECTOR_DISABLE:    return "VECTOR_DISABLE";    /* Disable Pulse Controllers */
+        case VECTOR_START:      return "VECTOR_START";      /* Start Measurement Acquisition */
+        case VECTOR_STOP:       return "VECTOR_STOP";       /* Stop Measurement Acquisition */
         case VECTOR_UNUSED_06:  return "VECTOR_UNUSED_06";
         case VECTOR_UNUSED_07:  return "VECTOR_UNUSED_07";
         case VECTOR_UNUSED_08:  return "VECTOR_UNUSED_08";
@@ -813,7 +905,7 @@ void gui::interruptVector_execute(interruptVectorType type)
     std::cout << "[INFO] [INT] Set Interrupt Vector -> " << vectorToString(type) << std::endl;
 
     *m_IO_GuiState = IO_COM_WRITE_ONLY;
-    printToMainConsole("[INT] Done");
+    printToMainConsole("[INT] Done -> " + QString::fromStdString(vectorToString(type)));
 }
 
 void gui::dma_execute(commandType cmd)
