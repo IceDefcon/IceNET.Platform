@@ -322,7 +322,7 @@ void Commander::threadCommander()
         }
 
         /* Reduce consumption of CPU resources */
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
 
     std::cout << "[INFO] [CMD] Terminate threadCommander" << std::endl;

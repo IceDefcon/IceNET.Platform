@@ -35,7 +35,8 @@ m_isKernelConnected(false),
 m_Rx_GuiVector(std::make_shared<std::vector<uint8_t>>(IO_TRANSFER_SIZE)),
 m_Tx_GuiVector(std::make_shared<std::vector<uint8_t>>(IO_TRANSFER_SIZE)),
 m_IO_GuiState(std::make_shared<ioStateType>(IO_IDLE)),
-m_isPulseControllerEnabled(true)
+m_isPulseControllerEnabled(true),
+m_phase(0.0)
 {
     qDebug() << "[MAIN] [CONSTRUCTOR]" << this << "::  gui";
 
@@ -71,43 +72,175 @@ void gui::setupWindow()
 {
     setWindowTitle("IceNET Platform");
     setFixedSize(1600, 600);
-}
 
+    QTimer *timer = new QTimer(this);
+    connect(timer, &QTimer::timeout, this, [=]()
+    {
+        m_phase += 0.1;  // Adjust speed here
+        update();      // Triggers paintEvent
+    });
+    timer->start(30);  // Redraw every 30ms (~33 FPS)
+}
 
 void gui::paintEvent(QPaintEvent *event)
 {
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);
 
-    QPen pen(Qt::blue, 2);  // Set pen color and thickness
-    painter.setPen(pen);
+    double scale = 25.0;
+    double step = 0.05;
+    double t_max = 400 / scale;
 
-    // Parameters for the function
-    int x_offset = 850;  // X position
-    int y_offset = 100;   // Y position
-    double scale = 50.0; // Scaling factor for visibility
-    double step = 0.1;   // Step size for smooth curve
-    double t_max = 20.0; // Max value of t
+    int x_offset = 820 + dev.xGap;
+    int y_offset1 = 150;  // Center Y for sine/cosine
+    int y_offset2 = 400;  // Center Y for tan/cot
 
+    QRect graphArea(x_offset, 0, static_cast<int>(scale * t_max), height());
+    if (!event->rect().intersects(graphArea))
+        return;
+
+    // ========== SINE + COSINE ==========
+    QPen sinPen(Qt::blue, 2);
+    QPen cosPen(Qt::darkGreen, 2);
+    QPen axisPen(Qt::darkGray, 2, Qt::DashLine);
+    QPen highlightPen(Qt::red, 4);
+
+    // Axes
+    painter.setPen(axisPen);
+    painter.drawLine(QPoint(x_offset, y_offset1), QPoint(x_offset + static_cast<int>(scale * t_max), y_offset1)); // X
+    painter.drawLine(QPoint(x_offset, y_offset1 - static_cast<int>(scale * 1.5)), QPoint(x_offset, y_offset1 + static_cast<int>(scale * 1.5))); // Y
+    painter.setPen(Qt::black);
+    painter.setFont(QFont("Arial", 8));
+    painter.drawText(x_offset - 20, y_offset1 - static_cast<int>(scale * 1.5) - 5, "Y");
+    painter.drawText(x_offset + static_cast<int>(scale * t_max) + 5, y_offset1 + 15, "X");
+
+    // Draw sine
+    painter.setPen(sinPen);
     QPoint lastPoint;
-    bool firstPoint = true;
-
-    // Draw function x(t)
-    for (double t = 0; t <= t_max; t += step)
-    {
+    bool first = true;
+    double lastT = 0.0, lastSin = 0.0;
+    for (double t = 0; t <= t_max; t += step) {
         int x = x_offset + static_cast<int>(scale * t);
-        int y = y_offset + static_cast<int>(scale * sin(t));  // Example function: sin(t)
-
-        QPoint currentPoint(x, y);
-
-        if (!firstPoint)
-        {
-            painter.drawLine(lastPoint, currentPoint);
-        }
-
-        lastPoint = currentPoint;
-        firstPoint = false;
+        double yVal = sin(t + m_phase);
+        int y = y_offset1 - static_cast<int>(scale * yVal);
+        QPoint pt(x, y);
+        if (!first) painter.drawLine(lastPoint, pt);
+        lastPoint = pt;
+        first = false;
+        lastT = t;
+        lastSin = yVal;
     }
+
+    // Draw cosine
+    painter.setPen(cosPen);
+    lastPoint = QPoint();
+    first = true;
+    double lastCos = 0.0;
+    for (double t = 0; t <= t_max; t += step) {
+        int x = x_offset + static_cast<int>(scale * t);
+        double yVal = cos(t + m_phase);
+        int y = y_offset1 - static_cast<int>(scale * yVal);
+        QPoint pt(x, y);
+        if (!first) painter.drawLine(lastPoint, pt);
+        lastPoint = pt;
+        first = false;
+        lastCos = yVal;
+    }
+
+    // Highlight latest point
+    painter.setPen(highlightPen);
+    int x_last = x_offset + static_cast<int>(scale * lastT);
+    int y_sin = y_offset1 - static_cast<int>(scale * lastSin);
+    int y_cos = y_offset1 - static_cast<int>(scale * lastCos);
+    painter.drawEllipse(QPoint(x_last, y_sin), 4, 4);
+    painter.drawEllipse(QPoint(x_last, y_cos), 4, 4);
+
+    // Data box for sine + cosine
+    QRect dataBox1(x_offset + 420, 80, 200, 80);
+    painter.setBrush(QColor(240, 240, 240));
+    painter.setPen(QPen(Qt::black, 2));
+    painter.drawRect(dataBox1);
+    painter.setFont(QFont("Arial", 10));
+    painter.setPen(Qt::black);
+    QString data1 = QString("t = %1\nsin(t) = %2\ncos(t) = %3")
+                    .arg(lastT + m_phase, 0, 'f', 2)
+                    .arg(lastSin, 0, 'f', 2)
+                    .arg(lastCos, 0, 'f', 2);
+    painter.drawText(dataBox1.adjusted(10, 10, -10, -10), Qt::AlignLeft | Qt::AlignTop, data1);
+
+    // ========== TANGENT + COTANGENT ==========
+    // Axes
+    double lastTan = 0.0;
+    double lastCot = 0.0;
+
+    painter.setPen(axisPen);
+    painter.drawLine(QPoint(x_offset, y_offset2), QPoint(x_offset + static_cast<int>(scale * t_max), y_offset2)); // X
+    painter.drawLine(QPoint(x_offset, y_offset2 - 150), QPoint(x_offset, y_offset2 + 150)); // Y
+    painter.setPen(Qt::black);
+    painter.drawText(x_offset - 20, y_offset2 - 150 - 5, "Y");
+    painter.drawText(x_offset + static_cast<int>(scale * t_max) + 5, y_offset2 + 15, "X");
+
+    // Tangent
+    QPen tanPen(Qt::darkMagenta, 2);
+    painter.setPen(tanPen);
+    first = true;
+    lastPoint = QPoint();
+    lastTan = 0.0;
+    for (double t = 0; t <= t_max; t += step) {
+        double yVal = tan(t + m_phase);
+        if (std::abs(yVal) > 5.0) { // limit to ±5
+            first = true;
+            continue;
+        }
+        int x = x_offset + static_cast<int>(scale * t);
+        int y = y_offset2 - static_cast<int>(scale * yVal);
+        QPoint pt(x, y);
+        if (!first) painter.drawLine(lastPoint, pt);
+        lastPoint = pt;
+        first = false;
+        lastTan = yVal;
+    }
+
+    // Cotangent
+    QPen cotPen(Qt::darkCyan, 2);
+    painter.setPen(cotPen);
+    first = true;
+    lastPoint = QPoint();
+    lastCot = 0.0;
+    for (double t = 0.01; t <= t_max; t += step) { // avoid division by 0
+        double yVal = 1.0 / tan(t + m_phase);
+        if (std::abs(yVal) > 5.0) { // limit to ±5
+            first = true;
+            continue;
+        }
+        int x = x_offset + static_cast<int>(scale * t);
+        int y = y_offset2 - static_cast<int>(scale * yVal);
+        QPoint pt(x, y);
+        if (!first) painter.drawLine(lastPoint, pt);
+        lastPoint = pt;
+        first = false;
+        lastCot = yVal;
+    }
+
+    // Highlight
+    painter.setPen(highlightPen);
+    int y_tan = y_offset2 - static_cast<int>(scale * lastTan);
+    int y_cot = y_offset2 - static_cast<int>(scale * lastCot);
+    painter.drawEllipse(QPoint(x_last, y_tan), 4, 4);
+    painter.drawEllipse(QPoint(x_last, y_cot), 4, 4);
+
+    // Data box for tan + cot
+    QRect dataBox2(x_offset + 420, 330, 200, 90);
+    painter.setBrush(QColor(240, 240, 240));
+    painter.setPen(QPen(Qt::black, 2));
+    painter.drawRect(dataBox2);
+    painter.setFont(QFont("Arial", 10));
+    painter.setPen(Qt::black);
+    QString data2 = QString("t = %1\ntan(t) = %2\ncot(t) = %3")
+                    .arg(lastT + m_phase, 0, 'f', 2)
+                    .arg(lastTan, 0, 'f', 2)
+                    .arg(lastCot, 0, 'f', 2);
+    painter.drawText(dataBox2.adjusted(10, 10, -10, -10), Qt::AlignLeft | Qt::AlignTop, data2);
 }
 
 void gui::setupMainConsole()
@@ -1022,7 +1155,7 @@ void gui::readUartData()
     {
         m_readBuffer.append(m_serialPort->readAll());
 
-#if 0
+#if 1
         const int messageLength = 8;
         while (m_readBuffer.size() >= messageLength)
         {
@@ -1165,6 +1298,8 @@ void gui::threadMain()
 
         if (true == m_instanceDroneCtrl->isKilled())
         {
+            /* TODO :: Button stays pressed at Thread Termination */
+            interruptVector_execute(VECTOR_DISABLE);
             m_isKernelConnected = false;
             break;
         }
@@ -1177,7 +1312,6 @@ void gui::threadMain()
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
 
-    interruptVector_execute(VECTOR_DISABLE);
     m_instanceDroneCtrl->getCommanderInstance()->sendCommand(CMD_RAMDISK_CLEAR);
     m_instanceDroneCtrl->shutdownKernelComms();
     m_instanceDroneCtrl.reset(); // Reset the unique_ptr to call the destructor

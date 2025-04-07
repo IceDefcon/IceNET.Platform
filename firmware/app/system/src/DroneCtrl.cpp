@@ -17,7 +17,8 @@
 
 DroneCtrl::DroneCtrl() :
     m_ctrlState(CTRL_INIT),
-    m_ctrlStatePrev(CTRL_INIT)
+    m_ctrlStatePrev(CTRL_INIT),
+    m_countMain10ms(0)
 {
     std::cout << "[INFO] [CONSTRUCTOR] " << this << " :: Instantiate DroneCtrl" << std::endl;
 }
@@ -34,6 +35,7 @@ void DroneCtrl::initPointers()
     m_instanceCommander = this;
     m_instanceWatchdog = this;
     m_instanceRamDisk = this;
+    m_instanceMeasList = this;
 }
 
 Commander* DroneCtrl::getCommanderInstance()
@@ -70,6 +72,7 @@ std::string DroneCtrl::getCtrlStateString(droneCtrlStateType state)
         "CTRL_RAMDISK_PERIPHERALS",
         "CTRL_RAMDISK_ACTIVATE_DMA",
         "CTRL_DMA_SINGLE",
+        "CTRL_MEAS_TEST",
         "CTRL_MAIN",
     };
 
@@ -94,7 +97,7 @@ void DroneCtrl::setDroneCtrlState(droneCtrlStateType state)
 {
     while(CTRL_MAIN != m_ctrlState) /* Wait until we are in CTRL_MAIN */
     {
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
     m_ctrlState = state;
 }
@@ -140,11 +143,26 @@ void DroneCtrl::droneCtrlMain()
         case CTRL_DMA_SINGLE:
             std::cout << "[INFO] [ D ] Configuration Done :: Switch DMA into a Normal Mode" << std::endl;
             m_instanceCommander->sendCommand(CMD_DMA_NORMAL);
+            m_ctrlState = CTRL_MEAS_TEST;
+            break;
+
+        case CTRL_MEAS_TEST:
+            std::cout << "[INFO] [ D ] Setup Test List" << std::endl;
+            m_instanceMeasList->append(1, 2, 3);
+            m_instanceMeasList->append(4, 5, 6);
+            m_instanceMeasList->append(7, 8, 9);
             m_ctrlState = CTRL_MAIN;
             break;
 
         case CTRL_MAIN:
-            /* TODO :: Main Function */
+#if 0 /* TODO :: Must be considered when measurements arrive from FPGA */
+            m_countMain10ms++;
+            if(100 == m_countMain10ms)
+            {
+                m_instanceMeasList->printList();
+                m_countMain10ms = 0;
+            }
+#endif
             break;
 
         default:
@@ -152,5 +170,5 @@ void DroneCtrl::droneCtrlMain()
     }
 
     /* Reduce consumption of CPU resources */
-    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
 }

@@ -71,6 +71,7 @@ typedef enum
     CTRL_RAMDISK_PERIPHERALS,
     CTRL_RAMDISK_ACTIVATE_DMA,
     CTRL_DMA_SINGLE,
+    CTRL_MEAS_TEST,
     CTRL_MAIN,
     CTRL_AMOUNT,
 } droneCtrlStateType;

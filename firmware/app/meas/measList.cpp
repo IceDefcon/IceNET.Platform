@@ -4,7 +4,7 @@
  * IceNET Technology 2025
  *
  */
-#include "list.h"
+#include "measList.h"
 
 MeasList::MeasList()
 : m_head(nullptr)
@@ -67,15 +67,3 @@ void MeasList::freeList()
     m_head = nullptr;
 }
 
-int main()
-{
-    MeasList list;
-
-    list.append(1, 2, 3);
-    list.append(4, 5, 6);
-    list.append(7, 8, 9);
-
-    list.printList();
-
-    return 0;
-}

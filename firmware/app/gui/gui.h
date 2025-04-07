@@ -97,6 +97,7 @@ class gui : public QWidget
     void paintEvent(QPaintEvent *event) override;
 
     bool m_isPulseControllerEnabled;;
+    double m_phase;
 
 public:
 
