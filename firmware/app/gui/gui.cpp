@@ -292,12 +292,12 @@ void gui::setupFpgaCtrl()
     reset_label->setGeometry(dev.xGap*5 + dev.xText + dev.xUnit*2, dev.yGap, dev.xLogo, dev.yLogo);
 
     QPushButton *resetButton = new QPushButton("RESET", this);
-    resetButton->setGeometry(dev.xGap*5 + dev.xText + dev.xUnit*2, dev.yGap*2 + dev.yLogo, dev.xUnit*2 + dev.xGap, dev.yUnit);
+    resetButton->setGeometry(dev.xGap*5 + dev.xText + dev.xUnit*2, dev.yGap*2 + dev.yLogo, dev.xUnit*2, dev.yUnit);
     resetButton->setStyleSheet(
         "QPushButton {"
         "   background-color: blue;"
         "   color: white;"
-        "   font-size: 18px;"
+        "   font-size: 17px;"
         "   font-weight: bold;"
         "   border-radius: 10px;"
         "   padding: 5px;"
@@ -322,12 +322,12 @@ void gui::setupFpgaCtrl()
     });
 
     QPushButton *offloadButton = new QPushButton("OFFLOAD", this);
-    offloadButton->setGeometry(dev.xGap*5 + dev.xText + dev.xUnit*2, dev.yGap*3 + dev.yLogo + dev.yUnit, dev.xUnit*2 + dev.xGap, dev.yUnit);
+    offloadButton->setGeometry(dev.xGap*5 + dev.xText + dev.xUnit*2, dev.yGap*3 + dev.yLogo + dev.yUnit, dev.xUnit*2, dev.yUnit);
     offloadButton->setStyleSheet(
         "QPushButton {"
         "   background-color: blue;"
         "   color: white;"
-        "   font-size: 18px;"
+        "   font-size: 17px;"
         "   font-weight: bold;"
         "   border-radius: 10px;"
         "   padding: 5px;"
@@ -352,13 +352,13 @@ void gui::setupFpgaCtrl()
     });
 
     QPushButton *enableButton = new QPushButton("ENABLE", this);
-    enableButton->setGeometry(dev.xGap*5 + dev.xText + dev.xUnit*2, dev.yGap*4 + dev.yLogo + dev.yUnit*2, dev.xUnit*2 + dev.xGap, dev.yUnit);
+    enableButton->setGeometry(dev.xGap*5 + dev.xText + dev.xUnit*2, dev.yGap*4 + dev.yLogo + dev.yUnit*2, dev.xUnit*2, dev.yUnit);
 
     enableButton->setStyleSheet(
         "QPushButton {"
-        "   background-color: blue;"
+        "   background-color: green;"
         "   color: white;"
-        "   font-size: 18px;"
+        "   font-size: 17px;"
         "   font-weight: bold;"
         "   border-radius: 10px;"
         "   padding: 5px;"
@@ -386,7 +386,7 @@ void gui::setupFpgaCtrl()
                 "QPushButton {"
                 "   background-color: red;"
                 "   color: white;"
-                "   font-size: 18px;"
+                "   font-size: 17px;"
                 "   font-weight: bold;"
                 "   border-radius: 10px;"
                 "   padding: 5px;"
@@ -406,9 +406,9 @@ void gui::setupFpgaCtrl()
             enableButton->setText("ENABLE");
             enableButton->setStyleSheet(
                 "QPushButton {"
-                "   background-color: blue;"
+                "   background-color: green;"
                 "   color: white;"
-                "   font-size: 18px;"
+                "   font-size: 17px;"
                 "   font-weight: bold;"
                 "   border-radius: 10px;"
                 "   padding: 5px;"
@@ -429,13 +429,13 @@ void gui::setupFpgaCtrl()
     });
 
     QPushButton *startButton = new QPushButton("START", this);
-    startButton->setGeometry(dev.xGap*7 + dev.xText + dev.xUnit*4, dev.yGap*4 + dev.yLogo + dev.yUnit*2, dev.xUnit*2 + dev.xGap, dev.yUnit);
+    startButton->setGeometry(dev.xGap*6 + dev.xText + dev.xUnit*4, dev.yGap*4 + dev.yLogo + dev.yUnit*2, dev.xUnit*2, dev.yUnit);
 
     startButton->setStyleSheet(
         "QPushButton {"
-        "   background-color: blue;"
+        "   background-color: green;"
         "   color: white;"
-        "   font-size: 18px;"
+        "   font-size: 17px;"
         "   font-weight: bold;"
         "   border-radius: 10px;"
         "   padding: 5px;"
@@ -463,7 +463,7 @@ void gui::setupFpgaCtrl()
                 "QPushButton {"
                 "   background-color: red;"
                 "   color: white;"
-                "   font-size: 18px;"
+                "   font-size: 17px;"
                 "   font-weight: bold;"
                 "   border-radius: 10px;"
                 "   padding: 5px;"
@@ -483,9 +483,9 @@ void gui::setupFpgaCtrl()
             startButton->setText("START");
             startButton->setStyleSheet(
                 "QPushButton {"
-                "   background-color: blue;"
+                "   background-color: green;"
                 "   color: white;"
-                "   font-size: 18px;"
+                "   font-size: 17px;"
                 "   font-weight: bold;"
                 "   border-radius: 10px;"
                 "   padding: 5px;"
@@ -505,7 +505,35 @@ void gui::setupFpgaCtrl()
         m_isStartAcquisition = !m_isStartAcquisition;
     });
 
-
+    QPushButton *pulseButton = new QPushButton("PULSE", this);
+    pulseButton->setGeometry(dev.xGap*7 + dev.xText + dev.xUnit*6, dev.yGap*4 + dev.yLogo + dev.yUnit*2, dev.xUnit*2, dev.yUnit);
+    pulseButton->setStyleSheet(
+        "QPushButton {"
+        "   background-color: blue;"
+        "   color: white;"
+        "   font-size: 17px;"
+        "   font-weight: bold;"
+        "   border-radius: 10px;"
+        "   padding: 5px;"
+        "}"
+        "QPushButton:hover {"
+        "   background-color: darkblue;"
+        "}"
+        "QPushButton:pressed {"
+        "   background-color: black;"
+        "}"
+    );
+    connect(pulseButton, &QPushButton::clicked, this, [this]()
+    {
+        if(NULL == m_instanceDroneCtrl)
+        {
+            printToMainConsole("[CTL] threadMain is not Running");
+        }
+        else
+        {
+            interruptVector_execute(VECTOR_PULSE);
+        }
+    });
 }
 
 void gui::setupThreadProcess()
@@ -524,7 +552,7 @@ void gui::setupThreadProcess()
         "QPushButton {"
         "   background-color: green;"
         "   color: white;"
-        "   font-size: 18px;"
+        "   font-size: 17px;"
         "   font-weight: bold;"
         "   border-radius: 10px;"
         "   padding: 5px;"
@@ -544,7 +572,7 @@ void gui::setupThreadProcess()
         "QPushButton {"
         "   background-color: red;"
         "   color: white;"
-        "   font-size: 18px;"
+        "   font-size: 17px;"
         "   font-weight: bold;"
         "   border-radius: 10px;"
         "   padding: 5px;"
@@ -809,7 +837,7 @@ std::string gui::vectorToString(interruptVectorType type)
         case VECTOR_DISABLE:    return "VECTOR_DISABLE";    /* Disable Pulse Controllers */
         case VECTOR_START:      return "VECTOR_START";      /* Start Measurement Acquisition */
         case VECTOR_STOP:       return "VECTOR_STOP";       /* Stop Measurement Acquisition */
-        case VECTOR_UNUSED_06:  return "VECTOR_UNUSED_06";
+        case VECTOR_PULSE:      return "VECTOR_PULSE";      /* Single 20ns Pulse :: To be connected anywhere in FPGA */
         case VECTOR_UNUSED_07:  return "VECTOR_UNUSED_07";
         case VECTOR_UNUSED_08:  return "VECTOR_UNUSED_08";
         case VECTOR_UNUSED_09:  return "VECTOR_UNUSED_09";
@@ -840,7 +868,7 @@ void gui::setInterruptVector(uint8_t vector)
     // 0011 :: VECTOR_DISABLE
     // 0100 :: VECTOR_START
     // 0101 :: VECTOR_STOP
-    // 0110 ::
+    // 0110 :: VECTOR_PULSE
     // 0111 ::
     // 1000 ::
     // 1001 ::
