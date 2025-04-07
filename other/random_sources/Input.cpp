@@ -190,7 +190,7 @@ void Input::threadInput()
         }
 
         /* Reduce consumption of CPU resources */
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
 
     std::cout << "[INFO] [ I ] Terminate threadInput" << std::endl;

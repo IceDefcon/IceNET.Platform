@@ -1,4 +1,4 @@
-obj-m := spiDma.o
+obj-m := list.o
 
 KDIR := /lib/modules/$(shell uname -r)/build
 

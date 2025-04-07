@@ -151,7 +151,7 @@ void Output::threadOutput()
         }
 
         /* Reduce consumption of CPU resources */
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
 
     std::cout << "[INFO] [ O ] Terminate threadOutput" << std::endl;

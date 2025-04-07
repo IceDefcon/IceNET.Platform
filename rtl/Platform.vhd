@@ -255,7 +255,7 @@ signal synced_SECONDARY_CS : std_logic := '0';
 -- Main UART
 signal synced_FPGA_UART_RX : std_logic := '0';
 -- Buttons
-signal active_button : std_logic := '0';
+signal active_button_1 : std_logic := '0';
 -- Spi.0 Primary
 signal primary_conversion_complete : std_logic := '0';
 signal primary_parallel_MOSI : std_logic_vector(7 downto 0) := (others => '0');
@@ -287,9 +287,9 @@ type VECTOR_TYPE is
     VECTOR_RESERVED,
     VECTOR_OFFLOAD,  -- "0001"
     VECTOR_ENABLE,   -- "0010"
-    VECTOR_DISABLE, -- "0011"
-    VECTOR_UNUSED_4, -- "0100"
-    VECTOR_UNUSED_5, -- "0101"
+    VECTOR_DISABLE,  -- "0011"
+    VECTOR_START,    -- "0100"
+    VECTOR_STOP,     -- "0101"
     VECTOR_UNUSED_6, -- "0110"
     VECTOR_UNUSED_7, -- "0111"
     VECTOR_UNUSED_8, -- "1000"
@@ -306,6 +306,7 @@ signal vector_state: VECTOR_TYPE := VECTOR_IDLE;
 -- Interrupt vector interrupts
 signal offload_vector_interrtupt : std_logic := '0';
 signal enable_vector_interrtupt : std_logic := '0';
+signal start_vector_interrtupt : std_logic := '0';
 -- Interrupt Vector signals
 signal primary_conversion_run : std_logic := '0';
 signal primary_conversion_reset : integer range 0 to 2048 := 0;
@@ -454,6 +455,7 @@ type SENSOR_STATE is
 signal s1_state: SENSOR_STATE := SENSOR_IDLE;
 
 -- Debug
+signal led_7_toggle : std_logic := '1';
 signal led_8_toggle : std_logic := '1';
 ----------------------------------------------------------------------------------------------------------------
 -- COMPONENTS DECLARATION
@@ -799,7 +801,7 @@ port map
     RESET => global_fpga_reset,
 
     BUTTON_IN => BUTTON_1,
-    BUTTON_OUT => active_button
+    BUTTON_OUT => active_button_1
 );
 
 
@@ -1212,7 +1214,7 @@ port map
 TimerInterrupt: InterruptGenerator
 generic map
 (
-    PERIOD_MS => 20, -- Every 20ms :: This could be absolutely minimum
+    PERIOD_MS => 20, -- Every 20ms
     PULSE_LENGTH => 50 -- 50 * 20ns = 1us Interrupt Pulse
 )
 port map
@@ -1273,6 +1275,14 @@ end process;
 -- //
 -- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+-----------------------------------
+--
+-- TODO
+--
+-- Need to be put
+-- Into the module
+--
+-----------------------------------
 interrupt_vector_process:
 process(CLOCK_50MHz)
 begin
@@ -1309,10 +1319,10 @@ begin
             end if;
         end if;
 
-        if STAGE_1_primary_parallel_MOSI(7) =  '1'
-        and STAGE_1_primary_parallel_MOSI(2) =  '1'
-        and STAGE_1_primary_parallel_MOSI(1) =  '1'
-        and STAGE_2_primary_parallel_MOSI = "10101111"
+        if STAGE_1_primary_parallel_MOSI(7) =  '1'  ---------------------------------
+        and STAGE_1_primary_parallel_MOSI(2) =  '1' ----===[ IRQ Vector Base ]===----
+        and STAGE_1_primary_parallel_MOSI(1) =  '1' ---------------------------------
+        and STAGE_2_primary_parallel_MOSI = "10101111" -- [Vector, 0xAF, 0xAE, 0xAD]
         and interrupt_vector_busy = '0'
         then
             interrupt_vector <= STAGE_1_primary_parallel_MOSI(6 downto 3);
@@ -1344,6 +1354,30 @@ begin
                     vector_state <= VECTOR_ENABLE;
                 elsif interrupt_vector = "0011" then
                     vector_state <= VECTOR_DISABLE;
+                elsif interrupt_vector = "0100" then
+                    vector_state <= VECTOR_START;
+                elsif interrupt_vector = "0101" then
+                    vector_state <= VECTOR_STOP;
+                elsif interrupt_vector = "0110" then
+                    vector_state <= VECTOR_UNUSED_6;
+                elsif interrupt_vector = "0111" then
+                    vector_state <= VECTOR_UNUSED_7;
+                elsif interrupt_vector = "1000" then
+                    vector_state <= VECTOR_UNUSED_8;
+                elsif interrupt_vector = "1001" then
+                    vector_state <= VECTOR_UNUSED_9;
+                elsif interrupt_vector = "1010" then
+                    vector_state <= VECTOR_UNUSED_10;
+                elsif interrupt_vector = "1011" then
+                    vector_state <= VECTOR_UNUSED_11;
+                elsif interrupt_vector = "1100" then
+                    vector_state <= VECTOR_UNUSED_12;
+                elsif interrupt_vector = "1101" then
+                    vector_state <= VECTOR_UNUSED_13;
+                elsif interrupt_vector = "1110" then
+                    vector_state <= VECTOR_UNUSED_14;
+                elsif interrupt_vector = "1111" then
+                    vector_state <= VECTOR_UNUSED_15;
                 end if;
 
             when VECTOR_RESERVED =>
@@ -1359,9 +1393,13 @@ begin
                 enable_vector_interrtupt <= '0';
                 led_8_toggle <= '1';
                 vector_state <= VECTOR_DONE;
-            when VECTOR_UNUSED_4 =>
+            when VECTOR_START =>
+                start_vector_interrtupt <= '1';
+                led_7_toggle <= '0';
                 vector_state <= VECTOR_DONE;
-            when VECTOR_UNUSED_5 =>
+            when VECTOR_STOP =>
+                start_vector_interrtupt <= '0';
+                led_7_toggle <= '1';
                 vector_state <= VECTOR_DONE;
             when VECTOR_UNUSED_6 =>
                 vector_state <= VECTOR_DONE;
@@ -1658,7 +1696,7 @@ begin
                         switch_pwm_ready <= '1';
                     end if;
                     s1_state <= SENSOR_DONE;
-                elsif s1_bmi160_int_1_DataReady = '1' and active_button = '1' then
+                elsif s1_bmi160_int_1_DataReady = '1' and start_vector_interrtupt = '1' then
                     s1_state <= SENSOR_TEST;
                 end if;
 
@@ -1963,7 +2001,7 @@ LED_3 <= '1';
 LED_4 <= '1';
 LED_5 <= '1';
 LED_6 <= '1';
-LED_7 <= '1';
+LED_7 <= led_7_toggle;
 LED_8 <= led_8_toggle;
 
 end rtl;

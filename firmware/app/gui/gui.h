@@ -94,9 +94,11 @@ class gui : public QWidget
 
     QString m_currentTime;
 
-    void paintEvent(QPaintEvent *event) override;
+    // void paintEvent(QPaintEvent *event) override;
 
     bool m_isPulseControllerEnabled;;
+    bool m_isStartAcquisition;;
+    double m_phase;
 
 public:
 
@@ -122,8 +124,8 @@ private slots:
     void setDummyCommand();
     void setInterruptVector(uint8_t vector);
     std::string vectorToString(interruptVectorType type);
-
     void interruptVector_execute(interruptVectorType intVector);
+    std::string cmdToString(commandType cmd);
     void dma_execute(commandType cmd);
     void i2c_execute();
     void spi_execute();
