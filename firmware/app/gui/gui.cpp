@@ -1416,6 +1416,7 @@ void gui::threadMain()
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
 
+    m_instanceDroneCtrl->getCommanderInstance()->sendCommand(CMD_FPGA_RESET);
     m_instanceDroneCtrl->getCommanderInstance()->sendCommand(CMD_RAMDISK_CLEAR);
     m_instanceDroneCtrl->shutdownKernelComms();
     m_instanceDroneCtrl.reset(); // Reset the unique_ptr to call the destructor

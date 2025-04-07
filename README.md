@@ -16,6 +16,13 @@
 	02. Attach to CPU @ Ozone Debuger
 	03. Design Powered PCB for bus control
 
+# TODO FPGA
+
+	00. Reanalyze Reset Network in FPGA
+	01. Reset modules :: Done !
+	02. Empty FIFO's
+	03. Reconfigure Peripherals :: Reset them through registers
+
 # TODO Software
 
 	00. Fix up parametriation of I2C Controller
