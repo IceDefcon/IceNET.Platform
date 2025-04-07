@@ -799,6 +799,29 @@ void gui::setDummyCommand()
     (*m_Tx_GuiVector)[7] = 0x44;
 }
 
+std::string gui::vectorToString(interruptVectorType type)
+{
+    switch (type)
+    {
+        case VECTOR_RESERVED:   return "VECTOR_RESERVED";
+        case VECTOR_OFFLOAD:    return "VECTOR_OFFLOAD";    /* FIFO Offload chain */
+        case VECTOR_ENABLE:     return "VECTOR_ENABLE";     /* Enable Pulse Controllers */
+        case VECTOR_DISABLE:    return "VECTOR_DISABLE";    /* Disable Pulse Controllers */
+        case VECTOR_START:      return "VECTOR_START";      /* Start Measurement Acquisition */
+        case VECTOR_STOP:       return "VECTOR_STOP";       /* Stop Measurement Acquisition */
+        case VECTOR_UNUSED_06:  return "VECTOR_UNUSED_06";
+        case VECTOR_UNUSED_07:  return "VECTOR_UNUSED_07";
+        case VECTOR_UNUSED_08:  return "VECTOR_UNUSED_08";
+        case VECTOR_UNUSED_09:  return "VECTOR_UNUSED_09";
+        case VECTOR_UNUSED_10:  return "VECTOR_UNUSED_10";
+        case VECTOR_UNUSED_11:  return "VECTOR_UNUSED_11";
+        case VECTOR_UNUSED_12:  return "VECTOR_UNUSED_12";
+        case VECTOR_UNUSED_13:  return "VECTOR_UNUSED_13";
+        case VECTOR_UNUSED_14:  return "VECTOR_UNUSED_14";
+        case VECTOR_UNUSED_15:  return "VECTOR_UNUSED_15";
+        default:                return "UNKNOWN_VECTOR";
+    }
+}
 /**
  *
  * TODO
@@ -811,12 +834,12 @@ void gui::setInterruptVector(uint8_t vector)
     //////////////////////////////////////////////////////////////////////////////
     // Vector Table
     //////////////////////////////////////////////////////////////////////////////
-    // 0000 :: RESERVED
-    // 0001 :: OFFLOAD
-    // 0010 ::
-    // 0011 ::
-    // 0100 ::
-    // 0101 ::
+    // 0000 :: VECTOR_RESERVED
+    // 0001 :: VECTOR_OFFLOAD
+    // 0010 :: VECTOR_ENABLE
+    // 0011 :: VECTOR_DISABLE
+    // 0100 :: VECTOR_START
+    // 0101 :: VECTOR_STOP
     // 0110 ::
     // 0111 ::
     // 1000 ::
@@ -858,30 +881,6 @@ void gui::setInterruptVector(uint8_t vector)
     (*m_Tx_GuiVector)[7] = 0x00;
 }
 
-std::string gui::vectorToString(interruptVectorType type)
-{
-    switch (type)
-    {
-        case VECTOR_RESERVED:   return "VECTOR_RESERVED";
-        case VECTOR_OFFLOAD:    return "VECTOR_OFFLOAD";    /* FIFO Offload chain */
-        case VECTOR_ENABLE:     return "VECTOR_ENABLE";     /* Enable Pulse Controllers */
-        case VECTOR_DISABLE:    return "VECTOR_DISABLE";    /* Disable Pulse Controllers */
-        case VECTOR_START:      return "VECTOR_START";      /* Start Measurement Acquisition */
-        case VECTOR_STOP:       return "VECTOR_STOP";       /* Stop Measurement Acquisition */
-        case VECTOR_UNUSED_06:  return "VECTOR_UNUSED_06";
-        case VECTOR_UNUSED_07:  return "VECTOR_UNUSED_07";
-        case VECTOR_UNUSED_08:  return "VECTOR_UNUSED_08";
-        case VECTOR_UNUSED_09:  return "VECTOR_UNUSED_09";
-        case VECTOR_UNUSED_10:  return "VECTOR_UNUSED_10";
-        case VECTOR_UNUSED_11:  return "VECTOR_UNUSED_11";
-        case VECTOR_UNUSED_12:  return "VECTOR_UNUSED_12";
-        case VECTOR_UNUSED_13:  return "VECTOR_UNUSED_13";
-        case VECTOR_UNUSED_14:  return "VECTOR_UNUSED_14";
-        case VECTOR_UNUSED_15:  return "VECTOR_UNUSED_15";
-        default:                return "UNKNOWN_VECTOR";
-    }
-}
-
 void gui::interruptVector_execute(interruptVectorType type)
 {
     //////////////////////////////////////////////////////////////////////////////
@@ -898,7 +897,7 @@ void gui::interruptVector_execute(interruptVectorType type)
     //    | 1 | size | 11 | 0 | << OFFLOAD_CTRL : std_logic_vector(7 downto 0)
     //
     //////////////////////////////////////////////////////////////////////////////
-    uint8_t intVector = 0x86;
+    uint8_t intVector = 0x86; /* Base :: RESERVED Vector */
     intVector += ((uint8_t)type << 3);
 
     setInterruptVector(intVector);
@@ -906,6 +905,21 @@ void gui::interruptVector_execute(interruptVectorType type)
 
     *m_IO_GuiState = IO_COM_WRITE_ONLY;
     printToMainConsole("[INT] Done -> " + QString::fromStdString(vectorToString(type)));
+}
+
+std::string gui::cmdToString(commandType cmd)
+{
+    switch (cmd)
+    {
+        case CMD_DMA_NORMAL:    return "CMD_DMA_NORMAL";
+        case CMD_DMA_SENSOR:    return "CMD_DMA_SENSOR";
+        case CMD_DMA_SINGLE:    return "CMD_DMA_SINGLE";
+        case CMD_DMA_CUSTOM:    return "CMD_DMA_CUSTOM";
+        case CMD_RAMDISK_CONFIG:return "CMD_RAMDISK_CONFIG";
+        case CMD_RAMDISK_CLEAR: return "CMD_RAMDISK_CLEAR";
+        case CMD_FPGA_RESET:    return "CMD_FPGA_RESET";
+        default:                return "UNKNOWN_CMD";
+    }
 }
 
 void gui::dma_execute(commandType cmd)
@@ -916,10 +930,9 @@ void gui::dma_execute(commandType cmd)
     }
     else
     {
+        printToMainConsole("[DMA] Send DMA Command to Kernel -> " + QString::fromStdString(cmdToString(cmd)));
         if(CMD_DMA_CUSTOM == cmd)
         {
-            printToMainConsole("[DMA] Send DMA Command to Kernel");
-
             bool ok;
             QString dataText = m_dmaCustom_dataField->text();
             uint8_t dmaSize = static_cast<uint8_t>(dataText.toUInt(&ok, 16));
@@ -929,7 +942,6 @@ void gui::dma_execute(commandType cmd)
         }
         else if(CMD_DMA_SINGLE == cmd || CMD_DMA_SENSOR == cmd)
         {
-            printToMainConsole("[DMA] Send DMA Command to Kernel");
             m_instanceDroneCtrl->getCommanderInstance()->sendCommand(cmd);
         }
         else
