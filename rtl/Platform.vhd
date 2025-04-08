@@ -284,17 +284,17 @@ signal interrupt_vector_enable : std_logic := '0';
 type VECTOR_TYPE is
 (
     VECTOR_IDLE,
-    VECTOR_RESERVED,
+    VECTOR_RESERVED, -- "0000"
     VECTOR_OFFLOAD,  -- "0001"
     VECTOR_ENABLE,   -- "0010"
     VECTOR_DISABLE,  -- "0011"
     VECTOR_START,    -- "0100"
     VECTOR_STOP,     -- "0101"
-    VECTOR_UNUSED_6, -- "0110"
-    VECTOR_UNUSED_7, -- "0111"
-    VECTOR_UNUSED_8, -- "1000"
-    VECTOR_UNUSED_9, -- "1001"
-    VECTOR_UNUSED_10, -- "1010"
+    VECTOR_PULSE,    -- "0110"
+    VECTOR_DATA,     -- "0111"
+    VECTOR_F1,       -- "1000"
+    VECTOR_F2,       -- "1001"
+    VECTOR_F3,       -- "1010"
     VECTOR_UNUSED_11, -- "1011"
     VECTOR_UNUSED_12, -- "1100"
     VECTOR_UNUSED_13, -- "1101"
@@ -307,6 +307,15 @@ signal vector_state: VECTOR_TYPE := VECTOR_IDLE;
 signal offload_vector_interrtupt : std_logic := '0';
 signal enable_vector_interrtupt : std_logic := '0';
 signal start_vector_interrtupt : std_logic := '0';
+signal pulse_vector_interrtupt : std_logic := '0';
+signal pulse_vector_extension : std_logic := '0';
+signal data_vector_interrupt : std_logic := '0';
+signal f1_vector_interrupt : std_logic := '0';
+signal f2_vector_interrupt : std_logic := '0';
+signal f3_vector_interrupt : std_logic := '0';
+-- Interrupt Help
+signal data_vector_run : std_logic := '0';
+signal data_vector_count : std_logic_vector(3 downto 0) := (others => '0');
 -- Interrupt Vector signals
 signal primary_conversion_run : std_logic := '0';
 signal primary_conversion_reset : integer range 0 to 2048 := 0;
@@ -316,6 +325,10 @@ signal primary_fifo_rd_en : std_logic := '0';
 signal primary_fifo_data_out : std_logic_vector(7 downto 0) := (others => '0');
 signal primary_fifo_full : std_logic := '0';
 signal primary_fifo_empty : std_logic := '0';
+-- Fifo
+signal sensor_fifo_data_out : std_logic_vector(7 downto 0) := (others => '0');
+signal sensor_fifo_full : std_logic := '0';
+signal sensor_fifo_empty : std_logic := '0';
 -- Offload
 signal offload_ready : std_logic := '0';
 signal offload_id : std_logic_vector(6 downto 0) := (others => '0');
@@ -349,6 +362,17 @@ signal interrupt_spi_bmi160_s1_feedback : std_logic := '0';
 signal interrupt_spi_bmi160_s2_feedback : std_logic := '0';
 signal interrupt_spi_bmi160_s3_feedback : std_logic := '0';
 signal interrupt_pwm_feedback : std_logic := '0';
+-- Feedback Pulse & Burst for S1
+signal interrupt_spi_bmi160_s1_pulse : std_logic := '0';
+signal interrupt_spi_bmi160_s1_burst : std_logic := '0';
+-- Feedback Pulse & Burst for S2 + Data
+signal interrupt_spi_bmi160_s2_pulse : std_logic := '0';
+signal interrupt_spi_bmi160_s2_burst : std_logic := '0';
+signal data_spi_bmi160_s1_burst : std_logic_vector(7 downto 0);
+signal data_spi_bmi160_s2_burst : std_logic_vector(7 downto 0);
+-- Feedback Pulse & Burst for NRF905
+signal interrupt_spi_rf_burst : std_logic := '0';
+signal data_spi_rf_burst : std_logic_vector(7 downto 0);
 -- Feedback data
 signal data_i2c_feedback : std_logic_vector(7 downto 0) := (others => '0');
 signal data_spi_rf_feedback : std_logic_vector(7 downto 0) := "00010001";
@@ -455,6 +479,7 @@ type SENSOR_STATE is
 signal s1_state: SENSOR_STATE := SENSOR_IDLE;
 
 -- Debug
+signal led_6_toggle : std_logic := '1';
 signal led_7_toggle : std_logic := '1';
 signal led_8_toggle : std_logic := '1';
 ----------------------------------------------------------------------------------------------------------------
@@ -516,6 +541,8 @@ Port
     CTRL_SCK : out std_logic;
 
     FPGA_INT : out std_logic;
+    BURST_INT : out std_logic;
+    BURST_DATA : out std_logic_vector(7 downto 0);
     FEEDBACK_DATA : out std_logic_vector(7 downto 0)
 );
 end component;
@@ -560,22 +587,24 @@ port
 end component;
 
 ------------------------------------------------------
+--
+-- Asynchronous Reset
+--
 -- 8-Bit
 -- 256 Deepth
+--
 ------------------------------------------------------
-component Fifo
+component FifoData
 port
 (
-    clock : IN STD_LOGIC;
-
-    data  : IN STD_LOGIC_VECTOR (7 DOWNTO 0);
-    rdreq : IN STD_LOGIC;
-    wrreq : IN STD_LOGIC;
-
-    empty : OUT STD_LOGIC;
-    full : OUT STD_LOGIC;
-    q : OUT STD_LOGIC_VECTOR (7 DOWNTO 0);
-    usedw : OUT STD_LOGIC_VECTOR (7 DOWNTO 0)
+    aclr : IN STD_LOGIC ;
+    clock : IN STD_LOGIC ;
+    data : IN STD_LOGIC_VECTOR (7 DOWNTO 0);
+    rdreq : IN STD_LOGIC ;
+    wrreq : IN STD_LOGIC ;
+    empty : OUT STD_LOGIC ;
+    full : OUT STD_LOGIC ;
+    q : OUT STD_LOGIC_VECTOR (7 DOWNTO 0)
 );
 end component;
 
@@ -1359,15 +1388,15 @@ begin
                 elsif interrupt_vector = "0101" then
                     vector_state <= VECTOR_STOP;
                 elsif interrupt_vector = "0110" then
-                    vector_state <= VECTOR_UNUSED_6;
+                    vector_state <= VECTOR_PULSE;
                 elsif interrupt_vector = "0111" then
-                    vector_state <= VECTOR_UNUSED_7;
+                    vector_state <= VECTOR_DATA;
                 elsif interrupt_vector = "1000" then
-                    vector_state <= VECTOR_UNUSED_8;
+                    vector_state <= VECTOR_F1;
                 elsif interrupt_vector = "1001" then
-                    vector_state <= VECTOR_UNUSED_9;
+                    vector_state <= VECTOR_F2;
                 elsif interrupt_vector = "1010" then
-                    vector_state <= VECTOR_UNUSED_10;
+                    vector_state <= VECTOR_F3;
                 elsif interrupt_vector = "1011" then
                     vector_state <= VECTOR_UNUSED_11;
                 elsif interrupt_vector = "1100" then
@@ -1401,15 +1430,20 @@ begin
                 start_vector_interrtupt <= '0';
                 led_7_toggle <= '1';
                 vector_state <= VECTOR_DONE;
-            when VECTOR_UNUSED_6 =>
+            when VECTOR_PULSE =>
+                pulse_vector_interrtupt <= '1';
                 vector_state <= VECTOR_DONE;
-            when VECTOR_UNUSED_7 =>
+            when VECTOR_DATA =>
+                data_vector_interrupt <= '1';
                 vector_state <= VECTOR_DONE;
-            when VECTOR_UNUSED_8 =>
+            when VECTOR_F1 =>
+                f1_vector_interrupt <= '1';
                 vector_state <= VECTOR_DONE;
-            when VECTOR_UNUSED_9 =>
+            when VECTOR_F2 =>
+                f2_vector_interrupt <= '1';
                 vector_state <= VECTOR_DONE;
-            when VECTOR_UNUSED_10 =>
+            when VECTOR_F3 =>
+                f3_vector_interrupt <= '1';
                 vector_state <= VECTOR_DONE;
             when VECTOR_UNUSED_11 =>
                 vector_state <= VECTOR_DONE;
@@ -1423,6 +1457,11 @@ begin
                 vector_state <= VECTOR_DONE;
             when VECTOR_DONE =>
                 offload_vector_interrtupt <= '0';
+                pulse_vector_interrtupt <= '0';
+                data_vector_interrupt <= '0';
+                f1_vector_interrupt <= '0';
+                f2_vector_interrupt <= '0';
+                f3_vector_interrupt <= '0';
                 vector_state <= VECTOR_IDLE;
             when others =>
                 vector_state <= VECTOR_IDLE;
@@ -1437,9 +1476,15 @@ end process;
 -- //
 -- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
--- FIFO Module
-Fifo_module: Fifo
-port map (
+------------------------------------------------------
+-- FIFO
+-- 8-Bit
+-- 256 Deepth
+------------------------------------------------------
+PrimarySpiData_Fifo: FifoData
+port map
+(
+    aclr  => global_fpga_reset,
     clock => CLOCK_50MHz,
     -- IN
     data  => FIFO_primary_parallel_MOSI,
@@ -1450,8 +1495,7 @@ port map (
     -- OUT
     empty => primary_fifo_empty,
     full  => primary_fifo_full,
-    q     => primary_fifo_data_out,
-    usedw => open
+    q     => primary_fifo_data_out
 );
 
 OffloadController_module: OffloadController
@@ -1667,6 +1711,11 @@ PacketSwitch:
 process(CLOCK_50MHz)
 begin
     if rising_edge(CLOCK_50MHz) then
+
+        if pulse_vector_interrtupt = '1' then
+            pulse_vector_extension <= '1';
+        end if;
+
         case s1_state is
             when SENSOR_IDLE =>
                 if offload_ready = '1' then
@@ -1696,8 +1745,12 @@ begin
                         switch_pwm_ready <= '1';
                     end if;
                     s1_state <= SENSOR_DONE;
-                elsif s1_bmi160_int_1_DataReady = '1' and start_vector_interrtupt = '1' then
-                    s1_state <= SENSOR_TEST;
+                elsif s1_bmi160_int_1_DataReady = '1' then
+                    if start_vector_interrtupt = '1'
+                    or pulse_vector_extension = '1' then
+                        pulse_vector_extension <= '0';
+                        s1_state <= SENSOR_TEST;
+                    end if;
                 end if;
 
             when SENSOR_TEST =>
@@ -1782,6 +1835,8 @@ SpiController_BMI160_S1_module: SpiController port map
     CTRL_SCK => ctrl_BMI160_S1_SCLK,
 
     FPGA_INT => interrupt_spi_bmi160_s1_feedback,
+    BURST_INT => interrupt_spi_bmi160_s1_burst,
+    BURST_DATA => data_spi_bmi160_s1_burst,
     FEEDBACK_DATA => data_spi_bmi160_s1_feedback
 );
 
@@ -1810,6 +1865,8 @@ SpiController_BMI160_S2_module: SpiController port map
     CTRL_SCK => ctrl_BMI160_S2_SCLK,
 
     FPGA_INT => interrupt_spi_bmi160_s2_feedback,
+    BURST_INT => interrupt_spi_bmi160_s2_burst,
+    BURST_DATA => data_spi_bmi160_s2_burst,
     FEEDBACK_DATA => data_spi_bmi160_s2_feedback
 );
 
@@ -1838,10 +1895,52 @@ SpiController_RF_module: SpiController port map
     CTRL_SCK => ctrl_RF_SCLK,
 
     FPGA_INT => interrupt_spi_rf_feedback,
+    BURST_INT => interrupt_spi_rf_burst,
+    BURST_DATA => data_spi_rf_burst,
     FEEDBACK_DATA => data_spi_rf_feedback
 );
 
 offload_wait <= offload_wait_i2c or offload_wait_spi_s1 or offload_wait_spi_s2 or offload_wait_spi_rf;
+
+-- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+-- //                    //
+-- //                    //
+-- // [FIFO] Sensor Data //
+-- //                    //
+-- //                    //
+-- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+offload_FifoData:
+process(CLOCK_50MHz)
+begin
+    if rising_edge(CLOCK_50MHz) then
+        if data_vector_interrupt = '1' and data_vector_run <= '0' then
+            data_vector_count <= "0000";
+            data_vector_run <= '1';
+        elsif data_vector_run = '1' and data_vector_count < "1011" then
+            data_vector_count <= data_vector_count + '1';
+        else
+            data_vector_run <= '0';
+        end if;
+    end if;
+end process;
+
+SensorData_Fifo: FifoData
+port map
+(
+    aclr  => global_fpga_reset,
+    clock => CLOCK_50MHz,
+    -- IN
+    data  => data_spi_bmi160_s1_burst,
+
+    rdreq => data_vector_run,
+    wrreq => interrupt_spi_bmi160_s1_burst,
+
+    -- OUT
+    empty => sensor_fifo_empty,
+    full  => sensor_fifo_full,
+    q     => sensor_fifo_data_out
+);
 
 -------------------------------------
 --
@@ -2000,7 +2099,7 @@ LED_2 <= '1';
 LED_3 <= '1';
 LED_4 <= '1';
 LED_5 <= '1';
-LED_6 <= '1';
+LED_6 <= led_6_toggle;
 LED_7 <= led_7_toggle;
 LED_8 <= led_8_toggle;
 
