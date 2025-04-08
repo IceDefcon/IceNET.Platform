@@ -141,6 +141,7 @@ private slots:
     void printToUartConsole(const QString &message);
 
     void initThread();
+    void debugThread();
     void shutdownThread();
     void threadMain();
 };
