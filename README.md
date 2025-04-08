@@ -4,7 +4,7 @@
 
 # Current Hardware configuration
 
-	Quartus :: 22.1std.1.917 :: SC Lite Edition
+	Quartus :: 22.1std.1 Build 917 02/14/2023 SC Lite Edition
 	Cyclone IV :: EP4CE15F23C8N
 	Cortex-A57 :: 4.9.253-tegra Kernel Module
 	Cortex-A57 :: Qt5 GUI & System Application for Master Control

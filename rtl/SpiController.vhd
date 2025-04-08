@@ -24,6 +24,8 @@ Port
     CTRL_SCK : out std_logic;
 
     FPGA_INT : out std_logic;
+    BURST_INT : out std_logic;
+    BURST_DATA : out std_logic_vector(7 downto 0);
     FEEDBACK_DATA : out std_logic_vector(7 downto 0)
 );
 end entity SpiController;
@@ -225,6 +227,8 @@ begin
                                 spi_status <= "1000"; -- Next Byte Exit
                             else
                                 spi_status <= "1110"; -- Going Back to CONFIG
+                                BURST_INT <= '1';
+                                BURST_DATA <= feedback_byte;
                             end if;
                         end if;
 
@@ -240,7 +244,9 @@ begin
                             elsif byte_process_timer < BYTE_BREAK + BYTE_INIT + BYTE_CLOCK + BYTE_EXIT + TRANSFER_EXIT then
                                 spi_status <= "1101"; -- Transfer Exit
                                 FPGA_INT <= '1';
+                                BURST_INT <= '1';
                                 FEEDBACK_DATA <= feedback_byte;
+                                BURST_DATA <= feedback_byte;
                             else
                                 spi_status <= "1111"; -- Going Back to CONFIG -> IDLE
                             end if;
@@ -276,6 +282,10 @@ begin
                             CTRL_CS <= '0';
                             CTRL_MOSI <= '0';
                             CTRL_SCK <= '0';
+                        end if;
+
+                        if spi_status = "1101" then
+                            BURST_INT <= '0';
                         end if;
 
                         ---------------------------------------------------
@@ -320,6 +330,7 @@ begin
                             CTRL_CS <= '0';
                             CTRL_MOSI <= '0';
                             CTRL_SCK <= '0';
+                            BURST_INT <= '0';
                         end if;
 
                         ------------------------
@@ -330,6 +341,7 @@ begin
                             CTRL_MOSI <= '1';
                             CTRL_SCK <= '0';
                             SPI_state <= SPI_CONFIG;
+                            BURST_INT <= '0';
                         end if;
 
 ------------------------------------------------------------------------------------------------------------------------------
@@ -364,7 +376,7 @@ begin
                             elsif byte_process_timer < BYTE_BREAK + BYTE_INIT then
                                 spi_status <= "0110"; -- Next Byte Init
                             elsif byte_process_timer < BYTE_BREAK + BYTE_INIT + BYTE_CLOCK then
-                                spi_status <= "0111"; -- Generic Byte Clock Processhn    n gfn,h@;]rt pyUNmr509xq-0,9 ij
+                                spi_status <= "0111"; -- Generic Byte Clock Processing
                             elsif byte_process_timer < BYTE_BREAK + BYTE_INIT + BYTE_CLOCK + BYTE_EXIT then
                                 spi_status <= "1000"; -- Next Byte Exit
                             else
