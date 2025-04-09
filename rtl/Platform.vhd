@@ -132,17 +132,15 @@ port
     -----------------------------------------------------------------------------
     -- Kernel Communication
     -----------------------------------------------------------------------------
-    --SPI_INT_FROM_CPU : in std_logic; -- PIN_A5 :: GPIO12 :: HEADER_PIN_15
     SPI_INT_FROM_FPGA : out std_logic; -- PIN_A9 :: GPIO01 :: HEADER_PIN_29
     TIMER_INT_FROM_FPGA : out std_logic; -- PIN_A13 :: GPIO09 :: HEADER_PIN_07
     WDG_INT_FROM_FPGA : out std_logic; -- PIN_A20 :: GPIO11 :: HEADER_PIN_31
-    --CFG_INT_FROM_CPU : in std_logic; -- PIN_B4 :: GPIO13 :: HEADER_PIN_33
     RESET_FROM_CPU : in std_logic; -- PIN_B5 :: GPIO07 :: HEADER_PIN_32
 
-    PRIMARY_MOSI : in std_logic;  -- PIN_B6 :: H19 :: SPI0_MOSI
-    PRIMARY_MISO : out std_logic; -- PIN_A8 :: H21 :: SPI0_MISO
-    PRIMARY_SCLK : in std_logic;  -- PIN_B8 :: H23 :: SPI0_SCLK
-    PRIMARY_CS : in std_logic;    -- PIN_A6 :: H24 :: SPI0_CS0
+    PRIMARY_MOSI : in std_logic;  -- PIN_B6 :: H19 :: SPI0_MOSI :: SDA
+    PRIMARY_MISO : out std_logic; -- PIN_A8 :: H21 :: SPI0_MISO :: SAO
+    PRIMARY_SCLK : in std_logic;  -- PIN_B8 :: H23 :: SPI0_SCLK :: SCL
+    PRIMARY_CS : in std_logic;    -- PIN_A6 :: H24 :: SPI0_CS0  :: CS
 
     SECONDARY_MOSI : in std_logic;  -- PIN_B14 :: P9_30 :: SPI1_D1
     SECONDARY_MISO : out std_logic; -- PIN_A14 :: P9_29 :: SPI1_D0
@@ -254,6 +252,7 @@ signal synced_SECONDARY_SCLK : std_logic := '0';
 signal synced_SECONDARY_CS : std_logic := '0';
 -- Main UART
 signal synced_FPGA_UART_RX : std_logic := '0';
+signal synced_GPS_UART_RX : std_logic := '0';
 -- Buttons
 signal active_button_1 : std_logic := '0';
 -- Spi.0 Primary
@@ -945,6 +944,20 @@ port map
 
     ASYNC_INPUT => FPGA_UART_RX,
     SYNC_OUTPUT => synced_FPGA_UART_RX
+);
+
+DelaySynchroniser_GPS_UART: DelaySynchroniser
+generic map
+(
+    SYNCHRONIZATION_DEPTH => 2
+)
+port map
+(
+    CLOCK_50MHz => CLOCK_50MHz,
+    RESET => global_fpga_reset,
+
+    ASYNC_INPUT => GPS_UART_RX,
+    SYNC_OUTPUT => synced_GPS_UART_RX
 );
 
 -- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1668,20 +1681,23 @@ port map
 -- //                   //
 -- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-UartDataTransfer_module: UartDataTransfer
-port map
-(
-    CLOCK_50MHz => CLOCK_50MHz,
-    RESET => global_fpga_reset,
+--UartDataTransfer_module: UartDataTransfer
+--port map
+--(
+--    CLOCK_50MHz => CLOCK_50MHz,
+--    RESET => global_fpga_reset,
 
-    WRITE_ENABLE => uart_write_enable,
-    WRITE_SYMBOL => uart_write_symbol,
+--    WRITE_ENABLE => uart_write_enable,
+--    WRITE_SYMBOL => uart_write_symbol,
 
-    FPGA_UART_TX => FPGA_UART_TX,
-    FPGA_UART_RX => synced_FPGA_UART_RX,
+--    FPGA_UART_TX => FPGA_UART_TX,
+--    FPGA_UART_RX => synced_FPGA_UART_RX,
 
-    WRITE_BUSY => uart_write_busy
-);
+--    WRITE_BUSY => uart_write_busy
+--);
+
+FPGA_UART_TX <=  synced_GPS_UART_RX;
+GPS_UART_TX <= synced_FPGA_UART_RX;
 
 UartDataAssembly_module: UartDataAssembly
 port map
