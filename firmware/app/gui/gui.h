@@ -33,6 +33,8 @@
 
 typedef struct
 {
+    uint32_t xWindow;
+    uint32_t yWindow;
     uint32_t xGap;
     uint32_t yGap;
     uint32_t xLogo;
@@ -94,7 +96,7 @@ class gui : public QWidget
 
     QString m_currentTime;
 
-    // void paintEvent(QPaintEvent *event) override;
+    void paintEvent(QPaintEvent *event) override;
 
     bool m_isPulseControllerEnabled;;
     bool m_isStartAcquisition;;
@@ -119,6 +121,7 @@ private slots:
     void setupSPI();
     void setupPWM();
     void setupDma();
+    void setupFifo();
 
     void setDeadCommand();
     void setDummyCommand();

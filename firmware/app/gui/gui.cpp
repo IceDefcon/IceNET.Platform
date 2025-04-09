@@ -10,6 +10,8 @@
 
 static const deviceType dev =
 {
+    .xWindow = 1200,
+    .yWindow = 750,
     .xGap = 5,
     .yGap = 5,
     .xLogo = 200,
@@ -25,7 +27,7 @@ static const consoleType console =
 {
     .xPosition = dev.xGap*5 + dev.xText + dev.xUnit*2,  // Vertical Separator
     .yPosition = dev.yGap*6 + dev.yLogo + dev.yUnit*3,  // At SPI Logo
-    .xSize = 800 - console.xPosition - dev.xGap,        // Obvious
+    .xSize = dev.xWindow - console.xPosition - dev.xGap,        // Obvious
     .ySize = dev.yGap*8 + dev.yLogo*2 + dev.yUnit*6+1,  // Last Horizontal Separator - yPosition + yGap
 };
 
@@ -53,6 +55,7 @@ m_phase(0.0)
     setupSPI();
     setupPWM();
     setupDma();
+    setupFifo();
 
     setupSeparators();
 }
@@ -68,25 +71,11 @@ gui::~gui()
         shutdownThread();
     }
 }
-#if 1
-void gui::setupWindow()
-{
-    setWindowTitle("IceNET Platform");
-    setFixedSize(800, 600);
 
-    QTimer *timer = new QTimer(this);
-    connect(timer, &QTimer::timeout, this, [=]()
-    {
-        m_phase += 0.1;  // Adjust speed here
-        update();      // Triggers paintEvent
-    });
-    timer->start(30);  // Redraw every 30ms (~33 FPS)
-}
-#else
 void gui::setupWindow()
 {
     setWindowTitle("IceNET Platform");
-    setFixedSize(1600, 600);
+    setFixedSize(dev.xWindow, dev.yWindow);
 
     QTimer *timer = new QTimer(this);
     connect(timer, &QTimer::timeout, this, [=]()
@@ -104,11 +93,10 @@ void gui::paintEvent(QPaintEvent *event)
 
     double scale = 25.0;
     double step = 0.05;
-    double t_max = 400 / scale;
+    double t_max = (dev.xWindow - 800 - scale - dev.xGap*4) / scale;
 
-    int x_offset = 820 + dev.xGap;
-    int y_offset1 = 150;  // Center Y for sine/cosine
-    int y_offset2 = 400;  // Center Y for tan/cot
+    int x_offset = 800 + scale + dev.xGap;
+    int y_offset = scale*2 + dev.xGap;
 
     QRect graphArea(x_offset, 0, static_cast<int>(scale * t_max), height());
     if (!event->rect().intersects(graphArea))
@@ -122,12 +110,12 @@ void gui::paintEvent(QPaintEvent *event)
 
     // Axes
     painter.setPen(axisPen);
-    painter.drawLine(QPoint(x_offset, y_offset1), QPoint(x_offset + static_cast<int>(scale * t_max), y_offset1)); // X
-    painter.drawLine(QPoint(x_offset, y_offset1 - static_cast<int>(scale * 1.5)), QPoint(x_offset, y_offset1 + static_cast<int>(scale * 1.5))); // Y
+    painter.drawLine(QPoint(x_offset, y_offset), QPoint(x_offset + static_cast<int>(scale * t_max), y_offset)); // X
+    painter.drawLine(QPoint(x_offset, y_offset - static_cast<int>(scale * 1.5)), QPoint(x_offset, y_offset + static_cast<int>(scale * 1.5))); // Y
     painter.setPen(Qt::black);
     painter.setFont(QFont("Arial", 8));
-    painter.drawText(x_offset - 20, y_offset1 - static_cast<int>(scale * 1.5) - 5, "Y");
-    painter.drawText(x_offset + static_cast<int>(scale * t_max) + 5, y_offset1 + 15, "X");
+    painter.drawText(x_offset - 20, y_offset - static_cast<int>(scale * 1.5) - 5, "y(t)");
+    painter.drawText(x_offset + static_cast<int>(scale * t_max) + 5, y_offset + 15, "t");
 
     // Draw sine
     painter.setPen(sinPen);
@@ -137,7 +125,7 @@ void gui::paintEvent(QPaintEvent *event)
     for (double t = 0; t <= t_max; t += step) {
         int x = x_offset + static_cast<int>(scale * t);
         double yVal = sin(t + m_phase);
-        int y = y_offset1 - static_cast<int>(scale * yVal);
+        int y = y_offset - static_cast<int>(scale * yVal);
         QPoint pt(x, y);
         if (!first) painter.drawLine(lastPoint, pt);
         lastPoint = pt;
@@ -154,7 +142,7 @@ void gui::paintEvent(QPaintEvent *event)
     for (double t = 0; t <= t_max; t += step) {
         int x = x_offset + static_cast<int>(scale * t);
         double yVal = cos(t + m_phase);
-        int y = y_offset1 - static_cast<int>(scale * yVal);
+        int y = y_offset - static_cast<int>(scale * yVal);
         QPoint pt(x, y);
         if (!first) painter.drawLine(lastPoint, pt);
         lastPoint = pt;
@@ -165,99 +153,25 @@ void gui::paintEvent(QPaintEvent *event)
     // Highlight latest point
     painter.setPen(highlightPen);
     int x_last = x_offset + static_cast<int>(scale * lastT);
-    int y_sin = y_offset1 - static_cast<int>(scale * lastSin);
-    int y_cos = y_offset1 - static_cast<int>(scale * lastCos);
+    int y_sin = y_offset - static_cast<int>(scale * lastSin);
+    int y_cos = y_offset - static_cast<int>(scale * lastCos);
     painter.drawEllipse(QPoint(x_last, y_sin), 4, 4);
     painter.drawEllipse(QPoint(x_last, y_cos), 4, 4);
 
     // Data box for sine + cosine
-    QRect dataBox1(x_offset + 420, 80, 200, 80);
-    painter.setBrush(QColor(240, 240, 240));
+    QRect dataBox1(x_offset + dev.xGap*2, 80 + dev.yGap*2, 180, 50);
+    painter.setBrush(QColor(240, 240, 240)); /* RGB Colour */
     painter.setPen(QPen(Qt::black, 2));
     painter.drawRect(dataBox1);
     painter.setFont(QFont("Arial", 10));
     painter.setPen(Qt::black);
-    QString data1 = QString("t = %1\nsin(t) = %2\ncos(t) = %3")
-                    .arg(lastT + m_phase, 0, 'f', 2)
-                    .arg(lastSin, 0, 'f', 2)
-                    .arg(lastCos, 0, 'f', 2);
+    QString data1 = QString("y(t) = sin(%1) = %2\ny(t) = cos(%1) = %3")
+                        .arg(lastT + m_phase, 0, 'f', 2)
+                        .arg(lastSin, 0, 'f', 2)
+                        .arg(lastCos, 0, 'f', 2);
     painter.drawText(dataBox1.adjusted(10, 10, -10, -10), Qt::AlignLeft | Qt::AlignTop, data1);
-
-    // ========== TANGENT + COTANGENT ==========
-    // Axes
-    double lastTan = 0.0;
-    double lastCot = 0.0;
-
-    painter.setPen(axisPen);
-    painter.drawLine(QPoint(x_offset, y_offset2), QPoint(x_offset + static_cast<int>(scale * t_max), y_offset2)); // X
-    painter.drawLine(QPoint(x_offset, y_offset2 - 150), QPoint(x_offset, y_offset2 + 150)); // Y
-    painter.setPen(Qt::black);
-    painter.drawText(x_offset - 20, y_offset2 - 150 - 5, "Y");
-    painter.drawText(x_offset + static_cast<int>(scale * t_max) + 5, y_offset2 + 15, "X");
-
-    // Tangent
-    QPen tanPen(Qt::darkMagenta, 2);
-    painter.setPen(tanPen);
-    first = true;
-    lastPoint = QPoint();
-    lastTan = 0.0;
-    for (double t = 0; t <= t_max; t += step) {
-        double yVal = tan(t + m_phase);
-        if (std::abs(yVal) > 5.0) { // limit to ±5
-            first = true;
-            continue;
-        }
-        int x = x_offset + static_cast<int>(scale * t);
-        int y = y_offset2 - static_cast<int>(scale * yVal);
-        QPoint pt(x, y);
-        if (!first) painter.drawLine(lastPoint, pt);
-        lastPoint = pt;
-        first = false;
-        lastTan = yVal;
-    }
-
-    // Cotangent
-    QPen cotPen(Qt::darkCyan, 2);
-    painter.setPen(cotPen);
-    first = true;
-    lastPoint = QPoint();
-    lastCot = 0.0;
-    for (double t = 0.01; t <= t_max; t += step) { // avoid division by 0
-        double yVal = 1.0 / tan(t + m_phase);
-        if (std::abs(yVal) > 5.0) { // limit to ±5
-            first = true;
-            continue;
-        }
-        int x = x_offset + static_cast<int>(scale * t);
-        int y = y_offset2 - static_cast<int>(scale * yVal);
-        QPoint pt(x, y);
-        if (!first) painter.drawLine(lastPoint, pt);
-        lastPoint = pt;
-        first = false;
-        lastCot = yVal;
-    }
-
-    // Highlight
-    painter.setPen(highlightPen);
-    int y_tan = y_offset2 - static_cast<int>(scale * lastTan);
-    int y_cot = y_offset2 - static_cast<int>(scale * lastCot);
-    painter.drawEllipse(QPoint(x_last, y_tan), 4, 4);
-    painter.drawEllipse(QPoint(x_last, y_cot), 4, 4);
-
-    // Data box for tan + cot
-    QRect dataBox2(x_offset + 420, 330, 200, 90);
-    painter.setBrush(QColor(240, 240, 240));
-    painter.setPen(QPen(Qt::black, 2));
-    painter.drawRect(dataBox2);
-    painter.setFont(QFont("Arial", 10));
-    painter.setPen(Qt::black);
-    QString data2 = QString("t = %1\ntan(t) = %2\ncot(t) = %3")
-                    .arg(lastT + m_phase, 0, 'f', 2)
-                    .arg(lastTan, 0, 'f', 2)
-                    .arg(lastCot, 0, 'f', 2);
-    painter.drawText(dataBox2.adjusted(10, 10, -10, -10), Qt::AlignLeft | Qt::AlignTop, data2);
 }
-#endif
+
 void gui::setupMainConsole()
 {
     m_mainConsoleOutput = new QPlainTextEdit(this);
@@ -271,11 +185,11 @@ void gui::setupUartConsole()
     /* Rx window */
     m_uartConsoleOutput = new QPlainTextEdit(this);
     m_uartConsoleOutput->setReadOnly(true);
-    m_uartConsoleOutput->setGeometry(console.xPosition, dev.yGap*16 + dev.yLogo*3 + dev.yUnit*9, console.xSize, 600 - dev.yGap*17 - dev.yUnit*10 - dev.yLogo*3);
+    m_uartConsoleOutput->setGeometry(console.xPosition, dev.yGap*16 + dev.yLogo*3 + dev.yUnit*9, console.xSize, dev.yWindow - dev.yGap*17 - dev.yUnit*10 - dev.yLogo*3);
     m_uartConsoleOutput->setPlainText("[INIT] UART Console Initialized");
     /* Tx bar */
     m_uartInput = new QLineEdit(this);
-    m_uartInput->setGeometry(console.xPosition, 600 - dev.yGap - dev.yUnit, console.xSize, dev.yUnit);
+    m_uartInput->setGeometry(console.xPosition, dev.yWindow - dev.yGap - dev.yUnit, console.xSize, dev.yUnit);
     connect(m_uartInput, &QLineEdit::returnPressed, this, &gui::onUartInput);
     /* Open device */
     openUart();
@@ -731,12 +645,12 @@ void gui::setupSeparators()
 {
     /* Vertical Separator */
     QFrame *vLine1 = new QFrame(this);
-    vLine1->setGeometry(dev.xGap*4 + dev.xText + dev.xUnit*2, dev.yGap, dev.separatorWidth , 600 - dev.yGap*2);
+    vLine1->setGeometry(dev.xGap*4 + dev.xText + dev.xUnit*2, dev.yGap, dev.separatorWidth , dev.yWindow - dev.yGap*2);
     vLine1->setFrameShape(QFrame::VLine);
     vLine1->setFrameShadow(QFrame::Sunken);
     /* Horizontal Separator */
     QFrame *hLine1 = new QFrame(this);
-    hLine1->setGeometry(dev.xGap, dev.yGap*5 + dev.yLogo + dev.yUnit*3, 800 - dev.xGap*1, dev.separatorWidth);
+    hLine1->setGeometry(dev.xGap, dev.yGap*5 + dev.yLogo + dev.yUnit*3, dev.xWindow - dev.xGap*2, dev.separatorWidth);
     hLine1->setFrameShape(QFrame::HLine);
     hLine1->setFrameShadow(QFrame::Sunken);
     /* Horizontal Separator */
@@ -746,7 +660,7 @@ void gui::setupSeparators()
     hLine2->setFrameShadow(QFrame::Sunken);
     /* Horizontal Separator */
     QFrame *hLine3 = new QFrame(this);
-    hLine3->setGeometry(dev.xGap, dev.yGap*15 + dev.yLogo*3 + dev.yUnit*9, 800 - dev.xGap*1, dev.separatorWidth);
+    hLine3->setGeometry(dev.xGap, dev.yGap*15 + dev.yLogo*3 + dev.yUnit*9, dev.xWindow - dev.xGap*2, dev.separatorWidth);
     hLine3->setFrameShape(QFrame::HLine);
     hLine3->setFrameShadow(QFrame::Sunken);
     /* Vertical Separator */
@@ -756,9 +670,14 @@ void gui::setupSeparators()
     vLine2->setFrameShadow(QFrame::Sunken);
     /* Vertical Separator */
     QFrame *vLine3 = new QFrame(this);
-    vLine3->setGeometry(800, dev.yGap, dev.separatorWidth, 600 - dev.yGap*2);
+    vLine3->setGeometry(800, dev.yGap, dev.separatorWidth, dev.yGap*4 + dev.yLogo + dev.yUnit*3);
     vLine3->setFrameShape(QFrame::VLine);
     vLine3->setFrameShadow(QFrame::Sunken);
+    /* Horizontal Separator */
+    QFrame *hLine4 = new QFrame(this);
+    hLine4->setGeometry(dev.xGap, dev.yGap*20 + dev.yLogo*4 + dev.yUnit*12, dev.xGap*3 + dev.xText + dev.xUnit*2, dev.separatorWidth);
+    hLine4->setFrameShape(QFrame::HLine);
+    hLine4->setFrameShadow(QFrame::Sunken);
 }
 
 void gui::setupI2C()
@@ -939,6 +858,18 @@ void gui::setupDma()
     {
         dma_execute(CMD_DMA_SENSOR);
     });
+}
+
+void gui::setupFifo()
+{
+    /* FIFO :: Row[0] */
+    QLabel *i2c_label = new QLabel("FIFO", this);
+    QFont i2c_labelFont;
+    i2c_labelFont.setPointSize(30);
+    i2c_labelFont.setItalic(true);
+    i2c_labelFont.setBold(true);
+    i2c_label->setFont(i2c_labelFont);
+    i2c_label->setGeometry(dev.xGap, dev.yGap*21 + dev.yLogo*4 + dev.yUnit*12, dev.xLogo, dev.yLogo);
 }
 
 void gui::setDeadCommand()
@@ -1397,7 +1328,7 @@ void gui::openUart()
 
     m_uartPortName = "/dev/ttyTHS1";
     m_serialPort->setPortName(m_uartPortName);
-#if 1
+#if 0
     m_serialPort->setBaudRate(2000000);
 #else
     m_serialPort->setBaudRate(115200);
@@ -1427,7 +1358,7 @@ void gui::readUartData()
     {
         m_readBuffer.append(m_serialPort->readAll());
 
-#if 1
+#if 0
         const int messageLength = 8;
         while (m_readBuffer.size() >= messageLength)
         {
