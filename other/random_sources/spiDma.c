@@ -201,7 +201,7 @@ static int __init spi_module_init(void)
     // if (ret < 0)
     // {
     //     return ret;
-    // }
+    //
 
     printk(KERN_INFO "[CTRL][SPI] Chip ID = 0x%02x\n", chip_id);
     printk(KERN_INFO "[CTRL][SPI] Acceleration Data: X_lo=0x%02x, X_hi=0x%02x\n", accel_x_lo, accel_x_hi);
