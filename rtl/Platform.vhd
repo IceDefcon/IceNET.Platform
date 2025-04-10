@@ -132,17 +132,15 @@ port
     -----------------------------------------------------------------------------
     -- Kernel Communication
     -----------------------------------------------------------------------------
-    --SPI_INT_FROM_CPU : in std_logic; -- PIN_A5 :: GPIO12 :: HEADER_PIN_15
     SPI_INT_FROM_FPGA : out std_logic; -- PIN_A9 :: GPIO01 :: HEADER_PIN_29
     TIMER_INT_FROM_FPGA : out std_logic; -- PIN_A13 :: GPIO09 :: HEADER_PIN_07
     WDG_INT_FROM_FPGA : out std_logic; -- PIN_A20 :: GPIO11 :: HEADER_PIN_31
-    --CFG_INT_FROM_CPU : in std_logic; -- PIN_B4 :: GPIO13 :: HEADER_PIN_33
     RESET_FROM_CPU : in std_logic; -- PIN_B5 :: GPIO07 :: HEADER_PIN_32
 
-    PRIMARY_MOSI : in std_logic;  -- PIN_B6 :: H19 :: SPI0_MOSI
-    PRIMARY_MISO : out std_logic; -- PIN_A8 :: H21 :: SPI0_MISO
-    PRIMARY_SCLK : in std_logic;  -- PIN_B8 :: H23 :: SPI0_SCLK
-    PRIMARY_CS : in std_logic;    -- PIN_A6 :: H24 :: SPI0_CS0
+    PRIMARY_MOSI : in std_logic;  -- PIN_B6 :: H19 :: SPI0_MOSI :: SDA
+    PRIMARY_MISO : out std_logic; -- PIN_A8 :: H21 :: SPI0_MISO :: SAO
+    PRIMARY_SCLK : in std_logic;  -- PIN_B8 :: H23 :: SPI0_SCLK :: SCL
+    PRIMARY_CS : in std_logic;    -- PIN_A6 :: H24 :: SPI0_CS0  :: CS
 
     SECONDARY_MOSI : in std_logic;  -- PIN_B14 :: P9_30 :: SPI1_D1
     SECONDARY_MISO : out std_logic; -- PIN_A14 :: P9_29 :: SPI1_D0
@@ -254,6 +252,7 @@ signal synced_SECONDARY_SCLK : std_logic := '0';
 signal synced_SECONDARY_CS : std_logic := '0';
 -- Main UART
 signal synced_FPGA_UART_RX : std_logic := '0';
+signal synced_GPS_UART_RX : std_logic := '0';
 -- Buttons
 signal active_button_1 : std_logic := '0';
 -- Spi.0 Primary
@@ -290,11 +289,11 @@ type VECTOR_TYPE is
     VECTOR_DISABLE,  -- "0011"
     VECTOR_START,    -- "0100"
     VECTOR_STOP,     -- "0101"
-    VECTOR_PULSE,    -- "0110"
+    VECTOR_READ,     -- "0110"
     VECTOR_DATA,     -- "0111"
     VECTOR_F1,       -- "1000"
     VECTOR_F2,       -- "1001"
-    VECTOR_F3,       -- "1010"
+    VECTOR_RETURN,   -- "1010"
     VECTOR_UNUSED_11, -- "1011"
     VECTOR_UNUSED_12, -- "1100"
     VECTOR_UNUSED_13, -- "1101"
@@ -307,12 +306,13 @@ signal vector_state: VECTOR_TYPE := VECTOR_IDLE;
 signal offload_vector_interrtupt : std_logic := '0';
 signal enable_vector_interrtupt : std_logic := '0';
 signal start_vector_interrtupt : std_logic := '0';
-signal pulse_vector_interrtupt : std_logic := '0';
-signal pulse_vector_extension : std_logic := '0';
+signal read_vector_interrtupt : std_logic := '0';
+signal read_vector_extension : std_logic := '0';
 signal data_vector_interrupt : std_logic := '0';
 signal f1_vector_interrupt : std_logic := '0';
 signal f2_vector_interrupt : std_logic := '0';
-signal f3_vector_interrupt : std_logic := '0';
+signal return_vector_interrupt : std_logic := '0';
+signal return_vector_extension : std_logic := '0';
 -- Interrupt Help
 signal data_vector_run : std_logic := '0';
 signal data_vector_count : std_logic_vector(3 downto 0) := (others => '0');
@@ -947,6 +947,20 @@ port map
     SYNC_OUTPUT => synced_FPGA_UART_RX
 );
 
+DelaySynchroniser_GPS_UART: DelaySynchroniser
+generic map
+(
+    SYNCHRONIZATION_DEPTH => 2
+)
+port map
+(
+    CLOCK_50MHz => CLOCK_50MHz,
+    RESET => global_fpga_reset,
+
+    ASYNC_INPUT => GPS_UART_RX,
+    SYNC_OUTPUT => synced_GPS_UART_RX
+);
+
 -- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 -- //
 -- // NOISE CONTROLERS :: Used to eliminate spike noise from the long pulses :: Required for breadboard + long cables
@@ -1258,22 +1272,29 @@ feedback_interrupts_process:
 process(CLOCK_50MHz)
 begin
     if rising_edge(CLOCK_50MHz) then
+
+        if return_vector_interrupt = '1' then -- TODO :: Extension
+            return_vector_extension <= '1';
+        end if;
+
         if interrupt_i2c_feedback = '1'
         or interrupt_pwm_feedback = '1'
         or interrupt_spi_bmi160_s1_feedback = '1'
         or interrupt_spi_bmi160_s2_feedback = '1'
         or interrupt_spi_bmi160_s3_feedback = '1'
         or interrupt_spi_rf_feedback = '1'
+        or return_vector_extension = '1' -- TODO :: Extension
         then
             if feedback_interrupt_timer = "110010" then -- 50 * 20 = 1000ns = 1us interrupt pulse back to CPU
                 SPI_INT_FROM_FPGA <= '0';
+                return_vector_extension <= '0';
             else
                 SPI_INT_FROM_FPGA <= '1';
                 feedback_interrupt_timer <= feedback_interrupt_timer + '1';
             end if;
         else
             SPI_INT_FROM_FPGA <= '0';
-            feedback_interrupt_timer <= (others => '0');
+            feedback_interrupt_timer <= (others => '0'); -- Reseting timer here :: When FPGA_INT goto '0'
         end if;
     end if;
 end process;
@@ -1388,7 +1409,7 @@ begin
                 elsif interrupt_vector = "0101" then
                     vector_state <= VECTOR_STOP;
                 elsif interrupt_vector = "0110" then
-                    vector_state <= VECTOR_PULSE;
+                    vector_state <= VECTOR_READ;
                 elsif interrupt_vector = "0111" then
                     vector_state <= VECTOR_DATA;
                 elsif interrupt_vector = "1000" then
@@ -1396,7 +1417,7 @@ begin
                 elsif interrupt_vector = "1001" then
                     vector_state <= VECTOR_F2;
                 elsif interrupt_vector = "1010" then
-                    vector_state <= VECTOR_F3;
+                    vector_state <= VECTOR_RETURN;
                 elsif interrupt_vector = "1011" then
                     vector_state <= VECTOR_UNUSED_11;
                 elsif interrupt_vector = "1100" then
@@ -1430,8 +1451,8 @@ begin
                 start_vector_interrtupt <= '0';
                 led_7_toggle <= '1';
                 vector_state <= VECTOR_DONE;
-            when VECTOR_PULSE =>
-                pulse_vector_interrtupt <= '1';
+            when VECTOR_READ =>
+                read_vector_interrtupt <= '1';
                 vector_state <= VECTOR_DONE;
             when VECTOR_DATA =>
                 data_vector_interrupt <= '1';
@@ -1442,8 +1463,8 @@ begin
             when VECTOR_F2 =>
                 f2_vector_interrupt <= '1';
                 vector_state <= VECTOR_DONE;
-            when VECTOR_F3 =>
-                f3_vector_interrupt <= '1';
+            when VECTOR_RETURN =>
+                return_vector_interrupt <= '1';
                 vector_state <= VECTOR_DONE;
             when VECTOR_UNUSED_11 =>
                 vector_state <= VECTOR_DONE;
@@ -1457,12 +1478,12 @@ begin
                 vector_state <= VECTOR_DONE;
             when VECTOR_DONE =>
                 offload_vector_interrtupt <= '0';
-                pulse_vector_interrtupt <= '0';
+                read_vector_interrtupt <= '0';
                 data_vector_interrupt <= '0';
                 f1_vector_interrupt <= '0';
                 f2_vector_interrupt <= '0';
-                f3_vector_interrupt <= '0';
                 vector_state <= VECTOR_IDLE;
+                return_vector_interrupt <= '0';
             when others =>
                 vector_state <= VECTOR_IDLE;
         end case;
@@ -1683,6 +1704,9 @@ port map
     WRITE_BUSY => uart_write_busy
 );
 
+--FPGA_UART_TX <=  synced_GPS_UART_RX;
+--GPS_UART_TX <= synced_FPGA_UART_RX;
+
 UartDataAssembly_module: UartDataAssembly
 port map
 (
@@ -1712,8 +1736,8 @@ process(CLOCK_50MHz)
 begin
     if rising_edge(CLOCK_50MHz) then
 
-        if pulse_vector_interrtupt = '1' then
-            pulse_vector_extension <= '1';
+        if read_vector_interrtupt = '1' then
+            read_vector_extension <= '1';
         end if;
 
         case s1_state is
@@ -1747,8 +1771,8 @@ begin
                     s1_state <= SENSOR_DONE;
                 elsif s1_bmi160_int_1_DataReady = '1' then
                     if start_vector_interrtupt = '1'
-                    or pulse_vector_extension = '1' then
-                        pulse_vector_extension <= '0';
+                    or read_vector_extension = '1' then
+                        read_vector_extension <= '0';
                         s1_state <= SENSOR_TEST;
                     end if;
                 end if;
@@ -1810,7 +1834,7 @@ I2cController_module: I2cController port map
     FEEDBACK_DATA => data_i2c_feedback
 );
 
-SpiController_BMI160_S1_module: SpiController port map
+SpiController_BMI160_S1_primary: SpiController port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
     RESET => global_fpga_reset,
