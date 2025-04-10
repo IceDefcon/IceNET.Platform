@@ -261,7 +261,8 @@ void gui::setupFpgaCtrl()
         }
         else
         {
-            interruptVector_execute(VECTOR_OFFLOAD);
+            printToMainConsole("[CTL] Primary Offload from the FIFO");
+            interruptVector_execute(VECTOR_OFFLOAD_PRIMARY);
         }
     });
 
@@ -313,6 +314,7 @@ void gui::setupFpgaCtrl()
                 "}"
             );
 
+            printToMainConsole("[CTL] Enable Pulse Controllers");
             interruptVector_execute(VECTOR_ENABLE);
         }
         else
@@ -335,6 +337,7 @@ void gui::setupFpgaCtrl()
                 "}"
             );
 
+            printToMainConsole("[CTL] Disable Pulse Controllers");
             interruptVector_execute(VECTOR_DISABLE);
         }
 
@@ -390,6 +393,7 @@ void gui::setupFpgaCtrl()
                 "}"
             );
 
+            printToMainConsole("[CTL] Start Secondary SPI/DMA");
             interruptVector_execute(VECTOR_START);
         }
         else
@@ -412,6 +416,7 @@ void gui::setupFpgaCtrl()
                 "}"
             );
 
+            printToMainConsole("[CTL] Stop Secondary SPI/DMA");
             interruptVector_execute(VECTOR_STOP);
         }
 
@@ -419,7 +424,7 @@ void gui::setupFpgaCtrl()
         m_isStartAcquisition = !m_isStartAcquisition;
     });
 
-    QPushButton *pulseButton = new QPushButton("PULSE", this);
+    QPushButton *pulseButton = new QPushButton("READ", this);
     pulseButton->setGeometry(dev.xGap*7 + dev.xText + dev.xUnit*6, dev.yGap*4 + dev.yLogo + dev.yUnit*2, dev.xUnit*2, dev.yUnit);
     pulseButton->setStyleSheet(
         "QPushButton {"
@@ -445,11 +450,12 @@ void gui::setupFpgaCtrl()
         }
         else
         {
-            interruptVector_execute(VECTOR_PULSE);
+            printToMainConsole("[CTL] Read single sensor data :: 12-Bytes");
+            interruptVector_execute(VECTOR_READ);
         }
     });
 
-    QPushButton *dataButton = new QPushButton("DATA", this);
+    QPushButton *dataButton = new QPushButton("OFFLOAD", this);
     dataButton->setGeometry(dev.xGap*7 + dev.xText + dev.xUnit*6, dev.yGap*3 + dev.yLogo + dev.yUnit, dev.xUnit*2, dev.yUnit);
     dataButton->setStyleSheet(
         "QPushButton {"
@@ -475,7 +481,8 @@ void gui::setupFpgaCtrl()
         }
         else
         {
-            interruptVector_execute(VECTOR_DATA);
+            printToMainConsole("[CTL] Secondary Offload from the FIFO");
+            interruptVector_execute(VECTOR_OFFLOAD_SECONDARY);
         }
     });
 
@@ -505,6 +512,7 @@ void gui::setupFpgaCtrl()
         }
         else
         {
+            printToMainConsole("[CTL] Execute F1");
             interruptVector_execute(VECTOR_F1);
         }
     });
@@ -535,11 +543,12 @@ void gui::setupFpgaCtrl()
         }
         else
         {
+            printToMainConsole("[CTL] Execute F2");
             interruptVector_execute(VECTOR_F2);
         }
     });
 
-    QPushButton *f3Button = new QPushButton("F3", this);
+    QPushButton *f3Button = new QPushButton("RETURN", this);
     f3Button->setGeometry(dev.xGap*7 + dev.xText + dev.xUnit*6, dev.yGap*2 + dev.yLogo, dev.xUnit*2, dev.yUnit);
     f3Button->setStyleSheet(
         "QPushButton {"
@@ -565,7 +574,8 @@ void gui::setupFpgaCtrl()
         }
         else
         {
-            interruptVector_execute(VECTOR_F3);
+            printToMainConsole("[CTL] Return over secondarySPI/DMA Transition");
+            interruptVector_execute(VECTOR_RETURN);
         }
     });
 }
@@ -902,23 +912,23 @@ std::string gui::vectorToString(interruptVectorType type)
 {
     switch (type)
     {
-        case VECTOR_RESERVED:   return "VECTOR_RESERVED";
-        case VECTOR_OFFLOAD:    return "VECTOR_OFFLOAD";    /* FIFO Offload chain */
-        case VECTOR_ENABLE:     return "VECTOR_ENABLE";     /* Enable Pulse Controllers */
-        case VECTOR_DISABLE:    return "VECTOR_DISABLE";    /* Disable Pulse Controllers */
-        case VECTOR_START:      return "VECTOR_START";      /* Start Measurement Acquisition */
-        case VECTOR_STOP:       return "VECTOR_STOP";       /* Stop Measurement Acquisition */
-        case VECTOR_PULSE:      return "VECTOR_PULSE";      /* Single 20ns Pulse :: To be connected anywhere in FPGA */
-        case VECTOR_DATA:       return "VECTOR_DATA";       /* Offload data from sensor FIFO */
-        case VECTOR_F1:         return "VECTOR_F1";         /* Undefined Function F1 */
-        case VECTOR_F2:         return "VECTOR_F2";         /* Undefined Function F2 */
-        case VECTOR_F3:         return "VECTOR_F3";         /* Undefined Function F3 */
-        case VECTOR_UNUSED_11:  return "VECTOR_UNUSED_11";
-        case VECTOR_UNUSED_12:  return "VECTOR_UNUSED_12";
-        case VECTOR_UNUSED_13:  return "VECTOR_UNUSED_13";
-        case VECTOR_UNUSED_14:  return "VECTOR_UNUSED_14";
-        case VECTOR_UNUSED_15:  return "VECTOR_UNUSED_15";
-        default:                return "UNKNOWN_VECTOR";
+        case VECTOR_RESERVED:           return "VECTOR_RESERVED";
+        case VECTOR_OFFLOAD_PRIMARY:    return "VECTOR_OFFLOAD_PRIMARY";    /* FIFO Offload chain */
+        case VECTOR_ENABLE:             return "VECTOR_ENABLE";             /* Enable Pulse Controllers */
+        case VECTOR_DISABLE:            return "VECTOR_DISABLE";            /* Disable Pulse Controllers */
+        case VECTOR_START:              return "VECTOR_START";              /* Start Measurement Acquisition */
+        case VECTOR_STOP:               return "VECTOR_STOP";               /* Stop Measurement Acquisition */
+        case VECTOR_READ:               return "VECTOR_READ";               /* Read [x, y, z] From Accel and Gyro 12-Bytes */
+        case VECTOR_OFFLOAD_SECONDARY:  return "VECTOR_OFFLOAD_SECONDARY";  /* Offload data from sensor FIFO */
+        case VECTOR_F1:                 return "VECTOR_F1";                 /* Undefined Function F1 */
+        case VECTOR_F2:                 return "VECTOR_F2";                 /* Undefined Function F2 */
+        case VECTOR_RETURN:             return "VECTOR_RETURN";             /* Initilize Return secondary SPI/DMA Transfer */
+        case VECTOR_UNUSED_11:          return "VECTOR_UNUSED_11";
+        case VECTOR_UNUSED_12:          return "VECTOR_UNUSED_12";
+        case VECTOR_UNUSED_13:          return "VECTOR_UNUSED_13";
+        case VECTOR_UNUSED_14:          return "VECTOR_UNUSED_14";
+        case VECTOR_UNUSED_15:          return "VECTOR_UNUSED_15";
+        default:                        return "UNKNOWN_VECTOR";
     }
 }
 /**
@@ -932,24 +942,6 @@ void gui::setInterruptVector(uint8_t vector)
 {
     //////////////////////////////////////////////////////////////////////////////
     // Vector Table
-    //////////////////////////////////////////////////////////////////////////////
-    // 0000 :: VECTOR_RESERVED
-    // 0001 :: VECTOR_OFFLOAD
-    // 0010 :: VECTOR_ENABLE
-    // 0011 :: VECTOR_DISABLE
-    // 0100 :: VECTOR_START
-    // 0101 :: VECTOR_STOP
-    // 0110 :: VECTOR_PULSE
-    // 0111 ::
-    // 1000 ::
-    // 1001 ::
-    // 1010 ::
-    // 1011 ::
-    // 1100 ::
-    // 1101 ::
-    // 1110 ::
-    // 1111 ::
-    //
     //////////////////////////////////////////////////////////////////////////////
     //
     //  OFFLOAD_CTRL :: 8-bits
@@ -1328,7 +1320,7 @@ void gui::openUart()
 
     m_uartPortName = "/dev/ttyTHS1";
     m_serialPort->setPortName(m_uartPortName);
-#if 0
+#if 1
     m_serialPort->setBaudRate(2000000);
 #else
     m_serialPort->setBaudRate(115200);
@@ -1358,7 +1350,7 @@ void gui::readUartData()
     {
         m_readBuffer.append(m_serialPort->readAll());
 
-#if 0
+#if 1
         const int messageLength = 8;
         while (m_readBuffer.size() >= messageLength)
         {
@@ -1515,6 +1507,7 @@ void gui::threadMain()
         if (true == m_instanceDroneCtrl->isKilled())
         {
             /* TODO :: Button stays pressed at Thread Termination */
+            printToMainConsole("[CTL] Disable Pulse Controllers");
             interruptVector_execute(VECTOR_DISABLE);
             m_isKernelConnected = false;
             break;
