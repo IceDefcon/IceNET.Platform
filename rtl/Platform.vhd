@@ -283,32 +283,32 @@ signal interrupt_vector_enable : std_logic := '0';
 type VECTOR_TYPE is
 (
     VECTOR_IDLE,
-    VECTOR_RESERVED, -- "0000"
-    VECTOR_OFFLOAD,  -- "0001"
-    VECTOR_ENABLE,   -- "0010"
-    VECTOR_DISABLE,  -- "0011"
-    VECTOR_START,    -- "0100"
-    VECTOR_STOP,     -- "0101"
-    VECTOR_READ,     -- "0110"
-    VECTOR_DATA,     -- "0111"
-    VECTOR_F1,       -- "1000"
-    VECTOR_F2,       -- "1001"
-    VECTOR_RETURN,   -- "1010"
-    VECTOR_UNUSED_11, -- "1011"
-    VECTOR_UNUSED_12, -- "1100"
-    VECTOR_UNUSED_13, -- "1101"
-    VECTOR_UNUSED_14, -- "1110"
-    VECTOR_UNUSED_15, -- "1111"
+    VECTOR_RESERVED,            -- "0000"
+    VECTOR_OFFLOAD_PRIMARY,     -- "0001"
+    VECTOR_ENABLE,              -- "0010"
+    VECTOR_DISABLE,             -- "0011"
+    VECTOR_START,               -- "0100"
+    VECTOR_STOP,                -- "0101"
+    VECTOR_READ,                -- "0110"
+    VECTOR_OFFLOAD_SECONDARY,   -- "0111"
+    VECTOR_F1,                  -- "1000"
+    VECTOR_F2,                  -- "1001"
+    VECTOR_RETURN,              -- "1010"
+    VECTOR_UNUSED_11,           -- "1011"
+    VECTOR_UNUSED_12,           -- "1100"
+    VECTOR_UNUSED_13,           -- "1101"
+    VECTOR_UNUSED_14,           -- "1110"
+    VECTOR_UNUSED_15,           -- "1111"
     VECTOR_DONE
 );
 signal vector_state: VECTOR_TYPE := VECTOR_IDLE;
 -- Interrupt vector interrupts
-signal offload_vector_interrtupt : std_logic := '0';
+signal offload_primary_vector_interrtupt : std_logic := '0';
 signal enable_vector_interrtupt : std_logic := '0';
 signal start_vector_interrtupt : std_logic := '0';
 signal read_vector_interrtupt : std_logic := '0';
 signal read_vector_extension : std_logic := '0';
-signal data_vector_interrupt : std_logic := '0';
+signal offload_secondary_vector_interrupt : std_logic := '0';
 signal f1_vector_interrupt : std_logic := '0';
 signal f2_vector_interrupt : std_logic := '0';
 signal return_vector_interrupt : std_logic := '0';
@@ -1399,7 +1399,7 @@ begin
 
             when VECTOR_IDLE =>
                 if interrupt_vector = "0001" then
-                    vector_state <= VECTOR_OFFLOAD;
+                    vector_state <= VECTOR_OFFLOAD_PRIMARY;
                 elsif interrupt_vector = "0010" then
                     vector_state <= VECTOR_ENABLE;
                 elsif interrupt_vector = "0011" then
@@ -1411,7 +1411,7 @@ begin
                 elsif interrupt_vector = "0110" then
                     vector_state <= VECTOR_READ;
                 elsif interrupt_vector = "0111" then
-                    vector_state <= VECTOR_DATA;
+                    vector_state <= VECTOR_OFFLOAD_SECONDARY;
                 elsif interrupt_vector = "1000" then
                     vector_state <= VECTOR_F1;
                 elsif interrupt_vector = "1001" then
@@ -1432,8 +1432,8 @@ begin
 
             when VECTOR_RESERVED =>
                 vector_state <= VECTOR_DONE;
-            when VECTOR_OFFLOAD =>
-                offload_vector_interrtupt <= '1';
+            when VECTOR_OFFLOAD_PRIMARY =>
+                offload_primary_vector_interrtupt <= '1';
                 vector_state <= VECTOR_DONE;
             when VECTOR_ENABLE =>
                 enable_vector_interrtupt <= '1';
@@ -1454,8 +1454,8 @@ begin
             when VECTOR_READ =>
                 read_vector_interrtupt <= '1';
                 vector_state <= VECTOR_DONE;
-            when VECTOR_DATA =>
-                data_vector_interrupt <= '1';
+            when VECTOR_OFFLOAD_SECONDARY =>
+                offload_secondary_vector_interrupt <= '1';
                 vector_state <= VECTOR_DONE;
             when VECTOR_F1 =>
                 f1_vector_interrupt <= '1';
@@ -1477,9 +1477,9 @@ begin
             when VECTOR_UNUSED_15 =>
                 vector_state <= VECTOR_DONE;
             when VECTOR_DONE =>
-                offload_vector_interrtupt <= '0';
+                offload_primary_vector_interrtupt <= '0';
                 read_vector_interrtupt <= '0';
-                data_vector_interrupt <= '0';
+                offload_secondary_vector_interrupt <= '0';
                 f1_vector_interrupt <= '0';
                 f2_vector_interrupt <= '0';
                 vector_state <= VECTOR_IDLE;
@@ -1525,7 +1525,7 @@ port map
     CLOCK_50MHz => CLOCK_50MHz,
     RESET => global_fpga_reset,
 
-    OFFLOAD_INTERRUPT => offload_vector_interrtupt,
+    OFFLOAD_INTERRUPT => offload_primary_vector_interrtupt,
     FIFO_DATA => primary_fifo_data_out,
     FIFO_READ_ENABLE => primary_fifo_rd_en,
 
@@ -1938,7 +1938,7 @@ offload_FifoData:
 process(CLOCK_50MHz)
 begin
     if rising_edge(CLOCK_50MHz) then
-        if data_vector_interrupt = '1' and data_vector_run <= '0' then
+        if offload_secondary_vector_interrupt = '1' and data_vector_run <= '0' then
             data_vector_count <= "0000";
             data_vector_run <= '1';
         elsif data_vector_run = '1' and data_vector_count < "1011" then
