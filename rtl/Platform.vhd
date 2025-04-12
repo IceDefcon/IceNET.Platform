@@ -313,6 +313,7 @@ signal f1_vector_interrupt : std_logic := '0';
 signal f2_vector_interrupt : std_logic := '0';
 signal return_vector_interrupt : std_logic := '0';
 signal return_vector_extension : std_logic := '0';
+signal secondary_dma_trigger_gpio_pulse : std_logic := '0';
 -- Interrupt Help
 signal data_vector_run : std_logic := '0';
 signal data_vector_count : std_logic_vector(3 downto 0) := (others => '0');
@@ -696,6 +697,19 @@ port
     OFFLOAD_DATA : out std_logic_vector(7 downto 0);
 
     OFFLOAD_WAIT : in std_logic
+);
+end component;
+
+component SensorFifo_OffloadController
+Port
+(
+    CLOCK_50MHz : in  std_logic;
+    RESET : in std_logic;
+
+    IRQ_VECTOR_OFFLOAD  : in  std_logic;
+
+    OFFLOAD_READ_ENABLE : out std_logic;
+    SECONDARY_DMA_TRIGGER  : out  std_logic
 );
 end component;
 
@@ -1281,7 +1295,7 @@ process(CLOCK_50MHz)
 begin
     if rising_edge(CLOCK_50MHz) then
 
-        if return_vector_interrupt = '1' then -- TODO :: Extension
+        if secondary_dma_trigger_gpio_pulse = '1' then -- TODO :: Extension
             return_vector_extension <= '1';
         end if;
 
@@ -2003,6 +2017,18 @@ port map
     q     => sensor_fifo_data_out
 );
 
+OffloadController_secondary: SensorFifo_OffloadController
+port map
+(
+    CLOCK_50MHz => CLOCK_50MHz,
+    RESET => global_fpga_reset,
+    -- In
+    IRQ_VECTOR_OFFLOAD => return_vector_interrupt,
+    -- Out
+    OFFLOAD_READ_ENABLE => open,
+    SECONDARY_DMA_TRIGGER => secondary_dma_trigger_gpio_pulse
+);
+
 -------------------------------------
 --
 -- nRF905
@@ -2028,19 +2054,20 @@ NRF905_TX_EN <= 'Z';
 --
 -------------------------------------
 
-process(enable_vector_interrupt, acquisition_ctrl_BMI160_S1_CS, acquisition_ctrl_BMI160_S1_MOSI, acquisition_ctrl_BMI160_S1_SCLK,
-    ctrl_BMI160_S1_CS, ctrl_BMI160_S1_MOSI, ctrl_BMI160_S1_SCLK, S1_BMI160_MISO)
+process(CLOCK_50MHz)
 begin
-    if enable_vector_interrupt = '1' then
-        S1_BMI160_CS <= acquisition_ctrl_BMI160_S1_CS;
-        acquisition_ctrl_BMI160_S1_MISO <= S1_BMI160_MISO;
-        S1_BMI160_MOSI <= acquisition_ctrl_BMI160_S1_MOSI;
-        S1_BMI160_SCLK <= acquisition_ctrl_BMI160_S1_SCLK;
-    else
-        S1_BMI160_CS <= ctrl_BMI160_S1_CS;
-        ctrl_BMI160_S1_MISO <= S1_BMI160_MISO;
-        S1_BMI160_MOSI <= ctrl_BMI160_S1_MOSI;
-        S1_BMI160_SCLK <= ctrl_BMI160_S1_SCLK;
+    if rising_edge(CLOCK_50MHz) then
+        if enable_vector_interrupt = '1' then
+            S1_BMI160_CS <= acquisition_ctrl_BMI160_S1_CS;
+            acquisition_ctrl_BMI160_S1_MISO <= S1_BMI160_MISO;
+            S1_BMI160_MOSI <= acquisition_ctrl_BMI160_S1_MOSI;
+            S1_BMI160_SCLK <= acquisition_ctrl_BMI160_S1_SCLK;
+        else
+            S1_BMI160_CS <= ctrl_BMI160_S1_CS;
+            ctrl_BMI160_S1_MISO <= S1_BMI160_MISO;
+            S1_BMI160_MOSI <= ctrl_BMI160_S1_MOSI;
+            S1_BMI160_SCLK <= ctrl_BMI160_S1_SCLK;
+        end if;
     end if;
 end process;
 
