@@ -227,7 +227,7 @@ void gui::setupFpgaCtrl()
     {
         if(NULL == m_instanceDroneCtrl)
         {
-            printToMainConsole("[CTL] threadMain is not Running");
+            printToMainConsole("$ threadMain is not Running");
         }
         else
         {
@@ -257,11 +257,11 @@ void gui::setupFpgaCtrl()
     {
         if(NULL == m_instanceDroneCtrl)
         {
-            printToMainConsole("[CTL] threadMain is not Running");
+            printToMainConsole("$ threadMain is not Running");
         }
         else
         {
-            printToMainConsole("[CTL] Primary Offload from the FIFO");
+            printToMainConsole("$ Primary Offload from the FIFO");
             interruptVector_execute(VECTOR_OFFLOAD_PRIMARY);
         }
     });
@@ -290,7 +290,7 @@ void gui::setupFpgaCtrl()
     {
         if (NULL == m_instanceDroneCtrl)
         {
-            printToMainConsole("[CTL] threadMain is not Running");
+            printToMainConsole("$ threadMain is not Running");
             return;
         }
 
@@ -314,7 +314,7 @@ void gui::setupFpgaCtrl()
                 "}"
             );
 
-            printToMainConsole("[CTL] Enable Pulse Controllers");
+            printToMainConsole("$ Enable Pulse Controllers");
             interruptVector_execute(VECTOR_ENABLE);
         }
         else
@@ -337,7 +337,7 @@ void gui::setupFpgaCtrl()
                 "}"
             );
 
-            printToMainConsole("[CTL] Disable Pulse Controllers");
+            printToMainConsole("$ Disable Pulse Controllers");
             interruptVector_execute(VECTOR_DISABLE);
         }
 
@@ -369,7 +369,7 @@ void gui::setupFpgaCtrl()
     {
         if (NULL == m_instanceDroneCtrl)
         {
-            printToMainConsole("[CTL] threadMain is not Running");
+            printToMainConsole("$ threadMain is not Running");
             return;
         }
 
@@ -393,7 +393,7 @@ void gui::setupFpgaCtrl()
                 "}"
             );
 
-            printToMainConsole("[CTL] Start Secondary SPI/DMA");
+            printToMainConsole("$ Start Secondary SPI/DMA");
             interruptVector_execute(VECTOR_START);
         }
         else
@@ -416,7 +416,7 @@ void gui::setupFpgaCtrl()
                 "}"
             );
 
-            printToMainConsole("[CTL] Stop Secondary SPI/DMA");
+            printToMainConsole("$ Stop Secondary SPI/DMA");
             interruptVector_execute(VECTOR_STOP);
         }
 
@@ -446,11 +446,11 @@ void gui::setupFpgaCtrl()
     {
         if(NULL == m_instanceDroneCtrl)
         {
-            printToMainConsole("[CTL] threadMain is not Running");
+            printToMainConsole("$ threadMain is not Running");
         }
         else
         {
-            printToMainConsole("[CTL] Read single sensor data :: 12-Bytes");
+            printToMainConsole("$ Read single sensor data :: 12-Bytes");
             interruptVector_execute(VECTOR_READ);
         }
     });
@@ -477,11 +477,11 @@ void gui::setupFpgaCtrl()
     {
         if(NULL == m_instanceDroneCtrl)
         {
-            printToMainConsole("[CTL] threadMain is not Running");
+            printToMainConsole("$ threadMain is not Running");
         }
         else
         {
-            printToMainConsole("[CTL] Secondary Offload from the FIFO");
+            printToMainConsole("$ Secondary Offload from the FIFO");
             interruptVector_execute(VECTOR_OFFLOAD_SECONDARY);
         }
     });
@@ -508,11 +508,11 @@ void gui::setupFpgaCtrl()
     {
         if(NULL == m_instanceDroneCtrl)
         {
-            printToMainConsole("[CTL] threadMain is not Running");
+            printToMainConsole("$ threadMain is not Running");
         }
         else
         {
-            printToMainConsole("[CTL] Execute F1");
+            printToMainConsole("$ Execute F1");
             interruptVector_execute(VECTOR_F1);
         }
     });
@@ -539,11 +539,11 @@ void gui::setupFpgaCtrl()
     {
         if(NULL == m_instanceDroneCtrl)
         {
-            printToMainConsole("[CTL] threadMain is not Running");
+            printToMainConsole("$ threadMain is not Running");
         }
         else
         {
-            printToMainConsole("[CTL] Execute F2");
+            printToMainConsole("$ Execute F2");
             interruptVector_execute(VECTOR_F2);
         }
     });
@@ -570,11 +570,11 @@ void gui::setupFpgaCtrl()
     {
         if(NULL == m_instanceDroneCtrl)
         {
-            printToMainConsole("[CTL] threadMain is not Running");
+            printToMainConsole("$ threadMain is not Running");
         }
         else
         {
-            printToMainConsole("[CTL] Return over secondarySPI/DMA Transition");
+            printToMainConsole("$ Return over secondarySPI/DMA Transition");
             interruptVector_execute(VECTOR_RETURN);
         }
     });
@@ -995,7 +995,7 @@ void gui::interruptVector_execute(interruptVectorType type)
     std::cout << "[INFO] [INT] Set Interrupt Vector -> " << vectorToString(type) << std::endl;
 
     *m_IO_GuiState = IO_COM_WRITE_ONLY;
-    printToMainConsole("[INT] Done -> " + QString::fromStdString(vectorToString(type)));
+    printToMainConsole("$ Done -> " + QString::fromStdString(vectorToString(type)));
 }
 
 std::string gui::cmdToString(commandType cmd)
@@ -1017,11 +1017,11 @@ void gui::dma_execute(commandType cmd)
 {
     if(NULL == m_instanceDroneCtrl)
     {
-        printToMainConsole("[DMA] threadMain is not Running");
+        printToMainConsole("$ threadMain is not Running");
     }
     else
     {
-        printToMainConsole("[DMA] Send DMA Command to Kernel -> " + QString::fromStdString(cmdToString(cmd)));
+        printToMainConsole("$ Send DMA Command to Kernel -> " + QString::fromStdString(cmdToString(cmd)));
         if(CMD_DMA_CUSTOM == cmd)
         {
             bool ok;
@@ -1037,7 +1037,7 @@ void gui::dma_execute(commandType cmd)
         }
         else
         {
-            printToMainConsole("[DMA] Wrong DMA Command");
+            printToMainConsole("$ Wrong DMA Command");
         }
     }
 }
@@ -1049,11 +1049,11 @@ void gui::i2c_execute()
 
     if(m_threadKill)
     {
-        printToMainConsole("[I2C] threadMain is Down");
+        printToMainConsole("$ threadMain is Down");
     }
     else if(!m_isKernelConnected)
     {
-        printToMainConsole("[I2C] Kernel Communication is Down");
+        printToMainConsole("$ Kernel Communication is Down");
     }
     else
     {
@@ -1114,7 +1114,7 @@ void gui::i2c_execute()
 
         /* Wait for Kerenl to send data to FPGA */
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        printToMainConsole("[I2C] Done");
+        printToMainConsole("$ Done");
     }
 }
 
@@ -1145,11 +1145,11 @@ void gui::spi_execute()
 
     if(m_threadKill)
     {
-        printToMainConsole("[SPI] threadMain is Down");
+        printToMainConsole("$ threadMain is Down");
     }
     else if(!m_isKernelConnected)
     {
-        printToMainConsole("[SPI] Kernel Communication is Down");
+        printToMainConsole("$ Kernel Communication is Down");
     }
     else
     {
@@ -1219,7 +1219,7 @@ void gui::spi_execute()
 
         /* Wait for Kerenl to send data to FPGA */
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        printToMainConsole("[SPI] Done");
+        printToMainConsole("$ Done");
     }
 }
 
@@ -1230,11 +1230,11 @@ void gui::pwm_execute(pwmType type)
 
     if(m_threadKill)
     {
-        printToMainConsole("[PWM] threadMain is Down");
+        printToMainConsole("$ threadMain is Down");
     }
     else if(!m_isKernelConnected)
     {
-        printToMainConsole("[PWM] Kernel Communication is Down");
+        printToMainConsole("$ Kernel Communication is Down");
     }
     else
     {
@@ -1261,7 +1261,7 @@ void gui::pwm_execute(pwmType type)
             {
                 case PWM_EXE:
                     dataValue = static_cast<uint8_t>(dataTemp);
-                    printToMainConsole("[PWM] Execute");
+                    printToMainConsole("$ Execute");
                     break;
 
                 case PWM_UP:
@@ -1275,7 +1275,7 @@ void gui::pwm_execute(pwmType type)
                         dataValue += 0x05;
                     }
                     m_pwm_dataField->setText(QString("0x%1").arg(dataValue, 2, 16, QChar('0')).toLower());
-                    printToMainConsole("[PWM] Up");
+                    printToMainConsole("$ Up");
                     break;
 
                 case PWM_DOWN:
@@ -1289,11 +1289,11 @@ void gui::pwm_execute(pwmType type)
                         dataValue -= 0x05;
                     }
                     m_pwm_dataField->setText(QString("0x%1").arg(dataValue, 2, 16, QChar('0')).toLower());
-                    printToMainConsole("[PWM] Down");
+                    printToMainConsole("$ Down");
                     break;
 
                 default:
-                    printToMainConsole("[PWM] Unknown type of operation");
+                    printToMainConsole("$ Unknown type of operation");
                     break;
             };
         }
@@ -1310,7 +1310,7 @@ void gui::pwm_execute(pwmType type)
 
         /* Wait for Kerenl to send data to FPGA */
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        printToMainConsole("[PWM] Done");
+        printToMainConsole("$ Done");
     }
 }
 
@@ -1430,11 +1430,11 @@ void gui::initThread()
 
     if (m_threadMain.joinable())
     {
-        printToMainConsole("[THR] threadMain is already running.");
+        printToMainConsole("$ threadMain is already running.");
         return;
     }
 
-    printToMainConsole("[THR] Initialize threadMain");
+    printToMainConsole("$ Initialize threadMain");
 
     m_threadKill = false;
     m_threadMain = std::thread(&gui::threadMain, this);
@@ -1452,18 +1452,18 @@ void gui::shutdownThread()
 
     if (m_threadKill)
     {
-        printToMainConsole("[THR] threadMain is already marked for shutdown.");
+        printToMainConsole("$ threadMain is already marked for shutdown.");
         return;
     }
 
-    printToMainConsole("[THR] Shutdown threadMain");
+    printToMainConsole("$ Shutdown threadMain");
 
     m_threadKill = true;
 
     if (m_threadMain.joinable())
     {
         m_threadMain.join();
-        printToMainConsole("[THR] threadMain has been shut down.");
+        printToMainConsole("$ threadMain has been shut down.");
     }
 
     qDebug() << "[EXIT] [THR] Terminate threadMain";
@@ -1478,7 +1478,7 @@ void gui::debugThread()
      * LATE#R
      *
      */
-    printToMainConsole("[THR] Debug threadMain");
+    printToMainConsole("$ Debug threadMain");
     qDebug() << "[CTRL] [THR] Debug threadMain";
 }
 
@@ -1507,7 +1507,7 @@ void gui::threadMain()
         if (true == m_instanceDroneCtrl->isKilled())
         {
             /* TODO :: Button stays pressed at Thread Termination */
-            printToMainConsole("[CTL] Disable Pulse Controllers");
+            printToMainConsole("$ Disable Pulse Controllers");
             interruptVector_execute(VECTOR_DISABLE);
             m_isKernelConnected = false;
             break;
