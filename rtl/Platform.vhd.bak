@@ -331,7 +331,6 @@ signal sensor_fifo_rdreq : std_logic := '0';
 signal sensor_fifo_data_out : std_logic_vector(7 downto 0) := (others => '0');
 signal sensor_fifo_full : std_logic := '0';
 signal sensor_fifo_empty : std_logic := '0';
-signal sensor_fifo_bit_count : std_logic_vector(3 downto 0) := (others => '0');
 -- Offload
 signal offload_ready : std_logic := '0';
 signal offload_id : std_logic_vector(6 downto 0) := (others => '0');
@@ -473,7 +472,6 @@ signal acquisition_offload_data : std_logic_vector(7 downto 0) := (others => '0'
 signal acquisition_offload_wait_spi_s1 : std_logic := '0';
 
 signal acquisition_interrupt_spi_bmi160_s1_feedback : std_logic := '0';
-signal acquisition_interrupt_spi_bmi160_s1_feedback_short : std_logic := '0';
 signal acquisition_interrupt_spi_bmi160_s1_burst : std_logic := '0';
 signal acquisition_data_spi_bmi160_s1_burst : std_logic_vector(7 downto 0);
 signal acquisition_data_spi_bmi160_s1_feedback : std_logic_vector(7 downto 0) := "00010101";
@@ -528,7 +526,6 @@ Port
     PARALLEL_MISO : in std_logic_vector(7 downto 0);
     SERIAL_MISO : out std_logic;
 
-    CONVERSION_BIT_COUNT : out std_logic_vector(3 downto 0);
     CONVERSION_COMPLETE : out std_logic
 );
 end component;
@@ -713,9 +710,7 @@ Port
     CLOCK_50MHz : in  std_logic;
     RESET : in std_logic;
 
-    OFFLOAD_IRQ_VECTOR  : in std_logic;
-    OFFLOAD_BIT_COUNT : in std_logic_vector(3 downto 0);
-    OFFLOAD_FIFO_EMPTY  : in  std_logic;
+    OFFLOAD_IRQ_VECTOR  : in  std_logic;
 
     OFFLOAD_READ_ENABLE : out std_logic;
     OFFLOAD_SECONDARY_DMA_TRIGGER  : out  std_logic
@@ -1246,7 +1241,6 @@ primarySpiConverter_module: SpiConverter port map
 	PARALLEL_MISO => "00011000", -- in :: 0x18 Hard coded Feedback to Serialize
 	SERIAL_MISO => PRIMARY_MISO, -- out :: 0x18 Serialized Hard coded Feedback to Kernel
 
-    CONVERSION_BIT_COUNT => open,
     CONVERSION_COMPLETE => primary_conversion_complete -- Out :: Data byte is ready [FIFO Write Enable]
 );
 
@@ -1263,9 +1257,10 @@ secondarySpiConverter_module: SpiConverter port map
     PARALLEL_MISO => secondary_parallel_MISO, -- in :: Parallel Data from the packet switch
     SERIAL_MISO => SECONDARY_MISO, -- out :: Serialized Data from the packet switch
 
-    CONVERSION_BIT_COUNT => sensor_fifo_bit_count,
     CONVERSION_COMPLETE => open -- out :: Not in use !
 );
+
+sensor_fifo_data_out
 
 -- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 -- //
@@ -1336,20 +1331,16 @@ feedback_data_process:
 process(CLOCK_50MHz)
 begin
     if rising_edge(CLOCK_50MHz) then
-        --
-        -- TODO :: For now
-        --
-        -- SPI Return multiplexing is only available
-        -- If sensor data acquisition is disabled
-        --
-        if enable_vector_interrupt = '1' then
-            secondary_parallel_MISO <= sensor_fifo_data_out;
-        elsif interrupt_i2c_feedback = '1'  then
+        if interrupt_i2c_feedback = '1'  then
             secondary_parallel_MISO <= data_i2c_feedback;
         elsif interrupt_pwm_feedback = '1' then
             secondary_parallel_MISO <= data_pwm_feedback;
         elsif interrupt_spi_bmi160_s1_feedback = '1' then
-            secondary_parallel_MISO <= data_spi_bmi160_s1_feedback;
+            if enable_vector_interrupt = '1' then
+                secondary_parallel_MISO <= data_spi_bmi160_s1_feedback;
+            else
+                secondary_parallel_MISO <= sensor_fifo_data_out;
+            end if;
         elsif interrupt_spi_bmi160_s2_feedback = '1' then
             secondary_parallel_MISO <= data_spi_bmi160_s2_feedback;
         elsif interrupt_spi_bmi160_s3_feedback = '1' then
@@ -2034,32 +2025,13 @@ port map
     q     => sensor_fifo_data_out
 );
 
-ccqusition_pulse: PulseController
-generic map
-(
-    PULSE_LENGTH => 1 -- 1*20ns Pulse
-)
-port map
-(
-    CLOCK_50MHz => CLOCK_50MHz,
-    RESET => global_fpga_reset,
-
-    ENABLE_CONTROLLER => enable_vector_interrupt,
-
-    INPUT_PULSE => acquisition_interrupt_spi_bmi160_s1_feedback,
-    OUTPUT_PULSE => acquisition_interrupt_spi_bmi160_s1_feedback_short
-);
-
-
 OffloadController_secondary: SensorFifo_OffloadController
 port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
     RESET => global_fpga_reset,
     -- In
-    OFFLOAD_IRQ_VECTOR => return_vector_interrupt or acquisition_interrupt_spi_bmi160_s1_feedback_short,
-    OFFLOAD_BIT_COUNT => sensor_fifo_bit_count,
-    OFFLOAD_FIFO_EMPTY => sensor_fifo_empty,
+    OFFLOAD_IRQ_VECTOR => return_vector_interrupt,
     -- Out
     OFFLOAD_READ_ENABLE => sensor_fifo_rdreq,
     OFFLOAD_SECONDARY_DMA_TRIGGER => secondary_dma_trigger_gpio_pulse
