@@ -303,16 +303,17 @@ type VECTOR_TYPE is
 );
 signal vector_state: VECTOR_TYPE := VECTOR_IDLE;
 -- Interrupt vector interrupts
-signal offload_primary_vector_interrtupt : std_logic := '0';
-signal enable_vector_interrtupt : std_logic := '0';
-signal start_vector_interrtupt : std_logic := '0';
-signal read_vector_interrtupt : std_logic := '0';
+signal offload_primary_vector_interrupt : std_logic := '0';
+signal enable_vector_interrupt : std_logic := '0';
+signal start_vector_interrupt : std_logic := '0';
+signal read_vector_interrupt : std_logic := '0';
 signal read_vector_extension : std_logic := '0';
 signal offload_secondary_vector_interrupt : std_logic := '0';
 signal f1_vector_interrupt : std_logic := '0';
 signal f2_vector_interrupt : std_logic := '0';
 signal return_vector_interrupt : std_logic := '0';
 signal return_vector_extension : std_logic := '0';
+signal secondary_dma_trigger_gpio_pulse : std_logic := '0';
 -- Interrupt Help
 signal data_vector_run : std_logic := '0';
 signal data_vector_count : std_logic_vector(3 downto 0) := (others => '0');
@@ -463,17 +464,25 @@ signal s2_bmi160_int_2_DataReady : std_logic := '0';
 signal s3_adxl345_int_1_DataReady : std_logic := '0';
 signal s3_adxl345_int_2_DataReady : std_logic := '0';
 -- Debug
-signal test_continue_flag : std_logic := '0';
-signal test_switch_bmi160_s1_ready : std_logic := '0';
-signal test_offload_ctrl : std_logic_vector(7 downto 0) := (others => '0');
-signal test_offload_register : std_logic_vector(7 downto 0) := (others => '0');
-signal test_offload_data : std_logic_vector(7 downto 0) := (others => '0');
-signal test_counter : std_logic_vector(7 downto 0) := (others => '0');
+signal acquisition_switch_bmi160_s1_ready : std_logic := '0';
+signal acquisition_offload_ctrl : std_logic_vector(7 downto 0) := (others => '0');
+signal acquisition_offload_register : std_logic_vector(7 downto 0) := (others => '0');
+signal acquisition_offload_data : std_logic_vector(7 downto 0) := (others => '0');
+signal acquisition_offload_wait_spi_s1 : std_logic := '0';
+
+signal acquisition_interrupt_spi_bmi160_s1_feedback : std_logic := '0';
+signal acquisition_interrupt_spi_bmi160_s1_burst : std_logic := '0';
+signal acquisition_data_spi_bmi160_s1_burst : std_logic_vector(7 downto 0);
+signal acquisition_data_spi_bmi160_s1_feedback : std_logic_vector(7 downto 0) := "00010101";
+signal acquisition_ctrl_BMI160_S1_CS : std_logic := '0';
+signal acquisition_ctrl_BMI160_S1_MISO : std_logic := '0';
+signal acquisition_ctrl_BMI160_S1_MOSI : std_logic := '0';
+signal acquisition_ctrl_BMI160_S1_SCLK : std_logic := '0';
 
 type SENSOR_STATE is
 (
     SENSOR_IDLE,
-    SENSOR_TEST,
+    SENSOR_ACQUISITION,
     SENSOR_DONE
 );
 signal s1_state: SENSOR_STATE := SENSOR_IDLE;
@@ -688,6 +697,19 @@ port
     OFFLOAD_DATA : out std_logic_vector(7 downto 0);
 
     OFFLOAD_WAIT : in std_logic
+);
+end component;
+
+component SensorFifo_OffloadController
+Port
+(
+    CLOCK_50MHz : in  std_logic;
+    RESET : in std_logic;
+
+    IRQ_VECTOR_OFFLOAD  : in  std_logic;
+
+    OFFLOAD_READ_ENABLE : out std_logic;
+    SECONDARY_DMA_TRIGGER  : out  std_logic
 );
 end component;
 
@@ -1076,7 +1098,7 @@ port map
     CLOCK_50MHz => CLOCK_50MHz,
     RESET => global_fpga_reset,
 
-    ENABLE_CONTROLLER => enable_vector_interrtupt,
+    ENABLE_CONTROLLER => enable_vector_interrupt,
 
     INPUT_PULSE => s1_bmi160_int1_denoised,
     OUTPUT_PULSE => s1_bmi160_int_1_DataReady
@@ -1095,7 +1117,7 @@ port map
     CLOCK_50MHz => CLOCK_50MHz,
     RESET => global_fpga_reset,
 
-    ENABLE_CONTROLLER => enable_vector_interrtupt,
+    ENABLE_CONTROLLER => enable_vector_interrupt,
 
     INPUT_PULSE => s1_bmi160_int2_denoised,
     OUTPUT_PULSE => s1_bmi160_int_2_DataReady
@@ -1114,7 +1136,7 @@ port map
     CLOCK_50MHz => CLOCK_50MHz,
     RESET => global_fpga_reset,
 
-    ENABLE_CONTROLLER => enable_vector_interrtupt,
+    ENABLE_CONTROLLER => enable_vector_interrupt,
 
     INPUT_PULSE => s2_bmi160_int1_denoised,
     OUTPUT_PULSE => s2_bmi160_int_1_DataReady
@@ -1133,7 +1155,7 @@ port map
     CLOCK_50MHz => CLOCK_50MHz,
     RESET => global_fpga_reset,
 
-    ENABLE_CONTROLLER => enable_vector_interrtupt,
+    ENABLE_CONTROLLER => enable_vector_interrupt,
 
     INPUT_PULSE => s2_bmi160_int2_denoised,
     OUTPUT_PULSE => s2_bmi160_int_2_DataReady
@@ -1152,7 +1174,7 @@ port map
     CLOCK_50MHz => CLOCK_50MHz,
     RESET => global_fpga_reset,
 
-    ENABLE_CONTROLLER => enable_vector_interrtupt,
+    ENABLE_CONTROLLER => enable_vector_interrupt,
 
     INPUT_PULSE => s3_adxl345_int1_denoised,
     OUTPUT_PULSE => s3_adxl345_int_1_DataReady
@@ -1171,7 +1193,7 @@ port map
     CLOCK_50MHz => CLOCK_50MHz,
     RESET => global_fpga_reset,
 
-    ENABLE_CONTROLLER => enable_vector_interrtupt,
+    ENABLE_CONTROLLER => enable_vector_interrupt,
 
     INPUT_PULSE => s3_adxl345_int2_denoised,
     OUTPUT_PULSE => s3_adxl345_int_2_DataReady
@@ -1273,7 +1295,7 @@ process(CLOCK_50MHz)
 begin
     if rising_edge(CLOCK_50MHz) then
 
-        if return_vector_interrupt = '1' then -- TODO :: Extension
+        if secondary_dma_trigger_gpio_pulse = '1' then -- TODO :: Extension
             return_vector_extension <= '1';
         end if;
 
@@ -1433,26 +1455,26 @@ begin
             when VECTOR_RESERVED =>
                 vector_state <= VECTOR_DONE;
             when VECTOR_OFFLOAD_PRIMARY =>
-                offload_primary_vector_interrtupt <= '1';
+                offload_primary_vector_interrupt <= '1';
                 vector_state <= VECTOR_DONE;
             when VECTOR_ENABLE =>
-                enable_vector_interrtupt <= '1';
+                enable_vector_interrupt <= '1';
                 led_8_toggle <= '0';
                 vector_state <= VECTOR_DONE;
             when VECTOR_DISABLE =>
-                enable_vector_interrtupt <= '0';
+                enable_vector_interrupt <= '0';
                 led_8_toggle <= '1';
                 vector_state <= VECTOR_DONE;
             when VECTOR_START =>
-                start_vector_interrtupt <= '1';
+                start_vector_interrupt <= '1';
                 led_7_toggle <= '0';
                 vector_state <= VECTOR_DONE;
             when VECTOR_STOP =>
-                start_vector_interrtupt <= '0';
+                start_vector_interrupt <= '0';
                 led_7_toggle <= '1';
                 vector_state <= VECTOR_DONE;
             when VECTOR_READ =>
-                read_vector_interrtupt <= '1';
+                read_vector_interrupt <= '1';
                 vector_state <= VECTOR_DONE;
             when VECTOR_OFFLOAD_SECONDARY =>
                 offload_secondary_vector_interrupt <= '1';
@@ -1477,8 +1499,8 @@ begin
             when VECTOR_UNUSED_15 =>
                 vector_state <= VECTOR_DONE;
             when VECTOR_DONE =>
-                offload_primary_vector_interrtupt <= '0';
-                read_vector_interrtupt <= '0';
+                offload_primary_vector_interrupt <= '0';
+                read_vector_interrupt <= '0';
                 offload_secondary_vector_interrupt <= '0';
                 f1_vector_interrupt <= '0';
                 f2_vector_interrupt <= '0';
@@ -1519,13 +1541,13 @@ port map
     q     => primary_fifo_data_out
 );
 
-OffloadController_module: OffloadController
+OffloadController_primary: OffloadController
 port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
     RESET => global_fpga_reset,
 
-    OFFLOAD_INTERRUPT => offload_primary_vector_interrtupt,
+    OFFLOAD_INTERRUPT => offload_primary_vector_interrupt,
     FIFO_DATA => primary_fifo_data_out,
     FIFO_READ_ENABLE => primary_fifo_rd_en,
 
@@ -1736,7 +1758,7 @@ process(CLOCK_50MHz)
 begin
     if rising_edge(CLOCK_50MHz) then
 
-        if read_vector_interrtupt = '1' then
+        if read_vector_interrupt = '1' then
             read_vector_extension <= '1';
         end if;
 
@@ -1747,11 +1769,7 @@ begin
                         switch_i2c_ready <= '1';
                     elsif offload_ctrl(2 downto 1) = SWITCH_SPI then
                         if offload_id = SWITCH_BMI160_S1 then
-                            --switch_bmi160_s1_ready <= '1';
-                            test_switch_bmi160_s1_ready <= '1';
-                            test_offload_ctrl           <= offload_ctrl;
-                            test_offload_register       <= offload_register;
-                            test_offload_data           <= offload_data;
+                            switch_bmi160_s1_ready <= '1';
                         elsif offload_id = SWITCH_BMI160_S2 then
                             switch_bmi160_s2_ready <= '1';
                         elsif offload_id = SWITCH_BMI160_S3 then
@@ -1759,8 +1777,8 @@ begin
                         elsif offload_id = SWITCH_nRF905 then
                             switch_spi_RF_ready <= '1';
                         else
-                            test_switch_bmi160_s1_ready <= '0';
-                            --switch_bmi160_s1_ready <= '0';
+                            acquisition_switch_bmi160_s1_ready <= '0';
+                            switch_bmi160_s1_ready <= '0';
                             switch_bmi160_s2_ready <= '0';
                             switch_bmi160_s3_ready <= '0';
                             switch_spi_RF_ready <= '0';
@@ -1770,25 +1788,25 @@ begin
                     end if;
                     s1_state <= SENSOR_DONE;
                 elsif s1_bmi160_int_1_DataReady = '1' then
-                    if start_vector_interrtupt = '1'
+                    if start_vector_interrupt = '1'
                     or read_vector_extension = '1' then
                         read_vector_extension <= '0';
-                        s1_state <= SENSOR_TEST;
+                        s1_state <= SENSOR_ACQUISITION;
                     end if;
                 end if;
 
-            when SENSOR_TEST =>
-                test_switch_bmi160_s1_ready <= '1';
-                test_offload_ctrl           <= "11100010";
-                test_offload_register       <= "10010010";
-                test_offload_data           <= "00000000";
+            when SENSOR_ACQUISITION =>
+                acquisition_switch_bmi160_s1_ready <= '1';
+                acquisition_offload_ctrl           <= "11100010";
+                acquisition_offload_register       <= "10010010";
+                acquisition_offload_data           <= "00000000";
                 s1_state <= SENSOR_DONE;
 
             when SENSOR_DONE =>
                 switch_i2c_ready <= '0';
                 switch_pwm_ready <= '0';
-                test_switch_bmi160_s1_ready <= '0';
-                --switch_bmi160_s1_ready <= '0';
+                acquisition_switch_bmi160_s1_ready <= '0';
+                switch_bmi160_s1_ready <= '0';
                 switch_bmi160_s2_ready <= '0';
                 switch_bmi160_s3_ready <= '0';
                 switch_spi_RF_ready <= '0';
@@ -1834,22 +1852,22 @@ I2cController_module: I2cController port map
     FEEDBACK_DATA => data_i2c_feedback
 );
 
-SpiController_BMI160_S1_primary: SpiController port map
+SpiController_BMI160_S1_configuration: SpiController port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
     RESET => global_fpga_reset,
 
-    OFFLOAD_INT => test_switch_bmi160_s1_ready,
-
+    -- In
+    OFFLOAD_INT => switch_bmi160_s1_ready,
     OFFLOAD_ID => offload_id(0) & offload_id(1) &
                 offload_id(2) & offload_id(3) &
                 offload_id(4) & offload_id(5) &
                 offload_id(6), -- Turn back around for SPI
+    OFFLOAD_CONTROL => offload_ctrl,
+    OFFLOAD_REGISTER => offload_register,
+    OFFLOAD_DATA => offload_data,
 
-    OFFLOAD_CONTROL => test_offload_ctrl,
-    OFFLOAD_REGISTER => test_offload_register,
-    OFFLOAD_DATA => test_offload_data,
-
+    -- Out
     OFFLOAD_WAIT => offload_wait_spi_s1,
 
     -- Master SPI interface
@@ -1858,10 +1876,43 @@ SpiController_BMI160_S1_primary: SpiController port map
     CTRL_MOSI => ctrl_BMI160_S1_MOSI,
     CTRL_SCK => ctrl_BMI160_S1_SCLK,
 
+    -- Out
     FPGA_INT => interrupt_spi_bmi160_s1_feedback,
     BURST_INT => interrupt_spi_bmi160_s1_burst,
     BURST_DATA => data_spi_bmi160_s1_burst,
     FEEDBACK_DATA => data_spi_bmi160_s1_feedback
+);
+
+SpiController_BMI160_S1_acquisition: SpiController port map
+(
+    CLOCK_50MHz => CLOCK_50MHz,
+    RESET => global_fpga_reset,
+
+    -- In
+    OFFLOAD_INT => acquisition_switch_bmi160_s1_ready,
+    OFFLOAD_ID => offload_id(0) & offload_id(1) &
+                offload_id(2) & offload_id(3) &
+                offload_id(4) & offload_id(5) &
+                offload_id(6), -- Turn back around for SPI
+
+    OFFLOAD_CONTROL => acquisition_offload_ctrl,
+    OFFLOAD_REGISTER => acquisition_offload_register,
+    OFFLOAD_DATA => acquisition_offload_data,
+
+    -- Out
+    OFFLOAD_WAIT => acquisition_offload_wait_spi_s1, -- TODO :: Need wait to process individual Bytes
+
+    -- Master SPI interface
+    CTRL_CS => acquisition_ctrl_BMI160_S1_CS,
+    CTRL_MISO => acquisition_ctrl_BMI160_S1_MISO,
+    CTRL_MOSI => acquisition_ctrl_BMI160_S1_MOSI,
+    CTRL_SCK => acquisition_ctrl_BMI160_S1_SCLK,
+
+    -- Out
+    FPGA_INT => acquisition_interrupt_spi_bmi160_s1_feedback,
+    BURST_INT => acquisition_interrupt_spi_bmi160_s1_burst,
+    BURST_DATA => acquisition_data_spi_bmi160_s1_burst,
+    FEEDBACK_DATA => acquisition_data_spi_bmi160_s1_feedback
 );
 
 SpiController_BMI160_S2_module: SpiController port map
@@ -1955,15 +2006,27 @@ port map
     aclr  => global_fpga_reset,
     clock => CLOCK_50MHz,
     -- IN
-    data  => data_spi_bmi160_s1_burst,
+    data  => acquisition_data_spi_bmi160_s1_burst,
 
     rdreq => data_vector_run,
-    wrreq => interrupt_spi_bmi160_s1_burst,
+    wrreq => acquisition_interrupt_spi_bmi160_s1_burst,
 
     -- OUT
     empty => sensor_fifo_empty,
     full  => sensor_fifo_full,
     q     => sensor_fifo_data_out
+);
+
+OffloadController_secondary: SensorFifo_OffloadController
+port map
+(
+    CLOCK_50MHz => CLOCK_50MHz,
+    RESET => global_fpga_reset,
+    -- In
+    IRQ_VECTOR_OFFLOAD => return_vector_interrupt,
+    -- Out
+    OFFLOAD_READ_ENABLE => open,
+    SECONDARY_DMA_TRIGGER => secondary_dma_trigger_gpio_pulse
 );
 
 -------------------------------------
@@ -1990,10 +2053,23 @@ NRF905_TX_EN <= 'Z';
 -- SAO :: MISO
 --
 -------------------------------------
-S1_BMI160_CS <= ctrl_BMI160_S1_CS;
-ctrl_BMI160_S1_MISO <= S1_BMI160_MISO;
-S1_BMI160_MOSI <= ctrl_BMI160_S1_MOSI;
-S1_BMI160_SCLK <= ctrl_BMI160_S1_SCLK;
+
+process(CLOCK_50MHz)
+begin
+    if rising_edge(CLOCK_50MHz) then
+        if enable_vector_interrupt = '1' then
+            S1_BMI160_CS <= acquisition_ctrl_BMI160_S1_CS;
+            acquisition_ctrl_BMI160_S1_MISO <= S1_BMI160_MISO;
+            S1_BMI160_MOSI <= acquisition_ctrl_BMI160_S1_MOSI;
+            S1_BMI160_SCLK <= acquisition_ctrl_BMI160_S1_SCLK;
+        else
+            S1_BMI160_CS <= ctrl_BMI160_S1_CS;
+            ctrl_BMI160_S1_MISO <= S1_BMI160_MISO;
+            S1_BMI160_MOSI <= ctrl_BMI160_S1_MOSI;
+            S1_BMI160_SCLK <= ctrl_BMI160_S1_SCLK;
+        end if;
+    end if;
+end process;
 
 S2_BMI160_CS <= ctrl_BMI160_S2_CS;
 ctrl_BMI160_S2_MISO <= S2_BMI160_MISO;
