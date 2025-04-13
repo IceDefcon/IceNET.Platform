@@ -995,7 +995,7 @@ void gui::interruptVector_execute(interruptVectorType type)
     std::cout << "[INFO] [INT] Set Interrupt Vector -> " << vectorToString(type) << std::endl;
 
     *m_IO_GuiState = IO_COM_WRITE_ONLY;
-    printToMainConsole("$ Done -> " + QString::fromStdString(vectorToString(type)));
+    printToMainConsole("$ Set Interrupt Vector -> " + QString::fromStdString(vectorToString(type)));
 }
 
 std::string gui::cmdToString(commandType cmd)

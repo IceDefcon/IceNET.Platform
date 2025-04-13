@@ -179,6 +179,9 @@ void Commander::initThread()
 
 void Commander::shutdownThread()
 {
+    /* Switch to single DMA before termination */
+    sendCommand(CMD_DMA_SINGLE);
+
     /**
      * Automatically locks the mutex when it is constructed
      * and releases the lock when it goes out of scope
