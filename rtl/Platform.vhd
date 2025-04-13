@@ -1729,23 +1729,23 @@ port map
 -- //                   //
 -- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-UartDataTransfer_module: UartDataTransfer
-port map
-(
-    CLOCK_50MHz => CLOCK_50MHz,
-    RESET => global_fpga_reset,
+--UartDataTransfer_module: UartDataTransfer
+--port map
+--(
+--    CLOCK_50MHz => CLOCK_50MHz,
+--    RESET => global_fpga_reset,
 
-    WRITE_ENABLE => uart_write_enable,
-    WRITE_SYMBOL => uart_write_symbol,
+--    WRITE_ENABLE => uart_write_enable,
+--    WRITE_SYMBOL => uart_write_symbol,
 
-    FPGA_UART_TX => FPGA_UART_TX,
-    FPGA_UART_RX => synced_FPGA_UART_RX,
+--    FPGA_UART_TX => FPGA_UART_TX,
+--    FPGA_UART_RX => synced_FPGA_UART_RX,
 
-    WRITE_BUSY => uart_write_busy
-);
+--    WRITE_BUSY => uart_write_busy
+--);
 
---FPGA_UART_TX <=  synced_GPS_UART_RX;
---GPS_UART_TX <= synced_FPGA_UART_RX;
+FPGA_UART_TX <=  synced_GPS_UART_RX;
+GPS_UART_TX <= synced_FPGA_UART_RX;
 
 UartDataAssembly_module: UartDataAssembly
 port map
