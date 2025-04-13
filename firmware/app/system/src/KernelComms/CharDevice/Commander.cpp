@@ -18,11 +18,11 @@
 Commander::Commander() :
 m_file_descriptor(-1),
 m_threadKill(false),
-m_ioState(IO_IDLE),
-m_ioStatePrev(IO_IDLE),
+m_ioState(IO_COM_IDLE),
+m_ioStatePrev(IO_COM_IDLE),
 m_Rx_CommanderVector(std::make_shared<std::vector<uint8_t>>(IO_TRANSFER_SIZE)),
 m_Tx_CommanderVector(std::make_shared<std::vector<uint8_t>>(IO_TRANSFER_SIZE)),
-m_IO_CommanderState(std::make_shared<ioStateType>(IO_IDLE)),
+m_IO_CommanderState(std::make_shared<ioStateType>(IO_COM_IDLE)),
 m_commandMatrix(CMD_AMOUNT, std::vector<uint8_t>(CMD_LENGTH, 0)),
 m_customDmaSize(0)
 {
@@ -240,7 +240,7 @@ void Commander::threadCommander()
          **/
         switch(*m_IO_CommanderState)
         {
-            case IO_IDLE:
+            case IO_COM_IDLE:
                 break;
 
             case IO_COM_WRITE:
@@ -283,7 +283,7 @@ void Commander::threadCommander()
                         (*m_Tx_CommanderVector)[i] = 0x00;
                     }
 
-                    *m_IO_CommanderState = IO_IDLE;
+                    *m_IO_CommanderState = IO_COM_IDLE;
                 }
                 break;
 
@@ -311,7 +311,27 @@ void Commander::threadCommander()
                         std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>((*m_Rx_CommanderVector)[i]) << " ";
                     }
                     std::cout << std::endl;
-                    *m_IO_CommanderState = IO_IDLE;
+                    *m_IO_CommanderState = IO_COM_IDLE;
+                }
+                else
+                {
+                    std::cout << "[ERNO] [CMD] Cannot read from kernel space" << std::endl;
+                }
+
+                break;
+
+            case IO_COM_READ_ONLY:
+
+                ret = read(m_file_descriptor, m_Rx_CommanderVector->data(), IO_TRANSFER_SIZE);
+
+                if(ret > 0)
+                {
+                    std::cout << std::dec << "[INFO] [CMD] Received " << ret << " Bytes of data: ";
+                    for (int i = 0; i < ret; ++i)
+                    {
+                        std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>((*m_Rx_CommanderVector)[i]) << " ";
+                    }
+                    std::cout << std::endl;
                 }
                 else
                 {
