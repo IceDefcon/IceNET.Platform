@@ -36,7 +36,7 @@ m_threadKill(true),
 m_isKernelConnected(false),
 m_Rx_GuiVector(std::make_shared<std::vector<uint8_t>>(IO_TRANSFER_SIZE)),
 m_Tx_GuiVector(std::make_shared<std::vector<uint8_t>>(IO_TRANSFER_SIZE)),
-m_IO_GuiState(std::make_shared<ioStateType>(IO_IDLE)),
+m_IO_GuiState(std::make_shared<ioStateType>(IO_COM_IDLE)),
 m_isPulseControllerEnabled(true),
 m_isStartAcquisition(true),
 m_phase(0.0)
@@ -873,13 +873,75 @@ void gui::setupDma()
 void gui::setupFifo()
 {
     /* FIFO :: Row[0] */
-    QLabel *i2c_label = new QLabel("FIFO", this);
+    QLabel *i2c_label = new QLabel("CMD", this);
     QFont i2c_labelFont;
     i2c_labelFont.setPointSize(30);
     i2c_labelFont.setItalic(true);
     i2c_labelFont.setBold(true);
     i2c_label->setFont(i2c_labelFont);
     i2c_label->setGeometry(dev.xGap, dev.yGap*21 + dev.yLogo*4 + dev.yUnit*12, dev.xLogo, dev.yLogo);
+
+    QPushButton *readOnlyButton = new QPushButton("READ", this);
+    readOnlyButton->setGeometry(dev.xGap, dev.yGap*22 + dev.yLogo*5 + dev.yUnit*12, dev.xUnit*2, dev.yUnit);
+    readOnlyButton->setStyleSheet(
+        "QPushButton {"
+        "   background-color: blue;"
+        "   color: white;"
+        "   font-size: 17px;"
+        "   font-weight: bold;"
+        "   border-radius: 10px;"
+        "   padding: 5px;"
+        "}"
+        "QPushButton:hover {"
+        "   background-color: darkblue;"
+        "}"
+        "QPushButton:pressed {"
+        "   background-color: black;"
+        "}"
+    );
+    connect(readOnlyButton, &QPushButton::clicked, this, [this]()
+    {
+        if(NULL == m_instanceDroneCtrl)
+        {
+            printToMainConsole("$ threadMain is not Running");
+        }
+        else
+        {
+            printToMainConsole("$ Set Commander State Machine -> IO_COM_READ_ONLY");
+            *m_IO_GuiState = IO_COM_READ_ONLY;
+        }
+    });
+
+    QPushButton *idleButton = new QPushButton("IDLE", this);
+    idleButton->setGeometry(dev.xGap, dev.yGap*23 + dev.yLogo*5 + dev.yUnit*13, dev.xUnit*2, dev.yUnit);
+    idleButton->setStyleSheet(
+        "QPushButton {"
+        "   background-color: blue;"
+        "   color: white;"
+        "   font-size: 17px;"
+        "   font-weight: bold;"
+        "   border-radius: 10px;"
+        "   padding: 5px;"
+        "}"
+        "QPushButton:hover {"
+        "   background-color: darkblue;"
+        "}"
+        "QPushButton:pressed {"
+        "   background-color: black;"
+        "}"
+    );
+    connect(idleButton, &QPushButton::clicked, this, [this]()
+    {
+        if(NULL == m_instanceDroneCtrl)
+        {
+            printToMainConsole("$ threadMain is not Running");
+        }
+        else
+        {
+            printToMainConsole("$ Set Commander State Machine -> IO_COM_IDLE");
+            *m_IO_GuiState = IO_COM_IDLE;
+        }
+    });
 }
 
 void gui::setDeadCommand()
@@ -1320,7 +1382,7 @@ void gui::openUart()
 
     m_uartPortName = "/dev/ttyTHS1";
     m_serialPort->setPortName(m_uartPortName);
-#if 1
+#if 0
     m_serialPort->setBaudRate(2000000);
 #else
     m_serialPort->setBaudRate(115200);
@@ -1350,7 +1412,7 @@ void gui::readUartData()
     {
         m_readBuffer.append(m_serialPort->readAll());
 
-#if 1
+#if 0
         const int messageLength = 8;
         while (m_readBuffer.size() >= messageLength)
         {
