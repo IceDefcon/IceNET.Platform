@@ -17,7 +17,7 @@ Port
     PARALLEL_MISO : in std_logic_vector(7 downto 0);
     SERIAL_MISO : out std_logic;
 
-    CONVERSION_BIT_COUNT : out std_logic_vector(3 downto 0);
+    CONVERSION_BIT_COUNT : out std_logic
     CONVERSION_COMPLETE : out std_logic
 );
 end entity SpiConverter;
@@ -49,7 +49,6 @@ begin
         if CS = '0' then
 
             index <= to_integer(unsigned(spi_bit_count));
-            CONVERSION_BIT_COUNT <= spi_bit_count;
 
             if spi_conversion_complete = '1' then -- Interrupt bit for 20ns only
                 spi_conversion_complete <= '0'; -- Then pull Low
