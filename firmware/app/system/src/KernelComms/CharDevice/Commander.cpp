@@ -326,12 +326,14 @@ void Commander::threadCommander()
 
                 if(ret > 0)
                 {
+#if 1 /* Debug */
                     std::cout << std::dec << "[INFO] [CMD] Received " << ret << " Bytes of data: ";
                     for (int i = 0; i < ret; ++i)
                     {
                         std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>((*m_Rx_CommanderVector)[i]) << " ";
                     }
                     std::cout << std::endl;
+#endif
                 }
                 else
                 {

@@ -1382,7 +1382,7 @@ void gui::openUart()
 
     m_uartPortName = "/dev/ttyTHS1";
     m_serialPort->setPortName(m_uartPortName);
-#if 0
+#if 1
     m_serialPort->setBaudRate(2000000);
 #else
     m_serialPort->setBaudRate(115200);
@@ -1412,7 +1412,7 @@ void gui::readUartData()
     {
         m_readBuffer.append(m_serialPort->readAll());
 
-#if 0
+#if 1
         const int messageLength = 8;
         while (m_readBuffer.size() >= messageLength)
         {
@@ -1584,7 +1584,6 @@ void gui::threadMain()
     }
 
     m_instanceDroneCtrl->getCommanderInstance()->sendCommand(CMD_FPGA_RESET);
-    m_instanceDroneCtrl->getCommanderInstance()->sendCommand(CMD_RAMDISK_CLEAR);
     m_instanceDroneCtrl->shutdownKernelComms();
     m_instanceDroneCtrl.reset(); // Reset the unique_ptr to call the destructor
 }

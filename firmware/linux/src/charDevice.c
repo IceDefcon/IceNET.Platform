@@ -256,7 +256,9 @@ static ssize_t commanderRead(struct file *filep, char *buffer, size_t len, loff_
 
     if (error_count == 0)
     {
+#if 0
         printk(KERN_INFO "[CTRL][ C ] Sent %zu characters to user-space\n", Device[DEVICE_COMMANDER].transferSize);
+#endif
         ret = Device[DEVICE_COMMANDER].transferSize;
     }
     else

@@ -123,6 +123,7 @@ void DroneCtrl::droneCtrlMain()
              */
             if(true == KernelComms::Watchdog::getFpgaConfigReady())
             {
+                m_instanceCommander->sendCommand(CMD_RAMDISK_CLEAR);
                 m_ctrlState = CTRL_RAMDISK_PERIPHERALS;
             }
             break;
