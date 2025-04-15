@@ -1729,23 +1729,23 @@ port map
 -- //                   //
 -- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
---UartDataTransfer_module: UartDataTransfer
---port map
---(
---    CLOCK_50MHz => CLOCK_50MHz,
---    RESET => global_fpga_reset,
+UartDataTransfer_module: UartDataTransfer
+port map
+(
+    CLOCK_50MHz => CLOCK_50MHz,
+    RESET => global_fpga_reset,
 
---    WRITE_ENABLE => uart_write_enable,
---    WRITE_SYMBOL => uart_write_symbol,
+    WRITE_ENABLE => uart_write_enable,
+    WRITE_SYMBOL => uart_write_symbol,
 
---    FPGA_UART_TX => FPGA_UART_TX,
---    FPGA_UART_RX => synced_FPGA_UART_RX,
+    FPGA_UART_TX => FPGA_UART_TX,
+    FPGA_UART_RX => synced_FPGA_UART_RX,
 
---    WRITE_BUSY => uart_write_busy
---);
+    WRITE_BUSY => uart_write_busy
+);
 
-FPGA_UART_TX <=  synced_GPS_UART_RX;
-GPS_UART_TX <= synced_FPGA_UART_RX;
+--FPGA_UART_TX <=  synced_GPS_UART_RX;
+--GPS_UART_TX <= synced_FPGA_UART_RX;
 
 UartDataAssembly_module: UartDataAssembly
 port map
@@ -1813,11 +1813,30 @@ begin
                     end if;
                 end if;
 
+            --------------------------------------------------------------------------------
+            -- OFFLOAD_CTRL :: 8-bits
+            --------------------------------------------------------------------------------
+            --  Dma config (Auto/Manual Config)
+            --      |
+            --      |        Device (I2C, SPI, PWM)
+            --      |          ID
+            --      |          ||
+            --      |          ||
+            --      V          VV
+            --    | x | xxxx | xx | x | <<<---- OFFLOAD_CTRL : std_logic_vector(7 downto 0)
+            --          ΛΛΛΛ        Λ
+            --          ||||        |
+            --          ||||        |
+            --          ||||        |
+            --       burst size    R/W (I2C, SPI)
+            --       (I2C, SPI)
+            --------------------------------------------------------------------------------
             when SENSOR_ACQUISITION =>
-                acquisition_switch_bmi160_s1_ready <= '1';
-                acquisition_offload_ctrl           <= "11100010";
-                acquisition_offload_register       <= "10010010";
-                acquisition_offload_data           <= "00000000";
+                acquisition_switch_bmi160_s1_ready <= '1';         -- N/A   12    NA   R
+                acquisition_offload_ctrl           <= "00110000"; -- | 0 | 1100 | 01 | 0 |
+                acquisition_offload_register       <= "10010010"; -- 0x92 :: TODO -> Add 0x10 in case of Read !!!
+                --acquisition_offload_register       <= "10001100"; -- 0x8C :: TODO -> Add 0x10 in case of Read !!!
+                acquisition_offload_data           <= "00000000"; -- 0x00
                 s1_state <= SENSOR_DONE;
 
             when SENSOR_DONE =>
