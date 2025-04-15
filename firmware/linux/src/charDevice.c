@@ -79,7 +79,7 @@ static charDeviceData Device[DEVICE_AMOUNT] =
         .deviceMutex = __MUTEX_INITIALIZER(Device[DEVICE_COMMANDER].deviceMutex),
         .isLocked = true,
         .tryLock = 0,
-        .transferSize = 12,
+        .transferSize = 6,
 
         .io_transfer =
         {
@@ -256,7 +256,9 @@ static ssize_t commanderRead(struct file *filep, char *buffer, size_t len, loff_
 
     if (error_count == 0)
     {
+#if 0
         printk(KERN_INFO "[CTRL][ C ] Sent %zu characters to user-space\n", Device[DEVICE_COMMANDER].transferSize);
+#endif
         ret = Device[DEVICE_COMMANDER].transferSize;
     }
     else

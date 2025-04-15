@@ -61,11 +61,12 @@ static irqreturn_t InterruptFromFPGA_WatchdogISR(int irq, void *data)
 
 static irqreturn_t InterruptFromFPGA_SpiISR(int irq, void *data)
 {
+#if 0
     static int counter = 0;
 
     printk(KERN_INFO "[CTRL][ISR] Interrupt No[%d] received from FPGA @ Pin [%d] :: TODO Checksum comparsion\n", counter, GPIO_NUMBER_ACTIVATE_SECONDARY_DMA);
     counter++;
-
+#endif
     /* QUEUE :: Execution of masterTransferSecondary */
     queue_work(get_masterTransferSecondary_wq(), get_masterTransferSecondary_work());
     return IRQ_HANDLED;

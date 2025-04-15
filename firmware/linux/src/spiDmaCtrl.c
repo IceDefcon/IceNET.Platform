@@ -173,7 +173,8 @@ static int spiDmaInit(spiDeviceType spiDeviceEnum, dmaConfigType dmaConfig)
         case DMA_CONFIG_SENSOR:
             dmaTransfer = getCharDeviceTransfer(DEVICE_COMMANDER);
             printk(KERN_ERR "[INIT][SPI] Secondary SPI/DMA -> Sensor Mode\n");
-            Device[spiDeviceEnum].spiLength = SENSOR_DMA_TRANSFER_SIZE;
+            // Device[spiDeviceEnum].spiLength = SENSOR_DMA_TRANSFER_SIZE;
+            Device[spiDeviceEnum].spiLength = SENSOR_DMA_SINGLE_TRANSFER_SIZE;
             break;
 
         case DMA_CONFIG_SINGLE:
@@ -320,10 +321,12 @@ void masterTransferPrimary(struct work_struct *work)
 
 void masterTransferSecondary(struct work_struct *work)
 {
+#if 0
     unsigned char *tx_buf;
     unsigned char *rx_buf;
-    int ret;
     int i;
+#endif
+    int ret;
 
     /* Initiate DMA Controller to perform SPI transfer */
     ret = spi_sync(Device[SPI_SECONDARY].spiDevice, &Device[SPI_SECONDARY].Dma.spiMessage);
@@ -333,6 +336,7 @@ void masterTransferSecondary(struct work_struct *work)
         printk(KERN_ERR "[CTRL][SPI] SPI transfer at interrupt From Fpga failed: %d\n", ret);
         return;
     }
+#if 0
     else
     {
         printk(KERN_INFO "[CTRL][SPI] Secondary FPGA Transfer :: Signaled by masterTransferSecondary over SPI.1\n");
@@ -345,7 +349,7 @@ void masterTransferSecondary(struct work_struct *work)
     {
         printk(KERN_INFO "[CTRL][SPI] Secondary FPGA Transfer :: Byte[%d]: [Feedback] Tx[0x%02x] [Data] Rx[0x%02x]\n", i, tx_buf[i], rx_buf[i]);
     }
-
+#endif
     /**
      *
      * TODO
