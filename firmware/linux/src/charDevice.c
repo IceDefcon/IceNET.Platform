@@ -79,7 +79,7 @@ static charDeviceData Device[DEVICE_AMOUNT] =
         .deviceMutex = __MUTEX_INITIALIZER(Device[DEVICE_COMMANDER].deviceMutex),
         .isLocked = true,
         .tryLock = 0,
-        .transferSize = 12,
+        .transferSize = 6,
 
         .io_transfer =
         {

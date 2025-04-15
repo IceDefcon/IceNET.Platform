@@ -210,6 +210,10 @@ bool Commander::isThreadKilled()
     return m_threadKill;
 }
 
+int16_t to_signed_16bit(uint8_t msb, uint8_t lsb) {
+    return static_cast<int16_t>((msb << 8) | lsb);
+}
+
 void Commander::threadCommander()
 {
     int ret = 0;
@@ -324,16 +328,17 @@ void Commander::threadCommander()
 
                 ret = read(m_file_descriptor, m_Rx_CommanderVector->data(), IO_TRANSFER_SIZE);
 
-                if(ret > 0)
+                // Inside your processing logic
+                if (ret == 6)
                 {
-#if 1 /* Debug */
-                    std::cout << std::dec << "[INFO] [CMD] Received " << ret << " Bytes of data: ";
-                    for (int i = 0; i < ret; ++i)
-                    {
-                        std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>((*m_Rx_CommanderVector)[i]) << " ";
-                    }
-                    std::cout << std::endl;
-#endif
+                    int16_t x = to_signed_16bit((*m_Rx_CommanderVector)[1], (*m_Rx_CommanderVector)[0]);
+                    int16_t y = to_signed_16bit((*m_Rx_CommanderVector)[3], (*m_Rx_CommanderVector)[2]);
+                    int16_t z = to_signed_16bit((*m_Rx_CommanderVector)[5], (*m_Rx_CommanderVector)[4]);
+
+                    std::cout << std::dec;
+                    std::cout << "[INFO] [CMD] Accel X: " << x
+                              << "  Y: " << y
+                              << "  Z: " << z << std::endl;
                 }
                 else
                 {

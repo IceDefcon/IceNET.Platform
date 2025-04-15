@@ -173,7 +173,8 @@ static int spiDmaInit(spiDeviceType spiDeviceEnum, dmaConfigType dmaConfig)
         case DMA_CONFIG_SENSOR:
             dmaTransfer = getCharDeviceTransfer(DEVICE_COMMANDER);
             printk(KERN_ERR "[INIT][SPI] Secondary SPI/DMA -> Sensor Mode\n");
-            Device[spiDeviceEnum].spiLength = SENSOR_DMA_TRANSFER_SIZE;
+            // Device[spiDeviceEnum].spiLength = SENSOR_DMA_TRANSFER_SIZE;
+            Device[spiDeviceEnum].spiLength = SENSOR_DMA_SINGLE_TRANSFER_SIZE;
             break;
 
         case DMA_CONFIG_SINGLE:
