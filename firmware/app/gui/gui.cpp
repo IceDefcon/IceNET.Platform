@@ -131,7 +131,7 @@ void gui::paintEvent(QPaintEvent *event)
     for (int i = 0; i < sampleCount; ++i)
     {
         int index = i * 6;
-        if (index + 5 >= RxBuffer.size()) break;
+        if (index + 5 >= static_cast<int>(RxBuffer.size())) break;
 
         double t = i * step;
         int x = x_offset + static_cast<int>(scale * t);
@@ -165,7 +165,7 @@ void gui::paintEvent(QPaintEvent *event)
     for (int i = 0; i < sampleCount; ++i)
     {
         int index = i * 6;
-        if (index + 5 >= RxBuffer.size()) break;
+        if (index + 5 >= static_cast<int>(RxBuffer.size())) break;
 
         double t = i * step;
         int x = x_offset + static_cast<int>(scale * t);
@@ -198,7 +198,7 @@ void gui::paintEvent(QPaintEvent *event)
     for (int i = 0; i < sampleCount; ++i)
     {
         int index = i * 6;
-        if (index + 5 >= RxBuffer.size()) break;
+        if (index + 5 >= static_cast<int>(RxBuffer.size())) break;
 
         double t = i * step;
         int x = x_offset + static_cast<int>(scale * t);
@@ -355,10 +355,10 @@ void gui::setupFpgaCtrl()
         }
     });
 
-    QPushButton *enableButton = new QPushButton("ENABLE", this);
-    enableButton->setGeometry(dev.xGap*5 + dev.xText + dev.xUnit*2, dev.yGap*4 + dev.yLogo + dev.yUnit*2, dev.xUnit*2, dev.yUnit);
+    m_enableButton = new QPushButton("ENABLE", this);
+    m_enableButton->setGeometry(dev.xGap*5 + dev.xText + dev.xUnit*2, dev.yGap*4 + dev.yLogo + dev.yUnit*2, dev.xUnit*2, dev.yUnit);
 
-    enableButton->setStyleSheet(
+    m_enableButton->setStyleSheet(
         "QPushButton {"
         "   background-color: green;"
         "   color: white;"
@@ -375,7 +375,7 @@ void gui::setupFpgaCtrl()
         "}"
     );
 
-    connect(enableButton, &QPushButton::clicked, this, [this, enableButton]()
+    connect(m_enableButton, &QPushButton::clicked, this, [this]()
     {
         if (NULL == m_instanceDroneCtrl)
         {
@@ -385,8 +385,8 @@ void gui::setupFpgaCtrl()
 
         if (m_isPulseControllerEnabled)
         {
-            enableButton->setText("DISABLE");
-            enableButton->setStyleSheet(
+            m_enableButton->setText("DISABLE");
+            m_enableButton->setStyleSheet(
                 "QPushButton {"
                 "   background-color: red;"
                 "   color: white;"
@@ -408,8 +408,8 @@ void gui::setupFpgaCtrl()
         }
         else
         {
-            enableButton->setText("ENABLE");
-            enableButton->setStyleSheet(
+            m_enableButton->setText("ENABLE");
+            m_enableButton->setStyleSheet(
                 "QPushButton {"
                 "   background-color: green;"
                 "   color: white;"
@@ -434,10 +434,10 @@ void gui::setupFpgaCtrl()
         m_isPulseControllerEnabled = !m_isPulseControllerEnabled;
     });
 
-    QPushButton *startButton = new QPushButton("START", this);
-    startButton->setGeometry(dev.xGap*6 + dev.xText + dev.xUnit*4, dev.yGap*4 + dev.yLogo + dev.yUnit*2, dev.xUnit*2, dev.yUnit);
+    m_startButton = new QPushButton("START", this);
+    m_startButton->setGeometry(dev.xGap*6 + dev.xText + dev.xUnit*4, dev.yGap*4 + dev.yLogo + dev.yUnit*2, dev.xUnit*2, dev.yUnit);
 
-    startButton->setStyleSheet(
+    m_startButton->setStyleSheet(
         "QPushButton {"
         "   background-color: green;"
         "   color: white;"
@@ -454,7 +454,7 @@ void gui::setupFpgaCtrl()
         "}"
     );
 
-    connect(startButton, &QPushButton::clicked, this, [this, startButton]()
+    connect(m_startButton, &QPushButton::clicked, this, [this]()
     {
         if (NULL == m_instanceDroneCtrl)
         {
@@ -464,8 +464,8 @@ void gui::setupFpgaCtrl()
 
         if (m_isStartAcquisition)
         {
-            startButton->setText("STOP");
-            startButton->setStyleSheet(
+            m_startButton->setText("STOP");
+            m_startButton->setStyleSheet(
                 "QPushButton {"
                 "   background-color: red;"
                 "   color: white;"
@@ -487,8 +487,8 @@ void gui::setupFpgaCtrl()
         }
         else
         {
-            startButton->setText("START");
-            startButton->setStyleSheet(
+            m_startButton->setText("START");
+            m_startButton->setStyleSheet(
                 "QPushButton {"
                 "   background-color: green;"
                 "   color: white;"
@@ -1600,6 +1600,47 @@ void gui::initThread()
 
 void gui::shutdownThread()
 {
+    interruptVector_execute(VECTOR_DISABLE);
+    interruptVector_execute(VECTOR_STOP);
+
+    m_isPulseControllerEnabled = true;
+    m_enableButton->setText("ENABLE");
+    m_enableButton->setStyleSheet(
+        "QPushButton {"
+        "   background-color: green;"
+        "   color: white;"
+        "   font-size: 17px;"
+        "   font-weight: bold;"
+        "   border-radius: 10px;"
+        "   padding: 5px;"
+        "}"
+        "QPushButton:hover {"
+        "   background-color: darkblue;"
+        "}"
+        "QPushButton:pressed {"
+        "   background-color: black;"
+        "}"
+    );
+
+    m_isStartAcquisition = true;
+    m_startButton->setText("START");
+    m_startButton->setStyleSheet(
+        "QPushButton {"
+        "   background-color: green;"
+        "   color: white;"
+        "   font-size: 17px;"
+        "   font-weight: bold;"
+        "   border-radius: 10px;"
+        "   padding: 5px;"
+        "}"
+        "QPushButton:hover {"
+        "   background-color: darkblue;"
+        "}"
+        "QPushButton:pressed {"
+        "   background-color: black;"
+        "}"
+    );
+
     /**
      * Automatically locks the mutex when it is constructed
      * and releases the lock when it goes out of scope
@@ -1664,7 +1705,6 @@ void gui::threadMain()
         {
             /* TODO :: Button stays pressed at Thread Termination */
             printToMainConsole("$ Disable Pulse Controllers");
-            interruptVector_execute(VECTOR_DISABLE);
             m_isKernelConnected = false;
             break;
         }
