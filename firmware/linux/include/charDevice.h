@@ -36,7 +36,8 @@ typedef struct
     DmaTransferType io_transfer;
     struct file_operations fops;
     char* name;
-    char* nameClass;;
+    char* nameClass;
+    char unlockTimer;
 }charDeviceData;
 
 typedef enum

@@ -179,8 +179,10 @@ void Commander::initThread()
 
 void Commander::shutdownThread()
 {
-    /* Switch to single DMA before termination */
+    /* Switch to single DMA */
     sendCommand(CMD_DMA_SINGLE);
+    /* Reset FPGA */
+    sendCommand(CMD_FPGA_RESET);
 
     /**
      * Automatically locks the mutex when it is constructed
@@ -331,14 +333,29 @@ void Commander::threadCommander()
                 // Inside your processing logic
                 if (ret == 6)
                 {
-                    int16_t x = to_signed_16bit((*m_Rx_CommanderVector)[1], (*m_Rx_CommanderVector)[0]);
-                    int16_t y = to_signed_16bit((*m_Rx_CommanderVector)[3], (*m_Rx_CommanderVector)[2]);
-                    int16_t z = to_signed_16bit((*m_Rx_CommanderVector)[5], (*m_Rx_CommanderVector)[4]);
 
-                    std::cout << std::dec;
-                    std::cout << "[INFO] [CMD] Accel X: " << x
-                              << "  Y: " << y
-                              << "  Z: " << z << std::endl;
+                    if((*m_Rx_CommanderVector)[1] == 0xDE && (*m_Rx_CommanderVector)[2] == 0xAD && (*m_Rx_CommanderVector)[3] == 0xC0 && (*m_Rx_CommanderVector)[4] == 0xDE)
+                    {
+                        std::cout << "[ERNO] [CMD] 0xDEADCODE Received -> Going to IO_COM_IDLE" << std::endl;
+                        *m_IO_CommanderState = IO_COM_IDLE;
+                        break;
+                    }
+
+                    // int16_t x = to_signed_16bit((*m_Rx_CommanderVector)[1], (*m_Rx_CommanderVector)[0]);
+                    // int16_t y = to_signed_16bit((*m_Rx_CommanderVector)[3], (*m_Rx_CommanderVector)[2]);
+                    // int16_t z = to_signed_16bit((*m_Rx_CommanderVector)[5], (*m_Rx_CommanderVector)[4]);
+
+                    struct timespec ts;
+                    clock_gettime(CLOCK_MONOTONIC, &ts);
+
+                    double seconds_since_boot = ts.tv_sec + ts.tv_nsec / 1e9;
+
+                    std::cout << std::fixed << std::setprecision(6);
+                    std::cout << "[INFO] [CMD] [" << seconds_since_boot << "] " << std::endl;
+                    // std::cout << "[INFO] [CMD] [" << seconds_since_boot << "] " << std::dec
+                    //           << "Accel X: " << x
+                    //           << "  Y: " << y
+                    //           << "  Z: " << z << std::endl;
                 }
                 else
                 {
@@ -352,7 +369,7 @@ void Commander::threadCommander()
         }
 
         /* Reduce consumption of CPU resources */
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        // std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
 
     std::cout << "[INFO] [CMD] Terminate threadCommander" << std::endl;

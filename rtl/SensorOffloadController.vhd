@@ -39,7 +39,7 @@ type OFFLOAD_TYPE is
 );
 signal offload_state: OFFLOAD_TYPE := OFFLOAD_IDLE;
 
-signal offload_counter : integer range 0 to 400000 := 0;
+signal offload_counter : integer range 0 to 60000 := 0;
 signal offload_fifo_empty_counter : integer range 0 to 256 := 0;
 begin
 
@@ -89,7 +89,7 @@ begin
                         offload_state <= OFFLOAD_TRANSFER;
                     end if;
 
-                    if offload_counter = 400000 then
+                    if offload_counter = 60000 then
                         offload_state <= OFFLOAD_FIFO_CLEAN;
                     else
                         offload_counter <= offload_counter + 1;

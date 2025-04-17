@@ -76,6 +76,9 @@ class gui : public QWidget
     QLineEdit *m_pwm_dataField;
     QLineEdit *m_dmaCustom_dataField;
 
+    QPushButton *m_enableButton;
+    QPushButton *m_startButton;
+
     std::unique_ptr<DroneCtrl> m_instanceDroneCtrl;
     std::thread m_threadMain;
     std::mutex m_threadMutex;

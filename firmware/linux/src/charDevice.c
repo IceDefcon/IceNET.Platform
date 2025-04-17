@@ -68,6 +68,7 @@ static charDeviceData Device[DEVICE_AMOUNT] =
 
         .name = "KernelWatchdog",
         .nameClass = "KernelWatchdogClass",
+        .unlockTimer = 0,
     },
 
     [DEVICE_COMMANDER] =
@@ -97,6 +98,7 @@ static charDeviceData Device[DEVICE_AMOUNT] =
 
         .name = "KernelCommander",
         .nameClass = "KernelCommanderClass",
+        .unlockTimer = 0,
     },
 };
 
@@ -250,7 +252,19 @@ static ssize_t commanderRead(struct file *filep, char *buffer, size_t len, loff_
     while(isDeviceLocked(DEVICE_COMMANDER))
     {
         msleep(10); /* Release 90% of CPU resources */
+        Device[DEVICE_COMMANDER].unlockTimer++;
+        if(100 == Device[DEVICE_COMMANDER].unlockTimer) /* 1s Timeout :: Then unblock*/
+        {
+            Device[DEVICE_COMMANDER].io_transfer.TxData[0] = 0x00;
+            Device[DEVICE_COMMANDER].io_transfer.TxData[1] = 0xDE;
+            Device[DEVICE_COMMANDER].io_transfer.TxData[2] = 0xAD;
+            Device[DEVICE_COMMANDER].io_transfer.TxData[3] = 0xC0;
+            Device[DEVICE_COMMANDER].io_transfer.TxData[4] = 0xDE;
+            Device[DEVICE_COMMANDER].io_transfer.TxData[5] = 0x00;
+            break;
+        }
     }
+    Device[DEVICE_COMMANDER].unlockTimer = 0;
 #endif
     error_count = copy_to_user(buffer, (const void *)Device[DEVICE_COMMANDER].io_transfer.TxData, Device[DEVICE_COMMANDER].transferSize);
 

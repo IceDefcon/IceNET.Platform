@@ -1219,7 +1219,7 @@ generic map
 port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
-    RESET => global_fpga_reset,
+    RESET => '0',
 
     ENABLE_CONTROLLER => '1',
 
@@ -1375,9 +1375,19 @@ end process;
 --
 -----------------------------------
 interrupt_vector_process:
-process(CLOCK_50MHz)
+process(CLOCK_50MHz, global_fpga_reset)
 begin
-    if rising_edge(CLOCK_50MHz) then
+    if global_fpga_reset = '1' then
+        offload_primary_vector_interrupt <= '0';
+        read_vector_interrupt <= '0';
+        offload_secondary_vector_interrupt <= '0';
+        f1_vector_interrupt <= '0';
+        f2_vector_interrupt <= '0';
+        vector_state <= VECTOR_IDLE;
+        return_vector_interrupt <= '0';
+        enable_vector_interrupt <= '0';
+        start_vector_interrupt <= '0';
+    elsif rising_edge(CLOCK_50MHz) then
 
         REG_primary_fifo_wr_en <= REG_primary_fifo_wr_en(2046 downto 0) & primary_conversion_complete;
         REG_primary_parallel_MOSI_7 <= REG_primary_parallel_MOSI_0(2046 downto 0) & primary_parallel_MOSI(7);
