@@ -24,7 +24,11 @@ m_Rx_CommanderVector(std::make_shared<std::vector<uint8_t>>(IO_TRANSFER_SIZE)),
 m_Tx_CommanderVector(std::make_shared<std::vector<uint8_t>>(IO_TRANSFER_SIZE)),
 m_IO_CommanderState(std::make_shared<ioStateType>(IO_COM_IDLE)),
 m_commandMatrix(CMD_AMOUNT, std::vector<uint8_t>(CMD_LENGTH, 0)),
-m_customDmaSize(0)
+m_customDmaSize(0),
+m_x(0),
+m_y(0),
+m_z(0),
+m_seconds_since_boot(0)
 {
     std::cout << "[INFO] [CONSTRUCTOR] " << this << " :: Instantiate Commander" << std::endl;
 
@@ -212,10 +216,6 @@ bool Commander::isThreadKilled()
     return m_threadKill;
 }
 
-int16_t to_signed_16bit(uint8_t msb, uint8_t lsb) {
-    return static_cast<int16_t>((msb << 8) | lsb);
-}
-
 void Commander::threadCommander()
 {
     int ret = 0;
@@ -341,21 +341,119 @@ void Commander::threadCommander()
                         break;
                     }
 
-                    // int16_t x = to_signed_16bit((*m_Rx_CommanderVector)[1], (*m_Rx_CommanderVector)[0]);
-                    // int16_t y = to_signed_16bit((*m_Rx_CommanderVector)[3], (*m_Rx_CommanderVector)[2]);
-                    // int16_t z = to_signed_16bit((*m_Rx_CommanderVector)[5], (*m_Rx_CommanderVector)[4]);
+                    m_x = static_cast<int16_t>(((*m_Rx_CommanderVector)[1] << 8) | (*m_Rx_CommanderVector)[0]);
+                    m_y = static_cast<int16_t>(((*m_Rx_CommanderVector)[3] << 8) | (*m_Rx_CommanderVector)[2]);
+                    m_z = static_cast<int16_t>(((*m_Rx_CommanderVector)[5] << 8) | (*m_Rx_CommanderVector)[4]);
 
-                    struct timespec ts;
-                    clock_gettime(CLOCK_MONOTONIC, &ts);
+                    m_x_vector[31] = m_x_vector[30];
+                    m_x_vector[30] = m_x_vector[29];
+                    m_x_vector[29] = m_x_vector[28];
+                    m_x_vector[28] = m_x_vector[27];
+                    m_x_vector[27] = m_x_vector[26];
+                    m_x_vector[26] = m_x_vector[25];
+                    m_x_vector[25] = m_x_vector[24];
+                    m_x_vector[24] = m_x_vector[23];
+                    m_x_vector[23] = m_x_vector[22];
+                    m_x_vector[22] = m_x_vector[21];
+                    m_x_vector[21] = m_x_vector[20];
+                    m_x_vector[20] = m_x_vector[19];
+                    m_x_vector[19] = m_x_vector[18];
+                    m_x_vector[18] = m_x_vector[17];
+                    m_x_vector[17] = m_x_vector[16];
+                    m_x_vector[16] = m_x_vector[15];
+                    m_x_vector[15] = m_x_vector[14];
+                    m_x_vector[14] = m_x_vector[13];
+                    m_x_vector[13] = m_x_vector[12];
+                    m_x_vector[12] = m_x_vector[11];
+                    m_x_vector[11] = m_x_vector[10];
+                    m_x_vector[10] = m_x_vector[9];
+                    m_x_vector[9] = m_x_vector[8];
+                    m_x_vector[8] = m_x_vector[7];
+                    m_x_vector[7] = m_x_vector[6];
+                    m_x_vector[6] = m_x_vector[5];
+                    m_x_vector[5] = m_x_vector[4];
+                    m_x_vector[4] = m_x_vector[3];
+                    m_x_vector[3] = m_x_vector[2];
+                    m_x_vector[2] = m_x_vector[1];
+                    m_x_vector[1] = m_x_vector[0];
+                    m_x_vector[0] = m_x;
 
-                    double seconds_since_boot = ts.tv_sec + ts.tv_nsec / 1e9;
+                    m_y_vector[31] = m_y_vector[30];
+                    m_y_vector[30] = m_y_vector[29];
+                    m_y_vector[29] = m_y_vector[28];
+                    m_y_vector[28] = m_y_vector[27];
+                    m_y_vector[27] = m_y_vector[26];
+                    m_y_vector[26] = m_y_vector[25];
+                    m_y_vector[25] = m_y_vector[24];
+                    m_y_vector[24] = m_y_vector[23];
+                    m_y_vector[23] = m_y_vector[22];
+                    m_y_vector[22] = m_y_vector[21];
+                    m_y_vector[21] = m_y_vector[20];
+                    m_y_vector[20] = m_y_vector[19];
+                    m_y_vector[19] = m_y_vector[18];
+                    m_y_vector[18] = m_y_vector[17];
+                    m_y_vector[17] = m_y_vector[16];
+                    m_y_vector[16] = m_y_vector[15];
+                    m_y_vector[15] = m_y_vector[14];
+                    m_y_vector[14] = m_y_vector[13];
+                    m_y_vector[13] = m_y_vector[12];
+                    m_y_vector[12] = m_y_vector[11];
+                    m_y_vector[11] = m_y_vector[10];
+                    m_y_vector[10] = m_y_vector[9];
+                    m_y_vector[9] = m_y_vector[8];
+                    m_y_vector[8] = m_y_vector[7];
+                    m_y_vector[7] = m_y_vector[6];
+                    m_y_vector[6] = m_y_vector[5];
+                    m_y_vector[5] = m_y_vector[4];
+                    m_y_vector[4] = m_y_vector[3];
+                    m_y_vector[3] = m_y_vector[2];
+                    m_y_vector[2] = m_y_vector[1];
+                    m_y_vector[1] = m_y_vector[0];
+                    m_y_vector[0] = m_y;
+
+                    m_z_vector[31] = m_z_vector[30];
+                    m_z_vector[30] = m_z_vector[29];
+                    m_z_vector[29] = m_z_vector[28];
+                    m_z_vector[28] = m_z_vector[27];
+                    m_z_vector[27] = m_z_vector[26];
+                    m_z_vector[26] = m_z_vector[25];
+                    m_z_vector[25] = m_z_vector[24];
+                    m_z_vector[24] = m_z_vector[23];
+                    m_z_vector[23] = m_z_vector[22];
+                    m_z_vector[22] = m_z_vector[21];
+                    m_z_vector[21] = m_z_vector[20];
+                    m_z_vector[20] = m_z_vector[19];
+                    m_z_vector[19] = m_z_vector[18];
+                    m_z_vector[18] = m_z_vector[17];
+                    m_z_vector[17] = m_z_vector[16];
+                    m_z_vector[16] = m_z_vector[15];
+                    m_z_vector[15] = m_z_vector[14];
+                    m_z_vector[14] = m_z_vector[13];
+                    m_z_vector[13] = m_z_vector[12];
+                    m_z_vector[12] = m_z_vector[11];
+                    m_z_vector[11] = m_z_vector[10];
+                    m_z_vector[10] = m_z_vector[9];
+                    m_z_vector[9] = m_z_vector[8];
+                    m_z_vector[8] = m_z_vector[7];
+                    m_z_vector[7] = m_z_vector[6];
+                    m_z_vector[6] = m_z_vector[5];
+                    m_z_vector[5] = m_z_vector[4];
+                    m_z_vector[4] = m_z_vector[3];
+                    m_z_vector[3] = m_z_vector[2];
+                    m_z_vector[2] = m_z_vector[1];
+                    m_z_vector[1] = m_z_vector[0];
+                    m_z_vector[0] = m_z;
+
+                    m_x_average = (m_x_vector[0] + m_x_vector[1] + m_x_vector[2] + m_x_vector[3] + m_x_vector[4] + m_x_vector[5] + m_x_vector[6] + m_x_vector[7] + m_x_vector[8] + m_x_vector[9] + m_x_vector[10] + m_x_vector[11] + m_x_vector[12] + m_x_vector[13] + m_x_vector[14] + m_x_vector[15] + m_x_vector[16] + m_x_vector[17] + m_x_vector[18] + m_x_vector[19] + m_x_vector[20] + m_x_vector[21] + m_x_vector[22] + m_x_vector[23] + m_x_vector[24] + m_x_vector[25] + m_x_vector[26] + m_x_vector[27] + m_x_vector[28] + m_x_vector[29] + m_x_vector[30] + m_x_vector[31])/32;
+                    m_y_average = (m_y_vector[0] + m_y_vector[1] + m_y_vector[2] + m_y_vector[3] + m_y_vector[4] + m_y_vector[5] + m_y_vector[6] + m_y_vector[7] + m_y_vector[8] + m_y_vector[9] + m_y_vector[10] + m_y_vector[11] + m_y_vector[12] + m_y_vector[13] + m_y_vector[14] + m_y_vector[15] + m_y_vector[16] + m_y_vector[17] + m_y_vector[18] + m_y_vector[19] + m_y_vector[20] + m_y_vector[21] + m_y_vector[22] + m_y_vector[23] + m_y_vector[24] + m_y_vector[25] + m_y_vector[26] + m_y_vector[27] + m_y_vector[28] + m_y_vector[29] + m_y_vector[30] + m_y_vector[31])/32;
+                    m_z_average = (m_z_vector[0] + m_z_vector[1] + m_z_vector[2] + m_z_vector[3] + m_z_vector[4] + m_z_vector[5] + m_z_vector[6] + m_z_vector[7] + m_z_vector[8] + m_z_vector[9] + m_z_vector[10] + m_z_vector[11] + m_z_vector[12] + m_z_vector[13] + m_z_vector[14] + m_z_vector[15] + m_z_vector[16] + m_z_vector[17] + m_z_vector[18] + m_z_vector[19] + m_z_vector[20] + m_z_vector[21] + m_z_vector[22] + m_z_vector[23] + m_z_vector[24] + m_z_vector[25] + m_z_vector[26] + m_z_vector[27] + m_z_vector[28] + m_z_vector[29] + m_z_vector[30] + m_z_vector[31])/32;
+
+                    clock_gettime(CLOCK_MONOTONIC, &m_ts);
+                    m_seconds_since_boot = m_ts.tv_sec + m_ts.tv_nsec / 1e9;
 
                     std::cout << std::fixed << std::setprecision(6);
-                    std::cout << "[INFO] [CMD] [" << seconds_since_boot << "] " << std::endl;
-                    // std::cout << "[INFO] [CMD] [" << seconds_since_boot << "] " << std::dec
-                    //           << "Accel X: " << x
-                    //           << "  Y: " << y
-                    //           << "  Z: " << z << std::endl;
+                    std::cout << "[INFO] [CMD] [" << m_seconds_since_boot << "] " << std::dec
+                              << "Average Acceleration [" << m_x_average << "," << m_y_average << "," << m_z_average << "]" << std::endl;
                 }
                 else
                 {
