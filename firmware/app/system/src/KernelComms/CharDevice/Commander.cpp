@@ -28,6 +28,9 @@ m_customDmaSize(0),
 m_x(0),
 m_y(0),
 m_z(0),
+m_x_sum(0),
+m_y_sum(0),
+m_z_sum(0),
 m_seconds_since_boot(0)
 {
     std::cout << "[INFO] [CONSTRUCTOR] " << this << " :: Instantiate Commander" << std::endl;
@@ -401,17 +404,16 @@ void Commander::threadCommander()
                     }
                     m_y_vector[0] = m_z;
 
-                    int x_sum, y_sum, z_sum = 0;
                     for (int i = 0; i < 32; ++i)
                     {
-                        x_sum += m_x_vector[i];
-                        y_sum += m_y_vector[i];
-                        z_sum += m_z_vector[i];
+                        m_x_sum += m_x_vector[i];
+                        m_y_sum += m_y_vector[i];
+                        m_z_sum += m_z_vector[i];
                     }
 
-                    m_x_average = x_sum / 32;
-                    m_y_average = y_sum / 32;
-                    m_z_average = z_sum / 32;
+                    m_x_average = m_x_sum / 32;
+                    m_y_average = m_y_sum / 32;
+                    m_z_average = m_z_sum / 32;
 
                     clock_gettime(CLOCK_MONOTONIC, &m_ts);
                     m_seconds_since_boot = m_ts.tv_sec + m_ts.tv_nsec / 1e9;
