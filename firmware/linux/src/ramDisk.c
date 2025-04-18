@@ -1,4 +1,5 @@
-/*
+/**
+ *
  * Ram backed block device driver.
  *
  * Copyright (C) 2007 Nick Piggin
@@ -6,8 +7,10 @@
  *
  * Parts derived from drivers/block/rd.c, and drivers/block/loop.c, copyright
  * of their respective owners.
+ *
+ * Modified: Ice.Marek
+ *
  */
-
 #include <linux/init.h>
 #include <linux/module.h>
 #include <linux/moduleparam.h>
