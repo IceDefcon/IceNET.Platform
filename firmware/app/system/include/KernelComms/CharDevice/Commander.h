@@ -57,6 +57,7 @@ class Commander
         int dataRX();
         int closeDEV();
 
+        std::string getIoStateString(ioStateType state);
         std::string commandToString(commandType cmd);
 
         void setDmaCustom(uint8_t size);

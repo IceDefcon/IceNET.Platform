@@ -102,6 +102,27 @@ void Commander::setDmaCustom(uint8_t size)
     m_customDmaSize = size;
 }
 
+std::string Commander::getIoStateString(ioStateType state)
+{
+    static const std::array<std::string, IO_AMOUNT> ioStateStrings =
+    {
+        "IO_COM_IDLE",
+        "IO_COM_WRITE",
+        "IO_COM_WRITE_ONLY",
+        "IO_COM_READ",
+        "IO_COM_READ_ONLY",
+        "IO_COM_CALIBRATION",
+    };
+
+    if (state >= 0 && state < IO_AMOUNT)
+    {
+        return ioStateStrings[state];
+    }
+    else
+    {
+        return "UNKNOWN_STATE";
+    }
+}
 
 std::string Commander::commandToString(commandType cmd)
 {
@@ -323,14 +344,31 @@ void Commander::threadCommander()
                 {
                     std::cout << "[ERNO] [CMD] Cannot read from kernel space" << std::endl;
                 }
-
                 break;
 
             case IO_COM_READ_ONLY:
 
                 ret = read(m_file_descriptor, m_Rx_CommanderVector->data(), IO_TRANSFER_SIZE);
 
-                // Inside your processing logic
+                if(ret > 0)
+                {
+                    std::cout << std::dec << "[INFO] [CMD] Received " << ret << " Bytes of data: ";
+                    for (int i = 0; i < ret; ++i)
+                    {
+                        std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>((*m_Rx_CommanderVector)[i]) << " ";
+                    }
+                    std::cout << std::endl;
+                }
+                else
+                {
+                    std::cout << "[ERNO] [CMD] Cannot read from kernel space" << std::endl;
+                }
+                break;
+
+            case IO_COM_CALIBRATION:
+
+                ret = read(m_file_descriptor, m_Rx_CommanderVector->data(), IO_TRANSFER_SIZE);
+
                 if (ret == 6)
                 {
 
@@ -345,108 +383,35 @@ void Commander::threadCommander()
                     m_y = static_cast<int16_t>(((*m_Rx_CommanderVector)[3] << 8) | (*m_Rx_CommanderVector)[2]);
                     m_z = static_cast<int16_t>(((*m_Rx_CommanderVector)[5] << 8) | (*m_Rx_CommanderVector)[4]);
 
-                    m_x_vector[31] = m_x_vector[30];
-                    m_x_vector[30] = m_x_vector[29];
-                    m_x_vector[29] = m_x_vector[28];
-                    m_x_vector[28] = m_x_vector[27];
-                    m_x_vector[27] = m_x_vector[26];
-                    m_x_vector[26] = m_x_vector[25];
-                    m_x_vector[25] = m_x_vector[24];
-                    m_x_vector[24] = m_x_vector[23];
-                    m_x_vector[23] = m_x_vector[22];
-                    m_x_vector[22] = m_x_vector[21];
-                    m_x_vector[21] = m_x_vector[20];
-                    m_x_vector[20] = m_x_vector[19];
-                    m_x_vector[19] = m_x_vector[18];
-                    m_x_vector[18] = m_x_vector[17];
-                    m_x_vector[17] = m_x_vector[16];
-                    m_x_vector[16] = m_x_vector[15];
-                    m_x_vector[15] = m_x_vector[14];
-                    m_x_vector[14] = m_x_vector[13];
-                    m_x_vector[13] = m_x_vector[12];
-                    m_x_vector[12] = m_x_vector[11];
-                    m_x_vector[11] = m_x_vector[10];
-                    m_x_vector[10] = m_x_vector[9];
-                    m_x_vector[9] = m_x_vector[8];
-                    m_x_vector[8] = m_x_vector[7];
-                    m_x_vector[7] = m_x_vector[6];
-                    m_x_vector[6] = m_x_vector[5];
-                    m_x_vector[5] = m_x_vector[4];
-                    m_x_vector[4] = m_x_vector[3];
-                    m_x_vector[3] = m_x_vector[2];
-                    m_x_vector[2] = m_x_vector[1];
-                    m_x_vector[1] = m_x_vector[0];
+                    for (int i = 31; i > 0; i--)
+                    {
+                        m_x_vector[i] = m_x_vector[i - 1];
+                    }
                     m_x_vector[0] = m_x;
 
-                    m_y_vector[31] = m_y_vector[30];
-                    m_y_vector[30] = m_y_vector[29];
-                    m_y_vector[29] = m_y_vector[28];
-                    m_y_vector[28] = m_y_vector[27];
-                    m_y_vector[27] = m_y_vector[26];
-                    m_y_vector[26] = m_y_vector[25];
-                    m_y_vector[25] = m_y_vector[24];
-                    m_y_vector[24] = m_y_vector[23];
-                    m_y_vector[23] = m_y_vector[22];
-                    m_y_vector[22] = m_y_vector[21];
-                    m_y_vector[21] = m_y_vector[20];
-                    m_y_vector[20] = m_y_vector[19];
-                    m_y_vector[19] = m_y_vector[18];
-                    m_y_vector[18] = m_y_vector[17];
-                    m_y_vector[17] = m_y_vector[16];
-                    m_y_vector[16] = m_y_vector[15];
-                    m_y_vector[15] = m_y_vector[14];
-                    m_y_vector[14] = m_y_vector[13];
-                    m_y_vector[13] = m_y_vector[12];
-                    m_y_vector[12] = m_y_vector[11];
-                    m_y_vector[11] = m_y_vector[10];
-                    m_y_vector[10] = m_y_vector[9];
-                    m_y_vector[9] = m_y_vector[8];
-                    m_y_vector[8] = m_y_vector[7];
-                    m_y_vector[7] = m_y_vector[6];
-                    m_y_vector[6] = m_y_vector[5];
-                    m_y_vector[5] = m_y_vector[4];
-                    m_y_vector[4] = m_y_vector[3];
-                    m_y_vector[3] = m_y_vector[2];
-                    m_y_vector[2] = m_y_vector[1];
-                    m_y_vector[1] = m_y_vector[0];
+                    for (int i = 31; i > 0; i--)
+                    {
+                        m_y_vector[i] = m_y_vector[i - 1];
+                    }
                     m_y_vector[0] = m_y;
 
-                    m_z_vector[31] = m_z_vector[30];
-                    m_z_vector[30] = m_z_vector[29];
-                    m_z_vector[29] = m_z_vector[28];
-                    m_z_vector[28] = m_z_vector[27];
-                    m_z_vector[27] = m_z_vector[26];
-                    m_z_vector[26] = m_z_vector[25];
-                    m_z_vector[25] = m_z_vector[24];
-                    m_z_vector[24] = m_z_vector[23];
-                    m_z_vector[23] = m_z_vector[22];
-                    m_z_vector[22] = m_z_vector[21];
-                    m_z_vector[21] = m_z_vector[20];
-                    m_z_vector[20] = m_z_vector[19];
-                    m_z_vector[19] = m_z_vector[18];
-                    m_z_vector[18] = m_z_vector[17];
-                    m_z_vector[17] = m_z_vector[16];
-                    m_z_vector[16] = m_z_vector[15];
-                    m_z_vector[15] = m_z_vector[14];
-                    m_z_vector[14] = m_z_vector[13];
-                    m_z_vector[13] = m_z_vector[12];
-                    m_z_vector[12] = m_z_vector[11];
-                    m_z_vector[11] = m_z_vector[10];
-                    m_z_vector[10] = m_z_vector[9];
-                    m_z_vector[9] = m_z_vector[8];
-                    m_z_vector[8] = m_z_vector[7];
-                    m_z_vector[7] = m_z_vector[6];
-                    m_z_vector[6] = m_z_vector[5];
-                    m_z_vector[5] = m_z_vector[4];
-                    m_z_vector[4] = m_z_vector[3];
-                    m_z_vector[3] = m_z_vector[2];
-                    m_z_vector[2] = m_z_vector[1];
-                    m_z_vector[1] = m_z_vector[0];
-                    m_z_vector[0] = m_z;
+                    for (int i = 31; i > 0; i--)
+                    {
+                        m_y_vector[i] = m_y_vector[i - 1];
+                    }
+                    m_y_vector[0] = m_z;
 
-                    m_x_average = (m_x_vector[0] + m_x_vector[1] + m_x_vector[2] + m_x_vector[3] + m_x_vector[4] + m_x_vector[5] + m_x_vector[6] + m_x_vector[7] + m_x_vector[8] + m_x_vector[9] + m_x_vector[10] + m_x_vector[11] + m_x_vector[12] + m_x_vector[13] + m_x_vector[14] + m_x_vector[15] + m_x_vector[16] + m_x_vector[17] + m_x_vector[18] + m_x_vector[19] + m_x_vector[20] + m_x_vector[21] + m_x_vector[22] + m_x_vector[23] + m_x_vector[24] + m_x_vector[25] + m_x_vector[26] + m_x_vector[27] + m_x_vector[28] + m_x_vector[29] + m_x_vector[30] + m_x_vector[31])/32;
-                    m_y_average = (m_y_vector[0] + m_y_vector[1] + m_y_vector[2] + m_y_vector[3] + m_y_vector[4] + m_y_vector[5] + m_y_vector[6] + m_y_vector[7] + m_y_vector[8] + m_y_vector[9] + m_y_vector[10] + m_y_vector[11] + m_y_vector[12] + m_y_vector[13] + m_y_vector[14] + m_y_vector[15] + m_y_vector[16] + m_y_vector[17] + m_y_vector[18] + m_y_vector[19] + m_y_vector[20] + m_y_vector[21] + m_y_vector[22] + m_y_vector[23] + m_y_vector[24] + m_y_vector[25] + m_y_vector[26] + m_y_vector[27] + m_y_vector[28] + m_y_vector[29] + m_y_vector[30] + m_y_vector[31])/32;
-                    m_z_average = (m_z_vector[0] + m_z_vector[1] + m_z_vector[2] + m_z_vector[3] + m_z_vector[4] + m_z_vector[5] + m_z_vector[6] + m_z_vector[7] + m_z_vector[8] + m_z_vector[9] + m_z_vector[10] + m_z_vector[11] + m_z_vector[12] + m_z_vector[13] + m_z_vector[14] + m_z_vector[15] + m_z_vector[16] + m_z_vector[17] + m_z_vector[18] + m_z_vector[19] + m_z_vector[20] + m_z_vector[21] + m_z_vector[22] + m_z_vector[23] + m_z_vector[24] + m_z_vector[25] + m_z_vector[26] + m_z_vector[27] + m_z_vector[28] + m_z_vector[29] + m_z_vector[30] + m_z_vector[31])/32;
+                    int x_sum, y_sum, z_sum = 0;
+                    for (int i = 0; i < 32; ++i)
+                    {
+                        x_sum += m_x_vector[i];
+                        y_sum += m_y_vector[i];
+                        z_sum += m_z_vector[i];
+                    }
+
+                    m_x_average = x_sum / 32;
+                    m_y_average = y_sum / 32;
+                    m_z_average = z_sum / 32;
 
                     clock_gettime(CLOCK_MONOTONIC, &m_ts);
                     m_seconds_since_boot = m_ts.tv_sec + m_ts.tv_nsec / 1e9;
@@ -459,7 +424,6 @@ void Commander::threadCommander()
                 {
                     std::cout << "[ERNO] [CMD] Cannot read from kernel space" << std::endl;
                 }
-
                 break;
 
             default:

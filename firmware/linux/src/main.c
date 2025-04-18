@@ -17,6 +17,7 @@
 #include "console.h"
 #include "ramDisk.h"
 #include "ramAxis.h"
+#include "network.h"
 #include "memory.h"
 
 MODULE_VERSION("1.0");
@@ -61,6 +62,8 @@ static int __init fpga_driver_init(void)
     watchdogInit();
     /* Initialize scheduler */
     schedulerInit();
+    /* Initialize Broad listener */
+    broadcastRxInit();
 
     printk(KERN_INFO "--------------------------------------\n");
     printk(KERN_INFO "[READY] FPGA Driver loaded successfuly \n");
@@ -83,6 +86,7 @@ static void __exit fpga_driver_exit(void)
     printk(KERN_INFO "[TERMINATE] Termination of FPGA driver \n");
     printk(KERN_INFO "-------------------------------------------------\n");
     /* Destroy everything */
+    broadcastRxDestroy();
     schedulerDestroy();
     watchdogDestroy();
     consoleDestroy();

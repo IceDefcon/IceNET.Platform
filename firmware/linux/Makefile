@@ -13,7 +13,8 @@ iceDriver-objs := \
     src/ramDisk.o \
     src/ramAxis.o \
     src/console.o \
-    src/memory.o
+    src/memory.o \
+    src/network.o
 
 EXTRA_CFLAGS = -I$(PWD)/include
 
