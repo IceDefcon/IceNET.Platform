@@ -49,17 +49,13 @@ RamDisk::RamDisk() :
             .registers =
             {
                 {0x7E, 0xB6}, /* Soft reset the sensor */
-                // {0x7E, 0x03}, /* Start Fast Offset Calibration */
                 {0x40, 0x2B}, /* No undersampling, Filter set 2, Output data rate 800Hz */
-                {0x41, 0x08}, /* ±8g accelerometer range */
+                {0x41, 0x05}, /* ±4g accelerometer range */
                 {0x7E, 0x11}, /* Set accelerometer to normal mode */
                 {0x77, 0x40}, /* Enable accel offset only */
-                {0x71, 0x00}, /* Calibration x-offset :: (650 / 4096) * 1000 -> 41 = 0x29 */
-                {0x72, 0x00}, /* Calibration y-offset :: (260 / 4096) * 1000 ->  23.4mg → 31.7 / 3.9 = 0x08 */
-                {0x73, 0x00}, /* Calibration z-offset :: (108 / 4096) * 1000 ->  11.7mg → 11.7 / 3.9 = 0x03 */
-                // {0x71, 0x14}, /* Calibration x-offset :: (650 / 8192) * 1000 = 79.3mg → 79.3 / 3.9 = 0x14 */
-                // {0x72, 0x08}, /* Calibration y-offset :: (260 / 8192) * 1000 = 23.4mg → 31.7 / 3.9 = 0x08 */
-                // {0x73, 0x03}, /* Calibration z-offset :: (108 / 8192) * 1000 = 11.7mg → 11.7 / 3.9 = 0x03 */
+                {0x71, 0x14}, /* Calibration x-offset :: (645 / 8192) * 1000 -> 78,73mg → 20 = 0x14 */
+                {0x72, 0x07}, /* Calibration y-offset :: (226 / 8192) * 1000 -> 27,59mg →  7 = 0x07 */
+                {0x73, 0x03}, /* Calibration z-offset :: (111 / 8192) * 1000 -> 13,55mg →  3 = 0x03 */
                 {0x51, 0x10}, /* Enable Data Ready Interrupt */
                 {0x56, 0x88}, /* Map Data Ready Interrupt to INT1 and INT2 */
                 {0x53, 0xAA}, /* Configure INT1 and INT2 as Outputs + Make them Active High */

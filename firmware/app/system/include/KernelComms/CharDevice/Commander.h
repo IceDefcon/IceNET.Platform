@@ -33,6 +33,21 @@ class Commander
 
         uint8_t m_customDmaSize;
 
+        int16_t m_x;
+        int16_t m_y;
+        int16_t m_z;
+
+        int16_t m_x_vector[32];
+        int16_t m_y_vector[32];
+        int16_t m_z_vector[32];
+
+        int16_t m_x_average;
+        int16_t m_y_average;
+        int16_t m_z_average;
+
+        struct timespec m_ts;
+        double m_seconds_since_boot;
+
     public:
         Commander();
         ~Commander();
@@ -42,6 +57,7 @@ class Commander
         int dataRX();
         int closeDEV();
 
+        std::string getIoStateString(ioStateType state);
         std::string commandToString(commandType cmd);
 
         void setDmaCustom(uint8_t size);

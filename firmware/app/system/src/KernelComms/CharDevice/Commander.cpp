@@ -24,7 +24,11 @@ m_Rx_CommanderVector(std::make_shared<std::vector<uint8_t>>(IO_TRANSFER_SIZE)),
 m_Tx_CommanderVector(std::make_shared<std::vector<uint8_t>>(IO_TRANSFER_SIZE)),
 m_IO_CommanderState(std::make_shared<ioStateType>(IO_COM_IDLE)),
 m_commandMatrix(CMD_AMOUNT, std::vector<uint8_t>(CMD_LENGTH, 0)),
-m_customDmaSize(0)
+m_customDmaSize(0),
+m_x(0),
+m_y(0),
+m_z(0),
+m_seconds_since_boot(0)
 {
     std::cout << "[INFO] [CONSTRUCTOR] " << this << " :: Instantiate Commander" << std::endl;
 
@@ -98,6 +102,27 @@ void Commander::setDmaCustom(uint8_t size)
     m_customDmaSize = size;
 }
 
+std::string Commander::getIoStateString(ioStateType state)
+{
+    static const std::array<std::string, IO_AMOUNT> ioStateStrings =
+    {
+        "IO_COM_IDLE",
+        "IO_COM_WRITE",
+        "IO_COM_WRITE_ONLY",
+        "IO_COM_READ",
+        "IO_COM_READ_ONLY",
+        "IO_COM_CALIBRATION",
+    };
+
+    if (state >= 0 && state < IO_AMOUNT)
+    {
+        return ioStateStrings[state];
+    }
+    else
+    {
+        return "UNKNOWN_STATE";
+    }
+}
 
 std::string Commander::commandToString(commandType cmd)
 {
@@ -212,10 +237,6 @@ bool Commander::isThreadKilled()
     return m_threadKill;
 }
 
-int16_t to_signed_16bit(uint8_t msb, uint8_t lsb) {
-    return static_cast<int16_t>((msb << 8) | lsb);
-}
-
 void Commander::threadCommander()
 {
     int ret = 0;
@@ -323,14 +344,31 @@ void Commander::threadCommander()
                 {
                     std::cout << "[ERNO] [CMD] Cannot read from kernel space" << std::endl;
                 }
-
                 break;
 
             case IO_COM_READ_ONLY:
 
                 ret = read(m_file_descriptor, m_Rx_CommanderVector->data(), IO_TRANSFER_SIZE);
 
-                // Inside your processing logic
+                if(ret > 0)
+                {
+                    std::cout << std::dec << "[INFO] [CMD] Received " << ret << " Bytes of data: ";
+                    for (int i = 0; i < ret; ++i)
+                    {
+                        std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>((*m_Rx_CommanderVector)[i]) << " ";
+                    }
+                    std::cout << std::endl;
+                }
+                else
+                {
+                    std::cout << "[ERNO] [CMD] Cannot read from kernel space" << std::endl;
+                }
+                break;
+
+            case IO_COM_CALIBRATION:
+
+                ret = read(m_file_descriptor, m_Rx_CommanderVector->data(), IO_TRANSFER_SIZE);
+
                 if (ret == 6)
                 {
 
@@ -341,27 +379,51 @@ void Commander::threadCommander()
                         break;
                     }
 
-                    // int16_t x = to_signed_16bit((*m_Rx_CommanderVector)[1], (*m_Rx_CommanderVector)[0]);
-                    // int16_t y = to_signed_16bit((*m_Rx_CommanderVector)[3], (*m_Rx_CommanderVector)[2]);
-                    // int16_t z = to_signed_16bit((*m_Rx_CommanderVector)[5], (*m_Rx_CommanderVector)[4]);
+                    m_x = static_cast<int16_t>(((*m_Rx_CommanderVector)[1] << 8) | (*m_Rx_CommanderVector)[0]);
+                    m_y = static_cast<int16_t>(((*m_Rx_CommanderVector)[3] << 8) | (*m_Rx_CommanderVector)[2]);
+                    m_z = static_cast<int16_t>(((*m_Rx_CommanderVector)[5] << 8) | (*m_Rx_CommanderVector)[4]);
 
-                    struct timespec ts;
-                    clock_gettime(CLOCK_MONOTONIC, &ts);
+                    for (int i = 31; i > 0; i--)
+                    {
+                        m_x_vector[i] = m_x_vector[i - 1];
+                    }
+                    m_x_vector[0] = m_x;
 
-                    double seconds_since_boot = ts.tv_sec + ts.tv_nsec / 1e9;
+                    for (int i = 31; i > 0; i--)
+                    {
+                        m_y_vector[i] = m_y_vector[i - 1];
+                    }
+                    m_y_vector[0] = m_y;
+
+                    for (int i = 31; i > 0; i--)
+                    {
+                        m_y_vector[i] = m_y_vector[i - 1];
+                    }
+                    m_y_vector[0] = m_z;
+
+                    int x_sum, y_sum, z_sum = 0;
+                    for (int i = 0; i < 32; ++i)
+                    {
+                        x_sum += m_x_vector[i];
+                        y_sum += m_y_vector[i];
+                        z_sum += m_z_vector[i];
+                    }
+
+                    m_x_average = x_sum / 32;
+                    m_y_average = y_sum / 32;
+                    m_z_average = z_sum / 32;
+
+                    clock_gettime(CLOCK_MONOTONIC, &m_ts);
+                    m_seconds_since_boot = m_ts.tv_sec + m_ts.tv_nsec / 1e9;
 
                     std::cout << std::fixed << std::setprecision(6);
-                    std::cout << "[INFO] [CMD] [" << seconds_since_boot << "] " << std::endl;
-                    // std::cout << "[INFO] [CMD] [" << seconds_since_boot << "] " << std::dec
-                    //           << "Accel X: " << x
-                    //           << "  Y: " << y
-                    //           << "  Z: " << z << std::endl;
+                    std::cout << "[INFO] [CMD] [" << m_seconds_since_boot << "] " << std::dec
+                              << "Average Acceleration [" << m_x_average << "," << m_y_average << "," << m_z_average << "]" << std::endl;
                 }
                 else
                 {
                     std::cout << "[ERNO] [CMD] Cannot read from kernel space" << std::endl;
                 }
-
                 break;
 
             default:

@@ -1036,6 +1036,37 @@ void gui::setupFifo()
             *m_IO_GuiState = IO_COM_IDLE;
         }
     });
+
+    QPushButton *calibButton = new QPushButton("CALIB", this);
+    calibButton->setGeometry(dev.xGap, dev.yGap*24 + dev.yLogo*5 + dev.yUnit*14, dev.xUnit*2, dev.yUnit);
+    calibButton->setStyleSheet(
+        "QPushButton {"
+        "   background-color: blue;"
+        "   color: white;"
+        "   font-size: 17px;"
+        "   font-weight: bold;"
+        "   border-radius: 10px;"
+        "   padding: 5px;"
+        "}"
+        "QPushButton:hover {"
+        "   background-color: darkblue;"
+        "}"
+        "QPushButton:pressed {"
+        "   background-color: black;"
+        "}"
+    );
+    connect(calibButton, &QPushButton::clicked, this, [this]()
+    {
+        if(NULL == m_instanceDroneCtrl)
+        {
+            printToMainConsole("$ threadMain is not Running");
+        }
+        else
+        {
+            printToMainConsole("$ Set Commander State Machine -> IO_COM_IDLE");
+            *m_IO_GuiState = IO_COM_CALIBRATION;
+        }
+    });
 }
 
 void gui::setDeadCommand()

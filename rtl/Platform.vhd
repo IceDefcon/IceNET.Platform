@@ -1387,6 +1387,8 @@ begin
         return_vector_interrupt <= '0';
         enable_vector_interrupt <= '0';
         start_vector_interrupt <= '0';
+        led_7_toggle <= '1';
+        led_8_toggle <= '1';
     elsif rising_edge(CLOCK_50MHz) then
 
         REG_primary_fifo_wr_en <= REG_primary_fifo_wr_en(2046 downto 0) & primary_conversion_complete;
@@ -2063,7 +2065,7 @@ port map
     q     => sensor_fifo_data_out
 );
 
-ccqusition_pulse: PulseController
+Accqusition_pulse: PulseController
 generic map
 (
     PULSE_LENGTH => 1 -- 1*20ns Pulse

@@ -63,6 +63,7 @@ typedef enum
     IO_COM_WRITE_ONLY,
     IO_COM_READ,
     IO_COM_READ_ONLY,
+    IO_COM_CALIBRATION,
     IO_AMOUNT
 } ioStateType;
 
@@ -84,27 +85,6 @@ typedef enum
    PWM_DOWN,
    PWM_AMOUNT
 }pwmType;
-
-inline std::string getIoStateString(ioStateType state)
-{
-    static const std::array<std::string, IO_AMOUNT> ioStateStrings =
-    {
-        "IO_COM_IDLE",
-        "IO_COM_WRITE",
-        "IO_COM_WRITE_ONLY",
-        "IO_COM_READ",
-        "IO_COM_READ_ONLY",
-    };
-
-    if (state >= 0 && state < IO_AMOUNT)
-    {
-        return ioStateStrings[state];
-    }
-    else
-    {
-        return "UNKNOWN_STATE";
-    }
-}
 
 inline void printHexBuffer(std::vector<char>* buffer)
 {
