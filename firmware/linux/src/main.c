@@ -22,8 +22,8 @@
 
 MODULE_VERSION("1.0");
 MODULE_LICENSE("GPL");
-MODULE_AUTHOR("Ice Marek");
-MODULE_DESCRIPTION("FPGA Comms Driver");
+MODULE_AUTHOR("Ice.Marek");
+MODULE_DESCRIPTION("FPGA Driver");
 
 //////////////////////////
 //                      //
