@@ -37,7 +37,7 @@ static unsigned int recv_hook(void *priv,
         return NF_ACCEPT;
 
     udp_payload = (u8 *)((u8 *)udph + sizeof(struct udphdr));
-    pr_info("broadcast_recv_kmod: Received broadcast UDP from %pI4:%d, payload: %.16s\n",
+    pr_info("[RX] Received broadcast UDP from %pI4:%d, payload: %.16s\n",
             &iph->saddr, ntohs(udph->source), udp_payload);
 
     return NF_ACCEPT;
@@ -51,18 +51,18 @@ static int __init recv_init(void)
     nfho.priority = NF_IP_PRI_FIRST;
 
     if (nf_register_net_hook(&init_net, &nfho) < 0) {
-        pr_err("broadcast_recv_kmod: Failed to register netfilter hook\n");
+        pr_err("[RX] Failed to register netfilter hook\n");
         return -1;
     }
 
-    pr_info("broadcast_recv_kmod: Module loaded, listening on UDP port %d\n", LISTEN_PORT);
+    pr_info("[RX] Module loaded, listening on UDP port %d\n", LISTEN_PORT);
     return 0;
 }
 
 static void __exit recv_exit(void)
 {
     nf_unregister_net_hook(&init_net, &nfho);
-    pr_info("broadcast_recv_kmod: Module unloaded\n");
+    pr_info("[RX] Module unloaded\n");
 }
 
 module_init(recv_init);

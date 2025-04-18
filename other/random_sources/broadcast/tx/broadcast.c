@@ -30,31 +30,65 @@ static int __init broadcast_init(void)
     unsigned char dst_mac[ETH_ALEN] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff}; // Broadcast MAC
     __be32 src_ip = 0, dst_ip = 0;
 
-    pr_info("broadcast_kmod: Loading module...\n");
+    pr_info("[TX] Loading module...\n");
 
     if (!in4_pton(SRC_IP, -1, (u8 *)&src_ip, -1, NULL) ||
         !in4_pton(DST_IP, -1, (u8 *)&dst_ip, -1, NULL)) {
-        pr_err("broadcast_kmod: Invalid IP format\n");
+        pr_err("[TX] Invalid IP format\n");
         return -EINVAL;
     }
 
     dev = dev_get_by_name(&init_net, iface_name);
     if (!dev) {
-        pr_err("broadcast_kmod: Device %s not found\n", iface_name);
+        pr_err("[TX] Device %s not found\n", iface_name);
         return -ENODEV;
     }
 
     skb = alloc_skb(total_len + NET_IP_ALIGN, GFP_ATOMIC);
     if (!skb) {
         dev_put(dev);
-        pr_err("broadcast_kmod: Failed to allocate skb\n");
+        pr_err("[TX] Failed to allocate skb\n");
         return -ENOMEM;
     }
 
     skb_reserve(skb, NET_IP_ALIGN);
     skb_reserve(skb, ETH_HLEN + sizeof(struct iphdr) + sizeof(struct udphdr));
     data = skb_put(skb, PAYLOAD_LEN);
-    memset(data, 'X', PAYLOAD_LEN);  // Dummy payload
+
+    memset(data, 0, PAYLOAD_LEN);  // Dummy payload
+
+    data[0] = 0x30;
+    data[1] = 0x44;
+    data[2] = 0x45;
+    data[3] = 0x41;
+    data[4] = 0x44;
+    data[5] = 0x2E;
+    data[6] = 0x43;
+    data[7] = 0x4F;
+    data[8] = 0x44;
+    data[9] = 0x45;
+    data[10] = 0x30;
+    data[11] = 0x30;
+    data[12] = 0x30;
+    data[13] = 0x30;
+    data[14] = 0x30;
+    data[15] = 0x30;
+    data[16] = 0x30;
+    data[17] = 0x30;
+    data[18] = 0x30;
+    data[19] = 0x30;
+    data[20] = 0x30;
+    data[21] = 0x30;
+    data[22] = 0x30;
+    data[23] = 0x30;
+    data[24] = 0x30;
+    data[25] = 0x30;
+    data[26] = 0x30;
+    data[27] = 0x30;
+    data[28] = 0x30;
+    data[29] = 0x30;
+    data[30] = 0x30;
+    data[31] = 0x30;
 
     skb_push(skb, sizeof(struct udphdr));
     udph = (struct udphdr *)skb->data;
@@ -90,19 +124,19 @@ static int __init broadcast_init(void)
     skb->ip_summed = CHECKSUM_UNNECESSARY;
 
     if (dev_queue_xmit(skb) < 0) {
-        pr_err("broadcast_kmod: Failed to transmit packet\n");
+        pr_err("[TX] broadcast_kmod: Failed to transmit packet\n");
         dev_put(dev);
         return -EIO;
     }
 
-    pr_info("broadcast_kmod: Packet sent via %s to %s\n", iface_name, DST_IP);
+    pr_info("[TX] Packet sent via %s to %s\n", iface_name, DST_IP);
     dev_put(dev);
     return 0;
 }
 
 static void __exit broadcast_exit(void)
 {
-    pr_info("broadcast_kmod: Module unloaded\n");
+    pr_info("[TX] Module unloaded\n");
 }
 
 module_init(broadcast_init);
