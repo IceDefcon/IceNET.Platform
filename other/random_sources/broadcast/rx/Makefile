@@ -1,4 +1,4 @@
-obj-m := broadcast.o
+obj-m := receiver.o
 
 KDIR := /lib/modules/$(shell uname -r)/build
 
