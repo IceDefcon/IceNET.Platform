@@ -12,6 +12,7 @@ def count_lines_of_code(directory):
     # Subdirectory counters
     rtl_lines = 0
     linux_lines = 0
+    x86_lines = 0
     app_lines = 0
 
     # Add folders to check
@@ -34,6 +35,8 @@ def count_lines_of_code(directory):
                                 rtl_lines += line_count
                             elif "firmware/linux" in root.replace("\\", "/"):
                                 linux_lines += line_count
+                            elif "firmware/x86" in root.replace("\\", "/"):
+                                x86_lines += line_count
                             elif "firmware/app" in root.replace("\\", "/"):
                                 app_lines += line_count
 
@@ -47,6 +50,7 @@ def count_lines_of_code(directory):
     print("\n           FPGA Logic -> {} lines".format(rtl_lines))
     print("        Kernel Module -> {} lines".format(linux_lines))
     print("User Space Appliation -> {} lines".format(app_lines))
+    print("Master x86 Controller -> {} lines".format(x86_lines))
     print("--------------------------------------------")
     print("                Total -> {} lines of code".format(total_lines))
 
