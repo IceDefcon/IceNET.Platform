@@ -47,7 +47,7 @@ static unsigned int receiverHook(void *priv, struct sk_buff *skb, const struct n
     if (!iph || iph->protocol != IPPROTO_UDP)
     {
         pr_info("[L3][IP] Extract IP header\n");
-        return NF_ACCEP3333
+        return NF_ACCEPT;
     }
 
     // L4 - Extract UDP header
