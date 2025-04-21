@@ -1,5 +1,7 @@
 cd firmware/linux/
 make clean
+cd ../x86/
+make clean
 cd ../app/
 make clean
 cd ..
