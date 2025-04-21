@@ -23,6 +23,8 @@
 #define TEST_PORT 22222
 #define BROADCAST_IP 0xC0A808FF // 192.168.8.255
 
+#define AES_BLOCK_SIZE 16
+
 static struct nf_hook_ops netFilterHook;
 
 typedef struct
@@ -36,37 +38,33 @@ static hookControlType hookControl =
     .ethernetHeader = NULL,
 };
 
-// AES Decryption function
 static int aes_decrypt(void *data, size_t len, u8 *key, u8 *iv)
 {
     struct crypto_cipher *tfm;
-    struct scatterlist sg;
-    int ret;
+    int i;
 
-    // Allocate a cipher handle for AES
+    if (len % AES_BLOCK_SIZE != 0) {
+        pr_err("AES decryption error: data size must be multiple of 16 bytes\n");
+        return -EINVAL;
+    }
+
     tfm = crypto_alloc_cipher("aes", 0, 0);
     if (IS_ERR(tfm)) {
         pr_err("Failed to allocate AES cipher\n");
         return PTR_ERR(tfm);
     }
 
-    // Set the decryption key (same key used for encryption)
-    ret = crypto_cipher_setkey(tfm, key, 16);  // 128-bit AES key
-    if (ret) {
+    if (crypto_cipher_setkey(tfm, key, 16)) {
         pr_err("Failed to set AES key\n");
         crypto_free_cipher(tfm);
-        return ret;
+        return -EIO;
     }
 
-    // Initialize the scatterlist for the data
-    sg_init_one(&sg, data, len);
+    for (i = 0; i < len; i += AES_BLOCK_SIZE) {
+        crypto_cipher_decrypt_one(tfm, data + i, data + i);
+    }
 
-    // Decrypt the data
-    crypto_cipher_decrypt_one(tfm, data, data);
-
-    // Free the cipher handle
     crypto_free_cipher(tfm);
-
     return 0;
 }
 
