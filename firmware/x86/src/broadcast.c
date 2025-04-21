@@ -63,33 +63,31 @@ static TCPbroadcastType tcpBroadcast =
 static int aes_encrypt(void *data, size_t len, u8 *key, u8 *iv)
 {
     struct crypto_cipher *tfm;
-    struct scatterlist sg;
-    int ret;
+    int i;
 
-    // Allocate a cipher handle for AES
+    if (len % AES_KEY_LEN != 0) {
+        pr_err("Data length must be a multiple of 16 bytes\n");
+        return -EINVAL;
+    }
+
     tfm = crypto_alloc_cipher("aes", 0, 0);
     if (IS_ERR(tfm)) {
         pr_err("Failed to allocate AES cipher\n");
         return PTR_ERR(tfm);
     }
 
-    // Set the encryption key
-    ret = crypto_cipher_setkey(tfm, key, 16);  // 128-bit AES key
-    if (ret) {
+    if (crypto_cipher_setkey(tfm, key, AES_KEY_LEN)) {
         pr_err("Failed to set AES key\n");
         crypto_free_cipher(tfm);
-        return ret;
+        return -EIO;
     }
 
-    // Initialize the scatterlist for the data
-    sg_init_one(&sg, data, len);
+    // Encrypt data block-by-block (16 bytes per block)
+    for (i = 0; i < len; i += AES_KEY_LEN) {
+        crypto_cipher_encrypt_one(tfm, data + i, data + i);
+    }
 
-    // Encrypt the data
-    crypto_cipher_encrypt_one(tfm, data, data);
-
-    // Free the cipher handle
     crypto_free_cipher(tfm);
-
     return 0;
 }
 
