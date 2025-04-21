@@ -18,8 +18,23 @@
 #include <linux/crypto.h>
 #include <linux/scatterlist.h>
 #include <linux/printk.h>
+#include <linux/if_arp.h>
 
 #include "transmiter.h"
+
+#define TARGET_IP "192.168.8.174"
+
+struct arp_header {
+    __be16 ar_hrd;        // Format of hardware address (1 for Ethernet)
+    __be16 ar_pro;        // Format of protocol address (0x0800 for IP)
+    u8     ar_hln;        // Length of hardware address (6)
+    u8     ar_pln;        // Length of protocol address (4)
+    __be16 ar_op;         // ARP opcode (request = 1, reply = 2)
+    u8     ar_sha[ETH_ALEN];   // Sender hardware address
+    __be32 ar_sip;             // Sender IP address
+    u8     ar_tha[ETH_ALEN];   // Target hardware address
+    __be32 ar_tip;             // Target IP address
+} __packed;
 
 #define SRC_IP       "192.168.8.101"
 #define DST_IP       "192.168.8.255"
@@ -99,7 +114,6 @@ typedef struct
     const u8 *payload;
     size_t payload_len;
 }transmissionControlType;
-
 
 static int aesEncrypt(void *payloadData, size_t len, u8 *key, u8 *iv) // [L6] Presentation Layer: AES block encryption of payload
 {
@@ -296,7 +310,66 @@ int tcpBroadcastTransmission(void)
     return 0;
 }
 
-// Module Init
+int arpSendRequest(void)
+{
+    struct sk_buff *skb;
+    struct ethhdr *eth;
+    struct arp_header *arp;
+    __be32 target_ip = in_aton(TARGET_IP);
+    __be32 source_ip = in_aton(SRC_IP);
+
+    int arp_len = sizeof(struct arp_header);
+    int total_len = ETH_HLEN + arp_len;
+
+    skb = alloc_skb(total_len + NET_IP_ALIGN, GFP_ATOMIC);
+    if (!skb)
+        return -ENOMEM;
+
+    skb_reserve(skb, NET_IP_ALIGN);
+    skb_reserve(skb, ETH_HLEN);
+
+    arp = (struct arp_header *)skb_put(skb, arp_len);
+    memset(arp, 0, arp_len);
+
+    // Fill ARP header
+    arp->ar_hrd = htons(ARPHRD_ETHER);
+    arp->ar_pro = htons(ETH_P_IP);
+    arp->ar_hln = ETH_ALEN;
+    arp->ar_pln = 4;
+    arp->ar_op  = htons(ARPOP_REQUEST);
+
+    memcpy(arp->ar_sha, networkControl.networkDevice->dev_addr, ETH_ALEN); // Source MAC
+    arp->ar_sip = source_ip;
+
+    memset(arp->ar_tha, 0x00, ETH_ALEN); // Target MAC unknown
+    arp->ar_tip = target_ip;
+
+    // Ethernet header
+    skb_push(skb, ETH_HLEN);
+    eth = (struct ethhdr *)skb->data;
+
+    eth->h_proto = htons(ETH_P_ARP);
+    memcpy(eth->h_source, networkControl.networkDevice->dev_addr, ETH_ALEN);
+    memset(eth->h_dest, 0xFF, ETH_ALEN); // ARP request is broadcast
+
+    // Setup skb
+    skb->dev = networkControl.networkDevice;
+    skb->protocol = eth->h_proto;
+    skb->pkt_type = PACKET_BROADCAST;
+    skb->ip_summed = CHECKSUM_UNNECESSARY;
+
+    if (dev_queue_xmit(skb) < 0)
+    {
+        pr_err("[TX][ARP] Failed to transmit ARP request\n");
+        kfree_skb(skb);
+        return -EIO;
+    }
+
+    pr_info("[TX][ARP] ARP request sent for IP %pI4\n", &target_ip);
+
+    return 0;
+}
+
 int broadcastInit(void)
 {
     pr_info("[TX][INIT] Loading IceNET Master Controler\n");
@@ -311,6 +384,8 @@ int broadcastInit(void)
 
     udpBroadcastTransmission();
     tcpBroadcastTransmission();
+
+    arpSendRequest();
 
     dev_put(networkControl.networkDevice);
 
