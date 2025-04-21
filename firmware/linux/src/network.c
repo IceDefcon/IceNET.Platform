@@ -128,7 +128,7 @@ static int handle_arp_request(struct sk_buff *skb)
     memcpy(our_mac, dev->dev_addr, ETH_ALEN); // Our MAC
     pr_info("[ARP] Our MAC address: %pM\n", our_mac);
 
-    arp_hdr_len = sizeof(struct arphdr) + 2 * (arp->ar_hln + arp->ar_pln);
+    arp_hdr_len = sizeof(struct arphdr) + 2 * (ETH_ALEN + 4); // hln=6, pln=4
     pr_info("[ARP] ARP header length calculated: %d\n", arp_hdr_len);
 
     reply_skb = alloc_skb(ETH_HLEN + arp_hdr_len, GFP_ATOMIC);
@@ -138,9 +138,11 @@ static int handle_arp_request(struct sk_buff *skb)
     }
     pr_info("[ARP] Successfully allocated skb for ARP reply: reply_skb=%p\n", reply_skb);
 
-    skb_reserve(reply_skb, ETH_HLEN + arp_hdr_len);
-    skb_push(reply_skb, ETH_HLEN + arp_hdr_len);
-    pr_info("[ARP] skb reserved and pushed: skb_headroom=%d, skb_tailroom=%d\n",
+    skb_reserve(reply_skb, ETH_HLEN);               // Reserve space for Ethernet header
+    skb_put(reply_skb, arp_hdr_len);                // Make room for ARP header/data
+    eth = (struct ethhdr *)skb_push(reply_skb, ETH_HLEN);            // Push Ethernet header
+
+    pr_info("[ARP] skb headroom: %d, tailroom: %d\n",
             skb_headroom(reply_skb), skb_tailroom(reply_skb));
 
     reply_skb->dev = dev;
@@ -148,39 +150,44 @@ static int handle_arp_request(struct sk_buff *skb)
     skb_reset_mac_header(reply_skb);
     skb_reset_network_header(reply_skb);
 
-    pr_info("[ARP] skb MAC header reset: skb_mac_header=%p\n", skb_mac_header(reply_skb));
+    pr_info("[ARP] MAC header set at: %p\n", skb_mac_header(reply_skb));
 
     eth = (struct ethhdr *)skb_mac_header(reply_skb);
-    pr_info("[ARP] Setting Ethernet header: destination MAC=%pM, source MAC=%pM\n",
-            sha, our_mac);
-
-    memcpy(eth->h_dest, sha, ETH_ALEN);         // Destination = sender MAC
-    memcpy(eth->h_source, our_mac, ETH_ALEN);   // Source = our MAC
+    memcpy(eth->h_dest, sha, ETH_ALEN);         // Dest: sender MAC
+    memcpy(eth->h_source, our_mac, ETH_ALEN);   // Src: our MAC
     eth->h_proto = htons(ETH_P_ARP);            // Protocol type
 
-    // Setup ARP response header
+    pr_info("[ARP] Ethernet header: dst=%pM, src=%pM, proto=0x%04x\n",
+            eth->h_dest, eth->h_source, ntohs(eth->h_proto));
+
+    // Alignment check (paranoid safety for non-x86 archs)
+    BUILD_BUG_ON(__alignof__(struct arphdr) > __alignof__(unsigned long));
+
+    // Setup ARP response
     arp = (struct arphdr *)(eth + 1);
+    memset(arp, 0, sizeof(struct arphdr)); // Zero for safety
+
     arp->ar_hrd = htons(ARPHRD_ETHER);
     arp->ar_pro = htons(ETH_P_IP);
     arp->ar_hln = ETH_ALEN;
     arp->ar_pln = 4;
     arp->ar_op  = htons(ARPOP_REPLY);
 
-    pr_info("[ARP] ARP response header: ar_hrd=%u, ar_pro=%u, ar_hln=%d, ar_pln=%d, ar_op=%u\n",
-            ntohs(arp->ar_hrd), ntohs(arp->ar_pro), arp->ar_hln, arp->ar_pln, ntohs(arp->ar_op));
+    pr_info("[ARP] ARP header: hrd=%u, pro=%u, hln=%d, pln=%d, op=%u\n",
+            ntohs(arp->ar_hrd), ntohs(arp->ar_pro),
+            arp->ar_hln, arp->ar_pln, ntohs(arp->ar_op));
 
+    // Fill ARP payload
     arp_reply_ptr = (unsigned char *)(arp + 1);
-    pr_info("[ARP] Populating ARP reply data\n");
+    memcpy(arp_reply_ptr, our_mac, ETH_ALEN);                // Sender MAC
+    memcpy(arp_reply_ptr + ETH_ALEN, &our_ip, 4);            // Sender IP
+    memcpy(arp_reply_ptr + ETH_ALEN + 4, sha, ETH_ALEN);     // Target MAC
+    memcpy(arp_reply_ptr + 2 * ETH_ALEN + 4, spa, 4);        // Target IP
 
-    memcpy(arp_reply_ptr, our_mac, ETH_ALEN);            // Sender MAC
-    memcpy(arp_reply_ptr + ETH_ALEN, &our_ip, 4);        // Sender IP
-    memcpy(arp_reply_ptr + ETH_ALEN + 4, sha, ETH_ALEN); // Target MAC
-    memcpy(arp_reply_ptr + 2 * ETH_ALEN + 4, spa, 4);    // Target IP
-
-    pr_info("[ARP] ARP reply: sender MAC=%pM, sender IP=%pI4, target MAC=%pM, target IP=%pI4\n",
+    pr_info("[ARP] ARP payload: sender MAC=%pM, sender IP=%pI4, target MAC=%pM, target IP=%pI4\n",
             our_mac, &our_ip, sha, &sender_ip);
 
-    pr_info("[ARP] Sending ARP reply using dev_queue_xmit directly (no dev_hard_header)\n");
+    pr_info("[ARP] Sending ARP reply with dev_queue_xmit (raw Ethernet frame)\n");
     dev_queue_xmit(reply_skb);
 
     pr_info("[ARP] ARP reply successfully sent to %pI4\n", &sender_ip);
