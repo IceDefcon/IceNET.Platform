@@ -71,19 +71,36 @@ static int aes_decrypt(void *data, size_t len, u8 *key, u8 *iv)
     return 0;
 }
 
-// ARP packet handler
 static int handle_arp_request(struct sk_buff *skb)
 {
     struct arphdr *arp;
     unsigned char *arp_ptr;
+    struct sk_buff *reply_skb;
+    struct net_device *dev = skb->dev;
     unsigned char *sha, *spa, *tha, *tpa;
+    unsigned char *arp_reply_ptr;
+    struct ethhdr *eth;
+    int arp_hdr_len;
+
+    __be32 sender_ip, target_ip;
+    unsigned char our_mac[ETH_ALEN];
+
+    __be32 our_ip = htonl(0xC0A808AE);     // 192.168.8.174
+    __be32 allowed_sender_ip = htonl(0xC0A80865);  // 192.168.8.101
+
+    pr_info("[ARP] Received ARP request, skb=%p, dev=%s\n", skb, dev->name);
 
     arp = arp_hdr(skb);
-    if (!arp)
+    if (!arp) {
+        pr_err("[ARP] Failed to extract ARP header from skb: %p\n", skb);
         return NET_RX_DROP;
+    }
+    pr_info("[ARP] Extracted ARP header: arp=%p, operation=%u\n", arp, ntohs(arp->ar_op));
 
-    if (ntohs(arp->ar_op) != ARPOP_REQUEST)
+    if (ntohs(arp->ar_op) != ARPOP_REQUEST) {
+        pr_info("[ARP] Not an ARP request, skipping\n");
         return NET_RX_SUCCESS;
+    }
 
     arp_ptr = (unsigned char *)(arp + 1);
     sha = arp_ptr;
@@ -91,8 +108,82 @@ static int handle_arp_request(struct sk_buff *skb)
     tha = spa + arp->ar_pln;
     tpa = tha + arp->ar_hln;
 
-    pr_info("[ARP] ARP request: who has %pI4? Tell %pI4\n", tpa, spa);
+    pr_info("[ARP] SHA (Sender MAC) = %pM\n", sha);
+    pr_info("[ARP] SPA (Sender IP) = %pI4\n", spa);
+    pr_info("[ARP] THA (Target MAC) = %pM\n", tha);
+    pr_info("[ARP] TPA (Target IP) = %pI4\n", tpa);
 
+    memcpy(&sender_ip, spa, 4);   // Sender IP
+    memcpy(&target_ip, tpa, 4);   // Target IP
+    pr_info("[ARP] Sender IP = %pI4, Target IP = %pI4\n", &sender_ip, &target_ip);
+
+    if (target_ip != our_ip || sender_ip != allowed_sender_ip) {
+        pr_info("[ARP] Ignoring request from %pI4 for %pI4 (Expected IPs: sender=%pI4, target=%pI4)\n",
+                &sender_ip, &target_ip, &allowed_sender_ip, &our_ip);
+        return NET_RX_SUCCESS;
+    }
+
+    pr_info("[ARP] Responding to ARP request from %pI4 asking for %pI4\n", &sender_ip, &target_ip);
+
+    memcpy(our_mac, dev->dev_addr, ETH_ALEN); // Our MAC
+    pr_info("[ARP] Our MAC address: %pM\n", our_mac);
+
+    arp_hdr_len = sizeof(struct arphdr) + 2 * (arp->ar_hln + arp->ar_pln);
+    pr_info("[ARP] ARP header length calculated: %d\n", arp_hdr_len);
+
+    reply_skb = alloc_skb(ETH_HLEN + arp_hdr_len, GFP_ATOMIC);
+    if (!reply_skb) {
+        pr_err("[ARP] Failed to allocate skb for ARP reply\n");
+        return NET_RX_DROP;
+    }
+    pr_info("[ARP] Successfully allocated skb for ARP reply: reply_skb=%p\n", reply_skb);
+
+    skb_reserve(reply_skb, ETH_HLEN + arp_hdr_len);
+    skb_push(reply_skb, ETH_HLEN + arp_hdr_len);
+    pr_info("[ARP] skb reserved and pushed: skb_headroom=%d, skb_tailroom=%d\n",
+            skb_headroom(reply_skb), skb_tailroom(reply_skb));
+
+    reply_skb->dev = dev;
+    reply_skb->protocol = htons(ETH_P_ARP);
+    skb_reset_mac_header(reply_skb);
+    skb_reset_network_header(reply_skb);
+
+    pr_info("[ARP] skb MAC header reset: skb_mac_header=%p\n", skb_mac_header(reply_skb));
+
+    eth = (struct ethhdr *)skb_mac_header(reply_skb);
+    pr_info("[ARP] Setting Ethernet header: destination MAC=%pM, source MAC=%pM\n",
+            sha, our_mac);
+
+    memcpy(eth->h_dest, sha, ETH_ALEN);         // Destination = sender MAC
+    memcpy(eth->h_source, our_mac, ETH_ALEN);   // Source = our MAC
+    eth->h_proto = htons(ETH_P_ARP);            // Protocol type
+
+    // Setup ARP response header
+    arp = (struct arphdr *)(eth + 1);
+    arp->ar_hrd = htons(ARPHRD_ETHER);
+    arp->ar_pro = htons(ETH_P_IP);
+    arp->ar_hln = ETH_ALEN;
+    arp->ar_pln = 4;
+    arp->ar_op  = htons(ARPOP_REPLY);
+
+    pr_info("[ARP] ARP response header: ar_hrd=%u, ar_pro=%u, ar_hln=%d, ar_pln=%d, ar_op=%u\n",
+            ntohs(arp->ar_hrd), ntohs(arp->ar_pro), arp->ar_hln, arp->ar_pln, ntohs(arp->ar_op));
+
+    arp_reply_ptr = (unsigned char *)(arp + 1);
+    pr_info("[ARP] Populating ARP reply data\n");
+
+    memcpy(arp_reply_ptr, our_mac, ETH_ALEN);            // Sender MAC
+    memcpy(arp_reply_ptr + ETH_ALEN, &our_ip, 4);        // Sender IP
+    memcpy(arp_reply_ptr + ETH_ALEN + 4, sha, ETH_ALEN); // Target MAC
+    memcpy(arp_reply_ptr + 2 * ETH_ALEN + 4, spa, 4);    // Target IP
+
+    pr_info("[ARP] ARP reply: sender MAC=%pM, sender IP=%pI4, target MAC=%pM, target IP=%pI4\n",
+            our_mac, &our_ip, sha, &sender_ip);
+
+    pr_info("[ARP] Sending ARP reply using dev_queue_xmit directly (no dev_hard_header)\n");
+    dev_queue_xmit(reply_skb);
+
+    pr_info("[ARP] ARP reply successfully sent to %pI4\n", &sender_ip);
     return NET_RX_SUCCESS;
 }
 
