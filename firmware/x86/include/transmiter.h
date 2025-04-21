@@ -4,11 +4,11 @@
  * IceNET Technology 2025
  *
  */
-#ifndef BROADCAST_H
-#define BROADCAST_H
+#ifndef TRANSMITER_H
+#define TRANSMITER_H
 
 int broadcastInit(void);
 void broadcastDestroy(void);
 
 
-#endif // BROADCAST_H
+#endif // TRANSMITER_H

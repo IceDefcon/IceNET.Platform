@@ -1,7 +1,7 @@
 obj-m += iceControler.o
 
 iceControler-objs := \
-    src/broadcast.o \
+    src/transmiter.o \
     src/main.o
 
 EXTRA_CFLAGS = -I$(PWD)/include
