@@ -83,7 +83,8 @@ static int aes_encrypt(void *data, size_t len, u8 *key, u8 *iv)
     }
 
     // Encrypt data block-by-block (16 bytes per block)
-    for (i = 0; i < len; i += AES_KEY_LEN) {
+    for (i = 0; i < len; i += AES_KEY_LEN)
+    {
         crypto_cipher_encrypt_one(tfm, data + i, data + i);
     }
 
