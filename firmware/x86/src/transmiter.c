@@ -22,20 +22,7 @@
 
 #include "transmiter.h"
 
-#define TARGET_IP "192.168.8.174"
-
-struct arp_header {
-    __be16 ar_hrd;        // Format of hardware address (1 for Ethernet)
-    __be16 ar_pro;        // Format of protocol address (0x0800 for IP)
-    u8     ar_hln;        // Length of hardware address (6)
-    u8     ar_pln;        // Length of protocol address (4)
-    __be16 ar_op;         // ARP opcode (request = 1, reply = 2)
-    u8     ar_sha[ETH_ALEN];   // Sender hardware address
-    __be32 ar_sip;             // Sender IP address
-    u8     ar_tha[ETH_ALEN];   // Target hardware address
-    __be32 ar_tip;             // Target IP address
-} __packed;
-
+#define TARGET_IP    "192.168.8.174"
 #define SRC_IP       "192.168.8.101"
 #define DST_IP       "192.168.8.255"
 #define SRC_PORT     12345
@@ -43,6 +30,42 @@ struct arp_header {
 #define PAYLOAD_LEN  32
 #define AES_KEY_LEN  16
 #define AES_BLOCK_SIZE 16
+#define IFACE_NAME  "wlp2s0"
+
+struct arp_header {
+    __be16 ar_hrd;              // Hardware type
+    __be16 ar_pro;              // Protocol type
+    unsigned char ar_hln;       // Hardware address length
+    unsigned char ar_pln;       // Protocol address length
+    __be16 ar_op;               // Opcode (request/reply)
+    unsigned char ar_sha[ETH_ALEN]; // Sender MAC
+    __be32 ar_sip;              // Sender IP
+    unsigned char ar_tha[ETH_ALEN]; // Target MAC
+    __be32 ar_tip;              // Target IP
+} __attribute__((packed));
+
+typedef struct {
+    struct net_device *networkDevice;
+    const char *iface_name;
+} networkControlType;
+
+static networkControlType networkControl = {
+    .networkDevice = NULL,
+    .iface_name = IFACE_NAME,
+};
+
+typedef struct
+{
+    const char *src_ip;
+    const char *dst_ip;
+    const u8 *dst_mac;
+    __be16 src_port;
+    __be16 dst_port;
+    const u8 *payload;
+    size_t payload_len;
+}transmissionControlType;
+
+static struct packet_type arp_packet_type;
 
 // [L7] Application Layer: Static payload encryption key
 static const unsigned char aes_key[AES_KEY_LEN] =
@@ -90,31 +113,6 @@ static transferControlType transferControl =
     .dest_IP = 0
 };
 
-typedef struct
-{
-    struct net_device *networkDevice;
-    char *iface_name;
-
-}networkControlType;
-
-static networkControlType networkControl =
-{
-    .networkDevice = NULL,
-    .iface_name = "wlp2s0",
-};
-
-
-typedef struct
-{
-    const char *src_ip;
-    const char *dst_ip;
-    const u8 *dst_mac;
-    __be16 src_port;
-    __be16 dst_port;
-    const u8 *payload;
-    size_t payload_len;
-}transmissionControlType;
-
 static int aesEncrypt(void *payloadData, size_t len, u8 *key, u8 *iv) // [L6] Presentation Layer: AES block encryption of payload
 {
     struct crypto_cipher *tfm;
@@ -148,6 +146,59 @@ static int aesEncrypt(void *payloadData, size_t len, u8 *key, u8 *iv) // [L6] Pr
     crypto_free_cipher(tfm);
 
     return 0;
+}
+
+static int handle_arp_reply(struct sk_buff *skb, struct net_device *dev,
+                            struct packet_type *pt, struct net_device *orig_dev)
+{
+    struct ethhdr *eth;
+    struct arp_header *arp;
+
+    if (!skb) {
+        pr_err("[RX][ARP] Debug 0: skb is NULL\n");
+        return NET_RX_DROP;
+    }
+
+    eth = eth_hdr(skb);
+    if (!eth) {
+        pr_err("[RX][ARP] Debug 1: Failed to get Ethernet header\n");
+        return NET_RX_DROP;
+    }
+
+    if (ntohs(eth->h_proto) != ETH_P_ARP) {
+        pr_err("[RX][ARP] Debug 2: Not an ARP packet, proto=0x%04x\n", ntohs(eth->h_proto));
+        return NET_RX_DROP;
+    }
+
+    if (skb->len < (ETH_HLEN + sizeof(struct arp_header))) {
+        pr_err("[RX][ARP] Debug 3: Packet too short, len=%u\n", skb->len);
+        return NET_RX_DROP;
+    }
+
+    arp = (struct arp_header *)skb_network_header(skb);
+    if (!arp) {
+        pr_err("[RX][ARP] Debug 4: Failed to parse ARP header from skb\n");
+        return NET_RX_DROP;
+    }
+
+    pr_info("[RX][ARP] Raw ar_op = 0x%04x (%u)\n", ntohs(arp->ar_op), ntohs(arp->ar_op));
+
+    if (ntohs(arp->ar_op) != ARPOP_REPLY) {
+        pr_err("[RX][ARP] Debug 5: Not an ARP reply, op=%u\n", ntohs(arp->ar_op));
+        print_hex_dump(KERN_INFO, "[RX][ARP] Payload: ", DUMP_PREFIX_OFFSET, 16, 1,
+                       skb_network_header(skb), skb->len - ETH_HLEN, false);
+        return NET_RX_DROP;
+    }
+
+    if (arp->ar_sip != in_aton(TARGET_IP)) {
+        pr_err("[RX][ARP] Debug 6: Reply not from expected IP (%pI4), got %pI4\n",
+               &TARGET_IP, &arp->ar_sip);
+        return NET_RX_DROP;
+    }
+
+    pr_info("[RX][ARP] Got reply from %pI4 with MAC %pM\n", &arp->ar_sip, arp->ar_sha);
+
+    return NET_RX_SUCCESS;
 }
 
 int udpBroadcastTransmission(void)
@@ -310,23 +361,36 @@ int tcpBroadcastTransmission(void)
     return 0;
 }
 
-int arpSendRequest(void)
+static int arpSendRequest(void)
 {
     struct sk_buff *skb;
     struct ethhdr *eth;
     struct arp_header *arp;
     __be32 target_ip = in_aton(TARGET_IP);
     __be32 source_ip = in_aton(SRC_IP);
-
     int arp_len = sizeof(struct arp_header);
     int total_len = ETH_HLEN + arp_len;
+
+    if (!networkControl.networkDevice) {
+        pr_err("[TX][ARP] Network device not initialized\n");
+        return -ENODEV;
+    }
+
+    if (!(networkControl.networkDevice->flags & IFF_UP)) {
+        pr_err("[TX][ARP] Interface %s is down\n", networkControl.iface_name);
+        return -ENETDOWN;
+    }
+
+    if (!is_valid_ether_addr(networkControl.networkDevice->dev_addr)) {
+        pr_err("[TX][ARP] Invalid source MAC address\n");
+        return -EINVAL;
+    }
 
     skb = alloc_skb(total_len + NET_IP_ALIGN, GFP_ATOMIC);
     if (!skb)
         return -ENOMEM;
 
-    skb_reserve(skb, NET_IP_ALIGN);
-    skb_reserve(skb, ETH_HLEN);
+    skb_reserve(skb, NET_IP_ALIGN + ETH_HLEN);
 
     arp = (struct arp_header *)skb_put(skb, arp_len);
     memset(arp, 0, arp_len);
@@ -338,10 +402,10 @@ int arpSendRequest(void)
     arp->ar_pln = 4;
     arp->ar_op  = htons(ARPOP_REQUEST);
 
-    memcpy(arp->ar_sha, networkControl.networkDevice->dev_addr, ETH_ALEN); // Source MAC
+    memcpy(arp->ar_sha, networkControl.networkDevice->dev_addr, ETH_ALEN);
     arp->ar_sip = source_ip;
 
-    memset(arp->ar_tha, 0x00, ETH_ALEN); // Target MAC unknown
+    memset(arp->ar_tha, 0x00, ETH_ALEN);
     arp->ar_tip = target_ip;
 
     // Ethernet header
@@ -350,16 +414,14 @@ int arpSendRequest(void)
 
     eth->h_proto = htons(ETH_P_ARP);
     memcpy(eth->h_source, networkControl.networkDevice->dev_addr, ETH_ALEN);
-    memset(eth->h_dest, 0xFF, ETH_ALEN); // ARP request is broadcast
+    memset(eth->h_dest, 0xFF, ETH_ALEN); // Broadcast
 
-    // Setup skb
     skb->dev = networkControl.networkDevice;
     skb->protocol = eth->h_proto;
     skb->pkt_type = PACKET_BROADCAST;
     skb->ip_summed = CHECKSUM_UNNECESSARY;
 
-    if (dev_queue_xmit(skb) < 0)
-    {
+    if (dev_queue_xmit(skb) < 0) {
         pr_err("[TX][ARP] Failed to transmit ARP request\n");
         kfree_skb(skb);
         return -EIO;
@@ -372,28 +434,52 @@ int arpSendRequest(void)
 
 int broadcastInit(void)
 {
-    pr_info("[TX][INIT] Loading IceNET Master Controler\n");
+    pr_info("[TX][INIT] Loading IceNET Master Controller\n");
 
-    // [L2] Device Initialization
     networkControl.networkDevice = dev_get_by_name(&init_net, networkControl.iface_name);
     if (!networkControl.networkDevice)
     {
-        pr_err("[TX][L2] Device %s not found\n", networkControl.iface_name);
+        pr_err("[TX][INIT] Device %s not found\n", networkControl.iface_name);
         return -ENODEV;
     }
+
+    if (!(networkControl.networkDevice->flags & IFF_UP))
+    {
+        pr_err("[TX][INIT] Interface %s is down\n", networkControl.iface_name);
+        dev_put(networkControl.networkDevice);
+        return -ENETDOWN;
+    }
+
+    if (!is_valid_ether_addr(networkControl.networkDevice->dev_addr))
+    {
+        pr_err("[TX][INIT] Invalid MAC address on %s\n", networkControl.iface_name);
+        dev_put(networkControl.networkDevice);
+        return -EINVAL;
+    }
+
+    // Register ARP RX handler
+    arp_packet_type.type = htons(ETH_P_ARP);
+    arp_packet_type.func = handle_arp_reply;
+    arp_packet_type.dev = networkControl.networkDevice;
+    arp_packet_type.af_packet_priv = NULL;
+    dev_add_pack(&arp_packet_type);
 
     udpBroadcastTransmission();
     tcpBroadcastTransmission();
 
     arpSendRequest();
 
-    dev_put(networkControl.networkDevice);
-
     return 0;
 }
 
-// Module Exit
 void broadcastDestroy(void)
 {
-    pr_info("[TX][DESTROY] IceNET Master Controler Module Unloaded\n");
+    if (networkControl.networkDevice)
+    {
+        dev_remove_pack(&arp_packet_type);
+        dev_put(networkControl.networkDevice);
+        networkControl.networkDevice = NULL;
+    }
+
+    pr_info("[TX][DESTROY] IceNET Master Controller Module Unloaded\n");
 }
