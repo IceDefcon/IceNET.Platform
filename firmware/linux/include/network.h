@@ -9,8 +9,8 @@
 
 
 
-void broadcastRxInit(void);
-void broadcastRxDestroy(void);
+void networkInit(void);
+void networkDestroy(void);
 
 
 

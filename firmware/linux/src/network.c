@@ -327,8 +327,7 @@ static unsigned int receiverHook(void *priv, struct sk_buff *socketBuffer, const
     return NF_ACCEPT;
 }
 
-// Init routine
-void broadcastRxInit(void)
+void networkInit(void)
 {
     /**
      * [L3] Netfilter hook works only at Layer 3
@@ -358,8 +357,7 @@ void broadcastRxInit(void)
     pr_info("[INIT][ARP] ARP sniffer registered\n");
 }
 
-// Cleanup routine
-void broadcastRxDestroy(void)
+void networkDestroy(void)
 {
     nf_unregister_net_hook(&init_net, &netFilterHook);
     dev_remove_pack(&arp_packet_type);
