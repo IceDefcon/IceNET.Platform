@@ -12,7 +12,9 @@
 #include <linux/gpio.h>
 
 #include "networkControl.h"
+#include "transmitter.h"
 #include "mainThread.h"
+#include "receiver.h"
 
 /////////////////////////
 //                     //
@@ -105,7 +107,6 @@ static int mainThread(void *data)
             case MAIN_THREAD_UDP_TRANSMISSION:
                 printk(KERN_INFO "[CTRL][STM] mode -> MAIN_THREAD_UDP_TRANSMISSION\n");
                 udpTransmission();
-                udpTransmissionRSA();
                 setStateMachine(MAIN_THREAD_DONE);
                 break;
 
@@ -118,7 +119,6 @@ static int mainThread(void *data)
                 printk(KERN_ERR "[CTRL][STM] mode -> Unknown\n");
                 return -EINVAL; // Proper error code
         }
-
 
         /**
          *

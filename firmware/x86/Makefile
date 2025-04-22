@@ -4,7 +4,9 @@ iceControler-objs := \
     src/main.o \
     src/mainThread.o \
     src/networkControl.o \
-    ../common/src/crypto.o
+    ../common/src/crypto.o \
+    ../common/src/receiver.o \
+    ../common/src/transmitter.o
 
 EXTRA_CFLAGS = -I$(PWD)/include -I$(PWD)/../common/include
 
