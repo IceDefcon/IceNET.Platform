@@ -10,13 +10,12 @@
 #define TARGET_IP    "192.168.8.174"
 #define SRC_IP       "192.168.8.101"
 #define DST_IP       "192.168.8.255"
-#define SRC_PORT     12345
-#define DST_PORT     54321
+#define SRC_PORT     12000
+#define DST_PORT     54000
 #define PAYLOAD_LEN  32
 
 #define IFACE_NAME  "wlp2s0"
-#define LISTEN_PORT 54321
-#define TEST_PORT 22222
+#define LISTEN_PORT 54000
 #define BROADCAST_IP 0xC0A808FF // 192.168.8.255
 
 // [L7] Application Layer: Static payload encryption key
@@ -237,7 +236,7 @@ int tcpTransmission(void)
     skb_push(transferControl.socketBuffer, sizeof(struct tcphdr));
     transferControl.tcpHeader = (struct tcphdr *)transferControl.socketBuffer->data;
     memset(transferControl.tcpHeader, 0, sizeof(struct tcphdr));
-    transferControl.tcpHeader->source = htons(44444);
+    transferControl.tcpHeader->source = htons(44000);
     transferControl.tcpHeader->dest = htons(80);
     transferControl.tcpHeader->seq = htonl(0);
     transferControl.tcpHeader->doff = 5;
@@ -429,7 +428,7 @@ static unsigned int receiverHook(void *priv, struct sk_buff *socketBuffer, const
         }
 
         dport = ntohs(udph->dest);
-        if (dport != LISTEN_PORT && dport != TEST_PORT)
+        if (dport != LISTEN_PORT)
         {
             return NF_ACCEPT;
         }
@@ -447,7 +446,7 @@ static unsigned int receiverHook(void *priv, struct sk_buff *socketBuffer, const
         if (payload_len > 0 && skb_tail_pointer(socketBuffer) >= payload + payload_len)
         {
             pr_info("[L7][DATA][UDP] Encrypted Payload: %.32s\n", payload);
-            if (aes_decrypt(payload, payload_len, aes_key, NULL) == 0)
+            if (aesDecrypt(payload, payload_len, aes_key, NULL) == 0)
             {
                 pr_info("[L7][DATA][UDP] Decrypted Payload: %.32s\n", payload);
             }
@@ -477,7 +476,7 @@ static unsigned int receiverHook(void *priv, struct sk_buff *socketBuffer, const
         if (payload_len > 0 && skb_tail_pointer(socketBuffer) >= payload + payload_len)
         {
             pr_info("[L7][DATA][TCP] Encrypted Payload: %.32s\n", payload);
-            if (aes_decrypt(payload, payload_len, aes_key, NULL) == 0)
+            if (aesDecrypt(payload, payload_len, aes_key, NULL) == 0)
             {
                 pr_info("[L7][DATA][TCP] Decrypted Payload: %.32s\n", payload);
             }
@@ -528,7 +527,7 @@ static void registerHandlerARP(void)
 
 int networkInit(void)
 {
-    pr_info("[INIT][NET] Master Controller Network Initialisation\n");
+    pr_info("[INIT][NET] Master Control Network Initialisation\n");
 
     (void)configureNetworkDevice();
     registerNetFilterHook();
