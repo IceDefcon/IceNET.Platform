@@ -24,8 +24,9 @@
 #include <linux/crypto.h>
 #include <linux/scatterlist.h>
 
-#define LISTEN_PORT 54321
-#define TEST_PORT 22222
+#define UDP_PORT 54000
+#define TCP_PORT 80
+
 #define BROADCAST_IP 0xC0A808FF // 192.168.8.255
 
 #define AES_KEY_SIZE 16
@@ -65,7 +66,5 @@ typedef struct
 
 void networkInit(void);
 void networkDestroy(void);
-
-
 
 #endif // NETWORK_H

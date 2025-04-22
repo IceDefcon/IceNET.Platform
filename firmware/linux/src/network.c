@@ -5,9 +5,10 @@
  *
  */
 #include "network.h"
+#include "crypto.h"
 
 static struct nf_hook_ops netFilterHook;
-static struct packet_type arp_packet_type;
+static struct packet_type arpPacket;
 static hookControlType hookControl =
 {
     .ethernetHeader = NULL,
@@ -44,36 +45,6 @@ static arpRequestType arpRequest =
     .allowedSenderIp = 0,
 };
 
-static int aes_decrypt(void *data, size_t len, u8 *key, u8 *iv)
-{
-    struct crypto_cipher *tfm;
-    int i;
-
-    if (len % AES_BLOCK_SIZE != 0) {
-        pr_err("AES decryption error: data size must be multiple of 16 bytes\n");
-        return -EINVAL;
-    }
-
-    tfm = crypto_alloc_cipher("aes", 0, 0);
-    if (IS_ERR(tfm)) {
-        pr_err("Failed to allocate AES cipher\n");
-        return PTR_ERR(tfm);
-    }
-
-    if (crypto_cipher_setkey(tfm, key, 16)) {
-        pr_err("Failed to set AES key\n");
-        crypto_free_cipher(tfm);
-        return -EIO;
-    }
-
-    for (i = 0; i < len; i += AES_BLOCK_SIZE) {
-        crypto_cipher_decrypt_one(tfm, data + i, data + i);
-    }
-
-    crypto_free_cipher(tfm);
-    return 0;
-}
-
 static int handleArpRequest(struct sk_buff *socketBuffer)
 {
     arpRequest.ourIp = htonl(0xC0A808AE);     // 192.168.8.174
@@ -90,7 +61,8 @@ static int handleArpRequest(struct sk_buff *socketBuffer)
     }
     // pr_info("[ARP] Extracted ARP header: arpHeader=%p, operation=%u\n", arpRequest.arpHeader, ntohs(arpRequest.arpHeader->ar_op));
 
-    if (ntohs(arpRequest.arpHeader->ar_op) != ARPOP_REQUEST) {
+    if (ntohs(arpRequest.arpHeader->ar_op) != ARPOP_REQUEST)
+    {
         // pr_info("[ARP] Not an ARP request, skipping\n");
         return NET_RX_SUCCESS;
     }
@@ -181,6 +153,7 @@ static int handleArpRequest(struct sk_buff *socketBuffer)
     pr_info("[ARP] Reply Successfully Sent -> %pI4\n", &arpRequest.senderIp);
     pr_info("[ARP] Reply Payload -> senderMac[%pM] senderIp[%pI4] targetMac[%pM] targetIp[%pI4]\n",
         arpRequest.ourMac, &arpRequest.ourIp, arpRequest.senderMacAddress, &arpRequest.senderIp);
+
     return NET_RX_SUCCESS;
 }
 
@@ -249,7 +222,7 @@ static unsigned int receiverHook(void *priv, struct sk_buff *socketBuffer, const
         }
 
         hookControl.destPort = ntohs(hookControl.udpHeader->dest);
-        if (hookControl.destPort != LISTEN_PORT && hookControl.destPort != TEST_PORT)
+        if (hookControl.destPort != UDP_PORT)
         {
             return NF_ACCEPT;
         }
@@ -267,7 +240,7 @@ static unsigned int receiverHook(void *priv, struct sk_buff *socketBuffer, const
         if (hookControl.payloadLength > 0 && skb_tail_pointer(socketBuffer) >= hookControl.payload + hookControl.payloadLength)
         {
             // pr_info("[L7][DATA][UDP] Encrypted Payload: %.32s\n", hookControl.payload);
-            if (aes_decrypt(hookControl.payload, hookControl.payloadLength, hookControl.aesKey, NULL) == 0)
+            if (aesDecrypt(hookControl.payload, hookControl.payloadLength, hookControl.aesKey, NULL) == 0)
             {
                 if('I' == hookControl.payload[0] && 'c' == hookControl.payload[1] && 'e' == hookControl.payload[2])
                 {
@@ -293,6 +266,12 @@ static unsigned int receiverHook(void *priv, struct sk_buff *socketBuffer, const
             return NF_ACCEPT;
         }
 
+        hookControl.destPort = ntohs(hookControl.tcpHeader->dest);
+        if (hookControl.destPort != TCP_PORT)
+        {
+            return NF_ACCEPT;
+        }
+
         hookControl.payload = (u8 *)hookControl.tcpHeader + (hookControl.tcpHeader->doff * 4);
         hookControl.payloadLength = ntohs(hookControl.ipHeader->tot_len) - (hookControl.ipHeader->ihl * 4) - (hookControl.tcpHeader->doff * 4);
 
@@ -301,7 +280,7 @@ static unsigned int receiverHook(void *priv, struct sk_buff *socketBuffer, const
         if (hookControl.payloadLength > 0 && skb_tail_pointer(socketBuffer) >= hookControl.payload + hookControl.payloadLength)
         {
             // pr_info("[L7][DATA][TCP] Encrypted Payload: %.32s\n", hookControl.payload);
-            if (aes_decrypt(hookControl.payload, hookControl.payloadLength, hookControl.aesKey, NULL) == 0)
+            if (aesDecrypt(hookControl.payload, hookControl.payloadLength, hookControl.aesKey, NULL) == 0)
             {
                 if('I' == hookControl.payload[0] && 'c' == hookControl.payload[1] && 'e' == hookControl.payload[2])
                 {
@@ -325,6 +304,8 @@ static unsigned int receiverHook(void *priv, struct sk_buff *socketBuffer, const
 
 void networkInit(void)
 {
+    pr_info("[INIT][NET] Drone Control Network Initalisation\n");
+
     /**
      * [L3] Netfilter hook works only at Layer 3
      * and above meaning IP packets (IPv4, IPv6, etc)
@@ -340,22 +321,24 @@ void networkInit(void)
     }
     else
     {
-        pr_info("[INIT][NET] Sniffing TCP and UDP @ port %d\n", LISTEN_PORT);
+        pr_info("[INIT][NET] Sniffing TCP[port: %d] and UDP[port: %d]\n",TCP_PORT, UDP_PORT);
     }
 
     /**
-     * [L2] ARP is not IP protocol
-     * ARP is Layer 2 protocol instead
+     * [L2] ARP is not an IP protocol it
+     * is Layer 2 protocol and cannot
+     * be hooked by the net filter
      */
-    arp_packet_type.type = htons(ETH_P_ARP);
-    arp_packet_type.func = arp_receive;
-    dev_add_pack(&arp_packet_type);
+    arpPacket.type = htons(ETH_P_ARP);
+    arpPacket.func = arp_receive;
+    dev_add_pack(&arpPacket);
+
     pr_info("[INIT][ARP] ARP sniffer registered\n");
 }
 
 void networkDestroy(void)
 {
     nf_unregister_net_hook(&init_net, &netFilterHook);
-    dev_remove_pack(&arp_packet_type);
+    dev_remove_pack(&arpPacket);
     pr_info("[DESTROY][NET] Sniffer stopped\n");
 }
