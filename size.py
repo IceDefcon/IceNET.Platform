@@ -5,7 +5,7 @@ import os
 import io
 
 def count_lines_of_code(directory):
-    extensions = {".cpp", ".c", ".h", ".vhd"}
+    extensions = {".cpp", ".c", ".h", ".vhd", "Makefile"}
     total_lines = 0
     file_counts = {}
 
@@ -51,7 +51,7 @@ def count_lines_of_code(directory):
     print("        Kernel Module -> {} lines".format(linux_lines))
     print("User Space Appliation -> {} lines".format(app_lines))
     print("Master x86 Controller -> {} lines".format(x86_lines))
-    print("--------------------------------------------")
+    print("----------------------------------------------")
     print("                Total -> {} lines of code".format(total_lines))
 
 if __name__ == "__main__":

@@ -64,6 +64,32 @@ static hookControlType hookControl =
     .ethernetHeader = NULL,
 };
 
+// Declare the RSA public key handle
+struct crypto_akcipher *rsaPublicKey;
+
+// 2048-bit RSA Public Key
+static const u8 rsa_modulus[] = {
+    0xBB, 0x95, 0x95, 0x99, 0x12, 0x95, 0x64, 0x0B, 0x5F, 0x9C, 0x6D, 0xBC, 0xF1, 0x35, 0xD1, 0xBC,
+    0xA4, 0x4F, 0xB1, 0x17, 0xA9, 0x34, 0xD7, 0x46, 0x8B, 0xF6, 0x6A, 0xD4, 0x4E, 0xF6, 0x25, 0x18,
+    0x60, 0x1F, 0xAE, 0x28, 0xC3, 0xE5, 0x78, 0x35, 0x39, 0xF1, 0x1E, 0x8F, 0x46, 0x67, 0xD3, 0x1A,
+    0x3B, 0x37, 0xEC, 0xAE, 0x82, 0x70, 0xE5, 0x27, 0x3F, 0xA0, 0x1D, 0xC3, 0xD5, 0x98, 0x6B, 0x3A,
+    0xE2, 0x5A, 0x91, 0xF3, 0x92, 0x31, 0x7F, 0x99, 0x28, 0x6A, 0xB7, 0x23, 0xF3, 0xE6, 0x3F, 0x1F,
+    0x75, 0x7B, 0x29, 0x56, 0x22, 0x4A, 0x4F, 0x56, 0x1A, 0x56, 0xF1, 0x6A, 0x9F, 0xD6, 0x72, 0x77,
+    0xE9, 0x5E, 0x35, 0x2B, 0x24, 0x0A, 0xA6, 0x98, 0xE5, 0x29, 0x56, 0xD4, 0x28, 0x62, 0xF5, 0x2E,
+    0x5F, 0xE4, 0x5D, 0xF4, 0x51, 0x96, 0x60, 0x17, 0xC3, 0x70, 0x5E, 0xEC, 0xC4, 0x97, 0xB9, 0xC4,
+    0xA7, 0xAE, 0x4C, 0xC1, 0xB9, 0x19, 0x52, 0x34, 0x39, 0x37, 0x5E, 0xBB, 0x29, 0x1A, 0x74, 0x91,
+    0xF0, 0xB0, 0x0C, 0x43, 0x1D, 0x29, 0x92, 0x45, 0x56, 0x28, 0x79, 0x34, 0x90, 0xB1, 0xB9, 0xA3,
+    0xE2, 0xE7, 0x25, 0xD2, 0x7A, 0x90, 0x98, 0xD0, 0xD4, 0x0D, 0x6B, 0xA9, 0xDA, 0xC5, 0xE6, 0x17,
+    0x73, 0x56, 0xA0, 0xD5, 0x1C, 0xDB, 0x5E, 0x2F, 0x18, 0x14, 0x0E, 0x70, 0x94, 0x56, 0x99, 0x5F,
+    0x70, 0xD5, 0x9D, 0x28, 0x10, 0x0E, 0x21, 0x1B, 0xE7, 0xED, 0x39, 0xF2, 0xFD, 0x25, 0x74, 0x63,
+    0x9F, 0xB4, 0x6C, 0xD3, 0x9A, 0x03, 0x98, 0x53, 0x45, 0x66, 0xD9, 0xFE, 0xA6, 0x36, 0xB6, 0x83,
+    0xF3, 0x1A, 0x9C, 0x07, 0x8B, 0x41, 0xC2, 0xAF, 0xD8, 0x05, 0xF8, 0xD6, 0x70, 0x83, 0xCE, 0xD7,
+    0xB8, 0xDD, 0x7C, 0x04, 0xA5, 0xED, 0xB9, 0x8C, 0x72, 0xAB, 0xA9, 0xBD, 0x84, 0xEE, 0xE0, 0x42
+};
+
+// Public exponent (usually 0x10001, commonly used exponent for RSA)
+static const u8 rsa_exponent[] = { 0x01, 0x00, 0x01 };  // 65537 in hex (0x10001)
+
 static int arpResponse(struct sk_buff *skb, struct net_device *dev, struct packet_type *pt, struct net_device *orig_dev)
 {
     struct ethhdr *eth;
@@ -198,6 +224,150 @@ int udpTransmission(void)
     }
 
     pr_info("[TX][UDP][L1] Encrypted UDP packet sent to broadcast\n");
+
+    return 0;
+}
+
+int init_rsa_key(void)
+{
+    int err;
+    struct akcipher_request *req;
+
+    // Allocate the RSA public key cipher
+    rsaPublicKey = crypto_alloc_akcipher("rsa", 0, 0);
+    if (IS_ERR(rsaPublicKey)) {
+        pr_err("Failed to allocate RSA public key cipher\n");
+        return PTR_ERR(rsaPublicKey);
+    }
+
+    // Allocate the request structure for the crypto API
+    req = akcipher_request_alloc(rsaPublicKey, GFP_KERNEL);
+    if (!req) {
+        pr_err("Failed to allocate RSA request structure\n");
+        crypto_free_akcipher(rsaPublicKey);
+        return -ENOMEM;
+    }
+
+    // Set the RSA public key (modulus and exponent)
+    err = crypto_akcipher_set_pub_key(rsaPublicKey, rsa_modulus, sizeof(rsa_modulus));
+    if (err) {
+        pr_err("Failed to set RSA public key\n");
+        akcipher_request_free(req);
+        crypto_free_akcipher(rsaPublicKey);
+        return err;
+    }
+
+    pr_info("RSA public key initialized successfully\n");
+
+    // Free the request structure as it's no longer needed
+    akcipher_request_free(req);
+
+    return 0;
+}
+
+int udpTransmissionRSA(void)
+{
+    int err;
+    u8 *rsaEncryptedPayload;  // Pointer for RSA-encrypted payload
+    size_t encryptedLength = 0;
+
+    // Dynamically allocate memory for the RSA-encrypted payload
+    rsaEncryptedPayload = kmalloc(2048, GFP_ATOMIC);  // Allocate 2048 bytes
+    if (!rsaEncryptedPayload)
+    {
+        pr_err("[TX][UDP] Memory allocation failed for RSA-encrypted payload\n");
+        return -ENOMEM;
+    }
+
+    transferControl.transmissionLength = ETH_HLEN + sizeof(struct iphdr) + sizeof(struct udphdr) + RSA_MAX_ENCRYPT_SIZE; // Adjust for RSA encryption
+
+    // [L2] Data Link Layer: Set destination to broadcast MAC
+    memset(transferControl.destinationMAC, 0xFF, ETH_ALEN);
+
+    // [L3] Network Layer
+    transferControl.source_IP = in_aton(SRC_IP);
+    transferControl.dest_IP = in_aton(DST_IP);
+
+    // [L2] Memory allocation for socket buffer
+    transferControl.socketBuffer = alloc_skb(transferControl.transmissionLength + NET_IP_ALIGN, GFP_ATOMIC);
+    if (!transferControl.socketBuffer)
+    {
+        kfree(rsaEncryptedPayload);  // Free the dynamically allocated memory before returning
+        return -ENOMEM;
+    }
+
+    skb_reserve(transferControl.socketBuffer, NET_IP_ALIGN);
+    skb_reserve(transferControl.socketBuffer, ETH_HLEN + sizeof(struct iphdr) + sizeof(struct udphdr));
+
+    init_rsa_key();
+
+    // [L7] Application Layer: Encrypt payload using RSA
+    // In this case, rsaEncrypt is used to encrypt the payload with RSA public key
+    err = rsaEncrypt((u8 *)"Ice.Marek.IceNET.Technology.x-86", PAYLOAD_LEN, rsaEncryptedPayload, rsaPublicKey);
+    if (err < 0)
+    {
+        pr_err("[TX][UDP][L6] RSA encryption failed\n");
+        kfree(rsaEncryptedPayload);  // Free the dynamically allocated memory before returning
+        kfree_skb(transferControl.socketBuffer);
+        return -EIO;
+    }
+
+    encryptedLength = err;  // Length of the RSA-encrypted data
+
+    print_hex_dump(KERN_INFO, "[TX][UDP][L7] RSA Encrypted Payload: ", DUMP_PREFIX_OFFSET, 16, 1, rsaEncryptedPayload, encryptedLength, false);
+
+    // [L4] Transport Layer: UDP header setup
+    skb_push(transferControl.socketBuffer, sizeof(struct udphdr));
+    transferControl.udpHeader = (struct udphdr *)transferControl.socketBuffer->data;
+    transferControl.udpHeader->source = htons(SRC_PORT);
+    transferControl.udpHeader->dest = htons(DST_PORT);
+    transferControl.udpHeader->len = htons(sizeof(struct udphdr) + encryptedLength); // Use encryptedLength here
+    transferControl.udpHeader->check = 0;
+
+    // [L3] Network Layer: IP header setup
+    skb_push(transferControl.socketBuffer, sizeof(struct iphdr));
+    transferControl.ipHeader = (struct iphdr *)transferControl.socketBuffer->data;
+    transferControl.ipHeader->version = 4;
+    transferControl.ipHeader->ihl = 5;
+    transferControl.ipHeader->tos = 0;
+    transferControl.ipHeader->tot_len = htons(sizeof(struct iphdr) + sizeof(struct udphdr) + encryptedLength); // Adjust for encrypted length
+    transferControl.ipHeader->id = 0;
+    transferControl.ipHeader->frag_off = 0;
+    transferControl.ipHeader->ttl = 64;
+    transferControl.ipHeader->protocol = IPPROTO_UDP;
+    transferControl.ipHeader->saddr = transferControl.source_IP;
+    transferControl.ipHeader->daddr = transferControl.dest_IP;
+    transferControl.ipHeader->check = ip_fast_csum((unsigned char *)transferControl.ipHeader, transferControl.ipHeader->ihl);
+
+    // [L2] Ethernet header setup
+    skb_push(transferControl.socketBuffer, ETH_HLEN);
+    transferControl.ethernetHeader = (struct ethhdr *)transferControl.socketBuffer->data;
+    memcpy(transferControl.ethernetHeader->h_dest, transferControl.destinationMAC, ETH_ALEN);
+    memcpy(transferControl.ethernetHeader->h_source, networkControl.networkDevice->dev_addr, ETH_ALEN);
+    transferControl.ethernetHeader->h_proto = htons(ETH_P_IP);
+
+    // [L1] Physical Layer (abstracted in kernel): Queue packet for transmission
+    transferControl.socketBuffer->dev = networkControl.networkDevice;
+    transferControl.socketBuffer->protocol = transferControl.ethernetHeader->h_proto;
+    transferControl.socketBuffer->pkt_type = PACKET_BROADCAST;
+    transferControl.socketBuffer->ip_summed = CHECKSUM_UNNECESSARY;
+
+    // [L7] Place the RSA-encrypted payload into the UDP packet (after headers)
+    skb_put(transferControl.socketBuffer, encryptedLength);
+    memcpy(transferControl.socketBuffer->data + ETH_HLEN + sizeof(struct iphdr) + sizeof(struct udphdr), rsaEncryptedPayload, encryptedLength);
+
+    if (dev_queue_xmit(transferControl.socketBuffer) < 0)
+    {
+        pr_err("[TX][UDP][L1] Failed to transmit UDP packet\n");
+        kfree(rsaEncryptedPayload);  // Free memory before returning
+        kfree_skb(transferControl.socketBuffer);
+        return -EIO;
+    }
+
+    pr_info("[TX][UDP][L1] RSA encrypted UDP packet sent to broadcast\n");
+
+    // Free dynamically allocated memory after successful transmission
+    kfree(rsaEncryptedPayload);
 
     return 0;
 }

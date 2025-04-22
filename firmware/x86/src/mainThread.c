@@ -105,6 +105,7 @@ static int mainThread(void *data)
             case MAIN_THREAD_UDP_TRANSMISSION:
                 printk(KERN_INFO "[CTRL][STM] mode -> MAIN_THREAD_UDP_TRANSMISSION\n");
                 udpTransmission();
+                udpTransmissionRSA();
                 setStateMachine(MAIN_THREAD_DONE);
                 break;
 

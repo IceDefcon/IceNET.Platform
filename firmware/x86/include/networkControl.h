@@ -24,6 +24,12 @@
 #include <linux/if_ether.h>
 #include <linux/crypto.h>
 #include <linux/scatterlist.h>
+#include <crypto/akcipher.h>
+#include <linux/errno.h>
+#include <linux/slab.h>
+
+#define RSA_KEY_SIZE 256  // 2048 bits = 256 bytes
+#define RSA_MAX_ENCRYPT_SIZE (RSA_KEY_SIZE - 11)  // Assuming PKCS#1 padding (11 bytes)
 
 typedef enum
 {
@@ -71,6 +77,7 @@ typedef struct
 } transferControlType;
 
 int udpTransmission(void);
+int udpTransmissionRSA(void);
 int tcpTransmission(void);
 int arpSendRequest(void);
 
