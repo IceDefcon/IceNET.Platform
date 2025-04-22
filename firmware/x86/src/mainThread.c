@@ -12,7 +12,9 @@
 #include <linux/gpio.h>
 
 #include "networkControl.h"
+#include "transmitter.h"
 #include "mainThread.h"
+#include "receiver.h"
 
 /////////////////////////
 //                     //
@@ -117,7 +119,6 @@ static int mainThread(void *data)
                 printk(KERN_ERR "[CTRL][STM] mode -> Unknown\n");
                 return -EINVAL; // Proper error code
         }
-
 
         /**
          *

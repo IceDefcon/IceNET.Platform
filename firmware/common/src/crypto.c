@@ -4,10 +4,9 @@
  * IceNET Technology 2025
  *
  */
-#include <linux/crypto.h>
-#include <linux/scatterlist.h>
-
 #include "crypto.h"
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 int aesEncrypt(void *payloadData, size_t len, u8 *key, u8 *iv)
 {
@@ -60,7 +59,7 @@ int aesDecrypt(void *data, size_t len, u8 *key, u8 *iv)
         return PTR_ERR(tfm);
     }
 
-    if (crypto_cipher_setkey(tfm, key, 16)) {
+    if (crypto_cipher_setkey(tfm, key, AES_KEY_LEN)) {
         pr_err("Failed to set AES key\n");
         crypto_free_cipher(tfm);
         return -EIO;
