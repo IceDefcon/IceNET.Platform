@@ -26,77 +26,97 @@
 
 static mainThreadProcess Process =
 {
-    .currentState = SM_IDLE,
-    .previousState = SM_IDLE,
+    .currentState = MAIN_THREAD_IDLE,
+    .previousState = MAIN_THREAD_IDLE,
     .threadHandle = NULL,
     .irqFlags = 0,
 };
 
-/* SET */ void setStateMachine(stateMachineType newState)
+/* SET */ void setStateMachine(mainThreadStateType newState)
 {
     spin_lock_irqsave(&Process.smSpinlock, Process.irqFlags);
     Process.currentState = newState;
     spin_unlock_irqrestore(&Process.smSpinlock, Process.irqFlags);
 }
 
-/* GET */ stateMachineType getStateMachine(void)
+/* GET */ mainThreadStateType getStateMachine(void)
 {
-    stateMachineType state;
+    mainThreadStateType state;
     spin_lock_irqsave(&Process.smSpinlock, Process.irqFlags);
     state = Process.currentState;
     spin_unlock_irqrestore(&Process.smSpinlock, Process.irqFlags);
     return state;
 }
 
-/* Kernel state machine */
+static const char* getMainThreadStateString(mainThreadStateType type)
+{
+    static const char* mainThreadStateStrings[] =
+    {
+        "MAIN_THREAD_IDLE",
+        "MAIN_THREAD_NETWORK_ARP_REQUEST",
+        "MAIN_THREAD_TCP_TRANSMISSION",
+        "MAIN_THREAD_UDP_TRANSMISSION",
+        "MAIN_THREAD_DONE"
+    };
+
+    if (type >= 0 && type < MAIN_THREAD_AMOUNT)
+    {
+        return mainThreadStateStrings[type];
+    }
+    else
+    {
+        return "UNKNOWN_MAIN_THRAD";
+    }
+}
+
 static int mainThread(void *data)
 {
-    stateMachineType state;
+    mainThreadStateType state;
 
     while (!kthread_should_stop())
     {
         state = getStateMachine();
 
+        if(Process.previousState != Process.currentState)
+        {
+            printk(KERN_INFO "[CTRL][STM] mainThread State Machine %d->%d %s\n",Process.previousState, Process.currentState, getMainThreadStateString(Process.currentState));
+            Process.previousState = Process.currentState;
+        }
+
         switch(state)
         {
-            case SM_IDLE:
+            case MAIN_THREAD_IDLE:
                 /* Nothing here :: Just wait */
                 break;
 
-            case SM_NETWORK_INIT:
-                printk(KERN_INFO "[CTRL][STM] mode -> SM_NETWORK_INIT\n");
-                setStateMachine(SM_DONE);
+            case MAIN_THREAD_NETWORK_ARP_REQUEST:
+                printk(KERN_INFO "[CTRL][STM] mode -> MAIN_THREAD_NETWORK_ARP_REQUEST\n");
+                arpSendRequest();
+                setStateMachine(MAIN_THREAD_DONE);
                 break;
 
-            case SM_NETWORK_TCP:
-                printk(KERN_INFO "[CTRL][STM] mode -> SM_NETWORK_TCP\n");
-                setStateMachine(SM_DONE);
+            case MAIN_THREAD_TCP_TRANSMISSION:
+                printk(KERN_INFO "[CTRL][STM] mode -> MAIN_THREAD_TCP_TRANSMISSION\n");
+                tcpTransmission();
+                setStateMachine(MAIN_THREAD_DONE);
                 break;
 
-            case SM_NETWORK_UDP:
-                printk(KERN_INFO "[CTRL][STM] mode -> SM_NETWORK_UDP\n");
-                setStateMachine(SM_DONE);
+            case MAIN_THREAD_UDP_TRANSMISSION:
+                printk(KERN_INFO "[CTRL][STM] mode -> MAIN_THREAD_UDP_TRANSMISSION\n");
+                udpTransmission();
+                setStateMachine(MAIN_THREAD_DONE);
                 break;
 
-            case SM_NETWORK_REGISTER_ARP:
-                printk(KERN_INFO "[CTRL][STM] mode -> SM_NETWORK_REGISTER_ARP\n");
-                setStateMachine(SM_DONE);
-                break;
-
-            case SM_NETWORK_REQUEST_ARP:
-                printk(KERN_INFO "[CTRL][STM] mode -> SM_NETWORK_REQUEST_ARP\n");
-                setStateMachine(SM_DONE);
-                break;
-
-            case SM_DONE:
-                printk(KERN_INFO "[CTRL][STM] mode -> SM_DONE\n");
-                setStateMachine(SM_IDLE);
+            case MAIN_THREAD_DONE:
+                printk(KERN_INFO "[CTRL][STM] mode -> MAIN_THREAD_DONE\n");
+                setStateMachine(MAIN_THREAD_IDLE);
                 break;
 
             default:
                 printk(KERN_ERR "[CTRL][STM] mode -> Unknown\n");
                 return -EINVAL; // Proper error code
         }
+
 
         /**
          *
@@ -115,7 +135,7 @@ static int mainThread(void *data)
 void mainThreadInit(void)
 {
     spin_lock_init(&Process.smSpinlock);
-    setStateMachine(SM_IDLE);
+    setStateMachine(MAIN_THREAD_IDLE);
 
     Process.threadHandle = kthread_create(mainThread, NULL, "iceMainThread");
 

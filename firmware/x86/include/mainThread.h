@@ -20,26 +20,25 @@
 
 typedef enum 
 {
-    SM_IDLE = 0,
-    SM_NETWORK_INIT,
-    SM_NETWORK_TCP,
-    SM_NETWORK_UDP,
-    SM_NETWORK_REGISTER_ARP,
-    SM_NETWORK_REQUEST_ARP,
-    SM_DONE,
-} stateMachineType;
+    MAIN_THREAD_IDLE = 0,
+    MAIN_THREAD_NETWORK_ARP_REQUEST,
+    MAIN_THREAD_TCP_TRANSMISSION,
+    MAIN_THREAD_UDP_TRANSMISSION,
+    MAIN_THREAD_DONE,
+    MAIN_THREAD_AMOUNT,
+} mainThreadStateType;
 
 typedef struct
 {
-    stateMachineType currentState;
-    stateMachineType previousState;
+    mainThreadStateType currentState;
+    mainThreadStateType previousState;
     struct task_struct *threadHandle;
     spinlock_t smSpinlock;
     unsigned long irqFlags;
 } mainThreadProcess;
 
-/* SET */ void setStateMachine(stateMachineType newState);
-/* GET */ stateMachineType getStateMachine(void);
+/* SET */ void setStateMachine(mainThreadStateType newState);
+/* GET */ mainThreadStateType getStateMachine(void);
 
 void mainThreadInit(void);
 void mainThreadDestroy(void);

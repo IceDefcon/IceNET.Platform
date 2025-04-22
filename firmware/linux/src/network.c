@@ -209,7 +209,6 @@ static int arp_receive(struct sk_buff *skb, struct net_device *dev,
     return NET_RX_SUCCESS;
 }
 
-// Main Netfilter hook
 static unsigned int receiverHook(void *priv, struct sk_buff *socketBuffer, const struct nf_hook_state *state)
 {
     struct iphdr *iph;

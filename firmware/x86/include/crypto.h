@@ -12,5 +12,6 @@
 
 // [L6] Presentation Layer: AES block encryption of payload
 int aesEncrypt(void *payloadData, size_t len, u8 *key, u8 *iv);
+int aes_decrypt(void *data, size_t len, u8 *key, u8 *iv);
 
 #endif // CRYPTO_H

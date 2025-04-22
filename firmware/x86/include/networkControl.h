@@ -10,15 +10,20 @@
 #include <linux/module.h>
 #include <linux/kernel.h>
 #include <linux/init.h>
-#include <linux/netdevice.h>
+#include <linux/netdevice.h>   // L2 - Network device structures (Ethernet)
 #include <linux/skbuff.h>
-#include <linux/ip.h>
-#include <linux/udp.h>
-#include <linux/tcp.h>
-#include <linux/etherdevice.h>
+#include <linux/ip.h>          // L3 - IP header
+#include <linux/udp.h>         // L4 - UDP header
+#include <linux/tcp.h>         // L4 - TCP header
+#include <linux/etherdevice.h> // L2 - Ethernet header helpers
 #include <linux/inet.h>
 #include <linux/printk.h>
 #include <linux/if_arp.h>
+#include <linux/netfilter.h>
+#include <linux/netfilter_ipv4.h>
+#include <linux/if_ether.h>
+#include <linux/crypto.h>
+#include <linux/scatterlist.h>
 
 typedef enum
 {
@@ -64,6 +69,10 @@ typedef struct
     __be32 source_IP;
     __be32 dest_IP;
 } transferControlType;
+
+int udpTransmission(void);
+int tcpTransmission(void);
+int arpSendRequest(void);
 
 int networkInit(void);
 void networkDestroy(void);
