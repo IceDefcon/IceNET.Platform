@@ -4,23 +4,8 @@
  * IceNET Technology 2025
  *
  */
-
-#include <linux/module.h>
-#include <linux/kernel.h>
-#include <linux/init.h>
-#include <linux/netdevice.h>
-#include <linux/skbuff.h>
-#include <linux/ip.h>
-#include <linux/udp.h>
-#include <linux/tcp.h>
-#include <linux/etherdevice.h>
-#include <linux/inet.h>
-#include <linux/crypto.h>
-#include <linux/scatterlist.h>
-#include <linux/printk.h>
-#include <linux/if_arp.h>
-
-#include "transmiter.h"
+#include "networkControl.h"
+#include "crypto.h"
 
 #define TARGET_IP    "192.168.8.174"
 #define SRC_IP       "192.168.8.101"
@@ -28,44 +13,8 @@
 #define SRC_PORT     12345
 #define DST_PORT     54321
 #define PAYLOAD_LEN  32
-#define AES_KEY_LEN  16
-#define AES_BLOCK_SIZE 16
+
 #define IFACE_NAME  "wlp2s0"
-
-struct arp_header {
-    __be16 ar_hrd;              // Hardware type
-    __be16 ar_pro;              // Protocol type
-    unsigned char ar_hln;       // Hardware address length
-    unsigned char ar_pln;       // Protocol address length
-    __be16 ar_op;               // Opcode (request/reply)
-    unsigned char ar_sha[ETH_ALEN]; // Sender MAC
-    __be32 ar_sip;              // Sender IP
-    unsigned char ar_tha[ETH_ALEN]; // Target MAC
-    __be32 ar_tip;              // Target IP
-} __attribute__((packed));
-
-typedef struct {
-    struct net_device *networkDevice;
-    const char *iface_name;
-} networkControlType;
-
-static networkControlType networkControl = {
-    .networkDevice = NULL,
-    .iface_name = IFACE_NAME,
-};
-
-typedef struct
-{
-    const char *src_ip;
-    const char *dst_ip;
-    const u8 *dst_mac;
-    __be16 src_port;
-    __be16 dst_port;
-    const u8 *payload;
-    size_t payload_len;
-}transmissionControlType;
-
-static struct packet_type arp_packet_type;
 
 // [L7] Application Layer: Static payload encryption key
 static const unsigned char aes_key[AES_KEY_LEN] =
@@ -74,26 +23,13 @@ static const unsigned char aes_key[AES_KEY_LEN] =
     0xab, 0xf7, 0x97, 0x75, 0x46, 0x7e, 0x56, 0x4e
 };
 
-typedef enum
-{
-    DATA_PACKET_UDP,
-    DATA_PACKET_TCP,
-    DATA_PACKET_AMOUNT,
-}packetType;
+static struct packet_type arp_packet_type;
 
-typedef struct
+static networkControlType networkControl =
 {
-    struct sk_buff *socketBuffer;
-    struct ethhdr *ethernetHeader;
-    struct iphdr *ipHeader;
-    struct udphdr *udpHeader;
-    struct tcphdr *tcpHeader;
-    unsigned char *Data[DATA_PACKET_AMOUNT];
-    int broadcastLength;
-    unsigned char destinationMAC[ETH_ALEN];
-    __be32 source_IP;
-    __be32 dest_IP;
-} transferControlType;
+    .networkDevice = NULL,
+    .iface_name = IFACE_NAME,
+};
 
 static transferControlType transferControl =
 {
@@ -113,46 +49,10 @@ static transferControlType transferControl =
     .dest_IP = 0
 };
 
-static int aesEncrypt(void *payloadData, size_t len, u8 *key, u8 *iv) // [L6] Presentation Layer: AES block encryption of payload
-{
-    struct crypto_cipher *tfm;
-    int i;
-
-    if (len % AES_BLOCK_SIZE != 0)
-    {
-        pr_err("[TX][L6] Data length must be a multiple of 16 bytes\n");
-        return -EINVAL;
-    }
-
-    tfm = crypto_alloc_cipher("aes", 0, 0);
-    if (IS_ERR(tfm))
-    {
-        pr_err("[TX][L6] Failed to allocate AES cipher\n");
-        return PTR_ERR(tfm);
-    }
-
-    if (crypto_cipher_setkey(tfm, key, AES_KEY_LEN))
-    {
-        pr_err("[TX][L6] Failed to set AES key\n");
-        crypto_free_cipher(tfm);
-        return -EIO;
-    }
-
-    for (i = 0; i < len; i += AES_BLOCK_SIZE)
-    {
-        crypto_cipher_encrypt_one(tfm, payloadData + i, payloadData + i);
-    }
-
-    crypto_free_cipher(tfm);
-
-    return 0;
-}
-
-static int handle_arp_reply(struct sk_buff *skb, struct net_device *dev,
-                            struct packet_type *pt, struct net_device *orig_dev)
+static int arpResponse(struct sk_buff *skb, struct net_device *dev, struct packet_type *pt, struct net_device *orig_dev)
 {
     struct ethhdr *eth;
-    struct arp_header *arp;
+    struct arpHeader *arp;
 
     if (!skb) {
         pr_err("[RX][ARP] Debug 0: skb is NULL\n");
@@ -160,39 +60,43 @@ static int handle_arp_reply(struct sk_buff *skb, struct net_device *dev,
     }
 
     eth = eth_hdr(skb);
-    if (!eth) {
+    if (!eth)
+    {
         pr_err("[RX][ARP] Debug 1: Failed to get Ethernet header\n");
         return NET_RX_DROP;
     }
 
-    if (ntohs(eth->h_proto) != ETH_P_ARP) {
+    if (ntohs(eth->h_proto) != ETH_P_ARP)
+    {
         pr_err("[RX][ARP] Debug 2: Not an ARP packet, proto=0x%04x\n", ntohs(eth->h_proto));
         return NET_RX_DROP;
     }
 
-    if (skb->len < (ETH_HLEN + sizeof(struct arp_header))) {
+    if (skb->len < (ETH_HLEN + sizeof(struct arpHeader)))
+    {
         pr_err("[RX][ARP] Debug 3: Packet too short, len=%u\n", skb->len);
         return NET_RX_DROP;
     }
 
-    arp = (struct arp_header *)skb_network_header(skb);
-    if (!arp) {
+    arp = (struct arpHeader *)skb_network_header(skb);
+    if (!arp)
+    {
         pr_err("[RX][ARP] Debug 4: Failed to parse ARP header from skb\n");
         return NET_RX_DROP;
     }
 
     pr_info("[RX][ARP] Raw ar_op = 0x%04x (%u)\n", ntohs(arp->ar_op), ntohs(arp->ar_op));
 
-    if (ntohs(arp->ar_op) != ARPOP_REPLY) {
+    if (ntohs(arp->ar_op) != ARPOP_REPLY)
+    {
         pr_err("[RX][ARP] Debug 5: Not an ARP reply, op=%u\n", ntohs(arp->ar_op));
-        print_hex_dump(KERN_INFO, "[RX][ARP] Payload: ", DUMP_PREFIX_OFFSET, 16, 1,
-                       skb_network_header(skb), skb->len - ETH_HLEN, false);
+        print_hex_dump(KERN_INFO, "[RX][ARP] Payload: ", DUMP_PREFIX_OFFSET, 16, 1, skb_network_header(skb), skb->len - ETH_HLEN, false);
         return NET_RX_DROP;
     }
 
-    if (arp->ar_sip != in_aton(TARGET_IP)) {
-        pr_err("[RX][ARP] Debug 6: Reply not from expected IP (%pI4), got %pI4\n",
-               &TARGET_IP, &arp->ar_sip);
+    if (arp->ar_sip != in_aton(TARGET_IP))
+    {
+        pr_err("[RX][ARP] Debug 6: Reply not from expected IP (%pI4), got %pI4\n", &TARGET_IP, &arp->ar_sip);
         return NET_RX_DROP;
     }
 
@@ -363,12 +267,10 @@ int tcpBroadcastTransmission(void)
 
 static int arpSendRequest(void)
 {
-    struct sk_buff *skb;
-    struct ethhdr *eth;
-    struct arp_header *arp;
+    struct arpHeader *arp;
     __be32 target_ip = in_aton(TARGET_IP);
     __be32 source_ip = in_aton(SRC_IP);
-    int arp_len = sizeof(struct arp_header);
+    int arp_len = sizeof(struct arpHeader);
     int total_len = ETH_HLEN + arp_len;
 
     if (!networkControl.networkDevice) {
@@ -386,13 +288,13 @@ static int arpSendRequest(void)
         return -EINVAL;
     }
 
-    skb = alloc_skb(total_len + NET_IP_ALIGN, GFP_ATOMIC);
-    if (!skb)
+    transferControl.socketBuffer = alloc_skb(total_len + NET_IP_ALIGN, GFP_ATOMIC);
+    if (!transferControl.socketBuffer)
         return -ENOMEM;
 
-    skb_reserve(skb, NET_IP_ALIGN + ETH_HLEN);
+    skb_reserve(transferControl.socketBuffer, NET_IP_ALIGN + ETH_HLEN);
 
-    arp = (struct arp_header *)skb_put(skb, arp_len);
+    arp = (struct arpHeader *)skb_put(transferControl.socketBuffer, arp_len);
     memset(arp, 0, arp_len);
 
     // Fill ARP header
@@ -409,21 +311,21 @@ static int arpSendRequest(void)
     arp->ar_tip = target_ip;
 
     // Ethernet header
-    skb_push(skb, ETH_HLEN);
-    eth = (struct ethhdr *)skb->data;
+    skb_push(transferControl.socketBuffer, ETH_HLEN);
+    transferControl.ethernetHeader = (struct ethhdr *)transferControl.socketBuffer->data;
 
-    eth->h_proto = htons(ETH_P_ARP);
-    memcpy(eth->h_source, networkControl.networkDevice->dev_addr, ETH_ALEN);
-    memset(eth->h_dest, 0xFF, ETH_ALEN); // Broadcast
+    transferControl.ethernetHeader->h_proto = htons(ETH_P_ARP);
+    memcpy(transferControl.ethernetHeader->h_source, networkControl.networkDevice->dev_addr, ETH_ALEN);
+    memset(transferControl.ethernetHeader->h_dest, 0xFF, ETH_ALEN); // Broadcast
 
-    skb->dev = networkControl.networkDevice;
-    skb->protocol = eth->h_proto;
-    skb->pkt_type = PACKET_BROADCAST;
-    skb->ip_summed = CHECKSUM_UNNECESSARY;
+    transferControl.socketBuffer->dev = networkControl.networkDevice;
+    transferControl.socketBuffer->protocol = transferControl.ethernetHeader->h_proto;
+    transferControl.socketBuffer->pkt_type = PACKET_BROADCAST;
+    transferControl.socketBuffer->ip_summed = CHECKSUM_UNNECESSARY;
 
-    if (dev_queue_xmit(skb) < 0) {
+    if (dev_queue_xmit(transferControl.socketBuffer) < 0) {
         pr_err("[TX][ARP] Failed to transmit ARP request\n");
-        kfree_skb(skb);
+        kfree_skb(transferControl.socketBuffer);
         return -EIO;
     }
 
@@ -432,7 +334,7 @@ static int arpSendRequest(void)
     return 0;
 }
 
-int broadcastInit(void)
+int networkInit(void)
 {
     pr_info("[TX][INIT] Loading IceNET Master Controller\n");
 
@@ -459,7 +361,7 @@ int broadcastInit(void)
 
     // Register ARP RX handler
     arp_packet_type.type = htons(ETH_P_ARP);
-    arp_packet_type.func = handle_arp_reply;
+    arp_packet_type.func = arpResponse;
     arp_packet_type.dev = networkControl.networkDevice;
     arp_packet_type.af_packet_priv = NULL;
     dev_add_pack(&arp_packet_type);
@@ -472,7 +374,7 @@ int broadcastInit(void)
     return 0;
 }
 
-void broadcastDestroy(void)
+void networkDestroy(void)
 {
     if (networkControl.networkDevice)
     {

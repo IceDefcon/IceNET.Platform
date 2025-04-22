@@ -1,8 +1,10 @@
 obj-m += iceControler.o
 
 iceControler-objs := \
-    src/transmiter.o \
-    src/main.o
+    src/crypto.o \
+    src/main.o \
+    src/mainThread.o \
+    src/networkControl.o \
 
 EXTRA_CFLAGS = -I$(PWD)/include
 

@@ -7,12 +7,13 @@
 #include <linux/init.h>        // For __init and __exit macros
 #include <linux/module.h>      // For module initialization and exit macros
 
-#include "transmiter.h"
+#include "networkControl.h"
+#include "mainThread.h"
 
 MODULE_VERSION("1.0");
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Ice.Marek");
-MODULE_DESCRIPTION("Master Controler");
+MODULE_DESCRIPTION("Master x86 Controler");
 
 //////////////////////////
 //                      //
@@ -26,14 +27,16 @@ static int __init master_controler_init(void)
     int ret = 0;
 
     printk(KERN_INFO "-------------------------------------------------\n");
-    printk(KERN_INFO "[BEGIN] IceNET Master Controler                  \n");
+    printk(KERN_INFO "[BEGIN] Master x86 Controler                     \n");
     printk(KERN_INFO "-------------------------------------------------\n");
 
+    /* Initialise main thread */
+    mainThreadInit();
     /* Initialise Broadcas Transmiter */
-    broadcastInit();
+    networkInit();
 
     printk(KERN_INFO "-------------------------------------------------\n");
-    printk(KERN_INFO "[READY] IceNET Controler loaded successfuly      \n");
+    printk(KERN_INFO "[READY] Master x86 Controler Loaded Successfuly  \n");
     printk(KERN_INFO "-------------------------------------------------\n");
 
     return ret;
@@ -49,11 +52,12 @@ static int __init master_controler_init(void)
 static void __exit master_controler_exit(void)
 {
     printk(KERN_INFO "-------------------------------------------------\n");
-    printk(KERN_INFO "[TERMINATE] Termination of Master Controler      \n");
+    printk(KERN_INFO "[TERMINATE] Termination of Master x86 Controler  \n");
     printk(KERN_INFO "-------------------------------------------------\n");
-    /* Destroy everything */
-    broadcastDestroy();
 
+    /* Destroy everything */
+    networkDestroy();
+    mainThreadDestroy();
 
     printk(KERN_INFO "[TERMINATE] Master Controler Terminated Successfully\n");
 }
