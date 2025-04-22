@@ -19,7 +19,7 @@ static const unsigned char aes_key[AES_KEY_LEN] =
 static networkControlType networkControl =
 {
     .networkDevice = NULL,
-    .iface_name = IFACE_NAME,
+    .iface_name = "Unknown",
 };
 
 static transferControlType transferControl =
@@ -221,7 +221,8 @@ int arpSendRequest(void)
         return -ENODEV;
     }
 
-    if (!(networkControl.networkDevice->flags & IFF_UP)) {
+    if (!(networkControl.networkDevice->flags & IFF_UP))
+    {
         pr_err("[TX][ARP] Interface %s is down\n", networkControl.iface_name);
         return -ENETDOWN;
     }

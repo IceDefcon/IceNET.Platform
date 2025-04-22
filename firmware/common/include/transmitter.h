@@ -37,7 +37,6 @@
 #define DST_PORT     54000
 #define PAYLOAD_LEN  32
 
-#define IFACE_NAME  "wlp2s0"
 #define LISTEN_PORT 54000
 #define BROADCAST_IP 0xC0A808FF // 192.168.8.255
 

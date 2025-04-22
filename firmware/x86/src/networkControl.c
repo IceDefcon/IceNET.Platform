@@ -19,6 +19,7 @@ static struct packet_type arpPacket;
 static int configureNetworkDevice(void)
 {
     networkControlType* networkControl = getNetworkController();
+    networkControl->iface_name = "wlp2s0";
 
     networkControl->networkDevice = dev_get_by_name(&init_net, networkControl->iface_name);
     if (!networkControl->networkDevice)
