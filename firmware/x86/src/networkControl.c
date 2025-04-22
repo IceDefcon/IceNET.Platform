@@ -46,7 +46,7 @@ static transferControlType transferControl =
         [DATA_PACKET_UDP] = NULL,
         [DATA_PACKET_TCP] = NULL,
     },
-    .broadcastLength = 0,
+    .transmissionLength = 0,
     .destinationMAC = {0},
     .source_IP = 0,
     .dest_IP = 0
@@ -123,7 +123,7 @@ static int arpResponse(struct sk_buff *skb, struct net_device *dev, struct packe
 
 int udpTransmission(void)
 {
-    transferControl.broadcastLength = ETH_HLEN + sizeof(struct iphdr) + sizeof(struct udphdr) + PAYLOAD_LEN;
+    transferControl.transmissionLength = ETH_HLEN + sizeof(struct iphdr) + sizeof(struct udphdr) + PAYLOAD_LEN;
 
     // [L2] Data Link Layer: Set destination to broadcast MAC
     memset(transferControl.destinationMAC, 0xFF, ETH_ALEN);
@@ -133,7 +133,7 @@ int udpTransmission(void)
     transferControl.dest_IP = in_aton(DST_IP);
 
     // [L2] Memory allocation for socket buffer
-    transferControl.socketBuffer = alloc_skb(transferControl.broadcastLength + NET_IP_ALIGN, GFP_ATOMIC);
+    transferControl.socketBuffer = alloc_skb(transferControl.transmissionLength + NET_IP_ALIGN, GFP_ATOMIC);
     if (!transferControl.socketBuffer)
     {
         return -ENOMEM;
@@ -205,7 +205,7 @@ int udpTransmission(void)
 
 int tcpTransmission(void)
 {
-    transferControl.broadcastLength = ETH_HLEN + sizeof(struct iphdr) + sizeof(struct tcphdr) + PAYLOAD_LEN;
+    transferControl.transmissionLength = ETH_HLEN + sizeof(struct iphdr) + sizeof(struct tcphdr) + PAYLOAD_LEN;
 
     // [L2] Data Link Layer: Set destination to broadcast MAC
     memset(transferControl.destinationMAC, 0xFF, ETH_ALEN);
@@ -214,7 +214,7 @@ int tcpTransmission(void)
     transferControl.source_IP = in_aton(SRC_IP);
     transferControl.dest_IP = in_aton(DST_IP);
 
-    transferControl.socketBuffer = alloc_skb(transferControl.broadcastLength + NET_IP_ALIGN, GFP_ATOMIC);
+    transferControl.socketBuffer = alloc_skb(transferControl.transmissionLength + NET_IP_ALIGN, GFP_ATOMIC);
     if (!transferControl.socketBuffer) return -ENOMEM;
 
     skb_reserve(transferControl.socketBuffer, NET_IP_ALIGN);

@@ -64,7 +64,7 @@ typedef struct
     struct udphdr *udpHeader;
     struct tcphdr *tcpHeader;
     unsigned char *Data[DATA_PACKET_AMOUNT];
-    int broadcastLength;
+    int transmissionLength;
     unsigned char destinationMAC[ETH_ALEN];
     __be32 source_IP;
     __be32 dest_IP;

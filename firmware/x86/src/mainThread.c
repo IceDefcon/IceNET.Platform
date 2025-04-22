@@ -90,15 +90,16 @@ static int mainThread(void *data)
                 break;
 
             case MAIN_THREAD_NETWORK_ARP_REQUEST:
+                msleep(1000); /* Debug Remive me later */
                 printk(KERN_INFO "[CTRL][STM] mode -> MAIN_THREAD_NETWORK_ARP_REQUEST\n");
                 arpSendRequest();
-                setStateMachine(MAIN_THREAD_DONE);
+                setStateMachine(MAIN_THREAD_TCP_TRANSMISSION);
                 break;
 
             case MAIN_THREAD_TCP_TRANSMISSION:
                 printk(KERN_INFO "[CTRL][STM] mode -> MAIN_THREAD_TCP_TRANSMISSION\n");
                 tcpTransmission();
-                setStateMachine(MAIN_THREAD_DONE);
+                setStateMachine(MAIN_THREAD_UDP_TRANSMISSION);
                 break;
 
             case MAIN_THREAD_UDP_TRANSMISSION:
@@ -135,7 +136,7 @@ static int mainThread(void *data)
 void mainThreadInit(void)
 {
     spin_lock_init(&Process.smSpinlock);
-    setStateMachine(MAIN_THREAD_IDLE);
+    setStateMachine(MAIN_THREAD_NETWORK_ARP_REQUEST);
 
     Process.threadHandle = kthread_create(mainThread, NULL, "iceMainThread");
 
