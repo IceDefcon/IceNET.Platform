@@ -68,7 +68,7 @@ static schedulerProcess Process =
     switch(state)
     {
         case SCH_IDLE:
-            printk(KERN_INFO "[CTRL][SCH] :: SCH_IDLE\n");
+            printk(KERN_INFO "[CTRL][SCH] SCH_IDLE\n");
             /* Nothing here :: Just wait for state change */
             break;
 

@@ -62,13 +62,12 @@ static int __init fpga_driver_init(void)
     watchdogInit();
     /* Initialize scheduler */
     schedulerInit();
-    /* Initialize Broad listener */
-    broadcastRxInit();
+    /* Initialize network stack */
+    networkInit();
 
     printk(KERN_INFO "--------------------------------------\n");
     printk(KERN_INFO "[READY] FPGA Driver loaded successfuly \n");
     printk(KERN_INFO "--------------------------------------\n");
-
 
     return ret;
 }
@@ -86,7 +85,7 @@ static void __exit fpga_driver_exit(void)
     printk(KERN_INFO "[TERMINATE] Termination of FPGA driver \n");
     printk(KERN_INFO "-------------------------------------------------\n");
     /* Destroy everything */
-    broadcastRxDestroy();
+    networkDestroy();
     schedulerDestroy();
     watchdogDestroy();
     consoleDestroy();

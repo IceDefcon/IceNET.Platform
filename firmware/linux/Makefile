@@ -14,12 +14,14 @@ iceDriver-objs := \
     src/ramAxis.o \
     src/console.o \
     src/memory.o \
-    src/network.o
+    src/network.o \
+    ../common/src/crypto.o
 
-EXTRA_CFLAGS = -I$(PWD)/include
+EXTRA_CFLAGS = -I$(PWD)/include -I$(PWD)/../common/include
 
 all:
 	make -C /lib/modules/$(shell uname -r)/build M=$(PWD) modules
 
 clean:
 	make -C /lib/modules/$(shell uname -r)/build M=$(PWD) clean
+	make -C /lib/modules/$(shell uname -r)/build M=$(PWD)/../common/src clean
