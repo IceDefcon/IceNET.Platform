@@ -81,4 +81,11 @@
 	SYN115 - Radio Module 433MHz
 	L3G4200D - Gyroscope Module
 
+# Most Recent TODO
+
+	00. Finish Sensor calibration
+	01. Network stack architecture
+	02. Char device for Master Controller
+	03. Ram Disk Block device for Master Controller
+
 # ICE
