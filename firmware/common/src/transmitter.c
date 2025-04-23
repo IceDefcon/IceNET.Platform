@@ -278,10 +278,6 @@ int arpSendRequest(void)
     return 0;
 }
 
-#include <linux/if_ether.h>
-#include <linux/icmpv6.h>
-#include <net/addrconf.h>
-
 int ndpSendRequest(void)
 {
     struct sockaddr_in6 dest_addr;
