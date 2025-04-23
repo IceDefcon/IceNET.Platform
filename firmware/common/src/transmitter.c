@@ -290,7 +290,8 @@ int ndpSendRequest(void)
     struct kvec vec;
     char buf[128];
     // struct icmp6hdr *icmp_hdr;
-    struct nd_msg {
+    struct nd_msg
+    {
         struct icmp6hdr icmph;
         struct in6_addr target;
         struct {
@@ -301,12 +302,13 @@ int ndpSendRequest(void)
     } __packed *ndp;
     int ret;
 
-    pr_info("Starting NDP request\n");
+    pr_info("[TX][NDP] Starting NDP request\n");
 
     // Create raw socket for ICMPv6
     ret = sock_create(AF_INET6, SOCK_RAW, IPPROTO_ICMPV6, &sock);
-    if (ret < 0) {
-        pr_err("Failed to create socket\n");
+    if (ret < 0)
+    {
+        pr_err("[TX][NDP] Failed to create socket\n");
         return ret;
     }
 
@@ -340,10 +342,13 @@ int ndpSendRequest(void)
 
     // Send the message
     ret = kernel_sendmsg(sock, &msg, &vec, 1, vec.iov_len);
-    if (ret < 0) {
-        pr_err("Failed to send NDP request\n");
-    } else {
-        pr_info("NDP request sent to %pI6\n", &dest_addr.sin6_addr);
+    if (ret < 0)
+    {
+        pr_err("[TX][NDP] Failed to send NDP request\n");
+    }
+    else
+    {
+        pr_info("[TX][NDP] NDP request sent to %pI6\n", &dest_addr.sin6_addr);
     }
 
     sock_release(sock);
