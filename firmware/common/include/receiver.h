@@ -21,6 +21,8 @@
 #include <linux/if_arp.h>
 #include <linux/netfilter.h>
 #include <linux/netfilter_ipv4.h>
+#include <linux/ipv6.h>
+#include <linux/icmpv6.h>
 #include <linux/if_ether.h>
 #include <linux/crypto.h>
 #include <linux/scatterlist.h>
@@ -35,6 +37,8 @@
 #define BROADCAST_IP 0xC0A808FF // 192.168.8.255
 #define AES_KEY_SIZE 16
 #define AES_BLOCK_SIZE 16
+#define ICMPV6_NEIGHBOR_SOLICITATION 135
+#define ICMPV6_NEIGHBOR_ADVERTISEMENT 136
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -74,5 +78,6 @@ typedef struct
 
 unsigned int receiverHook(void *priv, struct sk_buff *socketBuffer, const struct nf_hook_state *state);
 int arpReceive(struct sk_buff *socketBuffer, struct net_device *networkDevice, struct packet_type *packetType, struct net_device *originalDevice);
+int ndpReceive(struct sk_buff *socketBuffer, struct net_device *networkDevice, struct packet_type *pt, struct net_device *orig_dev);
 
 #endif // RECEIVER_H

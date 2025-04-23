@@ -56,6 +56,7 @@ static const char* getMainThreadStateString(mainThreadStateType type)
     {
         "MAIN_THREAD_IDLE",
         "MAIN_THREAD_NETWORK_ARP_REQUEST",
+        "MAIN_THREAD_NETWORK_NDP_REQUEST",
         "MAIN_THREAD_TCP_TRANSMISSION",
         "MAIN_THREAD_UDP_TRANSMISSION",
         "MAIN_THREAD_DONE"
@@ -95,6 +96,12 @@ static int mainThread(void *data)
                 msleep(1000); /* Debug Remive me later */
                 printk(KERN_INFO "[CTRL][STM] mode -> MAIN_THREAD_NETWORK_ARP_REQUEST\n");
                 arpSendRequest();
+                setStateMachine(MAIN_THREAD_NETWORK_NDP_REQUEST);
+                break;
+
+            case MAIN_THREAD_NETWORK_NDP_REQUEST:
+                printk(KERN_INFO "[CTRL][STM] mode -> MAIN_THREAD_NETWORK_NDP_REQUEST\n");
+                ndpSendRequest();
                 setStateMachine(MAIN_THREAD_TCP_TRANSMISSION);
                 break;
 

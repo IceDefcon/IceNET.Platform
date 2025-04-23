@@ -304,3 +304,48 @@ int arpReceive(struct sk_buff *socketBuffer, struct net_device *networkDevice, s
 
     return NET_RX_SUCCESS;
 }
+
+int ndpReceive(struct sk_buff *socketBuffer, struct net_device *networkDevice, struct packet_type *pt, struct net_device *orig_dev)
+{
+    struct ipv6hdr *ip6h;
+    struct icmp6hdr *icmp6;
+
+    if (!socketBuffer)
+    {
+        printk(KERN_INFO "[NDP HOOK] Debug 0\n");
+        return NET_RX_DROP;
+    }
+
+    if (!pskb_may_pull(socketBuffer, sizeof(struct ipv6hdr)))
+    {
+        printk(KERN_INFO "[NDP HOOK] Debug 1\n");
+        return NET_RX_DROP;
+    }
+
+    ip6h = ipv6_hdr(socketBuffer);
+
+    if (ip6h->nexthdr != IPPROTO_ICMPV6)
+    {
+        printk(KERN_INFO "[NDP HOOK] Debug 2\n");
+        return NET_RX_SUCCESS; // Not ICMPv6
+    }
+
+    if (!pskb_may_pull(socketBuffer, sizeof(struct ipv6hdr) + sizeof(struct icmp6hdr)))
+    {
+        printk(KERN_INFO "[NDP HOOK] Debug 3\n");
+        return NET_RX_DROP;
+    }
+
+    icmp6 = (struct icmp6hdr *)(skb_network_header(socketBuffer) + sizeof(struct ipv6hdr));
+
+    if (icmp6->icmp6_type == ICMPV6_NEIGHBOR_SOLICITATION)
+    {
+        printk(KERN_INFO "[NDP HOOK] Neighbor Solicitation received on %s\n", networkDevice->name);
+    }
+    else if (icmp6->icmp6_type == ICMPV6_NEIGHBOR_ADVERTISEMENT)
+    {
+        printk(KERN_INFO "[NDP HOOK] Neighbor Advertisement received on %s\n", networkDevice->name);
+    }
+
+    return NET_RX_SUCCESS;
+}
