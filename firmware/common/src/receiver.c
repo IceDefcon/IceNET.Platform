@@ -45,6 +45,7 @@ static arpRequestType arpRequest =
     .allowedSenderIp = 0,
 };
 
+static int RX_Count = 0;
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -356,7 +357,7 @@ int ndpReceive(struct sk_buff *socketBuffer, struct net_device *networkDevice, s
 
     if (icmp6->icmp6_type == ICMPV6_NEIGHBOR_SOLICITATION)
     {
-        printk(KERN_INFO "[RX][NDP] Neighbor Solicitation received on %s\n", networkDevice->name);
+        printk(KERN_INFO "[RX][NDP][%d] Neighbor Solicitation received on %s\n", RX_Count, networkDevice->name);
 
         ndm = (struct nd_msg *)(icmp6);
         target_addr = ndm->target;
@@ -370,7 +371,7 @@ int ndpReceive(struct sk_buff *socketBuffer, struct net_device *networkDevice, s
         }
         else
         {
-            printk(KERN_INFO "[RX][NDP] We own the target address: %pI6c on %s\n", &target_addr, networkDevice->name);
+            printk(KERN_INFO "[RX][NDP][%d] We own the target address: %pI6c on %s\n",RX_Count, &target_addr, networkDevice->name);
         }
 
         na_msg_len = sizeof(struct nd_msg);
@@ -378,7 +379,7 @@ int ndpReceive(struct sk_buff *socketBuffer, struct net_device *networkDevice, s
         na_skb = alloc_skb(LL_RESERVED_SPACE(networkDevice) + sizeof(struct ipv6hdr) + na_msg_len, GFP_ATOMIC);
         if (!na_skb)
         {
-            printk(KERN_ERR "[RX][NDP] Failed to allocate skb for NA\n");
+            printk(KERN_ERR "[RX][NDP][%d] Failed to allocate skb for NA\n",RX_Count);
             return NET_RX_DROP;
         }
 
@@ -406,7 +407,7 @@ int ndpReceive(struct sk_buff *socketBuffer, struct net_device *networkDevice, s
         na_skb->dev = networkDevice;
         na_skb->protocol = htons(ETH_P_IPV6);
 
-        printk(KERN_INFO "[RX][NDP] Responding to Neighbor Solicitation from %pI6c\n", &ip6h->saddr);
+        printk(KERN_INFO "[RX][NDP][%d] Responding to Neighbor Solicitation from %pI6c\n",RX_Count, &ip6h->saddr);
 
         na->icmph.icmp6_cksum = csum_ipv6_magic(&na_ip6h->saddr, &na_ip6h->daddr,
                                                 na_msg_len, IPPROTO_ICMPV6,
@@ -414,11 +415,13 @@ int ndpReceive(struct sk_buff *socketBuffer, struct net_device *networkDevice, s
 
         dev_queue_xmit(na_skb);
 
-        printk(KERN_INFO "[RX][NDP] Sent Neighbor Advertisement\n");
+        printk(KERN_INFO "[RX][NDP][%d] Sent Neighbor Advertisement\n",RX_Count);
+        RX_Count++;
     }
     else if (icmp6->icmp6_type == ICMPV6_NEIGHBOR_ADVERTISEMENT)
     {
-        printk(KERN_INFO "[RX][NDP] Neighbor Advertisement received on %s\n", networkDevice->name);
+        printk(KERN_INFO "[RX][NDP][%d] Neighbor Advertisement received on %s\n",RX_Count, networkDevice->name);
+        RX_Count++;
     }
 
     return NET_RX_SUCCESS;
