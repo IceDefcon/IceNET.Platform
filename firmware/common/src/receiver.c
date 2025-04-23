@@ -45,6 +45,7 @@ static arpRequestType arpRequest =
     .allowedSenderIp = 0,
 };
 
+static int RX_Count = 0;
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -305,20 +306,45 @@ int arpReceive(struct sk_buff *socketBuffer, struct net_device *networkDevice, s
     return NET_RX_SUCCESS;
 }
 
+#include <linux/icmpv6.h>
+#include <linux/ipv6.h>
+#include <net/addrconf.h>       // for ipv6_chk_addr
+#include <net/ip6_checksum.h>   // for csum_ipv6_magic
+
+#define ND_NA_FLAG_ROUTER     0x80
+#define ND_NA_FLAG_SOLICITED  0x40
+#define ND_NA_FLAG_OVERRIDE   0x20
+
+static void inet6_addr_to_str(const struct in6_addr *addr, char *str, size_t size)
+{
+    snprintf(str, size, "%x:%x:%x:%x:%x:%x:%x:%x",
+             ntohs(addr->s6_addr16[0]), ntohs(addr->s6_addr16[1]),
+             ntohs(addr->s6_addr16[2]), ntohs(addr->s6_addr16[3]),
+             ntohs(addr->s6_addr16[4]), ntohs(addr->s6_addr16[5]),
+             ntohs(addr->s6_addr16[6]), ntohs(addr->s6_addr16[7]));
+}
+
 int ndpReceive(struct sk_buff *socketBuffer, struct net_device *networkDevice, struct packet_type *pt, struct net_device *orig_dev)
 {
     struct ipv6hdr *ip6h;
     struct icmp6hdr *icmp6;
+    struct nd_msg *ndm;
+    struct in6_addr target_addr;
+    struct sk_buff *na_skb;
+    struct ipv6hdr *na_ip6h;
+    struct nd_msg *na;
+    int na_msg_len;
+    struct in6_addr src_addr;
 
     if (!socketBuffer)
     {
-        printk(KERN_INFO "[NDP HOOK] Debug 0\n");
+        // printk(KERN_INFO "[NDP HOOK] Debug 0\n");
         return NET_RX_DROP;
     }
 
     if (!pskb_may_pull(socketBuffer, sizeof(struct ipv6hdr)))
     {
-        printk(KERN_INFO "[NDP HOOK] Debug 1\n");
+        // printk(KERN_INFO "[NDP HOOK] Debug 1\n");
         return NET_RX_DROP;
     }
 
@@ -326,13 +352,13 @@ int ndpReceive(struct sk_buff *socketBuffer, struct net_device *networkDevice, s
 
     if (ip6h->nexthdr != IPPROTO_ICMPV6)
     {
-        printk(KERN_INFO "[NDP HOOK] Debug 2\n");
+        // printk(KERN_INFO "[NDP HOOK] Debug 2\n");
         return NET_RX_SUCCESS; // Not ICMPv6
     }
 
     if (!pskb_may_pull(socketBuffer, sizeof(struct ipv6hdr) + sizeof(struct icmp6hdr)))
     {
-        printk(KERN_INFO "[NDP HOOK] Debug 3\n");
+        // printk(KERN_INFO "[NDP HOOK] Debug 3\n");
         return NET_RX_DROP;
     }
 
@@ -340,11 +366,75 @@ int ndpReceive(struct sk_buff *socketBuffer, struct net_device *networkDevice, s
 
     if (icmp6->icmp6_type == ICMPV6_NEIGHBOR_SOLICITATION)
     {
-        printk(KERN_INFO "[NDP HOOK] Neighbor Solicitation received on %s\n", networkDevice->name);
+        printk(KERN_INFO "[RX][NDP][%d] Neighbor Solicitation received on %s\n", RX_Count, networkDevice->name);
+
+        ndm = (struct nd_msg *)(icmp6);
+        target_addr = ndm->target;
+
+        // Optional: Check if this host owns target_addr before responding
+        if (!ipv6_chk_addr(dev_net(networkDevice), &target_addr, networkDevice, 0))
+        {
+            // printk(KERN_INFO "[NDP HOOK] Not our address, ignoring NS\n");
+            // printk(KERN_INFO "[NDP HOOK] Target address is %pI6c\n", &target_addr);
+            return NET_RX_SUCCESS;
+        }
+        else
+        {
+            printk(KERN_INFO "[RX][NDP][%d] We own the target address: %pI6c on %s\n",RX_Count, &target_addr, networkDevice->name);
+        }
+
+        na_msg_len = sizeof(struct nd_msg);
+
+        na_skb = alloc_skb(LL_RESERVED_SPACE(networkDevice) + sizeof(struct ipv6hdr) + na_msg_len, GFP_ATOMIC);
+        if (!na_skb)
+        {
+            printk(KERN_ERR "[RX][NDP][%d] Failed to allocate skb for NA\n",RX_Count);
+            return NET_RX_DROP;
+        }
+
+        skb_reserve(na_skb, LL_RESERVED_SPACE(networkDevice));
+        skb_reset_network_header(na_skb);
+
+        na_ip6h = (struct ipv6hdr *)skb_put(na_skb, sizeof(struct ipv6hdr));
+        na_ip6h->version = 6;
+        na_ip6h->priority = 0;
+        na_ip6h->nexthdr = IPPROTO_ICMPV6;
+        na_ip6h->hop_limit = 255;
+        na_ip6h->payload_len = htons(na_msg_len);
+        na_ip6h->daddr = ip6h->saddr;
+
+        in6_pton("fd42:b95b:3fcd:8900:64c6:24fe:1f5a:b55a", -1, src_addr.s6_addr, -1, NULL);
+        na_ip6h->saddr = src_addr;
+
+        na = (struct nd_msg *)skb_put(na_skb, na_msg_len);
+        memset(na, 0, na_msg_len);
+        na->icmph.icmp6_type = ICMPV6_NEIGHBOR_ADVERTISEMENT;
+        na->icmph.icmp6_code = 0;
+        na->icmph.icmp6_cksum = 0;
+        na->target = target_addr;
+
+        na_skb->dev = networkDevice;
+        na_skb->protocol = htons(ETH_P_IPV6);
+
+        printk(KERN_INFO "[RX][NDP][%d] Responding to Neighbor Solicitation from %pI6c\n",RX_Count, &ip6h->saddr);
+
+        na->icmph.icmp6_cksum = csum_ipv6_magic(&na_ip6h->saddr, &na_ip6h->daddr,
+                                                na_msg_len, IPPROTO_ICMPV6,
+                                                csum_partial((char *)na, na_msg_len, 0));
+
+        dev_queue_xmit(na_skb);
+
+        printk(KERN_INFO "[RX][NDP][%d] Sent Neighbor Advertisement\n",RX_Count);
+        RX_Count++;
     }
     else if (icmp6->icmp6_type == ICMPV6_NEIGHBOR_ADVERTISEMENT)
     {
-        printk(KERN_INFO "[NDP HOOK] Neighbor Advertisement received on %s\n", networkDevice->name);
+        // Manually convert IPv6 address to string
+        char src_addr_str[INET6_ADDRSTRLEN];
+        inet6_addr_to_str(&ip6h->saddr, src_addr_str, sizeof(src_addr_str));
+
+        printk(KERN_INFO "[RX][NDP][%d] Neighbor Advertisement received from %s on %s\n",RX_Count, src_addr_str, networkDevice->name);
+        RX_Count++;
     }
 
     return NET_RX_SUCCESS;

@@ -13,6 +13,7 @@
 
 static struct nf_hook_ops netFilterHook;
 static struct packet_type arpPacket;
+static struct packet_type ndpPacket;
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -84,6 +85,11 @@ int networkInit(void)
     arpPacket.func = arpReceive;
     dev_add_pack(&arpPacket);
 
+    ndpPacket.type = htons(ETH_P_IPV6);
+    ndpPacket.func = ndpReceive;
+    ndpPacket.dev = NULL; // All devices
+    dev_add_pack(&ndpPacket);
+
     return 0;
 }
 
@@ -93,9 +99,11 @@ void networkDestroy(void)
 
     nf_unregister_net_hook(&init_net, &netFilterHook);
 
+    dev_remove_pack(&ndpPacket);
+    dev_remove_pack(&arpPacket);
+
     if (networkControl->networkDevice)
     {
-        dev_remove_pack(&arpPacket);
         dev_put(networkControl->networkDevice);
         networkControl->networkDevice = NULL;
     }

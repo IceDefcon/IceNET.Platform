@@ -277,3 +277,76 @@ int arpSendRequest(void)
 
     return 0;
 }
+
+int ndpSendRequest(void)
+{
+    struct sockaddr_in6 dest_addr;
+    struct socket *sock;
+    struct msghdr msg;
+    struct kvec vec;
+    char buf[128];
+    // struct icmp6hdr *icmp_hdr;
+    struct nd_msg
+    {
+        struct icmp6hdr icmph;
+        struct in6_addr target;
+        struct {
+            uint8_t type;
+            uint8_t length;
+            uint8_t addr[ETH_ALEN];
+        } __packed opt;
+    } __packed *ndp;
+    int ret;
+
+    pr_info("[TX][NDP] Starting NDP request\n");
+
+    // Create raw socket for ICMPv6
+    ret = sock_create(AF_INET6, SOCK_RAW, IPPROTO_ICMPV6, &sock);
+    if (ret < 0)
+    {
+        pr_err("[TX][NDP] Failed to create socket\n");
+        return ret;
+    }
+
+    // Set destination IPv6 address (solicited-node multicast or known address)
+    memset(&dest_addr, 0, sizeof(dest_addr));
+    dest_addr.sin6_family = AF_INET6;
+    in6_pton("fe80::d1d2:2209:4803:5ca2", -1, (u8 *)&dest_addr.sin6_addr, 0, NULL);
+
+    // Fill in ICMPv6 Neighbor Solicitation message
+    memset(buf, 0, sizeof(buf));
+    ndp = (struct nd_msg *)buf;
+    ndp->icmph.icmp6_type = NDISC_NEIGHBOUR_SOLICITATION;
+    ndp->icmph.icmp6_code = 0;
+    ndp->icmph.icmp6_cksum = 0;  // Kernel will calculate checksum
+
+    // Set target address you're querying
+    in6_pton("fe80::d1d2:2209:4803:5ca2", -1, (u8 *)&ndp->target, 0, NULL);
+
+    // Optional: Add Source Link-Layer Address Option (Type 1)
+    ndp->opt.type = 1;         // Source Link-Layer Address
+    ndp->opt.length = 1;       // In units of 8 bytes; 1 = 8 bytes = 6 for MAC + 2 padding
+    memcpy(ndp->opt.addr, "\x00\x04\x4b\x00\x00\x01", ETH_ALEN); // Replace with actual MAC
+
+    // Prepare vector and message
+    vec.iov_base = buf;
+    vec.iov_len = sizeof(struct nd_msg);
+
+    memset(&msg, 0, sizeof(msg));
+    msg.msg_name = &dest_addr;
+    msg.msg_namelen = sizeof(dest_addr);
+
+    // Send the message
+    ret = kernel_sendmsg(sock, &msg, &vec, 1, vec.iov_len);
+    if (ret < 0)
+    {
+        pr_err("[TX][NDP] Failed to send NDP request\n");
+    }
+    else
+    {
+        pr_info("[TX][NDP] NDP request sent to %pI6\n", &dest_addr.sin6_addr);
+    }
+
+    sock_release(sock);
+    return ret;
+}
