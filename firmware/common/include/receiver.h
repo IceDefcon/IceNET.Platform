@@ -29,6 +29,8 @@
 #include <crypto/akcipher.h>
 #include <linux/errno.h>
 #include <linux/slab.h>
+#include <net/addrconf.h>       // for ipv6_chk_addr
+#include <net/ip6_checksum.h>   // for csum_ipv6_magic
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -39,6 +41,9 @@
 #define AES_BLOCK_SIZE 16
 #define ICMPV6_NEIGHBOR_SOLICITATION 135
 #define ICMPV6_NEIGHBOR_ADVERTISEMENT 136
+#define ND_NA_FLAG_ROUTER     0x80
+#define ND_NA_FLAG_SOLICITED  0x40
+#define ND_NA_FLAG_OVERRIDE   0x20
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
