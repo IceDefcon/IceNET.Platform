@@ -315,6 +315,15 @@ int arpReceive(struct sk_buff *socketBuffer, struct net_device *networkDevice, s
 #define ND_NA_FLAG_SOLICITED  0x40
 #define ND_NA_FLAG_OVERRIDE   0x20
 
+static void inet6_addr_to_str(const struct in6_addr *addr, char *str, size_t size)
+{
+    snprintf(str, size, "%x:%x:%x:%x:%x:%x:%x:%x",
+             ntohs(addr->s6_addr16[0]), ntohs(addr->s6_addr16[1]),
+             ntohs(addr->s6_addr16[2]), ntohs(addr->s6_addr16[3]),
+             ntohs(addr->s6_addr16[4]), ntohs(addr->s6_addr16[5]),
+             ntohs(addr->s6_addr16[6]), ntohs(addr->s6_addr16[7]));
+}
+
 int ndpReceive(struct sk_buff *socketBuffer, struct net_device *networkDevice, struct packet_type *pt, struct net_device *orig_dev)
 {
     struct ipv6hdr *ip6h;
@@ -420,10 +429,13 @@ int ndpReceive(struct sk_buff *socketBuffer, struct net_device *networkDevice, s
     }
     else if (icmp6->icmp6_type == ICMPV6_NEIGHBOR_ADVERTISEMENT)
     {
-        printk(KERN_INFO "[RX][NDP][%d] Neighbor Advertisement received on %s\n",RX_Count, networkDevice->name);
+        // Manually convert IPv6 address to string
+        char src_addr_str[INET6_ADDRSTRLEN];
+        inet6_addr_to_str(&ip6h->saddr, src_addr_str, sizeof(src_addr_str));
+
+        printk(KERN_INFO "[RX][NDP][%d] Neighbor Advertisement received from %s on %s\n",RX_Count, src_addr_str, networkDevice->name);
         RX_Count++;
     }
 
     return NET_RX_SUCCESS;
 }
-
