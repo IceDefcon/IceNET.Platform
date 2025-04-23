@@ -406,6 +406,8 @@ int ndpReceive(struct sk_buff *socketBuffer, struct net_device *networkDevice, s
         na_skb->dev = networkDevice;
         na_skb->protocol = htons(ETH_P_IPV6);
 
+        printk(KERN_INFO "[RX][NDP] Responding to Neighbor Solicitation from %pI6c\n", &ip6h->saddr);
+
         na->icmph.icmp6_cksum = csum_ipv6_magic(&na_ip6h->saddr, &na_ip6h->daddr,
                                                 na_msg_len, IPPROTO_ICMPV6,
                                                 csum_partial((char *)na, na_msg_len, 0));
