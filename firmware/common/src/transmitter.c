@@ -216,7 +216,8 @@ int arpSendRequest(void)
     int arp_len = sizeof(struct arpHeader);
     int total_len = ETH_HLEN + arp_len;
 
-    if (!networkControl.networkDevice) {
+    if (!networkControl.networkDevice)
+    {
         pr_err("[TX][ARP] Network device not initialized\n");
         return -ENODEV;
     }
@@ -227,7 +228,8 @@ int arpSendRequest(void)
         return -ENETDOWN;
     }
 
-    if (!is_valid_ether_addr(networkControl.networkDevice->dev_addr)) {
+    if (!is_valid_ether_addr(networkControl.networkDevice->dev_addr))
+    {
         pr_err("[TX][ARP] Invalid source MAC address\n");
         return -EINVAL;
     }
@@ -285,7 +287,10 @@ int ndpSendRequest(void)
     struct msghdr msg;
     struct kvec vec;
     char buf[128];
-    // struct icmp6hdr *icmp_hdr;
+
+    struct in6_addr target_ipv6;
+    struct in6_addr solicited_node_multicast;
+
     struct nd_msg
     {
         struct icmp6hdr icmph;
@@ -296,6 +301,7 @@ int ndpSendRequest(void)
             uint8_t addr[ETH_ALEN];
         } __packed opt;
     } __packed *ndp;
+
     int ret;
 
     pr_info("[TX][NDP] Starting NDP request\n");
@@ -308,25 +314,38 @@ int ndpSendRequest(void)
         return ret;
     }
 
-    // Set destination IPv6 address (solicited-node multicast or known address)
+    // Parse the target IPv6 address you're trying to resolve
+    in6_pton("fe80::d1d2:2209:4803:5ca2", -1, (u8 *)&target_ipv6, 0, NULL);
+
+    // Construct the solicited-node multicast address: ff02::1:ffXX:XXXX
+    memset(&solicited_node_multicast, 0, sizeof(solicited_node_multicast));
+    solicited_node_multicast.s6_addr[0]  = 0xff;
+    solicited_node_multicast.s6_addr[1]  = 0x02;
+    solicited_node_multicast.s6_addr[11] = 0x01;
+    solicited_node_multicast.s6_addr[12] = 0xff;
+    solicited_node_multicast.s6_addr[13] = target_ipv6.s6_addr[13];
+    solicited_node_multicast.s6_addr[14] = target_ipv6.s6_addr[14];
+    solicited_node_multicast.s6_addr[15] = target_ipv6.s6_addr[15];
+
+    // Set destination address to the solicited-node multicast
     memset(&dest_addr, 0, sizeof(dest_addr));
     dest_addr.sin6_family = AF_INET6;
-    in6_pton("fe80::d1d2:2209:4803:5ca2", -1, (u8 *)&dest_addr.sin6_addr, 0, NULL);
+    dest_addr.sin6_addr = solicited_node_multicast;
+    dest_addr.sin6_scope_id = 0; // set interface index if needed for link-local
 
     // Fill in ICMPv6 Neighbor Solicitation message
     memset(buf, 0, sizeof(buf));
     ndp = (struct nd_msg *)buf;
     ndp->icmph.icmp6_type = NDISC_NEIGHBOUR_SOLICITATION;
     ndp->icmph.icmp6_code = 0;
-    ndp->icmph.icmp6_cksum = 0;  // Kernel will calculate checksum
+    ndp->icmph.icmp6_cksum = 0; // Kernel will calculate checksum
 
-    // Set target address you're querying
-    in6_pton("fe80::d1d2:2209:4803:5ca2", -1, (u8 *)&ndp->target, 0, NULL);
+    ndp->target = target_ipv6;
 
     // Optional: Add Source Link-Layer Address Option (Type 1)
-    ndp->opt.type = 1;         // Source Link-Layer Address
-    ndp->opt.length = 1;       // In units of 8 bytes; 1 = 8 bytes = 6 for MAC + 2 padding
-    memcpy(ndp->opt.addr, "\x00\x04\x4b\x00\x00\x01", ETH_ALEN); // Replace with actual MAC
+    ndp->opt.type = 1;
+    ndp->opt.length = 1;
+    memcpy(ndp->opt.addr, "\x3c\x6d\x66\x14\xde\xb5", ETH_ALEN); // Replace with actual source MAC
 
     // Prepare vector and message
     vec.iov_base = buf;

@@ -181,19 +181,42 @@ static int handleArpRequest(struct sk_buff *socketBuffer)
     arpRequest.allowedSenderIp = htonl(0xC0A80865);  // 192.168.8.101
     arpRequest.networkDevice = socketBuffer->dev;
 
-    // pr_info("[ARP] Received ARP request, socketBuffer=%p, networkDevice=%s\n", socketBuffer, arpRequest.networkDevice->name);
+    // pr_info("[RX][ARP] Received ARP request, socketBuffer=%p, networkDevice=%s\n", socketBuffer, arpRequest.networkDevice->name);
 
     arpRequest.arpHeader = arp_hdr(socketBuffer);
     if (!arpRequest.arpHeader)
     {
-        pr_err("[ARP] Failed to extract ARP header from socketBuffer: %p\n", socketBuffer);
+        pr_err("[RX][ARP] Failed to extract ARP header from socketBuffer: %p\n", socketBuffer);
         return NET_RX_DROP;
     }
-    // pr_info("[ARP] Extracted ARP header: arpHeader=%p, operation=%u\n", arpRequest.arpHeader, ntohs(arpRequest.arpHeader->ar_op));
+    // pr_info("[RX][ARP] Extracted ARP header: arpHeader=%p, operation=%u\n", arpRequest.arpHeader, ntohs(arpRequest.arpHeader->ar_op));
 
     if (ntohs(arpRequest.arpHeader->ar_op) != ARPOP_REQUEST)
     {
-        // pr_info("[ARP] Not an ARP request, skipping\n");
+        if (ntohs(arpRequest.arpHeader->ar_op) == ARPOP_REPLY)
+        {
+            // ARP Reply received
+            pr_info("[RX][ARP] ARP Reply received from %pI4\n", &arpRequest.senderIp);
+
+            // Ensure we're correctly parsing the ARP header to extract the MAC address
+            arpRequest.arpPtr = (unsigned char *)(arpRequest.arpHeader + 1); // Move pointer past ARP header
+
+            // Extract Sender MAC Address (SHA) and print it
+            arpRequest.senderMacAddress = arpRequest.arpPtr;
+            pr_info("[RX][ARP] Sender MAC Address (from ARP Reply): %pM\n", arpRequest.senderMacAddress);
+
+            // Extract Sender IP Address (SPA)
+            arpRequest.senderIpAddress = arpRequest.senderMacAddress + arpRequest.arpHeader->ar_hln;
+            pr_info("[RX][ARP] Sender IP Address: %pI4\n", arpRequest.senderIpAddress);
+
+            // If needed, you can also extract the Target MAC Address (THA) and Target IP Address (TPA)
+            arpRequest.targetMacAddress = arpRequest.senderIpAddress + arpRequest.arpHeader->ar_pln;
+            arpRequest.targetIpAddress = arpRequest.targetMacAddress + arpRequest.arpHeader->ar_hln;
+
+            // Print Target MAC Address (THA) and Target IP Address (TPA)
+            pr_info("[RX][ARP] Target MAC Address: %pM\n", arpRequest.targetMacAddress);
+            pr_info("[RX][ARP] Target IP Address: %pI4\n", arpRequest.targetIpAddress);
+        }
         return NET_RX_SUCCESS;
     }
 
@@ -203,56 +226,56 @@ static int handleArpRequest(struct sk_buff *socketBuffer)
     arpRequest.targetMacAddress = arpRequest.senderIpAddress + arpRequest.arpHeader->ar_pln;
     arpRequest.targetIpAddress = arpRequest.targetMacAddress + arpRequest.arpHeader->ar_hln;
 
-    // pr_info("[ARP] SHA (Sender MAC) = %pM\n", arpRequest.senderMacAddress);
-    // pr_info("[ARP] SPA (Sender IP) = %pI4\n", arpRequest.senderIpAddress);
-    // pr_info("[ARP] THA (Target MAC) = %pM\n", arpRequest.targetMacAddress);
-    // pr_info("[ARP] TPA (Target IP) = %pI4\n", arpRequest.targetIpAddress);
+    // pr_info("[RX][ARP] SHA (Sender MAC) = %pM\n", arpRequest.senderMacAddress);
+    // pr_info("[RX][ARP] SPA (Sender IP) = %pI4\n", arpRequest.senderIpAddress);
+    // pr_info("[RX][ARP] THA (Target MAC) = %pM\n", arpRequest.targetMacAddress);
+    // pr_info("[RX][ARP] TPA (Target IP) = %pI4\n", arpRequest.targetIpAddress);
 
     memcpy(&arpRequest.senderIp, arpRequest.senderIpAddress, 4);   // Sender IP
     memcpy(&arpRequest.targetIp, arpRequest.targetIpAddress, 4);   // Target IP
-    // pr_info("[ARP] Sender IP = %pI4, Target IP = %pI4\n", &arpRequest.senderIp, &arpRequest.targetIp);
+    // pr_info("[RX][ARP] Sender IP = %pI4, Target IP = %pI4\n", &arpRequest.senderIp, &arpRequest.targetIp);
 
     if (arpRequest.targetIp != arpRequest.ourIp || arpRequest.senderIp != arpRequest.allowedSenderIp)
     {
-        // pr_info("[ARP] Ignoring request from %pI4 for %pI4 (Expected IPs: sender=%pI4, target=%pI4)\n", &arpRequest.senderIp, &arpRequest.targetIp, &arpRequest.allowedSenderIp, &arpRequest.ourIp);
+        // pr_info("[RX][ARP] Ignoring request from %pI4 for %pI4 (Expected IPs: sender=%pI4, target=%pI4)\n", &arpRequest.senderIp, &arpRequest.targetIp, &arpRequest.allowedSenderIp, &arpRequest.ourIp);
         return NET_RX_SUCCESS;
     }
 
-    // pr_info("[ARP] Responding to ARP request from %pI4 asking for %pI4\n", &arpRequest.senderIp, &arpRequest.targetIp);
+    // pr_info("[RX][ARP] Responding to ARP request from %pI4 asking for %pI4\n", &arpRequest.senderIp, &arpRequest.targetIp);
 
     memcpy(arpRequest.ourMac, arpRequest.networkDevice->dev_addr, ETH_ALEN); // Our MAC
-    // pr_info("[ARP] Our MAC address: %pM\n", arpRequest.ourMac);
+    // pr_info("[RX][ARP] Our MAC address: %pM\n", arpRequest.ourMac);
 
     arpRequest.arpHeaderLength = sizeof(struct arphdr) + 2 * (ETH_ALEN + 4); // hln=6, pln=4
-    // pr_info("[ARP] ARP header length calculated: %d\n", arpRequest.arpHeaderLength);
+    // pr_info("[RX][ARP] ARP header length calculated: %d\n", arpRequest.arpHeaderLength);
 
     arpRequest.replySocketBuffer = alloc_skb(ETH_HLEN + arpRequest.arpHeaderLength, GFP_ATOMIC);
     if (!arpRequest.replySocketBuffer)
     {
-        pr_err("[ARP] Failed to allocate replySocketBuffer for ARP reply\n");
+        pr_err("[RX][ARP] Failed to allocate replySocketBuffer for ARP reply\n");
         return NET_RX_DROP;
     }
-    // pr_info("[ARP] Successfully allocated replySocketBuffer for ARP reply: replySocketBuffer=%p\n", arpRequest.replySocketBuffer);
+    // pr_info("[RX][ARP] Successfully allocated replySocketBuffer for ARP reply: replySocketBuffer=%p\n", arpRequest.replySocketBuffer);
 
     skb_reserve(arpRequest.replySocketBuffer, ETH_HLEN);               // Reserve space for Ethernet header
     skb_put(arpRequest.replySocketBuffer, arpRequest.arpHeaderLength);                // Make room for ARP header/data
     arpRequest.ethernetHeader = (struct ethhdr *)skb_push(arpRequest.replySocketBuffer, ETH_HLEN);            // Push Ethernet header
 
-    // pr_info("[ARP] replySocketBuffer headroom: %d, tailroom: %d\n", skb_headroom(arpRequest.replySocketBuffer), skb_tailroom(arpRequest.replySocketBuffer));
+    // pr_info("[RX][ARP] replySocketBuffer headroom: %d, tailroom: %d\n", skb_headroom(arpRequest.replySocketBuffer), skb_tailroom(arpRequest.replySocketBuffer));
 
     arpRequest.replySocketBuffer->dev = arpRequest.networkDevice;
     arpRequest.replySocketBuffer->protocol = htons(ETH_P_ARP);
     skb_reset_mac_header(arpRequest.replySocketBuffer);
     skb_reset_network_header(arpRequest.replySocketBuffer);
 
-    // pr_info("[ARP] MAC header set at: %p\n", skb_mac_header(arpRequest.replySocketBuffer));
+    // pr_info("[RX][ARP] MAC header set at: %p\n", skb_mac_header(arpRequest.replySocketBuffer));
 
     arpRequest.ethernetHeader = (struct ethhdr *)skb_mac_header(arpRequest.replySocketBuffer);
     memcpy(arpRequest.ethernetHeader->h_dest, arpRequest.senderMacAddress, ETH_ALEN);         // Dest: sender MAC
     memcpy(arpRequest.ethernetHeader->h_source, arpRequest.ourMac, ETH_ALEN);   // Src: our MAC
     arpRequest.ethernetHeader->h_proto = htons(ETH_P_ARP);            // Protocol type
 
-    // pr_info("[ARP] Ethernet header: dst=%pM, src=%pM, proto=0x%04x\n", arpRequest.ethernetHeader->h_dest, arpRequest.ethernetHeader->h_source, ntohs(arpRequest.ethernetHeader->h_proto));
+    // pr_info("[RX][ARP] Ethernet header: dst=%pM, src=%pM, proto=0x%04x\n", arpRequest.ethernetHeader->h_dest, arpRequest.ethernetHeader->h_source, ntohs(arpRequest.ethernetHeader->h_proto));
 
     // Alignment check (paranoid safety for non-x86 archs)
     BUILD_BUG_ON(__alignof__(struct arphdr) > __alignof__(unsigned long));
@@ -267,7 +290,7 @@ static int handleArpRequest(struct sk_buff *socketBuffer)
     arpRequest.arpHeader->ar_pln = 4;
     arpRequest.arpHeader->ar_op  = htons(ARPOP_REPLY);
 
-    // pr_info("[ARP] ARP header: hrd=%u, pro=%u, hln=%d, pln=%d, op=%u\n",
+    // pr_info("[RX][ARP] ARP header: hrd=%u, pro=%u, hln=%d, pln=%d, op=%u\n",
     //     ntohs(arpRequest.arpHeader->ar_hrd), ntohs(arpRequest.arpHeader->ar_pro),
     //     arpRequest.arpHeader->ar_hln, arpRequest.arpHeader->ar_pln, ntohs(arpRequest.arpHeader->ar_op));
 
@@ -280,8 +303,8 @@ static int handleArpRequest(struct sk_buff *socketBuffer)
 
     dev_queue_xmit(arpRequest.replySocketBuffer);
 
-    pr_info("[ARP] Reply Successfully Sent -> %pI4\n", &arpRequest.senderIp);
-    pr_info("[ARP] Reply Payload -> senderMac[%pM] senderIp[%pI4] targetMac[%pM] targetIp[%pI4]\n",
+    pr_info("[RX][ARP] Reply Successfully Sent -> %pI4\n", &arpRequest.senderIp);
+    pr_info("[RX][ARP] Reply Payload -> senderMac[%pM] senderIp[%pI4] targetMac[%pM] targetIp[%pI4]\n",
         arpRequest.ourMac, &arpRequest.ourIp, arpRequest.senderMacAddress, &arpRequest.senderIp);
 
     return NET_RX_SUCCESS;
@@ -305,15 +328,6 @@ int arpReceive(struct sk_buff *socketBuffer, struct net_device *networkDevice, s
 
     return NET_RX_SUCCESS;
 }
-
-#include <linux/icmpv6.h>
-#include <linux/ipv6.h>
-#include <net/addrconf.h>       // for ipv6_chk_addr
-#include <net/ip6_checksum.h>   // for csum_ipv6_magic
-
-#define ND_NA_FLAG_ROUTER     0x80
-#define ND_NA_FLAG_SOLICITED  0x40
-#define ND_NA_FLAG_OVERRIDE   0x20
 
 static void inet6_addr_to_str(const struct in6_addr *addr, char *str, size_t size)
 {
