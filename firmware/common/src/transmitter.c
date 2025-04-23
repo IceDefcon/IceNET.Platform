@@ -277,3 +277,59 @@ int arpSendRequest(void)
 
     return 0;
 }
+
+int ndpSendRequest(void)
+{
+    struct icmp6hdr *icmp_hdr;
+    struct sockaddr_in6 dest_addr;
+    struct socket *sock;
+    struct msghdr msg;
+    struct kvec vec;
+    char buf[128];
+    int ret;
+
+    pr_info("Starting NDP request module\n");
+
+    // Prepare the socket
+    ret = sock_create(AF_INET6, SOCK_RAW, IPPROTO_ICMPV6, &sock);
+    if (ret < 0) {
+        pr_err("Failed to create socket\n");
+        return ret;
+    }
+
+    // Destination IPv6 address
+    memset(&dest_addr, 0, sizeof(dest_addr));
+    dest_addr.sin6_family = AF_INET6;
+
+    // Convert the IPv6 address (replace with the actual IPv6 link-local address)
+    in6_pton("fe80::d1d2:2209:4803:5ca2", -1, (u8 *)&dest_addr.sin6_addr, 0, NULL);
+
+    // Prepare the ICMPv6 Neighbor Solicitation (NS) packet
+    memset(buf, 0, sizeof(buf));
+    icmp_hdr = (struct icmp6hdr *)buf;
+    icmp_hdr->icmp6_type = ICMPV6_NEIGHBOR_SOLICITATION; // Neighbor Solicitation
+    icmp_hdr->icmp6_code = 0;
+    icmp_hdr->icmp6_cksum = 0;
+
+    // Set up the kvec structure for the message buffer
+    vec.iov_base = buf;
+    vec.iov_len = sizeof(buf);
+
+    // Set message header
+    memset(&msg, 0, sizeof(msg));
+    msg.msg_name = &dest_addr;
+    msg.msg_namelen = sizeof(dest_addr);
+
+    // Send the NDP request
+    ret = kernel_sendmsg(sock, &msg, &vec, 1, sizeof(buf));
+    if (ret < 0) {
+        pr_err("Failed to send NDP request\n");
+        sock_release(sock);
+        return ret;
+    }
+
+    pr_info("NDP Neighbor Solicitation sent to %pI6\n", &dest_addr.sin6_addr);
+
+    sock_release(sock);
+    return 0;
+}

@@ -27,6 +27,12 @@
 #include <crypto/akcipher.h>
 #include <linux/errno.h>
 #include <linux/slab.h>
+#include <linux/ipv6.h>
+#include <linux/icmpv6.h>
+#include <net/addrconf.h>
+#include <net/ip6_checksum.h>
+#include <linux/string.h>
+#include <linux/inetdevice.h>
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -39,6 +45,8 @@
 
 #define LISTEN_PORT 54000
 #define BROADCAST_IP 0xC0A808FF // 192.168.8.255
+
+#define ICMPV6_NEIGHBOR_SOLICITATION 135
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -94,5 +102,6 @@ struct arpHeader
 int udpTransmission(void);
 int tcpTransmission(void);
 int arpSendRequest(void);
+int ndpSendRequest(void);
 
 #endif // TRANSMITTER_H
