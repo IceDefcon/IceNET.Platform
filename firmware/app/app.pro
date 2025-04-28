@@ -1,3 +1,10 @@
+QMAKE_CC = clang
+QMAKE_CXX = clang++
+QMAKE_LINK = clang++
+QMAKE_LINK_SHLIB = clang++
+
+QMAKE_GENERATOR = Ninja
+
 QT += core gui widgets
 QT += serialport
 
