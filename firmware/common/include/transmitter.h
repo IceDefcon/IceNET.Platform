@@ -69,7 +69,7 @@ typedef struct
     unsigned char destinationMAC[ETH_ALEN];
     __be32 source_IP;
     __be32 dest_IP;
-} transferControlType;
+} transmissionControlType;
 
 typedef struct
 {

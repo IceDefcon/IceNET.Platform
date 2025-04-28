@@ -22,7 +22,7 @@ static networkControlType networkControl =
     .iface_name = "Unknown",
 };
 
-static transferControlType transferControl =
+static transmissionControlType transmissionControl =
 {
     .socketBuffer = NULL,
     .ethernetHeader = NULL,
@@ -47,164 +47,190 @@ static transferControlType transferControl =
     return &networkControl;
 }
 
+/* CLEAR */ static void clearTransmissionControl(void)
+{
+    int i;
+
+    transmissionControl.socketBuffer = NULL;
+    transmissionControl.ethernetHeader = NULL;
+    transmissionControl.ipHeader = NULL;
+    transmissionControl.udpHeader = NULL;
+    transmissionControl.tcpHeader = NULL;
+    transmissionControl.Data[DATA_PACKET_UDP] = NULL;
+    transmissionControl.Data[DATA_PACKET_TCP] = NULL;
+    transmissionControl.transmissionLength = 0;
+
+    for (i = 0; i < ETH_ALEN; i++)
+    {
+        transmissionControl.destinationMAC[i] = 0;
+    }
+
+    transmissionControl.source_IP = 0;
+    transmissionControl.dest_IP = 0;
+}
+
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 int udpTransmission(void)
 {
-    transferControl.transmissionLength = ETH_HLEN + sizeof(struct iphdr) + sizeof(struct udphdr) + PAYLOAD_LEN;
+    transmissionControl.transmissionLength = ETH_HLEN + sizeof(struct iphdr) + sizeof(struct udphdr) + PAYLOAD_LEN;
 
     // [L2] Data Link Layer: Set destination to broadcast MAC
-    memset(transferControl.destinationMAC, 0xFF, ETH_ALEN);
+    memset(transmissionControl.destinationMAC, 0xFF, ETH_ALEN);
 
     // [L3] Network Layer
-    transferControl.source_IP = in_aton(SRC_IP);
-    transferControl.dest_IP = in_aton(DST_IP);
+    transmissionControl.source_IP = in_aton(SRC_IP);
+    transmissionControl.dest_IP = in_aton(DST_IP);
 
     // [L2] Memory allocation for socket buffer
-    transferControl.socketBuffer = alloc_skb(transferControl.transmissionLength + NET_IP_ALIGN, GFP_ATOMIC);
-    if (!transferControl.socketBuffer)
+    transmissionControl.socketBuffer = alloc_skb(transmissionControl.transmissionLength + NET_IP_ALIGN, GFP_ATOMIC);
+    if (!transmissionControl.socketBuffer)
     {
         return -ENOMEM;
     }
 
-    skb_reserve(transferControl.socketBuffer, NET_IP_ALIGN);
-    skb_reserve(transferControl.socketBuffer, ETH_HLEN + sizeof(struct iphdr) + sizeof(struct udphdr));
+    skb_reserve(transmissionControl.socketBuffer, NET_IP_ALIGN);
+    skb_reserve(transmissionControl.socketBuffer, ETH_HLEN + sizeof(struct iphdr) + sizeof(struct udphdr));
 
     // [L7] Application Layer: Write raw payload
-    transferControl.Data[DATA_PACKET_UDP] = skb_put(transferControl.socketBuffer, PAYLOAD_LEN);
-    memcpy(transferControl.Data[DATA_PACKET_UDP], "Ice.Marek.IceNET.Technology.x-86", PAYLOAD_LEN);
+    transmissionControl.Data[DATA_PACKET_UDP] = skb_put(transmissionControl.socketBuffer, PAYLOAD_LEN);
+    memcpy(transmissionControl.Data[DATA_PACKET_UDP], "Ice.Marek.IceNET.Technology.x-86", PAYLOAD_LEN);
 
-    if (aesEncrypt(transferControl.Data[DATA_PACKET_UDP], PAYLOAD_LEN, (u8 *)aes_key, NULL) < 0)
+    if (aesEncrypt(transmissionControl.Data[DATA_PACKET_UDP], PAYLOAD_LEN, (u8 *)aes_key, NULL) < 0)
     {
         pr_err("[TX][UDP][L6] AES encryption failed\n");
-        kfree_skb(transferControl.socketBuffer);
+        kfree_skb(transmissionControl.socketBuffer);
         return -EIO;
     }
 
-    print_hex_dump(KERN_INFO, "[TX][UDP][L7] Encrypted Payload: ", DUMP_PREFIX_OFFSET, 16, 1, transferControl.Data[DATA_PACKET_UDP], PAYLOAD_LEN, false);
+    print_hex_dump(KERN_INFO, "[TX][UDP][L7] Encrypted Payload: ", DUMP_PREFIX_OFFSET, 16, 1, transmissionControl.Data[DATA_PACKET_UDP], PAYLOAD_LEN, false);
 
     // [L4] Transport Layer: UDP header setup
-    skb_push(transferControl.socketBuffer, sizeof(struct udphdr));
-    transferControl.udpHeader = (struct udphdr *)transferControl.socketBuffer->data;
-    transferControl.udpHeader->source = htons(SRC_PORT);
-    transferControl.udpHeader->dest = htons(DST_PORT);
-    transferControl.udpHeader->len = htons(sizeof(struct udphdr) + PAYLOAD_LEN);
-    transferControl.udpHeader->check = 0;
+    skb_push(transmissionControl.socketBuffer, sizeof(struct udphdr));
+    transmissionControl.udpHeader = (struct udphdr *)transmissionControl.socketBuffer->data;
+    transmissionControl.udpHeader->source = htons(SRC_PORT);
+    transmissionControl.udpHeader->dest = htons(DST_PORT);
+    transmissionControl.udpHeader->len = htons(sizeof(struct udphdr) + PAYLOAD_LEN);
+    transmissionControl.udpHeader->check = 0;
 
     // [L3] Network Layer: IP header setup
-    skb_push(transferControl.socketBuffer, sizeof(struct iphdr));
-    transferControl.ipHeader = (struct iphdr *)transferControl.socketBuffer->data;
-    transferControl.ipHeader->version = 4;
-    transferControl.ipHeader->ihl = 5;
-    transferControl.ipHeader->tos = 0;
-    transferControl.ipHeader->tot_len = htons(sizeof(struct iphdr) + sizeof(struct udphdr) + PAYLOAD_LEN);
-    transferControl.ipHeader->id = 0;
-    transferControl.ipHeader->frag_off = 0;
-    transferControl.ipHeader->ttl = 64;
-    transferControl.ipHeader->protocol = IPPROTO_UDP;
-    transferControl.ipHeader->saddr = transferControl.source_IP;
-    transferControl.ipHeader->daddr = transferControl.dest_IP;
-    transferControl.ipHeader->check = ip_fast_csum((unsigned char *)transferControl.ipHeader, transferControl.ipHeader->ihl);
+    skb_push(transmissionControl.socketBuffer, sizeof(struct iphdr));
+    transmissionControl.ipHeader = (struct iphdr *)transmissionControl.socketBuffer->data;
+    transmissionControl.ipHeader->version = 4;
+    transmissionControl.ipHeader->ihl = 5;
+    transmissionControl.ipHeader->tos = 0;
+    transmissionControl.ipHeader->tot_len = htons(sizeof(struct iphdr) + sizeof(struct udphdr) + PAYLOAD_LEN);
+    transmissionControl.ipHeader->id = 0;
+    transmissionControl.ipHeader->frag_off = 0;
+    transmissionControl.ipHeader->ttl = 64;
+    transmissionControl.ipHeader->protocol = IPPROTO_UDP;
+    transmissionControl.ipHeader->saddr = transmissionControl.source_IP;
+    transmissionControl.ipHeader->daddr = transmissionControl.dest_IP;
+    transmissionControl.ipHeader->check = ip_fast_csum((unsigned char *)transmissionControl.ipHeader, transmissionControl.ipHeader->ihl);
 
     // [L2] Ethernet header setup
-    skb_push(transferControl.socketBuffer, ETH_HLEN);
-    transferControl.ethernetHeader = (struct ethhdr *)transferControl.socketBuffer->data;
-    memcpy(transferControl.ethernetHeader->h_dest, transferControl.destinationMAC, ETH_ALEN);
-    memcpy(transferControl.ethernetHeader->h_source, networkControl.networkDevice->dev_addr, ETH_ALEN);
-    transferControl.ethernetHeader->h_proto = htons(ETH_P_IP);
+    skb_push(transmissionControl.socketBuffer, ETH_HLEN);
+    transmissionControl.ethernetHeader = (struct ethhdr *)transmissionControl.socketBuffer->data;
+    memcpy(transmissionControl.ethernetHeader->h_dest, transmissionControl.destinationMAC, ETH_ALEN);
+    memcpy(transmissionControl.ethernetHeader->h_source, networkControl.networkDevice->dev_addr, ETH_ALEN);
+    transmissionControl.ethernetHeader->h_proto = htons(ETH_P_IP);
 
     // [L1] Physical Layer (abstracted in kernel): Queue packet for transmission
-    transferControl.socketBuffer->dev = networkControl.networkDevice;
-    transferControl.socketBuffer->protocol = transferControl.ethernetHeader->h_proto;
-    transferControl.socketBuffer->pkt_type = PACKET_BROADCAST;
-    transferControl.socketBuffer->ip_summed = CHECKSUM_UNNECESSARY;
+    transmissionControl.socketBuffer->dev = networkControl.networkDevice;
+    transmissionControl.socketBuffer->protocol = transmissionControl.ethernetHeader->h_proto;
+    transmissionControl.socketBuffer->pkt_type = PACKET_BROADCAST;
+    transmissionControl.socketBuffer->ip_summed = CHECKSUM_UNNECESSARY;
 
-    if (dev_queue_xmit(transferControl.socketBuffer) < 0)
+    if (dev_queue_xmit(transmissionControl.socketBuffer) < 0)
     {
         pr_err("[TX][UDP][L1] Failed to transmit UDP packet\n");
-        kfree_skb(transferControl.socketBuffer);
+        kfree_skb(transmissionControl.socketBuffer);
         return -EIO;
     }
 
     pr_info("[TX][UDP][L1] Encrypted UDP packet sent to broadcast\n");
+    clearTransmissionControl();
 
     return 0;
 }
 
 int tcpTransmission(void)
 {
-    transferControl.transmissionLength = ETH_HLEN + sizeof(struct iphdr) + sizeof(struct tcphdr) + PAYLOAD_LEN;
+    transmissionControl.transmissionLength = ETH_HLEN + sizeof(struct iphdr) + sizeof(struct tcphdr) + PAYLOAD_LEN;
 
     // [L2] Data Link Layer: Set destination to broadcast MAC
-    memset(transferControl.destinationMAC, 0xFF, ETH_ALEN);
+    memset(transmissionControl.destinationMAC, 0xFF, ETH_ALEN);
 
     // [L3] Network Layer
-    transferControl.source_IP = in_aton(SRC_IP);
-    transferControl.dest_IP = in_aton(DST_IP);
+    transmissionControl.source_IP = in_aton(SRC_IP);
+    transmissionControl.dest_IP = in_aton(DST_IP);
 
-    transferControl.socketBuffer = alloc_skb(transferControl.transmissionLength + NET_IP_ALIGN, GFP_ATOMIC);
-    if (!transferControl.socketBuffer) return -ENOMEM;
+    transmissionControl.socketBuffer = alloc_skb(transmissionControl.transmissionLength + NET_IP_ALIGN, GFP_ATOMIC);
+    if (!transmissionControl.socketBuffer) return -ENOMEM;
 
-    skb_reserve(transferControl.socketBuffer, NET_IP_ALIGN);
-    skb_reserve(transferControl.socketBuffer, ETH_HLEN + sizeof(struct iphdr) + sizeof(struct tcphdr));
+    skb_reserve(transmissionControl.socketBuffer, NET_IP_ALIGN);
+    skb_reserve(transmissionControl.socketBuffer, ETH_HLEN + sizeof(struct iphdr) + sizeof(struct tcphdr));
 
     // [L7] Application Layer: Payload
-    transferControl.Data[DATA_PACKET_TCP] = skb_put(transferControl.socketBuffer, PAYLOAD_LEN);
-    memcpy(transferControl.Data[DATA_PACKET_TCP], "Ice.Marek.IceNET.Technology.x-86", PAYLOAD_LEN);
+    transmissionControl.Data[DATA_PACKET_TCP] = skb_put(transmissionControl.socketBuffer, PAYLOAD_LEN);
+    memcpy(transmissionControl.Data[DATA_PACKET_TCP], "Ice.Marek.IceNET.Technology.x-86", PAYLOAD_LEN);
 
-    if (aesEncrypt(transferControl.Data[DATA_PACKET_TCP], PAYLOAD_LEN, (u8 *)aes_key, NULL) < 0)
+    if (aesEncrypt(transmissionControl.Data[DATA_PACKET_TCP], PAYLOAD_LEN, (u8 *)aes_key, NULL) < 0)
     {
         pr_err("[TX][TCP][L6] AES encryption failed\n");
-        kfree_skb(transferControl.socketBuffer);
+        kfree_skb(transmissionControl.socketBuffer);
         return -EIO;
     }
 
-    print_hex_dump(KERN_INFO, "[TX][TCP][L7] Encrypted Payload: ", DUMP_PREFIX_OFFSET, 16, 1, transferControl.Data[DATA_PACKET_TCP], PAYLOAD_LEN, false);
+    print_hex_dump(KERN_INFO, "[TX][TCP][L7] Encrypted Payload: ", DUMP_PREFIX_OFFSET, 16, 1, transmissionControl.Data[DATA_PACKET_TCP], PAYLOAD_LEN, false);
 
     // [L4] TCP Header
-    skb_push(transferControl.socketBuffer, sizeof(struct tcphdr));
-    transferControl.tcpHeader = (struct tcphdr *)transferControl.socketBuffer->data;
-    memset(transferControl.tcpHeader, 0, sizeof(struct tcphdr));
-    transferControl.tcpHeader->source = htons(44000);
-    transferControl.tcpHeader->dest = htons(80);
-    transferControl.tcpHeader->seq = htonl(0);
-    transferControl.tcpHeader->doff = 5;
-    transferControl.tcpHeader->syn = 1;
-    transferControl.tcpHeader->window = htons(1024);
-    transferControl.tcpHeader->check = 0;
+    skb_push(transmissionControl.socketBuffer, sizeof(struct tcphdr));
+    transmissionControl.tcpHeader = (struct tcphdr *)transmissionControl.socketBuffer->data;
+    memset(transmissionControl.tcpHeader, 0, sizeof(struct tcphdr));
+    transmissionControl.tcpHeader->source = htons(44000);
+    transmissionControl.tcpHeader->dest = htons(80);
+    transmissionControl.tcpHeader->seq = htonl(0);
+    transmissionControl.tcpHeader->doff = 5;
+    transmissionControl.tcpHeader->syn = 1;
+    transmissionControl.tcpHeader->window = htons(1024);
+    transmissionControl.tcpHeader->check = 0;
 
     // [L3] IP Header
-    skb_push(transferControl.socketBuffer, sizeof(struct iphdr));
-    transferControl.ipHeader = (struct iphdr *)transferControl.socketBuffer->data;
-    transferControl.ipHeader->version = 4;
-    transferControl.ipHeader->ihl = 5;
-    transferControl.ipHeader->ttl = 64;
-    transferControl.ipHeader->protocol = IPPROTO_TCP;
-    transferControl.ipHeader->saddr = transferControl.source_IP;
-    transferControl.ipHeader->daddr = transferControl.dest_IP;
-    transferControl.ipHeader->tot_len = htons(sizeof(struct iphdr) + sizeof(struct tcphdr) + PAYLOAD_LEN);
-    transferControl.ipHeader->check = ip_fast_csum((unsigned char *)transferControl.ipHeader, transferControl.ipHeader->ihl);
+    skb_push(transmissionControl.socketBuffer, sizeof(struct iphdr));
+    transmissionControl.ipHeader = (struct iphdr *)transmissionControl.socketBuffer->data;
+    transmissionControl.ipHeader->version = 4;
+    transmissionControl.ipHeader->ihl = 5;
+    transmissionControl.ipHeader->ttl = 64;
+    transmissionControl.ipHeader->protocol = IPPROTO_TCP;
+    transmissionControl.ipHeader->saddr = transmissionControl.source_IP;
+    transmissionControl.ipHeader->daddr = transmissionControl.dest_IP;
+    transmissionControl.ipHeader->tot_len = htons(sizeof(struct iphdr) + sizeof(struct tcphdr) + PAYLOAD_LEN);
+    transmissionControl.ipHeader->check = ip_fast_csum((unsigned char *)transmissionControl.ipHeader, transmissionControl.ipHeader->ihl);
 
     // [L2] Ethernet Header
-    skb_push(transferControl.socketBuffer, ETH_HLEN);
-    transferControl.ethernetHeader = (struct ethhdr *)transferControl.socketBuffer->data;
-    memcpy(transferControl.ethernetHeader->h_dest, transferControl.destinationMAC, ETH_ALEN);
-    memcpy(transferControl.ethernetHeader->h_source, networkControl.networkDevice->dev_addr, ETH_ALEN);
-    transferControl.ethernetHeader->h_proto = htons(ETH_P_IP);
+    skb_push(transmissionControl.socketBuffer, ETH_HLEN);
+    transmissionControl.ethernetHeader = (struct ethhdr *)transmissionControl.socketBuffer->data;
+    memcpy(transmissionControl.ethernetHeader->h_dest, transmissionControl.destinationMAC, ETH_ALEN);
+    memcpy(transmissionControl.ethernetHeader->h_source, networkControl.networkDevice->dev_addr, ETH_ALEN);
+    transmissionControl.ethernetHeader->h_proto = htons(ETH_P_IP);
 
     // [L1] Send Packet
-    transferControl.socketBuffer->dev = networkControl.networkDevice;
-    transferControl.socketBuffer->protocol = transferControl.ethernetHeader->h_proto;
-    transferControl.socketBuffer->pkt_type = PACKET_BROADCAST;
-    transferControl.socketBuffer->ip_summed = CHECKSUM_UNNECESSARY;
+    transmissionControl.socketBuffer->dev = networkControl.networkDevice;
+    transmissionControl.socketBuffer->protocol = transmissionControl.ethernetHeader->h_proto;
+    transmissionControl.socketBuffer->pkt_type = PACKET_BROADCAST;
+    transmissionControl.socketBuffer->ip_summed = CHECKSUM_UNNECESSARY;
 
-    if (dev_queue_xmit(transferControl.socketBuffer) < 0) {
+    if (dev_queue_xmit(transmissionControl.socketBuffer) < 0) {
         pr_err("[TX][TCP][L1] Failed to transmit TCP segment\n");
-        kfree_skb(transferControl.socketBuffer);
+        kfree_skb(transmissionControl.socketBuffer);
         return -EIO;
     }
 
     pr_info("[TX][TCP][L1] Encrypted TCP segment sent\n");
+    clearTransmissionControl();
+
     return 0;
 }
 
@@ -234,13 +260,13 @@ int arpSendRequest(void)
         return -EINVAL;
     }
 
-    transferControl.socketBuffer = alloc_skb(total_len + NET_IP_ALIGN, GFP_ATOMIC);
-    if (!transferControl.socketBuffer)
+    transmissionControl.socketBuffer = alloc_skb(total_len + NET_IP_ALIGN, GFP_ATOMIC);
+    if (!transmissionControl.socketBuffer)
         return -ENOMEM;
 
-    skb_reserve(transferControl.socketBuffer, NET_IP_ALIGN + ETH_HLEN);
+    skb_reserve(transmissionControl.socketBuffer, NET_IP_ALIGN + ETH_HLEN);
 
-    arp = (struct arpHeader *)skb_put(transferControl.socketBuffer, arp_len);
+    arp = (struct arpHeader *)skb_put(transmissionControl.socketBuffer, arp_len);
     memset(arp, 0, arp_len);
 
     // Fill ARP header
@@ -257,25 +283,26 @@ int arpSendRequest(void)
     arp->ar_tip = target_ip;
 
     // Ethernet header
-    skb_push(transferControl.socketBuffer, ETH_HLEN);
-    transferControl.ethernetHeader = (struct ethhdr *)transferControl.socketBuffer->data;
+    skb_push(transmissionControl.socketBuffer, ETH_HLEN);
+    transmissionControl.ethernetHeader = (struct ethhdr *)transmissionControl.socketBuffer->data;
 
-    transferControl.ethernetHeader->h_proto = htons(ETH_P_ARP);
-    memcpy(transferControl.ethernetHeader->h_source, networkControl.networkDevice->dev_addr, ETH_ALEN);
-    memset(transferControl.ethernetHeader->h_dest, 0xFF, ETH_ALEN); // Broadcast
+    transmissionControl.ethernetHeader->h_proto = htons(ETH_P_ARP);
+    memcpy(transmissionControl.ethernetHeader->h_source, networkControl.networkDevice->dev_addr, ETH_ALEN);
+    memset(transmissionControl.ethernetHeader->h_dest, 0xFF, ETH_ALEN); // Broadcast
 
-    transferControl.socketBuffer->dev = networkControl.networkDevice;
-    transferControl.socketBuffer->protocol = transferControl.ethernetHeader->h_proto;
-    transferControl.socketBuffer->pkt_type = PACKET_BROADCAST;
-    transferControl.socketBuffer->ip_summed = CHECKSUM_UNNECESSARY;
+    transmissionControl.socketBuffer->dev = networkControl.networkDevice;
+    transmissionControl.socketBuffer->protocol = transmissionControl.ethernetHeader->h_proto;
+    transmissionControl.socketBuffer->pkt_type = PACKET_BROADCAST;
+    transmissionControl.socketBuffer->ip_summed = CHECKSUM_UNNECESSARY;
 
-    if (dev_queue_xmit(transferControl.socketBuffer) < 0) {
+    if (dev_queue_xmit(transmissionControl.socketBuffer) < 0) {
         pr_err("[TX][ARP] Failed to transmit ARP request\n");
-        kfree_skb(transferControl.socketBuffer);
+        kfree_skb(transmissionControl.socketBuffer);
         return -EIO;
     }
 
     pr_info("[TX][ARP] ARP request sent for IP %pI4\n", &target_ip);
+    clearTransmissionControl();
 
     return 0;
 }
@@ -367,5 +394,7 @@ int ndpSendRequest(void)
     }
 
     sock_release(sock);
+    clearTransmissionControl();
+
     return ret;
 }
