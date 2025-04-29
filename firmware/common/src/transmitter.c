@@ -40,6 +40,19 @@ static transmissionControlType transmissionControl =
     .dest_IP = 0
 };
 
+static arpHeaderType arpHeader =
+{
+    .ar_hrd = 0,    // Hardware type
+    .ar_pro = 0,    // Protocol type
+    .ar_hln = 6,    // Hardware address length
+    .ar_pln = 4,    // Protocol address length
+    .ar_op = 0,     // Opcode (request/reply)
+    .ar_sha = {0},  // Sender MAC
+    .ar_sip = 0,    // Sender IP
+    .ar_tha = {0},  // Target MAC
+    .ar_tip = 0     // Target IP
+};
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /* GET */ networkControlType* getNetworkController(void)
@@ -236,11 +249,9 @@ int tcpTransmission(void)
 
 int arpSendRequest(void)
 {
-    struct arpHeader *arp;
     __be32 target_ip = in_aton(TARGET_IP);
     __be32 source_ip = in_aton(SRC_IP);
-    int arp_len = sizeof(struct arpHeader);
-    int total_len = ETH_HLEN + arp_len;
+    transmissionControl.transmissionLength = ETH_HLEN + sizeof(arpHeaderType);;
 
     if (!networkControl.networkDevice)
     {
@@ -260,27 +271,27 @@ int arpSendRequest(void)
         return -EINVAL;
     }
 
-    transmissionControl.socketBuffer = alloc_skb(total_len + NET_IP_ALIGN, GFP_ATOMIC);
+    transmissionControl.socketBuffer = alloc_skb(transmissionControl.transmissionLength + NET_IP_ALIGN, GFP_ATOMIC);
     if (!transmissionControl.socketBuffer)
         return -ENOMEM;
 
     skb_reserve(transmissionControl.socketBuffer, NET_IP_ALIGN + ETH_HLEN);
 
-    arp = (struct arpHeader *)skb_put(transmissionControl.socketBuffer, arp_len);
-    memset(arp, 0, arp_len);
+    // Prepare ARP header statically
+    arpHeader.ar_hrd = htons(ARPHRD_ETHER);
+    arpHeader.ar_pro = htons(ETH_P_IP);
+    arpHeader.ar_hln = ETH_ALEN;
+    arpHeader.ar_pln = 4;
+    arpHeader.ar_op  = htons(ARPOP_REQUEST);
 
-    // Fill ARP header
-    arp->ar_hrd = htons(ARPHRD_ETHER);
-    arp->ar_pro = htons(ETH_P_IP);
-    arp->ar_hln = ETH_ALEN;
-    arp->ar_pln = 4;
-    arp->ar_op  = htons(ARPOP_REQUEST);
+    memcpy(arpHeader.ar_sha, networkControl.networkDevice->dev_addr, ETH_ALEN);
+    arpHeader.ar_sip = source_ip;
 
-    memcpy(arp->ar_sha, networkControl.networkDevice->dev_addr, ETH_ALEN);
-    arp->ar_sip = source_ip;
+    memset(arpHeader.ar_tha, 0x00, ETH_ALEN);
+    arpHeader.ar_tip = target_ip;
 
-    memset(arp->ar_tha, 0x00, ETH_ALEN);
-    arp->ar_tip = target_ip;
+    // Copy it to the skb
+    memcpy(skb_put(transmissionControl.socketBuffer, sizeof(arpHeader)), &arpHeader, sizeof(arpHeader));
 
     // Ethernet header
     skb_push(transmissionControl.socketBuffer, ETH_HLEN);

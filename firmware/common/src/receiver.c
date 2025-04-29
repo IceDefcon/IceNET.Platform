@@ -100,7 +100,7 @@ unsigned int receiverHook(void *priv, struct sk_buff *socketBuffer, const struct
             return NF_ACCEPT;
         }
 
-        if (hookControl.ipHeader->daddr != htonl(BROADCAST_IP))
+        if (hookControl.ipHeader->daddr != htonl(BROADCAST_HEX_IP))
         {
             return NF_ACCEPT;
         }
@@ -189,36 +189,8 @@ static int handleArpRequest(struct sk_buff *socketBuffer)
         pr_err("[RX][ARP] Failed to extract ARP header from socketBuffer: %p\n", socketBuffer);
         return NET_RX_DROP;
     }
+
     // pr_info("[RX][ARP] Extracted ARP header: arpHeader=%p, operation=%u\n", arpRequest.arpHeader, ntohs(arpRequest.arpHeader->ar_op));
-
-    if (ntohs(arpRequest.arpHeader->ar_op) != ARPOP_REQUEST)
-    {
-        if (ntohs(arpRequest.arpHeader->ar_op) == ARPOP_REPLY)
-        {
-            // ARP Reply received
-            pr_info("[RX][ARP] ARP Reply received from %pI4\n", &arpRequest.senderIp);
-
-            // Ensure we're correctly parsing the ARP header to extract the MAC address
-            arpRequest.arpPtr = (unsigned char *)(arpRequest.arpHeader + 1); // Move pointer past ARP header
-
-            // Extract Sender MAC Address (SHA) and print it
-            arpRequest.senderMacAddress = arpRequest.arpPtr;
-            pr_info("[RX][ARP] Sender MAC Address (from ARP Reply): %pM\n", arpRequest.senderMacAddress);
-
-            // Extract Sender IP Address (SPA)
-            arpRequest.senderIpAddress = arpRequest.senderMacAddress + arpRequest.arpHeader->ar_hln;
-            pr_info("[RX][ARP] Sender IP Address: %pI4\n", arpRequest.senderIpAddress);
-
-            // If needed, you can also extract the Target MAC Address (THA) and Target IP Address (TPA)
-            arpRequest.targetMacAddress = arpRequest.senderIpAddress + arpRequest.arpHeader->ar_pln;
-            arpRequest.targetIpAddress = arpRequest.targetMacAddress + arpRequest.arpHeader->ar_hln;
-
-            // Print Target MAC Address (THA) and Target IP Address (TPA)
-            pr_info("[RX][ARP] Target MAC Address: %pM\n", arpRequest.targetMacAddress);
-            pr_info("[RX][ARP] Target IP Address: %pI4\n", arpRequest.targetIpAddress);
-        }
-        return NET_RX_SUCCESS;
-    }
 
     arpRequest.arpPtr = (unsigned char *)(arpRequest.arpHeader + 1);
     arpRequest.senderMacAddress = arpRequest.arpPtr;
@@ -226,15 +198,18 @@ static int handleArpRequest(struct sk_buff *socketBuffer)
     arpRequest.targetMacAddress = arpRequest.senderIpAddress + arpRequest.arpHeader->ar_pln;
     arpRequest.targetIpAddress = arpRequest.targetMacAddress + arpRequest.arpHeader->ar_hln;
 
-    // pr_info("[RX][ARP] SHA (Sender MAC) = %pM\n", arpRequest.senderMacAddress);
-    // pr_info("[RX][ARP] SPA (Sender IP) = %pI4\n", arpRequest.senderIpAddress);
-    // pr_info("[RX][ARP] THA (Target MAC) = %pM\n", arpRequest.targetMacAddress);
-    // pr_info("[RX][ARP] TPA (Target IP) = %pI4\n", arpRequest.targetIpAddress);
+    if (ntohs(arpRequest.arpHeader->ar_op) != ARPOP_REQUEST)
+    {
+        if (ntohs(arpRequest.arpHeader->ar_op) == ARPOP_REPLY)
+        {
+            pr_info("[RX][ARP] Sender MAC: %pM -> %pI4\n", arpRequest.senderMacAddress, arpRequest.senderIpAddress);
+            pr_info("[RX][ARP] Target MAC: %pM -> %pI4\n", arpRequest.targetMacAddress, arpRequest.targetIpAddress);
+        }
+        return NET_RX_SUCCESS;
+    }
 
     memcpy(&arpRequest.senderIp, arpRequest.senderIpAddress, 4);   // Sender IP
     memcpy(&arpRequest.targetIp, arpRequest.targetIpAddress, 4);   // Target IP
-    // pr_info("[RX][ARP] Sender IP = %pI4, Target IP = %pI4\n", &arpRequest.senderIp, &arpRequest.targetIp);
-
     if (arpRequest.targetIp != arpRequest.ourIp || arpRequest.senderIp != arpRequest.allowedSenderIp)
     {
         // pr_info("[RX][ARP] Ignoring request from %pI4 for %pI4 (Expected IPs: sender=%pI4, target=%pI4)\n", &arpRequest.senderIp, &arpRequest.targetIp, &arpRequest.allowedSenderIp, &arpRequest.ourIp);

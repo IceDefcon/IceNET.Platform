@@ -82,7 +82,8 @@ typedef struct
  * matches the ARP packet format as
  * defined by network protocols
  */
-struct arpHeader
+
+typedef struct __attribute__((__packed__))
 {
     __be16 ar_hrd;                  // Hardware type
     __be16 ar_pro;                  // Protocol type
@@ -93,7 +94,7 @@ struct arpHeader
     __be32 ar_sip;                  // Sender IP
     unsigned char ar_tha[ETH_ALEN]; // Target MAC
     __be32 ar_tip;                  // Target IP
-} __attribute__((packed));
+} arpHeaderType;
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
