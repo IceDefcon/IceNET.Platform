@@ -48,6 +48,7 @@ static int configureNetworkDevice(void)
 
 int networkInit(void)
 {
+    struct net_device *dev;
     int ret = configureNetworkDevice();
 
     pr_info("[INIT][NET] Master Control Network Initialisation\n");
@@ -76,6 +77,13 @@ int networkInit(void)
         pr_info("[INIT][NET] Sniffing TCP[port: %d] and UDP[port: %d]\n",TCP_PORT, UDP_PORT);
     }
 
+    dev = dev_get_by_name(&init_net, "wlp2s0");
+    if (!dev)
+    {
+        pr_err("Failed to get device wlp2s0\n");
+        return -ENODEV;
+    }
+
     /**
      * [L2] ARP is not an IP protocol it
      * is Layer 2 protocol and cannot
@@ -83,11 +91,12 @@ int networkInit(void)
      */
     arpPacket.type = htons(ETH_P_ARP);
     arpPacket.func = arpReceive;
+    arpPacket.dev = dev; /* TODO -> Need to be universalized :: Explicitly set wlp2s0 interface only */
     dev_add_pack(&arpPacket);
 
     ndpPacket.type = htons(ETH_P_IPV6);
     ndpPacket.func = ndpReceive;
-    ndpPacket.dev = NULL; // All devices
+    ndpPacket.dev = dev; /* TODO -> Need to be universalized :: Explicitly set wlp2s0 interface only */
     dev_add_pack(&ndpPacket);
 
     return 0;
