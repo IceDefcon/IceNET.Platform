@@ -1,19 +1,13 @@
-/*!
- *
- * Author: Ice.Marek
- * IceNET Technology 2025
- *
- */
-
 #include <linux/kernel.h>
 #include <linux/kthread.h>
 #include <linux/spinlock.h>
-#include <linux/delay.h> // For msleep
+#include <linux/delay.h>
 #include <linux/gpio.h>
+#include <linux/wait.h>
 
-#include "networkControl.h"
 #include "transmitter.h"
 #include "mainThread.h"
+#include "x86network.h"
 #include "receiver.h"
 
 /////////////////////////
@@ -26,22 +20,30 @@
 //                     //
 /////////////////////////
 
+static DECLARE_WAIT_QUEUE_HEAD(mainThreadWaitQueue); /* Added wait queue */
+
 static mainThreadProcess Process =
 {
     .currentState = MAIN_THREAD_IDLE,
     .previousState = MAIN_THREAD_IDLE,
+    .stateChanged = false,
     .threadHandle = NULL,
     .irqFlags = 0,
 };
 
-/* SET */ void setStateMachine(mainThreadStateType newState)
+/* SET */
+void setStateMachine(mainThreadStateType newState)
 {
     spin_lock_irqsave(&Process.smSpinlock, Process.irqFlags);
     Process.currentState = newState;
+    Process.stateChanged = true;  /* Signal that something changed */
     spin_unlock_irqrestore(&Process.smSpinlock, Process.irqFlags);
+
+    wake_up_interruptible(&mainThreadWaitQueue); /* Wake up thread */
 }
 
-/* GET */ mainThreadStateType getStateMachine(void)
+/* GET */
+mainThreadStateType getStateMachine(void)
 {
     mainThreadStateType state;
     spin_lock_irqsave(&Process.smSpinlock, Process.irqFlags);
@@ -68,7 +70,7 @@ static const char* getMainThreadStateString(mainThreadStateType type)
     }
     else
     {
-        return "UNKNOWN_MAIN_THRAD";
+        return "UNKNOWN_MAIN_THREAD";
     }
 }
 
@@ -78,25 +80,37 @@ static int mainThread(void *data)
 
     while (!kthread_should_stop())
     {
+        /* Sleep until stateChanged or stop signal */
+        wait_event_interruptible(mainThreadWaitQueue, Process.stateChanged || kthread_should_stop());
+
+        if (kthread_should_stop())
+        {
+            break;
+        }
+
+        /* Clear flag after wake */
+        spin_lock_irqsave(&Process.smSpinlock, Process.irqFlags);
+        Process.stateChanged = false;
+        spin_unlock_irqrestore(&Process.smSpinlock, Process.irqFlags);
+
         state = getStateMachine();
 
-        if(Process.previousState != Process.currentState)
+        if (Process.previousState != Process.currentState)
         {
-            printk(KERN_INFO "[CTRL][STM] mainThread State Machine %d->%d %s\n",Process.previousState, Process.currentState, getMainThreadStateString(Process.currentState));
+            printk(KERN_INFO "[CTRL][STM] mainThread State Machine %d->%d %s\n", Process.previousState, Process.currentState, getMainThreadStateString(Process.currentState));
             Process.previousState = Process.currentState;
         }
 
-        switch(state)
+        switch (state)
         {
             case MAIN_THREAD_IDLE:
-                /* Nothing here :: Just wait */
+                /* Nothing to do */
                 break;
 
             case MAIN_THREAD_NETWORK_ARP_REQUEST:
-                msleep(1000); /* TODO :: Initialise that after some event */
                 printk(KERN_INFO "[CTRL][STM] mode -> MAIN_THREAD_NETWORK_ARP_REQUEST\n");
                 arpSendRequest();
-                setStateMachine(MAIN_THREAD_DONE);
+                setStateMachine(MAIN_THREAD_NETWORK_NDP_REQUEST);
                 break;
 
             case MAIN_THREAD_NETWORK_NDP_REQUEST:
@@ -124,18 +138,8 @@ static int mainThread(void *data)
 
             default:
                 printk(KERN_ERR "[CTRL][STM] mode -> Unknown\n");
-                return -EINVAL; // Proper error code
+                return -EINVAL;
         }
-
-        /**
-         *
-         * Reduce consumption of CPU resources
-         * Add a short delay to prevent
-         * busy waiting
-         *
-         */
-        msleep(10); /* Release 90% of CPU resources */
-
     }
 
     return 0;
@@ -144,7 +148,7 @@ static int mainThread(void *data)
 void mainThreadInit(void)
 {
     spin_lock_init(&Process.smSpinlock);
-    setStateMachine(MAIN_THREAD_NETWORK_ARP_REQUEST); /* TODO :: Considerations required */
+    setStateMachine(MAIN_THREAD_IDLE);
 
     Process.threadHandle = kthread_create(mainThread, NULL, "iceMainThread");
 

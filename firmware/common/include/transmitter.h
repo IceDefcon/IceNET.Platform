@@ -36,16 +36,14 @@
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#define TARGET_IP    "192.168.8.174"
-#define SRC_IP       "192.168.8.101"
-#define DST_IP       "192.168.8.255"
-#define SRC_PORT     12000
-#define DST_PORT     54000
+#define TRANSMITTER_IP  "192.168.8.101"
+#define BROADCAST_IP    "192.168.8.255"
+#define RECEIVER_IP     "192.168.8.174"
+
+#define TRANSMITTER_PORT 12000
+#define RECEIVER_PORT 54000
+
 #define PAYLOAD_LEN  32
-
-#define LISTEN_PORT 54000
-#define BROADCAST_IP 0xC0A808FF // 192.168.8.255
-
 #define ICMPV6_NEIGHBOR_SOLICITATION 135
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -68,7 +66,7 @@ typedef struct
     int transmissionLength;
     unsigned char destinationMAC[ETH_ALEN];
     __be32 source_IP;
-    __be32 dest_IP;
+    __be32 target_IP;
 } transmissionControlType;
 
 typedef struct
@@ -95,6 +93,37 @@ typedef struct __attribute__((__packed__))
     unsigned char ar_tha[ETH_ALEN]; // Target MAC
     __be32 ar_tip;                  // Target IP
 } arpHeaderType;
+
+///////////////////////////////////////////////////
+//
+// NDP
+//
+///////////////////////////////////////////////////
+typedef struct __attribute__((__packed__))
+{
+    uint8_t type;
+    uint8_t length;
+    uint8_t addr[ETH_ALEN];
+} optType;
+
+typedef struct __attribute__((__packed__))
+{
+    struct icmp6hdr icmph;
+    struct in6_addr target;
+    optType opt;
+} ndpType;
+
+typedef struct
+{
+    struct sockaddr_in6 dest_addr;
+    struct socket *sock;
+    struct msghdr msg;
+    struct kvec vec;
+
+    struct in6_addr target_ipv6;
+    struct in6_addr solicited_node_multicast;
+    struct net_device *dev;
+} ndpRequestType;
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

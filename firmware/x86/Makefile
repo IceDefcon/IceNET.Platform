@@ -3,7 +3,7 @@ obj-m += iceControler.o
 iceControler-objs := \
     src/main.o \
     src/mainThread.o \
-    src/networkControl.o \
+    src/x86network.o \
     ../common/src/crypto.o \
     ../common/src/receiver.o \
     ../common/src/transmitter.o

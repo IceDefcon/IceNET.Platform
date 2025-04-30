@@ -33,6 +33,7 @@ typedef struct
 {
     mainThreadStateType currentState;
     mainThreadStateType previousState;
+    bool stateChanged;
     struct task_struct *threadHandle;
     spinlock_t smSpinlock;
     unsigned long irqFlags;
