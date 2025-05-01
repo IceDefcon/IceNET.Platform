@@ -83,11 +83,12 @@ int networkInit(void)
      */
     arpPacket.type = htons(ETH_P_ARP);
     arpPacket.func = arpReceive;
+    arpPacket.dev = NULL;
     dev_add_pack(&arpPacket);
 
     ndpPacket.type = htons(ETH_P_IPV6);
     ndpPacket.func = ndpReceive;
-    ndpPacket.dev = NULL; // All devices
+    ndpPacket.dev = NULL;
     dev_add_pack(&ndpPacket);
 
     return 0;

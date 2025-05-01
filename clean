@@ -3,5 +3,6 @@ make clean
 cd ../x86/
 make clean
 cd ../app/
+rm build -R
 make clean
 cd ..

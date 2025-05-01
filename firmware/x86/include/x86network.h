@@ -4,8 +4,8 @@
  * IceNET Technology 2025
  *
  */
-#ifndef NETWORK_CONTROL_H
-#define NETWORK_CONTROL_H
+#ifndef X86_NETWORK_H
+#define X86_NETWORK_H
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -35,4 +35,4 @@
 int networkInit(void);
 void networkDestroy(void);
 
-#endif // NETWORK_CONTROL_H
+#endif // X86_NETWORK_H

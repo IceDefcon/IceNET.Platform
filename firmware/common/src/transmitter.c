@@ -37,7 +37,50 @@ static transmissionControlType transmissionControl =
     .transmissionLength = 0,
     .destinationMAC = {0},
     .source_IP = 0,
-    .dest_IP = 0
+    .target_IP = 0
+};
+
+static arpHeaderType arpHeader =
+{
+    .ar_hrd = 0,    // Hardware type
+    .ar_pro = 0,    // Protocol type
+    .ar_hln = 6,    // Hardware address length
+    .ar_pln = 4,    // Protocol address length
+    .ar_op = 0,     // Opcode (request/reply)
+    .ar_sha = {0},  // Sender MAC
+    .ar_sip = 0,    // Sender IP
+    .ar_tha = {0},  // Target MAC
+    .ar_tip = 0     // Target IP
+};
+
+static ndpType ndpPacket =
+{
+    .icmph =
+    {
+        .icmp6_type = 0,
+        .icmp6_code = 0,
+        .icmp6_cksum = 0,
+        .icmp6_unused = 0
+    },
+
+    .target = IN6ADDR_ANY_INIT,  // This sets all 16 bytes to 0
+    .opt =
+    {
+        .type = 0,
+        .length = 0,
+        .addr = {0, 0, 0, 0, 0, 0}
+    }
+};
+
+static ndpRequestType ndpRequest =
+{
+    .dest_addr = { 0 },
+    .sock = NULL,
+    .msg = { 0 },
+    .vec = { 0 },
+    .target_ipv6 = IN6ADDR_ANY_INIT,
+    .solicited_node_multicast = IN6ADDR_ANY_INIT,
+    .dev = NULL,
 };
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -66,7 +109,7 @@ static transmissionControlType transmissionControl =
     }
 
     transmissionControl.source_IP = 0;
-    transmissionControl.dest_IP = 0;
+    transmissionControl.target_IP = 0;
 }
 
 
@@ -80,8 +123,8 @@ int udpTransmission(void)
     memset(transmissionControl.destinationMAC, 0xFF, ETH_ALEN);
 
     // [L3] Network Layer
-    transmissionControl.source_IP = in_aton(SRC_IP);
-    transmissionControl.dest_IP = in_aton(DST_IP);
+    transmissionControl.source_IP = in_aton(TRANSMITTER_IP);
+    transmissionControl.target_IP = in_aton(BROADCAST_IP);
 
     // [L2] Memory allocation for socket buffer
     transmissionControl.socketBuffer = alloc_skb(transmissionControl.transmissionLength + NET_IP_ALIGN, GFP_ATOMIC);
@@ -109,8 +152,8 @@ int udpTransmission(void)
     // [L4] Transport Layer: UDP header setup
     skb_push(transmissionControl.socketBuffer, sizeof(struct udphdr));
     transmissionControl.udpHeader = (struct udphdr *)transmissionControl.socketBuffer->data;
-    transmissionControl.udpHeader->source = htons(SRC_PORT);
-    transmissionControl.udpHeader->dest = htons(DST_PORT);
+    transmissionControl.udpHeader->source = htons(TRANSMITTER_PORT);
+    transmissionControl.udpHeader->dest = htons(RECEIVER_PORT);
     transmissionControl.udpHeader->len = htons(sizeof(struct udphdr) + PAYLOAD_LEN);
     transmissionControl.udpHeader->check = 0;
 
@@ -126,7 +169,7 @@ int udpTransmission(void)
     transmissionControl.ipHeader->ttl = 64;
     transmissionControl.ipHeader->protocol = IPPROTO_UDP;
     transmissionControl.ipHeader->saddr = transmissionControl.source_IP;
-    transmissionControl.ipHeader->daddr = transmissionControl.dest_IP;
+    transmissionControl.ipHeader->daddr = transmissionControl.target_IP;
     transmissionControl.ipHeader->check = ip_fast_csum((unsigned char *)transmissionControl.ipHeader, transmissionControl.ipHeader->ihl);
 
     // [L2] Ethernet header setup
@@ -163,8 +206,8 @@ int tcpTransmission(void)
     memset(transmissionControl.destinationMAC, 0xFF, ETH_ALEN);
 
     // [L3] Network Layer
-    transmissionControl.source_IP = in_aton(SRC_IP);
-    transmissionControl.dest_IP = in_aton(DST_IP);
+    transmissionControl.source_IP = in_aton(TRANSMITTER_IP);
+    transmissionControl.target_IP = in_aton(BROADCAST_IP);
 
     transmissionControl.socketBuffer = alloc_skb(transmissionControl.transmissionLength + NET_IP_ALIGN, GFP_ATOMIC);
     if (!transmissionControl.socketBuffer) return -ENOMEM;
@@ -205,7 +248,7 @@ int tcpTransmission(void)
     transmissionControl.ipHeader->ttl = 64;
     transmissionControl.ipHeader->protocol = IPPROTO_TCP;
     transmissionControl.ipHeader->saddr = transmissionControl.source_IP;
-    transmissionControl.ipHeader->daddr = transmissionControl.dest_IP;
+    transmissionControl.ipHeader->daddr = transmissionControl.target_IP;
     transmissionControl.ipHeader->tot_len = htons(sizeof(struct iphdr) + sizeof(struct tcphdr) + PAYLOAD_LEN);
     transmissionControl.ipHeader->check = ip_fast_csum((unsigned char *)transmissionControl.ipHeader, transmissionControl.ipHeader->ihl);
 
@@ -236,11 +279,9 @@ int tcpTransmission(void)
 
 int arpSendRequest(void)
 {
-    struct arpHeader *arp;
-    __be32 target_ip = in_aton(TARGET_IP);
-    __be32 source_ip = in_aton(SRC_IP);
-    int arp_len = sizeof(struct arpHeader);
-    int total_len = ETH_HLEN + arp_len;
+    transmissionControl.source_IP = in_aton(TRANSMITTER_IP);
+    transmissionControl.target_IP = in_aton(RECEIVER_IP);
+    transmissionControl.transmissionLength = ETH_HLEN + sizeof(arpHeaderType);;
 
     if (!networkControl.networkDevice)
     {
@@ -260,27 +301,29 @@ int arpSendRequest(void)
         return -EINVAL;
     }
 
-    transmissionControl.socketBuffer = alloc_skb(total_len + NET_IP_ALIGN, GFP_ATOMIC);
+    transmissionControl.socketBuffer = alloc_skb(transmissionControl.transmissionLength + NET_IP_ALIGN, GFP_ATOMIC);
     if (!transmissionControl.socketBuffer)
+    {
         return -ENOMEM;
+    }
 
     skb_reserve(transmissionControl.socketBuffer, NET_IP_ALIGN + ETH_HLEN);
 
-    arp = (struct arpHeader *)skb_put(transmissionControl.socketBuffer, arp_len);
-    memset(arp, 0, arp_len);
+    // Prepare ARP header statically
+    arpHeader.ar_hrd = htons(ARPHRD_ETHER);
+    arpHeader.ar_pro = htons(ETH_P_IP);
+    arpHeader.ar_hln = ETH_ALEN;
+    arpHeader.ar_pln = 4;
+    arpHeader.ar_op  = htons(ARPOP_REQUEST);
 
-    // Fill ARP header
-    arp->ar_hrd = htons(ARPHRD_ETHER);
-    arp->ar_pro = htons(ETH_P_IP);
-    arp->ar_hln = ETH_ALEN;
-    arp->ar_pln = 4;
-    arp->ar_op  = htons(ARPOP_REQUEST);
+    memcpy(arpHeader.ar_sha, networkControl.networkDevice->dev_addr, ETH_ALEN);
+    arpHeader.ar_sip = transmissionControl.source_IP;
 
-    memcpy(arp->ar_sha, networkControl.networkDevice->dev_addr, ETH_ALEN);
-    arp->ar_sip = source_ip;
+    memset(arpHeader.ar_tha, 0x00, ETH_ALEN);
+    arpHeader.ar_tip = transmissionControl.target_IP;
 
-    memset(arp->ar_tha, 0x00, ETH_ALEN);
-    arp->ar_tip = target_ip;
+    // Copy it to the skb
+    memcpy(skb_put(transmissionControl.socketBuffer, sizeof(arpHeader)), &arpHeader, sizeof(arpHeader));
 
     // Ethernet header
     skb_push(transmissionControl.socketBuffer, ETH_HLEN);
@@ -301,7 +344,7 @@ int arpSendRequest(void)
         return -EIO;
     }
 
-    pr_info("[TX][ARP] ARP request sent for IP %pI4\n", &target_ip);
+    pr_info("[TX][ARP] ARP request sent for IP %pI4\n", &transmissionControl.target_IP);
     clearTransmissionControl();
 
     return 0;
@@ -309,32 +352,12 @@ int arpSendRequest(void)
 
 int ndpSendRequest(void)
 {
-    struct sockaddr_in6 dest_addr;
-    struct socket *sock;
-    struct msghdr msg;
-    struct kvec vec;
-    char buf[128];
-
-    struct in6_addr target_ipv6;
-    struct in6_addr solicited_node_multicast;
-
-    struct nd_msg
-    {
-        struct icmp6hdr icmph;
-        struct in6_addr target;
-        struct {
-            uint8_t type;
-            uint8_t length;
-            uint8_t addr[ETH_ALEN];
-        } __packed opt;
-    } __packed *ndp;
-
     int ret;
 
     pr_info("[TX][NDP] Starting NDP request\n");
 
     // Create raw socket for ICMPv6
-    ret = sock_create(AF_INET6, SOCK_RAW, IPPROTO_ICMPV6, &sock);
+    ret = sock_create(AF_INET6, SOCK_RAW, IPPROTO_ICMPV6, &ndpRequest.sock);
     if (ret < 0)
     {
         pr_err("[TX][NDP] Failed to create socket\n");
@@ -342,58 +365,67 @@ int ndpSendRequest(void)
     }
 
     // Parse the target IPv6 address you're trying to resolve
-    in6_pton("fe80::d1d2:2209:4803:5ca2", -1, (u8 *)&target_ipv6, 0, NULL);
+    in6_pton("fe80::d1d2:2209:4803:5ca2", -1, (u8 *)&ndpRequest.target_ipv6, 0, NULL);
 
     // Construct the solicited-node multicast address: ff02::1:ffXX:XXXX
-    memset(&solicited_node_multicast, 0, sizeof(solicited_node_multicast));
-    solicited_node_multicast.s6_addr[0]  = 0xff;
-    solicited_node_multicast.s6_addr[1]  = 0x02;
-    solicited_node_multicast.s6_addr[11] = 0x01;
-    solicited_node_multicast.s6_addr[12] = 0xff;
-    solicited_node_multicast.s6_addr[13] = target_ipv6.s6_addr[13];
-    solicited_node_multicast.s6_addr[14] = target_ipv6.s6_addr[14];
-    solicited_node_multicast.s6_addr[15] = target_ipv6.s6_addr[15];
+    memset(&ndpRequest.solicited_node_multicast, 0, sizeof(ndpRequest.solicited_node_multicast));
+    ndpRequest.solicited_node_multicast.s6_addr[0]  = 0xff;
+    ndpRequest.solicited_node_multicast.s6_addr[1]  = 0x02;
+    ndpRequest.solicited_node_multicast.s6_addr[11] = 0x01;
+    ndpRequest.solicited_node_multicast.s6_addr[12] = 0xff;
+    ndpRequest.solicited_node_multicast.s6_addr[13] = ndpRequest.target_ipv6.s6_addr[13];
+    ndpRequest.solicited_node_multicast.s6_addr[14] = ndpRequest.target_ipv6.s6_addr[14];
+    ndpRequest.solicited_node_multicast.s6_addr[15] = ndpRequest.target_ipv6.s6_addr[15];
+
+    // Get device and its index
+    ndpRequest.dev = dev_get_by_name(&init_net, "wlp2s0");
+    if (!ndpRequest.dev)
+    {
+        pr_err("[TX][NDP] Failed to get net_device for wlp2s0\n");
+        sock_release(ndpRequest.sock);
+        return -ENODEV;
+    }
 
     // Set destination address to the solicited-node multicast
-    memset(&dest_addr, 0, sizeof(dest_addr));
-    dest_addr.sin6_family = AF_INET6;
-    dest_addr.sin6_addr = solicited_node_multicast;
-    dest_addr.sin6_scope_id = 0; // set interface index if needed for link-local
+    memset(&ndpRequest.dest_addr, 0, sizeof(ndpRequest.dest_addr));
+    ndpRequest.dest_addr.sin6_family = AF_INET6;
+    ndpRequest.dest_addr.sin6_addr = ndpRequest.solicited_node_multicast;
+    ndpRequest.dest_addr.sin6_scope_id = ndpRequest.dev->ifindex;  // Important for link-local addresses
 
     // Fill in ICMPv6 Neighbor Solicitation message
-    memset(buf, 0, sizeof(buf));
-    ndp = (struct nd_msg *)buf;
-    ndp->icmph.icmp6_type = NDISC_NEIGHBOUR_SOLICITATION;
-    ndp->icmph.icmp6_code = 0;
-    ndp->icmph.icmp6_cksum = 0; // Kernel will calculate checksum
+    ndpPacket.icmph.icmp6_type = NDISC_NEIGHBOUR_SOLICITATION;
+    ndpPacket.icmph.icmp6_code = 0;
+    ndpPacket.icmph.icmp6_cksum = 0; // Kernel will calculate checksum
 
-    ndp->target = target_ipv6;
+    ndpPacket.target = ndpRequest.target_ipv6;
 
-    // Optional: Add Source Link-Layer Address Option (Type 1)
-    ndp->opt.type = 1;
-    ndp->opt.length = 1;
-    memcpy(ndp->opt.addr, "\x3c\x6d\x66\x14\xde\xb5", ETH_ALEN); // Replace with actual source MAC
+    // Add Source Link-Layer Address Option (Type 1)
+    ndpPacket.opt.type = 1;
+    ndpPacket.opt.length = 1;
+    memcpy(ndpPacket.opt.addr, ndpRequest.dev->dev_addr, ETH_ALEN); // Use actual MAC of wlp2s0
+
+    dev_put(ndpRequest.dev); // Release reference to net_device
 
     // Prepare vector and message
-    vec.iov_base = buf;
-    vec.iov_len = sizeof(struct nd_msg);
+    ndpRequest.vec.iov_base = &ndpPacket;
+    ndpRequest.vec.iov_len = sizeof(ndpPacket);
 
-    memset(&msg, 0, sizeof(msg));
-    msg.msg_name = &dest_addr;
-    msg.msg_namelen = sizeof(dest_addr);
+    memset(&ndpRequest.msg, 0, sizeof(ndpRequest.msg));
+    ndpRequest.msg.msg_name = &ndpRequest.dest_addr;
+    ndpRequest.msg.msg_namelen = sizeof(ndpRequest.dest_addr);
 
     // Send the message
-    ret = kernel_sendmsg(sock, &msg, &vec, 1, vec.iov_len);
+    ret = kernel_sendmsg(ndpRequest.sock, &ndpRequest.msg, &ndpRequest.vec, 1, ndpRequest.vec.iov_len);
     if (ret < 0)
     {
         pr_err("[TX][NDP] Failed to send NDP request\n");
     }
     else
     {
-        pr_info("[TX][NDP] NDP request sent to %pI6\n", &dest_addr.sin6_addr);
+        pr_info("[TX][NDP] NDP request sent to %pI6\n", &ndpRequest.dest_addr.sin6_addr);
     }
 
-    sock_release(sock);
+    sock_release(ndpRequest.sock);
     clearTransmissionControl();
 
     return ret;

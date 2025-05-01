@@ -4,8 +4,9 @@
  * IceNET Technology 2025
  *
  */
-#include "networkControl.h"
 #include "transmitter.h"
+#include "mainThread.h"
+#include "x86network.h"
 #include "receiver.h"
 #include "crypto.h"
 
@@ -83,13 +84,17 @@ int networkInit(void)
      */
     arpPacket.type = htons(ETH_P_ARP);
     arpPacket.func = arpReceive;
+    arpPacket.dev = NULL;
     dev_add_pack(&arpPacket);
 
     ndpPacket.type = htons(ETH_P_IPV6);
     ndpPacket.func = ndpReceive;
-    ndpPacket.dev = NULL; // All devices
+    ndpPacket.dev = NULL;
     dev_add_pack(&ndpPacket);
-
+#if 0 /* Debug Test */
+    msleep(1000); // still optional
+    setStateMachine(MAIN_THREAD_NETWORK_ARP_REQUEST);
+#endif
     return 0;
 }
 

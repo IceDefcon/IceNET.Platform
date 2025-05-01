@@ -7,8 +7,8 @@
 #include <linux/init.h>        // For __init and __exit macros
 #include <linux/module.h>      // For module initialization and exit macros
 
-#include "networkControl.h"
 #include "mainThread.h"
+#include "x86network.h"
 
 MODULE_VERSION("1.0");
 MODULE_LICENSE("GPL");
