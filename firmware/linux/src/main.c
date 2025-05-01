@@ -25,6 +25,8 @@ MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Ice.Marek");
 MODULE_DESCRIPTION("FPGA Driver");
 
+/* NAME */ static const char threadName[] = "fpga_driver_init";
+
 //////////////////////////
 //                      //
 //        [FPGA]        //
@@ -64,6 +66,9 @@ static int __init fpga_driver_init(void)
     schedulerInit();
     /* Initialize network stack */
     networkInit();
+
+    /* Main Thread Diagnostics */
+    showThreadDiagnostics(threadName);
 
     printk(KERN_INFO "--------------------------------------\n");
     printk(KERN_INFO "[READY] FPGA Driver loaded successfuly \n");

@@ -16,9 +16,12 @@
 #include <linux/ktime.h>
 
 #include "console.h"
+#include "memory.h"
 
 #define SERIAL_DEVICE "/dev/ttyS1"
 #define BAUD_RATE 921600 /* Bits per second */
+
+/* NAME */ static const char threadName[] = "iceConsole";
 
 static consoleProcess process =
 {
@@ -143,6 +146,8 @@ ssize_t uart_write(const char *buf, size_t len)
 
 static int consoleThread(void *data)
 {
+    showThreadDiagnostics(threadName);
+
     /* TODO :: To be considered later */
     // int len;
     // struct timespec64 ts;
@@ -184,7 +189,7 @@ void consoleInit(void)
         printk(KERN_ERR "[INIT][CON] Cannot open UART device\n");
     }
 
-    process.threadHandle = kthread_create(consoleThread, NULL, "iceConsole");
+    process.threadHandle = kthread_create(consoleThread, NULL, threadName);
 
     if (IS_ERR(process.threadHandle))
     {

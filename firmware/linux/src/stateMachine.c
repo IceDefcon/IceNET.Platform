@@ -18,6 +18,7 @@
 #include "isrCtrl.h"
 #include "spiWork.h"
 #include "ramAxis.h"
+#include "memory.h"
 #include "config.h"
 
 /////////////////////////
@@ -53,10 +54,12 @@ static stateMachineProcess Process =
     return state;
 }
 
-/* Kernel state machine */
+/* NAME */ static const char threadName[] = "iceStateMachine";
+
 static int stateMachineThread(void *data)
 {
     stateMachineType state;
+    showThreadDiagnostics(threadName);
 
     while (!kthread_should_stop())
     {
@@ -174,7 +177,7 @@ void stateMachineInit(void)
     spin_lock_init(&Process.smSpinlock);
     setStateMachine(SM_IDLE);
 
-    Process.threadHandle = kthread_create(stateMachineThread, NULL, "iceStateMachine");
+    Process.threadHandle = kthread_create(stateMachineThread, NULL, threadName);
     
     if (IS_ERR(Process.threadHandle))
     {

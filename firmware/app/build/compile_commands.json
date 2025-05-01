@@ -1,0 +1,55 @@
+[
+{
+  "directory": "/home/ice/code.lab/IceNET.Platform/firmware/app/build",
+  "command": "/usr/bin/c++  -DQT_CORE_LIB -DQT_GUI_LIB -DQT_NO_DEBUG -DQT_SERIALPORT_LIB -DQT_WIDGETS_LIB -Iapp_autogen/include -I../gui -I../meas -I../system/include -I../system/include/KernelComms -I../system/include/KernelComms/BlockDevice -I../system/include/KernelComms/CharDevice -isystem /usr/include/aarch64-linux-gnu/qt5 -isystem /usr/include/aarch64-linux-gnu/qt5/QtCore -isystem /usr/lib/aarch64-linux-gnu/qt5/mkspecs/linux-g++ -isystem /usr/include/aarch64-linux-gnu/qt5/QtGui -isystem /usr/include/aarch64-linux-gnu/qt5/QtWidgets -isystem /usr/include/aarch64-linux-gnu/qt5/QtSerialPort    -fPIC -std=gnu++1z -o CMakeFiles/app.dir/main.cpp.o -c /home/ice/code.lab/IceNET.Platform/firmware/app/main.cpp",
+  "file": "/home/ice/code.lab/IceNET.Platform/firmware/app/main.cpp"
+},
+
+{
+  "directory": "/home/ice/code.lab/IceNET.Platform/firmware/app/build",
+  "command": "/usr/bin/c++  -DQT_CORE_LIB -DQT_GUI_LIB -DQT_NO_DEBUG -DQT_SERIALPORT_LIB -DQT_WIDGETS_LIB -Iapp_autogen/include -I../gui -I../meas -I../system/include -I../system/include/KernelComms -I../system/include/KernelComms/BlockDevice -I../system/include/KernelComms/CharDevice -isystem /usr/include/aarch64-linux-gnu/qt5 -isystem /usr/include/aarch64-linux-gnu/qt5/QtCore -isystem /usr/lib/aarch64-linux-gnu/qt5/mkspecs/linux-g++ -isystem /usr/include/aarch64-linux-gnu/qt5/QtGui -isystem /usr/include/aarch64-linux-gnu/qt5/QtWidgets -isystem /usr/include/aarch64-linux-gnu/qt5/QtSerialPort    -fPIC -std=gnu++1z -o CMakeFiles/app.dir/gui/gui.cpp.o -c /home/ice/code.lab/IceNET.Platform/firmware/app/gui/gui.cpp",
+  "file": "/home/ice/code.lab/IceNET.Platform/firmware/app/gui/gui.cpp"
+},
+
+{
+  "directory": "/home/ice/code.lab/IceNET.Platform/firmware/app/build",
+  "command": "/usr/bin/c++  -DQT_CORE_LIB -DQT_GUI_LIB -DQT_NO_DEBUG -DQT_SERIALPORT_LIB -DQT_WIDGETS_LIB -Iapp_autogen/include -I../gui -I../meas -I../system/include -I../system/include/KernelComms -I../system/include/KernelComms/BlockDevice -I../system/include/KernelComms/CharDevice -isystem /usr/include/aarch64-linux-gnu/qt5 -isystem /usr/include/aarch64-linux-gnu/qt5/QtCore -isystem /usr/lib/aarch64-linux-gnu/qt5/mkspecs/linux-g++ -isystem /usr/include/aarch64-linux-gnu/qt5/QtGui -isystem /usr/include/aarch64-linux-gnu/qt5/QtWidgets -isystem /usr/include/aarch64-linux-gnu/qt5/QtSerialPort    -fPIC -std=gnu++1z -o CMakeFiles/app.dir/meas/measList.cpp.o -c /home/ice/code.lab/IceNET.Platform/firmware/app/meas/measList.cpp",
+  "file": "/home/ice/code.lab/IceNET.Platform/firmware/app/meas/measList.cpp"
+},
+
+{
+  "directory": "/home/ice/code.lab/IceNET.Platform/firmware/app/build",
+  "command": "/usr/bin/c++  -DQT_CORE_LIB -DQT_GUI_LIB -DQT_NO_DEBUG -DQT_SERIALPORT_LIB -DQT_WIDGETS_LIB -Iapp_autogen/include -I../gui -I../meas -I../system/include -I../system/include/KernelComms -I../system/include/KernelComms/BlockDevice -I../system/include/KernelComms/CharDevice -isystem /usr/include/aarch64-linux-gnu/qt5 -isystem /usr/include/aarch64-linux-gnu/qt5/QtCore -isystem /usr/lib/aarch64-linux-gnu/qt5/mkspecs/linux-g++ -isystem /usr/include/aarch64-linux-gnu/qt5/QtGui -isystem /usr/include/aarch64-linux-gnu/qt5/QtWidgets -isystem /usr/include/aarch64-linux-gnu/qt5/QtSerialPort    -fPIC -std=gnu++1z -o CMakeFiles/app.dir/system/src/DroneCtrl.cpp.o -c /home/ice/code.lab/IceNET.Platform/firmware/app/system/src/DroneCtrl.cpp",
+  "file": "/home/ice/code.lab/IceNET.Platform/firmware/app/system/src/DroneCtrl.cpp"
+},
+
+{
+  "directory": "/home/ice/code.lab/IceNET.Platform/firmware/app/build",
+  "command": "/usr/bin/c++  -DQT_CORE_LIB -DQT_GUI_LIB -DQT_NO_DEBUG -DQT_SERIALPORT_LIB -DQT_WIDGETS_LIB -Iapp_autogen/include -I../gui -I../meas -I../system/include -I../system/include/KernelComms -I../system/include/KernelComms/BlockDevice -I../system/include/KernelComms/CharDevice -isystem /usr/include/aarch64-linux-gnu/qt5 -isystem /usr/include/aarch64-linux-gnu/qt5/QtCore -isystem /usr/lib/aarch64-linux-gnu/qt5/mkspecs/linux-g++ -isystem /usr/include/aarch64-linux-gnu/qt5/QtGui -isystem /usr/include/aarch64-linux-gnu/qt5/QtWidgets -isystem /usr/include/aarch64-linux-gnu/qt5/QtSerialPort    -fPIC -std=gnu++1z -o CMakeFiles/app.dir/system/src/KernelComms/KernelComms.cpp.o -c /home/ice/code.lab/IceNET.Platform/firmware/app/system/src/KernelComms/KernelComms.cpp",
+  "file": "/home/ice/code.lab/IceNET.Platform/firmware/app/system/src/KernelComms/KernelComms.cpp"
+},
+
+{
+  "directory": "/home/ice/code.lab/IceNET.Platform/firmware/app/build",
+  "command": "/usr/bin/c++  -DQT_CORE_LIB -DQT_GUI_LIB -DQT_NO_DEBUG -DQT_SERIALPORT_LIB -DQT_WIDGETS_LIB -Iapp_autogen/include -I../gui -I../meas -I../system/include -I../system/include/KernelComms -I../system/include/KernelComms/BlockDevice -I../system/include/KernelComms/CharDevice -isystem /usr/include/aarch64-linux-gnu/qt5 -isystem /usr/include/aarch64-linux-gnu/qt5/QtCore -isystem /usr/lib/aarch64-linux-gnu/qt5/mkspecs/linux-g++ -isystem /usr/include/aarch64-linux-gnu/qt5/QtGui -isystem /usr/include/aarch64-linux-gnu/qt5/QtWidgets -isystem /usr/include/aarch64-linux-gnu/qt5/QtSerialPort    -fPIC -std=gnu++1z -o CMakeFiles/app.dir/system/src/KernelComms/BlockDevice/RamDisk.cpp.o -c /home/ice/code.lab/IceNET.Platform/firmware/app/system/src/KernelComms/BlockDevice/RamDisk.cpp",
+  "file": "/home/ice/code.lab/IceNET.Platform/firmware/app/system/src/KernelComms/BlockDevice/RamDisk.cpp"
+},
+
+{
+  "directory": "/home/ice/code.lab/IceNET.Platform/firmware/app/build",
+  "command": "/usr/bin/c++  -DQT_CORE_LIB -DQT_GUI_LIB -DQT_NO_DEBUG -DQT_SERIALPORT_LIB -DQT_WIDGETS_LIB -Iapp_autogen/include -I../gui -I../meas -I../system/include -I../system/include/KernelComms -I../system/include/KernelComms/BlockDevice -I../system/include/KernelComms/CharDevice -isystem /usr/include/aarch64-linux-gnu/qt5 -isystem /usr/include/aarch64-linux-gnu/qt5/QtCore -isystem /usr/lib/aarch64-linux-gnu/qt5/mkspecs/linux-g++ -isystem /usr/include/aarch64-linux-gnu/qt5/QtGui -isystem /usr/include/aarch64-linux-gnu/qt5/QtWidgets -isystem /usr/include/aarch64-linux-gnu/qt5/QtSerialPort    -fPIC -std=gnu++1z -o CMakeFiles/app.dir/system/src/KernelComms/CharDevice/Commander.cpp.o -c /home/ice/code.lab/IceNET.Platform/firmware/app/system/src/KernelComms/CharDevice/Commander.cpp",
+  "file": "/home/ice/code.lab/IceNET.Platform/firmware/app/system/src/KernelComms/CharDevice/Commander.cpp"
+},
+
+{
+  "directory": "/home/ice/code.lab/IceNET.Platform/firmware/app/build",
+  "command": "/usr/bin/c++  -DQT_CORE_LIB -DQT_GUI_LIB -DQT_NO_DEBUG -DQT_SERIALPORT_LIB -DQT_WIDGETS_LIB -Iapp_autogen/include -I../gui -I../meas -I../system/include -I../system/include/KernelComms -I../system/include/KernelComms/BlockDevice -I../system/include/KernelComms/CharDevice -isystem /usr/include/aarch64-linux-gnu/qt5 -isystem /usr/include/aarch64-linux-gnu/qt5/QtCore -isystem /usr/lib/aarch64-linux-gnu/qt5/mkspecs/linux-g++ -isystem /usr/include/aarch64-linux-gnu/qt5/QtGui -isystem /usr/include/aarch64-linux-gnu/qt5/QtWidgets -isystem /usr/include/aarch64-linux-gnu/qt5/QtSerialPort    -fPIC -std=gnu++1z -o CMakeFiles/app.dir/system/src/KernelComms/CharDevice/Watchdog.cpp.o -c /home/ice/code.lab/IceNET.Platform/firmware/app/system/src/KernelComms/CharDevice/Watchdog.cpp",
+  "file": "/home/ice/code.lab/IceNET.Platform/firmware/app/system/src/KernelComms/CharDevice/Watchdog.cpp"
+},
+
+{
+  "directory": "/home/ice/code.lab/IceNET.Platform/firmware/app/build",
+  "command": "/usr/bin/c++  -DQT_CORE_LIB -DQT_GUI_LIB -DQT_NO_DEBUG -DQT_SERIALPORT_LIB -DQT_WIDGETS_LIB -Iapp_autogen/include -I../gui -I../meas -I../system/include -I../system/include/KernelComms -I../system/include/KernelComms/BlockDevice -I../system/include/KernelComms/CharDevice -isystem /usr/include/aarch64-linux-gnu/qt5 -isystem /usr/include/aarch64-linux-gnu/qt5/QtCore -isystem /usr/lib/aarch64-linux-gnu/qt5/mkspecs/linux-g++ -isystem /usr/include/aarch64-linux-gnu/qt5/QtGui -isystem /usr/include/aarch64-linux-gnu/qt5/QtWidgets -isystem /usr/include/aarch64-linux-gnu/qt5/QtSerialPort    -fPIC -std=gnu++1z -o CMakeFiles/app.dir/app_autogen/mocs_compilation.cpp.o -c /home/ice/code.lab/IceNET.Platform/firmware/app/build/app_autogen/mocs_compilation.cpp",
+  "file": "/home/ice/code.lab/IceNET.Platform/firmware/app/build/app_autogen/mocs_compilation.cpp"
+}
+]
