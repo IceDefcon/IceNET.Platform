@@ -84,14 +84,14 @@ static int watchdogThread(void *data)
             Process.indicatorFPGA = false;
         }
 
-        /* Update indicator and unlock Watchdog Mutex */
-   		Process.indicatorPrevious = Process.indicatorCurrent;
+        /* Update indicator and unlock Watchdog Spinlock */
+        Process.indicatorPrevious = Process.indicatorCurrent;
         watchdog_spinLockCtrl(CTRL_UNLOCK);
 
         /**
          *
-         * Reduce consumption of CPU resources
-         * Add a short delay to prevent
+         * Long delays like 1000ms
+         * still prevents thread
          * busy waiting
          *
          */
