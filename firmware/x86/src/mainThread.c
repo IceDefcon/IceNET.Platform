@@ -9,6 +9,7 @@
 #include "mainThread.h"
 #include "x86network.h"
 #include "receiver.h"
+#include "memory.h"
 
 /////////////////////////
 //                     //
@@ -29,6 +30,7 @@ static mainThreadProcess Process =
     .stateChanged = false,
     .threadHandle = NULL,
     .irqFlags = 0,
+    .threadName = "iceMainThread",
 };
 
 /* SET */
@@ -77,6 +79,7 @@ static const char* getMainThreadStateString(mainThreadStateType type)
 static int mainThread(void *data)
 {
     mainThreadStateType state;
+    showThreadDiagnostics(Process.threadName);
 
     while (!kthread_should_stop())
     {
@@ -150,7 +153,7 @@ void mainThreadInit(void)
     spin_lock_init(&Process.smSpinlock);
     setStateMachine(MAIN_THREAD_IDLE);
 
-    Process.threadHandle = kthread_create(mainThread, NULL, "iceMainThread");
+    Process.threadHandle = kthread_create(mainThread, NULL, Process.threadName);
 
     if (IS_ERR(Process.threadHandle))
     {
