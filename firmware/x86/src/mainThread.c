@@ -113,7 +113,7 @@ static int mainThread(void *data)
             case MAIN_THREAD_NETWORK_ARP_REQUEST:
                 printk(KERN_INFO "[CTRL][STM] mode -> MAIN_THREAD_NETWORK_ARP_REQUEST\n");
                 arpSendRequest();
-                setStateMachine(MAIN_THREAD_NETWORK_NDP_REQUEST);
+                setStateMachine(MAIN_THREAD_DONE);
                 break;
 
             case MAIN_THREAD_NETWORK_NDP_REQUEST:
@@ -151,8 +151,12 @@ static int mainThread(void *data)
 void mainThreadInit(void)
 {
     spin_lock_init(&Process.smSpinlock);
-    setStateMachine(MAIN_THREAD_IDLE);
-
+#if 1 /* Debug */
+    setStateMachine(MAIN_THREAD_DONE);
+#else
+    setStateMachine(MAIN_THREAD_NETWORK_ARP_REQUEST);
+    msleep(1000);
+#endif
     Process.threadHandle = kthread_create(mainThread, NULL, Process.threadName);
 
     if (IS_ERR(Process.threadHandle))

@@ -5,6 +5,7 @@
 #include <linux/kallsyms.h>
 #include <linux/sched.h>
 #include <asm/thread_info.h>  // For THREAD_SIZE
+#include <linux/sched/task_stack.h>
 
 #include "memory.h"
 
@@ -120,7 +121,7 @@ void memoryDestroy(void)
     pr_info("[INFO][DIA] Kernel Thread ID  : %s\n", name);
     pr_info("[INFO][DIA] Kernel Stack Base : 0x%lx\n", stack_base);
     pr_info("[INFO][DIA] Kernel Stack End  : 0x%lx\n", stack_end);
-    pr_info("[INFO][DIA] Current Stack Ptr : 0x%lx THREAD_SIZE[0x%x]\n", sp, THREAD_SIZE); /* THREAD_SIZE is typically 16 KB (0x4000) on ARM64 */
+    pr_info("[INFO][DIA] Current Stack Ptr : 0x%lx THREAD_SIZE[0x%lx]\n", sp, (unsigned long)THREAD_SIZE);  /* THREAD_SIZE is typically 16 KB (0x4000) on ARM64 */
     pr_info("[INFO][DIA] Used Stack        : %zu bytes\n", used);
     pr_info("[INFO][DIA] Free Stack        : %zu bytes\n", remaining);
 }
