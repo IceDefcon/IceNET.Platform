@@ -36,6 +36,7 @@ static stateMachineProcess Process =
     .currentState = SM_IDLE,
     .threadHandle = NULL,
     .irqFlags = 0,
+    .threadName = "iceStateMachine",
 };
 
 /* SET */ void setStateMachine(stateMachineType newState)
@@ -54,12 +55,10 @@ static stateMachineProcess Process =
     return state;
 }
 
-/* NAME */ static const char threadName[] = "iceStateMachine";
-
 static int stateMachineThread(void *data)
 {
     stateMachineType state;
-    showThreadDiagnostics(threadName);
+    showThreadDiagnostics(Process.threadName);
 
     while (!kthread_should_stop())
     {
@@ -177,7 +176,7 @@ void stateMachineInit(void)
     spin_lock_init(&Process.smSpinlock);
     setStateMachine(SM_IDLE);
 
-    Process.threadHandle = kthread_create(stateMachineThread, NULL, threadName);
+    Process.threadHandle = kthread_create(stateMachineThread, NULL, Process.threadName);
     
     if (IS_ERR(Process.threadHandle))
     {

@@ -25,6 +25,7 @@ static watchdogProcess Process =
     .indicatorPrevious = 0x00,
     .threadHandle = NULL,
     .irqflags = 0,
+    .threadName = "iceWatchdog",
 };
 
 watchdogProcess* watchdog_getProcess(void)
@@ -44,15 +45,13 @@ void watchdog_spinLockCtrl(CtrlType ctrl)
     }
 }
 
-/* NAME */ static const char threadName[] = "iceWatchdog";
-
 /* Kernel state machine */
 static int watchdogThread(void *data)
 {
     DmaTransferType* watchdogData;
     msleep(500); /* Wait for the watchdog capture from FPGA */
     printk(KERN_INFO "[INIT][WDG] Diagnostics\n");
-    showThreadDiagnostics(threadName);
+    showThreadDiagnostics(Process.threadName);
 
     while (!kthread_should_stop())
     {
@@ -107,7 +106,7 @@ void watchdogInit(void)
 {
     spin_lock_init(&Process.watchdogSpinlock);
 
-    Process.threadHandle = kthread_create(watchdogThread, NULL, threadName);
+    Process.threadHandle = kthread_create(watchdogThread, NULL, Process.threadName);
 
     if (IS_ERR(Process.threadHandle))
     {
