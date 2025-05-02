@@ -16,15 +16,17 @@
 #include <linux/ktime.h>
 
 #include "console.h"
+#include "memory.h"
 
 #define SERIAL_DEVICE "/dev/ttyS1"
 #define BAUD_RATE 921600 /* Bits per second */
 
-static consoleProcess process =
+static consoleProcess Process =
 {
     .uartFile = NULL,
     .threadHandle = NULL,
-    .stateMutex = __MUTEX_INITIALIZER(process.stateMutex),
+    .stateMutex = __MUTEX_INITIALIZER(Process.stateMutex),
+    .threadName = "iceConsole",
 };
 
 static void uart_close(void);
@@ -76,17 +78,17 @@ static int uart_open(void)
      * O_NOCTTY :: No Controlling Terminal
      * O_NDELAY :: Non-blocking I/O
      */
-    process.uartFile = filp_open(SERIAL_DEVICE, O_RDWR | O_NOCTTY | O_NDELAY, 0);
-    if (IS_ERR(process.uartFile))
+    Process.uartFile = filp_open(SERIAL_DEVICE, O_RDWR | O_NOCTTY | O_NDELAY, 0);
+    if (IS_ERR(Process.uartFile))
     {
-        printk(KERN_ERR "[INIT][CON] Failed to open serial device: %ld\n", PTR_ERR(process.uartFile));
-        return PTR_ERR(process.uartFile);
+        printk(KERN_ERR "[INIT][CON] Failed to open serial device: %ld\n", PTR_ERR(Process.uartFile));
+        return PTR_ERR(Process.uartFile);
     }
 
     printk(KERN_INFO "[INIT][CON] Serial device opened successfully @ %s\n", SERIAL_DEVICE);
 
     // Get the tty structure from the file
-    uartTty = get_tty_from_file(process.uartFile);
+    uartTty = get_tty_from_file(Process.uartFile);
     if (!uartTty)
     {
         printk(KERN_ERR "[INIT][CON] Failed to get tty from file.\n");
@@ -108,9 +110,9 @@ static int uart_open(void)
 
 static void uart_close(void)
 {
-    if (!IS_ERR(process.uartFile))
+    if (!IS_ERR(Process.uartFile))
     {
-        filp_close(process.uartFile, NULL);
+        filp_close(Process.uartFile, NULL);
         printk(KERN_INFO "[DESTROY][CON] UART device closed.\n");
     }
 }
@@ -120,7 +122,7 @@ ssize_t uart_write(const char *buf, size_t len)
     mm_segment_t oldfs;
     ssize_t ret;
 
-    if (!process.uartFile)
+    if (!Process.uartFile)
     {
         printk(KERN_ERR "[INIT][CON] UART device is not open!\n");
         return -ENODEV;
@@ -129,7 +131,7 @@ ssize_t uart_write(const char *buf, size_t len)
     oldfs = get_fs();
     set_fs(KERNEL_DS);  // Change address limit for kernel space write
 
-    ret = kernel_write(process.uartFile, buf, len, process.uartFile->f_pos);
+    ret = kernel_write(Process.uartFile, buf, len, Process.uartFile->f_pos);
 
     set_fs(oldfs);  // Restore address limit
 
@@ -143,6 +145,8 @@ ssize_t uart_write(const char *buf, size_t len)
 
 static int consoleThread(void *data)
 {
+    showThreadDiagnostics(Process.threadName);
+
     /* TODO :: To be considered later */
     // int len;
     // struct timespec64 ts;
@@ -184,16 +188,16 @@ void consoleInit(void)
         printk(KERN_ERR "[INIT][CON] Cannot open UART device\n");
     }
 
-    process.threadHandle = kthread_create(consoleThread, NULL, "iceConsole");
+    Process.threadHandle = kthread_create(consoleThread, NULL, Process.threadName);
 
-    if (IS_ERR(process.threadHandle))
+    if (IS_ERR(Process.threadHandle))
     {
-        printk(KERN_ERR "[INIT][CON] Failed to create kernel thread. Error code: %ld\n", PTR_ERR(process.threadHandle));
+        printk(KERN_ERR "[INIT][CON] Failed to create kernel thread. Error code: %ld\n", PTR_ERR(Process.threadHandle));
     }
     else
     {
         printk(KERN_INFO "[INIT][CON] Created kthread for consoleThread\n");
-        wake_up_process(process.threadHandle);
+        wake_up_process(Process.threadHandle);
     }
 }
 
@@ -201,10 +205,10 @@ void consoleDestroy(void)
 {
     uart_close();
 
-    if (process.threadHandle)
+    if (Process.threadHandle)
     {
-        kthread_stop(process.threadHandle);
-        process.threadHandle = NULL;
+        kthread_stop(Process.threadHandle);
+        Process.threadHandle = NULL;
     }
     printk(KERN_INFO "[DESTROY][CON] Destroy consoleThread\n");
 }

@@ -65,6 +65,9 @@ static int __init fpga_driver_init(void)
     /* Initialize network stack */
     networkInit();
 
+    /* Main Thread Diagnostics */
+    showThreadDiagnostics("MainThread");
+
     printk(KERN_INFO "--------------------------------------\n");
     printk(KERN_INFO "[READY] FPGA Driver loaded successfuly \n");
     printk(KERN_INFO "--------------------------------------\n");

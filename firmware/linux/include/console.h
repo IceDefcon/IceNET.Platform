@@ -27,6 +27,7 @@ typedef struct
     struct file *uartFile;
     struct task_struct *threadHandle;
     struct mutex stateMutex;
+    const char threadName[];
 } consoleProcess;
 
 ssize_t uart_write(const char *buf, size_t len);

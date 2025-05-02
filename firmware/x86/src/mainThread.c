@@ -9,6 +9,7 @@
 #include "mainThread.h"
 #include "x86network.h"
 #include "receiver.h"
+#include "memory.h"
 
 /////////////////////////
 //                     //
@@ -29,6 +30,7 @@ static mainThreadProcess Process =
     .stateChanged = false,
     .threadHandle = NULL,
     .irqFlags = 0,
+    .threadName = "iceMainThread",
 };
 
 /* SET */
@@ -77,6 +79,7 @@ static const char* getMainThreadStateString(mainThreadStateType type)
 static int mainThread(void *data)
 {
     mainThreadStateType state;
+    showThreadDiagnostics(Process.threadName);
 
     while (!kthread_should_stop())
     {
@@ -110,7 +113,7 @@ static int mainThread(void *data)
             case MAIN_THREAD_NETWORK_ARP_REQUEST:
                 printk(KERN_INFO "[CTRL][STM] mode -> MAIN_THREAD_NETWORK_ARP_REQUEST\n");
                 arpSendRequest();
-                setStateMachine(MAIN_THREAD_NETWORK_NDP_REQUEST);
+                setStateMachine(MAIN_THREAD_DONE);
                 break;
 
             case MAIN_THREAD_NETWORK_NDP_REQUEST:
@@ -148,9 +151,13 @@ static int mainThread(void *data)
 void mainThreadInit(void)
 {
     spin_lock_init(&Process.smSpinlock);
-    setStateMachine(MAIN_THREAD_IDLE);
-
-    Process.threadHandle = kthread_create(mainThread, NULL, "iceMainThread");
+#if 1 /* Debug */
+    setStateMachine(MAIN_THREAD_DONE);
+#else
+    setStateMachine(MAIN_THREAD_NETWORK_ARP_REQUEST);
+    msleep(1000);
+#endif
+    Process.threadHandle = kthread_create(mainThread, NULL, Process.threadName);
 
     if (IS_ERR(Process.threadHandle))
     {

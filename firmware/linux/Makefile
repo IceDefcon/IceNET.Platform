@@ -13,9 +13,9 @@ iceDriver-objs := \
     src/ramDisk.o \
     src/ramAxis.o \
     src/console.o \
-    src/memory.o \
     src/network.o \
     ../common/src/crypto.o \
+    ../common/src/memory.o \
     ../common/src/receiver.o \
     ../common/src/transmitter.o
 

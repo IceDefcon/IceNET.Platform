@@ -21,6 +21,7 @@ typedef struct
     struct task_struct *threadHandle;
     spinlock_t watchdogSpinlock;
     unsigned long irqflags;
+    const char threadName[];
 } watchdogProcess;
 
 void watchdog_spinLockCtrl(CtrlType ctrl);

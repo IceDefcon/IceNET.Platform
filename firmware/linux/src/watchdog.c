@@ -15,6 +15,7 @@
 #include "charDevice.h"
 #include "watchdog.h"
 #include "console.h"
+#include "memory.h"
 #include "types.h"
 
 static watchdogProcess Process =
@@ -24,6 +25,7 @@ static watchdogProcess Process =
     .indicatorPrevious = 0x00,
     .threadHandle = NULL,
     .irqflags = 0,
+    .threadName = "iceWatchdog",
 };
 
 watchdogProcess* watchdog_getProcess(void)
@@ -48,6 +50,8 @@ static int watchdogThread(void *data)
 {
     DmaTransferType* watchdogData;
     msleep(500); /* Wait for the watchdog capture from FPGA */
+    printk(KERN_INFO "[INIT][WDG] Diagnostics\n");
+    showThreadDiagnostics(Process.threadName);
 
     while (!kthread_should_stop())
     {
@@ -80,14 +84,14 @@ static int watchdogThread(void *data)
             Process.indicatorFPGA = false;
         }
 
-        /* Update indicator and unlock Watchdog Mutex */
-   		Process.indicatorPrevious = Process.indicatorCurrent;
+        /* Update indicator and unlock Watchdog Spinlock */
+        Process.indicatorPrevious = Process.indicatorCurrent;
         watchdog_spinLockCtrl(CTRL_UNLOCK);
 
         /**
          *
-         * Reduce consumption of CPU resources
-         * Add a short delay to prevent
+         * Long delays like 1000ms
+         * still prevents thread
          * busy waiting
          *
          */
@@ -102,7 +106,7 @@ void watchdogInit(void)
 {
     spin_lock_init(&Process.watchdogSpinlock);
 
-    Process.threadHandle = kthread_create(watchdogThread, NULL, "iceWatchdog");
+    Process.threadHandle = kthread_create(watchdogThread, NULL, Process.threadName);
 
     if (IS_ERR(Process.threadHandle))
     {

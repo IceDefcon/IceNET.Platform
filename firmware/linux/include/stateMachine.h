@@ -40,6 +40,7 @@ typedef struct
     struct task_struct *threadHandle;
     spinlock_t smSpinlock;
     unsigned long irqFlags;
+    const char threadName[];
 } stateMachineProcess;
 
 /* SET */ void setStateMachine(stateMachineType newState);
