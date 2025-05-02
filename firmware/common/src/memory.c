@@ -5,7 +5,12 @@
 #include <linux/kallsyms.h>
 #include <linux/sched.h>
 #include <asm/thread_info.h>  // For THREAD_SIZE
+#include <linux/version.h>
+
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 4, 0)
+// Include for 5.4.0 and newer kernels (like 5.4.0-150-generic)
 #include <linux/sched/task_stack.h>
+#endif
 
 #include "memory.h"
 
