@@ -51,9 +51,9 @@ RamDisk::RamDisk() :
             {0x41, 0x05}, /* ±4g accelerometer range */
             {0x7E, 0x11}, /* Set accelerometer to normal mode */
             {0x77, 0x40}, /* Enable accel offset only */
-            {0x71, 0x14}, /* Calibration x-offset :: (645 / 8192) * 1000 -> 78,73mg → 20 = 0x14 */
-            {0x72, 0x07}, /* Calibration y-offset :: (226 / 8192) * 1000 -> 27,59mg →  7 = 0x07 */
-            {0x73, 0x03}, /* Calibration z-offset :: (111 / 8192) * 1000 -> 13,55mg →  3 = 0x03 */
+            {0x71, 0x00}, /* Calibration x-offset :: (645 / 8192) * 1000 -> 78,73mg → 20 = 0x14 */
+            {0x72, 0x00}, /* Calibration y-offset :: (226 / 8192) * 1000 -> 27,59mg →  7 = 0x07 */
+            {0x73, 0x00}, /* Calibration z-offset :: (111 / 8192) * 1000 -> 13,55mg →  3 = 0x03 */
             {0x51, 0x10}, /* Enable Data Ready Interrupt */
             {0x56, 0x88}, /* Map Data Ready Interrupt to INT1 and INT2 */
             {0x53, 0xAA}, /* Configure INT1 and INT2 as Outputs + Make them Active High */

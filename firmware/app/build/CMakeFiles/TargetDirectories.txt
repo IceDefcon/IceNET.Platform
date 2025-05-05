@@ -1,4 +1,0 @@
-/home/ice/code.lab/IceNET.Platform/firmware/app/build/CMakeFiles/rebuild_cache.dir
-/home/ice/code.lab/IceNET.Platform/firmware/app/build/CMakeFiles/app.dir
-/home/ice/code.lab/IceNET.Platform/firmware/app/build/CMakeFiles/edit_cache.dir
-/home/ice/code.lab/IceNET.Platform/firmware/app/build/CMakeFiles/app_autogen.dir
