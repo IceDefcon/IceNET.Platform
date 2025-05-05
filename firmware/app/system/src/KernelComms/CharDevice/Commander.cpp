@@ -386,26 +386,26 @@ void Commander::threadCommander()
                     m_y = static_cast<int16_t>(((*m_Rx_CommanderVector)[3] << 8) | (*m_Rx_CommanderVector)[2]);
                     m_z = static_cast<int16_t>(((*m_Rx_CommanderVector)[5] << 8) | (*m_Rx_CommanderVector)[4]);
 
-                    for (int i = 31; i > 0; i--)
-                    {
+                    for (int i = 31; i > 0; i--) {
                         m_x_vector[i] = m_x_vector[i - 1];
                     }
                     m_x_vector[0] = m_x;
 
-                    for (int i = 31; i > 0; i--)
-                    {
+                    for (int i = 31; i > 0; i--) {
                         m_y_vector[i] = m_y_vector[i - 1];
                     }
                     m_y_vector[0] = m_y;
 
-                    for (int i = 31; i > 0; i--)
-                    {
-                        m_y_vector[i] = m_y_vector[i - 1];
+                    for (int i = 31; i > 0; i--) {
+                        m_z_vector[i] = m_z_vector[i - 1];
                     }
-                    m_y_vector[0] = m_z;
+                    m_z_vector[0] = m_z;
 
-                    for (int i = 0; i < 32; ++i)
-                    {
+                    m_x_sum = 0;
+                    m_y_sum = 0;
+                    m_z_sum = 0;
+
+                    for (int i = 0; i < 32; ++i) {
                         m_x_sum += m_x_vector[i];
                         m_y_sum += m_y_vector[i];
                         m_z_sum += m_z_vector[i];
@@ -420,7 +420,8 @@ void Commander::threadCommander()
 
                     std::cout << std::fixed << std::setprecision(6);
                     std::cout << "[INFO] [CMD] [" << m_seconds_since_boot << "] " << std::dec
-                              << "Average Acceleration [" << m_x_average << "," << m_y_average << "," << m_z_average << "]" << std::endl;
+                              << "Average Acceleration [" << m_x_average << "," << m_y_average << "," << m_z_average << "]"
+                              << std::endl;
                 }
                 else
                 {
