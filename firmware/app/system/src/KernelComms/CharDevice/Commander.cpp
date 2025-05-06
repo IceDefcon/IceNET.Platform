@@ -243,6 +243,7 @@ bool Commander::isThreadKilled()
 void Commander::threadCommander()
 {
     int ret = 0;
+    bool check = false;
 
     while (!m_threadKill)
     {
@@ -386,6 +387,14 @@ void Commander::threadCommander()
                     m_y = static_cast<int16_t>(((*m_Rx_CommanderVector)[3] << 8) | (*m_Rx_CommanderVector)[2]);
                     m_z = static_cast<int16_t>(((*m_Rx_CommanderVector)[5] << 8) | (*m_Rx_CommanderVector)[4]);
 
+                    check = appendBuffer(m_x, m_y, m_z);
+
+                    if(true == check)
+                    {
+                        *m_IO_CommanderState = IO_COM_IDLE;
+                        averageBuffer();
+                    }
+#if 0
                     for (int i = 31; i > 0; i--) {
                         m_x_vector[i] = m_x_vector[i - 1];
                     }
@@ -422,6 +431,7 @@ void Commander::threadCommander()
                     std::cout << "[INFO] [CMD] [" << m_seconds_since_boot << "] " << std::dec
                               << "Average Acceleration [" << m_x_average << "," << m_y_average << "," << m_z_average << "]"
                               << std::endl;
+#endif
                 }
                 else
                 {

@@ -30,7 +30,6 @@ typedef struct
     struct device *nodeDevice;
     int openCount;
     struct mutex deviceMutex;
-    bool isLocked;
     size_t transferSize;
     int tryLock;
     DmaTransferType io_transfer;
@@ -38,6 +37,7 @@ typedef struct
     char* name;
     char* nameClass;
     char unlockTimer;
+    bool wakeUpDevice;
 }charDeviceData;
 
 typedef enum
@@ -60,8 +60,8 @@ typedef enum
 /* GET */ uint8_t getCustomDmaSize(void);
 /* GET */ charDeviceData* getCharDevice(void);
 /* GET */ DmaTransferType* getCharDeviceTransfer(charDeviceType charDevice);
+/* EVENT */ void eventWakeUpDevice(charDeviceType charDevice);
 /* MUTEX */ void charDeviceMutexCtrl(charDeviceType charDevice, MutexCtrlType mutexCtrl);
-/* FLAG */ void charDeviceLockCtrl(charDeviceType charDevice, CtrlType Ctrl);
 
 /* INIT */ void charDeviceInit(void);
 /* EXIT */ void charDeviceDestroy(void);

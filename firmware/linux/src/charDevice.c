@@ -29,6 +29,9 @@
 //                  //
 //////////////////////
 
+static DECLARE_WAIT_QUEUE_HEAD(commanderWaitQueue);
+static DECLARE_WAIT_QUEUE_HEAD(watchdogWaitQueue);
+
 /* WATCHDOG */ static int watchdogOpen(struct inode *inodep, struct file *filep);
 /* WATCHDOG */ static ssize_t watchdogRead(struct file *, char *, size_t, loff_t *);
 /* WATCHDOG */ static ssize_t watchdogWrite(struct file *, const char *, size_t, loff_t *);
@@ -48,7 +51,6 @@ static charDeviceData Device[DEVICE_AMOUNT] =
         .nodeDevice = NULL,
         .openCount = 0,
         .deviceMutex = __MUTEX_INITIALIZER(Device[DEVICE_WATCHDOG].deviceMutex),
-        .isLocked = true,
         .tryLock = 0,
         .transferSize = 2,
 
@@ -69,6 +71,7 @@ static charDeviceData Device[DEVICE_AMOUNT] =
         .name = "KernelWatchdog",
         .nameClass = "KernelWatchdogClass",
         .unlockTimer = 0,
+        .wakeUpDevice = false,
     },
 
     [DEVICE_COMMANDER] =
@@ -78,7 +81,6 @@ static charDeviceData Device[DEVICE_AMOUNT] =
         .nodeDevice = NULL,
         .openCount = 0,
         .deviceMutex = __MUTEX_INITIALIZER(Device[DEVICE_COMMANDER].deviceMutex),
-        .isLocked = true,
         .tryLock = 0,
         .transferSize = 6,
 
@@ -99,6 +101,7 @@ static charDeviceData Device[DEVICE_AMOUNT] =
         .name = "KernelCommander",
         .nameClass = "KernelCommanderClass",
         .unlockTimer = 0,
+        .wakeUpDevice = false,
     },
 };
 
@@ -152,23 +155,6 @@ static charDeviceData Device[DEVICE_AMOUNT] =
     }
 }
 
-/* CTRL */ void charDeviceLockCtrl(charDeviceType charDevice, CtrlType Ctrl)
-{
-    if(CTRL_LOCK == Ctrl)
-    {
-        Device[charDevice].isLocked = true;
-    }
-    else if(CTRL_UNLOCK == Ctrl)
-    {
-        Device[charDevice].isLocked = false;
-    }
-}
-
-/* CHECK */ bool isDeviceLocked(charDeviceType charDevice)
-{
-    return Device[charDevice].isLocked;
-}
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /* OPEN */ static int watchdogOpen(struct inode *inodep, struct file *filep)
@@ -209,11 +195,8 @@ static ssize_t watchdogRead(struct file *filep, char *buffer, size_t len, loff_t
 {
     int error_count = 0;
 
-    charDeviceLockCtrl(DEVICE_WATCHDOG, CTRL_LOCK);
-    while(isDeviceLocked(DEVICE_WATCHDOG))
-    {
-        msleep(10); /* Release 90% of CPU resources */
-    }
+    wait_event_interruptible(watchdogWaitQueue, Device[DEVICE_WATCHDOG].wakeUpDevice);
+    Device[DEVICE_WATCHDOG].wakeUpDevice = false;
 
     error_count = copy_to_user(buffer, (const void *)Device[DEVICE_WATCHDOG].io_transfer.TxData, Device[DEVICE_WATCHDOG].transferSize);
 
@@ -247,25 +230,10 @@ static ssize_t commanderRead(struct file *filep, char *buffer, size_t len, loff_
     int error_count = 0;
     size_t i;
 
-#if 1
-    charDeviceLockCtrl(DEVICE_COMMANDER, CTRL_LOCK);
-    while(isDeviceLocked(DEVICE_COMMANDER))
-    {
-        msleep(10); /* Release 90% of CPU resources */
-        Device[DEVICE_COMMANDER].unlockTimer++;
-        if(100 == Device[DEVICE_COMMANDER].unlockTimer) /* 1s Timeout :: Then unblock*/
-        {
-            Device[DEVICE_COMMANDER].io_transfer.TxData[0] = 0x00;
-            Device[DEVICE_COMMANDER].io_transfer.TxData[1] = 0xDE;
-            Device[DEVICE_COMMANDER].io_transfer.TxData[2] = 0xAD;
-            Device[DEVICE_COMMANDER].io_transfer.TxData[3] = 0xC0;
-            Device[DEVICE_COMMANDER].io_transfer.TxData[4] = 0xDE;
-            Device[DEVICE_COMMANDER].io_transfer.TxData[5] = 0x00;
-            break;
-        }
-    }
-    Device[DEVICE_COMMANDER].unlockTimer = 0;
-#endif
+    /* TODO :: Unfreeze if not kicked */
+    wait_event_interruptible(commanderWaitQueue, Device[DEVICE_COMMANDER].wakeUpDevice);
+    Device[DEVICE_COMMANDER].wakeUpDevice = false;
+
     error_count = copy_to_user(buffer, (const void *)Device[DEVICE_COMMANDER].io_transfer.TxData, Device[DEVICE_COMMANDER].transferSize);
 
     if (error_count == 0)
@@ -403,3 +371,22 @@ static ssize_t commanderWrite(struct file *filep, const char __user *buffer, siz
 {
     return &Device[charDevice].io_transfer;
 }
+
+/* EVENT */ void eventWakeUpDevice(charDeviceType charDevice)
+{
+    Device[charDevice].wakeUpDevice = true;
+
+    if(DEVICE_WATCHDOG == charDevice)
+    {
+        wake_up_interruptible(&watchdogWaitQueue);
+    }
+    else if(DEVICE_COMMANDER == charDevice)
+    {
+        wake_up_interruptible(&commanderWaitQueue);
+    }
+    else
+    {
+        printk(KERN_ALERT "[ERNO][ C ] There is no such char device -> %d\n", charDevice);
+    }
+}
+

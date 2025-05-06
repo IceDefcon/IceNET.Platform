@@ -52,7 +52,7 @@ OBJECTS_DIR   = ./
 
 SOURCES       = main.cpp \
 		gui/gui.cpp \
-		meas/measList.cpp \
+		meas/Measure.cpp \
 		system/src/DroneCtrl.cpp \
 		system/src/KernelComms/KernelComms.cpp \
 		system/src/KernelComms/BlockDevice/RamDisk.cpp \
@@ -60,7 +60,7 @@ SOURCES       = main.cpp \
 		system/src/KernelComms/CharDevice/Watchdog.cpp moc_gui.cpp
 OBJECTS       = main.o \
 		gui.o \
-		measList.o \
+		Measure.o \
 		DroneCtrl.o \
 		KernelComms.o \
 		RamDisk.o \
@@ -141,7 +141,7 @@ DIST          = /usr/lib/aarch64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		/usr/lib/aarch64-linux-gnu/qt5/mkspecs/features/yacc.prf \
 		/usr/lib/aarch64-linux-gnu/qt5/mkspecs/features/lex.prf \
 		app.pro gui/gui.h \
-		meas/measList.h \
+		meas/Measure.h \
 		system/include/Core.h \
 		system/include/Types.h \
 		system/include/DroneCtrl.h \
@@ -150,7 +150,7 @@ DIST          = /usr/lib/aarch64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		system/include/KernelComms/CharDevice/Commander.h \
 		system/include/KernelComms/CharDevice/Watchdog.h main.cpp \
 		gui/gui.cpp \
-		meas/measList.cpp \
+		meas/Measure.cpp \
 		system/src/DroneCtrl.cpp \
 		system/src/KernelComms/KernelComms.cpp \
 		system/src/KernelComms/BlockDevice/RamDisk.cpp \
@@ -339,8 +339,8 @@ distdir: FORCE
 	@test -d $(DISTDIR) || mkdir -p $(DISTDIR)
 	$(COPY_FILE) --parents $(DIST) $(DISTDIR)/
 	$(COPY_FILE) --parents /usr/lib/aarch64-linux-gnu/qt5/mkspecs/features/data/dummy.cpp $(DISTDIR)/
-	$(COPY_FILE) --parents gui/gui.h meas/measList.h system/include/Core.h system/include/Types.h system/include/DroneCtrl.h system/include/KernelComms/KernelComms.h system/include/KernelComms/BlockDevice/RamDisk.h system/include/KernelComms/CharDevice/Commander.h system/include/KernelComms/CharDevice/Watchdog.h $(DISTDIR)/
-	$(COPY_FILE) --parents main.cpp gui/gui.cpp meas/measList.cpp system/src/DroneCtrl.cpp system/src/KernelComms/KernelComms.cpp system/src/KernelComms/BlockDevice/RamDisk.cpp system/src/KernelComms/CharDevice/Commander.cpp system/src/KernelComms/CharDevice/Watchdog.cpp $(DISTDIR)/
+	$(COPY_FILE) --parents gui/gui.h meas/Measure.h system/include/Core.h system/include/Types.h system/include/DroneCtrl.h system/include/KernelComms/KernelComms.h system/include/KernelComms/BlockDevice/RamDisk.h system/include/KernelComms/CharDevice/Commander.h system/include/KernelComms/CharDevice/Watchdog.h $(DISTDIR)/
+	$(COPY_FILE) --parents main.cpp gui/gui.cpp meas/Measure.cpp system/src/DroneCtrl.cpp system/src/KernelComms/KernelComms.cpp system/src/KernelComms/BlockDevice/RamDisk.cpp system/src/KernelComms/CharDevice/Commander.cpp system/src/KernelComms/CharDevice/Watchdog.cpp $(DISTDIR)/
 
 
 clean: compiler_clean 
@@ -381,7 +381,7 @@ moc_gui.cpp: system/include/DroneCtrl.h \
 		system/include/KernelComms/BlockDevice/RamDisk.h \
 		system/include/Types.h \
 		system/include/KernelComms/CharDevice/Commander.h \
-		meas/measList.h \
+		meas/Measure.h \
 		gui/gui.h \
 		moc_predefs.h \
 		/usr/lib/qt5/bin/moc
@@ -408,7 +408,7 @@ main.o: main.cpp gui/gui.h \
 		system/include/KernelComms/BlockDevice/RamDisk.h \
 		system/include/Types.h \
 		system/include/KernelComms/CharDevice/Commander.h \
-		meas/measList.h
+		meas/Measure.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o main.o main.cpp
 
 gui.o: gui/gui.cpp gui/gui.h \
@@ -418,11 +418,11 @@ gui.o: gui/gui.cpp gui/gui.h \
 		system/include/KernelComms/BlockDevice/RamDisk.h \
 		system/include/Types.h \
 		system/include/KernelComms/CharDevice/Commander.h \
-		meas/measList.h
+		meas/Measure.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o gui.o gui/gui.cpp
 
-measList.o: meas/measList.cpp meas/measList.h
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o measList.o meas/measList.cpp
+Measure.o: meas/Measure.cpp meas/Measure.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o Measure.o meas/Measure.cpp
 
 DroneCtrl.o: system/src/DroneCtrl.cpp system/include/DroneCtrl.h \
 		system/include/KernelComms/KernelComms.h \
@@ -430,7 +430,7 @@ DroneCtrl.o: system/src/DroneCtrl.cpp system/include/DroneCtrl.h \
 		system/include/KernelComms/BlockDevice/RamDisk.h \
 		system/include/Types.h \
 		system/include/KernelComms/CharDevice/Commander.h \
-		meas/measList.h
+		meas/Measure.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o DroneCtrl.o system/src/DroneCtrl.cpp
 
 KernelComms.o: system/src/KernelComms/KernelComms.cpp system/include/KernelComms/KernelComms.h \

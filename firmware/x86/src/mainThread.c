@@ -21,7 +21,7 @@
 //                     //
 /////////////////////////
 
-static DECLARE_WAIT_QUEUE_HEAD(mainThreadWaitQueue); /* Added wait queue */
+static DECLARE_WAIT_QUEUE_HEAD(mainThreadWaitQueue);
 
 static mainThreadProcess Process =
 {
@@ -33,19 +33,16 @@ static mainThreadProcess Process =
     .threadName = "iceMainThread",
 };
 
-/* SET */
-void setStateMachine(mainThreadStateType newState)
+/* SET */ void setStateMachine(mainThreadStateType newState)
 {
     spin_lock_irqsave(&Process.smSpinlock, Process.irqFlags);
     Process.currentState = newState;
-    Process.stateChanged = true;  /* Signal that something changed */
+    Process.stateChanged = true; /* Signal that something changed */
     spin_unlock_irqrestore(&Process.smSpinlock, Process.irqFlags);
-
     wake_up_interruptible(&mainThreadWaitQueue); /* Wake up thread */
 }
 
-/* GET */
-mainThreadStateType getStateMachine(void)
+/* GET */ mainThreadStateType getStateMachine(void)
 {
     mainThreadStateType state;
     spin_lock_irqsave(&Process.smSpinlock, Process.irqFlags);

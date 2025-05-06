@@ -31,9 +31,13 @@
 //                     //
 /////////////////////////
 
+static DECLARE_WAIT_QUEUE_HEAD(stateMachineThreadWaitQueue);
+
 static stateMachineProcess Process =
 {
     .currentState = SM_IDLE,
+    .previousState = SM_IDLE,
+    .stateChanged = false,
     .threadHandle = NULL,
     .irqFlags = 0,
     .threadName = "iceStateMachine",
@@ -43,7 +47,9 @@ static stateMachineProcess Process =
 {
     spin_lock_irqsave(&Process.smSpinlock, Process.irqFlags);
     Process.currentState = newState;
+    Process.stateChanged = true; /* Signal that something changed */
     spin_unlock_irqrestore(&Process.smSpinlock, Process.irqFlags);
+    wake_up_interruptible(&stateMachineThreadWaitQueue); /* Wake up thread */
 }
 
 /* GET */ stateMachineType getStateMachine(void)
@@ -55,16 +61,62 @@ static stateMachineProcess Process =
     return state;
 }
 
+static const char* getStateMachineThreadString(stateMachineType type)
+{
+    static const char* stateMachineThreadStrings[] =
+    {
+        "SM_IDLE",
+        "SM_DMA_NORMAL",
+        "SM_DMA_SENSOR",
+        "SM_DMA_SINGLE",
+        "SM_DMA_CUSTOM",
+        "SM_RAMDISK_CONFIG",
+        "SM_RAMDISK_CLEAR",
+        "SM_RAMDISK_PRINT",
+        "SM_PRIMARY_SPI",
+        "SM_FPGA_RESET",
+        "SM_SENSOR_CONFIG_DONE",
+        "SM_DONE"
+    };
+
+    if (type >= 0 && type < SM_AMOUNT)
+    {
+        return stateMachineThreadStrings[type];
+    }
+    else
+    {
+        return "UNKNOWN_SM_STATE";
+    }
+}
+
 static int stateMachineThread(void *data)
 {
-    stateMachineType state;
     showThreadDiagnostics(Process.threadName);
 
     while (!kthread_should_stop())
     {
-        state = getStateMachine();
+        /* Sleep until stateChanged or stop signal */
+        wait_event_interruptible(stateMachineThreadWaitQueue, Process.stateChanged || kthread_should_stop());
 
-        switch(state)
+        if (kthread_should_stop())
+        {
+            break;
+        }
+
+        /* Clear flag after wake */
+        spin_lock_irqsave(&Process.smSpinlock, Process.irqFlags);
+        Process.stateChanged = false;
+        spin_unlock_irqrestore(&Process.smSpinlock, Process.irqFlags);
+
+        Process.currentState = getStateMachine();
+
+        if (Process.previousState != Process.currentState)
+        {
+            printk(KERN_INFO "[CTRL][STM] stateMachineThread %d->%d %s\n", Process.previousState, Process.currentState, getStateMachineThreadString(Process.currentState));
+            Process.previousState = Process.currentState;
+        }
+
+        switch(Process.currentState)
         {
             case SM_IDLE:
                 /* Nothing here :: Just wait */
@@ -156,16 +208,6 @@ static int stateMachineThread(void *data)
                 printk(KERN_ERR "[CTRL][STM] Unknown mode\n");
                 return -EINVAL; // Proper error code
         }
-
-        /**
-         * 
-         * Reduce consumption of CPU resources
-         * Add a short delay to prevent 
-         * busy waiting
-         * 
-         */
-        msleep(10); /* Release 90% of CPU resources */ 
-
     }
 
     return 0;

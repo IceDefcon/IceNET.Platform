@@ -276,7 +276,7 @@ void masterTransferPrimary(struct work_struct *work)
     if(0x18 != rx_buf[0])
     {
         printk(KERN_ERR "[CTRL][SPI] No FPGA Preamble detected :: FPGA is Not Programed, Connected or Running properly\n");
-        charDeviceLockCtrl(DEVICE_COMMANDER, CTRL_UNLOCK);
+        eventWakeUpDevice(DEVICE_COMMANDER);
     }
 }
 
@@ -361,8 +361,9 @@ void masterTransferSecondary(struct work_struct *work)
      */
     (void)isConfDone();
 
-    /* Unlock COMMANDER For Kernel Commander Device to process */
-    charDeviceLockCtrl(DEVICE_COMMANDER, CTRL_UNLOCK);
+    /* Unlock  Kernel Commander Device to process */
+    eventWakeUpDevice(DEVICE_COMMANDER);
+
 }
 
 int spiInit(void)

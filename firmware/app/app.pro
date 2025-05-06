@@ -13,7 +13,7 @@ TEMPLATE = app
 
 SOURCES += main.cpp \
            gui/gui.cpp \
-           meas/measList.cpp \
+           meas/Measure.cpp \
            system/src/DroneCtrl.cpp \
            system/src/KernelComms/KernelComms.cpp \
            system/src/KernelComms/BlockDevice/RamDisk.cpp \
@@ -21,7 +21,7 @@ SOURCES += main.cpp \
            system/src/KernelComms/CharDevice/Watchdog.cpp \
 
 HEADERS += gui/gui.h \
-           meas/measList.h \
+           meas/Measure.h \
            system/include/Core.h \
            system/include/Types.h \
            system/include/DroneCtrl.h \

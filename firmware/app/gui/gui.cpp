@@ -320,7 +320,7 @@ void gui::setupFpgaCtrl()
         }
         else
         {
-            m_instanceDroneCtrl->getCommanderInstance()->sendCommand(CMD_FPGA_RESET);
+            m_instanceDroneCtrl->sendCommand(CMD_FPGA_RESET);
         }
     });
 
@@ -1215,12 +1215,12 @@ void gui::dma_execute(commandType cmd)
             QString dataText = m_dmaCustom_dataField->text();
             uint8_t dmaSize = static_cast<uint8_t>(dataText.toUInt(&ok, 16));
 
-            m_instanceDroneCtrl->getCommanderInstance()->setDmaCustom(dmaSize);
-            m_instanceDroneCtrl->getCommanderInstance()->sendCommand(cmd);
+            m_instanceDroneCtrl->setDmaCustom(dmaSize);
+            m_instanceDroneCtrl->sendCommand(cmd);
         }
         else if(CMD_DMA_SINGLE == cmd || CMD_DMA_SENSOR == cmd)
         {
-            m_instanceDroneCtrl->getCommanderInstance()->sendCommand(cmd);
+            m_instanceDroneCtrl->sendCommand(cmd);
         }
         else
         {
@@ -1721,11 +1721,9 @@ void gui::threadMain()
 
     /* 1st :: Make unique DroneCtrl */
     m_instanceDroneCtrl = std::make_unique<DroneCtrl>();
-    /* 2st :: Initialise DroneCtrl pointers */
-    m_instanceDroneCtrl->initPointers();
-    /* 3nd :: Push transfer pointers to Commander */
-    m_instanceDroneCtrl->getCommanderInstance()->setTransferPointers(m_Rx_GuiVector, m_Tx_GuiVector, m_IO_GuiState);
-    /* 4th :: Init RamDisk Commander */
+    /* 2nd :: Push transfer pointers to Commander */
+    m_instanceDroneCtrl->setTransferPointers(m_Rx_GuiVector, m_Tx_GuiVector, m_IO_GuiState);
+    /* 3rd :: Init RamDisk Commander */
     m_instanceDroneCtrl->initKernelComms();
 
     while (false == m_threadKill)
@@ -1748,7 +1746,7 @@ void gui::threadMain()
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
 
-    m_instanceDroneCtrl->getCommanderInstance()->sendCommand(CMD_FPGA_RESET);
+    m_instanceDroneCtrl->sendCommand(CMD_FPGA_RESET);
     m_instanceDroneCtrl->shutdownKernelComms();
     m_instanceDroneCtrl.reset(); // Reset the unique_ptr to call the destructor
 }

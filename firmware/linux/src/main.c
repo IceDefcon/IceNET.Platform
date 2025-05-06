@@ -14,7 +14,6 @@
 #include "watchdog.h"
 #include "spiWork.h"
 #include "isrCtrl.h"
-#include "console.h"
 #include "ramDisk.h"
 #include "ramAxis.h"
 #include "network.h"
@@ -32,7 +31,7 @@ MODULE_DESCRIPTION("FPGA Driver");
 //         INIT         //
 //                      //
 //////////////////////////
-static int __init fpga_driver_init(void)
+static int __init initFpgaDriver(void)
 {
     int ret = 0;
 
@@ -56,8 +55,6 @@ static int __init fpga_driver_init(void)
     spiWorkInit();
     /* Initialise gpio ISR */
     isrGpioInit();
-    /* Initialise UART Console */
-    consoleInit();
     /* Initialise kthread Watchdog */
     watchdogInit();
     /* Initialize scheduler */
@@ -65,8 +62,8 @@ static int __init fpga_driver_init(void)
     /* Initialize network stack */
     networkInit();
 
-    /* Main Thread Diagnostics */
-    showThreadDiagnostics("MainThread");
+    /* Main Module Diagnostics */
+    showModuleDiagnostics("iceFpgaDriver");
 
     printk(KERN_INFO "--------------------------------------\n");
     printk(KERN_INFO "[READY] FPGA Driver loaded successfuly \n");
@@ -82,7 +79,7 @@ static int __init fpga_driver_init(void)
 //         EXIT         //
 //                      //
 //////////////////////////
-static void __exit fpga_driver_exit(void)
+static void __exit exitFpgaDriver(void)
 {
     printk(KERN_INFO "-------------------------------------------------\n");
     printk(KERN_INFO "[TERMINATE] Termination of FPGA driver \n");
@@ -91,7 +88,6 @@ static void __exit fpga_driver_exit(void)
     networkDestroy();
     schedulerDestroy();
     watchdogDestroy();
-    consoleDestroy();
     isrGpioDestroy();
     spiWorkDestroy();
     spiDestroy();
@@ -103,5 +99,5 @@ static void __exit fpga_driver_exit(void)
     printk(KERN_INFO "[TERMINATE] Driver Terminated Successfully\n");
 }
 
-module_init(fpga_driver_init);
-module_exit(fpga_driver_exit);
+module_init(initFpgaDriver);
+module_exit(exitFpgaDriver);

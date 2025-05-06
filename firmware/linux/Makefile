@@ -12,7 +12,6 @@ iceDriver-objs := \
     src/scheduler.o \
     src/ramDisk.o \
     src/ramAxis.o \
-    src/console.o \
     src/network.o \
     ../common/src/crypto.o \
     ../common/src/memory.o \
