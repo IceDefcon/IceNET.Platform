@@ -16,7 +16,7 @@ find_package(Qt5 REQUIRED COMPONENTS Core Gui Widgets SerialPort)
 set(SOURCES
     main.cpp
     gui/gui.cpp
-    meas/measList.cpp
+    meas/Measure.cpp
     system/src/DroneCtrl.cpp
     system/src/KernelComms/KernelComms.cpp
     system/src/KernelComms/BlockDevice/RamDisk.cpp
@@ -27,7 +27,7 @@ set(SOURCES
 # Header files (optional, but nice for IDEs)
 set(HEADERS
     gui/gui.h
-    meas/measList.h
+    meas/Measure.h
     system/include/Core.h
     system/include/Types.h
     system/include/DroneCtrl.h

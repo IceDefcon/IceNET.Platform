@@ -28,21 +28,6 @@ DroneCtrl::~DroneCtrl()
     std::cout << "[INFO] [DESTRUCTOR] " << this << " :: Destroy DroneCtrl" << std::endl;
 }
 
-void DroneCtrl::initPointers()
-{
-    std::cout << "[INIT] [ D ] Setup the pointers" << std::endl;
-    /* Get control instances */
-    m_instanceCommander = this;
-    m_instanceWatchdog = this;
-    m_instanceRamDisk = this;
-    m_instanceMeasList = this;
-}
-
-Commander* DroneCtrl::getCommanderInstance()
-{
-    return m_instanceCommander;
-}
-
 void DroneCtrl::initKernelComms()
 {
     std::cout << "[INIT] [ D ] Initialize RamDisk Commander" << std::endl;
@@ -72,7 +57,6 @@ std::string DroneCtrl::getCtrlStateString(droneCtrlStateType state)
         "CTRL_RAMDISK_PERIPHERALS",
         "CTRL_RAMDISK_ACTIVATE_DMA",
         "CTRL_DMA_SINGLE",
-        "CTRL_MEAS_TEST",
         "CTRL_MAIN",
     };
 
@@ -89,8 +73,8 @@ std::string DroneCtrl::getCtrlStateString(droneCtrlStateType state)
 void DroneCtrl::sendFpgaConfigToRamDisk()
 {
     std::cout << "[INFO] [ D ] Peripherals configuration ready :: Loading to FPGA" << std::endl;
-    m_instanceRamDisk->assembleConfig();
-    m_instanceRamDisk->sendConfig();
+    assembleConfig();
+    sendConfig();
 }
 
 void DroneCtrl::setDroneCtrlState(droneCtrlStateType state)
@@ -123,7 +107,7 @@ void DroneCtrl::droneCtrlMain()
              */
             if(true == KernelComms::Watchdog::getFpgaConfigReady())
             {
-                m_instanceCommander->sendCommand(CMD_RAMDISK_CLEAR);
+                sendCommand(CMD_RAMDISK_CLEAR);
                 m_ctrlState = CTRL_RAMDISK_PERIPHERALS;
             }
             break;
@@ -135,7 +119,7 @@ void DroneCtrl::droneCtrlMain()
 
         case CTRL_RAMDISK_ACTIVATE_DMA:
             std::cout << "[INFO] [ D ] Activating RamDisk Config DMA Engine" << std::endl;
-            m_instanceCommander->sendCommand(CMD_RAMDISK_CONFIG);
+            sendCommand(CMD_RAMDISK_CONFIG);
             /* Wait for Kerenl to send data to FPGA */
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
             m_ctrlState = CTRL_DMA_SINGLE;
@@ -143,27 +127,14 @@ void DroneCtrl::droneCtrlMain()
 
         case CTRL_DMA_SINGLE:
             std::cout << "[INFO] [ D ] Configuration Done :: Switch DMA into a Normal Mode" << std::endl;
-            m_instanceCommander->sendCommand(CMD_DMA_NORMAL);
-            m_ctrlState = CTRL_MEAS_TEST;
-            break;
-
-        case CTRL_MEAS_TEST:
-            std::cout << "[INFO] [ D ] Setup Test List" << std::endl;
-            m_instanceMeasList->append(1, 2, 3);
-            m_instanceMeasList->append(4, 5, 6);
-            m_instanceMeasList->append(7, 8, 9);
+            sendCommand(CMD_DMA_NORMAL);
             m_ctrlState = CTRL_MAIN;
             break;
 
         case CTRL_MAIN:
-#if 0 /* TODO :: Must be considered when measurements arrive from FPGA */
-            m_countMain10ms++;
-            if(100 == m_countMain10ms)
-            {
-                m_instanceMeasList->printList();
-                m_countMain10ms = 0;
-            }
-#endif
+            //
+            // TODO
+            //
             break;
 
         default:

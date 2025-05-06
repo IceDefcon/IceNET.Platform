@@ -12,9 +12,10 @@
 #include <vector>
 #include <mutex>
 
+#include "Measure.h"
 #include "Types.h"
 
-class Commander
+class Commander : public Measure
 {
     private:
         int m_file_descriptor;
