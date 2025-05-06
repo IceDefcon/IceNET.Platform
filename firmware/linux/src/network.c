@@ -50,7 +50,7 @@ int networkInit(void)
 {
     int ret = configureNetworkDevice();
 
-    pr_info("[INIT][NET] Master Control Network Initialisation\n");
+    pr_info("[INIT][NET] Network Initialisation\n");
 
     if(-ENODEV == ret || -ENETDOWN == ret || -EINVAL == ret)
     {
@@ -109,5 +109,5 @@ void networkDestroy(void)
         networkControl->networkDevice = NULL;
     }
 
-    pr_info("[TX][DESTROY] IceNET Master Controller Module Unloaded\n");
+    pr_info("[TX][DESTROY] Network Destroy\n");
 }

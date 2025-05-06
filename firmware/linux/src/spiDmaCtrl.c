@@ -276,7 +276,9 @@ void masterTransferPrimary(struct work_struct *work)
     if(0x18 != rx_buf[0])
     {
         printk(KERN_ERR "[CTRL][SPI] No FPGA Preamble detected :: FPGA is Not Programed, Connected or Running properly\n");
-        charDeviceLockCtrl(DEVICE_COMMANDER, CTRL_UNLOCK);
+        // charDeviceLockCtrl(DEVICE_COMMANDER, CTRL_UNLOCK);
+        wakeUpDevice(DEVICE_COMMANDER);
+
     }
 }
 
@@ -321,7 +323,7 @@ void masterTransferPrimary(struct work_struct *work)
 
 void masterTransferSecondary(struct work_struct *work)
 {
-#if 1
+#if 0
     unsigned char *tx_buf;
     unsigned char *rx_buf;
     int i;
@@ -336,7 +338,7 @@ void masterTransferSecondary(struct work_struct *work)
         printk(KERN_ERR "[CTRL][SPI] SPI transfer at interrupt From Fpga failed: %d\n", ret);
         return;
     }
-#if 1
+#if 0
     else
     {
         printk(KERN_INFO "[CTRL][SPI] Secondary FPGA Transfer :: Signaled by masterTransferSecondary over SPI.1\n");
@@ -362,7 +364,9 @@ void masterTransferSecondary(struct work_struct *work)
     (void)isConfDone();
 
     /* Unlock COMMANDER For Kernel Commander Device to process */
-    charDeviceLockCtrl(DEVICE_COMMANDER, CTRL_UNLOCK);
+    // charDeviceLockCtrl(DEVICE_COMMANDER, CTRL_UNLOCK);
+    wakeUpDevice(DEVICE_COMMANDER);
+
 }
 
 int spiInit(void)

@@ -29,6 +29,8 @@
 //                  //
 //////////////////////
 
+static DECLARE_WAIT_QUEUE_HEAD(commanderWaitQueue);
+
 /* WATCHDOG */ static int watchdogOpen(struct inode *inodep, struct file *filep);
 /* WATCHDOG */ static ssize_t watchdogRead(struct file *, char *, size_t, loff_t *);
 /* WATCHDOG */ static ssize_t watchdogWrite(struct file *, const char *, size_t, loff_t *);
@@ -69,6 +71,7 @@ static charDeviceData Device[DEVICE_AMOUNT] =
         .name = "KernelWatchdog",
         .nameClass = "KernelWatchdogClass",
         .unlockTimer = 0,
+        .wakeUpDevice = false,
     },
 
     [DEVICE_COMMANDER] =
@@ -99,6 +102,7 @@ static charDeviceData Device[DEVICE_AMOUNT] =
         .name = "KernelCommander",
         .nameClass = "KernelCommanderClass",
         .unlockTimer = 0,
+        .wakeUpDevice = false,
     },
 };
 
@@ -247,7 +251,9 @@ static ssize_t commanderRead(struct file *filep, char *buffer, size_t len, loff_
     int error_count = 0;
     size_t i;
 
-#if 1
+    wait_event_interruptible(commanderWaitQueue, Device[DEVICE_COMMANDER].wakeUpDevice);
+    Device[DEVICE_COMMANDER].wakeUpDevice = false;
+#if 0
     charDeviceLockCtrl(DEVICE_COMMANDER, CTRL_LOCK);
     while(isDeviceLocked(DEVICE_COMMANDER))
     {
@@ -403,3 +409,10 @@ static ssize_t commanderWrite(struct file *filep, const char __user *buffer, siz
 {
     return &Device[charDevice].io_transfer;
 }
+
+/* WAKE-UP */ void wakeUpDevice(charDeviceType charDevice)
+{
+    Device[charDevice].wakeUpDevice = true;
+    wake_up_interruptible(&commanderWaitQueue);
+}
+

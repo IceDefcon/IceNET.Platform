@@ -80,7 +80,8 @@ static int watchdogThread(void *data)
         else
         {
             printk(KERN_INFO "[CTRL][WDG] Watchdog Dead [%x|%x] ERROR: Please check if FPGA binary is loaded\n", Process.indicatorPrevious, Process.indicatorCurrent);
-            charDeviceLockCtrl(DEVICE_COMMANDER, CTRL_UNLOCK);
+            // charDeviceLockCtrl(DEVICE_COMMANDER, CTRL_UNLOCK);
+            wakeUpDevice(DEVICE_COMMANDER);
             Process.indicatorFPGA = false;
         }
 

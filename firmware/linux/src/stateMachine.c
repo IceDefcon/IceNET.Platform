@@ -91,7 +91,6 @@ static const char* getStateMachineThreadString(stateMachineType type)
 
 static int stateMachineThread(void *data)
 {
-    stateMachineType state;
     showThreadDiagnostics(Process.threadName);
 
     while (!kthread_should_stop())
@@ -109,7 +108,7 @@ static int stateMachineThread(void *data)
         Process.stateChanged = false;
         spin_unlock_irqrestore(&Process.smSpinlock, Process.irqFlags);
 
-        state = getStateMachine();
+        Process.currentState = getStateMachine();
 
         if (Process.previousState != Process.currentState)
         {
@@ -117,7 +116,7 @@ static int stateMachineThread(void *data)
             Process.previousState = Process.currentState;
         }
 
-        switch(state)
+        switch(Process.currentState)
         {
             case SM_IDLE:
                 /* Nothing here :: Just wait */

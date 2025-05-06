@@ -38,6 +38,7 @@ typedef struct
     char* name;
     char* nameClass;
     char unlockTimer;
+    bool wakeUpDevice;
 }charDeviceData;
 
 typedef enum
@@ -60,6 +61,7 @@ typedef enum
 /* GET */ uint8_t getCustomDmaSize(void);
 /* GET */ charDeviceData* getCharDevice(void);
 /* GET */ DmaTransferType* getCharDeviceTransfer(charDeviceType charDevice);
+/* WAKE-UP */ void wakeUpDevice(charDeviceType charDevice);
 /* MUTEX */ void charDeviceMutexCtrl(charDeviceType charDevice, MutexCtrlType mutexCtrl);
 /* FLAG */ void charDeviceLockCtrl(charDeviceType charDevice, CtrlType Ctrl);
 
