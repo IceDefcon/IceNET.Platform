@@ -32,11 +32,14 @@ typedef enum
     SM_FPGA_RESET,
     SM_SENSOR_CONFIG_DONE,
     SM_DONE,
+    SM_AMOUNT,
 } stateMachineType;
 
 typedef struct
 {
     stateMachineType currentState;
+    stateMachineType previousState;
+    bool stateChanged;
     struct task_struct *threadHandle;
     spinlock_t smSpinlock;
     unsigned long irqFlags;

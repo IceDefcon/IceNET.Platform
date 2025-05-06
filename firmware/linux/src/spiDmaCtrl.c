@@ -321,7 +321,7 @@ void masterTransferPrimary(struct work_struct *work)
 
 void masterTransferSecondary(struct work_struct *work)
 {
-#if 0
+#if 1
     unsigned char *tx_buf;
     unsigned char *rx_buf;
     int i;
@@ -336,7 +336,7 @@ void masterTransferSecondary(struct work_struct *work)
         printk(KERN_ERR "[CTRL][SPI] SPI transfer at interrupt From Fpga failed: %d\n", ret);
         return;
     }
-#if 0
+#if 1
     else
     {
         printk(KERN_INFO "[CTRL][SPI] Secondary FPGA Transfer :: Signaled by masterTransferSecondary over SPI.1\n");
