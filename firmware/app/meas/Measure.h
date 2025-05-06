@@ -12,7 +12,7 @@
 
 #define MAX_DIFF_BETWEEN_MEASUREMENTS 30
 #define VECTOR_BUFFER_LENGTH 32
-#define SMOOTH_FILTER_LENGTH 4
+#define SMOOTH_FILTER_LENGTH 8
 
 struct coordinatesType
 {

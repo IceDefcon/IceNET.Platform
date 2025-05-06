@@ -17,8 +17,7 @@
 
 DroneCtrl::DroneCtrl() :
     m_ctrlState(CTRL_INIT),
-    m_ctrlStatePrev(CTRL_INIT),
-    m_countMain10ms(0)
+    m_ctrlStatePrev(CTRL_INIT)
 {
     std::cout << "[INFO] [CONSTRUCTOR] " << this << " :: Instantiate DroneCtrl" << std::endl;
 }

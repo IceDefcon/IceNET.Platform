@@ -16,12 +16,12 @@
 const size_t CMD_LENGTH = 2;
 const size_t IO_TRANSFER_SIZE = 8;
 
-enum Status
+typedef enum
 {
 	OK,
 	ERROR,
 	UNKNOWN
-};
+} Status;
 
 typedef enum
 {

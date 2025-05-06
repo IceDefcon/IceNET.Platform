@@ -22,8 +22,6 @@ class DroneCtrl : public KernelComms
 
         static constexpr uint32_t FPGA_DELAY = 3000;
 
-        int m_countMain10ms;
-
     public:
         DroneCtrl();
         ~DroneCtrl();

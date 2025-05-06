@@ -1,6 +1,3 @@
-#
-# Script written by chatGPT
-#
 import os
 import io
 
@@ -15,13 +12,16 @@ def count_lines_of_code(directory):
     x86_lines = 0
     common_lines = 0
     app_lines = 0
+    test_lines = 0  # New counter
 
     # Add folders to check
-    target_folders = ['firmware', 'rtl']
+    target_folders = ['firmware', 'rtl', 'other/random_sources']
 
     for root, dirs, files in os.walk(directory):
-        # Check if the folder is 'firmware' or 'rtl' (at any level)
-        if any(folder in root for folder in target_folders):
+        # Normalize path separators for portability
+        normalized_root = root.replace("\\", "/")
+
+        if any(folder in normalized_root for folder in target_folders):
             for file in files:
                 if any(file.endswith(ext) for ext in extensions):
                     file_path = os.path.join(root, file)
@@ -32,16 +32,18 @@ def count_lines_of_code(directory):
                             file_counts[file_path] = line_count
 
                             # Check subdirectories and update respective counters
-                            if "rtl" in root:
+                            if "rtl" in normalized_root:
                                 rtl_lines += line_count
-                            elif "firmware/linux" in root.replace("\\", "/"):
+                            elif "firmware/linux" in normalized_root:
                                 linux_lines += line_count
-                            elif "firmware/x86" in root.replace("\\", "/"):
+                            elif "firmware/x86" in normalized_root:
                                 x86_lines += line_count
-                            elif "firmware/common" in root.replace("\\", "/"):
+                            elif "firmware/common" in normalized_root:
                                 common_lines += line_count
-                            elif "firmware/app" in root.replace("\\", "/"):
+                            elif "firmware/app" in normalized_root:
                                 app_lines += line_count
+                            elif "other/random_sources" in normalized_root:
+                                test_lines += line_count
 
                     except Exception as e:
                         print("Error reading {}: {}".format(file_path, e))
@@ -55,6 +57,7 @@ def count_lines_of_code(directory):
     print("   Common Kernel Code -> {} lines".format(common_lines))
     print("User Space Appliation -> {} lines".format(app_lines))
     print("Master x86 Controller -> {} lines".format(x86_lines))
+    print("      Testing Sources -> {} lines".format(test_lines))
     print("----------------------------------------------")
     print("                Total -> {} lines of code".format(total_lines))
 

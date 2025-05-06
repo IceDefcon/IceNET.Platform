@@ -38,24 +38,11 @@ class Commander : public Measure
         int16_t m_y;
         int16_t m_z;
 
-        int16_t m_x_vector[32];
-        int16_t m_y_vector[32];
-        int16_t m_z_vector[32];
-
-        int16_t m_x_average;
-        int16_t m_y_average;
-        int16_t m_z_average;
-
-        int m_x_sum;
-        int m_y_sum;
-        int m_z_sum;
-
-        struct timespec m_ts;
-        double m_seconds_since_boot;
-
     public:
         Commander();
         ~Commander();
+
+        void setupCommandMatrix();
 
         int openDEV();
         int dataTX();

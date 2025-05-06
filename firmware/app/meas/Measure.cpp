@@ -22,47 +22,42 @@ bool Measure::appendBuffer(int16_t x, int16_t y, int16_t z)
 {
     bool ret = false;
 
-    bool check_x = false;
-    bool check_y = false;
-    bool check_z = false;
-
     if (m_index >= VECTOR_BUFFER_LENGTH)
     {
-        std::cout << "[ERNO] [MEAS] Measure index above the buffer space -> " << m_index << std::endl;
-        ret = true;
+        std::cout << "[ERNO] [MEAS] Measure index above buffer space -> " << m_index << std::endl;
+        m_index = 0;
+        return true;
     }
 
-    for (int i = SMOOTH_FILTER_LENGTH; i > 0; i--)
+    for (int i = SMOOTH_FILTER_LENGTH - 1; i > 0; --i)
     {
-        m_vectorPrevoius[i].x = m_vectorPrevoius[i - 1].x;
-        m_vectorPrevoius[i].y = m_vectorPrevoius[i - 1].y;
-        m_vectorPrevoius[i].z = m_vectorPrevoius[i - 1].z;
+        m_vectorPrevoius[i] = m_vectorPrevoius[i - 1];
     }
-    m_vectorPrevoius[0].x = x;
-    m_vectorPrevoius[0].y = y;
-    m_vectorPrevoius[0].z = z;
 
-    int16_t min_x = m_vectorPrevoius[0].x, max_x = m_vectorPrevoius[0].x;
-    int16_t min_y = m_vectorPrevoius[0].y, max_y = m_vectorPrevoius[0].y;
-    int16_t min_z = m_vectorPrevoius[0].z, max_z = m_vectorPrevoius[0].z;
+    m_vectorPrevoius[0] = {x, y, z};
 
-    for (int i = 1; i < 4; ++i)
+    int16_t min_x = x, max_x = x;
+    int16_t min_y = y, max_y = y;
+    int16_t min_z = z, max_z = z;
+
+    for (int i = 1; i < SMOOTH_FILTER_LENGTH; ++i)
     {
-        if (m_vectorPrevoius[i].x < min_x) min_x = m_vectorPrevoius[i].x;
-        if (m_vectorPrevoius[i].x > max_x) max_x = m_vectorPrevoius[i].x;
+        const auto& vec = m_vectorPrevoius[i];
+        if (vec.x < min_x) min_x = vec.x;
+        if (vec.x > max_x) max_x = vec.x;
 
-        if (m_vectorPrevoius[i].y < min_y) min_y = m_vectorPrevoius[i].y;
-        if (m_vectorPrevoius[i].y > max_y) max_y = m_vectorPrevoius[i].y;
+        if (vec.y < min_y) min_y = vec.y;
+        if (vec.y > max_y) max_y = vec.y;
 
-        if (m_vectorPrevoius[i].z < min_z) min_z = m_vectorPrevoius[i].z;
-        if (m_vectorPrevoius[i].z > max_z) max_z = m_vectorPrevoius[i].z;
+        if (vec.z < min_z) min_z = vec.z;
+        if (vec.z > max_z) max_z = vec.z;
     }
 
-    check_x = (max_x - min_x <= MAX_DIFF_BETWEEN_MEASUREMENTS);
-    check_y = (max_y - min_y <= MAX_DIFF_BETWEEN_MEASUREMENTS);
-    check_z = (max_z - min_z <= MAX_DIFF_BETWEEN_MEASUREMENTS);
+    bool check_x = (max_x - min_x <= MAX_DIFF_BETWEEN_MEASUREMENTS);
+    bool check_y = (max_y - min_y <= MAX_DIFF_BETWEEN_MEASUREMENTS);
+    bool check_z = (max_z - min_z <= MAX_DIFF_BETWEEN_MEASUREMENTS);
 
-    if(true == check_x && true == check_y && true == check_z)
+    if (check_x && check_y && check_z)
     {
         m_vectorBuffer[m_index] = {x, y, z};
 
@@ -75,10 +70,9 @@ bool Measure::appendBuffer(int16_t x, int16_t y, int16_t z)
         << x << "," << y << "," << z << "]" << std::endl;
 
         m_index++;
-
         ret = (m_index == VECTOR_BUFFER_LENGTH);
 
-        if(true == ret)
+        if (ret)
         {
             m_index = 0;
         }
@@ -86,10 +80,11 @@ bool Measure::appendBuffer(int16_t x, int16_t y, int16_t z)
 #if 0
     else
     {
-        std::cout << "[INFO] [MEAS] Nothing " << std::dec << "[" << m_index << "] Vector Acceleration ["
-        << x << "," << y << "," << z << "]" << std::endl;
+        std::cout << "[INFO] [MEAS] Rejected [" << m_index << "] Vector Acceleration ["
+                  << x << "," << y << "," << z << "]" << std::endl;
     }
 #endif
+
     return ret;
 }
 

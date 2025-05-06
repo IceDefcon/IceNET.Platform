@@ -131,7 +131,8 @@ void memoryDestroy(void)
     // Estimate high water mark
     unsigned char *stack_ptr = (unsigned char *)stack_base;
     size_t high_water_bytes = 0;
-    while ((unsigned long)stack_ptr < stack_end && *stack_ptr == STACK_PATTERN) {
+    while ((unsigned long)stack_ptr < stack_end && *stack_ptr == STACK_PATTERN)
+    {
         high_water_bytes++;
         stack_ptr++;
     }
