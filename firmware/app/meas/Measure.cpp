@@ -26,13 +26,13 @@ bool Measure::appendBuffer(int16_t x, int16_t y, int16_t z)
     bool check_y = false;
     bool check_z = false;
 
-    if (m_index >= MAX_MEAS_SIZE)
+    if (m_index >= VECTOR_BUFFER_LENGTH)
     {
         std::cout << "[ERNO] [MEAS] Measure index above the buffer space -> " << m_index << std::endl;
         ret = true;
     }
 
-    for (int i = MAX_FILTER_SIZE; i > 0; i--)
+    for (int i = SMOOTH_FILTER_LENGTH; i > 0; i--)
     {
         m_vectorPrevoius[i].x = m_vectorPrevoius[i - 1].x;
         m_vectorPrevoius[i].y = m_vectorPrevoius[i - 1].y;
@@ -58,9 +58,9 @@ bool Measure::appendBuffer(int16_t x, int16_t y, int16_t z)
         if (m_vectorPrevoius[i].z > max_z) max_z = m_vectorPrevoius[i].z;
     }
 
-    check_x = (max_x - min_x <= 20);
-    check_y = (max_y - min_y <= 20);
-    check_z = (max_z - min_z <= 20);
+    check_x = (max_x - min_x <= MAX_DIFF_BETWEEN_MEASUREMENTS);
+    check_y = (max_y - min_y <= MAX_DIFF_BETWEEN_MEASUREMENTS);
+    check_z = (max_z - min_z <= MAX_DIFF_BETWEEN_MEASUREMENTS);
 
     if(true == check_x && true == check_y && true == check_z)
     {
@@ -76,19 +76,20 @@ bool Measure::appendBuffer(int16_t x, int16_t y, int16_t z)
 
         m_index++;
 
-        ret = (m_index == MAX_MEAS_SIZE);
+        ret = (m_index == VECTOR_BUFFER_LENGTH);
 
         if(true == ret)
         {
             m_index = 0;
         }
     }
+#if 0
     else
     {
         std::cout << "[INFO] [MEAS] Nothing " << std::dec << "[" << m_index << "] Vector Acceleration ["
         << x << "," << y << "," << z << "]" << std::endl;
     }
-
+#endif
     return ret;
 }
 
@@ -96,16 +97,16 @@ void Measure::averageBuffer()
 {
     int64_t sum_x = 0, sum_y = 0, sum_z = 0;
 
-    for (int i = 0; i < MAX_MEAS_SIZE; i++)
+    for (int i = 0; i < VECTOR_BUFFER_LENGTH; i++)
     {
         sum_x += m_vectorBuffer[i].x;
         sum_y += m_vectorBuffer[i].y;
         sum_z += m_vectorBuffer[i].z;
     }
 
-    m_average.x = static_cast<int16_t>(sum_x / MAX_MEAS_SIZE);
-    m_average.y = static_cast<int16_t>(sum_y / MAX_MEAS_SIZE);
-    m_average.z = static_cast<int16_t>(sum_z / MAX_MEAS_SIZE) + 8192;
+    m_average.x = static_cast<int16_t>(sum_x / VECTOR_BUFFER_LENGTH);
+    m_average.y = static_cast<int16_t>(sum_y / VECTOR_BUFFER_LENGTH);
+    m_average.z = static_cast<int16_t>(sum_z / VECTOR_BUFFER_LENGTH) + 8192;
 
     std::cout << std::fixed << std::setprecision(6);
     std::cout << "[INFO] [MEAS] [" << m_seconds_since_boot
@@ -115,7 +116,7 @@ void Measure::averageBuffer()
 
 void Measure::clearBuffer()
 {
-    for (int i = 0; i < MAX_MEAS_SIZE; i++)
+    for (int i = 0; i < VECTOR_BUFFER_LENGTH; i++)
     {
         m_vectorBuffer[i] = {0, 0, 0};
     }

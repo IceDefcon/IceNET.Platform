@@ -10,8 +10,9 @@
 #include <iomanip>
 #include <array>
 
-#define MAX_MEAS_SIZE 32
-#define MAX_FILTER_SIZE 4
+#define MAX_DIFF_BETWEEN_MEASUREMENTS 30
+#define VECTOR_BUFFER_LENGTH 32
+#define SMOOTH_FILTER_LENGTH 4
 
 struct coordinatesType
 {
@@ -23,8 +24,8 @@ struct coordinatesType
 class Measure
 {
 private:
-    std::array<coordinatesType, MAX_MEAS_SIZE> m_vectorBuffer;
-    std::array<coordinatesType, MAX_FILTER_SIZE> m_vectorPrevoius;
+    std::array<coordinatesType, VECTOR_BUFFER_LENGTH> m_vectorBuffer;
+    std::array<coordinatesType, SMOOTH_FILTER_LENGTH> m_vectorPrevoius;
     coordinatesType m_average;
     int m_index;
 

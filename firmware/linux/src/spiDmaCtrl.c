@@ -277,7 +277,7 @@ void masterTransferPrimary(struct work_struct *work)
     {
         printk(KERN_ERR "[CTRL][SPI] No FPGA Preamble detected :: FPGA is Not Programed, Connected or Running properly\n");
         // charDeviceLockCtrl(DEVICE_COMMANDER, CTRL_UNLOCK);
-        wakeUpDevice(DEVICE_COMMANDER);
+        eventWakeUpDevice(DEVICE_COMMANDER);
 
     }
 }
@@ -365,7 +365,7 @@ void masterTransferSecondary(struct work_struct *work)
 
     /* Unlock COMMANDER For Kernel Commander Device to process */
     // charDeviceLockCtrl(DEVICE_COMMANDER, CTRL_UNLOCK);
-    wakeUpDevice(DEVICE_COMMANDER);
+    eventWakeUpDevice(DEVICE_COMMANDER);
 
 }
 

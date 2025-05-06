@@ -61,7 +61,7 @@ typedef enum
 /* GET */ uint8_t getCustomDmaSize(void);
 /* GET */ charDeviceData* getCharDevice(void);
 /* GET */ DmaTransferType* getCharDeviceTransfer(charDeviceType charDevice);
-/* WAKE-UP */ void wakeUpDevice(charDeviceType charDevice);
+/* EVENT */ void eventWakeUpDevice(charDeviceType charDevice);
 /* MUTEX */ void charDeviceMutexCtrl(charDeviceType charDevice, MutexCtrlType mutexCtrl);
 /* FLAG */ void charDeviceLockCtrl(charDeviceType charDevice, CtrlType Ctrl);
 

@@ -70,12 +70,12 @@ static const char* getStateMachineThreadString(stateMachineType type)
         "SM_DMA_SENSOR",
         "SM_DMA_SINGLE",
         "SM_DMA_CUSTOM",
-        "SM_RAMDISK_CONFIG"
-        "SM_RAMDISK_CLEAR"
-        "SM_RAMDISK_PRINT"
-        "SM_PRIMARY_SPI"
-        "SM_FPGA_RESET"
-        "SM_SENSOR_CONFIG_DONE"
+        "SM_RAMDISK_CONFIG",
+        "SM_RAMDISK_CLEAR",
+        "SM_RAMDISK_PRINT",
+        "SM_PRIMARY_SPI",
+        "SM_FPGA_RESET",
+        "SM_SENSOR_CONFIG_DONE",
         "SM_DONE"
     };
 

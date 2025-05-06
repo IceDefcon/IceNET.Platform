@@ -30,6 +30,7 @@
 //////////////////////
 
 static DECLARE_WAIT_QUEUE_HEAD(commanderWaitQueue);
+static DECLARE_WAIT_QUEUE_HEAD(watchdogWaitQueue);
 
 /* WATCHDOG */ static int watchdogOpen(struct inode *inodep, struct file *filep);
 /* WATCHDOG */ static ssize_t watchdogRead(struct file *, char *, size_t, loff_t *);
@@ -213,11 +214,14 @@ static ssize_t watchdogRead(struct file *filep, char *buffer, size_t len, loff_t
 {
     int error_count = 0;
 
-    charDeviceLockCtrl(DEVICE_WATCHDOG, CTRL_LOCK);
-    while(isDeviceLocked(DEVICE_WATCHDOG))
-    {
-        msleep(10); /* Release 90% of CPU resources */
-    }
+    // charDeviceLockCtrl(DEVICE_WATCHDOG, CTRL_LOCK);
+    // while(isDeviceLocked(DEVICE_WATCHDOG))
+    // {
+    //     msleep(10); /* Release 90% of CPU resources */
+    // }
+
+    wait_event_interruptible(watchdogWaitQueue, Device[DEVICE_WATCHDOG].wakeUpDevice);
+    Device[DEVICE_WATCHDOG].wakeUpDevice = false;
 
     error_count = copy_to_user(buffer, (const void *)Device[DEVICE_WATCHDOG].io_transfer.TxData, Device[DEVICE_WATCHDOG].transferSize);
 
@@ -253,7 +257,7 @@ static ssize_t commanderRead(struct file *filep, char *buffer, size_t len, loff_
 
     wait_event_interruptible(commanderWaitQueue, Device[DEVICE_COMMANDER].wakeUpDevice);
     Device[DEVICE_COMMANDER].wakeUpDevice = false;
-#if 0
+#if 0 /* TODO :: Unfreeze if not kicked */
     charDeviceLockCtrl(DEVICE_COMMANDER, CTRL_LOCK);
     while(isDeviceLocked(DEVICE_COMMANDER))
     {
@@ -410,9 +414,21 @@ static ssize_t commanderWrite(struct file *filep, const char __user *buffer, siz
     return &Device[charDevice].io_transfer;
 }
 
-/* WAKE-UP */ void wakeUpDevice(charDeviceType charDevice)
+/* EVENT */ void eventWakeUpDevice(charDeviceType charDevice)
 {
     Device[charDevice].wakeUpDevice = true;
-    wake_up_interruptible(&commanderWaitQueue);
+
+    if(DEVICE_WATCHDOG == charDevice)
+    {
+        wake_up_interruptible(&watchdogWaitQueue);
+    }
+    else if(DEVICE_COMMANDER == charDevice)
+    {
+        wake_up_interruptible(&commanderWaitQueue);
+    }
+    else
+    {
+        printk(KERN_ALERT "[ERNO][ C ] There is no such char device -> %d\n", charDevice);
+    }
 }
 
