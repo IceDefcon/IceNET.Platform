@@ -14,7 +14,6 @@
 
 #include "charDevice.h"
 #include "watchdog.h"
-#include "console.h"
 #include "memory.h"
 #include "types.h"
 
@@ -63,7 +62,6 @@ static int watchdogThread(void *data)
         watchdogData = getCharDeviceTransfer(DEVICE_WATCHDOG);
         watchdogData->TxData[0] = Process.indicatorPrevious;
         watchdogData->TxData[1] = Process.indicatorCurrent;
-        // charDeviceLockCtrl(DEVICE_WATCHDOG, CTRL_UNLOCK);
         eventWakeUpDevice(DEVICE_WATCHDOG);
 
         if(Process.indicatorPrevious != Process.indicatorCurrent)
@@ -81,7 +79,6 @@ static int watchdogThread(void *data)
         else
         {
             printk(KERN_INFO "[CTRL][WDG] Watchdog Dead [%x|%x] ERROR: Please check if FPGA binary is loaded\n", Process.indicatorPrevious, Process.indicatorCurrent);
-            // charDeviceLockCtrl(DEVICE_COMMANDER, CTRL_UNLOCK);
             eventWakeUpDevice(DEVICE_COMMANDER);
             Process.indicatorFPGA = false;
         }

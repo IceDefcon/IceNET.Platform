@@ -6,6 +6,10 @@
 #include <linux/sched.h>
 #include <asm/thread_info.h>  // For THREAD_SIZE
 #include <linux/version.h>
+#include <linux/string.h>
+#include <linux/uaccess.h>
+
+#define STACK_PATTERN 0xAA  // Common poison pattern used to initialize stacks
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 4, 0)
 // Include for 5.4.0 and newer kernels (like 5.4.0-150-generic)
@@ -116,6 +120,7 @@ void memoryDestroy(void)
 
 /* PRINT */ void showThreadDiagnostics(const char name[])
 {
+    size_t estimated_max_usage = 0;
     unsigned long sp = (unsigned long)&sp; /* Local variable address :: Current stack pointer */
     unsigned long stack_base = (unsigned long)task_stack_page(current); /* Base address of the current task’s stack */
     unsigned long stack_end = stack_base + THREAD_SIZE; /* Top of the stack */
@@ -123,12 +128,40 @@ void memoryDestroy(void)
     size_t used = stack_end - sp;
     size_t remaining = sp - stack_base;
 
-    pr_info("[INFO][DIA] Kernel Thread ID  : %s\n", name);
-    pr_info("[INFO][DIA] Kernel Stack Base : 0x%lx\n", stack_base);
-    pr_info("[INFO][DIA] Kernel Stack End  : 0x%lx\n", stack_end);
-    pr_info("[INFO][DIA] Current Stack Ptr : 0x%lx THREAD_SIZE[0x%lx]\n", sp, (unsigned long)THREAD_SIZE);  /* THREAD_SIZE is typically 16 KB (0x4000) on ARM64 */
-    pr_info("[INFO][DIA] Used Stack        : %zu bytes\n", used);
-    pr_info("[INFO][DIA] Free Stack        : %zu bytes\n", remaining);
+    // Estimate high water mark
+    unsigned char *stack_ptr = (unsigned char *)stack_base;
+    size_t high_water_bytes = 0;
+    while ((unsigned long)stack_ptr < stack_end && *stack_ptr == STACK_PATTERN) {
+        high_water_bytes++;
+        stack_ptr++;
+    }
+
+    estimated_max_usage = THREAD_SIZE - high_water_bytes;
+
+    pr_info("[INFO][DIA] Kernel Thread ID   : %s\n", name);
+    pr_info("[INFO][DIA] Kernel Stack Base  : 0x%lx\n", stack_base);
+    pr_info("[INFO][DIA] Kernel Stack End   : 0x%lx\n", stack_end);
+    pr_info("[INFO][DIA] Current Stack Ptr  : 0x%lx THREAD_SIZE[0x%lx]\n", sp, (unsigned long)THREAD_SIZE);
+    pr_info("[INFO][DIA] Used Stack         : %zu bytes\n", used);
+    pr_info("[INFO][DIA] Free Stack         : %zu bytes\n", remaining);
+    pr_info("[INFO][DIA] High Water Mark    : %zu bytes used (max so far)\n", estimated_max_usage);
+}
+
+/* PRINT */ void showModuleDiagnostics(const char name[])
+{
+    unsigned long sp = (unsigned long)&sp;  // Current stack pointer (local variable address)
+    unsigned long stack_base = (unsigned long)task_stack_page(current);  // Stack base of current task
+    unsigned long stack_end = stack_base + THREAD_SIZE;  // Stack top
+
+    size_t used = stack_end - sp;
+    size_t remaining = sp - stack_base;
+
+    pr_info("[INFO][MOD] Kernel Module Context: %s\n", name);
+    pr_info("[INFO][MOD] Stack Base  : 0x%lx\n", stack_base);
+    pr_info("[INFO][MOD] Stack End   : 0x%lx\n", stack_end);
+    pr_info("[INFO][MOD] Stack Ptr   : 0x%lx\n", sp);
+    pr_info("[INFO][MOD] Used Stack  : %zu bytes\n", used);
+    pr_info("[INFO][MOD] Free Stack  : %zu bytes\n", remaining);
 }
 
 /* PRINT */ void showSections(void)
