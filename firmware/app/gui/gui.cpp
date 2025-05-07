@@ -312,7 +312,8 @@ void gui::setupFpgaCtrl()
         "   background-color: black;"
         "}"
     );
-    connect(resetButton, &QPushButton::clicked, this, [this]()
+
+    auto fpgaReset = [this]()
     {
         if(NULL == m_instanceDroneCtrl)
         {
@@ -322,7 +323,8 @@ void gui::setupFpgaCtrl()
         {
             m_instanceDroneCtrl->sendCommand(CMD_FPGA_RESET);
         }
-    });
+    };
+    connect(resetButton, &QPushButton::clicked, this, fpgaReset);
 
     QPushButton *offloadButton = new QPushButton("OFFLOAD", this);
     offloadButton->setGeometry(dev.xGap*5 + dev.xText + dev.xUnit*2, dev.yGap*3 + dev.yLogo + dev.yUnit, dev.xUnit*2, dev.yUnit);
@@ -342,7 +344,8 @@ void gui::setupFpgaCtrl()
         "   background-color: black;"
         "}"
     );
-    connect(offloadButton, &QPushButton::clicked, this, [this]()
+
+    auto primaryOffload = [this]()
     {
         if(NULL == m_instanceDroneCtrl)
         {
@@ -353,7 +356,8 @@ void gui::setupFpgaCtrl()
             printToMainConsole("$ Primary Offload from the FIFO");
             interruptVector_execute(VECTOR_OFFLOAD_PRIMARY);
         }
-    });
+    };
+    connect(offloadButton, &QPushButton::clicked, this, primaryOffload);
 
     m_enableButton = new QPushButton("ENABLE", this);
     m_enableButton->setGeometry(dev.xGap*5 + dev.xText + dev.xUnit*2, dev.yGap*4 + dev.yLogo + dev.yUnit*2, dev.xUnit*2, dev.yUnit);
@@ -375,7 +379,7 @@ void gui::setupFpgaCtrl()
         "}"
     );
 
-    connect(m_enableButton, &QPushButton::clicked, this, [this]()
+    auto pulseController = [this]()
     {
         if (NULL == m_instanceDroneCtrl)
         {
@@ -432,7 +436,8 @@ void gui::setupFpgaCtrl()
 
         // Toggle state
         m_isPulseControllerEnabled = !m_isPulseControllerEnabled;
-    });
+    };
+    connect(m_enableButton, &QPushButton::clicked, this, pulseController);
 
     m_startButton = new QPushButton("START", this);
     m_startButton->setGeometry(dev.xGap*6 + dev.xText + dev.xUnit*4, dev.yGap*4 + dev.yLogo + dev.yUnit*2, dev.xUnit*2, dev.yUnit);
@@ -454,7 +459,7 @@ void gui::setupFpgaCtrl()
         "}"
     );
 
-    connect(m_startButton, &QPushButton::clicked, this, [this]()
+    auto acquisitionControl = [this]()
     {
         if (NULL == m_instanceDroneCtrl)
         {
@@ -511,7 +516,8 @@ void gui::setupFpgaCtrl()
 
         // Toggle state
         m_isStartAcquisition = !m_isStartAcquisition;
-    });
+    };
+    connect(m_startButton, &QPushButton::clicked, this, acquisitionControl);
 
     QPushButton *pulseButton = new QPushButton("READ", this);
     pulseButton->setGeometry(dev.xGap*7 + dev.xText + dev.xUnit*6, dev.yGap*4 + dev.yLogo + dev.yUnit*2, dev.xUnit*2, dev.yUnit);
@@ -531,7 +537,8 @@ void gui::setupFpgaCtrl()
         "   background-color: black;"
         "}"
     );
-    connect(pulseButton, &QPushButton::clicked, this, [this]()
+
+    auto sensorRead = [this]()
     {
         if(NULL == m_instanceDroneCtrl)
         {
@@ -542,7 +549,8 @@ void gui::setupFpgaCtrl()
             printToMainConsole("$ Read single sensor data :: 12-Bytes");
             interruptVector_execute(VECTOR_READ);
         }
-    });
+    };
+    connect(pulseButton, &QPushButton::clicked, this, sensorRead);
 
     QPushButton *dataButton = new QPushButton("OFFLOAD", this);
     dataButton->setGeometry(dev.xGap*7 + dev.xText + dev.xUnit*6, dev.yGap*3 + dev.yLogo + dev.yUnit, dev.xUnit*2, dev.yUnit);
@@ -562,7 +570,8 @@ void gui::setupFpgaCtrl()
         "   background-color: black;"
         "}"
     );
-    connect(dataButton, &QPushButton::clicked, this, [this]()
+
+    auto secondaryOffload = [this]()
     {
         if(NULL == m_instanceDroneCtrl)
         {
@@ -573,7 +582,8 @@ void gui::setupFpgaCtrl()
             printToMainConsole("$ Secondary Offload from the FIFO");
             interruptVector_execute(VECTOR_OFFLOAD_SECONDARY);
         }
-    });
+    };
+    connect(dataButton, &QPushButton::clicked, this, secondaryOffload);
 
     QPushButton *f1Button = new QPushButton("F1", this);
     f1Button->setGeometry(dev.xGap*6 + dev.xText + dev.xUnit*4, dev.yGap*3 + dev.yLogo + dev.yUnit, dev.xUnit*2, dev.yUnit);
@@ -593,7 +603,8 @@ void gui::setupFpgaCtrl()
         "   background-color: black;"
         "}"
     );
-    connect(f1Button, &QPushButton::clicked, this, [this]()
+
+    auto f1_Execute = [this]()
     {
         if(NULL == m_instanceDroneCtrl)
         {
@@ -604,7 +615,8 @@ void gui::setupFpgaCtrl()
             printToMainConsole("$ Execute F1");
             interruptVector_execute(VECTOR_F1);
         }
-    });
+    };
+    connect(f1Button, &QPushButton::clicked, this, f1_Execute);
 
     QPushButton *f2Button = new QPushButton("F2", this);
     f2Button->setGeometry(dev.xGap*6 + dev.xText + dev.xUnit*4, dev.yGap*2 + dev.yLogo, dev.xUnit*2, dev.yUnit);
@@ -624,7 +636,8 @@ void gui::setupFpgaCtrl()
         "   background-color: black;"
         "}"
     );
-    connect(f2Button, &QPushButton::clicked, this, [this]()
+
+    auto f2_Execute = [this]()
     {
         if(NULL == m_instanceDroneCtrl)
         {
@@ -635,7 +648,8 @@ void gui::setupFpgaCtrl()
             printToMainConsole("$ Execute F2");
             interruptVector_execute(VECTOR_F2);
         }
-    });
+    };
+    connect(f2Button, &QPushButton::clicked, this, f2_Execute);
 
     QPushButton *f3Button = new QPushButton("RETURN", this);
     f3Button->setGeometry(dev.xGap*7 + dev.xText + dev.xUnit*6, dev.yGap*2 + dev.yLogo, dev.xUnit*2, dev.yUnit);
@@ -655,7 +669,8 @@ void gui::setupFpgaCtrl()
         "   background-color: black;"
         "}"
     );
-    connect(f3Button, &QPushButton::clicked, this, [this]()
+
+    auto f3_Execute = [this]()
     {
         if(NULL == m_instanceDroneCtrl)
         {
@@ -666,7 +681,8 @@ void gui::setupFpgaCtrl()
             printToMainConsole("$ Return over secondarySPI/DMA Transition");
             interruptVector_execute(VECTOR_RETURN);
         }
-    });
+    };
+    connect(f3Button, &QPushButton::clicked, this, f3_Execute);
 }
 
 void gui::setupThreadProcess()
@@ -902,24 +918,32 @@ void gui::setupPWM()
     m_pwm_dataField->setText("0x00");
     QPushButton *pwm_exeButton = new QPushButton("EXE", this);
     pwm_exeButton->setGeometry(dev.xGap*3 + dev.xText + dev.xUnit, dev.yGap*12 + dev.yLogo*3 + dev.yUnit*6, dev.xUnit, dev.yUnit);
-    connect(pwm_exeButton, &QPushButton::clicked, this, [this]()
+
+    auto pwmExecute = [this]()
     {
         pwm_execute(PWM_EXE);
-    });
+    };
+    connect(pwm_exeButton, &QPushButton::clicked, this, pwmExecute);
+
     /* PWM :: Row[2] */
     QPushButton *pwm_upButton = new QPushButton("UP", this);
     pwm_upButton->setGeometry(dev.xGap*3 + dev.xText + dev.xUnit, dev.yGap*13 + dev.yLogo*3 + dev.yUnit*7, dev.xUnit, dev.yUnit);
-    connect(pwm_upButton, &QPushButton::clicked, this, [this]()
+
+    auto pwmUp = [this]()
     {
         pwm_execute(PWM_UP);
-    });
+    };
+    connect(pwm_upButton, &QPushButton::clicked, this, pwmUp);
+
     /* PWM :: Row[3] */
     QPushButton *pwm_downButton = new QPushButton("DOWN", this);
     pwm_downButton->setGeometry(dev.xGap*3 + dev.xText + dev.xUnit, dev.yGap*14 + dev.yLogo*3 + dev.yUnit*8, dev.xUnit, dev.yUnit);
-    connect(pwm_downButton, &QPushButton::clicked, this, [this]()
+
+    auto pwmDown = [this]()
     {
         pwm_execute(PWM_DOWN);
-    });
+    };
+    connect(pwm_downButton, &QPushButton::clicked, this, pwmDown);
 }
 
 void gui::setupDma()
@@ -940,28 +964,39 @@ void gui::setupDma()
     m_dmaCustom_dataField->setText("0x01");
     QPushButton *dma_custom_exeButton = new QPushButton("EXE", this);
     dma_custom_exeButton->setGeometry(dev.xGap*3 + dev.xText + dev.xUnit, dev.yGap*16 + dev.yLogo*4 + dev.yUnit*9, dev.xUnit, dev.yUnit);
-    connect(dma_custom_exeButton, &QPushButton::clicked, this, [this]()
+
+    auto dmaCustom = [this]()
     {
         dma_execute(CMD_DMA_CUSTOM);
-    });
+
+    };
+    connect(dma_custom_exeButton, &QPushButton::clicked, this, dmaCustom);
+
     /* DMA :: Row[2] */
     QLabel *dma_singleLabel = new QLabel("[FPGA->CPU] Single", this);
     dma_singleLabel->setGeometry(dev.xGap, dev.yGap*17 + dev.yLogo*4 + dev.yUnit*10, dev.xText, dev.yUnit);
     QPushButton *dma_single_exeButton = new QPushButton("EXE", this);
     dma_single_exeButton->setGeometry(dev.xGap*3 + dev.xText + dev.xUnit, dev.yGap*17 + dev.yLogo*4 + dev.yUnit*10, dev.xUnit, dev.yUnit);
-    connect(dma_single_exeButton, &QPushButton::clicked, this, [this]()
+
+    auto dmaSingle = [this]()
     {
         dma_execute(CMD_DMA_SINGLE);
-    });
+
+    };
+    connect(dma_single_exeButton, &QPushButton::clicked, this, dmaSingle);
+
     /* DMA :: Row[3] */
     QLabel *i2c_registerLabel = new QLabel("[FPGA->CPU] Sensor", this);
     i2c_registerLabel->setGeometry(dev.xGap, dev.yGap*18 + dev.yLogo*4 + dev.yUnit*11, dev.xText, dev.yUnit);
     QPushButton *dmaSensor_exeButton = new QPushButton("EXE", this);
     dmaSensor_exeButton->setGeometry(dev.xGap*3 + dev.xText + dev.xUnit, dev.yGap*18 + dev.yLogo*4 + dev.yUnit*11, dev.xUnit, dev.yUnit);
-    connect(dmaSensor_exeButton, &QPushButton::clicked, this, [this]()
+
+    auto dmaSensor = [this]()
     {
         dma_execute(CMD_DMA_SENSOR);
-    });
+
+    };
+    connect(dmaSensor_exeButton, &QPushButton::clicked, this, dmaSensor);
 }
 
 void gui::setupFifo()
@@ -993,7 +1028,8 @@ void gui::setupFifo()
         "   background-color: black;"
         "}"
     );
-    connect(readOnlyButton, &QPushButton::clicked, this, [this]()
+
+    auto readOnlyMode = [this]()
     {
         if(NULL == m_instanceDroneCtrl)
         {
@@ -1005,7 +1041,8 @@ void gui::setupFifo()
             *m_IO_GuiState = IO_COM_READ_ONLY;
             m_instanceDroneCtrl->triggerEvent();
         }
-    });
+    };
+    connect(readOnlyButton, &QPushButton::clicked, this, readOnlyMode);
 
     QPushButton *idleButton = new QPushButton("IDLE", this);
     idleButton->setGeometry(dev.xGap, dev.yGap*23 + dev.yLogo*5 + dev.yUnit*13, dev.xUnit*2, dev.yUnit);
@@ -1025,7 +1062,8 @@ void gui::setupFifo()
         "   background-color: black;"
         "}"
     );
-    connect(idleButton, &QPushButton::clicked, this, [this]()
+
+    auto idleMode = [this]()
     {
         if(NULL == m_instanceDroneCtrl)
         {
@@ -1037,7 +1075,8 @@ void gui::setupFifo()
             *m_IO_GuiState = IO_COM_IDLE;
             m_instanceDroneCtrl->triggerEvent();
         }
-    });
+    };
+    connect(idleButton, &QPushButton::clicked, this, idleMode);
 
     QPushButton *calibButton = new QPushButton("CALIB", this);
     calibButton->setGeometry(dev.xGap, dev.yGap*24 + dev.yLogo*5 + dev.yUnit*14, dev.xUnit*2, dev.yUnit);
@@ -1057,7 +1096,8 @@ void gui::setupFifo()
         "   background-color: black;"
         "}"
     );
-    connect(calibButton, &QPushButton::clicked, this, [this]()
+
+    auto calibrationMode = [this]()
     {
         if(NULL == m_instanceDroneCtrl)
         {
@@ -1069,7 +1109,8 @@ void gui::setupFifo()
             *m_IO_GuiState = IO_COM_CALIBRATION;
             m_instanceDroneCtrl->triggerEvent();
         }
-    });
+    };
+    connect(calibButton, &QPushButton::clicked, this, calibrationMode);
 }
 
 void gui::setDeadCommand()
