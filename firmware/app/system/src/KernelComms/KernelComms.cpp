@@ -33,8 +33,8 @@ void KernelComms::initRamDiskCommander()
     Watchdog::openDEV();
 }
 
-void KernelComms::shutdownRamDiskCommander()
+void KernelComms::shutdownRamDiskCommander(bool isKernelConnected)
 {
-    Commander::shutdownThread();
-    Watchdog::shutdownThread();
+    Commander::shutdownThread(isKernelConnected);
+    Watchdog::shutdownThread(isKernelConnected);
 }

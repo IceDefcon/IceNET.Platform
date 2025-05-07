@@ -33,10 +33,10 @@ void DroneCtrl::initKernelComms()
     KernelComms::initRamDiskCommander();
 }
 
-void DroneCtrl::shutdownKernelComms()
+void DroneCtrl::shutdownKernelComms(bool isKernelConnected)
 {
     std::cout << "[INFO] [ D ] Drone Exit" << std::endl;
-    KernelComms::shutdownRamDiskCommander();
+    KernelComms::shutdownRamDiskCommander(isKernelConnected);
 }
 
 bool DroneCtrl::isKilled()

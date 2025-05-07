@@ -63,7 +63,7 @@ class Commander : public Measure
         int sendCommand(commandType cmd);
 
         void initThread();
-        void shutdownThread();
+        void shutdownThread(bool isKernelConnected);
         bool isThreadKilled();
         void threadCommander();
 

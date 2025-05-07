@@ -1638,8 +1638,11 @@ void gui::initThread()
 
 void gui::shutdownThread()
 {
-    interruptVector_execute(VECTOR_DISABLE);
-    interruptVector_execute(VECTOR_STOP);
+    if(true == m_isKernelConnected)
+    {
+        interruptVector_execute(VECTOR_DISABLE);
+        interruptVector_execute(VECTOR_STOP);
+    }
 
     m_isPulseControllerEnabled = true;
     m_enableButton->setText("ENABLE");
@@ -1710,13 +1713,21 @@ void gui::debugThread()
      *
      * TO BE
      * CONSIDERED
-     * LATE#R
+     * LATER
      *
      */
     printToMainConsole("$ Debug threadMain");
     qDebug() << "[CTRL] [THR] Debug threadMain";
 }
 
+/**
+ *
+ * TODO :: Consideration Requred
+ *
+ * Replace singletone with
+ * chosen design patter
+ *
+ */
 void gui::threadMain()
 {
     /**
@@ -1739,9 +1750,6 @@ void gui::threadMain()
 
         if (true == m_instanceDroneCtrl->isKilled())
         {
-            /* TODO :: Button stays pressed at Thread Termination */
-            printToMainConsole("$ Disable Pulse Controllers");
-            m_isKernelConnected = false;
             break;
         }
         else
@@ -1752,8 +1760,7 @@ void gui::threadMain()
         /* Reduce consumption of CPU resources */
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
-
-    m_instanceDroneCtrl->sendCommand(CMD_FPGA_RESET);
-    m_instanceDroneCtrl->shutdownKernelComms();
+    m_instanceDroneCtrl->shutdownKernelComms(m_isKernelConnected);
+    m_isKernelConnected = false;
     m_instanceDroneCtrl.reset(); // Reset the unique_ptr to call the destructor
 }

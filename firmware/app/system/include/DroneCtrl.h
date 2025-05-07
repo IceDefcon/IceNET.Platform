@@ -27,7 +27,7 @@ class DroneCtrl : public KernelComms
         ~DroneCtrl();
 
         void initKernelComms();
-        void shutdownKernelComms();
+        void shutdownKernelComms(bool isKernelConnected);
         bool isKilled();
 
         std::string getCtrlStateString(droneCtrlStateType state);

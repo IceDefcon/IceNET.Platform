@@ -215,12 +215,15 @@ void Commander::initThread()
     m_threadCommander = std::thread(&Commander::threadCommander, this);
 }
 
-void Commander::shutdownThread()
+void Commander::shutdownThread(bool isKernelConnected)
 {
-    /* Switch to single DMA */
-    sendCommand(CMD_DMA_SINGLE);
-    /* Reset FPGA */
-    sendCommand(CMD_FPGA_RESET);
+    if(true == isKernelConnected)
+    {
+        /* Switch to single DMA */
+        sendCommand(CMD_DMA_SINGLE);
+        /* Reset FPGA */
+        sendCommand(CMD_FPGA_RESET);
+    }
 
     /**
      * Automatically locks the mutex when it is constructed
@@ -236,7 +239,13 @@ void Commander::shutdownThread()
 
     std::cout << "[INFO] [CMD] Shutdown threadCommander" << std::endl;
 
+    /**
+     * Commander is Event controlled
+     * so we must trigger event to
+     * escape from IDLE state
+     */
     m_threadKill = true;
+    triggerEvent();
 
     if (m_threadCommander.joinable())
     {

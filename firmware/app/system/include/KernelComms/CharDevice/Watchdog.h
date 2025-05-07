@@ -19,6 +19,8 @@
 #include "Commander.h"
 #include "Types.h"
 
+#define WATCHDOG_TRANSFER_SIZE 2
+
 class Watchdog
 {
     private:
@@ -46,7 +48,7 @@ class Watchdog
         int closeDEV();
 
         void initThread();
-        void shutdownThread();
+        void shutdownThread(bool isKernelConnected);
         bool isThreadKilled();
         void threadWatchdog();
 
