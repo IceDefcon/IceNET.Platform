@@ -20,8 +20,8 @@ Watchdog::Watchdog() :
     m_threadKill(false),
     m_stopFlag(false),
     m_watchdogDead(false),
-    m_Rx_Watchdog(new std::vector<char>(IO_TRANSFER_SIZE)),
-    m_Tx_Watchdog(new std::vector<char>(IO_TRANSFER_SIZE))
+    m_Rx_Watchdog(new std::vector<char>(WATCHDOG_TRANSFER_SIZE)),
+    m_Tx_Watchdog(new std::vector<char>(WATCHDOG_TRANSFER_SIZE))
 {
     std::cout << "[INFO] [CONSTRUCTOR] " << this << " :: Instantiate Watchdog" << std::endl;
 }
@@ -64,14 +64,12 @@ int Watchdog::openDEV()
 
 int Watchdog::dataRX()
 {
-    int ret;
+    int ret = read(m_file_descriptor, m_Rx_Watchdog->data(), WATCHDOG_TRANSFER_SIZE);
 
-    ret = read(m_file_descriptor, m_Rx_Watchdog->data(), IO_TRANSFER_SIZE);
-
-    if (m_Rx_Watchdog->size() >= 2 && (*m_Rx_Watchdog)[0] == (*m_Rx_Watchdog)[1])
+    if ((*m_Rx_Watchdog)[0] == (*m_Rx_Watchdog)[1])
     {
         std::cout << "[ERNO] [WDG] [0] Kill the App :: No FPGA Watchdog Signal" << std::endl;
-        return 0;
+        ret = 0;
     }
 
     return ret;
@@ -119,7 +117,7 @@ void Watchdog::initThread()
     m_threadWatchdog = std::thread(&Watchdog::threadWatchdog, this);
 }
 
-void Watchdog::shutdownThread()
+void Watchdog::shutdownThread(bool isKernelConnected)
 {
     /**
      * Automatically locks the mutex when it is constructed
@@ -133,8 +131,7 @@ void Watchdog::shutdownThread()
         return;
     }
 
-    std::cout << "[INFO] [WDG] Shutdown threadWatchdog" << std::endl;
-
+    std::cout << "[INFO] [WDG] Killing threadWatchdog" << std::endl;
     m_threadKill = true;
 
     if (m_threadWatchdog.joinable())
@@ -142,6 +139,7 @@ void Watchdog::shutdownThread()
         m_threadWatchdog.join();
         std::cout << "[INFO] [WDG] threadWatchdog has been shut down" << std::endl;
     }
+    std::cout << "[INFO] [WDG] threadWatchdog Shutdown" << std::endl;
 }
 
 bool Watchdog::isThreadKilled()

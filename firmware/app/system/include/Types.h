@@ -69,7 +69,8 @@ typedef enum
 
 typedef enum
 {
-    CTRL_INIT = 0,
+    CTRL_IDLE = 0,
+    CTRL_INIT,
     CTRL_RAMDISK_PERIPHERALS,
     CTRL_RAMDISK_ACTIVATE_DMA,
     CTRL_DMA_SINGLE,

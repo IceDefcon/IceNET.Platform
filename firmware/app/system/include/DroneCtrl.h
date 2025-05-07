@@ -22,17 +22,33 @@ class DroneCtrl : public KernelComms
 
         static constexpr uint32_t FPGA_DELAY = 3000;
 
+        /* Thread Variables */
+        std::thread m_threadHandler;
+        std::mutex m_threadMutex;
+        bool m_threadKill;
+
+        /* Event Variables */
+        std::mutex m_eventMutex;
+        std::condition_variable m_conditionalVariable;
+        bool m_stateChanged;
+
     public:
         DroneCtrl();
         ~DroneCtrl();
 
+        /* THREAD */ void initThread();
+        /* THREAD */ void shutdownThread();
+        /* THREAD */ std::string getThreadStateMachineString(droneCtrlStateType state);
+        /* THREAD */ void DroneCtrlThread();
+
         void initKernelComms();
-        void shutdownKernelComms();
+        void shutdownKernelComms(bool isKernelConnected);
         bool isKilled();
 
-        std::string getCtrlStateString(droneCtrlStateType state);
 
         void sendFpgaConfigToRamDisk();
         void setDroneCtrlState(droneCtrlStateType state);
-        void droneCtrlMain();
+
+        /* EVENT */ void waitEvent();
+        /* EVENT */ void triggerEvent();
 };

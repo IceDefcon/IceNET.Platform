@@ -28,5 +28,5 @@ class KernelComms :
         ~KernelComms();
 
         void initRamDiskCommander();
-        void shutdownRamDiskCommander();
+        void shutdownRamDiskCommander(bool isKernelConnected);
 };
