@@ -7,8 +7,9 @@
 #include "Measure.h"
 
 Measure::Measure() :
+m_offserReady(0),
 m_index(0),
-m_seconds_since_boot(0)
+m_timeSinceBoot(0)
 {
     std::cout << "[INFO] [CONSTRUCTOR] " << this << " :: Instantiate Measure" << std::endl;
 }
@@ -61,11 +62,11 @@ bool Measure::appendBuffer(int16_t x, int16_t y, int16_t z)
     {
         m_vectorBuffer[m_index] = {x, y, z};
 
-        clock_gettime(CLOCK_MONOTONIC, &m_ts);
-        m_seconds_since_boot = m_ts.tv_sec + m_ts.tv_nsec / 1e9;
+        clock_gettime(CLOCK_MONOTONIC, &m_time);
+        m_timeSinceBoot = m_time.tv_sec + m_time.tv_nsec / 1e9;
 
         std::cout << std::fixed << std::setprecision(6);
-        std::cout << "[INFO] [MEAS] [" << m_seconds_since_boot << "] "
+        std::cout << "[INFO] [MEAS] [" << m_timeSinceBoot << "] "
         << std::dec << "[" << m_index << "] Vector Acceleration ["
         << x << "," << y << "," << z << "]" << std::endl;
 
@@ -77,11 +78,12 @@ bool Measure::appendBuffer(int16_t x, int16_t y, int16_t z)
             m_index = 0;
         }
     }
-#if 0
+#if 1
     else
     {
-        std::cout << "[INFO] [MEAS] Rejected [" << m_index << "] Vector Acceleration ["
-                  << x << "," << y << "," << z << "]" << std::endl;
+        std::cout << "[INFO] [MEAS] Rejected ["
+        << std::dec << m_index << "] Vector Acceleration ["
+        << x << "," << y << "," << z << "]" << std::endl;
     }
 #endif
 
@@ -104,9 +106,26 @@ void Measure::averageBuffer()
     m_average.z = static_cast<int16_t>(sum_z / VECTOR_BUFFER_LENGTH) + 8192;
 
     std::cout << std::fixed << std::setprecision(6);
-    std::cout << "[INFO] [MEAS] [" << m_seconds_since_boot
+    std::cout << "[INFO] [MEAS] [" << m_timeSinceBoot
     << "] " << std::dec << "Average Acceleration ["
     << m_average.x << "," << m_average.y << "," << m_average.z << "]" << std::endl;
+}
+
+void Measure::calibrationOfset()
+{
+    /**
+     *              Average * 1000
+     *  Offset = ---------------------
+     *              ACC_RAMGE * 3.9
+     */
+    m_offset.x = static_cast<uint8_t>(std::min(255.0, std::max(0.0, std::round(-(m_average.x * 1000.0) / (ACC_RAMGE * 3.9)))));
+    m_offset.y = static_cast<uint8_t>(std::min(255.0, std::max(0.0, std::round(-(m_average.y * 1000.0) / (ACC_RAMGE * 3.9)))));
+    m_offset.z = static_cast<uint8_t>(std::min(255.0, std::max(0.0, std::round(-(m_average.z * 1000.0) / (ACC_RAMGE * 3.9)))));
+
+    std::cout << "[INFO] [MEAS] Acceleration Offset [0x"
+            << std::hex << static_cast<int32_t>(m_offset.x) << ", 0x"
+            << static_cast<int32_t>(m_offset.y) << ", 0x"
+            << static_cast<int32_t>(m_offset.z) << "]" << std::endl;
 }
 
 void Measure::clearBuffer()
@@ -117,5 +136,6 @@ void Measure::clearBuffer()
     }
 
     m_average = {0, 0, 0};
+    m_offset = {0, 0, 0};
     m_index = 0;
 }

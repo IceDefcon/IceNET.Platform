@@ -27,7 +27,8 @@ m_commandMatrix(CMD_AMOUNT, std::vector<uint8_t>(CMD_LENGTH, 0)),
 m_customDmaSize(0),
 m_x(0),
 m_y(0),
-m_z(0)
+m_z(0),
+m_stateChanged(false)
 {
     std::cout << "[INFO] [CONSTRUCTOR] " << this << " :: Instantiate Commander" << std::endl;
 
@@ -281,6 +282,7 @@ void Commander::threadCommander()
         switch(*m_IO_CommanderState)
         {
             case IO_COM_IDLE:
+                waitEvent();
                 break;
 
             case IO_COM_WRITE:
@@ -402,6 +404,7 @@ void Commander::threadCommander()
                     {
                         *m_IO_CommanderState = IO_COM_IDLE;
                         averageBuffer();
+                        calibrationOfset();
                     }
                 }
                 else
@@ -413,9 +416,6 @@ void Commander::threadCommander()
             default:
                 std::cout << "[INFO] [CMD] Unknown Command" << std::endl;
         }
-
-        /* Reduce consumption of CPU resources */
-        // std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
 
     std::cout << "[INFO] [CMD] Terminate threadCommander" << std::endl;
@@ -429,4 +429,34 @@ std::shared_ptr<ioStateType> transferState)
     m_Rx_CommanderVector = transferPointerRx;
     m_Tx_CommanderVector = transferPointerTx;
     m_IO_CommanderState = transferState;
+}
+
+/* EVENT */ void Commander::waitEvent()
+{
+    std::unique_lock<std::mutex> lock(m_eventMutex);
+
+    auto predicate = [this]()
+    {
+        return m_stateChanged;
+    };
+    m_conditionalVariable.wait(lock, predicate);
+
+    std::cout << "[INFO] [CMD] Commander state change detected :: Trigering Event" << std::endl;
+
+    m_stateChanged = false;
+}
+
+/* EVENT */ void Commander::triggerEvent()
+{
+    /**
+     * The curly braces in this context are used to create a limited scope,
+     * so that the std::lock_guard<std::mutex> lock(m_eventMutex);
+     * releases the mutex as soon as the scope ends.
+     */
+    {
+        std::lock_guard<std::mutex> lock(m_eventMutex);
+        m_stateChanged = true;
+    }
+
+    m_conditionalVariable.notify_one(); // Wake up waiting thread
 }

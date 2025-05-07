@@ -196,8 +196,8 @@ static int stateMachineThread(void *data)
                 {
                     printk(KERN_INFO "[ERNO][STM] Peripherals not configured !\n");
                     setStateMachine(SM_DONE);
-
                 }
+                break;
 
             case SM_DONE:
                 printk(KERN_INFO "[CTRL][STM] Process Complete\n");
