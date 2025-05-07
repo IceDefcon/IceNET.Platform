@@ -437,7 +437,8 @@ KernelComms.o: system/src/KernelComms/KernelComms.cpp system/include/KernelComms
 		system/include/KernelComms/CharDevice/Watchdog.h \
 		system/include/KernelComms/BlockDevice/RamDisk.h \
 		system/include/Types.h \
-		system/include/KernelComms/CharDevice/Commander.h
+		system/include/KernelComms/CharDevice/Commander.h \
+		meas/Measure.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o KernelComms.o system/src/KernelComms/KernelComms.cpp
 
 RamDisk.o: system/src/KernelComms/BlockDevice/RamDisk.cpp system/include/KernelComms/BlockDevice/RamDisk.h \
@@ -445,13 +446,15 @@ RamDisk.o: system/src/KernelComms/BlockDevice/RamDisk.cpp system/include/KernelC
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o RamDisk.o system/src/KernelComms/BlockDevice/RamDisk.cpp
 
 Commander.o: system/src/KernelComms/CharDevice/Commander.cpp system/include/KernelComms/CharDevice/Commander.h \
+		meas/Measure.h \
 		system/include/Types.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o Commander.o system/src/KernelComms/CharDevice/Commander.cpp
 
 Watchdog.o: system/src/KernelComms/CharDevice/Watchdog.cpp system/include/KernelComms/CharDevice/Watchdog.h \
 		system/include/KernelComms/BlockDevice/RamDisk.h \
 		system/include/Types.h \
-		system/include/KernelComms/CharDevice/Commander.h
+		system/include/KernelComms/CharDevice/Commander.h \
+		meas/Measure.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o Watchdog.o system/src/KernelComms/CharDevice/Watchdog.cpp
 
 moc_gui.o: moc_gui.cpp 

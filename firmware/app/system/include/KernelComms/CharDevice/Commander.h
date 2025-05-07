@@ -11,6 +11,8 @@
 #include <atomic>
 #include <vector>
 #include <mutex>
+#include <condition_variable>
+#include <iostream>
 
 #include "Measure.h"
 #include "Types.h"
@@ -38,24 +40,16 @@ class Commander : public Measure
         int16_t m_y;
         int16_t m_z;
 
-        int16_t m_x_vector[32];
-        int16_t m_y_vector[32];
-        int16_t m_z_vector[32];
-
-        int16_t m_x_average;
-        int16_t m_y_average;
-        int16_t m_z_average;
-
-        int m_x_sum;
-        int m_y_sum;
-        int m_z_sum;
-
-        struct timespec m_ts;
-        double m_seconds_since_boot;
+        /* Event Variables */
+        std::mutex m_eventMutex;
+        std::condition_variable m_conditionalVariable;
+        bool m_stateChanged;
 
     public:
         Commander();
         ~Commander();
+
+        void setupCommandMatrix();
 
         int openDEV();
         int dataTX();
@@ -77,4 +71,7 @@ class Commander : public Measure
         std::shared_ptr<std::vector<uint8_t>> transferPointerRx,
         std::shared_ptr<std::vector<uint8_t>> transferPointerTx,
         std::shared_ptr<ioStateType> transferState);
+
+        /* EVENT */ void waitEvent();
+        /* EVENT */ void triggerEvent();
 };

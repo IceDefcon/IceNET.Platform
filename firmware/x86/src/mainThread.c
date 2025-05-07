@@ -148,12 +148,8 @@ static int mainThread(void *data)
 void mainThreadInit(void)
 {
     spin_lock_init(&Process.smSpinlock);
-#if 1 /* Debug */
     setStateMachine(MAIN_THREAD_DONE);
-#else
-    setStateMachine(MAIN_THREAD_NETWORK_ARP_REQUEST);
-    msleep(1000);
-#endif
+
     Process.threadHandle = kthread_create(mainThread, NULL, Process.threadName);
 
     if (IS_ERR(Process.threadHandle))

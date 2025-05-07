@@ -28,20 +28,11 @@ m_customDmaSize(0),
 m_x(0),
 m_y(0),
 m_z(0),
-m_x_sum(0),
-m_y_sum(0),
-m_z_sum(0),
-m_seconds_since_boot(0)
+m_stateChanged(false)
 {
     std::cout << "[INFO] [CONSTRUCTOR] " << this << " :: Instantiate Commander" << std::endl;
 
-    m_commandMatrix[CMD_DMA_NORMAL] = {0x04, 0xA1}; /* 0x04A1(ORAL) :: Reconfigure DMA Engine :: Normal Mode 4-Byte */
-    m_commandMatrix[CMD_DMA_SENSOR] = {0x5E, 0x50}; /* 0x5E50(SESO) :: Reconfigure DMA Engine :: Sensor Mode 12-Byte */
-    m_commandMatrix[CMD_DMA_SINGLE] = {0x51, 0x6E}; /* 0x516E(SIGE) :: Reconfigure DMA Engine :: Single Mode 1-Byte */
-    m_commandMatrix[CMD_DMA_CUSTOM] = {0xC5, 0x70}; /* 0xC570(CSTO) :: Reconfigure DMA Engine :: Custom Mode x-Byte */
-    m_commandMatrix[CMD_RAMDISK_CONFIG] = {0xC0, 0xF1}; /* 0xC0F1(COFI) :: Activate DMA transfer to send IMU's config to FPGA */
-    m_commandMatrix[CMD_RAMDISK_CLEAR]  = {0xC1, 0xEA}; /* 0xC1EA(CLEA) :: Clear DMA variables used for verification of IMU's config */
-    m_commandMatrix[CMD_FPGA_RESET] = {0x4E,0x5E}; /* 0x4E5E(RESE) :: Global Reset to FPGA */
+    setupCommandMatrix();
 }
 
 Commander::~Commander()
@@ -49,6 +40,17 @@ Commander::~Commander()
     std::cout << "[INFO] [DESTRUCTOR] " << this << " :: Destroy Commander" << std::endl;
 
     closeDEV();
+}
+
+void Commander::setupCommandMatrix()
+{
+    m_commandMatrix[CMD_DMA_NORMAL] = {0x04, 0xA1}; /* 0x04A1(ORAL) :: Reconfigure DMA Engine :: Normal Mode 4-Byte */
+    m_commandMatrix[CMD_DMA_SENSOR] = {0x5E, 0x50}; /* 0x5E50(SESO) :: Reconfigure DMA Engine :: Sensor Mode 12-Byte */
+    m_commandMatrix[CMD_DMA_SINGLE] = {0x51, 0x6E}; /* 0x516E(SIGE) :: Reconfigure DMA Engine :: Single Mode 1-Byte */
+    m_commandMatrix[CMD_DMA_CUSTOM] = {0xC5, 0x70}; /* 0xC570(CSTO) :: Reconfigure DMA Engine :: Custom Mode x-Byte */
+    m_commandMatrix[CMD_RAMDISK_CONFIG] = {0xC0, 0xF1}; /* 0xC0F1(COFI) :: Activate DMA transfer to send IMU's config to FPGA */
+    m_commandMatrix[CMD_RAMDISK_CLEAR]  = {0xC1, 0xEA}; /* 0xC1EA(CLEA) :: Clear DMA variables used for verification of IMU's config */
+    m_commandMatrix[CMD_FPGA_RESET] = {0x4E,0x5E}; /* 0x4E5E(RESE) :: Global Reset to FPGA */
 }
 
 int Commander::openDEV()
@@ -129,16 +131,24 @@ std::string Commander::getIoStateString(ioStateType state)
 
 std::string Commander::commandToString(commandType cmd)
 {
-    switch (cmd)
+    static const std::array<std::string, CMD_AMOUNT> commandStrings =
     {
-        case CMD_DMA_NORMAL:     return "CMD_DMA_NORMAL";
-        case CMD_DMA_SENSOR:     return "CMD_DMA_SENSOR";
-        case CMD_DMA_SINGLE:     return "CMD_DMA_SINGLE";
-        case CMD_DMA_CUSTOM:     return "CMD_DMA_CUSTOM";
-        case CMD_RAMDISK_CONFIG: return "CMD_RAMDISK_CONFIG";
-        case CMD_RAMDISK_CLEAR:  return "CMD_RAMDISK_CLEAR";
-        case CMD_FPGA_RESET:     return "CMD_FPGA_RESET";
-        default:                 return "UNKNOWN_CMD";
+        "CMD_DMA_NORMAL",
+        "CMD_DMA_SENSOR",
+        "CMD_DMA_SINGLE",
+        "CMD_DMA_CUSTOM",
+        "CMD_RAMDISK_CONFIG",
+        "CMD_RAMDISK_CLEAR",
+        "CMD_FPGA_RESET",
+    };
+
+    if (cmd >= 0 && cmd < CMD_AMOUNT)
+    {
+        return commandStrings[cmd];
+    }
+    else
+    {
+        return "CMD_UNKNOWN";
     }
 }
 
@@ -159,7 +169,7 @@ int Commander::sendCommand(commandType cmd)
     }
     else
     {
-        /* Write command to Kernel Space :: To be processed in Kernel */
+        /* Write command to Kernel Space */
         ret = write(m_file_descriptor, command->data(), CMD_LENGTH);
     }
 
@@ -272,6 +282,7 @@ void Commander::threadCommander()
         switch(*m_IO_CommanderState)
         {
             case IO_COM_IDLE:
+                waitEvent();
                 break;
 
             case IO_COM_WRITE:
@@ -393,45 +404,8 @@ void Commander::threadCommander()
                     {
                         *m_IO_CommanderState = IO_COM_IDLE;
                         averageBuffer();
+                        calibrationOfset();
                     }
-#if 0
-                    for (int i = 31; i > 0; i--) {
-                        m_x_vector[i] = m_x_vector[i - 1];
-                    }
-                    m_x_vector[0] = m_x;
-
-                    for (int i = 31; i > 0; i--) {
-                        m_y_vector[i] = m_y_vector[i - 1];
-                    }
-                    m_y_vector[0] = m_y;
-
-                    for (int i = 31; i > 0; i--) {
-                        m_z_vector[i] = m_z_vector[i - 1];
-                    }
-                    m_z_vector[0] = m_z;
-
-                    m_x_sum = 0;
-                    m_y_sum = 0;
-                    m_z_sum = 0;
-
-                    for (int i = 0; i < 32; ++i) {
-                        m_x_sum += m_x_vector[i];
-                        m_y_sum += m_y_vector[i];
-                        m_z_sum += m_z_vector[i];
-                    }
-
-                    m_x_average = m_x_sum / 32;
-                    m_y_average = m_y_sum / 32;
-                    m_z_average = m_z_sum / 32;
-
-                    clock_gettime(CLOCK_MONOTONIC, &m_ts);
-                    m_seconds_since_boot = m_ts.tv_sec + m_ts.tv_nsec / 1e9;
-
-                    std::cout << std::fixed << std::setprecision(6);
-                    std::cout << "[INFO] [CMD] [" << m_seconds_since_boot << "] " << std::dec
-                              << "Average Acceleration [" << m_x_average << "," << m_y_average << "," << m_z_average << "]"
-                              << std::endl;
-#endif
                 }
                 else
                 {
@@ -442,9 +416,6 @@ void Commander::threadCommander()
             default:
                 std::cout << "[INFO] [CMD] Unknown Command" << std::endl;
         }
-
-        /* Reduce consumption of CPU resources */
-        // std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
 
     std::cout << "[INFO] [CMD] Terminate threadCommander" << std::endl;
@@ -458,4 +429,34 @@ std::shared_ptr<ioStateType> transferState)
     m_Rx_CommanderVector = transferPointerRx;
     m_Tx_CommanderVector = transferPointerTx;
     m_IO_CommanderState = transferState;
+}
+
+/* EVENT */ void Commander::waitEvent()
+{
+    std::unique_lock<std::mutex> lock(m_eventMutex);
+
+    auto predicate = [this]()
+    {
+        return m_stateChanged;
+    };
+    m_conditionalVariable.wait(lock, predicate);
+
+    std::cout << "[INFO] [CMD] Commander state change detected :: Trigering Event" << std::endl;
+
+    m_stateChanged = false;
+}
+
+/* EVENT */ void Commander::triggerEvent()
+{
+    /**
+     * The curly braces in this context are used to create a limited scope,
+     * so that the std::lock_guard<std::mutex> lock(m_eventMutex);
+     * releases the mutex as soon as the scope ends.
+     */
+    {
+        std::lock_guard<std::mutex> lock(m_eventMutex);
+        m_stateChanged = true;
+    }
+
+    m_conditionalVariable.notify_one(); // Wake up waiting thread
 }

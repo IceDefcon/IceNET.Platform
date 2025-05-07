@@ -1003,6 +1003,7 @@ void gui::setupFifo()
         {
             printToMainConsole("$ Set Commander State Machine -> IO_COM_READ_ONLY");
             *m_IO_GuiState = IO_COM_READ_ONLY;
+            m_instanceDroneCtrl->triggerEvent();
         }
     });
 
@@ -1034,6 +1035,7 @@ void gui::setupFifo()
         {
             printToMainConsole("$ Set Commander State Machine -> IO_COM_IDLE");
             *m_IO_GuiState = IO_COM_IDLE;
+            m_instanceDroneCtrl->triggerEvent();
         }
     });
 
@@ -1063,8 +1065,9 @@ void gui::setupFifo()
         }
         else
         {
-            printToMainConsole("$ Set Commander State Machine -> IO_COM_IDLE");
+            printToMainConsole("$ Set Commander State Machine -> IO_COM_CALIBRATION");
             *m_IO_GuiState = IO_COM_CALIBRATION;
+            m_instanceDroneCtrl->triggerEvent();
         }
     });
 }
@@ -1182,6 +1185,7 @@ void gui::interruptVector_execute(interruptVectorType type)
     std::cout << "[INFO] [INT] Set Interrupt Vector -> " << vectorToString(type) << std::endl;
 
     *m_IO_GuiState = IO_COM_WRITE_ONLY;
+    m_instanceDroneCtrl->triggerEvent();
     printToMainConsole("$ Set Interrupt Vector -> " + QString::fromStdString(vectorToString(type)));
 }
 
@@ -1298,6 +1302,7 @@ void gui::i2c_execute()
         (*m_Tx_GuiVector)[6] = 0x00;
         (*m_Tx_GuiVector)[7] = 0x00;
         *m_IO_GuiState = IO_COM_WRITE_ONLY;
+        m_instanceDroneCtrl->triggerEvent();
 
         /* Wait for Kerenl to send data to FPGA */
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
@@ -1403,6 +1408,7 @@ void gui::spi_execute()
         (*m_Tx_GuiVector)[6] = 0x00;
         (*m_Tx_GuiVector)[7] = 0x00;
         *m_IO_GuiState = IO_COM_WRITE_ONLY;
+        m_instanceDroneCtrl->triggerEvent();
 
         /* Wait for Kerenl to send data to FPGA */
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
@@ -1494,6 +1500,7 @@ void gui::pwm_execute(pwmType type)
         (*m_Tx_GuiVector)[6] = 0x00;
         (*m_Tx_GuiVector)[7] = 0x00;
         *m_IO_GuiState = IO_COM_WRITE_ONLY;
+        m_instanceDroneCtrl->triggerEvent();
 
         /* Wait for Kerenl to send data to FPGA */
         std::this_thread::sleep_for(std::chrono::milliseconds(100));

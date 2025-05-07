@@ -1,6 +1,5 @@
 cd firmware/linux/
 make -j
 cd ../app/
-qmake
-make -j
+./ninja_build
 cd ../../
