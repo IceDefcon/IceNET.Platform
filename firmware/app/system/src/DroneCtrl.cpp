@@ -15,43 +15,75 @@
 #include "DroneCtrl.h"
 #include "Types.h"
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 DroneCtrl::DroneCtrl() :
-    m_ctrlState(CTRL_INIT),
-    m_ctrlStatePrev(CTRL_INIT)
+    m_ctrlState(CTRL_IDLE),
+    m_ctrlStatePrev(CTRL_IDLE)
 {
     std::cout << "[INFO] [CONSTRUCTOR] " << this << " :: Instantiate DroneCtrl" << std::endl;
+
+    initThread();
 }
 
 DroneCtrl::~DroneCtrl()
 {
     std::cout << "[INFO] [DESTRUCTOR] " << this << " :: Destroy DroneCtrl" << std::endl;
+
+    shutdownThread();
 }
 
-void DroneCtrl::initKernelComms()
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/* THREAD */ void DroneCtrl::initThread()
 {
-    std::cout << "[INIT] [ D ] Initialize RamDisk Commander" << std::endl;
-    KernelComms::initRamDiskCommander();
+    /**
+     * Automatically locks the mutex when it is constructed
+     * and releases the lock when it goes out of scope
+     */
+    std::lock_guard<std::mutex> lock(m_threadMutex);
+
+    if (m_threadHandler.joinable())
+    {
+        std::cout << "[INFO] [ D ] DroneCtrlThread is already running" << std::endl;
+        return;
+    }
+
+    m_threadKill = false;
+    m_threadHandler = std::thread(&DroneCtrl::DroneCtrlThread, this);
+    std::cout << "[INFO] [ D ] DroneCtrlThread Initialized" << std::endl;
 }
 
-void DroneCtrl::shutdownKernelComms(bool isKernelConnected)
+/* THREAD */ void DroneCtrl::shutdownThread()
 {
-    std::cout << "[INFO] [ D ] Drone Exit" << std::endl;
-    KernelComms::shutdownRamDiskCommander(isKernelConnected);
+    /**
+     * Automatically locks the mutex when it is constructed
+     * and releases the lock when it goes out of scope
+     */
+    std::lock_guard<std::mutex> lock(m_threadMutex);
+
+    if (m_threadKill)
+    {
+        std::cout << "[INFO] [ D ] DroneCtrlThread is already marked for shutdown" << std::endl;
+        return;
+    }
+
+    m_threadKill = true;
+    triggerEvent();
+
+    if (m_threadHandler.joinable())
+    {
+        m_threadHandler.join();
+    }
+
+    std::cout << "[INFO] [ D ] DroneCtrlThread Terminated" << std::endl;
 }
 
-bool DroneCtrl::isKilled()
-{
-    bool ret = false;
-
-    ret = KernelComms::Watchdog::isWatchdogDead() || KernelComms::Commander::isThreadKilled();
-
-    return ret;
-}
-
-std::string DroneCtrl::getCtrlStateString(droneCtrlStateType state)
+/* THREAD */ std::string DroneCtrl::getThreadStateMachineString(droneCtrlStateType state)
 {
     static const std::array<std::string, CTRL_AMOUNT> ctrlStateStrings =
     {
+        "CTRL_IDLE",
         "CTRL_INIT",
         "CTRL_RAMDISK_PERIPHERALS",
         "CTRL_RAMDISK_ACTIVATE_DMA",
@@ -69,33 +101,21 @@ std::string DroneCtrl::getCtrlStateString(droneCtrlStateType state)
     }
 }
 
-void DroneCtrl::sendFpgaConfigToRamDisk()
-{
-    std::cout << "[INFO] [ D ] Peripherals configuration ready :: Loading to FPGA" << std::endl;
-    assembleConfig();
-    sendConfig();
-}
-
-void DroneCtrl::setDroneCtrlState(droneCtrlStateType state)
-{
-    while(CTRL_MAIN != m_ctrlState) /* Wait until we are in CTRL_MAIN */
-    {
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    }
-    m_ctrlState = state;
-}
-
-void DroneCtrl::droneCtrlMain()
+/* THREAD */ void DroneCtrl::DroneCtrlThread()
 {
 #if 1 /* Just another debug */
     if(m_ctrlStatePrev != m_ctrlState)
     {
-        std::cout << "[INFO] [ D ] State DroneCtrl " << m_ctrlStatePrev << "->" << m_ctrlState << " " << getCtrlStateString(m_ctrlState) << std::endl;
+        std::cout << "[INFO] [ D ] State DroneCtrl " << m_ctrlStatePrev << "->" << m_ctrlState << " " << getThreadStateMachineString(m_ctrlState) << std::endl;
         m_ctrlStatePrev = m_ctrlState;
     }
 #endif
     switch(m_ctrlState)
     {
+        case CTRL_IDLE:
+            waitEvent();
+            break;
+
         case CTRL_INIT:
             /**
              * Main Config
@@ -143,3 +163,76 @@ void DroneCtrl::droneCtrlMain()
     /* Reduce consumption of CPU resources */
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
 }
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void DroneCtrl::initKernelComms()
+{
+    std::cout << "[INIT] [ D ] Initialize RamDisk Commander" << std::endl;
+    KernelComms::initRamDiskCommander();
+}
+
+void DroneCtrl::shutdownKernelComms(bool isKernelConnected)
+{
+    std::cout << "[INFO] [ D ] Drone Exit" << std::endl;
+    KernelComms::shutdownRamDiskCommander(isKernelConnected);
+}
+
+bool DroneCtrl::isKilled()
+{
+    bool ret = false;
+
+    ret = KernelComms::Watchdog::isWatchdogDead() || KernelComms::Commander::isThreadKilled();
+
+    return ret;
+}
+
+void DroneCtrl::sendFpgaConfigToRamDisk()
+{
+    std::cout << "[INFO] [ D ] Peripherals configuration ready :: Loading to FPGA" << std::endl;
+    assembleConfig();
+    sendConfig();
+}
+
+void DroneCtrl::setDroneCtrlState(droneCtrlStateType state)
+{
+    while(CTRL_MAIN != m_ctrlState) /* Wait until we are in CTRL_MAIN */
+    {
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
+    m_ctrlState = state;
+}
+
+
+
+/* EVENT */ void DroneCtrl::waitEvent()
+{
+    std::cout << "[INFO] [ D ] DroneCtrlThread Wait" << std::endl;
+
+    std::unique_lock<std::mutex> lock(m_eventMutex);
+
+    auto predicate = [this]()
+    {
+        return m_stateChanged;
+    };
+
+    m_conditionalVariable.wait(lock, predicate);
+    m_stateChanged = false;
+}
+
+/* EVENT */ void DroneCtrl::triggerEvent()
+{
+    std::cout << "[INFO] [ D ] DroneCtrlThread Event" << std::endl;
+    /**
+     * The curly braces in this context are used to create a limited scope,
+     * so that the std::lock_guard<std::mutex> lock(m_eventMutex);
+     * releases the mutex as soon as the scope ends.
+     */
+    {
+        std::lock_guard<std::mutex> lock(m_eventMutex);
+        m_stateChanged = true;
+    }
+
+    m_conditionalVariable.notify_one(); // Wake up waiting thread
+}
+

@@ -286,7 +286,7 @@ void gui::setupUartConsole()
 
 void gui::setupFpgaCtrl()
 {
-    QLabel *reset_label = new QLabel("CTRL", this);
+    QLabel *reset_label = new QLabel("IRQ", this);
     QFont reset_labelFont;
     reset_labelFont.setPointSize(30);
     reset_labelFont.setItalic(true);
@@ -687,7 +687,7 @@ void gui::setupFpgaCtrl()
 
 void gui::setupThreadProcess()
 {
-    QLabel *thread_label = new QLabel("THREAD", this);
+    QLabel *thread_label = new QLabel("CTRL", this);
     QFont thread_labelFont;
     thread_labelFont.setPointSize(30);
     thread_labelFont.setItalic(true);
@@ -695,8 +695,8 @@ void gui::setupThreadProcess()
     thread_label->setFont(thread_labelFont);
     thread_label->setGeometry(800 - dev.xGap*2 - dev.xUnit*4 , dev.yGap, dev.xLogo, dev.yLogo);
 
-    QPushButton *connectButton = new QPushButton("INITIALIZE", this);
-    connectButton->setGeometry(800 - dev.xGap*2 - dev.xUnit*4, dev.yGap*2 + dev.yLogo, dev.xUnit*4 + dev.xGap, dev.yUnit);
+    QPushButton *connectButton = new QPushButton("INIT", this);
+    connectButton->setGeometry(800 - dev.xGap*2 - dev.xUnit*4, dev.yGap*2 + dev.yLogo, dev.xUnit*2, dev.yUnit);
     connectButton->setStyleSheet(
         "QPushButton {"
         "   background-color: green;"
@@ -715,8 +715,28 @@ void gui::setupThreadProcess()
     );
     connect(connectButton, &QPushButton::clicked, this, &gui::initThread);
 
-    QPushButton *terminateButton = new QPushButton("TERMINATE", this);
-    terminateButton->setGeometry(800 - dev.xGap*2 - dev.xUnit*4, dev.yGap*3 + dev.yUnit*3, dev.xUnit*4 + dev.xGap, dev.yUnit);
+    QPushButton *newButton = new QPushButton("NEW", this);
+    newButton->setGeometry(800 - dev.xGap*1 - dev.xUnit*2, dev.yGap*2 + dev.yLogo, dev.xUnit*2, dev.yUnit);
+    newButton->setStyleSheet(
+        "QPushButton {"
+        "   background-color: green;"
+        "   color: white;"
+        "   font-size: 17px;"
+        "   font-weight: bold;"
+        "   border-radius: 10px;"
+        "   padding: 5px;"
+        "}"
+        "QPushButton:hover {"
+        "   background-color: darkgreen;"
+        "}"
+        "QPushButton:pressed {"
+        "   background-color: black;"
+        "}"
+    );
+    connect(newButton, &QPushButton::clicked, this, &gui::createDroneControl);
+
+    QPushButton *terminateButton = new QPushButton("EXIT", this);
+    terminateButton->setGeometry(800 - dev.xGap*2 - dev.xUnit*4, dev.yGap*3 + dev.yUnit*3, dev.xUnit*2, dev.yUnit);
     terminateButton->setStyleSheet(
         "QPushButton {"
         "   background-color: red;"
@@ -735,8 +755,28 @@ void gui::setupThreadProcess()
     );
     connect(terminateButton, &QPushButton::clicked, this, &gui::shutdownThread);
 
+    QPushButton *deleteButton = new QPushButton("DELETE", this);
+    deleteButton->setGeometry(800 - dev.xGap*1 - dev.xUnit*2, dev.yGap*3 + dev.yUnit*3, dev.xUnit*2, dev.yUnit);
+    deleteButton->setStyleSheet(
+        "QPushButton {"
+        "   background-color: red;"
+        "   color: white;"
+        "   font-size: 17px;"
+        "   font-weight: bold;"
+        "   border-radius: 10px;"
+        "   padding: 5px;"
+        "}"
+        "QPushButton:hover {"
+        "   background-color: darkred;"
+        "}"
+        "QPushButton:pressed {"
+        "   background-color: black;"
+        "}"
+    );
+    connect(deleteButton, &QPushButton::clicked, this, &gui::deleteDroneControl);
+
     QPushButton *debugButton = new QPushButton("DEBUG", this);
-    debugButton->setGeometry(800 - dev.xGap*2 - dev.xUnit*4, dev.yGap*4 + dev.yUnit*4, dev.xUnit*4 + dev.xGap, dev.yUnit);
+    debugButton->setGeometry(800 - dev.xGap*2 - dev.xUnit*4, dev.yGap*4 + dev.yUnit*4, dev.xUnit*2, dev.yUnit);
     debugButton->setStyleSheet(
         "QPushButton {"
         "   background-color: purple;"
@@ -754,6 +794,26 @@ void gui::setupThreadProcess()
         "}"
     );
     connect(debugButton, &QPushButton::clicked, this, &gui::debugThread);
+
+    QPushButton *hideButton = new QPushButton("HACK", this);
+    hideButton->setGeometry(800 - dev.xGap*1 - dev.xUnit*2, dev.yGap*4 + dev.yUnit*4, dev.xUnit*2, dev.yUnit);
+    hideButton->setStyleSheet(
+        "QPushButton {"
+        "   background-color: purple;"
+        "   color: white;"
+        "   font-size: 17px;"
+        "   font-weight: bold;"
+        "   border-radius: 10px;"
+        "   padding: 5px;"
+        "}"
+        "QPushButton:hover {"
+        "   background-color: darkred;"
+        "}"
+        "QPushButton:pressed {"
+        "   background-color: black;"
+        "}"
+    );
+    connect(hideButton, &QPushButton::clicked, this, &gui::debugThread);
 }
 
 void gui::setupSeparators()
@@ -1639,7 +1699,6 @@ void gui::onUartInput()
     }
 }
 
-
 void gui::shutdownUart()
 {
     if (m_uartIsConnected && m_serialPort->isOpen())
@@ -1676,6 +1735,30 @@ void gui::initThread()
 
     qDebug() << "[INIT] [THR] Initialize threadMain";
 }
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// Modified RAII
+//
+// If we put this into the constructor
+// and destructor we will have modified
+// Resource Acquisition Is Initialisation
+//
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void gui::createDroneControl()
+{
+    if (!m_instanceDroneControl)
+    {
+        m_instanceDroneControl = std::make_unique<DroneCtrl>();
+    }
+}
+
+void gui::deleteDroneControl()
+{
+    m_instanceDroneControl.reset();
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void gui::shutdownThread()
 {
@@ -1787,7 +1870,7 @@ void gui::threadMain()
 
     while (false == m_threadKill)
     {
-        m_instanceDroneCtrl->droneCtrlMain();
+        // m_instanceDroneCtrl->droneCtrlMain();
 
         if (true == m_instanceDroneCtrl->isKilled())
         {

@@ -80,6 +80,7 @@ class gui : public QWidget
     QPushButton *m_startButton;
 
     std::unique_ptr<DroneCtrl> m_instanceDroneCtrl;
+    std::unique_ptr<DroneCtrl> m_instanceDroneControl;
     std::thread m_threadMain;
     std::mutex m_threadMutex;
     bool m_threadKill;
@@ -150,4 +151,7 @@ private slots:
     void debugThread();
     void shutdownThread();
     void threadMain();
+
+    void createDroneControl();
+    void deleteDroneControl();
 };
