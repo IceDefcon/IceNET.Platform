@@ -90,8 +90,6 @@ class gui : public QWidget
     std::shared_ptr<std::vector<uint8_t>> m_Tx_GuiVector;
     std::shared_ptr<ioStateType> m_IO_GuiState;
 
-    Commander* m_instanceCommander;
-
     QSerialPort *m_serialPort;
     QByteArray m_readBuffer;
     QString m_uartPortName;

@@ -18,8 +18,8 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 DroneCtrl::DroneCtrl() :
-    m_ctrlState(CTRL_IDLE),
-    m_ctrlStatePrev(CTRL_IDLE)
+    m_ctrlState(DRONE_CTRL_IDLE),
+    m_ctrlStatePrev(DRONE_CTRL_IDLE)
 {
     std::cout << "[INFO] [CONSTRUCTOR] " << this << " :: Instantiate DroneCtrl" << std::endl;
 
@@ -81,17 +81,18 @@ DroneCtrl::~DroneCtrl()
 
 /* THREAD */ std::string DroneCtrl::getThreadStateMachineString(droneCtrlStateType state)
 {
-    static const std::array<std::string, CTRL_AMOUNT> ctrlStateStrings =
+    static const std::array<std::string, DRONE_CTRL_AMOUNT> ctrlStateStrings =
     {
-        "CTRL_IDLE",
-        "CTRL_INIT",
-        "CTRL_RAMDISK_PERIPHERALS",
-        "CTRL_RAMDISK_ACTIVATE_DMA",
-        "CTRL_DMA_SINGLE",
-        "CTRL_MAIN",
+        "DRONE_CTRL_IDLE",
+        "DRONE_CTRL_INIT",
+        "DRONE_CTRL_CONFIG",
+        "DRONE_CTRL_RAMDISK_PERIPHERALS",
+        "DRONE_CTRL_RAMDISK_ACTIVATE_DMA",
+        "DRONE_CTRL_DMA_SINGLE",
+        "DRONE_CTRL_MAIN",
     };
 
-    if (state >= 0 && state < CTRL_AMOUNT)
+    if (state >= 0 && state < DRONE_CTRL_AMOUNT)
     {
         return ctrlStateStrings[state];
     }
@@ -101,67 +102,81 @@ DroneCtrl::~DroneCtrl()
     }
 }
 
+/* THREAD */ void DroneCtrl::setDroneCtrlState(droneCtrlStateType state)
+{
+    std::unique_lock<std::mutex> lock(m_ctrlMutex);
+    m_ctrlState = state;
+    triggerEvent();
+}
+
 /* THREAD */ void DroneCtrl::DroneCtrlThread()
 {
-#if 1 /* Just another debug */
-    if(m_ctrlStatePrev != m_ctrlState)
+    while (!m_threadKill)
     {
-        std::cout << "[INFO] [ D ] State DroneCtrl " << m_ctrlStatePrev << "->" << m_ctrlState << " " << getThreadStateMachineString(m_ctrlState) << std::endl;
-        m_ctrlStatePrev = m_ctrlState;
+        if(m_ctrlStatePrev != m_ctrlState)
+        {
+            std::cout << "[INFO] [ D ] State DroneCtrl " << m_ctrlStatePrev << "->" << m_ctrlState << " " << getThreadStateMachineString(m_ctrlState) << std::endl;
+            m_ctrlStatePrev = m_ctrlState;
+        }
+
+        switch(m_ctrlState)
+        {
+            case DRONE_CTRL_IDLE:
+                waitEvent();
+                break;
+
+            case DRONE_CTRL_INIT:
+                initKernelComms();
+                m_ctrlState = DRONE_CTRL_CONFIG;
+                std::cout << "[INFO] [ D ] Goint to " << std::endl;
+                break;
+
+            case DRONE_CTRL_CONFIG:
+                /**
+                 * Main Config
+                 *
+                 * Configure IMU's connectd to FPGA
+                 * Via I2C or SPI buses
+                 * Using SPI/DMA
+                 */
+                if(true == KernelComms::Watchdog::getFpgaConfigReady())
+                {
+                    sendCommand(CMD_RAMDISK_CLEAR);
+                    m_ctrlState = DRONE_CTRL_RAMDISK_PERIPHERALS;
+                }
+                break;
+
+            case DRONE_CTRL_RAMDISK_PERIPHERALS:
+                sendFpgaConfigToRamDisk();
+                m_ctrlState = DRONE_CTRL_RAMDISK_ACTIVATE_DMA;
+                break;
+
+            case DRONE_CTRL_RAMDISK_ACTIVATE_DMA:
+                std::cout << "[INFO] [ D ] Activating RamDisk Config DMA Engine" << std::endl;
+                sendCommand(CMD_RAMDISK_CONFIG);
+                /* Wait for Kerenl to send data to FPGA */
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                m_ctrlState = DRONE_CTRL_DMA_SINGLE;
+                break;
+
+            case DRONE_CTRL_DMA_SINGLE:
+                std::cout << "[INFO] [ D ] Configuration Done :: Switch DMA into a Normal Mode" << std::endl;
+                sendCommand(CMD_DMA_NORMAL);
+                m_ctrlState = DRONE_CTRL_IDLE;
+                break;
+
+            case DRONE_CTRL_MAIN:
+                //
+                // TODO
+                //
+                break;
+
+            default:
+                std::cout << "[INFO] [ D ] Unknown State" << std::endl;
+        }
     }
-#endif
-    switch(m_ctrlState)
-    {
-        case CTRL_IDLE:
-            waitEvent();
-            break;
 
-        case CTRL_INIT:
-            /**
-             * Main Config
-             *
-             * Configure IMU's connectd to FPGA
-             * Via I2C or SPI buses
-             * Using SPI/DMA
-             */
-            if(true == KernelComms::Watchdog::getFpgaConfigReady())
-            {
-                sendCommand(CMD_RAMDISK_CLEAR);
-                m_ctrlState = CTRL_RAMDISK_PERIPHERALS;
-            }
-            break;
-
-        case CTRL_RAMDISK_PERIPHERALS:
-            sendFpgaConfigToRamDisk();
-            m_ctrlState = CTRL_RAMDISK_ACTIVATE_DMA;
-            break;
-
-        case CTRL_RAMDISK_ACTIVATE_DMA:
-            std::cout << "[INFO] [ D ] Activating RamDisk Config DMA Engine" << std::endl;
-            sendCommand(CMD_RAMDISK_CONFIG);
-            /* Wait for Kerenl to send data to FPGA */
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
-            m_ctrlState = CTRL_DMA_SINGLE;
-            break;
-
-        case CTRL_DMA_SINGLE:
-            std::cout << "[INFO] [ D ] Configuration Done :: Switch DMA into a Normal Mode" << std::endl;
-            sendCommand(CMD_DMA_NORMAL);
-            m_ctrlState = CTRL_MAIN;
-            break;
-
-        case CTRL_MAIN:
-            //
-            // TODO
-            //
-            break;
-
-        default:
-            std::cout << "[INFO] [ D ] Unknown State" << std::endl;
-    }
-
-    /* Reduce consumption of CPU resources */
-    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    std::cout << "[INFO] [ D ] Terminate DroneCtrlThread" << std::endl;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -194,17 +209,6 @@ void DroneCtrl::sendFpgaConfigToRamDisk()
     sendConfig();
 }
 
-void DroneCtrl::setDroneCtrlState(droneCtrlStateType state)
-{
-    while(CTRL_MAIN != m_ctrlState) /* Wait until we are in CTRL_MAIN */
-    {
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    }
-    m_ctrlState = state;
-}
-
-
-
 /* EVENT */ void DroneCtrl::waitEvent()
 {
     std::cout << "[INFO] [ D ] DroneCtrlThread Wait" << std::endl;
@@ -223,16 +227,8 @@ void DroneCtrl::setDroneCtrlState(droneCtrlStateType state)
 /* EVENT */ void DroneCtrl::triggerEvent()
 {
     std::cout << "[INFO] [ D ] DroneCtrlThread Event" << std::endl;
-    /**
-     * The curly braces in this context are used to create a limited scope,
-     * so that the std::lock_guard<std::mutex> lock(m_eventMutex);
-     * releases the mutex as soon as the scope ends.
-     */
-    {
-        std::lock_guard<std::mutex> lock(m_eventMutex);
-        m_stateChanged = true;
-    }
 
-    m_conditionalVariable.notify_one(); // Wake up waiting thread
+    std::lock_guard<std::mutex> lock(m_eventMutex);
+    m_stateChanged = true;
+    m_conditionalVariable.notify_one(); // Safe: no risk of lost wakeup
 }
-
