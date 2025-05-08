@@ -21,8 +21,11 @@ class Commander : public Measure
 {
     private:
         int m_file_descriptor;
-        std::thread m_threadCommander;
+
+        /* Thread Variables */
+        std::thread m_CommanderThread;
         std::mutex m_threadMutex;
+        std::mutex m_ctrlMutex;
         bool m_threadKill;
 
         ioStateType m_ioState;
@@ -62,10 +65,11 @@ class Commander : public Measure
         void setDmaCustom(uint8_t size);
         int sendCommand(commandType cmd);
 
-        void initThread();
-        void shutdownThread();
-        bool isThreadKilled();
-        void threadCommander();
+        /* THREAD */ void initThread();
+        /* THREAD */ void shutdownThread();
+        /* THREAD */ bool isThreadKilled();
+        /* THREAD */ void setCommanderState(ioStateType state);
+        /* THREAD */ void CommanderThread();
 
         /* SHARE */ void setTransferPointers(
         std::shared_ptr<std::vector<uint8_t>> transferPointerRx,
