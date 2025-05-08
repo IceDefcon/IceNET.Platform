@@ -19,7 +19,8 @@
 
 DroneCtrl::DroneCtrl() :
     m_ctrlState(DRONE_CTRL_IDLE),
-    m_ctrlStatePrev(DRONE_CTRL_IDLE)
+    m_ctrlStatePrev(DRONE_CTRL_IDLE),
+    m_isKernelConnected(false)
 {
     std::cout << "[INFO] [CONSTRUCTOR] " << this << " :: Instantiate DroneCtrl" << std::endl;
 
@@ -30,7 +31,10 @@ DroneCtrl::~DroneCtrl()
 {
     std::cout << "[INFO] [DESTRUCTOR] " << this << " :: Destroy DroneCtrl" << std::endl;
 
+    shutdownKernelComms();
     shutdownThread();
+
+    m_isKernelConnected = false;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -69,7 +73,7 @@ DroneCtrl::~DroneCtrl()
     }
 
     m_threadKill = true;
-    triggerEvent();
+    triggerDroneControlEvent();
 
     if (m_threadHandler.joinable())
     {
@@ -106,7 +110,7 @@ DroneCtrl::~DroneCtrl()
 {
     std::unique_lock<std::mutex> lock(m_ctrlMutex);
     m_ctrlState = state;
-    triggerEvent();
+    triggerDroneControlEvent();
 }
 
 /* THREAD */ void DroneCtrl::DroneCtrlThread()
@@ -122,13 +126,22 @@ DroneCtrl::~DroneCtrl()
         switch(m_ctrlState)
         {
             case DRONE_CTRL_IDLE:
-                waitEvent();
+                waitDroneControlEvent();
                 break;
 
             case DRONE_CTRL_INIT:
-                initKernelComms();
+                m_isKernelConnected = (OK == initKernelComms()) ? true : false;
+                if(false == m_isKernelConnected)
+                {
+                    std::cout << "[INFO] [ D ] Kernel Connection -> Failure" << std::endl;
+                    m_ctrlState = DRONE_CTRL_IDLE;
+                    break;
+                }
+                else
+                {
+                    std::cout << "[INFO] [ D ] Kernel Connection -> Success" << std::endl;
+                }
                 m_ctrlState = DRONE_CTRL_CONFIG;
-                std::cout << "[INFO] [ D ] Goint to " << std::endl;
                 break;
 
             case DRONE_CTRL_CONFIG:
@@ -181,19 +194,23 @@ DroneCtrl::~DroneCtrl()
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void DroneCtrl::initKernelComms()
+int DroneCtrl::initKernelComms()
 {
+    int ret = UNKNOWN;
+
     std::cout << "[INIT] [ D ] Initialize RamDisk Commander" << std::endl;
-    KernelComms::initRamDiskCommander();
+    ret = KernelComms::initRamDiskCommander();
+
+    return ret;
 }
 
-void DroneCtrl::shutdownKernelComms(bool isKernelConnected)
+void DroneCtrl::shutdownKernelComms()
 {
     std::cout << "[INFO] [ D ] Drone Exit" << std::endl;
-    KernelComms::shutdownRamDiskCommander(isKernelConnected);
+    KernelComms::shutdownRamDiskCommander();
 }
 
-bool DroneCtrl::isKilled()
+bool DroneCtrl::isKernelComsDead()
 {
     bool ret = false;
 
@@ -209,11 +226,10 @@ void DroneCtrl::sendFpgaConfigToRamDisk()
     sendConfig();
 }
 
-/* EVENT */ void DroneCtrl::waitEvent()
+/* EVENT */ void DroneCtrl::waitDroneControlEvent()
 {
-    std::cout << "[INFO] [ D ] DroneCtrlThread Wait" << std::endl;
-
     std::unique_lock<std::mutex> lock(m_eventMutex);
+    std::cout << "[INFO] [ D ] DroneCtrlThread Wait" << std::endl;
 
     auto predicate = [this]()
     {
@@ -224,11 +240,16 @@ void DroneCtrl::sendFpgaConfigToRamDisk()
     m_stateChanged = false;
 }
 
-/* EVENT */ void DroneCtrl::triggerEvent()
+/* EVENT */ void DroneCtrl::triggerDroneControlEvent()
 {
+    std::lock_guard<std::mutex> lock(m_eventMutex);
     std::cout << "[INFO] [ D ] DroneCtrlThread Event" << std::endl;
 
-    std::lock_guard<std::mutex> lock(m_eventMutex);
     m_stateChanged = true;
     m_conditionalVariable.notify_one(); // Safe: no risk of lost wakeup
+}
+
+/* GET */ bool DroneCtrl::getKernelConnected()
+{
+    return m_isKernelConnected;
 }

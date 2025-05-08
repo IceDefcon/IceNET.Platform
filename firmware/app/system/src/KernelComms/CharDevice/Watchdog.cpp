@@ -30,7 +30,7 @@ Watchdog::~Watchdog()
 {
     std::cout << "[INFO] [DESTRUCTOR] " << this << " :: Destroy Watchdog" << std::endl;
 
-    shutdownThread(true); /* TODO :: Independent on the kernel connection */
+    shutdownThread();
 
     closeDEV();
 
@@ -119,7 +119,7 @@ void Watchdog::initThread()
     m_threadWatchdog = std::thread(&Watchdog::threadWatchdog, this);
 }
 
-void Watchdog::shutdownThread(bool isKernelConnected)
+void Watchdog::shutdownThread()
 {
     /**
      * Automatically locks the mutex when it is constructed

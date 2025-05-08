@@ -63,7 +63,7 @@ class Commander : public Measure
         int sendCommand(commandType cmd);
 
         void initThread();
-        void shutdownThread(bool isKernelConnected);
+        void shutdownThread();
         bool isThreadKilled();
         void threadCommander();
 
@@ -72,6 +72,6 @@ class Commander : public Measure
         std::shared_ptr<std::vector<uint8_t>> transferPointerTx,
         std::shared_ptr<ioStateType> transferState);
 
-        /* EVENT */ void waitEvent();
-        /* EVENT */ void triggerEvent();
+        /* EVENT */ void waitCommanderEvent();
+        /* EVENT */ void triggerCommanderEvent();
 };

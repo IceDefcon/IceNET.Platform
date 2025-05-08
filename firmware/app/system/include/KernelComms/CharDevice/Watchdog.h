@@ -48,7 +48,7 @@ class Watchdog
         int closeDEV();
 
         void initThread();
-        void shutdownThread(bool isKernelConnected);
+        void shutdownThread();
         bool isThreadKilled();
         void threadWatchdog();
 

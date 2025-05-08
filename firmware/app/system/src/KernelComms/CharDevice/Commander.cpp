@@ -39,8 +39,7 @@ Commander::~Commander()
 {
     std::cout << "[INFO] [DESTRUCTOR] " << this << " :: Destroy Commander" << std::endl;
 
-    shutdownThread(true);
-
+    shutdownThread();
     closeDEV();
 }
 
@@ -218,9 +217,9 @@ void Commander::initThread()
     m_threadCommander = std::thread(&Commander::threadCommander, this);
 }
 
-void Commander::shutdownThread(bool isKernelConnected)
+void Commander::shutdownThread()
 {
-    if(true == isKernelConnected)
+    if (m_file_descriptor >= 0)
     {
         /* Switch to single DMA */
         sendCommand(CMD_DMA_SINGLE);
@@ -248,7 +247,7 @@ void Commander::shutdownThread(bool isKernelConnected)
      * escape from IDLE state
      */
     m_threadKill = true;
-    triggerEvent();
+    triggerCommanderEvent();
 
     if (m_threadCommander.joinable())
     {
@@ -294,8 +293,7 @@ void Commander::threadCommander()
         switch(*m_IO_CommanderState)
         {
             case IO_COM_IDLE:
-                std::this_thread::sleep_for(std::chrono::milliseconds(10));
-                // waitEvent();
+                waitCommanderEvent();
                 break;
 
             case IO_COM_WRITE:
@@ -451,7 +449,7 @@ void Commander::threadCommander()
 }
 
 
-/* EVENT */ void Commander::waitEvent()
+/* EVENT */ void Commander::waitCommanderEvent()
 {
     std::unique_lock<std::mutex> lock(m_eventMutex);
 
@@ -466,7 +464,7 @@ void Commander::threadCommander()
     m_stateChanged = false;
 }
 
-/* EVENT */ void Commander::triggerEvent()
+/* EVENT */ void Commander::triggerCommanderEvent()
 {
     /**
      * The curly braces in this context are used to create a limited scope,
