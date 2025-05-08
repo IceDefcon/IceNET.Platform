@@ -1749,7 +1749,12 @@ void gui::createDroneControl()
 {
     if (!m_instanceDroneControl)
     {
+        /* Create Drone Control Instance */
         m_instanceDroneControl = std::make_unique<DroneCtrl>();
+        /* Configure Shared pointers for modified Observert */
+        m_instanceDroneControl->setTransferPointers(m_Rx_GuiVector, m_Tx_GuiVector, m_IO_GuiState);
+        /* Trigger configuration Event */
+        m_instanceDroneControl->setDroneCtrlState(DRONE_CTRL_INIT);
     }
 }
 

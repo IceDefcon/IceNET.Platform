@@ -30,6 +30,8 @@ Watchdog::~Watchdog()
 {
     std::cout << "[INFO] [DESTRUCTOR] " << this << " :: Destroy Watchdog" << std::endl;
 
+    shutdownThread(true); /* TODO :: Independent on the kernel connection */
+
     closeDEV();
 
     delete m_Rx_Watchdog;

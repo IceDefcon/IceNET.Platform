@@ -39,8 +39,11 @@ Commander::~Commander()
 {
     std::cout << "[INFO] [DESTRUCTOR] " << this << " :: Destroy Commander" << std::endl;
 
+    shutdownThread(true);
+
     closeDEV();
 }
+
 
 void Commander::setupCommandMatrix()
 {
@@ -291,7 +294,8 @@ void Commander::threadCommander()
         switch(*m_IO_CommanderState)
         {
             case IO_COM_IDLE:
-                waitEvent();
+                std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                // waitEvent();
                 break;
 
             case IO_COM_WRITE:
@@ -431,14 +435,21 @@ void Commander::threadCommander()
 }
 
 /* SHARE */ void Commander::setTransferPointers(
-std::shared_ptr<std::vector<uint8_t>> transferPointerRx,
-std::shared_ptr<std::vector<uint8_t>> transferPointerTx,
-std::shared_ptr<ioStateType> transferState)
+    std::shared_ptr<std::vector<uint8_t>> transferPointerRx,
+    std::shared_ptr<std::vector<uint8_t>> transferPointerTx,
+    std::shared_ptr<ioStateType> transferState)
 {
+    if (!transferPointerRx || !transferPointerTx || !transferState)
+    {
+        std::cerr << "[ERROR] [CMD] One or more transfer pointers are null!" << std::endl;
+        return; // or throw
+    }
+
     m_Rx_CommanderVector = transferPointerRx;
     m_Tx_CommanderVector = transferPointerTx;
     m_IO_CommanderState = transferState;
 }
+
 
 /* EVENT */ void Commander::waitEvent()
 {

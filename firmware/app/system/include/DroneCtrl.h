@@ -25,12 +25,17 @@ class DroneCtrl : public KernelComms
         /* Thread Variables */
         std::thread m_threadHandler;
         std::mutex m_threadMutex;
+        std::mutex m_ctrlMutex;
         bool m_threadKill;
 
         /* Event Variables */
         std::mutex m_eventMutex;
         std::condition_variable m_conditionalVariable;
         bool m_stateChanged;
+
+        std::shared_ptr<std::vector<uint8_t>> m_Rx_DroneCtrlVector;
+        std::shared_ptr<std::vector<uint8_t>> m_Tx_DroneCtrlVector;
+        std::shared_ptr<ioStateType> m_IO_DroneCtrlState;
 
     public:
         DroneCtrl();
@@ -39,15 +44,14 @@ class DroneCtrl : public KernelComms
         /* THREAD */ void initThread();
         /* THREAD */ void shutdownThread();
         /* THREAD */ std::string getThreadStateMachineString(droneCtrlStateType state);
+        /* THREAD */ void setDroneCtrlState(droneCtrlStateType state);
         /* THREAD */ void DroneCtrlThread();
 
         void initKernelComms();
         void shutdownKernelComms(bool isKernelConnected);
         bool isKilled();
 
-
         void sendFpgaConfigToRamDisk();
-        void setDroneCtrlState(droneCtrlStateType state);
 
         /* EVENT */ void waitEvent();
         /* EVENT */ void triggerEvent();
