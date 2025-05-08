@@ -25,16 +25,31 @@ KernelComms::~KernelComms()
     std::cout << "[INFO] [DESTRUCTOR] " << this << " :: Destroy KernelComms" << std::endl;
 }
 
-void KernelComms::initRamDiskCommander()
+int KernelComms::initRamDiskCommander()
 {
-    Commander::openDEV();
+    int ret;
+
+    ret = Commander::openDEV();
+    if(OK != ret)
+    {
+        std::cout << "[ERNO] [ K ] Commander Problem -> " << ret << std::endl;
+        return ret;
+    }
 
     Watchdog::initBuffers();
-    Watchdog::openDEV();
+
+    ret = Watchdog::openDEV();
+    if(OK != ret)
+    {
+        std::cout << "[ERNO] [ K ] Watchdog Problem -> " << ret << std::endl;
+        return ret;
+    }
+
+    return ret;
 }
 
-void KernelComms::shutdownRamDiskCommander(bool isKernelConnected)
+void KernelComms::shutdownRamDiskCommander()
 {
-    Commander::shutdownThread(isKernelConnected);
-    Watchdog::shutdownThread(isKernelConnected);
+    Commander::shutdownThread();
+    Watchdog::shutdownThread();
 }

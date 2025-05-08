@@ -19,8 +19,7 @@ class DroneCtrl : public KernelComms
     private:
         droneCtrlStateType m_ctrlState;
         droneCtrlStateType m_ctrlStatePrev;
-
-        static constexpr uint32_t FPGA_DELAY = 3000;
+        bool m_isKernelConnected;
 
         /* Thread Variables */
         std::thread m_threadHandler;
@@ -33,10 +32,6 @@ class DroneCtrl : public KernelComms
         std::condition_variable m_conditionalVariable;
         bool m_stateChanged;
 
-        std::shared_ptr<std::vector<uint8_t>> m_Rx_DroneCtrlVector;
-        std::shared_ptr<std::vector<uint8_t>> m_Tx_DroneCtrlVector;
-        std::shared_ptr<ioStateType> m_IO_DroneCtrlState;
-
     public:
         DroneCtrl();
         ~DroneCtrl();
@@ -47,12 +42,14 @@ class DroneCtrl : public KernelComms
         /* THREAD */ void setDroneCtrlState(droneCtrlStateType state);
         /* THREAD */ void DroneCtrlThread();
 
-        void initKernelComms();
-        void shutdownKernelComms(bool isKernelConnected);
-        bool isKilled();
+        /* KERNEL */ int initKernelComms();
+        /* KERNEL */ void shutdownKernelComms();
+        /* KERNEL */ bool isKernelComsDead();
 
         void sendFpgaConfigToRamDisk();
 
-        /* EVENT */ void waitEvent();
-        /* EVENT */ void triggerEvent();
+        /* EVENT */ void waitDroneControlEvent();
+        /* EVENT */ void triggerDroneControlEvent();
+
+        /* GET */ bool getKernelConnected();
 };

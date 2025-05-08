@@ -32,8 +32,6 @@ static const consoleType console =
 };
 
 gui::gui() :
-m_threadKill(true),
-m_isKernelConnected(false),
 m_Rx_GuiVector(std::make_shared<std::vector<uint8_t>>(IO_TRANSFER_SIZE)),
 m_Tx_GuiVector(std::make_shared<std::vector<uint8_t>>(IO_TRANSFER_SIZE)),
 m_IO_GuiState(std::make_shared<ioStateType>(IO_COM_IDLE)),
@@ -65,11 +63,7 @@ gui::~gui()
     qDebug() << "[MAIN] [DESTRUCTOR]" << this << ":: gui ";
 
     shutdownUart();
-
-    if(false == m_threadKill)
-    {
-        shutdownThread();
-    }
+    deleteDroneControl();
 }
 
 void gui::setupWindow()
@@ -315,13 +309,13 @@ void gui::setupFpgaCtrl()
 
     auto fpgaReset = [this]()
     {
-        if(NULL == m_instanceDroneCtrl)
+        if(NULL == m_instanceDroneControl)
         {
-            printToMainConsole("$ threadMain is not Running");
+            printToMainConsole("$ Drone Control is Down");
         }
         else
         {
-            m_instanceDroneCtrl->sendCommand(CMD_FPGA_RESET);
+            m_instanceDroneControl->sendCommand(CMD_FPGA_RESET);
         }
     };
     connect(resetButton, &QPushButton::clicked, this, fpgaReset);
@@ -347,9 +341,9 @@ void gui::setupFpgaCtrl()
 
     auto primaryOffload = [this]()
     {
-        if(NULL == m_instanceDroneCtrl)
+        if(NULL == m_instanceDroneControl)
         {
-            printToMainConsole("$ threadMain is not Running");
+            printToMainConsole("$ Drone Control is Down");
         }
         else
         {
@@ -381,9 +375,9 @@ void gui::setupFpgaCtrl()
 
     auto pulseController = [this]()
     {
-        if (NULL == m_instanceDroneCtrl)
+        if (NULL == m_instanceDroneControl)
         {
-            printToMainConsole("$ threadMain is not Running");
+            printToMainConsole("$ Drone Control is Down");
             return;
         }
 
@@ -461,9 +455,9 @@ void gui::setupFpgaCtrl()
 
     auto acquisitionControl = [this]()
     {
-        if (NULL == m_instanceDroneCtrl)
+        if (NULL == m_instanceDroneControl)
         {
-            printToMainConsole("$ threadMain is not Running");
+            printToMainConsole("$ Drone Control is Down");
             return;
         }
 
@@ -540,9 +534,9 @@ void gui::setupFpgaCtrl()
 
     auto sensorRead = [this]()
     {
-        if(NULL == m_instanceDroneCtrl)
+        if(NULL == m_instanceDroneControl)
         {
-            printToMainConsole("$ threadMain is not Running");
+            printToMainConsole("$ Drone Control is Down");
         }
         else
         {
@@ -573,9 +567,9 @@ void gui::setupFpgaCtrl()
 
     auto secondaryOffload = [this]()
     {
-        if(NULL == m_instanceDroneCtrl)
+        if(NULL == m_instanceDroneControl)
         {
-            printToMainConsole("$ threadMain is not Running");
+            printToMainConsole("$ Drone Control is Down");
         }
         else
         {
@@ -606,9 +600,9 @@ void gui::setupFpgaCtrl()
 
     auto f1_Execute = [this]()
     {
-        if(NULL == m_instanceDroneCtrl)
+        if(NULL == m_instanceDroneControl)
         {
-            printToMainConsole("$ threadMain is not Running");
+            printToMainConsole("$ Drone Control is Down");
         }
         else
         {
@@ -639,9 +633,9 @@ void gui::setupFpgaCtrl()
 
     auto f2_Execute = [this]()
     {
-        if(NULL == m_instanceDroneCtrl)
+        if(NULL == m_instanceDroneControl)
         {
-            printToMainConsole("$ threadMain is not Running");
+            printToMainConsole("$ Drone Control is Down");
         }
         else
         {
@@ -672,9 +666,9 @@ void gui::setupFpgaCtrl()
 
     auto f3_Execute = [this]()
     {
-        if(NULL == m_instanceDroneCtrl)
+        if(NULL == m_instanceDroneControl)
         {
-            printToMainConsole("$ threadMain is not Running");
+            printToMainConsole("$ Drone Control is Down");
         }
         else
         {
@@ -695,7 +689,7 @@ void gui::setupThreadProcess()
     thread_label->setFont(thread_labelFont);
     thread_label->setGeometry(800 - dev.xGap*2 - dev.xUnit*4 , dev.yGap, dev.xLogo, dev.yLogo);
 
-    QPushButton *connectButton = new QPushButton("INIT", this);
+    QPushButton *connectButton = new QPushButton("C1", this);
     connectButton->setGeometry(800 - dev.xGap*2 - dev.xUnit*4, dev.yGap*2 + dev.yLogo, dev.xUnit*2, dev.yUnit);
     connectButton->setStyleSheet(
         "QPushButton {"
@@ -713,7 +707,7 @@ void gui::setupThreadProcess()
         "   background-color: black;"
         "}"
     );
-    connect(connectButton, &QPushButton::clicked, this, &gui::initThread);
+    connect(connectButton, &QPushButton::clicked, this, &gui::C1_Execute);
 
     QPushButton *newButton = new QPushButton("NEW", this);
     newButton->setGeometry(800 - dev.xGap*1 - dev.xUnit*2, dev.yGap*2 + dev.yLogo, dev.xUnit*2, dev.yUnit);
@@ -735,7 +729,7 @@ void gui::setupThreadProcess()
     );
     connect(newButton, &QPushButton::clicked, this, &gui::createDroneControl);
 
-    QPushButton *terminateButton = new QPushButton("EXIT", this);
+    QPushButton *terminateButton = new QPushButton("C2", this);
     terminateButton->setGeometry(800 - dev.xGap*2 - dev.xUnit*4, dev.yGap*3 + dev.yUnit*3, dev.xUnit*2, dev.yUnit);
     terminateButton->setStyleSheet(
         "QPushButton {"
@@ -753,7 +747,7 @@ void gui::setupThreadProcess()
         "   background-color: black;"
         "}"
     );
-    connect(terminateButton, &QPushButton::clicked, this, &gui::shutdownThread);
+    connect(terminateButton, &QPushButton::clicked, this, &gui::C2_Execute);
 
     QPushButton *deleteButton = new QPushButton("DELETE", this);
     deleteButton->setGeometry(800 - dev.xGap*1 - dev.xUnit*2, dev.yGap*3 + dev.yUnit*3, dev.xUnit*2, dev.yUnit);
@@ -775,7 +769,7 @@ void gui::setupThreadProcess()
     );
     connect(deleteButton, &QPushButton::clicked, this, &gui::deleteDroneControl);
 
-    QPushButton *debugButton = new QPushButton("DEBUG", this);
+    QPushButton *debugButton = new QPushButton("C3", this);
     debugButton->setGeometry(800 - dev.xGap*2 - dev.xUnit*4, dev.yGap*4 + dev.yUnit*4, dev.xUnit*2, dev.yUnit);
     debugButton->setStyleSheet(
         "QPushButton {"
@@ -793,9 +787,9 @@ void gui::setupThreadProcess()
         "   background-color: black;"
         "}"
     );
-    connect(debugButton, &QPushButton::clicked, this, &gui::debugThread);
+    connect(debugButton, &QPushButton::clicked, this, &gui::C3_Execute);
 
-    QPushButton *hideButton = new QPushButton("HACK", this);
+    QPushButton *hideButton = new QPushButton("C4", this);
     hideButton->setGeometry(800 - dev.xGap*1 - dev.xUnit*2, dev.yGap*4 + dev.yUnit*4, dev.xUnit*2, dev.yUnit);
     hideButton->setStyleSheet(
         "QPushButton {"
@@ -813,7 +807,7 @@ void gui::setupThreadProcess()
         "   background-color: black;"
         "}"
     );
-    connect(hideButton, &QPushButton::clicked, this, &gui::debugThread);
+    connect(hideButton, &QPushButton::clicked, this, &gui::C4_Execute);
 }
 
 void gui::setupSeparators()
@@ -1091,15 +1085,14 @@ void gui::setupFifo()
 
     auto readOnlyMode = [this]()
     {
-        if(NULL == m_instanceDroneCtrl)
+        if(NULL == m_instanceDroneControl)
         {
-            printToMainConsole("$ threadMain is not Running");
+            printToMainConsole("$ Drone Control is Down");
         }
         else
         {
             printToMainConsole("$ Set Commander State Machine -> IO_COM_READ_ONLY");
-            *m_IO_GuiState = IO_COM_READ_ONLY;
-            m_instanceDroneCtrl->triggerEvent();
+            m_instanceDroneControl->setCommanderState(IO_COM_READ_ONLY);
         }
     };
     connect(readOnlyButton, &QPushButton::clicked, this, readOnlyMode);
@@ -1125,15 +1118,14 @@ void gui::setupFifo()
 
     auto idleMode = [this]()
     {
-        if(NULL == m_instanceDroneCtrl)
+        if(NULL == m_instanceDroneControl)
         {
-            printToMainConsole("$ threadMain is not Running");
+            printToMainConsole("$ Drone Control is Down");
         }
         else
         {
             printToMainConsole("$ Set Commander State Machine -> IO_COM_IDLE");
-            *m_IO_GuiState = IO_COM_IDLE;
-            m_instanceDroneCtrl->triggerEvent();
+            m_instanceDroneControl->setCommanderState(IO_COM_IDLE);
         }
     };
     connect(idleButton, &QPushButton::clicked, this, idleMode);
@@ -1159,15 +1151,14 @@ void gui::setupFifo()
 
     auto calibrationMode = [this]()
     {
-        if(NULL == m_instanceDroneCtrl)
+        if(NULL == m_instanceDroneControl)
         {
-            printToMainConsole("$ threadMain is not Running");
+            printToMainConsole("$ Drone Control is Down");
         }
         else
         {
             printToMainConsole("$ Set Commander State Machine -> IO_COM_CALIBRATION");
-            *m_IO_GuiState = IO_COM_CALIBRATION;
-            m_instanceDroneCtrl->triggerEvent();
+            m_instanceDroneControl->setCommanderState(IO_COM_CALIBRATION);
         }
     };
     connect(calibButton, &QPushButton::clicked, this, calibrationMode);
@@ -1285,8 +1276,7 @@ void gui::interruptVector_execute(interruptVectorType type)
     setInterruptVector(intVector);
     std::cout << "[INFO] [INT] Set Interrupt Vector -> " << vectorToString(type) << std::endl;
 
-    *m_IO_GuiState = IO_COM_WRITE_ONLY;
-    m_instanceDroneCtrl->triggerEvent();
+    m_instanceDroneControl->setCommanderState(IO_COM_WRITE_ONLY);
     printToMainConsole("$ Set Interrupt Vector -> " + QString::fromStdString(vectorToString(type)));
 }
 
@@ -1307,9 +1297,9 @@ std::string gui::cmdToString(commandType cmd)
 
 void gui::dma_execute(commandType cmd)
 {
-    if(NULL == m_instanceDroneCtrl)
+    if(NULL == m_instanceDroneControl)
     {
-        printToMainConsole("$ threadMain is not Running");
+        printToMainConsole("$ Drone Control is Down");
     }
     else
     {
@@ -1320,12 +1310,12 @@ void gui::dma_execute(commandType cmd)
             QString dataText = m_dmaCustom_dataField->text();
             uint8_t dmaSize = static_cast<uint8_t>(dataText.toUInt(&ok, 16));
 
-            m_instanceDroneCtrl->setDmaCustom(dmaSize);
-            m_instanceDroneCtrl->sendCommand(cmd);
+            m_instanceDroneControl->setDmaCustom(dmaSize);
+            m_instanceDroneControl->sendCommand(cmd);
         }
         else if(CMD_DMA_SINGLE == cmd || CMD_DMA_SENSOR == cmd)
         {
-            m_instanceDroneCtrl->sendCommand(cmd);
+            m_instanceDroneControl->sendCommand(cmd);
         }
         else
         {
@@ -1339,11 +1329,11 @@ void gui::i2c_execute()
     /* Dead Command :: In case if something happen */
     setDeadCommand();
 
-    if(m_threadKill)
+    if(NULL == m_instanceDroneControl)
     {
-        printToMainConsole("$ threadMain is Down");
+        printToMainConsole("$ Drone Control is Down");
     }
-    else if(!m_isKernelConnected)
+    else if(false == m_instanceDroneControl->getKernelConnected())
     {
         printToMainConsole("$ Kernel Communication is Down");
     }
@@ -1402,8 +1392,7 @@ void gui::i2c_execute()
         (*m_Tx_GuiVector)[5] = 0x00;
         (*m_Tx_GuiVector)[6] = 0x00;
         (*m_Tx_GuiVector)[7] = 0x00;
-        *m_IO_GuiState = IO_COM_WRITE_ONLY;
-        m_instanceDroneCtrl->triggerEvent();
+        m_instanceDroneControl->setCommanderState(IO_COM_WRITE_ONLY);
 
         /* Wait for Kerenl to send data to FPGA */
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
@@ -1436,11 +1425,11 @@ void gui::spi_execute()
     /* Dead Command :: In case if something happen */
     setDeadCommand();
 
-    if(m_threadKill)
+    if(NULL == m_instanceDroneControl)
     {
-        printToMainConsole("$ threadMain is Down");
+        printToMainConsole("$ Drone Control is Down");
     }
-    else if(!m_isKernelConnected)
+    else if(false == m_instanceDroneControl->getKernelConnected())
     {
         printToMainConsole("$ Kernel Communication is Down");
     }
@@ -1508,8 +1497,7 @@ void gui::spi_execute()
         (*m_Tx_GuiVector)[5] = 0x00;
         (*m_Tx_GuiVector)[6] = 0x00;
         (*m_Tx_GuiVector)[7] = 0x00;
-        *m_IO_GuiState = IO_COM_WRITE_ONLY;
-        m_instanceDroneCtrl->triggerEvent();
+        m_instanceDroneControl->setCommanderState(IO_COM_WRITE_ONLY);
 
         /* Wait for Kerenl to send data to FPGA */
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
@@ -1522,11 +1510,11 @@ void gui::pwm_execute(pwmType type)
     /* Dead Command :: In case if something happen */
     setDeadCommand();
 
-    if(m_threadKill)
+    if(NULL == m_instanceDroneControl)
     {
-        printToMainConsole("$ threadMain is Down");
+        printToMainConsole("$ Drone Control is Down");
     }
-    else if(!m_isKernelConnected)
+    else if(false == m_instanceDroneControl->getKernelConnected())
     {
         printToMainConsole("$ Kernel Communication is Down");
     }
@@ -1600,8 +1588,7 @@ void gui::pwm_execute(pwmType type)
         (*m_Tx_GuiVector)[5] = 0x00;
         (*m_Tx_GuiVector)[6] = 0x00;
         (*m_Tx_GuiVector)[7] = 0x00;
-        *m_IO_GuiState = IO_COM_WRITE_ONLY;
-        m_instanceDroneCtrl->triggerEvent();
+        m_instanceDroneControl->setCommanderState(IO_COM_WRITE_ONLY);
 
         /* Wait for Kerenl to send data to FPGA */
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
@@ -1718,24 +1705,6 @@ void gui::printToUartConsole(const QString &message)
     m_uartConsoleOutput->appendPlainText(message);
 }
 
-void gui::initThread()
-{
-    std::lock_guard<std::mutex> lock(m_threadMutex);
-
-    if (m_threadMain.joinable())
-    {
-        printToMainConsole("$ threadMain is already running.");
-        return;
-    }
-
-    printToMainConsole("$ Initialize threadMain");
-
-    m_threadKill = false;
-    m_threadMain = std::thread(&gui::threadMain, this);
-
-    qDebug() << "[INIT] [THR] Initialize threadMain";
-}
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 // Modified RAII
@@ -1756,140 +1725,99 @@ void gui::createDroneControl()
         /* Trigger configuration Event */
         m_instanceDroneControl->setDroneCtrlState(DRONE_CTRL_INIT);
     }
+    else
+    {
+        std::cout << "[INFO] [GUI] Drone Control -> Already Created" << std::endl;
+    }
 }
 
 void gui::deleteDroneControl()
 {
-    m_instanceDroneControl.reset();
+    if(m_instanceDroneControl)
+    {
+        if(true == m_instanceDroneControl->getKernelConnected())
+        {
+            interruptVector_execute(VECTOR_DISABLE);
+            interruptVector_execute(VECTOR_STOP);
+        }
+
+        m_isPulseControllerEnabled = true;
+        m_enableButton->setText("ENABLE");
+        m_enableButton->setStyleSheet(
+            "QPushButton {"
+            "   background-color: green;"
+            "   color: white;"
+            "   font-size: 17px;"
+            "   font-weight: bold;"
+            "   border-radius: 10px;"
+            "   padding: 5px;"
+            "}"
+            "QPushButton:hover {"
+            "   background-color: darkblue;"
+            "}"
+            "QPushButton:pressed {"
+            "   background-color: black;"
+            "}"
+        );
+
+        m_isStartAcquisition = true;
+        m_startButton->setText("START");
+        m_startButton->setStyleSheet(
+            "QPushButton {"
+            "   background-color: green;"
+            "   color: white;"
+            "   font-size: 17px;"
+            "   font-weight: bold;"
+            "   border-radius: 10px;"
+            "   padding: 5px;"
+            "}"
+            "QPushButton:hover {"
+            "   background-color: darkblue;"
+            "}"
+            "QPushButton:pressed {"
+            "   background-color: black;"
+            "}"
+        );
+
+        m_instanceDroneControl.reset();
+    }
+    else
+    {
+        std::cout << "[INFO] [GUI] Drone Control -> Already Destroyed" << std::endl;
+    }
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void gui::shutdownThread()
+void gui::C1_Execute()
 {
-    if(true == m_isKernelConnected)
-    {
-        interruptVector_execute(VECTOR_DISABLE);
-        interruptVector_execute(VECTOR_STOP);
-    }
-
-    m_isPulseControllerEnabled = true;
-    m_enableButton->setText("ENABLE");
-    m_enableButton->setStyleSheet(
-        "QPushButton {"
-        "   background-color: green;"
-        "   color: white;"
-        "   font-size: 17px;"
-        "   font-weight: bold;"
-        "   border-radius: 10px;"
-        "   padding: 5px;"
-        "}"
-        "QPushButton:hover {"
-        "   background-color: darkblue;"
-        "}"
-        "QPushButton:pressed {"
-        "   background-color: black;"
-        "}"
-    );
-
-    m_isStartAcquisition = true;
-    m_startButton->setText("START");
-    m_startButton->setStyleSheet(
-        "QPushButton {"
-        "   background-color: green;"
-        "   color: white;"
-        "   font-size: 17px;"
-        "   font-weight: bold;"
-        "   border-radius: 10px;"
-        "   padding: 5px;"
-        "}"
-        "QPushButton:hover {"
-        "   background-color: darkblue;"
-        "}"
-        "QPushButton:pressed {"
-        "   background-color: black;"
-        "}"
-    );
-
-    /**
-     * Automatically locks the mutex when it is constructed
-     * and releases the lock when it goes out of scope
-     */
-    std::lock_guard<std::mutex> lock(m_threadMutex);
-
-    if (m_threadKill)
-    {
-        printToMainConsole("$ threadMain is already marked for shutdown.");
-        return;
-    }
-
-    printToMainConsole("$ Shutdown threadMain");
-
-    m_threadKill = true;
-
-    if (m_threadMain.joinable())
-    {
-        m_threadMain.join();
-        printToMainConsole("$ threadMain has been shut down.");
-    }
-
-    qDebug() << "[EXIT] [THR] Terminate threadMain";
+    std::cout << "[INFO] [DEBUG] C1_Execute" << std::endl;
+    //
+    // TODO
+    //
 }
 
-void gui::debugThread()
+void gui::C2_Execute()
 {
-    /**
-     *
-     * TO BE
-     * CONSIDERED
-     * LATER
-     *
-     */
-    printToMainConsole("$ Debug threadMain");
-    qDebug() << "[CTRL] [THR] Debug threadMain";
+    std::cout << "[INFO] [DEBUG] C2_Execute" << std::endl;
+    //
+    // TODO
+    //
 }
 
-/**
- *
- * TODO :: Consideration Requred
- *
- * Replace singletone with
- * chosen design patter
- *
- */
-void gui::threadMain()
+void gui::C3_Execute()
 {
-    /**
-     *
-     * Smart pointer for auto Heap
-     * allocation and deallocation
-     *
-     */
-
-    /* 1st :: Make unique DroneCtrl */
-    m_instanceDroneCtrl = std::make_unique<DroneCtrl>();
-    /* 2nd :: Push transfer pointers to Commander */
-    m_instanceDroneCtrl->setTransferPointers(m_Rx_GuiVector, m_Tx_GuiVector, m_IO_GuiState);
-    /* 3rd :: Init RamDisk Commander */
-    m_instanceDroneCtrl->initKernelComms();
-
-    while (false == m_threadKill)
-    {
-        // m_instanceDroneCtrl->droneCtrlMain();
-
-        if (true == m_instanceDroneCtrl->isKilled())
-        {
-            break;
-        }
-        else
-        {
-            m_isKernelConnected = true;
-        }
-
-        /* Reduce consumption of CPU resources */
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    }
-    m_instanceDroneCtrl->shutdownKernelComms(m_isKernelConnected);
-    m_isKernelConnected = false;
-    m_instanceDroneCtrl.reset(); // Reset the unique_ptr to call the destructor
+    std::cout << "[INFO] [DEBUG] C3_Execute" << std::endl;
+    //
+    // TODO
+    //
 }
+
+void gui::C4_Execute()
+{
+    std::cout << "[INFO] [DEBUG] C4_Execute" << std::endl;
+    //
+    // TODO
+    //
+}
+

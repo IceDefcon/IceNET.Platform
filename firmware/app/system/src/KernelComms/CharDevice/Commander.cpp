@@ -39,11 +39,9 @@ Commander::~Commander()
 {
     std::cout << "[INFO] [DESTRUCTOR] " << this << " :: Destroy Commander" << std::endl;
 
-    shutdownThread(true);
-
+    shutdownThread();
     closeDEV();
 }
-
 
 void Commander::setupCommandMatrix()
 {
@@ -108,28 +106,6 @@ int Commander::dataTX()
 void Commander::setDmaCustom(uint8_t size)
 {
     m_customDmaSize = size;
-}
-
-std::string Commander::getIoStateString(ioStateType state)
-{
-    static const std::array<std::string, IO_AMOUNT> ioStateStrings =
-    {
-        "IO_COM_IDLE",
-        "IO_COM_WRITE",
-        "IO_COM_WRITE_ONLY",
-        "IO_COM_READ",
-        "IO_COM_READ_ONLY",
-        "IO_COM_CALIBRATION",
-    };
-
-    if (state >= 0 && state < IO_AMOUNT)
-    {
-        return ioStateStrings[state];
-    }
-    else
-    {
-        return "UNKNOWN_STATE";
-    }
 }
 
 std::string Commander::commandToString(commandType cmd)
@@ -198,7 +174,7 @@ int Commander::closeDEV()
     return OK;
 }
 
-void Commander::initThread()
+/* THREAD */ void Commander::initThread()
 {
     /**
      * Automatically locks the mutex when it is constructed
@@ -206,21 +182,21 @@ void Commander::initThread()
      */
     std::lock_guard<std::mutex> lock(m_threadMutex);
 
-    if (m_threadCommander.joinable())
+    if (m_CommanderThread.joinable())
     {
-        std::cout << "[INFO] [CMD] threadCommander is already running" << std::endl;
+        std::cout << "[INFO] [CMD] CommanderThread is already running" << std::endl;
         return;
     }
 
-    std::cout << "[INFO] [CMD] Initialize threadCommander" << std::endl;
+    std::cout << "[INFO] [CMD] Initialize CommanderThread" << std::endl;
 
     m_threadKill = false;
-    m_threadCommander = std::thread(&Commander::threadCommander, this);
+    m_CommanderThread = std::thread(&Commander::CommanderThread, this);
 }
 
-void Commander::shutdownThread(bool isKernelConnected)
+/* THREAD */ void Commander::shutdownThread()
 {
-    if(true == isKernelConnected)
+    if (m_file_descriptor >= 0)
     {
         /* Switch to single DMA */
         sendCommand(CMD_DMA_SINGLE);
@@ -236,11 +212,11 @@ void Commander::shutdownThread(bool isKernelConnected)
 
     if (m_threadKill)
     {
-        std::cout << "[INFO] [CMD] threadCommander is already marked for shutdown" << std::endl;
+        std::cout << "[INFO] [CMD] CommanderThread is already marked for shutdown" << std::endl;
         return;
     }
 
-    std::cout << "[INFO] [CMD] Shutdown threadCommander" << std::endl;
+    std::cout << "[INFO] [CMD] Shutdown CommanderThread" << std::endl;
 
     /**
      * Commander is Event controlled
@@ -248,54 +224,66 @@ void Commander::shutdownThread(bool isKernelConnected)
      * escape from IDLE state
      */
     m_threadKill = true;
-    triggerEvent();
+    triggerCommanderEvent();
 
-    if (m_threadCommander.joinable())
+    if (m_CommanderThread.joinable())
     {
-        m_threadCommander.join();
-        std::cout << "[INFO] [CMD] threadCommander has been shut down" << std::endl;
+        m_CommanderThread.join();
+        std::cout << "[INFO] [CMD] CommanderThread has been shut down" << std::endl;
     }
 }
 
-bool Commander::isThreadKilled()
+/* THREAD */ std::string Commander::getIoStateString(ioStateType state)
+{
+    static const std::array<std::string, IO_AMOUNT> ioStateStrings =
+    {
+        "IO_COM_IDLE",
+        "IO_COM_WRITE",
+        "IO_COM_WRITE_ONLY",
+        "IO_COM_READ",
+        "IO_COM_READ_ONLY",
+        "IO_COM_CALIBRATION",
+    };
+
+    if (state >= 0 && state < IO_AMOUNT)
+    {
+        return ioStateStrings[state];
+    }
+    else
+    {
+        return "UNKNOWN_STATE";
+    }
+}
+
+/* THREAD */ bool Commander::isThreadKilled()
 {
     return m_threadKill;
 }
 
-void Commander::threadCommander()
+/* THREAD */ void Commander::setCommanderState(ioStateType state)
+{
+    std::unique_lock<std::mutex> lock(m_ctrlMutex);
+    m_ioState = state;
+    triggerCommanderEvent();
+}
+
+/* THREAD */ void Commander::CommanderThread()
 {
     int ret = 0;
     bool check = false;
 
     while (!m_threadKill)
     {
-        m_ioState = (ioStateType)(*m_IO_CommanderState);
-
         if(m_ioState != m_ioStatePrev)
         {
             std::cout << "[INFO] [CMD] State Commander " << m_ioStatePrev << "->" << m_ioState << " " << getIoStateString(m_ioState) << std::endl;
             m_ioStatePrev = m_ioState;
         }
 
-        /**
-         *
-         * INFO
-         *
-         * Shared Pointer Switch
-         *
-         * Both state machines change
-         * states simultaneously
-         * due to share_ptr
-         *
-         * [1] Commander
-         * [2] DroneCtrl
-         *
-         **/
-        switch(*m_IO_CommanderState)
+        switch(m_ioState)
         {
             case IO_COM_IDLE:
-                std::this_thread::sleep_for(std::chrono::milliseconds(10));
-                // waitEvent();
+                waitCommanderEvent();
                 break;
 
             case IO_COM_WRITE:
@@ -308,6 +296,7 @@ void Commander::threadCommander()
                 if (ret == -1)
                 {
                     std::cout << "[ERNO] [CMD] Cannot write command to kernel space" << std::endl;
+                    m_ioState = IO_COM_IDLE;
                 }
                 else
                 {
@@ -315,8 +304,7 @@ void Commander::threadCommander()
                     {
                         (*m_Tx_CommanderVector)[i] = 0x00;
                     }
-
-                    *m_IO_CommanderState = IO_COM_READ;
+                    m_ioState = IO_COM_READ;
                 }
                 break;
 
@@ -337,9 +325,8 @@ void Commander::threadCommander()
                     {
                         (*m_Tx_CommanderVector)[i] = 0x00;
                     }
-
-                    *m_IO_CommanderState = IO_COM_IDLE;
                 }
+                m_ioState = IO_COM_IDLE;
                 break;
 
             case IO_COM_READ:
@@ -366,12 +353,12 @@ void Commander::threadCommander()
                         std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>((*m_Rx_CommanderVector)[i]) << " ";
                     }
                     std::cout << std::endl;
-                    *m_IO_CommanderState = IO_COM_IDLE;
                 }
                 else
                 {
                     std::cout << "[ERNO] [CMD] Cannot read from kernel space" << std::endl;
                 }
+                m_ioState = IO_COM_IDLE;
                 break;
 
             case IO_COM_READ_ONLY:
@@ -391,6 +378,7 @@ void Commander::threadCommander()
                 {
                     std::cout << "[ERNO] [CMD] Cannot read from kernel space" << std::endl;
                 }
+                m_ioState = IO_COM_IDLE;
                 break;
 
             case IO_COM_CALIBRATION:
@@ -403,7 +391,7 @@ void Commander::threadCommander()
                     if((*m_Rx_CommanderVector)[1] == 0xDE && (*m_Rx_CommanderVector)[2] == 0xAD && (*m_Rx_CommanderVector)[3] == 0xC0 && (*m_Rx_CommanderVector)[4] == 0xDE)
                     {
                         std::cout << "[ERNO] [CMD] 0xDEADCODE Received -> Going to IO_COM_IDLE" << std::endl;
-                        *m_IO_CommanderState = IO_COM_IDLE;
+                        m_ioState = IO_COM_IDLE;
                         break;
                     }
 
@@ -415,14 +403,15 @@ void Commander::threadCommander()
 
                     if(true == check)
                     {
-                        *m_IO_CommanderState = IO_COM_IDLE;
                         averageBuffer();
                         calibrationOfset();
+                        m_ioState = IO_COM_IDLE;
                     }
                 }
                 else
                 {
                     std::cout << "[ERNO] [CMD] Cannot read from kernel space" << std::endl;
+                    m_ioState = IO_COM_IDLE;
                 }
                 break;
 
@@ -431,7 +420,7 @@ void Commander::threadCommander()
         }
     }
 
-    std::cout << "[INFO] [CMD] Terminate threadCommander" << std::endl;
+    std::cout << "[INFO] [CMD] Terminate CommanderThread" << std::endl;
 }
 
 /* SHARE */ void Commander::setTransferPointers(
@@ -450,33 +439,25 @@ void Commander::threadCommander()
     m_IO_CommanderState = transferState;
 }
 
-
-/* EVENT */ void Commander::waitEvent()
+/* EVENT */ void Commander::waitCommanderEvent()
 {
     std::unique_lock<std::mutex> lock(m_eventMutex);
+    std::cout << "[INFO] [CMD] CommanderThread Wait" << std::endl;
 
     auto predicate = [this]()
     {
         return m_stateChanged;
     };
+
     m_conditionalVariable.wait(lock, predicate);
-
-    std::cout << "[INFO] [CMD] Commander state change detected :: Trigering Event" << std::endl;
-
     m_stateChanged = false;
 }
 
-/* EVENT */ void Commander::triggerEvent()
+/* EVENT */ void Commander::triggerCommanderEvent()
 {
-    /**
-     * The curly braces in this context are used to create a limited scope,
-     * so that the std::lock_guard<std::mutex> lock(m_eventMutex);
-     * releases the mutex as soon as the scope ends.
-     */
-    {
-        std::lock_guard<std::mutex> lock(m_eventMutex);
-        m_stateChanged = true;
-    }
+    std::lock_guard<std::mutex> lock(m_eventMutex);
+    std::cout << "[INFO] [CMD] CommanderThread Event" << std::endl;
 
-    m_conditionalVariable.notify_one(); // Wake up waiting thread
+    m_stateChanged = true;
+    m_conditionalVariable.notify_one();
 }

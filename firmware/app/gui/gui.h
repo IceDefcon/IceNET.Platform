@@ -79,11 +79,7 @@ class gui : public QWidget
     QPushButton *m_enableButton;
     QPushButton *m_startButton;
 
-    std::unique_ptr<DroneCtrl> m_instanceDroneCtrl;
     std::unique_ptr<DroneCtrl> m_instanceDroneControl;
-    std::thread m_threadMain;
-    std::mutex m_threadMutex;
-    bool m_threadKill;
     bool m_isKernelConnected;
 
     std::shared_ptr<std::vector<uint8_t>> m_Rx_GuiVector;
@@ -145,11 +141,11 @@ private slots:
     void printToMainConsole(const QString &message);
     void printToUartConsole(const QString &message);
 
-    void initThread();
-    void debugThread();
-    void shutdownThread();
-    void threadMain();
-
     void createDroneControl();
     void deleteDroneControl();
+
+    void C1_Execute();
+    void C2_Execute();
+    void C3_Execute();
+    void C4_Execute();
 };
