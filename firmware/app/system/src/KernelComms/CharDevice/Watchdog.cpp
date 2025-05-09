@@ -70,7 +70,6 @@ int Watchdog::dataRX()
 
     if ((*m_Rx_Watchdog)[0] == (*m_Rx_Watchdog)[1])
     {
-        std::cout << "[ERNO] [WDG] [0] Kill the App :: No FPGA Watchdog Signal" << std::endl;
         ret = 0;
     }
 
@@ -162,7 +161,7 @@ void Watchdog::threadWatchdog()
          */
         if(dataRX() <= 0)
         {
-            std::cout << "[ERNO] [WDG] [1] Kill the App :: Something bad happen" << std::endl;
+            std::cout << "[ERNO] [WDG] No FPGA Watchdog Signal" << std::endl;
 
             /**
              *
