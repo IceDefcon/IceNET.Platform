@@ -289,11 +289,11 @@ type VECTOR_TYPE is
     VECTOR_DISABLE,             -- "0011"
     VECTOR_START,               -- "0100"
     VECTOR_STOP,                -- "0101"
-    VECTOR_READ,                -- "0110"
+    VECTOR_UNUSED_07,           -- "0110"
     VECTOR_OFFLOAD_SECONDARY,   -- "0111"
-    VECTOR_F1,                  -- "1000"
-    VECTOR_F2,                  -- "1001"
-    VECTOR_RETURN,              -- "1010"
+    VECTOR_UNUSED_08,           -- "1000"
+    VECTOR_UNUSED_09,           -- "1001"
+    VECTOR_UNUSED_10,           -- "1010"
     VECTOR_UNUSED_11,           -- "1011"
     VECTOR_UNUSED_12,           -- "1100"
     VECTOR_UNUSED_13,           -- "1101"
@@ -306,12 +306,7 @@ signal vector_state: VECTOR_TYPE := VECTOR_IDLE;
 signal offload_primary_vector_interrupt : std_logic := '0';
 signal enable_vector_interrupt : std_logic := '0';
 signal start_vector_interrupt : std_logic := '0';
-signal read_vector_interrupt : std_logic := '0';
-signal read_vector_extension : std_logic := '0';
 signal offload_secondary_vector_interrupt : std_logic := '0';
-signal f1_vector_interrupt : std_logic := '0';
-signal f2_vector_interrupt : std_logic := '0';
-signal return_vector_interrupt : std_logic := '0';
 signal return_vector_extension : std_logic := '0';
 signal secondary_dma_trigger_gpio_pulse : std_logic := '0';
 -- Interrupt Help
@@ -1379,12 +1374,8 @@ process(CLOCK_50MHz, global_fpga_reset)
 begin
     if global_fpga_reset = '1' then
         offload_primary_vector_interrupt <= '0';
-        read_vector_interrupt <= '0';
         offload_secondary_vector_interrupt <= '0';
-        f1_vector_interrupt <= '0';
-        f2_vector_interrupt <= '0';
         vector_state <= VECTOR_IDLE;
-        return_vector_interrupt <= '0';
         enable_vector_interrupt <= '0';
         start_vector_interrupt <= '0';
         led_7_toggle <= '1';
@@ -1462,15 +1453,15 @@ begin
                 elsif interrupt_vector = "0101" then
                     vector_state <= VECTOR_STOP;
                 elsif interrupt_vector = "0110" then
-                    vector_state <= VECTOR_READ;
-                elsif interrupt_vector = "0111" then
                     vector_state <= VECTOR_OFFLOAD_SECONDARY;
+                elsif interrupt_vector = "0111" then
+                    vector_state <= VECTOR_UNUSED_07;
                 elsif interrupt_vector = "1000" then
-                    vector_state <= VECTOR_F1;
+                    vector_state <= VECTOR_UNUSED_08;
                 elsif interrupt_vector = "1001" then
-                    vector_state <= VECTOR_F2;
+                    vector_state <= VECTOR_UNUSED_09;
                 elsif interrupt_vector = "1010" then
-                    vector_state <= VECTOR_RETURN;
+                    vector_state <= VECTOR_UNUSED_10;
                 elsif interrupt_vector = "1011" then
                     vector_state <= VECTOR_UNUSED_11;
                 elsif interrupt_vector = "1100" then
@@ -1504,20 +1495,16 @@ begin
                 start_vector_interrupt <= '0';
                 led_7_toggle <= '1';
                 vector_state <= VECTOR_DONE;
-            when VECTOR_READ =>
-                read_vector_interrupt <= '1';
-                vector_state <= VECTOR_DONE;
             when VECTOR_OFFLOAD_SECONDARY =>
                 offload_secondary_vector_interrupt <= '1';
                 vector_state <= VECTOR_DONE;
-            when VECTOR_F1 =>
-                f1_vector_interrupt <= '1';
+            when VECTOR_UNUSED_07 =>
                 vector_state <= VECTOR_DONE;
-            when VECTOR_F2 =>
-                f2_vector_interrupt <= '1';
+            when VECTOR_UNUSED_08 =>
                 vector_state <= VECTOR_DONE;
-            when VECTOR_RETURN =>
-                return_vector_interrupt <= '1';
+            when VECTOR_UNUSED_09 =>
+                vector_state <= VECTOR_DONE;
+            when VECTOR_UNUSED_10 =>
                 vector_state <= VECTOR_DONE;
             when VECTOR_UNUSED_11 =>
                 vector_state <= VECTOR_DONE;
@@ -1531,12 +1518,8 @@ begin
                 vector_state <= VECTOR_DONE;
             when VECTOR_DONE =>
                 offload_primary_vector_interrupt <= '0';
-                read_vector_interrupt <= '0';
                 offload_secondary_vector_interrupt <= '0';
-                f1_vector_interrupt <= '0';
-                f2_vector_interrupt <= '0';
                 vector_state <= VECTOR_IDLE;
-                return_vector_interrupt <= '0';
             when others =>
                 vector_state <= VECTOR_IDLE;
         end case;
@@ -1788,10 +1771,6 @@ process(CLOCK_50MHz)
 begin
     if rising_edge(CLOCK_50MHz) then
 
-        if read_vector_interrupt = '1' then
-            read_vector_extension <= '1';
-        end if;
-
         case s1_state is
             when SENSOR_IDLE =>
                 if offload_ready = '1' then
@@ -1818,9 +1797,7 @@ begin
                     end if;
                     s1_state <= SENSOR_DONE;
                 elsif s1_bmi160_int_1_DataReady = '1' then
-                    if start_vector_interrupt = '1'
-                    or read_vector_extension = '1' then
-                        read_vector_extension <= '0';
+                    if start_vector_interrupt = '1' then
                         s1_state <= SENSOR_ACQUISITION;
                     end if;
                 end if;
@@ -2088,7 +2065,7 @@ port map
     CLOCK_50MHz => CLOCK_50MHz,
     RESET => global_fpga_reset,
     -- In
-    OFFLOAD_IRQ_VECTOR => return_vector_interrupt or acquisition_interrupt_spi_bmi160_s1_feedback_short,
+    OFFLOAD_IRQ_VECTOR => acquisition_interrupt_spi_bmi160_s1_feedback_short,
     OFFLOAD_BIT_COUNT => sensor_fifo_bit_count,
     OFFLOAD_FIFO_EMPTY => sensor_fifo_empty,
     -- Out

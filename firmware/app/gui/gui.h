@@ -44,7 +44,7 @@ typedef struct
     uint32_t yUnit;
     uint32_t separatorLength;
     uint32_t separatorWidth;
-} deviceType;
+} mainWindowType;
 
 typedef struct
 {
@@ -52,7 +52,7 @@ typedef struct
     uint32_t yPosition;
     uint32_t xSize;
     uint32_t ySize;
-} consoleType;
+} mainConsoleType;
 
 class gui : public QWidget
 {
@@ -94,11 +94,14 @@ class gui : public QWidget
 
     QString m_currentTime;
 
-    void paintEvent(QPaintEvent *event) override;
-
     bool m_isPulseControllerEnabled;;
     bool m_isStartAcquisition;;
     double m_phase;
+
+private slots:
+
+    /* GET */ const mainWindowType* getMainWindow();
+    /* GET */ const mainConsoleType* getMainConsole();
 
 public:
 
@@ -112,14 +115,14 @@ private slots:
     void setupUartConsole();
 
     void setupFpgaCtrl();
-    void setupThreadProcess();
+    void setupDroneControl();
     void setupSeparators();
 
     void setupI2C();
     void setupSPI();
     void setupPWM();
-    void setupDma();
-    void setupFifo();
+    void setupDMA();
+    void setupCMD();
 
     void setDeadCommand();
     void setDummyCommand();

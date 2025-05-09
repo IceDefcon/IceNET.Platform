@@ -17,6 +17,7 @@ set(SOURCES
     main.cpp
     gui/gui.cpp
     meas/Measure.cpp
+    gui/peripherals.cpp
     system/src/DroneCtrl.cpp
     system/src/KernelComms/KernelComms.cpp
     system/src/KernelComms/BlockDevice/RamDisk.cpp
