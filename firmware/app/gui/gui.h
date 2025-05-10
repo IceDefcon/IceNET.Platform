@@ -78,6 +78,7 @@ class gui : public QWidget
 
     QPushButton *m_enableButton;
     QPushButton *m_startButton;
+    QPushButton *m_speedButton;
 
     std::unique_ptr<DroneCtrl> m_instanceDroneControl;
     bool m_isKernelConnected;
@@ -94,9 +95,9 @@ class gui : public QWidget
 
     QString m_currentTime;
 
-    bool m_isPulseControllerEnabled;;
-    bool m_isStartAcquisition;;
-    double m_phase;
+    bool m_isPulseControllerEnabled;
+    bool m_isStartAcquisition;
+    bool m_isFastControl;
 
 private slots:
 

@@ -27,7 +27,7 @@ static const mainConsoleType c =
 {
     .xPosition = w.xGap*5 + w.xText + w.xUnit*2,  // Vertical Separator
     .yPosition = w.yGap*6 + w.yLogo + w.yUnit*3,  // At SPI Logo
-    .xSize = w.xWindow - c.xPosition - w.xGap,        // Obvious
+    .xSize = w.xWindow - c.xPosition - w.xGap,    // Obvious
     .ySize = w.yGap*8 + w.yLogo*2 + w.yUnit*6+1,  // Last Horizontal Separator - yPosition + yGap
 };
 
@@ -47,7 +47,7 @@ m_Tx_GuiVector(std::make_shared<std::vector<uint8_t>>(IO_TRANSFER_SIZE)),
 m_IO_GuiState(std::make_shared<ioStateType>(IO_COM_IDLE)),
 m_isPulseControllerEnabled(true),
 m_isStartAcquisition(true),
-m_phase(0.0)
+m_isFastControl(true)
 {
     qDebug() << "[MAIN] [CONSTRUCTOR]" << this << "::  gui";
 
@@ -80,14 +80,6 @@ void gui::setupWindow()
 {
     setWindowTitle("IceNET Platform");
     setFixedSize(w.xWindow, w.yWindow);
-
-    QTimer *timer = new QTimer(this);
-    connect(timer, &QTimer::timeout, this, [=]()
-    {
-        m_phase += 0.1;  // Adjust speed here
-        update();      // Triggers paintEvent
-    });
-    timer->start(30);  // Redraw every 30ms (~33 FPS)
 }
 
 void gui::setupMainConsole()
@@ -263,7 +255,6 @@ void gui::setupFpgaCtrl()
             interruptVector_execute(VECTOR_DISABLE);
         }
 
-        // Toggle state
         m_isPulseControllerEnabled = !m_isPulseControllerEnabled;
     };
     connect(m_enableButton, &QPushButton::clicked, this, pulseController);
@@ -343,10 +334,87 @@ void gui::setupFpgaCtrl()
             interruptVector_execute(VECTOR_STOP);
         }
 
-        // Toggle state
         m_isStartAcquisition = !m_isStartAcquisition;
     };
     connect(m_startButton, &QPushButton::clicked, this, acquisitionControl);
+
+    m_speedButton = new QPushButton("T.SLOW", this);
+    m_speedButton->setGeometry(w.xGap*6 + w.xText + w.xUnit*4, w.yGap*2 + w.yLogo, w.xUnit*2, w.yUnit);
+    m_speedButton->setStyleSheet(
+        "QPushButton {"
+        "   background-color: blue;"
+        "   color: white;"
+        "   font-size: 17px;"
+        "   font-weight: bold;"
+        "   border-radius: 10px;"
+        "   padding: 5px;"
+        "}"
+        "QPushButton:hover {"
+        "   background-color: darkblue;"
+        "}"
+        "QPushButton:pressed {"
+        "   background-color: black;"
+        "}"
+    );
+
+    auto speedControl = [this]()
+    {
+        if (NULL == m_instanceDroneControl)
+        {
+            printToMainConsole("$ Drone Control is Down");
+            return;
+        }
+
+        if (m_isFastControl)
+        {
+            m_speedButton->setText("T.FAST");
+            m_speedButton->setStyleSheet(
+                "QPushButton {"
+                "   background-color: purple;"
+                "   color: white;"
+                "   font-size: 17px;"
+                "   font-weight: bold;"
+                "   border-radius: 10px;"
+                "   padding: 5px;"
+                "}"
+                "QPushButton:hover {"
+                "   background-color: darkred;"
+                "}"
+                "QPushButton:pressed {"
+                "   background-color: black;"
+                "}"
+            );
+
+            printToMainConsole("$ Start Secondary SPI/DMA");
+            interruptVector_execute(VECTOR_FAST);
+        }
+        else
+        {
+            m_speedButton->setText("T.SLOW");
+            m_speedButton->setStyleSheet(
+                "QPushButton {"
+                "   background-color: blue;"
+                "   color: white;"
+                "   font-size: 17px;"
+                "   font-weight: bold;"
+                "   border-radius: 10px;"
+                "   padding: 5px;"
+                "}"
+                "QPushButton:hover {"
+                "   background-color: darkblue;"
+                "}"
+                "QPushButton:pressed {"
+                "   background-color: black;"
+                "}"
+            );
+
+            printToMainConsole("$ Stop Secondary SPI/DMA");
+            interruptVector_execute(VECTOR_SLOW);
+        }
+
+        m_isFastControl = !m_isFastControl;
+    };
+    connect(m_speedButton, &QPushButton::clicked, this, speedControl);
 
     QPushButton *dataButton = new QPushButton("OFF.2ND", this);
     dataButton->setGeometry(w.xGap*6 + w.xText + w.xUnit*4, w.yGap*3 + w.yLogo + w.yUnit, w.xUnit*2, w.yUnit);
@@ -678,8 +746,8 @@ std::string gui::vectorToString(interruptVectorType type)
         case VECTOR_START:              return "VECTOR_START";              /* Start Measurement Acquisition */
         case VECTOR_STOP:               return "VECTOR_STOP";               /* Stop Measurement Acquisition */
         case VECTOR_OFFLOAD_SECONDARY:  return "VECTOR_OFFLOAD_SECONDARY";  /* Offload data from sensor FIFO */
-        case VECTOR_UNUSED_07:          return "VECTOR_UNUSED_07";
-        case VECTOR_UNUSED_08:          return "VECTOR_UNUSED_08";
+        case VECTOR_FAST:               return "VECTOR_FAST";               /* Reset 2nd Fifo after 30000  ->  600us */
+        case VECTOR_SLOW:               return "VECTOR_SLOW";               /* Reset 2nd Fifo after 495000 -> 9900us */
         case VECTOR_UNUSED_09:          return "VECTOR_UNUSED_09";
         case VECTOR_UNUSED_10:          return "VECTOR_UNUSED_10";
         case VECTOR_UNUSED_11:          return "VECTOR_UNUSED_11";
@@ -1216,6 +1284,7 @@ void gui::deleteDroneControl()
         {
             interruptVector_execute(VECTOR_DISABLE);
             interruptVector_execute(VECTOR_STOP);
+            interruptVector_execute(VECTOR_SLOW);
         }
 
         m_isPulseControllerEnabled = true;
@@ -1242,6 +1311,25 @@ void gui::deleteDroneControl()
         m_startButton->setStyleSheet(
             "QPushButton {"
             "   background-color: green;"
+            "   color: white;"
+            "   font-size: 17px;"
+            "   font-weight: bold;"
+            "   border-radius: 10px;"
+            "   padding: 5px;"
+            "}"
+            "QPushButton:hover {"
+            "   background-color: darkblue;"
+            "}"
+            "QPushButton:pressed {"
+            "   background-color: black;"
+            "}"
+        );
+
+        m_isFastControl = true;
+        m_speedButton->setText("T.SLOW");
+        m_speedButton->setStyleSheet(
+            "QPushButton {"
+            "   background-color: blue;"
             "   color: white;"
             "   font-size: 17px;"
             "   font-weight: bold;"

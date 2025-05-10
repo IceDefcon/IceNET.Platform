@@ -47,13 +47,13 @@ RamDisk::RamDisk() :
         .registers =
         {
             {0x7E, 0xB6}, /* Soft reset the sensor */
-            {0x40, 0x2B}, /* No undersampling, Filter set 2, Output data rate 800Hz */
+            /* CALIB */ {0x40, 0x28}, /* No undersampling, Filter set 2, Output data rate 100Hz (Default for Calibration) */
             {0x41, 0x05}, /* ±4g accelerometer range */
             {0x7E, 0x11}, /* Set accelerometer to normal mode */
             {0x77, 0x40}, /* Enable accel offset only */
-            {0x71, 0x00}, /* Calibration x-offset :: (645 / 8192) * 1000 -> 78,73mg → 20 = 0x14 */
-            {0x72, 0x00}, /* Calibration y-offset :: (226 / 8192) * 1000 -> 27,59mg →  7 = 0x07 */
-            {0x73, 0x00}, /* Calibration z-offset :: (111 / 8192) * 1000 -> 13,55mg →  3 = 0x03 */
+            /* CALIB */ {0x71, 0x00}, /* Acceleration x-offset :: (645 / 8192) * 1000 -> 78,73mg → 20 = 0x14 */
+            /* CALIB */ {0x72, 0x00}, /* Acceleration y-offset :: (226 / 8192) * 1000 -> 27,59mg →  7 = 0x07 */
+            /* CALIB */ {0x73, 0x00}, /* Acceleration z-offset :: (111 / 8192) * 1000 -> 13,55mg →  3 = 0x03 */
             {0x51, 0x10}, /* Enable Data Ready Interrupt */
             {0x56, 0x88}, /* Map Data Ready Interrupt to INT1 and INT2 */
             {0x53, 0xAA}, /* Configure INT1 and INT2 as Outputs + Make them Active High */
@@ -68,8 +68,13 @@ RamDisk::RamDisk() :
         .registers =
         {
             {0x7E, 0xB6}, /* Soft reset the sensor */
-            {0x40, 0x28}, /* No undersampling, Filter set 2, Output data rate 1600Hz */
+            /* CALIB */ {0x40, 0x28}, /* No undersampling, Filter set 2, Output data rate 100Hz (Default for Calibration) */
+            {0x43, 0x02}, /* ±500°/s gyroscope range */
             {0x7E, 0x15}, /* Set gyroscope to normal mode */
+            {0x77, 0x80}, /* Enable gyroscope offset -> 10-bit */
+            /* CALIB */ {0x74, 0x00}, /* Gyroscope Offset :: Assuming the same as above */
+            /* CALIB */ {0x75, 0x00}, /* Gyroscope Offset :: Assuming the same as above */
+            /* CALIB */ {0x76, 0x00}, /* Gyroscope Offset :: Assuming the same as above */
             {0x51, 0x10}, /* Enable Data Ready Interrupt */
             {0x56, 0x88}, /* Map Data Ready Interrupt to INT1 and INT2 */
             {0x53, 0xAA}, /* Configure INT1 and INT2 as Outputs + Make them Active High */
@@ -77,7 +82,7 @@ RamDisk::RamDisk() :
         }
     };
 
-    m_devices[DEVICE_ADXL345_I2C] =
+    m_devices[DEVICE_ADXL345_I2C] = /* TODO :: REMOVE */
     {
         .id = 0x53, /* ADXL345 */
         .ctrl = 0x01, /* OFFLOAD_CTRL :: DmaConfig(Auto=0) BurstSize(None=0000) Device(I2C=00) Write(1) */
