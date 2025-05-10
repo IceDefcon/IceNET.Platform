@@ -289,9 +289,9 @@ type VECTOR_TYPE is
     VECTOR_DISABLE,             -- "0011"
     VECTOR_START,               -- "0100"
     VECTOR_STOP,                -- "0101"
-    VECTOR_UNUSED_07,           -- "0110"
-    VECTOR_OFFLOAD_SECONDARY,   -- "0111"
-    VECTOR_UNUSED_08,           -- "1000"
+    VECTOR_OFFLOAD_SECONDARY,   -- "0110"
+    VECTOR_FAST,                -- "0111"
+    VECTOR_SLOW,                -- "1000"
     VECTOR_UNUSED_09,           -- "1001"
     VECTOR_UNUSED_10,           -- "1010"
     VECTOR_UNUSED_11,           -- "1011"
@@ -306,6 +306,7 @@ signal vector_state: VECTOR_TYPE := VECTOR_IDLE;
 signal offload_primary_vector_interrupt : std_logic := '0';
 signal enable_vector_interrupt : std_logic := '0';
 signal start_vector_interrupt : std_logic := '0';
+signal speed_vector_interrupt : std_logic := '0';
 signal offload_secondary_vector_interrupt : std_logic := '0';
 signal return_vector_extension : std_logic := '0';
 signal secondary_dma_trigger_gpio_pulse : std_logic := '0';
@@ -379,7 +380,7 @@ signal data_spi_bmi160_s2_feedback : std_logic_vector(7 downto 0) := "00010110";
 signal data_spi_bmi160_s3_feedback : std_logic_vector(7 downto 0) := "00010111";
 signal data_pwm_feedback : std_logic_vector(7 downto 0) := "11000011";
 -- Interrupts
-signal feedback_interrupt_timer : std_logic_vector(5 downto 0) := (others => '0');
+signal feedback_interrupt_timer : std_logic_vector(6 downto 0) := (others => '0');
 -- UART
 signal uart_write_enable : std_logic := '0';
 signal uart_write_symbol : std_logic_vector(6 downto 0) := (others => '0');
@@ -489,6 +490,10 @@ signal s1_state: SENSOR_STATE := SENSOR_IDLE;
 signal led_6_toggle : std_logic := '1';
 signal led_7_toggle : std_logic := '1';
 signal led_8_toggle : std_logic := '1';
+
+signal feedbck_interrupt_logic : std_logic := '0';
+signal offload_debug : std_logic := '0';
+
 ----------------------------------------------------------------------------------------------------------------
 -- COMPONENTS DECLARATION
 ----------------------------------------------------------------------------------------------------------------
@@ -708,12 +713,16 @@ Port
     CLOCK_50MHz : in  std_logic;
     RESET : in std_logic;
 
-    OFFLOAD_IRQ_VECTOR  : in std_logic;
+    OFFLOAD_DELAY_SWITCH  : in  std_logic;
+
+    OFFLOAD_IRQ_VECTOR  : in  std_logic;
     OFFLOAD_BIT_COUNT : in std_logic_vector(3 downto 0);
     OFFLOAD_FIFO_EMPTY  : in  std_logic;
 
     OFFLOAD_READ_ENABLE : out std_logic;
-    OFFLOAD_SECONDARY_DMA_TRIGGER  : out  std_logic
+    OFFLOAD_SECONDARY_DMA_TRIGGER : out  std_logic;
+
+    OFFLOAD_DEBUG : out std_logic
 );
 end component;
 
@@ -1313,15 +1322,18 @@ begin
         or interrupt_spi_rf_feedback = '1'
         or return_vector_extension = '1' -- TODO :: Extension
         then
-            if feedback_interrupt_timer = "110010" then -- 50 * 20 = 1000ns = 1us interrupt pulse back to CPU
+            if feedback_interrupt_timer = "1100100" then -- 100 * 20 = 2000ns = 1us interrupt pulse back to CPU
                 SPI_INT_FROM_FPGA <= '0';
+                feedbck_interrupt_logic <= '0';
                 return_vector_extension <= '0';
             else
                 SPI_INT_FROM_FPGA <= '1';
+                feedbck_interrupt_logic <= '1';
                 feedback_interrupt_timer <= feedback_interrupt_timer + '1';
             end if;
         else
             SPI_INT_FROM_FPGA <= '0';
+            feedbck_interrupt_logic <= '0';
             feedback_interrupt_timer <= (others => '0'); -- Reseting timer here :: When FPGA_INT goto '0'
         end if;
     end if;
@@ -1455,9 +1467,9 @@ begin
                 elsif interrupt_vector = "0110" then
                     vector_state <= VECTOR_OFFLOAD_SECONDARY;
                 elsif interrupt_vector = "0111" then
-                    vector_state <= VECTOR_UNUSED_07;
+                    vector_state <= VECTOR_FAST;
                 elsif interrupt_vector = "1000" then
-                    vector_state <= VECTOR_UNUSED_08;
+                    vector_state <= VECTOR_SLOW;
                 elsif interrupt_vector = "1001" then
                     vector_state <= VECTOR_UNUSED_09;
                 elsif interrupt_vector = "1010" then
@@ -1498,9 +1510,11 @@ begin
             when VECTOR_OFFLOAD_SECONDARY =>
                 offload_secondary_vector_interrupt <= '1';
                 vector_state <= VECTOR_DONE;
-            when VECTOR_UNUSED_07 =>
+            when VECTOR_FAST =>
+                speed_vector_interrupt <= '1';
                 vector_state <= VECTOR_DONE;
-            when VECTOR_UNUSED_08 =>
+            when VECTOR_SLOW =>
+                speed_vector_interrupt <= '0';
                 vector_state <= VECTOR_DONE;
             when VECTOR_UNUSED_09 =>
                 vector_state <= VECTOR_DONE;
@@ -2065,12 +2079,16 @@ port map
     CLOCK_50MHz => CLOCK_50MHz,
     RESET => global_fpga_reset,
     -- In
+    OFFLOAD_DELAY_SWITCH => speed_vector_interrupt,
+    -- In
     OFFLOAD_IRQ_VECTOR => acquisition_interrupt_spi_bmi160_s1_feedback_short,
     OFFLOAD_BIT_COUNT => sensor_fifo_bit_count,
     OFFLOAD_FIFO_EMPTY => sensor_fifo_empty,
     -- Out
     OFFLOAD_READ_ENABLE => sensor_fifo_rdreq,
-    OFFLOAD_SECONDARY_DMA_TRIGGER => secondary_dma_trigger_gpio_pulse
+    OFFLOAD_SECONDARY_DMA_TRIGGER => secondary_dma_trigger_gpio_pulse,
+
+    OFFLOAD_DEBUG => offload_debug
 );
 
 -------------------------------------
@@ -2199,16 +2217,14 @@ port map
 --    end if;
 --end process;
 
---logic_process:
---process(CLOCK_50MHz)
---begin
---    if rising_edge(CLOCK_50MHz) then
---        LOGIC_CH1 <= interrupt_i2c_feedback;
---        LOGIC_CH2 <= '0';
---        LOGIC_CH3 <= '0';
---        LOGIC_CH4 <= '0';
---    end if;
---end process;
+
+LOGIC_CH1 <= sensor_fifo_empty;
+LOGIC_CH2 <= SECONDARY_SCLK;
+LOGIC_CH3 <= SECONDARY_MOSI;
+LOGIC_CH4 <= feedbck_interrupt_logic;
+LOGIC_CH5 <= offload_debug;
+LOGIC_CH6 <= acquisition_ctrl_BMI160_S1_SCLK;
+
 
 ------------------------------------------------------------------------------------------------------------------------------------------
 --

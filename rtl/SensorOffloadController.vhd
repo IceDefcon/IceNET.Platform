@@ -8,12 +8,16 @@ Port
     CLOCK_50MHz : in  std_logic;
     RESET : in std_logic;
 
+    OFFLOAD_DELAY_SWITCH  : in  std_logic;
+
     OFFLOAD_IRQ_VECTOR  : in  std_logic;
     OFFLOAD_BIT_COUNT : in std_logic_vector(3 downto 0);
     OFFLOAD_FIFO_EMPTY  : in  std_logic;
 
     OFFLOAD_READ_ENABLE : out std_logic;
-    OFFLOAD_SECONDARY_DMA_TRIGGER : out  std_logic
+    OFFLOAD_SECONDARY_DMA_TRIGGER : out  std_logic;
+
+    OFFLOAD_DEBUG : out std_logic
 );
 end entity SensorFifo_OffloadController;
 
@@ -38,8 +42,8 @@ type OFFLOAD_TYPE is
     OFFLOAD_DONE
 );
 signal offload_state: OFFLOAD_TYPE := OFFLOAD_IDLE;
-
-signal offload_counter : integer range 0 to 60000 := 0;
+signal check_delay : integer := 500000;
+signal offload_counter : integer range 0 to 500000 := 0;
 signal offload_fifo_empty_counter : integer range 0 to 256 := 0;
 begin
 
@@ -50,11 +54,19 @@ begin
             offload_state <= OFFLOAD_IDLE;
             OFFLOAD_READ_ENABLE <= '0';
             OFFLOAD_SECONDARY_DMA_TRIGGER <= '0';
+            check_delay <= 400000;
         elsif rising_edge(CLOCK_50MHz) then
+
+            if OFFLOAD_DELAY_SWITCH = '1' then
+                check_delay <= 25000;
+            else
+                check_delay <= 400000;
+            end if;
 
             case offload_state is
 
                 when OFFLOAD_IDLE =>
+                    OFFLOAD_DEBUG <= '0';
                     if OFFLOAD_IRQ_VECTOR = '1' then
                         offload_state <= OFFLOAD_INIT;
                     end if;
@@ -89,13 +101,14 @@ begin
                         offload_state <= OFFLOAD_TRANSFER;
                     end if;
 
-                    if offload_counter = 60000 then
+                    if offload_counter = check_delay then
                         offload_state <= OFFLOAD_FIFO_CLEAN;
                     else
                         offload_counter <= offload_counter + 1;
                     end if;
 
                 when OFFLOAD_FIFO_CLEAN =>
+                    OFFLOAD_DEBUG <= '1';
                     if offload_fifo_empty_counter = 256 then
                         offload_fifo_empty_counter <= 0;
                         OFFLOAD_READ_ENABLE <= '0';
