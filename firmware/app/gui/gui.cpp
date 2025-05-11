@@ -8,7 +8,7 @@
 #include <iostream>
 #include "gui.h"
 
-static const deviceType dev =
+static const mainWindowType w =
 {
     .xWindow = 1200,
     .yWindow = 750,
@@ -23,13 +23,23 @@ static const deviceType dev =
     .separatorWidth = 2,
 };
 
-static const consoleType console =
+static const mainConsoleType c =
 {
-    .xPosition = dev.xGap*5 + dev.xText + dev.xUnit*2,  // Vertical Separator
-    .yPosition = dev.yGap*6 + dev.yLogo + dev.yUnit*3,  // At SPI Logo
-    .xSize = dev.xWindow - console.xPosition - dev.xGap,        // Obvious
-    .ySize = dev.yGap*8 + dev.yLogo*2 + dev.yUnit*6+1,  // Last Horizontal Separator - yPosition + yGap
+    .xPosition = w.xGap*5 + w.xText + w.xUnit*2,  // Vertical Separator
+    .yPosition = w.yGap*6 + w.yLogo + w.yUnit*3,  // At SPI Logo
+    .xSize = w.xWindow - c.xPosition - w.xGap,    // Obvious
+    .ySize = w.yGap*8 + w.yLogo*2 + w.yUnit*6+1,  // Last Horizontal Separator - yPosition + yGap
 };
+
+/* GET */ const mainWindowType* gui::getMainWindow()
+{
+    return &w;
+}
+
+/* GET */ const mainConsoleType* gui::getMainConsole()
+{
+    return &c;
+}
 
 gui::gui() :
 m_Rx_GuiVector(std::make_shared<std::vector<uint8_t>>(IO_TRANSFER_SIZE)),
@@ -37,7 +47,7 @@ m_Tx_GuiVector(std::make_shared<std::vector<uint8_t>>(IO_TRANSFER_SIZE)),
 m_IO_GuiState(std::make_shared<ioStateType>(IO_COM_IDLE)),
 m_isPulseControllerEnabled(true),
 m_isStartAcquisition(true),
-m_phase(0.0)
+m_isFastControl(true)
 {
     qDebug() << "[MAIN] [CONSTRUCTOR]" << this << "::  gui";
 
@@ -47,13 +57,13 @@ m_phase(0.0)
     setupUartConsole();
 
     setupFpgaCtrl();
-    setupThreadProcess();
+    setupDroneControl();
 
     setupI2C();
     setupSPI();
     setupPWM();
-    setupDma();
-    setupFifo();
+    setupDMA();
+    setupCMD();
 
     setupSeparators();
 }
@@ -69,197 +79,14 @@ gui::~gui()
 void gui::setupWindow()
 {
     setWindowTitle("IceNET Platform");
-    setFixedSize(dev.xWindow, dev.yWindow);
-
-    QTimer *timer = new QTimer(this);
-    connect(timer, &QTimer::timeout, this, [=]()
-    {
-        m_phase += 0.1;  // Adjust speed here
-        update();      // Triggers paintEvent
-    });
-    timer->start(30);  // Redraw every 30ms (~33 FPS)
-}
-
-void gui::paintEvent(QPaintEvent *event)
-{
-    QPainter painter(this);
-    painter.setRenderHint(QPainter::Antialiasing);
-
-    double scale = 25.0;
-    double step = 0.05;
-    double t_max = (dev.xWindow - 800 - scale - dev.xGap * 4) / scale;
-
-    int x_offset = 800 + scale + dev.xGap;
-    int y_offset = scale * 2 + dev.xGap;
-    int y_offset2 = y_offset + dev.yGap * 5 + dev.yLogo + dev.yUnit * 3;
-    int y_offset3 = y_offset + 2 * (dev.yGap * 5 + dev.yLogo + dev.yUnit * 3);
-
-    QRect graphArea(x_offset, 0, static_cast<int>(scale * t_max), height());
-    if (!event->rect().intersects(graphArea))
-        return;
-
-    // PENS
-    QPen xPen(Qt::blue, 2);
-    QPen yPen(Qt::darkGreen, 2);
-    QPen zPen(Qt::darkMagenta, 2);
-    QPen axisPen(Qt::darkGray, 2, Qt::DashLine);
-    QPen highlightPen(Qt::red, 4);
-
-    // x(t) AXIS
-    painter.setPen(axisPen);
-    painter.drawLine(QPoint(x_offset, y_offset), QPoint(x_offset + static_cast<int>(scale * t_max), y_offset));
-    painter.drawLine(QPoint(x_offset, y_offset - static_cast<int>(scale * 1.5)), QPoint(x_offset, y_offset + static_cast<int>(scale * 1.5)));
-    painter.setPen(Qt::black);
-    painter.setFont(QFont("Arial", 8));
-    painter.drawText(x_offset - 20, y_offset - static_cast<int>(scale * 1.5) - 5, "x(t)");
-    painter.drawText(x_offset + static_cast<int>(scale * t_max) + 5, y_offset + 15, "t");
-
-    // DRAW x(t)
-    painter.setPen(xPen);
-    QPoint lastPoint;
-    bool first = true;
-    double lastT = 0.0, last_x = 0.0;
-    auto& RxBuffer = *m_Rx_GuiVector;
-    int sampleCount = static_cast<int>(t_max / step);
-
-    for (int i = 0; i < sampleCount; ++i)
-    {
-        int index = i * 6;
-        if (index + 5 >= static_cast<int>(RxBuffer.size())) break;
-
-        double t = i * step;
-        int x = x_offset + static_cast<int>(scale * t);
-
-        qint16 rawX = static_cast<qint16>((RxBuffer[index + 1] << 8) | RxBuffer[index]);
-        double yVal = static_cast<double>(rawX) / 32768.0;
-        int y = y_offset - static_cast<int>(scale * yVal);
-
-        QPoint pt(x, y);
-        if (!first) painter.drawLine(lastPoint, pt);
-        lastPoint = pt;
-        first = false;
-        lastT = t;
-        last_x = yVal;
-    }
-
-    // y(t) AXIS
-    painter.setPen(axisPen);
-    painter.drawLine(QPoint(x_offset, y_offset2), QPoint(x_offset + static_cast<int>(scale * t_max), y_offset2));
-    painter.drawLine(QPoint(x_offset, y_offset2 - static_cast<int>(scale * 1.5)), QPoint(x_offset, y_offset2 + static_cast<int>(scale * 1.5)));
-    painter.setPen(Qt::black);
-    painter.drawText(x_offset - 20, y_offset2 - static_cast<int>(scale * 1.5) - 5, "y(t)");
-    painter.drawText(x_offset + static_cast<int>(scale * t_max) + 5, y_offset2 + 15, "t");
-
-    // DRAW y(t)
-    painter.setPen(yPen);
-    lastPoint = QPoint();
-    first = true;
-    double last_y = 0.0;
-
-    for (int i = 0; i < sampleCount; ++i)
-    {
-        int index = i * 6;
-        if (index + 5 >= static_cast<int>(RxBuffer.size())) break;
-
-        double t = i * step;
-        int x = x_offset + static_cast<int>(scale * t);
-
-        qint16 rawY = static_cast<qint16>((RxBuffer[index + 3] << 8) | RxBuffer[index + 2]);
-        double yVal = static_cast<double>(rawY) / 32768.0;
-        int y = y_offset2 - static_cast<int>(scale * yVal);
-
-        QPoint pt(x, y);
-        if (!first) painter.drawLine(lastPoint, pt);
-        lastPoint = pt;
-        first = false;
-        last_y = yVal;
-    }
-
-    // z(t) AXIS
-    painter.setPen(axisPen);
-    painter.drawLine(QPoint(x_offset, y_offset3), QPoint(x_offset + static_cast<int>(scale * t_max), y_offset3));
-    painter.drawLine(QPoint(x_offset, y_offset3 - static_cast<int>(scale * 1.5)), QPoint(x_offset, y_offset3 + static_cast<int>(scale * 1.5)));
-    painter.setPen(Qt::black);
-    painter.drawText(x_offset - 20, y_offset3 - static_cast<int>(scale * 1.5) - 5, "z(t)");
-    painter.drawText(x_offset + static_cast<int>(scale * t_max) + 5, y_offset3 + 15, "t");
-
-    // DRAW z(t)
-    painter.setPen(zPen);
-    lastPoint = QPoint();
-    first = true;
-    double last_z = 0.0;
-
-    for (int i = 0; i < sampleCount; ++i)
-    {
-        int index = i * 6;
-        if (index + 5 >= static_cast<int>(RxBuffer.size())) break;
-
-        double t = i * step;
-        int x = x_offset + static_cast<int>(scale * t);
-
-        qint16 rawZ = static_cast<qint16>((RxBuffer[index + 5] << 8) | RxBuffer[index + 4]);
-        double yVal = static_cast<double>(rawZ) / 32768.0;
-        int y = y_offset3 - static_cast<int>(scale * yVal);
-
-        QPoint pt(x, y);
-        if (!first) painter.drawLine(lastPoint, pt);
-        lastPoint = pt;
-        first = false;
-        last_z = yVal;
-    }
-
-    // HIGHLIGHT POINTS
-    painter.setPen(highlightPen);
-    int t_last = x_offset + static_cast<int>(scale * lastT);
-    int x_t = y_offset - static_cast<int>(scale * last_x);
-    int y_t = y_offset2 - static_cast<int>(scale * last_y);
-    int z_t = y_offset3 - static_cast<int>(scale * last_z);
-    painter.drawEllipse(QPoint(t_last, x_t), 4, 4);
-    painter.drawEllipse(QPoint(t_last, y_t), 4, 4);
-    painter.drawEllipse(QPoint(t_last, z_t), 4, 4);
-
-    // x(t) DATA BOX
-    QRect dataBox1(x_offset + dev.xGap * 2, y_offset + 50, 180, 30);
-    painter.setBrush(QColor(240, 240, 240));
-    painter.setPen(QPen(Qt::black, 2));
-    painter.drawRect(dataBox1);
-    painter.setFont(QFont("Arial", 10));
-    painter.setPen(Qt::black);
-    QString data1 = QString("x(t) = x(%1) = %2")
-                        .arg(lastT + m_phase, 0, 'f', 2)
-                        .arg(last_x, 0, 'f', 2);
-    painter.drawText(dataBox1.adjusted(10, 5, -10, -10), Qt::AlignLeft | Qt::AlignTop, data1);
-
-    // y(t) DATA BOX
-    QRect dataBox2(x_offset + dev.xGap * 2, y_offset2 + 50, 180, 30);
-    painter.setBrush(QColor(240, 240, 240));
-    painter.setPen(QPen(Qt::black, 2));
-    painter.drawRect(dataBox2);
-    painter.setFont(QFont("Arial", 10));
-    painter.setPen(Qt::black);
-    QString data2 = QString("y(t) = y(%1) = %2")
-                        .arg(lastT + m_phase, 0, 'f', 2)
-                        .arg(last_y, 0, 'f', 2);
-    painter.drawText(dataBox2.adjusted(10, 5, -10, -5), Qt::AlignLeft | Qt::AlignTop, data2);
-
-    // z(t) DATA BOX
-    QRect dataBox3(x_offset + dev.xGap * 2, y_offset3 + 50, 180, 30);
-    painter.setBrush(QColor(240, 240, 240));
-    painter.setPen(QPen(Qt::black, 2));
-    painter.drawRect(dataBox3);
-    painter.setFont(QFont("Arial", 10));
-    painter.setPen(Qt::black);
-    QString data3 = QString("z(t) = z(%1) = %2")
-                        .arg(lastT + m_phase, 0, 'f', 2)
-                        .arg(last_z, 0, 'f', 2);
-    painter.drawText(dataBox3.adjusted(10, 5, -10, -5), Qt::AlignLeft | Qt::AlignTop, data3);
+    setFixedSize(w.xWindow, w.yWindow);
 }
 
 void gui::setupMainConsole()
 {
     m_mainConsoleOutput = new QPlainTextEdit(this);
     m_mainConsoleOutput->setReadOnly(true);
-    m_mainConsoleOutput->setGeometry(console.xPosition, console.yPosition, console.xSize - 400, console.ySize);
+    m_mainConsoleOutput->setGeometry(c.xPosition, c.yPosition, c.xSize - 400, c.ySize);
     m_mainConsoleOutput->setPlainText("[INIT] Main Console Initialized...");
 }
 
@@ -268,11 +95,11 @@ void gui::setupUartConsole()
     /* Rx window */
     m_uartConsoleOutput = new QPlainTextEdit(this);
     m_uartConsoleOutput->setReadOnly(true);
-    m_uartConsoleOutput->setGeometry(console.xPosition, dev.yGap*16 + dev.yLogo*3 + dev.yUnit*9, console.xSize, dev.yWindow - dev.yGap*17 - dev.yUnit*10 - dev.yLogo*3);
+    m_uartConsoleOutput->setGeometry(c.xPosition, w.yGap*16 + w.yLogo*3 + w.yUnit*9, c.xSize, w.yWindow - w.yGap*17 - w.yUnit*10 - w.yLogo*3);
     m_uartConsoleOutput->setPlainText("[INIT] UART Console Initialized");
     /* Tx bar */
     m_uartInput = new QLineEdit(this);
-    m_uartInput->setGeometry(console.xPosition, dev.yWindow - dev.yGap - dev.yUnit, console.xSize, dev.yUnit);
+    m_uartInput->setGeometry(c.xPosition, w.yWindow - w.yGap - w.yUnit, c.xSize, w.yUnit);
     connect(m_uartInput, &QLineEdit::returnPressed, this, &gui::onUartInput);
     /* Open device */
     openUart();
@@ -286,10 +113,10 @@ void gui::setupFpgaCtrl()
     reset_labelFont.setItalic(true);
     reset_labelFont.setBold(true);
     reset_label->setFont(reset_labelFont);
-    reset_label->setGeometry(dev.xGap*5 + dev.xText + dev.xUnit*2, dev.yGap, dev.xLogo, dev.yLogo);
+    reset_label->setGeometry(w.xGap*5 + w.xText + w.xUnit*2, w.yGap, w.xLogo, w.yLogo);
 
     QPushButton *resetButton = new QPushButton("RESET", this);
-    resetButton->setGeometry(dev.xGap*5 + dev.xText + dev.xUnit*2, dev.yGap*2 + dev.yLogo, dev.xUnit*2, dev.yUnit);
+    resetButton->setGeometry(w.xGap*5 + w.xText + w.xUnit*2, w.yGap*2 + w.yLogo, w.xUnit*2, w.yUnit);
     resetButton->setStyleSheet(
         "QPushButton {"
         "   background-color: blue;"
@@ -320,8 +147,8 @@ void gui::setupFpgaCtrl()
     };
     connect(resetButton, &QPushButton::clicked, this, fpgaReset);
 
-    QPushButton *offloadButton = new QPushButton("OFFLOAD", this);
-    offloadButton->setGeometry(dev.xGap*5 + dev.xText + dev.xUnit*2, dev.yGap*3 + dev.yLogo + dev.yUnit, dev.xUnit*2, dev.yUnit);
+    QPushButton *offloadButton = new QPushButton("OFF.1ST", this);
+    offloadButton->setGeometry(w.xGap*5 + w.xText + w.xUnit*2, w.yGap*3 + w.yLogo + w.yUnit, w.xUnit*2, w.yUnit);
     offloadButton->setStyleSheet(
         "QPushButton {"
         "   background-color: blue;"
@@ -354,7 +181,7 @@ void gui::setupFpgaCtrl()
     connect(offloadButton, &QPushButton::clicked, this, primaryOffload);
 
     m_enableButton = new QPushButton("ENABLE", this);
-    m_enableButton->setGeometry(dev.xGap*5 + dev.xText + dev.xUnit*2, dev.yGap*4 + dev.yLogo + dev.yUnit*2, dev.xUnit*2, dev.yUnit);
+    m_enableButton->setGeometry(w.xGap*5 + w.xText + w.xUnit*2, w.yGap*4 + w.yLogo + w.yUnit*2, w.xUnit*2, w.yUnit);
 
     m_enableButton->setStyleSheet(
         "QPushButton {"
@@ -428,13 +255,12 @@ void gui::setupFpgaCtrl()
             interruptVector_execute(VECTOR_DISABLE);
         }
 
-        // Toggle state
         m_isPulseControllerEnabled = !m_isPulseControllerEnabled;
     };
     connect(m_enableButton, &QPushButton::clicked, this, pulseController);
 
     m_startButton = new QPushButton("START", this);
-    m_startButton->setGeometry(dev.xGap*6 + dev.xText + dev.xUnit*4, dev.yGap*4 + dev.yLogo + dev.yUnit*2, dev.xUnit*2, dev.yUnit);
+    m_startButton->setGeometry(w.xGap*6 + w.xText + w.xUnit*4, w.yGap*4 + w.yLogo + w.yUnit*2, w.xUnit*2, w.yUnit);
 
     m_startButton->setStyleSheet(
         "QPushButton {"
@@ -508,14 +334,13 @@ void gui::setupFpgaCtrl()
             interruptVector_execute(VECTOR_STOP);
         }
 
-        // Toggle state
         m_isStartAcquisition = !m_isStartAcquisition;
     };
     connect(m_startButton, &QPushButton::clicked, this, acquisitionControl);
 
-    QPushButton *pulseButton = new QPushButton("READ", this);
-    pulseButton->setGeometry(dev.xGap*7 + dev.xText + dev.xUnit*6, dev.yGap*4 + dev.yLogo + dev.yUnit*2, dev.xUnit*2, dev.yUnit);
-    pulseButton->setStyleSheet(
+    m_speedButton = new QPushButton("T.SLOW", this);
+    m_speedButton->setGeometry(w.xGap*6 + w.xText + w.xUnit*4, w.yGap*2 + w.yLogo, w.xUnit*2, w.yUnit);
+    m_speedButton->setStyleSheet(
         "QPushButton {"
         "   background-color: blue;"
         "   color: white;"
@@ -532,22 +357,67 @@ void gui::setupFpgaCtrl()
         "}"
     );
 
-    auto sensorRead = [this]()
+    auto speedControl = [this]()
     {
-        if(NULL == m_instanceDroneControl)
+        if (NULL == m_instanceDroneControl)
         {
             printToMainConsole("$ Drone Control is Down");
+            return;
+        }
+
+        if (m_isFastControl)
+        {
+            m_speedButton->setText("T.FAST");
+            m_speedButton->setStyleSheet(
+                "QPushButton {"
+                "   background-color: purple;"
+                "   color: white;"
+                "   font-size: 17px;"
+                "   font-weight: bold;"
+                "   border-radius: 10px;"
+                "   padding: 5px;"
+                "}"
+                "QPushButton:hover {"
+                "   background-color: darkred;"
+                "}"
+                "QPushButton:pressed {"
+                "   background-color: black;"
+                "}"
+            );
+
+            printToMainConsole("$ Start Secondary SPI/DMA");
+            interruptVector_execute(VECTOR_FAST);
         }
         else
         {
-            printToMainConsole("$ Read single sensor data :: 12-Bytes");
-            interruptVector_execute(VECTOR_READ);
-        }
-    };
-    connect(pulseButton, &QPushButton::clicked, this, sensorRead);
+            m_speedButton->setText("T.SLOW");
+            m_speedButton->setStyleSheet(
+                "QPushButton {"
+                "   background-color: blue;"
+                "   color: white;"
+                "   font-size: 17px;"
+                "   font-weight: bold;"
+                "   border-radius: 10px;"
+                "   padding: 5px;"
+                "}"
+                "QPushButton:hover {"
+                "   background-color: darkblue;"
+                "}"
+                "QPushButton:pressed {"
+                "   background-color: black;"
+                "}"
+            );
 
-    QPushButton *dataButton = new QPushButton("OFFLOAD", this);
-    dataButton->setGeometry(dev.xGap*7 + dev.xText + dev.xUnit*6, dev.yGap*3 + dev.yLogo + dev.yUnit, dev.xUnit*2, dev.yUnit);
+            printToMainConsole("$ Stop Secondary SPI/DMA");
+            interruptVector_execute(VECTOR_SLOW);
+        }
+
+        m_isFastControl = !m_isFastControl;
+    };
+    connect(m_speedButton, &QPushButton::clicked, this, speedControl);
+
+    QPushButton *dataButton = new QPushButton("OFF.2ND", this);
+    dataButton->setGeometry(w.xGap*6 + w.xText + w.xUnit*4, w.yGap*3 + w.yLogo + w.yUnit, w.xUnit*2, w.yUnit);
     dataButton->setStyleSheet(
         "QPushButton {"
         "   background-color: blue;"
@@ -578,119 +448,20 @@ void gui::setupFpgaCtrl()
         }
     };
     connect(dataButton, &QPushButton::clicked, this, secondaryOffload);
-
-    QPushButton *f1Button = new QPushButton("F1", this);
-    f1Button->setGeometry(dev.xGap*6 + dev.xText + dev.xUnit*4, dev.yGap*3 + dev.yLogo + dev.yUnit, dev.xUnit*2, dev.yUnit);
-    f1Button->setStyleSheet(
-        "QPushButton {"
-        "   background-color: purple;"
-        "   color: white;"
-        "   font-size: 17px;"
-        "   font-weight: bold;"
-        "   border-radius: 10px;"
-        "   padding: 5px;"
-        "}"
-        "QPushButton:hover {"
-        "   background-color: darkblue;"
-        "}"
-        "QPushButton:pressed {"
-        "   background-color: black;"
-        "}"
-    );
-
-    auto f1_Execute = [this]()
-    {
-        if(NULL == m_instanceDroneControl)
-        {
-            printToMainConsole("$ Drone Control is Down");
-        }
-        else
-        {
-            printToMainConsole("$ Execute F1");
-            interruptVector_execute(VECTOR_F1);
-        }
-    };
-    connect(f1Button, &QPushButton::clicked, this, f1_Execute);
-
-    QPushButton *f2Button = new QPushButton("F2", this);
-    f2Button->setGeometry(dev.xGap*6 + dev.xText + dev.xUnit*4, dev.yGap*2 + dev.yLogo, dev.xUnit*2, dev.yUnit);
-    f2Button->setStyleSheet(
-        "QPushButton {"
-        "   background-color: purple;"
-        "   color: white;"
-        "   font-size: 17px;"
-        "   font-weight: bold;"
-        "   border-radius: 10px;"
-        "   padding: 5px;"
-        "}"
-        "QPushButton:hover {"
-        "   background-color: darkblue;"
-        "}"
-        "QPushButton:pressed {"
-        "   background-color: black;"
-        "}"
-    );
-
-    auto f2_Execute = [this]()
-    {
-        if(NULL == m_instanceDroneControl)
-        {
-            printToMainConsole("$ Drone Control is Down");
-        }
-        else
-        {
-            printToMainConsole("$ Execute F2");
-            interruptVector_execute(VECTOR_F2);
-        }
-    };
-    connect(f2Button, &QPushButton::clicked, this, f2_Execute);
-
-    QPushButton *f3Button = new QPushButton("RETURN", this);
-    f3Button->setGeometry(dev.xGap*7 + dev.xText + dev.xUnit*6, dev.yGap*2 + dev.yLogo, dev.xUnit*2, dev.yUnit);
-    f3Button->setStyleSheet(
-        "QPushButton {"
-        "   background-color: purple;"
-        "   color: white;"
-        "   font-size: 17px;"
-        "   font-weight: bold;"
-        "   border-radius: 10px;"
-        "   padding: 5px;"
-        "}"
-        "QPushButton:hover {"
-        "   background-color: darkblue;"
-        "}"
-        "QPushButton:pressed {"
-        "   background-color: black;"
-        "}"
-    );
-
-    auto f3_Execute = [this]()
-    {
-        if(NULL == m_instanceDroneControl)
-        {
-            printToMainConsole("$ Drone Control is Down");
-        }
-        else
-        {
-            printToMainConsole("$ Return over secondarySPI/DMA Transition");
-            interruptVector_execute(VECTOR_RETURN);
-        }
-    };
-    connect(f3Button, &QPushButton::clicked, this, f3_Execute);
 }
 
-void gui::setupThreadProcess()
+void gui::setupDroneControl()
 {
-    QLabel *thread_label = new QLabel("CTRL", this);
+    QLabel *thread_label = new QLabel("DRONE", this);
     QFont thread_labelFont;
     thread_labelFont.setPointSize(30);
     thread_labelFont.setItalic(true);
     thread_labelFont.setBold(true);
     thread_label->setFont(thread_labelFont);
-    thread_label->setGeometry(800 - dev.xGap*2 - dev.xUnit*4 , dev.yGap, dev.xLogo, dev.yLogo);
+    thread_label->setGeometry(800 - w.xGap*2 - w.xUnit*4 , w.yGap, w.xLogo, w.yLogo);
 
-    QPushButton *connectButton = new QPushButton("C1", this);
-    connectButton->setGeometry(800 - dev.xGap*2 - dev.xUnit*4, dev.yGap*2 + dev.yLogo, dev.xUnit*2, dev.yUnit);
+    QPushButton *connectButton = new QPushButton("NEW", this);
+    connectButton->setGeometry(800 - w.xGap*2 - w.xUnit*4, w.yGap*2 + w.yLogo, w.xUnit*2, w.yUnit);
     connectButton->setStyleSheet(
         "QPushButton {"
         "   background-color: green;"
@@ -707,30 +478,10 @@ void gui::setupThreadProcess()
         "   background-color: black;"
         "}"
     );
-    connect(connectButton, &QPushButton::clicked, this, &gui::C1_Execute);
+    connect(connectButton, &QPushButton::clicked, this, &gui::createDroneControl);
 
-    QPushButton *newButton = new QPushButton("NEW", this);
-    newButton->setGeometry(800 - dev.xGap*1 - dev.xUnit*2, dev.yGap*2 + dev.yLogo, dev.xUnit*2, dev.yUnit);
-    newButton->setStyleSheet(
-        "QPushButton {"
-        "   background-color: green;"
-        "   color: white;"
-        "   font-size: 17px;"
-        "   font-weight: bold;"
-        "   border-radius: 10px;"
-        "   padding: 5px;"
-        "}"
-        "QPushButton:hover {"
-        "   background-color: darkgreen;"
-        "}"
-        "QPushButton:pressed {"
-        "   background-color: black;"
-        "}"
-    );
-    connect(newButton, &QPushButton::clicked, this, &gui::createDroneControl);
-
-    QPushButton *terminateButton = new QPushButton("C2", this);
-    terminateButton->setGeometry(800 - dev.xGap*2 - dev.xUnit*4, dev.yGap*3 + dev.yUnit*3, dev.xUnit*2, dev.yUnit);
+    QPushButton *terminateButton = new QPushButton("DELETE", this);
+    terminateButton->setGeometry(800 - w.xGap*2 - w.xUnit*4, w.yGap*3 + w.yUnit*3, w.xUnit*2, w.yUnit);
     terminateButton->setStyleSheet(
         "QPushButton {"
         "   background-color: red;"
@@ -747,260 +498,54 @@ void gui::setupThreadProcess()
         "   background-color: black;"
         "}"
     );
-    connect(terminateButton, &QPushButton::clicked, this, &gui::C2_Execute);
-
-    QPushButton *deleteButton = new QPushButton("DELETE", this);
-    deleteButton->setGeometry(800 - dev.xGap*1 - dev.xUnit*2, dev.yGap*3 + dev.yUnit*3, dev.xUnit*2, dev.yUnit);
-    deleteButton->setStyleSheet(
-        "QPushButton {"
-        "   background-color: red;"
-        "   color: white;"
-        "   font-size: 17px;"
-        "   font-weight: bold;"
-        "   border-radius: 10px;"
-        "   padding: 5px;"
-        "}"
-        "QPushButton:hover {"
-        "   background-color: darkred;"
-        "}"
-        "QPushButton:pressed {"
-        "   background-color: black;"
-        "}"
-    );
-    connect(deleteButton, &QPushButton::clicked, this, &gui::deleteDroneControl);
-
-    QPushButton *debugButton = new QPushButton("C3", this);
-    debugButton->setGeometry(800 - dev.xGap*2 - dev.xUnit*4, dev.yGap*4 + dev.yUnit*4, dev.xUnit*2, dev.yUnit);
-    debugButton->setStyleSheet(
-        "QPushButton {"
-        "   background-color: purple;"
-        "   color: white;"
-        "   font-size: 17px;"
-        "   font-weight: bold;"
-        "   border-radius: 10px;"
-        "   padding: 5px;"
-        "}"
-        "QPushButton:hover {"
-        "   background-color: darkred;"
-        "}"
-        "QPushButton:pressed {"
-        "   background-color: black;"
-        "}"
-    );
-    connect(debugButton, &QPushButton::clicked, this, &gui::C3_Execute);
-
-    QPushButton *hideButton = new QPushButton("C4", this);
-    hideButton->setGeometry(800 - dev.xGap*1 - dev.xUnit*2, dev.yGap*4 + dev.yUnit*4, dev.xUnit*2, dev.yUnit);
-    hideButton->setStyleSheet(
-        "QPushButton {"
-        "   background-color: purple;"
-        "   color: white;"
-        "   font-size: 17px;"
-        "   font-weight: bold;"
-        "   border-radius: 10px;"
-        "   padding: 5px;"
-        "}"
-        "QPushButton:hover {"
-        "   background-color: darkred;"
-        "}"
-        "QPushButton:pressed {"
-        "   background-color: black;"
-        "}"
-    );
-    connect(hideButton, &QPushButton::clicked, this, &gui::C4_Execute);
+    connect(terminateButton, &QPushButton::clicked, this, &gui::deleteDroneControl);
 }
 
 void gui::setupSeparators()
 {
     /* Vertical Separator */
     QFrame *vLine1 = new QFrame(this);
-    vLine1->setGeometry(dev.xGap*4 + dev.xText + dev.xUnit*2, dev.yGap, dev.separatorWidth , dev.yWindow - dev.yGap*2);
+    vLine1->setGeometry(w.xGap*4 + w.xText + w.xUnit*2, w.yGap, w.separatorWidth , w.yWindow - w.yGap*2);
     vLine1->setFrameShape(QFrame::VLine);
     vLine1->setFrameShadow(QFrame::Sunken);
     /* Horizontal Separator */
     QFrame *hLine1 = new QFrame(this);
-    hLine1->setGeometry(dev.xGap, dev.yGap*5 + dev.yLogo + dev.yUnit*3, dev.xWindow - dev.xGap*2, dev.separatorWidth);
+    hLine1->setGeometry(w.xGap, w.yGap*5 + w.yLogo + w.yUnit*3, w.xWindow - w.xGap*2, w.separatorWidth);
     hLine1->setFrameShape(QFrame::HLine);
     hLine1->setFrameShadow(QFrame::Sunken);
     /* Horizontal Separator */
     QFrame *hLine2 = new QFrame(this);
-    hLine2->setGeometry(dev.xGap, dev.yGap*10 + dev.yLogo*2 + dev.yUnit*6, dev.xGap*3 + dev.xText + dev.xUnit*2, dev.separatorWidth);
+    hLine2->setGeometry(w.xGap, w.yGap*10 + w.yLogo*2 + w.yUnit*6, w.xGap*3 + w.xText + w.xUnit*2, w.separatorWidth);
     hLine2->setFrameShape(QFrame::HLine);
     hLine2->setFrameShadow(QFrame::Sunken);
     /* Horizontal Separator */
     QFrame *hLine3 = new QFrame(this);
-    hLine3->setGeometry(800, dev.yGap*10 + dev.yLogo*2 + dev.yUnit*6, dev.xWindow - 800 - dev.xGap, dev.separatorWidth);
+    hLine3->setGeometry(800, w.yGap*10 + w.yLogo*2 + w.yUnit*6, w.xWindow - 800 - w.xGap, w.separatorWidth);
     hLine3->setFrameShape(QFrame::HLine);
     hLine3->setFrameShadow(QFrame::Sunken);
     /* Horizontal Separator */
     QFrame *hLine4 = new QFrame(this);
-    hLine4->setGeometry(dev.xGap, dev.yGap*15 + dev.yLogo*3 + dev.yUnit*9, dev.xWindow - dev.xGap*2, dev.separatorWidth);
+    hLine4->setGeometry(w.xGap, w.yGap*15 + w.yLogo*3 + w.yUnit*9, w.xWindow - w.xGap*2, w.separatorWidth);
     hLine4->setFrameShape(QFrame::HLine);
     hLine4->setFrameShadow(QFrame::Sunken);
     /* Vertical Separator */
     QFrame *vLine2 = new QFrame(this);
-    vLine2->setGeometry(800 - dev.xGap*3 - dev.xUnit*4 , dev.yGap, dev.separatorWidth, dev.yGap*4 + dev.yLogo + dev.yUnit*3);
+    vLine2->setGeometry(800 - w.xGap*3 - w.xUnit*4 , w.yGap, w.separatorWidth, w.yGap*4 + w.yLogo + w.yUnit*3);
     vLine2->setFrameShape(QFrame::VLine);
     vLine2->setFrameShadow(QFrame::Sunken);
     /* Vertical Separator */
     QFrame *vLine3 = new QFrame(this);
-    vLine3->setGeometry(800, dev.yGap, dev.separatorWidth, dev.yGap*14 + dev.yLogo*3 + dev.yUnit*9);
+    vLine3->setGeometry(800, w.yGap, w.separatorWidth, w.yGap*14 + w.yLogo*3 + w.yUnit*9);
     vLine3->setFrameShape(QFrame::VLine);
     vLine3->setFrameShadow(QFrame::Sunken);
     /* Horizontal Separator */
     QFrame *hLine5 = new QFrame(this);
-    hLine5->setGeometry(dev.xGap, dev.yGap*20 + dev.yLogo*4 + dev.yUnit*12, dev.xGap*3 + dev.xText + dev.xUnit*2, dev.separatorWidth);
+    hLine5->setGeometry(w.xGap, w.yGap*20 + w.yLogo*4 + w.yUnit*12, w.xGap*3 + w.xText + w.xUnit*2, w.separatorWidth);
     hLine5->setFrameShape(QFrame::HLine);
     hLine5->setFrameShadow(QFrame::Sunken);
 }
 
-void gui::setupI2C()
-{
-    /* I2C :: Row[0] */
-    QLabel *i2c_label = new QLabel("I2C", this);
-    QFont i2c_labelFont;
-    i2c_labelFont.setPointSize(30);
-    i2c_labelFont.setItalic(true);
-    i2c_labelFont.setBold(true);
-    i2c_label->setFont(i2c_labelFont);
-    i2c_label->setGeometry(dev.xGap , dev.yGap, dev.xLogo, dev.yLogo);
-    /* I2C :: Row[1] */
-    QLabel *i2c_addressLabel = new QLabel("Device Address", this);
-    i2c_addressLabel->setGeometry(dev.xGap, dev.yGap*2 + dev.yLogo, dev.xText, dev.yUnit);
-    m_i2c_addressField = new QLineEdit(this);
-    m_i2c_addressField->setGeometry(dev.xGap*2 + dev.xText, dev.yGap*2 + dev.yLogo, dev.xUnit, dev.yUnit);
-    m_i2c_addressField->setText("0x53");
-    QPushButton *i2c_exeButton = new QPushButton("EXE", this);
-    i2c_exeButton->setGeometry(dev.xGap*3 + dev.xText + dev.xUnit, dev.yGap*2 + dev.yLogo, dev.xUnit, dev.yUnit);
-    connect(i2c_exeButton, &QPushButton::clicked, this, &gui::i2c_execute);
-    /* I2C :: Row[2] */
-    QLabel *i2c_registerLabel = new QLabel("Register Address", this);
-    i2c_registerLabel->setGeometry(dev.xGap, dev.yGap*3 + dev.yLogo + dev.yUnit, dev.xText, dev.yUnit);
-    m_i2c_registerField = new QLineEdit(this);
-    m_i2c_registerField->setGeometry(dev.xGap*2 + dev.xText, dev.yGap*3 + dev.yLogo + dev.yUnit, dev.xUnit, dev.yUnit);
-    m_i2c_registerField->setText("0x00");
-    m_i2c_burstField = new QLineEdit(this);
-    m_i2c_burstField->setGeometry(dev.xGap*3 + dev.xText + dev.xUnit, dev.yGap*3 + dev.yLogo + dev.yUnit, dev.xUnit, dev.yUnit);
-    m_i2c_burstField->setText("0x01");
-    /* I2C :: Row[3] */
-    QLabel *i2c_dataLabel = new QLabel("Write Data", this);
-    i2c_dataLabel->setGeometry(dev.xGap, dev.yGap*4 + dev.yLogo + dev.yUnit*2, dev.xText, dev.yUnit);
-    m_i2c_dataField = new QLineEdit(this);
-    m_i2c_dataField->setGeometry(dev.xGap*2 + dev.xText , dev.yGap*4 + dev.yLogo + dev.yUnit*2, dev.xUnit, dev.yUnit);
-    m_i2c_dataField->setText("0x00");
-    m_i2c_dataField->setDisabled(true);
-    m_i2c_writeTick = new QCheckBox("WR", this);
-    m_i2c_writeTick->setGeometry(dev.xGap*3 + dev.xText + dev.xUnit, dev.yGap*4 + dev.yLogo + dev.yUnit*2, dev.xUnit, dev.yUnit);
-    connect(m_i2c_writeTick, &QCheckBox::toggled, m_i2c_dataField, &QLineEdit::setEnabled);
-}
-
-void gui::setupSPI()
-{
-    /* SPI :: Row[0] */
-    QLabel *spi_label = new QLabel("SPI", this);
-    QFont spi_labelFont;
-    spi_labelFont.setPointSize(30);
-    spi_labelFont.setItalic(true);
-    spi_labelFont.setBold(true);
-    spi_label->setFont(spi_labelFont);
-    spi_label->setGeometry(dev.xGap, dev.yGap*6 + dev.yLogo + dev.yUnit*3, dev.xLogo, dev.yLogo);
-    /* SPI :: Row[1] */
-    QLabel *spi_addressLabel = new QLabel("FPGA Device ID", this);
-    spi_addressLabel->setGeometry(dev.xGap, dev.yGap*7 + dev.yLogo*2 + dev.yUnit*3, dev.xText, dev.yUnit);
-    m_spi_addressField = new QLineEdit(this);
-    m_spi_addressField->setGeometry(dev.xGap*2 + dev.xText, dev.yGap*7 + dev.yLogo*2 + dev.yUnit*3, dev.xUnit, dev.yUnit);
-    m_spi_addressField->setText("0x11");
-    QPushButton *spi_exeButton = new QPushButton("EXE", this);
-    spi_exeButton->setGeometry(dev.xGap*3 + dev.xText + dev.xUnit, dev.yGap*7 + dev.yLogo*2 + dev.yUnit*3, dev.xUnit, dev.yUnit);
-    connect(spi_exeButton, &QPushButton::clicked, this, &gui::spi_execute);
-    /* SPI :: Row[2] */
-    QLabel *spi_registerLabel = new QLabel("Register Address", this);
-    spi_registerLabel->setGeometry(dev.xGap, dev.yGap*8 + dev.yLogo*2 + dev.yUnit*4, dev.xText, dev.yUnit);
-    m_spi_registerField = new QLineEdit(this);
-    m_spi_registerField->setGeometry(dev.xGap*2 + dev.xText, dev.yGap*8 + dev.yLogo*2 + dev.yUnit*4, dev.xUnit, dev.yUnit);
-    m_spi_registerField->setText("0x92");
-    m_spi_burstField = new QLineEdit(this);
-    m_spi_burstField->setGeometry(dev.xGap*3 + dev.xText + dev.xUnit, dev.yGap*8 + dev.yLogo*2 + dev.yUnit*4, dev.xUnit, dev.yUnit);
-    m_spi_burstField->setText("0x01");
-    /* SPI :: Row[3] */
-    QLabel *spi_dataLabel = new QLabel("Write Data", this);
-    spi_dataLabel->setGeometry(dev.xGap, dev.yGap*9 + dev.yLogo*2 + dev.yUnit*5, dev.xText, dev.yUnit);
-    m_spi_dataField = new QLineEdit(this);
-    m_spi_dataField->setGeometry(dev.xGap*2 + dev.xText, dev.yGap*9 + dev.yLogo*2 + dev.yUnit*5, dev.xUnit, dev.yUnit);
-    m_spi_dataField->setText("0x00");
-    m_spi_dataField->setDisabled(true);
-    m_spi_writeTick = new QCheckBox("WR", this);
-    m_spi_writeTick->setGeometry(dev.xGap*3 + dev.xText + dev.xUnit, dev.yGap*9 + dev.yLogo*2 + dev.yUnit*5, dev.xUnit, dev.yUnit);
-    connect(m_spi_writeTick, &QCheckBox::toggled, m_spi_dataField, &QLineEdit::setEnabled);
-    /**
-     *
-     * connect(sender, SIGNAL(signalName(parameters)), receiver, SLOT(slotName(parameters)));
-     *
-     * sender → The object emitting the signal
-     * signalName(parameters) → The signal emitted when an event occurs
-     * receiver → The object that receives and processes the signal
-     * slotName(parameters) → The function executed when the signal is received
-     *
-     * connect(m_spi_writeTick, &QCheckBox::toggled, m_spi_burstField, &QLineEdit::setDisabled);
-     *
-     */
-    connect(m_spi_writeTick, &QCheckBox::toggled, this, [=](bool checked)
-    {
-        m_spi_burstField->setDisabled(checked); // Disable burst field when checked
-        if (checked)
-        {
-            m_spi_burstField->setText("0x01"); // Ensure value is "0x01" when checked
-        }
-    });
-}
-
-void gui::setupPWM()
-{
-    /* PWM :: Row[0] */
-    QLabel *pwm_label = new QLabel("PWM", this);
-    QFont pwm_labelFont;
-    pwm_labelFont.setPointSize(30);
-    pwm_labelFont.setItalic(true);
-    pwm_labelFont.setBold(true);
-    pwm_label->setFont(pwm_labelFont);
-    pwm_label->setGeometry(dev.xGap, dev.yGap*11 + dev.yLogo*2 + dev.yUnit*6, dev.xLogo, dev.yLogo);
-    /* PWM :: Row[1] */
-    QLabel *pwm_speedLabel = new QLabel("Speed [Hex]", this);
-    pwm_speedLabel->setGeometry(dev.xGap, dev.yGap*12 + dev.yLogo*3 + dev.yUnit*6, dev.xText, dev.yUnit);
-    m_pwm_dataField = new QLineEdit(this);
-    m_pwm_dataField->setGeometry(dev.xGap*2 + dev.xText, dev.yGap*12 + dev.yLogo*3 + dev.yUnit*6, dev.xUnit, dev.yUnit);
-    m_pwm_dataField->setText("0x00");
-    QPushButton *pwm_exeButton = new QPushButton("EXE", this);
-    pwm_exeButton->setGeometry(dev.xGap*3 + dev.xText + dev.xUnit, dev.yGap*12 + dev.yLogo*3 + dev.yUnit*6, dev.xUnit, dev.yUnit);
-
-    auto pwmExecute = [this]()
-    {
-        pwm_execute(PWM_EXE);
-    };
-    connect(pwm_exeButton, &QPushButton::clicked, this, pwmExecute);
-
-    /* PWM :: Row[2] */
-    QPushButton *pwm_upButton = new QPushButton("UP", this);
-    pwm_upButton->setGeometry(dev.xGap*3 + dev.xText + dev.xUnit, dev.yGap*13 + dev.yLogo*3 + dev.yUnit*7, dev.xUnit, dev.yUnit);
-
-    auto pwmUp = [this]()
-    {
-        pwm_execute(PWM_UP);
-    };
-    connect(pwm_upButton, &QPushButton::clicked, this, pwmUp);
-
-    /* PWM :: Row[3] */
-    QPushButton *pwm_downButton = new QPushButton("DOWN", this);
-    pwm_downButton->setGeometry(dev.xGap*3 + dev.xText + dev.xUnit, dev.yGap*14 + dev.yLogo*3 + dev.yUnit*8, dev.xUnit, dev.yUnit);
-
-    auto pwmDown = [this]()
-    {
-        pwm_execute(PWM_DOWN);
-    };
-    connect(pwm_downButton, &QPushButton::clicked, this, pwmDown);
-}
-
-void gui::setupDma()
+void gui::setupDMA()
 {
     /* DMA :: Row[0] */
     QLabel *i2c_label = new QLabel("DMA", this);
@@ -1009,15 +554,15 @@ void gui::setupDma()
     i2c_labelFont.setItalic(true);
     i2c_labelFont.setBold(true);
     i2c_label->setFont(i2c_labelFont);
-    i2c_label->setGeometry(dev.xGap, dev.yGap*16 + dev.yLogo*3 + dev.yUnit*9, dev.xLogo, dev.yLogo);
+    i2c_label->setGeometry(w.xGap, w.yGap*16 + w.yLogo*3 + w.yUnit*9, w.xLogo, w.yLogo);
     /* DMA :: Row[1] */
     QLabel *dma_customLabel = new QLabel("[FPGA->CPU] Custom", this);
-    dma_customLabel->setGeometry(dev.xGap, dev.yGap*16 + dev.yLogo*4 + dev.yUnit*9, dev.xText, dev.yUnit);
+    dma_customLabel->setGeometry(w.xGap, w.yGap*16 + w.yLogo*4 + w.yUnit*9, w.xText, w.yUnit);
     m_dmaCustom_dataField = new QLineEdit(this);
-    m_dmaCustom_dataField->setGeometry(dev.xGap*2 + dev.xText, dev.yGap*16 + dev.yLogo*4 + dev.yUnit*9, dev.xUnit, dev.yUnit);
+    m_dmaCustom_dataField->setGeometry(w.xGap*2 + w.xText, w.yGap*16 + w.yLogo*4 + w.yUnit*9, w.xUnit, w.yUnit);
     m_dmaCustom_dataField->setText("0x01");
     QPushButton *dma_custom_exeButton = new QPushButton("EXE", this);
-    dma_custom_exeButton->setGeometry(dev.xGap*3 + dev.xText + dev.xUnit, dev.yGap*16 + dev.yLogo*4 + dev.yUnit*9, dev.xUnit, dev.yUnit);
+    dma_custom_exeButton->setGeometry(w.xGap*3 + w.xText + w.xUnit, w.yGap*16 + w.yLogo*4 + w.yUnit*9, w.xUnit, w.yUnit);
 
     auto dmaCustom = [this]()
     {
@@ -1028,9 +573,9 @@ void gui::setupDma()
 
     /* DMA :: Row[2] */
     QLabel *dma_singleLabel = new QLabel("[FPGA->CPU] Single", this);
-    dma_singleLabel->setGeometry(dev.xGap, dev.yGap*17 + dev.yLogo*4 + dev.yUnit*10, dev.xText, dev.yUnit);
+    dma_singleLabel->setGeometry(w.xGap, w.yGap*17 + w.yLogo*4 + w.yUnit*10, w.xText, w.yUnit);
     QPushButton *dma_single_exeButton = new QPushButton("EXE", this);
-    dma_single_exeButton->setGeometry(dev.xGap*3 + dev.xText + dev.xUnit, dev.yGap*17 + dev.yLogo*4 + dev.yUnit*10, dev.xUnit, dev.yUnit);
+    dma_single_exeButton->setGeometry(w.xGap*3 + w.xText + w.xUnit, w.yGap*17 + w.yLogo*4 + w.yUnit*10, w.xUnit, w.yUnit);
 
     auto dmaSingle = [this]()
     {
@@ -1041,9 +586,9 @@ void gui::setupDma()
 
     /* DMA :: Row[3] */
     QLabel *i2c_registerLabel = new QLabel("[FPGA->CPU] Sensor", this);
-    i2c_registerLabel->setGeometry(dev.xGap, dev.yGap*18 + dev.yLogo*4 + dev.yUnit*11, dev.xText, dev.yUnit);
+    i2c_registerLabel->setGeometry(w.xGap, w.yGap*18 + w.yLogo*4 + w.yUnit*11, w.xText, w.yUnit);
     QPushButton *dmaSensor_exeButton = new QPushButton("EXE", this);
-    dmaSensor_exeButton->setGeometry(dev.xGap*3 + dev.xText + dev.xUnit, dev.yGap*18 + dev.yLogo*4 + dev.yUnit*11, dev.xUnit, dev.yUnit);
+    dmaSensor_exeButton->setGeometry(w.xGap*3 + w.xText + w.xUnit, w.yGap*18 + w.yLogo*4 + w.yUnit*11, w.xUnit, w.yUnit);
 
     auto dmaSensor = [this]()
     {
@@ -1053,7 +598,7 @@ void gui::setupDma()
     connect(dmaSensor_exeButton, &QPushButton::clicked, this, dmaSensor);
 }
 
-void gui::setupFifo()
+void gui::setupCMD()
 {
     /* FIFO :: Row[0] */
     QLabel *i2c_label = new QLabel("CMD", this);
@@ -1062,10 +607,10 @@ void gui::setupFifo()
     i2c_labelFont.setItalic(true);
     i2c_labelFont.setBold(true);
     i2c_label->setFont(i2c_labelFont);
-    i2c_label->setGeometry(dev.xGap, dev.yGap*21 + dev.yLogo*4 + dev.yUnit*12, dev.xLogo, dev.yLogo);
+    i2c_label->setGeometry(800 + w.xGap, w.yGap, w.xLogo, w.yLogo);
 
     QPushButton *readOnlyButton = new QPushButton("READ", this);
-    readOnlyButton->setGeometry(dev.xGap, dev.yGap*22 + dev.yLogo*5 + dev.yUnit*12, dev.xUnit*2, dev.yUnit);
+    readOnlyButton->setGeometry(800 + w.xGap, w.yGap*2 + w.yLogo, w.xUnit*2, w.yUnit);
     readOnlyButton->setStyleSheet(
         "QPushButton {"
         "   background-color: blue;"
@@ -1098,7 +643,7 @@ void gui::setupFifo()
     connect(readOnlyButton, &QPushButton::clicked, this, readOnlyMode);
 
     QPushButton *idleButton = new QPushButton("IDLE", this);
-    idleButton->setGeometry(dev.xGap, dev.yGap*23 + dev.yLogo*5 + dev.yUnit*13, dev.xUnit*2, dev.yUnit);
+    idleButton->setGeometry(800 + w.xGap, w.yGap*3 + w.yUnit*3, w.xUnit*2, w.yUnit);
     idleButton->setStyleSheet(
         "QPushButton {"
         "   background-color: blue;"
@@ -1131,7 +676,7 @@ void gui::setupFifo()
     connect(idleButton, &QPushButton::clicked, this, idleMode);
 
     QPushButton *calibButton = new QPushButton("CALIB", this);
-    calibButton->setGeometry(dev.xGap, dev.yGap*24 + dev.yLogo*5 + dev.yUnit*14, dev.xUnit*2, dev.yUnit);
+    calibButton->setGeometry(800 + w.xGap, w.yGap*4 + w.yUnit*4, w.xUnit*2, w.yUnit);
     calibButton->setStyleSheet(
         "QPushButton {"
         "   background-color: blue;"
@@ -1200,11 +745,11 @@ std::string gui::vectorToString(interruptVectorType type)
         case VECTOR_DISABLE:            return "VECTOR_DISABLE";            /* Disable Pulse Controllers */
         case VECTOR_START:              return "VECTOR_START";              /* Start Measurement Acquisition */
         case VECTOR_STOP:               return "VECTOR_STOP";               /* Stop Measurement Acquisition */
-        case VECTOR_READ:               return "VECTOR_READ";               /* Read [x, y, z] From Accel and Gyro 12-Bytes */
         case VECTOR_OFFLOAD_SECONDARY:  return "VECTOR_OFFLOAD_SECONDARY";  /* Offload data from sensor FIFO */
-        case VECTOR_F1:                 return "VECTOR_F1";                 /* Undefined Function F1 */
-        case VECTOR_F2:                 return "VECTOR_F2";                 /* Undefined Function F2 */
-        case VECTOR_RETURN:             return "VECTOR_RETURN";             /* Initilize Return secondary SPI/DMA Transfer */
+        case VECTOR_FAST:               return "VECTOR_FAST";               /* Reset 2nd Fifo after 30000  ->  600us */
+        case VECTOR_SLOW:               return "VECTOR_SLOW";               /* Reset 2nd Fifo after 495000 -> 9900us */
+        case VECTOR_UNUSED_09:          return "VECTOR_UNUSED_09";
+        case VECTOR_UNUSED_10:          return "VECTOR_UNUSED_10";
         case VECTOR_UNUSED_11:          return "VECTOR_UNUSED_11";
         case VECTOR_UNUSED_12:          return "VECTOR_UNUSED_12";
         case VECTOR_UNUSED_13:          return "VECTOR_UNUSED_13";
@@ -1739,6 +1284,7 @@ void gui::deleteDroneControl()
         {
             interruptVector_execute(VECTOR_DISABLE);
             interruptVector_execute(VECTOR_STOP);
+            interruptVector_execute(VECTOR_SLOW);
         }
 
         m_isPulseControllerEnabled = true;
@@ -1765,6 +1311,25 @@ void gui::deleteDroneControl()
         m_startButton->setStyleSheet(
             "QPushButton {"
             "   background-color: green;"
+            "   color: white;"
+            "   font-size: 17px;"
+            "   font-weight: bold;"
+            "   border-radius: 10px;"
+            "   padding: 5px;"
+            "}"
+            "QPushButton:hover {"
+            "   background-color: darkblue;"
+            "}"
+            "QPushButton:pressed {"
+            "   background-color: black;"
+            "}"
+        );
+
+        m_isFastControl = true;
+        m_speedButton->setText("T.SLOW");
+        m_speedButton->setStyleSheet(
+            "QPushButton {"
+            "   background-color: blue;"
             "   color: white;"
             "   font-size: 17px;"
             "   font-weight: bold;"

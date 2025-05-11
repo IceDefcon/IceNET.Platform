@@ -13,11 +13,12 @@
 #include "scheduler.h"
 #include "watchdog.h"
 #include "spiWork.h"
-#include "isrCtrl.h"
+#include "irqCtrl.h"
 #include "ramDisk.h"
 #include "ramAxis.h"
 #include "network.h"
 #include "memory.h"
+#include "task.h"
 
 MODULE_VERSION("1.0");
 MODULE_LICENSE("GPL");

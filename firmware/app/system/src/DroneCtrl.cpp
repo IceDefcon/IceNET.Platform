@@ -228,8 +228,8 @@ void DroneCtrl::sendFpgaConfigToRamDisk()
 
 /* EVENT */ void DroneCtrl::waitDroneControlEvent()
 {
-    std::unique_lock<std::mutex> lock(m_eventMutex);
     std::cout << "[INFO] [ D ] DroneCtrlThread Wait" << std::endl;
+    std::unique_lock<std::mutex> lock(m_eventMutex);
 
     auto predicate = [this]()
     {
@@ -242,11 +242,11 @@ void DroneCtrl::sendFpgaConfigToRamDisk()
 
 /* EVENT */ void DroneCtrl::triggerDroneControlEvent()
 {
-    std::lock_guard<std::mutex> lock(m_eventMutex);
     std::cout << "[INFO] [ D ] DroneCtrlThread Event" << std::endl;
+    std::lock_guard<std::mutex> lock(m_eventMutex);
 
     m_stateChanged = true;
-    m_conditionalVariable.notify_one(); // Safe: no risk of lost wakeup
+    m_conditionalVariable.notify_one();
 }
 
 /* GET */ bool DroneCtrl::getKernelConnected()

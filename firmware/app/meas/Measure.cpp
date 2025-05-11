@@ -78,7 +78,7 @@ bool Measure::appendBuffer(int16_t x, int16_t y, int16_t z)
             m_index = 0;
         }
     }
-#if 1
+#if 0
     else
     {
         std::cout << "[INFO] [MEAS] Rejected ["
@@ -98,12 +98,12 @@ void Measure::averageBuffer()
     {
         sum_x += m_vectorBuffer[i].x;
         sum_y += m_vectorBuffer[i].y;
-        sum_z += m_vectorBuffer[i].z;
+        sum_z += (m_vectorBuffer[i].z + 8192);
     }
 
     m_average.x = static_cast<int16_t>(sum_x / VECTOR_BUFFER_LENGTH);
     m_average.y = static_cast<int16_t>(sum_y / VECTOR_BUFFER_LENGTH);
-    m_average.z = static_cast<int16_t>(sum_z / VECTOR_BUFFER_LENGTH) + 8192;
+    m_average.z = static_cast<int16_t>(sum_z / VECTOR_BUFFER_LENGTH);
 
     std::cout << std::fixed << std::setprecision(6);
     std::cout << "[INFO] [MEAS] [" << m_timeSinceBoot

@@ -8,6 +8,10 @@
 #ifndef GPIO_ISR_H
 #define GPIO_ISR_H
 
+#include <linux/kernel.h>
+#include <linux/module.h>
+#include <linux/gpio.h>
+#include <linux/interrupt.h>
 
 //////////////////////////
 //                      //
@@ -36,6 +40,26 @@
 // gpio-216 (GPIO09              |TIMER_INT_FROM_FPGA ) in  hi IRQ
 // gpio-168 (GPIO07              )RESET_FROM_CPU      ) out lo
 
+typedef struct
+{
+    int irqNumber;
+    char* gpioName;
+    char* irqName;
+    char* isrFunctionName;
+    unsigned long flags;
+    unsigned long irqFlags;
+    uint32_t gpioNumber;
+    irqreturn_t (*isrFunction)(int, void *);
+    spinlock_t isrLock;
+    int tryLock;
+}gpioInputProcessType;
+
+typedef struct
+{
+    char* gpioName;
+    uint32_t gpioNumber;
+}gpioOutputProcessType;
+
 typedef enum
 {
     GPIO_OUT_RESET_FPGA,
@@ -50,8 +74,11 @@ typedef enum
     GPIO_IN_AMOUNT
 }inputGpioType;
 
+/* CLEAR */ void clearIsrLock(void);
+
 void isrGpioInit(void);
 void isrGpioDestroy(void);
+
 
 #endif // GPIO_ISR_H
 

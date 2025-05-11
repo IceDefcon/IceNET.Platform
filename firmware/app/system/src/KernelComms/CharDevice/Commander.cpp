@@ -431,7 +431,7 @@ int Commander::closeDEV()
     if (!transferPointerRx || !transferPointerTx || !transferState)
     {
         std::cerr << "[ERROR] [CMD] One or more transfer pointers are null!" << std::endl;
-        return; // or throw
+        return;
     }
 
     m_Rx_CommanderVector = transferPointerRx;
@@ -441,8 +441,8 @@ int Commander::closeDEV()
 
 /* EVENT */ void Commander::waitCommanderEvent()
 {
-    std::unique_lock<std::mutex> lock(m_eventMutex);
     std::cout << "[INFO] [CMD] CommanderThread Wait" << std::endl;
+    std::unique_lock<std::mutex> lock(m_eventMutex);
 
     auto predicate = [this]()
     {
@@ -455,8 +455,8 @@ int Commander::closeDEV()
 
 /* EVENT */ void Commander::triggerCommanderEvent()
 {
-    std::lock_guard<std::mutex> lock(m_eventMutex);
     std::cout << "[INFO] [CMD] CommanderThread Event" << std::endl;
+    std::lock_guard<std::mutex> lock(m_eventMutex);
 
     m_stateChanged = true;
     m_conditionalVariable.notify_one();
