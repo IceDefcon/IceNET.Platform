@@ -15,6 +15,7 @@
 #include "ramAxis.h"
 #include "types.h"
 #include "config.h"
+#include "isrCtrl.h"
 
 ////////////////////////
 //                    //
@@ -364,6 +365,7 @@ void masterTransferSecondary(struct work_struct *work)
     /* Unlock  Kernel Commander Device to process */
     eventWakeUpDevice(DEVICE_COMMANDER);
 
+    unlockIsrMutex(); /* TODO Replace this with spin lock */
 }
 
 int spiInit(void)

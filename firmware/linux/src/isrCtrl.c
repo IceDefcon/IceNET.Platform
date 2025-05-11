@@ -25,8 +25,28 @@
 //                      //
 //////////////////////////
 
-/* ISR */
-static irqreturn_t InterruptFromFPGA_TimerISR(int irq, void *data)
+static isrProcessType isrProcess[ISR_AMOUNT] =
+{
+    [ISR_TIMER] =
+    {
+        .isrMutex = __MUTEX_INITIALIZER(isrProcess[ISR_TIMER].isrMutex),
+        .tryLock = 0,
+    },
+
+    [ISR_WATCHDOG] =
+    {
+        .isrMutex = __MUTEX_INITIALIZER(isrProcess[ISR_WATCHDOG].isrMutex),
+        .tryLock = 0,
+    },
+
+    [ISR_SPI] =
+    {
+        .isrMutex = __MUTEX_INITIALIZER(isrProcess[ISR_SPI].isrMutex),
+        .tryLock = 0,
+    },
+};
+
+/* ISR */ static irqreturn_t InterruptFromFPGA_TimerISR(int irq, void *data)
 {
     if(isShedulerReady())
     {
@@ -41,7 +61,7 @@ static irqreturn_t InterruptFromFPGA_TimerISR(int irq, void *data)
     return IRQ_HANDLED;
 }
 
-static irqreturn_t InterruptFromFPGA_WatchdogISR(int irq, void *data)
+/* ISR */ static irqreturn_t InterruptFromFPGA_WatchdogISR(int irq, void *data)
 {
     watchdogProcess* tmpProcess = watchdog_getProcess();
 
@@ -59,7 +79,7 @@ static irqreturn_t InterruptFromFPGA_WatchdogISR(int irq, void *data)
     return IRQ_HANDLED;
 }
 
-static irqreturn_t InterruptFromFPGA_SpiISR(int irq, void *data)
+/* ISR */ static irqreturn_t InterruptFromFPGA_SpiISR(int irq, void *data)
 {
 #if 0
     static int counter = 0;
@@ -67,9 +87,27 @@ static irqreturn_t InterruptFromFPGA_SpiISR(int irq, void *data)
     printk(KERN_INFO "[CTRL][ISR] Interrupt No[%d] received from FPGA @ Pin [%d] :: TODO Checksum comparsion\n", counter, GPIO_NUMBER_ACTIVATE_SECONDARY_DMA);
     counter++;
 #endif
-    /* QUEUE :: Execution of masterTransferSecondary */
-    queue_work(get_masterTransferSecondary_wq(), get_masterTransferSecondary_work());
+
+    /* Try */
+    isrProcess[ISR_SPI].tryLock = mutex_trylock(&isrProcess[ISR_SPI].isrMutex);
+
+    /* Check */
+    if (isrProcess[ISR_SPI].tryLock)
+    {
+        /* QUEUE :: Execution of masterTransferSecondary */
+        queue_work(get_masterTransferSecondary_wq(), get_masterTransferSecondary_work());
+    }
+    else
+    {
+        printk(KERN_INFO "[CTRL][ISR] ISR mutex is already held, skipping\n");
+    }
+
     return IRQ_HANDLED;
+}
+
+/* UNLOCK */ void unlockIsrMutex(void)
+{
+    mutex_unlock(&isrProcess[ISR_SPI].isrMutex);
 }
 
 static int initializeInterruptFromCPU(outputGpioType outGpio)
@@ -137,6 +175,7 @@ static int initializeInterruptFromFpga(inputGpioType inputGpio)
     int irq_kernel;
     char* irqProcess;
     char* isrFunctionName;
+    unsigned long flags;
     uint32_t gpioNumber;
     irqreturn_t (*isrFunction)(int, void *);
 
@@ -145,6 +184,7 @@ static int initializeInterruptFromFpga(inputGpioType inputGpio)
         case GPIO_IN_ACTIVATE_SECONDARY_DMA:
             gpioNumber = GPIO_NUMBER_ACTIVATE_SECONDARY_DMA;
             isrFunction = InterruptFromFPGA_SpiISR;
+            flags = IRQF_TRIGGER_RISING;
             isrFunctionName = "InterruptFromFPGA_SpiISR";
             irqProcess = "Activate SPI.1";
             break;
@@ -152,6 +192,7 @@ static int initializeInterruptFromFpga(inputGpioType inputGpio)
         case GPIO_IN_SCHEDULER_TIMER:
             gpioNumber = GPIO_NUMBER_SCHEDULER_TIMER;
             isrFunction = InterruptFromFPGA_TimerISR;
+            flags = IRQF_TRIGGER_RISING;
             isrFunctionName = "InterruptFromFPGA_TimerISR";
             irqProcess = "Scheduler Pulse";
             break;
@@ -159,6 +200,7 @@ static int initializeInterruptFromFpga(inputGpioType inputGpio)
         case GPIO_IN_WATCHDOG_TICK:
             gpioNumber = GPIO_NUMBER_WATCHDOG_TICK;
             isrFunction = InterruptFromFPGA_WatchdogISR;
+            flags = IRQF_TRIGGER_RISING;
             isrFunctionName = "InterruptFromFPGA_WatchdogISR";
             irqProcess = "Watchdog Tick";
             break;
@@ -205,7 +247,7 @@ static int initializeInterruptFromFpga(inputGpioType inputGpio)
         printk(KERN_ERR "[INIT][ISR] Setup GPIO Pin [%d] Interrupt\n", gpioNumber);
     }
 
-    result = request_irq(irq_kernel, isrFunction, IRQF_TRIGGER_RISING, irqProcess, NULL);
+    result = request_irq(irq_kernel, isrFunction, flags, irqProcess, NULL);
     if (result < 0)
     {
         printk(KERN_ERR "[INIT][ISR] Failed to request IRQ number :: Pin [%d]\n", gpioNumber);
@@ -215,6 +257,11 @@ static int initializeInterruptFromFpga(inputGpioType inputGpio)
     else
     {
         printk(KERN_ERR "[INIT][ISR] Setup GPIO Pin [%d] Register %s\n", gpioNumber, isrFunctionName);
+    }
+
+    if(GPIO_IN_ACTIVATE_SECONDARY_DMA == inputGpio)
+    {
+        mutex_init(&isrProcess[ISR_SPI].isrMutex);
     }
 
     return result;

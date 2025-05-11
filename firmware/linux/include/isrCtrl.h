@@ -36,6 +36,20 @@
 // gpio-216 (GPIO09              |TIMER_INT_FROM_FPGA ) in  hi IRQ
 // gpio-168 (GPIO07              )RESET_FROM_CPU      ) out lo
 
+typedef struct
+{
+    struct mutex isrMutex;
+    int tryLock;
+}isrProcessType;
+
+typedef enum
+{
+    ISR_TIMER,
+    ISR_WATCHDOG,
+    ISR_SPI,
+    ISR_AMOUNT,
+}isrType;
+
 typedef enum
 {
     GPIO_OUT_RESET_FPGA,
@@ -52,6 +66,8 @@ typedef enum
 
 void isrGpioInit(void);
 void isrGpioDestroy(void);
+
+/* UNLOCK */ void unlockIsrMutex(void);
 
 #endif // GPIO_ISR_H
 
