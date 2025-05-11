@@ -128,6 +128,8 @@ port
     LOGIC_CH4 : out std_logic; -- PIN_C22
     LOGIC_CH5 : out std_logic; -- PIN_D21
     LOGIC_CH6 : out std_logic; -- PIN_D22
+    LOGIC_CH7 : out std_logic; -- PIN_E21
+    LOGIC_CH8 : out std_logic; -- PIN_E22
 
     -----------------------------------------------------------------------------
     -- Kernel Communication
@@ -380,7 +382,7 @@ signal data_spi_bmi160_s2_feedback : std_logic_vector(7 downto 0) := "00010110";
 signal data_spi_bmi160_s3_feedback : std_logic_vector(7 downto 0) := "00010111";
 signal data_pwm_feedback : std_logic_vector(7 downto 0) := "11000011";
 -- Interrupts
-signal feedback_interrupt_timer : std_logic_vector(6 downto 0) := (others => '0');
+signal feedback_interrupt_timer : std_logic_vector(12 downto 0) := (others => '0');
 -- UART
 signal uart_write_enable : std_logic := '0';
 signal uart_write_symbol : std_logic_vector(6 downto 0) := (others => '0');
@@ -1322,7 +1324,7 @@ begin
         or interrupt_spi_rf_feedback = '1'
         or return_vector_extension = '1' -- TODO :: Extension
         then
-            if feedback_interrupt_timer = "1100100" then -- 100 * 20 = 2000ns = 1us interrupt pulse back to CPU
+            if feedback_interrupt_timer = "1001110001000" then -- 5000 * 20 = 100us interrupt pulse back to CPU
                 SPI_INT_FROM_FPGA <= '0';
                 feedbck_interrupt_logic <= '0';
                 return_vector_extension <= '0';
@@ -2218,13 +2220,13 @@ port map
 --end process;
 
 
-LOGIC_CH1 <= sensor_fifo_empty;
+LOGIC_CH1 <= acquisition_ctrl_BMI160_S1_SCLK;
 LOGIC_CH2 <= SECONDARY_SCLK;
 LOGIC_CH3 <= SECONDARY_MOSI;
 LOGIC_CH4 <= feedbck_interrupt_logic;
 LOGIC_CH5 <= offload_debug;
-LOGIC_CH6 <= acquisition_ctrl_BMI160_S1_SCLK;
-
+LOGIC_CH6 <= sensor_fifo_empty;
+LOGIC_CH7 <= sensor_fifo_full;
 
 ------------------------------------------------------------------------------------------------------------------------------------------
 --
