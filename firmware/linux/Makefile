@@ -3,7 +3,7 @@ obj-m += iceDriver.o
 iceDriver-objs := \
     src/charDevice.o \
     src/charDeviceCfg.o \
-    src/isrCtrl.o \
+    src/irqCtrl.o \
     src/main.o \
     src/spiDmaCtrl.o \
     src/spiWork.o \

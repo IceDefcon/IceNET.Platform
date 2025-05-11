@@ -15,7 +15,7 @@
 #include "ramAxis.h"
 #include "types.h"
 #include "config.h"
-#include "isrCtrl.h"
+#include "irqCtrl.h"
 
 ////////////////////////
 //                    //
@@ -220,6 +220,7 @@ static int spiDmaInit(spiDeviceType spiDeviceEnum, dmaConfigType dmaConfig)
     Device[spiDeviceEnum].Dma.spiTransfer.tx_buf = (void *)dmaTransfer->RxData;
     Device[spiDeviceEnum].Dma.spiTransfer.rx_buf = (void *)dmaTransfer->TxData;
     Device[spiDeviceEnum].Dma.spiTransfer.cs_change = 1;
+    Device[spiDeviceEnum].Dma.spiTransfer.delay_usecs = 100; /* Max 100us for CS to be Low */
     Device[spiDeviceEnum].Dma.spiTransfer.speed_hz = Device[spiDeviceEnum].spiDevice->max_speed_hz;
 
     spi_message_init(&Device[spiDeviceEnum].Dma.spiMessage);
@@ -243,6 +244,34 @@ static int spiDmaDestroy(spiDeviceType spiDeviceEnum)
     }
 
     return 0;
+}
+
+/* TEST */ static bool isConfDone(void)
+{
+    bool ret = false;
+
+    if(false == dmaCtrl.configDone)
+    {
+        if(isPayloadReady())
+        {
+            dmaCtrl.configCount++; /* Register */
+            dmaCtrl.configCount++; /* Data */
+
+            if(dmaCtrl.configCount == getPayloadBytesAmount())
+            {
+                printk(KERN_INFO "[CTRL][SPI] FPGA Devices payload count[%d] vs [%d]\n", dmaCtrl.configCount, getPayloadBytesAmount());
+                printk(KERN_INFO "[CTRL][SPI] FPGA Devices responded Successfully\n");
+                dmaCtrl.configDone = true;
+                ret = true;
+            }
+            else
+            {
+                printk(KERN_INFO "[CTRL][SPI] FPGA Devices payload count[%d] vs [%d]\n", dmaCtrl.configCount, getPayloadBytesAmount());
+            }
+        }
+    }
+
+    return ret;
 }
 
 void masterTransferPrimary(struct work_struct *work)
@@ -292,34 +321,6 @@ void masterTransferPrimary(struct work_struct *work)
     return dmaCtrl.configDone;
 }
 
-/* TEST */ static bool isConfDone(void)
-{
-    bool ret = false;
-
-    if(false == dmaCtrl.configDone)
-    {
-        if(isPayloadReady())
-        {
-            dmaCtrl.configCount++; /* Register */
-            dmaCtrl.configCount++; /* Data */
-
-            if(dmaCtrl.configCount == getPayloadBytesAmount())
-            {
-                printk(KERN_INFO "[CTRL][SPI] FPGA Devices payload count[%d] vs [%d]\n", dmaCtrl.configCount, getPayloadBytesAmount());
-                printk(KERN_INFO "[CTRL][SPI] FPGA Devices responded Successfully\n");
-                dmaCtrl.configDone = true;
-                ret = true;
-            }
-            else
-            {
-                printk(KERN_INFO "[CTRL][SPI] FPGA Devices payload count[%d] vs [%d]\n", dmaCtrl.configCount, getPayloadBytesAmount());
-            }
-        }
-    }
-
-    return ret;
-}
-
 void masterTransferSecondary(struct work_struct *work)
 {
 #if 0
@@ -351,6 +352,10 @@ void masterTransferSecondary(struct work_struct *work)
         printk(KERN_INFO "[CTRL][SPI] Secondary FPGA Transfer :: Byte[%d]: [Feedback] Tx[0x%02x] [Data] Rx[0x%02x]\n", i, tx_buf[i], rx_buf[i]);
     }
 #endif
+
+    /* Release the spin lock */
+    clearIsrLock();
+
     /**
      *
      * TODO
@@ -364,8 +369,6 @@ void masterTransferSecondary(struct work_struct *work)
 
     /* Unlock  Kernel Commander Device to process */
     eventWakeUpDevice(DEVICE_COMMANDER);
-
-    unlockIsrMutex(); /* TODO Replace this with spin lock */
 }
 
 int spiInit(void)

@@ -15,7 +15,7 @@
 #include "charDevice.h"
 #include "spiDmaCtrl.h"
 #include "watchdog.h"
-#include "isrCtrl.h"
+#include "irqCtrl.h"
 #include "spiWork.h"
 #include "ramAxis.h"
 #include "memory.h"

@@ -8,6 +8,10 @@
 #ifndef GPIO_ISR_H
 #define GPIO_ISR_H
 
+#include <linux/kernel.h>
+#include <linux/module.h>
+#include <linux/gpio.h>
+#include <linux/interrupt.h>
 
 //////////////////////////
 //                      //
@@ -38,17 +42,23 @@
 
 typedef struct
 {
-    struct mutex isrMutex;
+    int irqNumber;
+    char* gpioName;
+    char* irqName;
+    char* isrFunctionName;
+    unsigned long flags;
+    unsigned long irqFlags;
+    uint32_t gpioNumber;
+    irqreturn_t (*isrFunction)(int, void *);
+    spinlock_t isrLock;
     int tryLock;
-}isrProcessType;
+}gpioInputProcessType;
 
-typedef enum
+typedef struct
 {
-    ISR_TIMER,
-    ISR_WATCHDOG,
-    ISR_SPI,
-    ISR_AMOUNT,
-}isrType;
+    char* gpioName;
+    uint32_t gpioNumber;
+}gpioOutputProcessType;
 
 typedef enum
 {
@@ -64,10 +74,11 @@ typedef enum
     GPIO_IN_AMOUNT
 }inputGpioType;
 
+/* CLEAR */ void clearIsrLock(void);
+
 void isrGpioInit(void);
 void isrGpioDestroy(void);
 
-/* UNLOCK */ void unlockIsrMutex(void);
 
 #endif // GPIO_ISR_H
 
