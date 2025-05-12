@@ -42,8 +42,8 @@ type OFFLOAD_TYPE is
     OFFLOAD_DONE
 );
 signal offload_state: OFFLOAD_TYPE := OFFLOAD_IDLE;
-signal check_delay : integer := 500000;
-signal offload_counter : integer range 0 to 500000 := 0;
+signal check_delay : integer := 400000;
+signal offload_counter : integer range 0 to 400000 := 0;
 signal offload_fifo_empty_counter : integer range 0 to 256 := 0;
 begin
 
