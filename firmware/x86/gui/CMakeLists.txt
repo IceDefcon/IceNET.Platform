@@ -14,6 +14,18 @@ find_package(Qt5 REQUIRED COMPONENTS Core Gui Widgets Network)
 find_package(OpenCV REQUIRED)
 include_directories(${OpenCV_INCLUDE_DIRS})
 
+# Find GStreamer
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(GSTREAMER REQUIRED gstreamer-1.0 gstreamer-app-1.0 gstreamer-video-1.0)
+
+include_directories(
+    ${GSTREAMER_INCLUDE_DIRS}
+)
+
+link_directories(
+    ${GSTREAMER_LIBRARY_DIRS}
+)
+
 # Add source files
 set(SOURCES
     main.cpp
@@ -26,11 +38,12 @@ set(HEADERS
 
 add_executable(receiver ${SOURCES} ${HEADERS})
 
-# Link Qt and OpenCV
+# Link libraries
 target_link_libraries(receiver
     Qt5::Core
     Qt5::Gui
     Qt5::Widgets
     Qt5::Network
     ${OpenCV_LIBS}
+    ${GSTREAMER_LIBRARIES}
 )
