@@ -42,31 +42,50 @@ static const mainConsoleType c =
 }
 
 gui::gui() :
-m_Rx_GuiVector(std::make_shared<std::vector<uint8_t>>(IO_TRANSFER_SIZE)),
-m_Tx_GuiVector(std::make_shared<std::vector<uint8_t>>(IO_TRANSFER_SIZE)),
-m_IO_GuiState(std::make_shared<ioStateType>(IO_COM_IDLE)),
-m_isPulseControllerEnabled(true),
-m_isStartAcquisition(true),
-m_isFastControl(true)
+    m_Rx_GuiVector(std::make_shared<std::vector<uint8_t>>(IO_TRANSFER_SIZE)),
+    m_Tx_GuiVector(std::make_shared<std::vector<uint8_t>>(IO_TRANSFER_SIZE)),
+    m_IO_GuiState(std::make_shared<ioStateType>(IO_COM_IDLE)),
+    m_isPulseControllerEnabled(true),
+    m_isStartAcquisition(true),
+    m_isFastControl(true),
+    m_cameraWindow(nullptr)
 {
     qDebug() << "[MAIN] [CONSTRUCTOR]" << this << "::  gui";
 
     setupWindow();
-
     setupMainConsole();
     setupUartConsole();
-
     setupFpgaCtrl();
     setupDroneControl();
-
     setupI2C();
     setupSPI();
     setupPWM();
     setupDMA();
     setupCMD();
-
     setupSeparators();
+
+    // Add camera button
+    QPushButton *m_cameraButton = new QPushButton("CAMERA", this);
+    m_cameraButton->setGeometry(800 - w.xGap*1 - w.xUnit*2, w.yGap*2 + w.yLogo, w.xUnit*2, w.yUnit);
+    m_cameraButton->setStyleSheet(
+        "QPushButton {"
+        "   background-color: blue;"
+        "   color: white;"
+        "   font-size: 17px;"
+        "   font-weight: bold;"
+        "   border-radius: 10px;"
+        "   padding: 5px;"
+        "}"
+        "QPushButton:hover {"
+        "   background-color: darkblue;"
+        "}"
+        "QPushButton:pressed {"
+        "   background-color: black;"
+        "}"
+    );
+    connect(m_cameraButton, &QPushButton::clicked, this, &gui::openCameraWindow);
 }
+
 
 gui::~gui()
 {
@@ -1386,3 +1405,55 @@ void gui::C4_Execute()
     //
 }
 
+void gui::updateCameraFrame()
+{
+    if (!m_cap.isOpened())
+    {
+        qWarning() << "[Camera] Video capture not opened.";
+        return;
+    }
+
+    cv::Mat frame;
+    if (!m_cap.read(frame))
+    {
+        qWarning() << "[Camera] Failed to read frame.";
+        return;
+    }
+
+    if (frame.empty())
+    {
+        qWarning() << "[Camera] Captured empty frame.";
+        return;
+    }
+
+    // Convert BGR (OpenCV default) to RGB (Qt expects RGB)
+    cv::cvtColor(frame, frame, cv::COLOR_BGR2RGB);
+
+    // Convert cv::Mat to QImage
+    QImage image((const uchar*)frame.data, frame.cols, frame.rows, frame.step, QImage::Format_RGB888);
+
+    // Display the image on QLabel
+    m_cameraDisplay->setPixmap(QPixmap::fromImage(image).scaled(m_cameraDisplay->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation));
+}
+
+void gui::openCameraWindow()
+{
+    if (!m_cameraWindow)
+    {
+        m_cameraWindow = new CameraWindow();
+        m_cameraWindow->setAttribute(Qt::WA_DeleteOnClose);
+        m_cameraWindow->show();
+
+        auto cameraWindow = [this]()
+        {
+            m_cameraWindow = nullptr;
+        };
+
+        connect(m_cameraWindow, &QObject::destroyed, this, cameraWindow);
+    }
+    else
+    {
+        m_cameraWindow->raise();
+        m_cameraWindow->activateWindow();
+    }
+}

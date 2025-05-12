@@ -12,12 +12,17 @@ set(CMAKE_AUTOMOC ON)
 # Qt Setup
 find_package(Qt5 REQUIRED COMPONENTS Core Gui Widgets SerialPort)
 
+# OpenCV Setup
+find_package(OpenCV REQUIRED)
+include_directories(${OpenCV_INCLUDE_DIRS})
+
 # Source files
 set(SOURCES
     main.cpp
     gui/gui.cpp
     meas/Measure.cpp
     gui/peripherals.cpp
+    gui/CameraWindow.cpp
     system/src/DroneCtrl.cpp
     system/src/KernelComms/KernelComms.cpp
     system/src/KernelComms/BlockDevice/RamDisk.cpp
@@ -29,6 +34,7 @@ set(SOURCES
 set(HEADERS
     gui/gui.h
     meas/Measure.h
+    gui/CameraWindow.h
     system/include/Core.h
     system/include/Types.h
     system/include/DroneCtrl.h
@@ -53,11 +59,12 @@ add_executable(app ${SOURCES} ${HEADERS})
 
 find_package(Threads REQUIRED)
 
-# Link Qt
+# Link Qt and OpenCV libraries
 target_link_libraries(app
     Qt5::Core
     Qt5::Gui
     Qt5::Widgets
     Qt5::SerialPort
     Threads::Threads
+    ${OpenCV_LIBS}  # Add OpenCV libraries
 )

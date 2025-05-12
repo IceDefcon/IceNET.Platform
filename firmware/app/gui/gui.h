@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <opencv2/opencv.hpp>
 #include <QSerialPortInfo>
 #include <QPlainTextEdit>
 #include <QApplication>
@@ -18,18 +19,23 @@
 #include <QLineEdit>
 #include <QCheckBox>
 #include <QPainter>
+#include <QPixmap>
+#include <QDialog>
 #include <QWidget>
 #include <QObject>
 #include <QThread>
 #include <QDebug>
+#include <QImage>
 #include <QLabel>
 #include <QTimer>
 #include <QFont>
 
-#include "DroneCtrl.h"
 #include <thread>
 #include <mutex>
 #include <cmath>
+
+#include "DroneCtrl.h"
+#include "CameraWindow.h"
 
 typedef struct
 {
@@ -99,6 +105,14 @@ class gui : public QWidget
     bool m_isStartAcquisition;
     bool m_isFastControl;
 
+    QLabel *m_cameraDisplay;
+    QTimer *m_videoTimer;
+    cv::VideoCapture m_cap;
+
+    CameraWindow* m_cameraWindow;
+
+    QPushButton *m_cameraButton;
+
 private slots:
 
     /* GET */ const mainWindowType* getMainWindow();
@@ -152,4 +166,7 @@ private slots:
     void C2_Execute();
     void C3_Execute();
     void C4_Execute();
+
+    void updateCameraFrame();
+    void openCameraWindow();
 };
