@@ -59,12 +59,22 @@ add_executable(app ${SOURCES} ${HEADERS})
 
 find_package(Threads REQUIRED)
 
-# Link Qt and OpenCV libraries
+# GStreamer setup using pkg-config
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(GSTREAMER REQUIRED gstreamer-1.0>=1.14 gstreamer-base-1.0)
+
+# Include and link GStreamer
+include_directories(${GSTREAMER_INCLUDE_DIRS})
+link_directories(${GSTREAMER_LIBRARY_DIRS})
+add_definitions(${GSTREAMER_CFLAGS_OTHER})
+
+# Add GStreamer to your target
 target_link_libraries(app
     Qt5::Core
     Qt5::Gui
     Qt5::Widgets
     Qt5::SerialPort
     Threads::Threads
-    ${OpenCV_LIBS}  # Add OpenCV libraries
+    ${OpenCV_LIBS}
+    ${GSTREAMER_LIBRARIES}
 )
