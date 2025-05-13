@@ -20,7 +20,7 @@ CameraWindow::CameraWindow() :
     m_cameraDisplay->setAlignment(Qt::AlignCenter);
     m_cameraDisplay->setStyleSheet("background-color: black");
 
-    // Open the default camera
+    /* Open the default camera -> /dev/video0 */
     m_cap.open(0);
 
     if (!m_cap.isOpened())
@@ -29,17 +29,20 @@ CameraWindow::CameraWindow() :
         return;
     }
 
-    // Define GStreamer pipeline
-    std::string gstPipeline =
-        "appsrc ! videoconvert ! x264enc tune=zerolatency bitrate=500 speed-preset=ultrafast "
+    /* Set a lower resolution -> 320x240, 640x480 */
+    m_cap.set(cv::CAP_PROP_FRAME_WIDTH, 640);
+    m_cap.set(cv::CAP_PROP_FRAME_HEIGHT, 480);
+
+    double actualWidth = m_cap.get(cv::CAP_PROP_FRAME_WIDTH);
+    double actualHeight = m_cap.get(cv::CAP_PROP_FRAME_HEIGHT);
+    qDebug() << "[CameraWindow] Actual camera resolution:" << actualWidth << "x" << actualHeight;
+
+    /* GStreamer pipeline */
+    std::string gstPipeline = "appsrc ! videoconvert ! x264enc tune=zerolatency bitrate=500 speed-preset=ultrafast "
         "! rtph264pay config-interval=1 pt=96 ! udpsink host=192.168.8.101 port=5000";
 
-    // Get the camera resolution
-    int width = static_cast<int>(m_cap.get(cv::CAP_PROP_FRAME_WIDTH));
-    int height = static_cast<int>(m_cap.get(cv::CAP_PROP_FRAME_HEIGHT));
-
-    // Open the GStreamer writer
-    m_writer.open(gstPipeline, 0, 30, cv::Size(width, height), true);
+    /* Open GStreamer writer */
+    m_writer.open(gstPipeline, 0, 30, cv::Size(640, 480), true);
 
     if (!m_writer.isOpened())
     {
@@ -47,7 +50,7 @@ CameraWindow::CameraWindow() :
     }
 
     connect(m_videoTimer, &QTimer::timeout, this, &CameraWindow::updateCameraFrame);
-    m_videoTimer->start(33); // ~30 FPS
+    m_videoTimer->start(33); /* 30 FPS -> 1/30 = 0.0333 */
 }
 
 CameraWindow::~CameraWindow()
@@ -75,13 +78,17 @@ void CameraWindow::updateCameraFrame()
     cv::Mat frame;
     if (m_cap.read(frame))
     {
-        // Write to GStreamer pipeline
+        /* Force resize to 640x480 before sending */
+        cv::resize(frame, frame, cv::Size(640, 480));
+
+        qDebug() << "[CameraWindow] Sending frame:" << frame.cols << "x" << frame.rows;
+
+        /* Send to GStreamer */
         if (m_writer.isOpened())
         {
             m_writer.write(frame);
         }
 
-        // Display in Qt window
         cv::Mat rgbFrame;
         cv::cvtColor(frame, rgbFrame, cv::COLOR_BGR2RGB);
         QImage image(rgbFrame.data, rgbFrame.cols, rgbFrame.rows, rgbFrame.step, QImage::Format_RGB888);
