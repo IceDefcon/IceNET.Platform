@@ -12,7 +12,9 @@ set(CMAKE_AUTOMOC ON)
 # Qt Setup
 find_package(Qt5 REQUIRED COMPONENTS Core Gui Widgets SerialPort)
 
-# OpenCV Setup
+# --- OpenCV 4.12 Setup ---
+# Replace this path with the actual location of your OpenCV 4.12 installation
+set(OpenCV_DIR "/opt/opencv-4.12/share/OpenCV")
 find_package(OpenCV REQUIRED)
 include_directories(${OpenCV_INCLUDE_DIRS})
 
@@ -57,18 +59,9 @@ include_directories(
 # Define the executable
 add_executable(app ${SOURCES} ${HEADERS})
 
+# Link Qt and OpenCV libraries
 find_package(Threads REQUIRED)
 
-# GStreamer setup using pkg-config
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(GSTREAMER REQUIRED gstreamer-1.0>=1.14 gstreamer-base-1.0)
-
-# Include and link GStreamer
-include_directories(${GSTREAMER_INCLUDE_DIRS})
-link_directories(${GSTREAMER_LIBRARY_DIRS})
-add_definitions(${GSTREAMER_CFLAGS_OTHER})
-
-# Add GStreamer to your target
 target_link_libraries(app
     Qt5::Core
     Qt5::Gui
@@ -76,5 +69,4 @@ target_link_libraries(app
     Qt5::SerialPort
     Threads::Threads
     ${OpenCV_LIBS}
-    ${GSTREAMER_LIBRARIES}
 )
