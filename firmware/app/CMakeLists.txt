@@ -12,12 +12,19 @@ set(CMAKE_AUTOMOC ON)
 # Qt Setup
 find_package(Qt5 REQUIRED COMPONENTS Core Gui Widgets SerialPort)
 
+# --- OpenCV 4.12 Setup ---
+# Replace this path with the actual location of your OpenCV 4.12 installation
+set(OpenCV_DIR "/opt/opencv-4.12/share/OpenCV")
+find_package(OpenCV REQUIRED)
+include_directories(${OpenCV_INCLUDE_DIRS})
+
 # Source files
 set(SOURCES
     main.cpp
     gui/gui.cpp
     meas/Measure.cpp
     gui/peripherals.cpp
+    gui/CameraWindow.cpp
     system/src/DroneCtrl.cpp
     system/src/KernelComms/KernelComms.cpp
     system/src/KernelComms/BlockDevice/RamDisk.cpp
@@ -29,6 +36,7 @@ set(SOURCES
 set(HEADERS
     gui/gui.h
     meas/Measure.h
+    gui/CameraWindow.h
     system/include/Core.h
     system/include/Types.h
     system/include/DroneCtrl.h
@@ -51,13 +59,14 @@ include_directories(
 # Define the executable
 add_executable(app ${SOURCES} ${HEADERS})
 
+# Link Qt and OpenCV libraries
 find_package(Threads REQUIRED)
 
-# Link Qt
 target_link_libraries(app
     Qt5::Core
     Qt5::Gui
     Qt5::Widgets
     Qt5::SerialPort
     Threads::Threads
+    ${OpenCV_LIBS}
 )
