@@ -24,7 +24,7 @@ set(SOURCES
     gui/gui.cpp
     meas/Measure.cpp
     gui/peripherals.cpp
-    gui/CameraWindow.cpp
+    gui/UsbCamera.cpp
     system/src/DroneCtrl.cpp
     system/src/KernelComms/KernelComms.cpp
     system/src/KernelComms/BlockDevice/RamDisk.cpp
@@ -36,7 +36,7 @@ set(SOURCES
 set(HEADERS
     gui/gui.h
     meas/Measure.h
-    gui/CameraWindow.h
+    gui/UsbCamera.h
     system/include/Core.h
     system/include/Types.h
     system/include/DroneCtrl.h

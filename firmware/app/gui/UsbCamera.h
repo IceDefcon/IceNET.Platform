@@ -1,18 +1,27 @@
-#ifndef CAMERA_WINDOW_H
-#define CAMERA_WINDOW_H
+/*!
+ *
+ * Author: Ice.Marek
+ * IceNET Technology 2025
+ *
+ */
+#pragma once
 
+#include <opencv2/opencv.hpp>
+#include <QVBoxLayout>
+#include <QPixmap>
 #include <QDialog>
+#include <QDebug>
+#include <QImage>
 #include <QLabel>
 #include <QTimer>
-#include <opencv2/opencv.hpp>
 
-class CameraWindow : public QDialog
+class UsbCamera : public QDialog
 {
     Q_OBJECT
 
 public:
-    CameraWindow();
-    ~CameraWindow();
+    UsbCamera();
+    ~UsbCamera();
 
 private slots:
     void updateCameraFrame();
@@ -23,5 +32,3 @@ private:
     cv::VideoCapture m_cap;
     cv::VideoWriter m_writer;  // <<--- Added for GStreamer
 };
-
-#endif // CAMERA_WINDOW_H

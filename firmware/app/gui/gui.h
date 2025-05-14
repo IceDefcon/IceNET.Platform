@@ -4,7 +4,6 @@
  * IceNET Technology 2025
  *
  */
-
 #pragma once
 
 #include <opencv2/opencv.hpp>
@@ -35,7 +34,7 @@
 #include <cmath>
 
 #include "DroneCtrl.h"
-#include "CameraWindow.h"
+#include "UsbCamera.h"
 
 typedef struct
 {
@@ -109,7 +108,7 @@ class gui : public QWidget
     QTimer *m_videoTimer;
     cv::VideoCapture m_cap;
 
-    CameraWindow* m_cameraWindow;
+    UsbCamera* m_UsbCamera;
 
     QPushButton *m_cameraButton;
 
@@ -167,6 +166,5 @@ private slots:
     void C3_Execute();
     void C4_Execute();
 
-    void updateCameraFrame();
-    void openCameraWindow();
+    void openUsbCamera();
 };

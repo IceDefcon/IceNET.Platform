@@ -1,14 +1,16 @@
-#include "CameraWindow.h"
-#include <QVBoxLayout>
-#include <QDebug>
-#include <QImage>
-#include <QPixmap>
+/*!
+ *
+ * Author: Ice.Marek
+ * IceNET Technology 2025
+ *
+ */
+#include "UsbCamera.h"
 
-CameraWindow::CameraWindow() :
+UsbCamera::UsbCamera() :
     m_cameraDisplay(new QLabel(this)),
     m_videoTimer(new QTimer(this))
 {
-    qDebug() << "[CAM] [CONSTRUCTOR]" << this << "::  CameraWindow";
+    qDebug() << "[CAM] [CONSTRUCTOR]" << this << "::  UsbCamera";
 
     setWindowTitle("Camera Feed");
     resize(640, 480);
@@ -20,17 +22,19 @@ CameraWindow::CameraWindow() :
     m_cameraDisplay->setAlignment(Qt::AlignCenter);
     m_cameraDisplay->setStyleSheet("background-color: black");
 
-    /* Open the default camera -> /dev/video0 */
-    m_cap.open("/dev/video0");
+    m_cap.open("/dev/video1", cv::CAP_V4L2);
 
     if (!m_cap.isOpened())
     {
-        qWarning() << "[CameraWindow] Failed to open camera.";
+        qWarning() << "[CAM] Failed to open camera.";
         return;
     }
 
     /**
-     * v4l2-ctl --list-formats-ext
+     * v4l2-ctl --device=/dev/video1 --all
+     * v4l2-ctl --device=/dev/video1 --list-formats-ext
+     * v4l2-ctl --device=/dev/video1 --stream-mmap=3 --stream-to=test0.raw --stream-count=1
+     * v4l2-ctl --device=/dev/video1 --get-fmt-video
      *
      * Pixel Format: 'MJPG' (compressed)
      * Name        : Motion-JPEG
@@ -47,23 +51,17 @@ CameraWindow::CameraWindow() :
      */
     m_cap.set(cv::CAP_PROP_FRAME_WIDTH, 1280);
     m_cap.set(cv::CAP_PROP_FRAME_HEIGHT, 720);
-    /**
-     * By default we have:
-     *
-     * m_cap.set(cv::CAP_PROP_FOURCC, cv::VideoWriter::fourcc('Y', 'U', 'Y', 'V'));
-     *
-     */
     m_cap.set(cv::CAP_PROP_FOURCC, cv::VideoWriter::fourcc('M', 'J', 'P', 'G'));
 
     double actualWidth = m_cap.get(cv::CAP_PROP_FRAME_WIDTH);
     double actualHeight = m_cap.get(cv::CAP_PROP_FRAME_HEIGHT);
-    qDebug() << "[CameraWindow] Actual camera resolution:" << actualWidth << "x" << actualHeight;
+    qDebug() << "[CAM] Actual camera resolution:" << actualWidth << "x" << actualHeight;
 
     int fourcc = m_cap.get(cv::CAP_PROP_FOURCC);
-    qDebug() << "Camera FourCC: " << fourcc;
+    qDebug() << "[CAM] Camera FourCC: " << fourcc;
 
     double fps = m_cap.get(cv::CAP_PROP_FPS);
-    qDebug() << "Camera FPS: " << fps;
+    qDebug() << "[CAM] Camera FPS: " << fps;
 
     /* GStreamer pipeline */
     std::string gstPipeline = "appsrc ! videoconvert ! x264enc tune=zerolatency bitrate=500 speed-preset=ultrafast "
@@ -74,16 +72,16 @@ CameraWindow::CameraWindow() :
 
     if (!m_writer.isOpened())
     {
-        qWarning() << "[CameraWindow] Failed to open GStreamer pipeline.";
+        qWarning() << "[CAM] Failed to open GStreamer pipeline.";
     }
 
-    connect(m_videoTimer, &QTimer::timeout, this, &CameraWindow::updateCameraFrame);
+    connect(m_videoTimer, &QTimer::timeout, this, &UsbCamera::updateCameraFrame);
     m_videoTimer->start(33); /* 30 FPS -> 1/30 = 0.0333 */
 }
 
-CameraWindow::~CameraWindow()
+UsbCamera::~UsbCamera()
 {
-    qDebug() << "[CAM] [DESTRUCTOR]" << this << ":: CameraWindow ";
+    qDebug() << "[CAM] [DESTRUCTOR]" << this << ":: UsbCamera ";
 
     if (m_cap.isOpened())
     {
@@ -99,7 +97,7 @@ CameraWindow::~CameraWindow()
     delete m_videoTimer;
 }
 
-void CameraWindow::updateCameraFrame()
+void UsbCamera::updateCameraFrame()
 {
     if (!m_cap.isOpened()) return;
 
@@ -109,7 +107,7 @@ void CameraWindow::updateCameraFrame()
         /* Force resize to 640x480 before sending */
         cv::resize(frame, frame, cv::Size(1280, 720));
 
-        qDebug() << "[CameraWindow] Sending frame:" << frame.cols << "x" << frame.rows;
+        qDebug() << "[CAM] Sending frame:" << frame.cols << "x" << frame.rows;
 
         /* Send to GStreamer */
         if (m_writer.isOpened())
