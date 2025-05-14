@@ -34,6 +34,7 @@
 #include <cmath>
 
 #include "DroneCtrl.h"
+#include "CsiCamera.h"
 #include "UsbCamera.h"
 
 typedef struct
@@ -108,6 +109,7 @@ class gui : public QWidget
     QTimer *m_videoTimer;
     cv::VideoCapture m_cap;
 
+    CsiCamera* m_CsiCamera;
     UsbCamera* m_UsbCamera;
 
     QPushButton *m_cameraButton;
@@ -166,5 +168,6 @@ private slots:
     void C3_Execute();
     void C4_Execute();
 
+    void openCsiCamera();
     void openUsbCamera();
 };

@@ -48,6 +48,7 @@ gui::gui() :
     m_isPulseControllerEnabled(true),
     m_isStartAcquisition(true),
     m_isFastControl(true),
+    m_CsiCamera(nullptr),
     m_UsbCamera(nullptr)
 {
     qDebug() << "[MAIN] [CONSTRUCTOR]" << this << "::  gui";
@@ -64,10 +65,9 @@ gui::gui() :
     setupCMD();
     setupSeparators();
 
-    // Add camera button
-    QPushButton *m_cameraButton = new QPushButton("USB.CAM", this);
-    m_cameraButton->setGeometry(800 - w.xGap*1 - w.xUnit*2, w.yGap*2 + w.yLogo, w.xUnit*2, w.yUnit);
-    m_cameraButton->setStyleSheet(
+    QPushButton *usbCameraButton = new QPushButton("USB.CAM", this);
+    usbCameraButton->setGeometry(800 - w.xGap*1 - w.xUnit*2, w.yGap*2 + w.yLogo, w.xUnit*2, w.yUnit);
+    usbCameraButton->setStyleSheet(
         "QPushButton {"
         "   background-color: blue;"
         "   color: white;"
@@ -83,7 +83,27 @@ gui::gui() :
         "   background-color: black;"
         "}"
     );
-    connect(m_cameraButton, &QPushButton::clicked, this, &gui::openUsbCamera);
+    connect(usbCameraButton, &QPushButton::clicked, this, &gui::openUsbCamera);
+
+    QPushButton *csiCameraButton = new QPushButton("CSI.CAM", this);
+    csiCameraButton->setGeometry(800 - w.xGap*1 - w.xUnit*2, w.yGap*3 + w.yLogo + w.yUnit, w.xUnit*2, w.yUnit);
+    csiCameraButton->setStyleSheet(
+        "QPushButton {"
+        "   background-color: blue;"
+        "   color: white;"
+        "   font-size: 17px;"
+        "   font-weight: bold;"
+        "   border-radius: 10px;"
+        "   padding: 5px;"
+        "}"
+        "QPushButton:hover {"
+        "   background-color: darkblue;"
+        "}"
+        "QPushButton:pressed {"
+        "   background-color: black;"
+        "}"
+    );
+    connect(csiCameraButton, &QPushButton::clicked, this, &gui::openCsiCamera);
 }
 
 
@@ -1405,6 +1425,28 @@ void gui::C4_Execute()
     //
 }
 
+void gui::openCsiCamera()
+{
+    if (!m_CsiCamera)
+    {
+        m_CsiCamera = new CsiCamera();
+        m_CsiCamera->setAttribute(Qt::WA_DeleteOnClose);
+        m_CsiCamera->show();
+
+        auto CsiCamera = [this]()
+        {
+            m_CsiCamera = nullptr;
+        };
+
+        connect(m_CsiCamera, &QObject::destroyed, this, CsiCamera);
+    }
+    else
+    {
+        m_CsiCamera->raise();
+        m_CsiCamera->activateWindow();
+    }
+}
+
 void gui::openUsbCamera()
 {
     if (!m_UsbCamera)
@@ -1426,3 +1468,4 @@ void gui::openUsbCamera()
         m_UsbCamera->activateWindow();
     }
 }
+

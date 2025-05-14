@@ -4,13 +4,13 @@
  * IceNET Technology 2025
  *
  */
-#include "UsbCamera.h"
+#include "CsiCamera.h"
 
-UsbCamera::UsbCamera() :
+CsiCamera::CsiCamera() :
     m_cameraDisplay(new QLabel(this)),
     m_videoTimer(new QTimer(this))
 {
-    qDebug() << "[CAM] [CONSTRUCTOR]" << this << "::  UsbCamera";
+    qDebug() << "[CAM] [CONSTRUCTOR]" << this << "::  CsiCamera";
 
     setWindowTitle("Camera Feed");
     resize(640, 480);
@@ -22,7 +22,7 @@ UsbCamera::UsbCamera() :
     m_cameraDisplay->setAlignment(Qt::AlignCenter);
     m_cameraDisplay->setStyleSheet("background-color: black");
 
-    m_cap.open("/dev/video1", cv::CAP_V4L2);
+    m_cap.open("/dev/video0", cv::CAP_V4L2);
 
     if (!m_cap.isOpened())
     {
@@ -31,27 +31,24 @@ UsbCamera::UsbCamera() :
     }
 
     /**
-     * v4l2-ctl --device=/dev/video1 --all
-     * v4l2-ctl --device=/dev/video1 --list-formats-ext
-     * v4l2-ctl --device=/dev/video1 --stream-mmap=3 --stream-to=test0.raw --stream-count=1
-     * v4l2-ctl --device=/dev/video1 --get-fmt-video
      *
-     * Pixel Format: 'MJPG' (compressed)
-     * Name: Motion-JPEG
-     * Size: Discrete 1280x720 :: Interval: Discrete 0.033s (30.000 fps)
-     * Size: Discrete 640x480 :: Interval: Discrete 0.033s (30.000 fps)
-     * Size: Discrete 320x240 :: Interval: Discrete 0.033s (30.000 fps)
+     * v4l2-ctl --device=/dev/video0 --all
+     * v4l2-ctl --device=/dev/video0 --list-formats-ext
+     * v4l2-ctl --device=/dev/video0 --stream-mmap=3 --stream-to=test0.raw --stream-count=1
+     * v4l2-ctl --device=/dev/video0 --get-fmt-video
      *
-     * Pixel Format: 'YUYV'
-     * Name: YUYV 4:2:2
-     * Size: Discrete 1280x720 :: Interval: Discrete 0.100s (10.000 fps)
-     * Size: Discrete 640x480 :: Interval: Discrete 0.033s (30.000 fps)
-     * Size: Discrete 320x240 :: Interval: Discrete 0.033s (30.000 fps)
+     * Pixel Format: 'RG10'
+     * Name: 10-bit Bayer RGRG/GBGB
+     * Size: Discrete 3264x2464 :: Interval: Discrete 0.048s (21.000 fps)
+     * Size: Discrete 3264x1848 :: Interval: Discrete 0.036s (28.000 fps)
+     * Size: Discrete 1920x1080 :: Interval: Discrete 0.033s (30.000 fps)
+     * Size: Discrete 1640x1232 :: Interval: Discrete 0.033s (30.000 fps)
+     * Size: Discrete 1280x720 :: Interval: Discrete 0.017s (60.000 fps)
      *
      */
     m_cap.set(cv::CAP_PROP_FRAME_WIDTH, 1280);
     m_cap.set(cv::CAP_PROP_FRAME_HEIGHT, 720);
-    m_cap.set(cv::CAP_PROP_FOURCC, cv::VideoWriter::fourcc('M', 'J', 'P', 'G'));
+    m_cap.set(cv::CAP_PROP_FOURCC, cv::VideoWriter::fourcc('R', 'G', '1', '0'));
 
     double actualWidth = m_cap.get(cv::CAP_PROP_FRAME_WIDTH);
     double actualHeight = m_cap.get(cv::CAP_PROP_FRAME_HEIGHT);
@@ -60,12 +57,13 @@ UsbCamera::UsbCamera() :
     int fourcc = m_cap.get(cv::CAP_PROP_FOURCC);
     qDebug() << "[CAM] Camera FourCC: " << fourcc;
 
-    double fps = m_cap.get(cv::CAP_PROP_FPS);
-    qDebug() << "[CAM] Camera FPS: " << fps;
-
     /* GStreamer pipeline */
-    std::string gstPipeline = "appsrc ! videoconvert ! x264enc tune=zerolatency bitrate=500 speed-preset=ultrafast "
-        "! rtph264pay config-interval=1 pt=96 ! udpsink host=192.168.8.101 port=5000";
+    std::string gstPipeline =
+    "appsrc ! " // Source of the video stream
+    "videoconvert ! " // Convert the video format if needed
+    "x264enc tune=zerolatency bitrate=500 speed-preset=ultrafast ! " // H.264 encoding
+    "rtph264pay config-interval=1 pt=96 ! " // RTP packetization
+    "udpsink host=192.168.8.101 port=5000"; // UDP sink to the specified IP and port
 
     /* Open GStreamer writer */
     m_writer.open(gstPipeline, 0, 30, cv::Size(1280, 720), true);
@@ -75,13 +73,13 @@ UsbCamera::UsbCamera() :
         qWarning() << "[CAM] Failed to open GStreamer pipeline.";
     }
 
-    connect(m_videoTimer, &QTimer::timeout, this, &UsbCamera::updateCameraFrame);
-    m_videoTimer->start(33); /* 30 FPS -> 1/30 = 0.0333 */
+    connect(m_videoTimer, &QTimer::timeout, this, &CsiCamera::updateCameraFrame);
+    m_videoTimer->start(16);
 }
 
-UsbCamera::~UsbCamera()
+CsiCamera::~CsiCamera()
 {
-    qDebug() << "[CAM] [DESTRUCTOR]" << this << ":: UsbCamera ";
+    qDebug() << "[CAM] [DESTRUCTOR]" << this << ":: CsiCamera ";
 
     if (m_cap.isOpened())
     {
@@ -97,7 +95,7 @@ UsbCamera::~UsbCamera()
     delete m_videoTimer;
 }
 
-void UsbCamera::updateCameraFrame()
+void CsiCamera::updateCameraFrame()
 {
     if (!m_cap.isOpened()) return;
 
@@ -117,7 +115,9 @@ void UsbCamera::updateCameraFrame()
 
         cv::Mat rgbFrame;
         cv::cvtColor(frame, rgbFrame, cv::COLOR_BGR2RGB);
+
         QImage image(rgbFrame.data, rgbFrame.cols, rgbFrame.rows, rgbFrame.step, QImage::Format_RGB888);
         m_cameraDisplay->setPixmap(QPixmap::fromImage(image).scaled(m_cameraDisplay->size(), Qt::KeepAspectRatio));
     }
 }
+
