@@ -48,7 +48,8 @@ gui::gui() :
     m_isPulseControllerEnabled(true),
     m_isStartAcquisition(true),
     m_isFastControl(true),
-    m_cameraWindow(nullptr)
+    m_CsiCamera(nullptr),
+    m_UsbCamera(nullptr)
 {
     qDebug() << "[MAIN] [CONSTRUCTOR]" << this << "::  gui";
 
@@ -64,10 +65,9 @@ gui::gui() :
     setupCMD();
     setupSeparators();
 
-    // Add camera button
-    QPushButton *m_cameraButton = new QPushButton("CAMERA", this);
-    m_cameraButton->setGeometry(800 - w.xGap*1 - w.xUnit*2, w.yGap*2 + w.yLogo, w.xUnit*2, w.yUnit);
-    m_cameraButton->setStyleSheet(
+    QPushButton *usbCameraButton = new QPushButton("USB.CAM", this);
+    usbCameraButton->setGeometry(800 - w.xGap*1 - w.xUnit*2, w.yGap*2 + w.yLogo, w.xUnit*2, w.yUnit);
+    usbCameraButton->setStyleSheet(
         "QPushButton {"
         "   background-color: blue;"
         "   color: white;"
@@ -83,7 +83,27 @@ gui::gui() :
         "   background-color: black;"
         "}"
     );
-    connect(m_cameraButton, &QPushButton::clicked, this, &gui::openCameraWindow);
+    connect(usbCameraButton, &QPushButton::clicked, this, &gui::openUsbCamera);
+
+    QPushButton *csiCameraButton = new QPushButton("CSI.CAM", this);
+    csiCameraButton->setGeometry(800 - w.xGap*1 - w.xUnit*2, w.yGap*3 + w.yLogo + w.yUnit, w.xUnit*2, w.yUnit);
+    csiCameraButton->setStyleSheet(
+        "QPushButton {"
+        "   background-color: blue;"
+        "   color: white;"
+        "   font-size: 17px;"
+        "   font-weight: bold;"
+        "   border-radius: 10px;"
+        "   padding: 5px;"
+        "}"
+        "QPushButton:hover {"
+        "   background-color: darkblue;"
+        "}"
+        "QPushButton:pressed {"
+        "   background-color: black;"
+        "}"
+    );
+    connect(csiCameraButton, &QPushButton::clicked, this, &gui::openCsiCamera);
 }
 
 
@@ -1405,55 +1425,47 @@ void gui::C4_Execute()
     //
 }
 
-void gui::updateCameraFrame()
+void gui::openCsiCamera()
 {
-    if (!m_cap.isOpened())
+    if (!m_CsiCamera)
     {
-        qWarning() << "[Camera] Video capture not opened.";
-        return;
-    }
+        m_CsiCamera = new CsiCamera();
+        m_CsiCamera->setAttribute(Qt::WA_DeleteOnClose);
+        m_CsiCamera->show();
 
-    cv::Mat frame;
-    if (!m_cap.read(frame))
-    {
-        qWarning() << "[Camera] Failed to read frame.";
-        return;
-    }
-
-    if (frame.empty())
-    {
-        qWarning() << "[Camera] Captured empty frame.";
-        return;
-    }
-
-    // Convert BGR (OpenCV default) to RGB (Qt expects RGB)
-    cv::cvtColor(frame, frame, cv::COLOR_BGR2RGB);
-
-    // Convert cv::Mat to QImage
-    QImage image((const uchar*)frame.data, frame.cols, frame.rows, frame.step, QImage::Format_RGB888);
-
-    // Display the image on QLabel
-    m_cameraDisplay->setPixmap(QPixmap::fromImage(image).scaled(m_cameraDisplay->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation));
-}
-
-void gui::openCameraWindow()
-{
-    if (!m_cameraWindow)
-    {
-        m_cameraWindow = new CameraWindow();
-        m_cameraWindow->setAttribute(Qt::WA_DeleteOnClose);
-        m_cameraWindow->show();
-
-        auto cameraWindow = [this]()
+        auto CsiCamera = [this]()
         {
-            m_cameraWindow = nullptr;
+            m_CsiCamera = nullptr;
         };
 
-        connect(m_cameraWindow, &QObject::destroyed, this, cameraWindow);
+        connect(m_CsiCamera, &QObject::destroyed, this, CsiCamera);
     }
     else
     {
-        m_cameraWindow->raise();
-        m_cameraWindow->activateWindow();
+        m_CsiCamera->raise();
+        m_CsiCamera->activateWindow();
     }
 }
+
+void gui::openUsbCamera()
+{
+    if (!m_UsbCamera)
+    {
+        m_UsbCamera = new UsbCamera();
+        m_UsbCamera->setAttribute(Qt::WA_DeleteOnClose);
+        m_UsbCamera->show();
+
+        auto UsbCamera = [this]()
+        {
+            m_UsbCamera = nullptr;
+        };
+
+        connect(m_UsbCamera, &QObject::destroyed, this, UsbCamera);
+    }
+    else
+    {
+        m_UsbCamera->raise();
+        m_UsbCamera->activateWindow();
+    }
+}
+
