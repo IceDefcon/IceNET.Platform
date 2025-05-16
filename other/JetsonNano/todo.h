@@ -18,6 +18,12 @@ sudo apt install sublime-text
 sudo apt-get install sublime-merge
 
 //
+// Cmake + Ninja
+//
+sudo apt update
+sudo apt-get install cmake ninja-build -y
+
+//
 // Pip
 //
 sudo apt update
@@ -39,20 +45,18 @@ git config --global credential.helper 'store --file ~/.git-credentials'
 // Qt5
 //
 sudo apt update
-sudo apt install qt5-qmake qtbase5-dev
-sudo apt-get install libqt5serialport5-dev
+sudo apt-get install qt5-qmake qtbase5-dev libqt5serialport5-dev -y
 
 //
 // Install
 //
-apt-get install guake nano
+apt-get install guake nano -y
 
 //
 // Bash
 //
 mkdir /tmp/runtime-root
 chmod 777 /tmp/runtime-root -R
-
 cd /home/ice/code.lab/IceNET.Platform
 alias push_droneAI="git push origin droneAI"
 export XDG_RUNTIME_DIR="/tmp/runtime-root"
