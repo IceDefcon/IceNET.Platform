@@ -78,3 +78,55 @@ LABEL primary
       INITRD /boot/initrd
       FDT /boot/nano-spi.dtb
       APPEND ${cbootargs} quiet root=/dev/mmcblk0p1 rw rootwait rootfstype=ext4 console=ttyS0,115200n8 console=tty0 fbcon=map:0 net.ifnames=0 sdhci_tegra.en_boot_part_access=1
+
+//
+// Install openCV with CUDA support
+//
+sudo apt-get update
+sudo apt-get install -y cmake git libgtk2.0-dev pkg-config libavcodec-dev libavformat-dev libswscale-dev
+sudo apt-get install -y python3-dev python3-numpy libtbb2 libtbb-dev libjpeg-dev libpng-dev libtiff-dev
+sudo apt-get install -y libdc1394-22-dev libv4l-dev v4l-utils libopenblas-dev libatlas-base-dev libblas-dev
+sudo apt-get install -y libxvidcore-dev libx264-dev libgtk-3-dev libcanberra-gtk* libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev
+
+mkdir ~/opencv_build && cd ~/opencv_build
+git clone https://github.com/opencv/opencv.git
+git clone https://github.com/opencv/opencv_contrib.git
+cd opencv
+git checkout 4.5.4
+cd ../opencv_contrib
+git checkout 4.5.4
+
+cd ~/opencv_build/opencv
+mkdir build && cd build
+cmake -D CMAKE_BUILD_TYPE=RELEASE \
+      -D CMAKE_INSTALL_PREFIX=/usr/local \
+      -D OPENCV_EXTRA_MODULES_PATH=~/opencv_build/opencv_contrib/modules \
+      -D WITH_CUDA=ON \
+      -D ENABLE_FAST_MATH=1 \
+      -D CUDA_FAST_MATH=1 \
+      -D WITH_CUBLAS=1 \
+      -D WITH_LIBV4L=ON \
+      -D BUILD_opencv_python3=ON \
+      -D WITH_GSTREAMER=ON \
+      -D BUILD_EXAMPLES=OFF ..
+
+make -j4
+sudo make install
+sudo ldconfig
+
+//
+// Software Versions in JetPack 4.6.2 (L4T R32.7.2)
+//
+
+Component   Version
+
+-> CUDA         10.2
+-> cuDNN        8.2.1
+-> TensorRT     8.2.1
+-> VPI          1.1
+-> VisionWorks  1.6
+-> OpenCV       4.5.4
+-> Vulkan       1.2 (via Mesa)
+-> L4T (Linux)  R32.7.2
+-> Ubuntu       18.04
+-> Python       3.6 (default)
