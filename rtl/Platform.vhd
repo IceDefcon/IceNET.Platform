@@ -134,9 +134,9 @@ port
     -----------------------------------------------------------------------------
     -- Kernel Communication
     -----------------------------------------------------------------------------
-    SPI_INT_FROM_FPGA : out std_logic; -- PIN_A9 :: GPIO01 :: HEADER_PIN_29
-    TIMER_INT_FROM_FPGA : out std_logic; -- PIN_A13 :: GPIO09 :: HEADER_PIN_07
-    WDG_INT_FROM_FPGA : out std_logic; -- PIN_A20 :: GPIO11 :: HEADER_PIN_31
+    SPI_INT_FROM_FPGA : out std_logic; -- PIN_A6 :: GPIO01 :: HEADER_PIN_29
+    TIMER_INT_FROM_FPGA : out std_logic; -- PIN_A19 :: GPIO09 :: HEADER_PIN_07
+    WDG_INT_FROM_FPGA : out std_logic; -- PIN_A5 :: GPIO11 :: HEADER_PIN_31
     RESET_FROM_CPU : in std_logic; -- PIN_B5 :: GPIO07 :: HEADER_PIN_32
 
     PRIMARY_MOSI : in std_logic;  -- PIN_B6 :: H19 :: SPI0_MOSI :: SDA

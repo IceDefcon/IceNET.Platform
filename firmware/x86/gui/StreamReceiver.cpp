@@ -17,7 +17,7 @@ StreamReceiver::StreamReceiver(QWidget* parent)
     // GStreamer pipeline with enforced RGB format
     const char* pipelineDesc =
         "udpsrc port=5000 caps=\"application/x-rtp, media=video, encoding-name=H264, payload=96\" ! "
-        "rtph264depay ! avdec_h264 ! videoconvert ! video/x-raw,format=RGB ! appsink name=sink";
+        "rtph264depay ! avdec_h264 ! videoconvert ! video/x-raw,format=RGB ! appsink name=sink sync=true";
 
     GError* error = nullptr;
     m_pipeline = gst_parse_launch(pipelineDesc, &error);
@@ -37,8 +37,8 @@ StreamReceiver::StreamReceiver(QWidget* parent)
     // Configure appsink
     g_object_set(m_sink,
                  "emit-signals", FALSE,
-                 "sync", FALSE,
-                 "max-buffers", 1,
+                 "sync", TRUE,  // Enable sync for better video timing
+                 "max-buffers", 10,  // Allow more buffers to accumulate
                  "drop", TRUE,
                  nullptr);
 
@@ -71,8 +71,8 @@ void StreamReceiver::pullFrameFromGStreamer()
         return;
     }
 
-    // Try to pull a sample with a short timeout
-    GstSample* sample = gst_app_sink_try_pull_sample(GST_APP_SINK(m_sink), 500000); // 0.5s timeout
+    // Try to pull a sample with a longer timeout
+    GstSample* sample = gst_app_sink_try_pull_sample(GST_APP_SINK(m_sink), 1000000); // 1s timeout
     if (!sample) {
         qDebug() << "[Receiver] No sample received from appsink.";
         return;
@@ -115,7 +115,7 @@ void StreamReceiver::pullFrameFromGStreamer()
 
     // Use a copy of the image to avoid using dangling memory
     QImage image(frame.data, frame.cols, frame.rows, frame.step, QImage::Format_RGB888);
-    setPixmap(QPixmap::fromImage(image.copy()).scaled(size(), Qt::KeepAspectRatio));
+    setPixmap(QPixmap::fromImage(image).scaled(size(), Qt::KeepAspectRatio));
 
     // Cleanup
     gst_buffer_unmap(buffer, &map);
