@@ -4,7 +4,7 @@
 wget -qO - https://download.sublimetext.com/sublimehq-pub.gpg | sudo gpg --dearmor -o /usr/share/keyrings/sublimehq-pub.gpg
 echo "deb [signed-by=/usr/share/keyrings/sublimehq-pub.gpg] https://download.sublimetext.com/ apt/stable/" | sudo tee /etc/apt/sources.list.d/sublime-text.list
 sudo apt update
-sudo apt install sublime-text
+sudo apt install sublime-text -y
 
     "trim_trailing_white_space_on_save": true,
     "ensure_newline_at_eof_on_save": true,
@@ -15,18 +15,16 @@ sudo apt install sublime-text
     "trim_only_modified_white_space": true,
     "ensure_single_trailing_newline": true,
 
-sudo apt-get install sublime-merge
+sudo apt-get install sublime-merge -y
 
 //
 // Cmake + Ninja
 //
-sudo apt update
 sudo apt-get install cmake ninja-build -y
 
 //
 // Pip
 //
-sudo apt update
 sudo apt install python3-pip -y
 
 //
@@ -44,7 +42,6 @@ git config --global credential.helper 'store --file ~/.git-credentials'
 //
 // Qt5
 //
-sudo apt update
 sudo apt-get install qt5-qmake qtbase5-dev libqt5serialport5-dev -y
 
 //
