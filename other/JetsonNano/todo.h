@@ -130,3 +130,43 @@ Component   Version
 -> L4T (Linux)  R32.7.2
 -> Ubuntu       18.04
 -> Python       3.6 (default)
+
+//
+// cmake with OpenSSL
+//
+sudo apt remove cmake
+
+sudo apt update
+sudo apt install -y build-essential libssl-dev
+
+cd ~
+wget https://github.com/Kitware/CMake/releases/download/v3.13.4/cmake-3.13.4.tar.gz
+tar -zxvf cmake-3.13.4.tar.gz
+cd cmake-3.13.4
+
+./bootstrap
+make -j$(nproc)
+sudo make install
+
+//
+// TensorRT
+//
+git clone -b release/8.2 https://github.com/NVIDIA/TensorRT.git
+cd TensorRT
+
+sudo apt update
+sudo apt install -y \
+    cmake \
+    libprotobuf-dev protobuf-compiler \
+    libnvinfer-dev libnvonnxparsers-dev libnvparsers-dev \
+    python3-dev python3-pip \
+    swig libopencv-dev
+
+pip3 install onnx
+
+cd TensorRT
+mkdir build && cd build
+cmake .. -DGPU_ARCHS="53" -DCUDA_VERSION="10.2" -DCUDNN_VERSION="8.2"
+make -j$(nproc)
+
+sudo make install
