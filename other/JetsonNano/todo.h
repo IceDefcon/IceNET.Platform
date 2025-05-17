@@ -170,3 +170,36 @@ cmake .. -DGPU_ARCHS="53" -DCUDA_VERSION="10.2" -DCUDNN_VERSION="8.2"
 make -j$(nproc)
 
 sudo make install
+
+//
+// x86 OpenCV + GStream ->
+//
+sudo apt update
+sudo apt install -y build-essential cmake git pkg-config \
+libgtk-3-dev libavcodec-dev libavformat-dev libswscale-dev \
+libv4l-dev libxvidcore-dev libx264-dev libjpeg-dev libpng-dev libtiff-dev \
+gstreamer1.0-tools gstreamer1.0-plugins-base gstreamer1.0-plugins-good \
+gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-libav \
+gstreamer1.0-dev
+
+mkdir ~/opencv_build && cd ~/opencv_build
+git clone https://github.com/opencv/opencv.git
+git clone https://github.com/opencv/opencv_contrib.git
+
+cd opencv
+git checkout 4.5.4
+cd ../opencv_contrib
+git checkout 4.5.4
+
+cd ~/opencv_build/opencv
+mkdir build && cd build
+cmake -D CMAKE_BUILD_TYPE=Release \
+      -D CMAKE_INSTALL_PREFIX=/usr/local \
+      -D OPENCV_EXTRA_MODULES_PATH=../../opencv_contrib/modules \
+      -D WITH_GSTREAMER=ON \
+      -D WITH_FFMPEG=ON \
+      -D BUILD_EXAMPLES=ON ..
+
+make -j$(nproc)
+sudo make install
+sudo ldconfig
