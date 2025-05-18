@@ -54,10 +54,13 @@ apt-get install guake nano -y
 //
 mkdir /tmp/runtime-root
 chmod 777 /tmp/runtime-root -R
+
 cd /home/ice/code.lab/IceNET.Platform
 alias push_droneAI="git push origin droneAI"
 export XDG_RUNTIME_DIR="/tmp/runtime-root"
 export PATH=/usr/lib/qt5/bin:$PATH
+export PATH=/usr/local/cuda-11.3/bin:$PATH
+export LD_LIBRARY_PATH=/usr/local/cuda/lib64:$LD_LIBRARY_PATH
 
 //
 // Enable SPI trough device tree
@@ -233,3 +236,22 @@ LABEL SD
       INITRD /boot/initrd
       FDT /boot/nano-spi.dtb
       APPEND ${cbootargs} quiet root=/dev/sda1 rw rootwait rootfstype=ext4 console=ttyS0,115200n8 console=tty0 fbcon=map:0 net.ifnames=0 sdhci_tegra.en_boot_part_access=1
+
+//
+// Cuda 11.3
+//
+wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/sbsa/cuda-ubuntu1804.pin
+sudo mv cuda-ubuntu1804.pin /etc/apt/preferences.d/cuda-repository-pin-600
+wget https://developer.download.nvidia.com/compute/cuda/11.3.1/local_installers/cuda-repo-ubuntu1804-11-3-local_11.3.1-465.19.01-1_arm64.deb
+sudo dpkg -i cuda-repo-ubuntu1804-11-3-local_11.3.1-465.19.01-1_arm64.deb
+sudo apt-key add /var/cuda-repo-ubuntu1804-11-3-local/7fa2af80.pub
+sudo apt-get update
+sudo apt-get -y install cuda
+
+//
+// Cuda test
+//
+cd /usr/local/cuda-11.3/samples/1_Utilities/deviceQuery
+sudo make
+./deviceQuery
+
