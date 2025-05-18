@@ -169,37 +169,6 @@ make -j$(nproc)
 sudo make install
 
 //
-// x86 OpenCV + GStream ->
-//
-sudo apt update
-sudo apt install -y build-essential cmake git pkg-config \
-    libgtk-3-dev libavcodec-dev libavformat-dev libswscale-dev \
-    libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev \
-    gstreamer1.0-plugins-base gstreamer1.0-plugins-good \
-    gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly \
-    gstreamer1.0-libav
-
-mkdir ~/opencv_build && cd ~/opencv_build
-git clone https://github.com/opencv/opencv.git
-git clone https://github.com/opencv/opencv_contrib.git
-cd opencv
-git checkout 4.5.4
-cd ../opencv_contrib
-git checkout 4.5.4
-
-cd ~/opencv_build/opencv
-mkdir build && cd build
-cmake -D CMAKE_BUILD_TYPE=RELEASE \
-      -D CMAKE_INSTALL_PREFIX=/usr/local \
-      -D OPENCV_EXTRA_MODULES_PATH=~/opencv_build/opencv_contrib/modules \
-      -D WITH_GSTREAMER=ON \
-      -D BUILD_EXAMPLES=OFF ..
-
-make -j4
-sudo make install
-sudo ldconfig
-
-//
 // Env
 //
 setenv boot_targets mmc0
@@ -207,3 +176,30 @@ setenv boot_targets mmc1
 setenv boot_targets usb0
 setenv boot_targets "usb0 mmc1"
 
+//
+// x86 OpenCV + GStream
+//
+sudo apt update
+sudo apt install -y build-essential cmake git pkg-config \
+    libgtk-3-dev libavcodec-dev libavformat-dev libswscale-dev \
+    libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev \
+    python3-dev python3-numpy libtbb2 libtbb-dev libjpeg-dev \
+    libpng-dev libtiff-dev libdc1394-22-dev
+
+cd ~
+git clone https://github.com/opencv/opencv.git
+git clone https://github.com/opencv/opencv_contrib.git
+
+cd ~/opencv
+mkdir build
+cd build
+
+cmake -D CMAKE_BUILD_TYPE=Release \
+      -D CMAKE_INSTALL_PREFIX=/usr/local \
+      -D WITH_GSTREAMER=ON \
+      -D OPENCV_EXTRA_MODULES_PATH=~/opencv_contrib/modules \
+      ..
+
+make -j$(nproc)
+sudo make install
+sudo ldconfig
