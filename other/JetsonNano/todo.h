@@ -203,3 +203,33 @@ cmake -D CMAKE_BUILD_TYPE=Release \
 make -j$(nproc)
 sudo make install
 sudo ldconfig
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// Load System from SD card
+//
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+//
+// Prepare SD card
+//
+mount /dev/sdb1 /mnt
+sudo mount bootloader/system.img.raw ./tmp_system
+sudo rsync -axHAWX --numeric-ids --info=progress2 --exclude=/proc ./tmp_system/ /mnt
+sudo umount /mnt
+sudo umount ./tmp_system
+
+//
+// Update @ SD -> UUID in fstab
+//
+UUID=da0c2cea-40e1-4b54-914d-63b79432351a / ext4 defaults 0 1
+
+//
+// Update @ mmc0 -> /boot/extlinux/extlinux.conf
+//
+LABEL SD
+      MENU LABEL SD
+      LINUX /boot/Image
+      INITRD /boot/initrd
+      FDT /boot/nano-spi.dtb
+      APPEND ${cbootargs} quiet root=/dev/sda1 rw rootwait rootfstype=ext4 console=ttyS0,115200n8 console=tty0 fbcon=map:0 net.ifnames=0 sdhci_tegra.en_boot_part_access=1
