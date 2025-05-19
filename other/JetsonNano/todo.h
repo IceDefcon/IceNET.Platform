@@ -112,21 +112,19 @@ sudo make install
 sudo ldconfig
 
 //
-// Software Versions in JetPack 4.6.2 (L4T R32.7.2)
+// JetPack 4.6.1 -> L4T 32.7.1
 //
+-> CUDA 10.2
+-> cuDNN 8.2.1
+-> TensorRT 8.2.1
+-> VPI 1.2
+-> VisionWorks 1.6
+-> OpenCV 4.1.1
 
-Component   Version
-
--> CUDA         10.2
--> cuDNN        8.2.1
--> TensorRT     8.2.1
--> VPI          1.1
--> VisionWorks  1.6
--> OpenCV       4.5.4
--> Vulkan       1.2 (via Mesa)
--> L4T (Linux)  R32.7.2
--> Ubuntu       18.04
--> Python       3.6 (default)
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //
 // cmake with OpenSSL
@@ -203,3 +201,110 @@ cmake -D CMAKE_BUILD_TYPE=Release \
 make -j$(nproc)
 sudo make install
 sudo ldconfig
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// Load System from SD card
+//
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+//
+// Prepare SD card
+//
+mount /dev/sdb1 /mnt
+sudo mount bootloader/system.img.raw ./tmp_system
+sudo rsync -axHAWX --numeric-ids --info=progress2 --exclude=/proc ./tmp_system/ /mnt
+sudo mkdir -p /mnt/{proc,sys,dev,tmp,run}
+sudo chmod 755 /mnt/{proc,sys,dev,tmp,run}
+sudo umount /mnt
+sudo umount ./tmp_system
+
+//
+// Bad
+//
+[    0.000000] Booting Linux on physical CPU 0x0
+[    0.000000] Linux version 4.9.253-tegra (buildbrain@mobile-u64-5494-d8000) (gcc version 7.3.1 20180425 [linaro-7.3-2018.05 revision d29120a424ecfbc167ef90065c0eeb7f91977701] (Linaro GCC 7.3-2018.05) ) #1 SMP PREEMPT Wed Apr 20 14:25:12 PDT 2022
+[    0.000000] Boot CPU: AArch64 Processor [411fd071]
+[    0.000000] OF: fdt:memory scan node memory@80000000, reg size 32,
+[    0.000000] OF: fdt: - 80000000 ,  3f200000
+[    0.000000] OF: fdt: - c0000000 ,  3ee00000
+[    0.000000] Found tegra_fbmem: 00800000@92cb4000
+[    0.000000] earlycon: uart8250 at MMIO32 0x0000000070006000 (options '')
+[    0.000000] bootconsole [uart8250] enabled
+
+//
+// Good
+//
+[    0.000000] Booting Linux on physical CPU 0x0
+[    0.000000] Linux version 4.9.253-tegra (buildbrain@mobile-u64-5494-d8000) (gcc version 7.3.1 20180425 [linaro-7.3-2018.05 revision d29120a424ecfbc167ef90065c0eeb7f91977701] (Linaro GCC 7.3-2018.05) ) #1 SMP PREEMPT Wed Apr 20 14:25:12 PDT 2022
+[    0.000000] Boot CPU: AArch64 Processor [411fd071]
+[    0.000000] OF: fdt:memory scan node memory@80000000, reg size 32,
+[    0.000000] OF: fdt: - 80000000 ,  7ee00000
+[    0.000000] OF: fdt: - 100000000 ,  7f200000
+[    0.000000] Found tegra_fbmem: 00800000@92cb4000
+[    0.000000] earlycon: uart8250 at MMIO32 0x0000000070006000 (options '')
+[    0.000000] bootconsole [uart8250] enabled
+[    1.162457] tegradc tegradc.1: dpd enable lo
+
+//
+// Nvidia Download ->
+//
+https://developer.nvidia.com/embedded/jetson-linux-archive
+https://developer.nvidia.com/embedded/linux-tegra-r3276
+https://docs.nvidia.com/jetson/archives/l4t-archived/l4t-3275/index.html#page/Tegra%20Linux%20Driver%20Package%20Development%20Guide/quick_start.html#
+
+https://www.waveshare.com/wiki/JETSON-NANO-DEV-KIT#System_Environment_.26_EMMC_System_Programming
+
+//
+//
+//
+sudo tar -xjf Jetson-210_Linux_R32.7.2_aarch64.tbz2
+cd Linux_for_Tegra/rootfs/
+sudo tar -xjf ../../Tegra_Linux_Sample-Root-Filesystem_R32.7.2_aarch64.tbz2
+cd ../
+sudo ./apply_binaries.sh (If an error occurs, follow the prompts and re-enter the instruction).
+
+cd ..
+wget https://developer.nvidia.com/downloads/embedded/L4T/r32_Release_v7.5/overlay_32.7.5_PCN211181.tbz2
+sudo tar -xjf overlay_32.7.5_PCN211181.tbz2
+
+sudo ./flash.sh jetson-nano-emmc mmcblk0p1
+
+//
+// More ideas
+//
+TIMEOUT 30
+DEFAULT FLASH
+
+MENU TITLE L4T boot options
+
+LABEL FLASH
+      MENU LABEL FLASH
+      LINUX /boot/Image
+      INITRD /boot/initrd
+      APPEND ${cbootargs} quiet root=/dev/mmcblk0p1 rw rootwait rootfstype=ext4 console=ttyS0,115200n8 console=tty0 fbcon=map:0 net.ifnames=0 sdhci_tegra.en_boot_part_access=1
+
+LABEL SD
+      MENU LABEL SD
+      LINUX /boot/Image
+      INITRD /boot/initrd
+      FDT /boot/nano-spi.dtb
+      APPEND ${cbootargs} quiet root=UUID=fe3d7b93-91e9-469a-a245-3a0a52fe179c rw rootwait rootfstype=ext4 console=ttyS0,115200n8 console=tty0 fbcon=map:0 net.ifnames=0 sdhci_tegra.en_boot_part_access=1
+
+//
+// Update @ SD -> UUID in fstab
+//
+UUID=da0c2cea-40e1-4b54-914d-63b79432351a / ext4 defaults 0 1
+
+//
+// gcc-10 and g++-10
+//
+sudo apt remove --purge gcc-7
+sudo add-apt-repository ppa:ubuntu-toolchain-r/test
+sudo apt update
+sudo apt install gcc-10
+sudo apt install g++-10
+sudo ln -sf /usr/bin/gcc-10 /usr/bin/gcc
+sudo ln -sf /usr/bin/g++-10 /usr/bin/g++
+gcc --version
+g++ --version
