@@ -54,13 +54,10 @@ apt-get install guake nano -y
 //
 mkdir /tmp/runtime-root
 chmod 777 /tmp/runtime-root -R
-
 cd /home/ice/code.lab/IceNET.Platform
 alias push_droneAI="git push origin droneAI"
 export XDG_RUNTIME_DIR="/tmp/runtime-root"
 export PATH=/usr/lib/qt5/bin:$PATH
-export PATH=/usr/local/cuda-11.3/bin:$PATH
-export LD_LIBRARY_PATH=/usr/local/cuda/lib64:$LD_LIBRARY_PATH
 
 //
 // Enable SPI trough device tree
@@ -115,22 +112,14 @@ sudo make install
 sudo ldconfig
 
 //
-// Software Versions in JetPack 4.6.2 (L4T R32.7.2)
+// JetPack 4.6.1 -> L4T 32.7.1
 //
-
-Component   Version
-
--> CUDA         10.2
--> cuDNN        8.2.1
--> TensorRT     8.2.1
--> VPI          1.1
--> VisionWorks  1.6
--> OpenCV       4.5.4
--> Vulkan       1.2 (via Mesa)
--> L4T (Linux)  R32.7.2
--> Ubuntu       18.04
--> Python       3.6 (default)
-
+-> CUDA 10.2
+-> cuDNN 8.2.1
+-> TensorRT 8.2.1
+-> VPI 1.2
+-> VisionWorks 1.6
+-> OpenCV 4.1.1
 //
 // cmake with OpenSSL
 //
@@ -238,20 +227,28 @@ LABEL SD
       APPEND ${cbootargs} quiet root=/dev/sda1 rw rootwait rootfstype=ext4 console=ttyS0,115200n8 console=tty0 fbcon=map:0 net.ifnames=0 sdhci_tegra.en_boot_part_access=1
 
 //
-// Cuda 11.3
+// Bad
 //
-wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/sbsa/cuda-ubuntu1804.pin
-sudo mv cuda-ubuntu1804.pin /etc/apt/preferences.d/cuda-repository-pin-600
-wget https://developer.download.nvidia.com/compute/cuda/11.3.1/local_installers/cuda-repo-ubuntu1804-11-3-local_11.3.1-465.19.01-1_arm64.deb
-sudo dpkg -i cuda-repo-ubuntu1804-11-3-local_11.3.1-465.19.01-1_arm64.deb
-sudo apt-key add /var/cuda-repo-ubuntu1804-11-3-local/7fa2af80.pub
-sudo apt-get update
-sudo apt-get -y install cuda
+[    0.000000] Booting Linux on physical CPU 0x0
+[    0.000000] Linux version 4.9.253-tegra (buildbrain@mobile-u64-5494-d8000) (gcc version 7.3.1 20180425 [linaro-7.3-2018.05 revision d29120a424ecfbc167ef90065c0eeb7f91977701] (Linaro GCC 7.3-2018.05) ) #1 SMP PREEMPT Wed Apr 20 14:25:12 PDT 2022
+[    0.000000] Boot CPU: AArch64 Processor [411fd071]
+[    0.000000] OF: fdt:memory scan node memory@80000000, reg size 32,
+[    0.000000] OF: fdt: - 80000000 ,  3f200000
+[    0.000000] OF: fdt: - c0000000 ,  3ee00000
+[    0.000000] Found tegra_fbmem: 00800000@92cb4000
+[    0.000000] earlycon: uart8250 at MMIO32 0x0000000070006000 (options '')
+[    0.000000] bootconsole [uart8250] enabled
 
 //
-// Cuda test
+// Good
 //
-cd /usr/local/cuda-11.3/samples/1_Utilities/deviceQuery
-sudo make
-./deviceQuery
-
+[    0.000000] Booting Linux on physical CPU 0x0
+[    0.000000] Linux version 4.9.253-tegra (buildbrain@mobile-u64-5494-d8000) (gcc version 7.3.1 20180425 [linaro-7.3-2018.05 revision d29120a424ecfbc167ef90065c0eeb7f91977701] (Linaro GCC 7.3-2018.05) ) #1 SMP PREEMPT Wed Apr 20 14:25:12 PDT 2022
+[    0.000000] Boot CPU: AArch64 Processor [411fd071]
+[    0.000000] OF: fdt:memory scan node memory@80000000, reg size 32,
+[    0.000000] OF: fdt: - 80000000 ,  7ee00000
+[    0.000000] OF: fdt: - 100000000 ,  7f200000
+[    0.000000] Found tegra_fbmem: 00800000@92cb4000
+[    0.000000] earlycon: uart8250 at MMIO32 0x0000000070006000 (options '')
+[    0.000000] bootconsole [uart8250] enabled
+[    1.162457] tegradc tegradc.1: dpd enable lo
