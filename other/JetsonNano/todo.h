@@ -120,6 +120,12 @@ sudo ldconfig
 -> VPI 1.2
 -> VisionWorks 1.6
 -> OpenCV 4.1.1
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 //
 // cmake with OpenSSL
 //
@@ -208,23 +214,10 @@ sudo ldconfig
 mount /dev/sdb1 /mnt
 sudo mount bootloader/system.img.raw ./tmp_system
 sudo rsync -axHAWX --numeric-ids --info=progress2 --exclude=/proc ./tmp_system/ /mnt
+sudo mkdir -p /mnt/{proc,sys,dev,tmp,run}
+sudo chmod 755 /mnt/{proc,sys,dev,tmp,run}
 sudo umount /mnt
 sudo umount ./tmp_system
-
-//
-// Update @ SD -> UUID in fstab
-//
-UUID=da0c2cea-40e1-4b54-914d-63b79432351a / ext4 defaults 0 1
-
-//
-// Update @ mmc0 -> /boot/extlinux/extlinux.conf
-//
-LABEL SD
-      MENU LABEL SD
-      LINUX /boot/Image
-      INITRD /boot/initrd
-      FDT /boot/nano-spi.dtb
-      APPEND ${cbootargs} quiet root=/dev/sda1 rw rootwait rootfstype=ext4 console=ttyS0,115200n8 console=tty0 fbcon=map:0 net.ifnames=0 sdhci_tegra.en_boot_part_access=1
 
 //
 // Bad
@@ -254,6 +247,56 @@ LABEL SD
 [    1.162457] tegradc tegradc.1: dpd enable lo
 
 //
+// Nvidia Download ->
+//
+https://developer.nvidia.com/embedded/jetson-linux-archive
+https://developer.nvidia.com/embedded/linux-tegra-r3276
+https://docs.nvidia.com/jetson/archives/l4t-archived/l4t-3275/index.html#page/Tegra%20Linux%20Driver%20Package%20Development%20Guide/quick_start.html#
+
+https://www.waveshare.com/wiki/JETSON-NANO-DEV-KIT#System_Environment_.26_EMMC_System_Programming
+
+//
+//
+//
+sudo tar -xjf Jetson-210_Linux_R32.7.2_aarch64.tbz2
+cd Linux_for_Tegra/rootfs/
+sudo tar -xjf ../../Tegra_Linux_Sample-Root-Filesystem_R32.7.2_aarch64.tbz2
+cd ../
+sudo ./apply_binaries.sh (If an error occurs, follow the prompts and re-enter the instruction).
+
+cd ..
+wget https://developer.nvidia.com/downloads/embedded/L4T/r32_Release_v7.5/overlay_32.7.5_PCN211181.tbz2
+sudo tar -xjf overlay_32.7.5_PCN211181.tbz2
+
+sudo ./flash.sh jetson-nano-emmc mmcblk0p1
+
+//
+// More ideas
+//
+TIMEOUT 30
+DEFAULT FLASH
+
+MENU TITLE L4T boot options
+
+LABEL FLASH
+      MENU LABEL FLASH
+      LINUX /boot/Image
+      INITRD /boot/initrd
+      APPEND ${cbootargs} quiet root=/dev/mmcblk0p1 rw rootwait rootfstype=ext4 console=ttyS0,115200n8 console=tty0 fbcon=map:0 net.ifnames=0 sdhci_tegra.en_boot_part_access=1
+
+LABEL SD
+      MENU LABEL SD
+      LINUX /boot/Image
+      INITRD /boot/initrd
+      FDT /boot/nano-spi.dtb
+      APPEND ${cbootargs} quiet root=UUID=fe3d7b93-91e9-469a-a245-3a0a52fe179c rw rootwait rootfstype=ext4 console=ttyS0,115200n8 console=tty0 fbcon=map:0 net.ifnames=0 sdhci_tegra.en_boot_part_access=1
+
+//
+// Update @ SD -> UUID in fstab
+//
+UUID=da0c2cea-40e1-4b54-914d-63b79432351a / ext4 defaults 0 1
+
+//
 // gcc-10 and g++-10
 //
 sudo apt remove --purge gcc-7
@@ -265,4 +308,3 @@ sudo ln -sf /usr/bin/gcc-10 /usr/bin/gcc
 sudo ln -sf /usr/bin/g++-10 /usr/bin/g++
 gcc --version
 g++ --version
-
