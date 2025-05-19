@@ -252,3 +252,17 @@ LABEL SD
 [    0.000000] earlycon: uart8250 at MMIO32 0x0000000070006000 (options '')
 [    0.000000] bootconsole [uart8250] enabled
 [    1.162457] tegradc tegradc.1: dpd enable lo
+
+//
+// gcc-10 and g++-10
+//
+sudo apt remove --purge gcc-7
+sudo add-apt-repository ppa:ubuntu-toolchain-r/test
+sudo apt update
+sudo apt install gcc-10
+sudo apt install g++-10
+sudo ln -sf /usr/bin/gcc-10 /usr/bin/gcc
+sudo ln -sf /usr/bin/g++-10 /usr/bin/g++
+gcc --version
+g++ --version
+
