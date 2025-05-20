@@ -328,17 +328,18 @@ signal sensor_fifo_data_out : std_logic_vector(7 downto 0) := (others => '0');
 signal sensor_fifo_full : std_logic := '0';
 signal sensor_fifo_empty : std_logic := '0';
 signal sensor_fifo_bit_count : std_logic_vector(3 downto 0) := (others => '0');
--- Offload
-signal offload_ready : std_logic := '0';
-signal offload_id : std_logic_vector(6 downto 0) := (others => '0');
-signal offload_register : std_logic_vector(7 downto 0) := (others => '0');
-signal offload_ctrl : std_logic_vector(7 downto 0) := (others => '0');
-signal offload_data : std_logic_vector(7 downto 0) := (others => '0');
-signal offload_wait : std_logic := '0';
-signal offload_wait_i2c : std_logic := '0';
-signal offload_wait_spi_s1 : std_logic := '0';
-signal offload_wait_spi_s2 : std_logic := '0';
-signal offload_wait_spi_rf : std_logic := '0';
+-- Primary Offload
+signal primary_offload_ready : std_logic := '0';
+signal primary_offload_id : std_logic_vector(6 downto 0) := (others => '0');
+signal primary_offload_ctrl : std_logic_vector(7 downto 0) := (others => '0');
+signal primary_offload_register : std_logic_vector(7 downto 0) := (others => '0');
+signal primary_offload_data : std_logic_vector(7 downto 0) := (others => '0');
+-- Primary Offload Wait
+signal primary_offload_wait : std_logic := '0';
+signal primary_offload_wait_i2c : std_logic := '0';
+signal primary_offload_wait_spi_s1 : std_logic := '0';
+signal primary_offload_wait_spi_s2 : std_logic := '0';
+signal primary_offload_wait_spi_rf : std_logic := '0';
 -- PacketSwitch
 signal switch_i2c_ready : std_logic := '0';
 signal switch_bmi160_s1_ready : std_logic := '0';
@@ -350,9 +351,9 @@ constant SWITCH_I2C : std_logic_vector(1 downto 0) := "00";
 constant SWITCH_SPI : std_logic_vector(1 downto 0) := "01";
 constant SWITCH_PWM : std_logic_vector(1 downto 0) := "10";
 -- SPI Mux
-constant SWITCH_BMI160_S1 : std_logic_vector(6 downto 0) := "1000100"; -- "0010001"; -- Must be upside down :: Due to offload_id for i2c
-constant SWITCH_BMI160_S2 : std_logic_vector(6 downto 0) := "0100100"; -- "0010010"; -- Must be upside down :: Due to offload_id for i2c
-constant SWITCH_BMI160_S3 : std_logic_vector(6 downto 0) := "1100100"; -- "0010011"; -- Must be upside down :: Due to offload_id for i2c
+constant SWITCH_BMI160_S1 : std_logic_vector(6 downto 0) := "1000100"; -- "0010001"; -- Must be upside down :: Due to primary_offload_id for i2c
+constant SWITCH_BMI160_S2 : std_logic_vector(6 downto 0) := "0100100"; -- "0010010"; -- Must be upside down :: Due to primary_offload_id for i2c
+constant SWITCH_BMI160_S3 : std_logic_vector(6 downto 0) := "1100100"; -- "0010011"; -- Must be upside down :: Due to primary_offload_id for i2c
 constant SWITCH_nRF905 : std_logic_vector(6 downto 0) := "0010100"; -- Must be upside down :: Same as upside down
 -- Feedback interrupts
 signal interrupt_i2c_feedback : std_logic := '0';
@@ -527,25 +528,23 @@ Port
 (
     CLOCK_50MHz : in  std_logic;
     RESET : in std_logic;
-
+    -- IN
     OFFLOAD_INT : in std_logic;
-
     OFFLOAD_ID : in std_logic_vector(6 downto 0);
     OFFLOAD_REGISTER : in std_logic_vector(7 downto 0);
     OFFLOAD_CONTROL : in std_logic_vector(7 downto 0);
     OFFLOAD_DATA : in std_logic_vector(7 downto 0);
-
-    OFFLOAD_WAIT : out std_logic;
-
+    -- SPI
     CTRL_CS : out std_logic;
     CTRL_MISO : in std_logic;
     CTRL_MOSI : out std_logic;
     CTRL_SCK : out std_logic;
-
+    -- OUT
     SINGLE_COMPLETE : out std_logic;
     BURST_COMPLETE : out std_logic;
     BURST_DATA : out std_logic_vector(7 downto 0);
-    SINGLE_DATA : out std_logic_vector(7 downto 0)
+    SINGLE_DATA : out std_logic_vector(7 downto 0);
+    OFFLOAD_WAIT : out std_logic
 );
 end component;
 
@@ -1501,14 +1500,14 @@ port map
 
     FIFO_FULL => primary_fifo_full,
     FIFO_EMPTY => primary_fifo_empty,
+    -- OUT
+    OFFLOAD_READY => primary_offload_ready,
+    OFFLOAD_ID => primary_offload_id,
+    OFFLOAD_CTRL => primary_offload_ctrl,
+    OFFLOAD_REGISTER => primary_offload_register,
+    OFFLOAD_DATA => primary_offload_data,
 
-    OFFLOAD_READY => offload_ready,
-    OFFLOAD_ID => offload_id,
-    OFFLOAD_CTRL => offload_ctrl,
-    OFFLOAD_REGISTER => offload_register,
-    OFFLOAD_DATA => offload_data,
-
-    OFFLOAD_WAIT => offload_wait
+    OFFLOAD_WAIT => primary_offload_wait
 );
 
 -- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1708,17 +1707,17 @@ begin
 
         case s1_state is
             when SENSOR_IDLE =>
-                if offload_ready = '1' then
-                    if offload_ctrl(2 downto 1) = SWITCH_I2C then
+                if primary_offload_ready = '1' then
+                    if primary_offload_ctrl(2 downto 1) = SWITCH_I2C then
                         switch_i2c_ready <= '1';
-                    elsif offload_ctrl(2 downto 1) = SWITCH_SPI then
-                        if offload_id = SWITCH_BMI160_S1 then
+                    elsif primary_offload_ctrl(2 downto 1) = SWITCH_SPI then
+                        if primary_offload_id = SWITCH_BMI160_S1 then
                             switch_bmi160_s1_ready <= '1';
-                        elsif offload_id = SWITCH_BMI160_S2 then
+                        elsif primary_offload_id = SWITCH_BMI160_S2 then
                             switch_bmi160_s2_ready <= '1';
-                        elsif offload_id = SWITCH_BMI160_S3 then
+                        elsif primary_offload_id = SWITCH_BMI160_S3 then
                             switch_bmi160_s3_ready <= '1';
-                        elsif offload_id = SWITCH_nRF905 then
+                        elsif primary_offload_id = SWITCH_nRF905 then
                             switch_spi_RF_ready <= '1';
                         else
                             acquisition_switch_bmi160_s1_ready <= '0';
@@ -1727,7 +1726,7 @@ begin
                             switch_bmi160_s3_ready <= '0';
                             switch_spi_RF_ready <= '0';
                         end if;
-                    elsif offload_ctrl(2 downto 1) = SWITCH_PWM then
+                    elsif primary_offload_ctrl(2 downto 1) = SWITCH_PWM then
                         switch_pwm_ready <= '1';
                     end if;
                     s1_state <= SENSOR_DONE;
@@ -1800,7 +1799,6 @@ i2c_Bus_primary: I2cController port map
 (
     CLOCK => CLOCK_50MHz,
     RESET => global_fpga_reset,
-
     -- in
     OFFLOAD_INT => switch_i2c_ready, -- i2c transfer ready to begin
     -- in
@@ -1812,12 +1810,12 @@ i2c_Bus_primary: I2cController port map
     I2C_SCK => I2C_SCK,
     I2C_SDA => I2C_SDA,
     -- in
-    OFFLOAD_ID => offload_id, -- Device ID :: BMI160@0x69=1001011 :: ADXL345@0x53=1100101
-    OFFLOAD_REGISTER => offload_register, -- Device Register
-    OFFLOAD_CONTROL => offload_ctrl(0), -- For now :: Read/Write
-    OFFLOAD_DATA => offload_data, -- Write Data
+    OFFLOAD_ID => primary_offload_id, -- Device ID :: BMI160@0x69=1001011 :: ADXL345@0x53=1100101
+    OFFLOAD_REGISTER => primary_offload_register, -- Device Register
+    OFFLOAD_CONTROL => primary_offload_ctrl(0), -- For now :: Read/Write
+    OFFLOAD_DATA => primary_offload_data, -- Write Data
     -- out
-    OFFLOAD_WAIT => offload_wait_i2c, -- Wait between consecutive i2c transfers
+    OFFLOAD_WAIT => primary_offload_wait_i2c, -- Wait between consecutive i2c transfers
     FEEDBACK_DATA => data_i2c_feedback
 );
 
@@ -1825,94 +1823,72 @@ BMI160_S1_primary: SpiController port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
     RESET => global_fpga_reset,
-
-    -- In
+    -- IN
     OFFLOAD_INT => switch_bmi160_s1_ready,
-    OFFLOAD_ID => offload_id(0) & offload_id(1) &
-                offload_id(2) & offload_id(3) &
-                offload_id(4) & offload_id(5) &
-                offload_id(6), -- Turn back around for SPI
-    OFFLOAD_CONTROL => offload_ctrl,
-    OFFLOAD_REGISTER => offload_register,
-    OFFLOAD_DATA => offload_data,
-
-    -- Out
-    OFFLOAD_WAIT => offload_wait_spi_s1,
-
-    -- Master SPI interface
+    OFFLOAD_ID => "0000000",
+    OFFLOAD_CONTROL => primary_offload_ctrl,
+    OFFLOAD_REGISTER => primary_offload_register,
+    OFFLOAD_DATA => primary_offload_data,
+    -- SPI
     CTRL_CS => ctrl_BMI160_S1_CS,
     CTRL_MISO => ctrl_BMI160_S1_MISO,
     CTRL_MOSI => ctrl_BMI160_S1_MOSI,
     CTRL_SCK => ctrl_BMI160_S1_SCLK,
-
-    -- Out
+    -- OUT
     SINGLE_COMPLETE => interrupt_spi_bmi160_s1_feedback,
     BURST_COMPLETE => open,
     BURST_DATA => open,
-    SINGLE_DATA => data_spi_bmi160_s1_feedback
+    SINGLE_DATA => data_spi_bmi160_s1_feedback,
+    OFFLOAD_WAIT => primary_offload_wait_spi_s1
 );
 
 BMI160_S2_primary: SpiController port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
     RESET => global_fpga_reset,
-
+    -- IN
     OFFLOAD_INT => switch_bmi160_s2_ready,
-
-    OFFLOAD_ID => offload_id(0) & offload_id(1) &
-                offload_id(2) & offload_id(3) &
-                offload_id(4) & offload_id(5) &
-                offload_id(6), -- Turn back around for SPI
-
-    OFFLOAD_CONTROL => offload_ctrl,
-    OFFLOAD_REGISTER => offload_register,
-    OFFLOAD_DATA => offload_data,
-
-    OFFLOAD_WAIT => offload_wait_spi_s2,
-
-    -- Master SPI interface
+    OFFLOAD_ID => "0000000",
+    OFFLOAD_CONTROL => primary_offload_ctrl,
+    OFFLOAD_REGISTER => primary_offload_register,
+    OFFLOAD_DATA => primary_offload_data,
+    -- SPI
     CTRL_CS => ctrl_BMI160_S2_CS,
     CTRL_MISO => ctrl_BMI160_S2_MISO,
     CTRL_MOSI => ctrl_BMI160_S2_MOSI,
     CTRL_SCK => ctrl_BMI160_S2_SCLK,
-
+    -- OUT
     SINGLE_COMPLETE => interrupt_spi_bmi160_s2_feedback,
     BURST_COMPLETE => open,
     BURST_DATA => open,
-    SINGLE_DATA => data_spi_bmi160_s2_feedback
+    SINGLE_DATA => data_spi_bmi160_s2_feedback,
+    OFFLOAD_WAIT => primary_offload_wait_spi_s2
 );
 
 RF905_primary: SpiController port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
     RESET => global_fpga_reset,
-
+    -- IN
     OFFLOAD_INT => switch_spi_RF_ready,
-
-    OFFLOAD_ID => offload_id(0) & offload_id(1) &
-                offload_id(2) & offload_id(3) &
-                offload_id(4) & offload_id(5) &
-                offload_id(6), -- Turn back around for SPI
-
-    OFFLOAD_CONTROL => offload_ctrl,
-    OFFLOAD_REGISTER => offload_register,
-    OFFLOAD_DATA => offload_data,
-
-    OFFLOAD_WAIT => offload_wait_spi_rf,
-
-    -- Master SPI interface
+    OFFLOAD_ID => "0000000",
+    OFFLOAD_CONTROL => primary_offload_ctrl,
+    OFFLOAD_REGISTER => primary_offload_register,
+    OFFLOAD_DATA => primary_offload_data,
+    -- SPI
     CTRL_CS => ctrl_RF_CS,
     CTRL_MISO => ctrl_RF_MISO,
     CTRL_MOSI => ctrl_RF_MOSI,
     CTRL_SCK => ctrl_RF_SCLK,
-
+    -- OUT
     SINGLE_COMPLETE => interrupt_spi_rf_feedback,
     BURST_COMPLETE => open,
     BURST_DATA => open,
-    SINGLE_DATA => data_spi_rf_feedback
+    SINGLE_DATA => data_spi_rf_feedback,
+    OFFLOAD_WAIT => primary_offload_wait_spi_rf
 );
 
-offload_wait <= offload_wait_i2c or offload_wait_spi_s1 or offload_wait_spi_s2 or offload_wait_spi_rf;
+primary_offload_wait <= primary_offload_wait_i2c or primary_offload_wait_spi_s1 or primary_offload_wait_spi_s2 or primary_offload_wait_spi_rf;
 
 -- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 -- //                      //
@@ -1926,32 +1902,23 @@ BMI160_S1_acquisition: SpiController port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
     RESET => global_fpga_reset,
-
-    -- In
+    -- IN
     OFFLOAD_INT => acquisition_switch_bmi160_s1_ready,
-    OFFLOAD_ID => offload_id(0) & offload_id(1) &
-                offload_id(2) & offload_id(3) &
-                offload_id(4) & offload_id(5) &
-                offload_id(6), -- Turn back around for SPI
-
+    OFFLOAD_ID => "0000000",
     OFFLOAD_CONTROL => acquisition_offload_ctrl,
     OFFLOAD_REGISTER => acquisition_offload_register,
     OFFLOAD_DATA => acquisition_offload_data,
-
-    -- Out
-    OFFLOAD_WAIT => acquisition_offload_wait_spi_s1, -- TODO :: Need wait to process individual Bytes
-
-    -- Master SPI interface
+    -- SPI
     CTRL_CS => acquisition_ctrl_BMI160_S1_CS,
     CTRL_MISO => acquisition_ctrl_BMI160_S1_MISO,
     CTRL_MOSI => acquisition_ctrl_BMI160_S1_MOSI,
     CTRL_SCK => acquisition_ctrl_BMI160_S1_SCLK,
-
-    -- Out
+    -- OUT
     SINGLE_COMPLETE => acquisition_interrupt_spi_bmi160_s1_feedback,
     BURST_COMPLETE => acquisition_interrupt_spi_bmi160_s1_burst,
     BURST_DATA => acquisition_data_spi_bmi160_s1_burst,
-    SINGLE_DATA => acquisition_data_spi_bmi160_s1_feedback
+    SINGLE_DATA => acquisition_data_spi_bmi160_s1_feedback,
+    OFFLOAD_WAIT => acquisition_offload_wait_spi_s1 -- TODO :: Need wait to process individual Bytes
 );
 
 -- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2108,7 +2075,7 @@ port map
     OFFLOAD_INT => switch_pwm_ready,
     FPGA_INT => interrupt_pwm_feedback,
 
-    PWM_VECTOR => offload_data,
+    PWM_VECTOR => primary_offload_data,
     -- OUT
     PWM_SIGNAL => PWM_SIGNAL
 );

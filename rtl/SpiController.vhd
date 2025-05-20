@@ -8,25 +8,23 @@ Port
 (
     CLOCK_50MHz : in  std_logic;
     RESET : in std_logic;
-
+    -- IN
     OFFLOAD_INT : in std_logic;
-
     OFFLOAD_ID : in std_logic_vector(6 downto 0);
     OFFLOAD_CONTROL : in std_logic_vector(7 downto 0);
     OFFLOAD_REGISTER : in std_logic_vector(7 downto 0);
     OFFLOAD_DATA : in std_logic_vector(7 downto 0);
-
-    OFFLOAD_WAIT : out std_logic;
-
+    -- SPI
     CTRL_CS : out std_logic;
     CTRL_MISO : in std_logic;
     CTRL_MOSI : out std_logic;
     CTRL_SCK : out std_logic;
-
+    -- OUT
     SINGLE_COMPLETE : out std_logic;
     BURST_COMPLETE : out std_logic;
     BURST_DATA : out std_logic_vector(7 downto 0);
-    SINGLE_DATA : out std_logic_vector(7 downto 0)
+    SINGLE_DATA : out std_logic_vector(7 downto 0);
+    OFFLOAD_WAIT : out std_logic
 );
 end entity SpiController;
 
