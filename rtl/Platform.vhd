@@ -549,14 +549,16 @@ component InterruptGenerator
 generic
 (
     PERIOD_MS : integer := 1000;
-    PULSE_LENGTH : integer := 50
+    PULSE_LENGTH : integer := 50;
+    TRESHOLD_LENGTH : integer := 1000
 );
 Port
 (
     CLOCK_50MHz : in  std_logic;
     RESET : in std_logic;
 
-    INTERRUPT_SIGNAL : out std_logic
+    INTERRUPT_SIGNAL : out std_logic;
+    THRESHOLD : out std_logic
 );
 end component;
 
@@ -1197,28 +1199,32 @@ WatchdogInterrupt: InterruptGenerator
 generic map
 (
     PERIOD_MS => 100, -- Every 100ms
-    PULSE_LENGTH => 50 -- 50 * 20ns = 1us Interrupt Pulse
+    PULSE_LENGTH => 50, -- 50 * 20ns = 1us Interrupt Pulse
+    TRESHOLD_LENGTH => 2500 -- 2500 * 20ns = 50us Threashold
 )
 port map
 (
 	CLOCK_50MHz => CLOCK_50MHz,
     RESET => global_fpga_reset,
 
-	INTERRUPT_SIGNAL => WDG_INT_FROM_FPGA
+	INTERRUPT_SIGNAL => WDG_INT_FROM_FPGA,
+    THRESHOLD => open
 );
 
 TimerInterrupt: InterruptGenerator
 generic map
 (
-    PERIOD_MS => 20, -- Every 20ms
-    PULSE_LENGTH => 50 -- 50 * 20ns = 1us Interrupt Pulse
+    PERIOD_MS => 1, -- Every 20ms
+    PULSE_LENGTH => 50, -- 50 * 20ns = 1us Interrupt Pulse
+    TRESHOLD_LENGTH => 2500 -- 2500 * 20ns = 50us Threashold
 )
 port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
     RESET => global_fpga_reset,
 
-    INTERRUPT_SIGNAL => TIMER_INT_FROM_FPGA
+    INTERRUPT_SIGNAL => TIMER_INT_FROM_FPGA,
+    THRESHOLD => open
 );
 
 feedback_interrupts_process:
