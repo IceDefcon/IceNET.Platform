@@ -8,9 +8,9 @@ Port
     CLOCK_50MHz : in  std_logic;
     RESET : in std_logic;
 
-    OFFLOAD_DELAY_SWITCH  : in  std_logic;
+    VECTOR_SWITCH  : in  std_logic;
 
-    OFFLOAD_IRQ_VECTOR  : in  std_logic;
+    OFFLOAD_INTERRUPT  : in  std_logic;
     OFFLOAD_BIT_COUNT : in std_logic_vector(3 downto 0);
     OFFLOAD_FIFO_EMPTY  : in  std_logic;
 
@@ -57,7 +57,7 @@ begin
             check_delay <= 400000;
         elsif rising_edge(CLOCK_50MHz) then
 
-            if OFFLOAD_DELAY_SWITCH = '1' then
+            if VECTOR_SWITCH = '1' then
                 check_delay <= 25000;
             else
                 check_delay <= 400000;
@@ -67,7 +67,7 @@ begin
 
                 when OFFLOAD_IDLE =>
                     OFFLOAD_DEBUG <= '0';
-                    if OFFLOAD_IRQ_VECTOR = '1' then
+                    if OFFLOAD_INTERRUPT = '1' then
                         offload_state <= OFFLOAD_INIT;
                     end if;
 

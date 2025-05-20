@@ -9,7 +9,7 @@ port
     CLOCK : in std_logic;
     RESET : in std_logic;
 
-    OFFLOAD_INT : in std_logic;
+    OFFLOAD_TRIGGER : in std_logic;
     KERNEL_INT : in std_logic;
     FPGA_INT : out std_logic; -- 1000*20ns interrupt back to Kernel
     FIFO_INT : out std_logic;
@@ -151,7 +151,7 @@ begin
             ----------------------------------------
             -- State Machine :: Offload Interrupt
             ----------------------------------------
-            if OFFLOAD_INT = '1' then
+            if OFFLOAD_TRIGGER = '1' then
                 OFFLOAD_WAIT <= '1';
                 i2c_state <= I2C_INIT;
             else

@@ -22,7 +22,14 @@ UsbCamera::UsbCamera() :
     m_cameraDisplay->setAlignment(Qt::AlignCenter);
     m_cameraDisplay->setStyleSheet("background-color: black");
 
-    m_cap.open("/dev/video1", cv::CAP_V4L2);
+    if (access("/dev/video1", F_OK) != -1) 
+    {
+        m_cap.open("/dev/video1", cv::CAP_V4L2);
+    } 
+    else 
+    {
+        m_cap.open("/dev/video0", cv::CAP_V4L2);
+    }
 
     if (!m_cap.isOpened())
     {
@@ -63,9 +70,12 @@ UsbCamera::UsbCamera() :
     double fps = m_cap.get(cv::CAP_PROP_FPS);
     qDebug() << "[CAM] Camera FPS: " << fps;
 
-    /* GStreamer pipeline */
-    std::string gstPipeline = "appsrc ! videoconvert ! x264enc tune=zerolatency bitrate=500 speed-preset=ultrafast "
-        "! rtph264pay config-interval=1 pt=96 ! udpsink host=192.168.8.101 port=5000";
+    std::string gstPipeline =
+        "appsrc ! "
+        "videoconvert ! "
+        "x264enc bitrate=5000 speed-preset=ultrafast ! "
+        "rtph264pay config-interval=1 pt=96 ! "
+        "udpsink host=192.168.8.101 port=5000";
 
     /* Open GStreamer writer */
     m_writer.open(gstPipeline, 0, 30, cv::Size(1280, 720), true);

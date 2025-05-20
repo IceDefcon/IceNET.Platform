@@ -76,14 +76,23 @@ LABEL primary
       FDT /boot/nano-spi.dtb
       APPEND ${cbootargs} quiet root=/dev/mmcblk0p1 rw rootwait rootfstype=ext4 console=ttyS0,115200n8 console=tty0 fbcon=map:0 net.ifnames=0 sdhci_tegra.en_boot_part_access=1
 
-//
+///////////////////////////////////////////////
 // Install openCV with CUDA support
-//
+///////////////////////////////////////////////
 sudo apt-get update
 sudo apt-get install -y cmake git libgtk2.0-dev pkg-config libavcodec-dev libavformat-dev libswscale-dev
 sudo apt-get install -y python3-dev python3-numpy libtbb2 libtbb-dev libjpeg-dev libpng-dev libtiff-dev
 sudo apt-get install -y libdc1394-22-dev libv4l-dev v4l-utils libopenblas-dev libatlas-base-dev libblas-dev
 sudo apt-get install -y libxvidcore-dev libx264-dev libgtk-3-dev libcanberra-gtk* libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev
+
+sudo apt-get install -y build-essential cmake libavcodec-dev libavformat-dev libavutil-dev libeigen3-dev libglew-dev libgtk2.0-dev 
+sudo apt-get install -y libgtk-3-dev libjpeg-dev libpng-dev libpostproc-dev libswscale-dev libtbb-dev libtiff5-dev libv4l-dev libxvidcore-dev 
+sudo apt-get install -y libx264-dev qt5-default zlib1g-dev pkg-config
+
+sudo apt update
+sudo apt install -y build-essential cmake git pkg-config libjpeg-dev libpng-dev libtiff-dev \
+libavcodec-dev libavformat-dev libswscale-dev libv4l-dev libxvidcore-dev libx264-dev \
+libgtk-3-dev libcanberra-gtk3-dev libatlas-base-dev gfortran python3-dev
 
 mkdir ~/opencv_build && cd ~/opencv_build
 git clone https://github.com/opencv/opencv.git
@@ -92,19 +101,28 @@ cd opencv
 git checkout 4.5.4
 cd ../opencv_contrib
 git checkout 4.5.4
-
 cd ~/opencv_build/opencv
 mkdir build && cd build
+
 cmake -D CMAKE_BUILD_TYPE=RELEASE \
       -D CMAKE_INSTALL_PREFIX=/usr/local \
-      -D OPENCV_EXTRA_MODULES_PATH=~/opencv_build/opencv_contrib/modules \
       -D WITH_CUDA=ON \
-      -D ENABLE_FAST_MATH=1 \
-      -D CUDA_FAST_MATH=1 \
-      -D WITH_CUBLAS=1 \
+      -D CUDA_ARCH_BIN=${ARCH_BIN} \
+      -D CUDA_ARCH_PTX="" \
+      -D ENABLE_FAST_MATH=ON \
+      -D CUDA_FAST_MATH=ON \
+      -D WITH_CUBLAS=ON \
       -D WITH_LIBV4L=ON \
-      -D BUILD_opencv_python3=ON \
+      -D WITH_V4L=ON \
       -D WITH_GSTREAMER=ON \
+      -D WITH_GSTREAMER_0_10=OFF \
+      -D WITH_QT=ON \
+      -D WITH_OPENGL=ON \
+      -D BUILD_opencv_python2=ON \
+      -D BUILD_opencv_python3=ON \
+      -D BUILD_TESTS=OFF \
+      -D BUILD_PERF_TESTS=OFF \
+      -D OPENCV_EXTRA_MODULES_PATH=~/opencv_build/opencv_contrib/modules \
       -D BUILD_EXAMPLES=OFF ..
 
 make -j4
@@ -131,7 +149,7 @@ sudo ldconfig
 //
 sudo apt remove cmake
 
-sudo apt update
+sudo apt updatesudo apt-get install -y build-essential cmake libavcodec-dev libavformat-dev libavutil-dev libeigen3-dev libglew-dev libgtk2.0-dev libgtk-3-dev libjpeg-dev libpng-dev libpostproc-dev libswscale-dev libtbb-dev libtiff5-dev libv4l-dev libxvidcore-dev libx264-dev qt5-default zlib1g-dev pkg-config
 sudo apt install -y build-essential libssl-dev
 
 cd ~
