@@ -7,6 +7,8 @@
 #pragma once
 
 #include <opencv2/opencv.hpp>
+#include <unistd.h>
+
 #include <QVBoxLayout>
 #include <QPixmap>
 #include <QDialog>
