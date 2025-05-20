@@ -9,7 +9,7 @@ Port
     CLOCK_50MHz : in  std_logic;
     RESET : in std_logic;
     -- IN
-    OFFLOAD_INT : in std_logic;
+    OFFLOAD_TRIGGER : in std_logic;
     OFFLOAD_ID : in std_logic_vector(6 downto 0);
     OFFLOAD_CONTROL : in std_logic_vector(7 downto 0);
     OFFLOAD_REGISTER : in std_logic_vector(7 downto 0);
@@ -101,7 +101,7 @@ begin
             SINGLE_DATA <= (others => '0');
         elsif rising_edge(CLOCK_50MHz) then
 
-            if OFFLOAD_INT = '1' then
+            if OFFLOAD_TRIGGER = '1' then
                 OFFLOAD_WAIT <= '1';
                 SPI_state <= SPI_INIT;
             end if;

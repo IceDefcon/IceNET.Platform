@@ -13,7 +13,7 @@ port
     CLOCK_50MHz : in std_logic;
     RESET : in std_logic;
 
-    OFFLOAD_INT : in std_logic;
+    OFFLOAD_TRIGGER : in std_logic;
     FPGA_INT : out std_logic;
 
     PWM_VECTOR : in std_logic_vector(7 downto 0);
@@ -76,7 +76,7 @@ begin
         end if;
 
         -- Check if new data vector is ready to store
-        if OFFLOAD_INT = '1' then
+        if OFFLOAD_TRIGGER = '1' then
             pwm_ready <= '1';
             pwm_data_vector <= PWM_VECTOR;
         end if;
