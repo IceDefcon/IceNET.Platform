@@ -23,10 +23,10 @@ Port
     CTRL_MOSI : out std_logic;
     CTRL_SCK : out std_logic;
 
-    FPGA_INT : out std_logic;
-    BURST_INT : out std_logic;
+    SINGLE_COMPLETE : out std_logic;
+    BURST_COMPLETE : out std_logic;
     BURST_DATA : out std_logic_vector(7 downto 0);
-    FEEDBACK_DATA : out std_logic_vector(7 downto 0)
+    SINGLE_DATA : out std_logic_vector(7 downto 0)
 );
 end entity SpiController;
 
@@ -99,8 +99,8 @@ begin
             CTRL_CS <= '0';
             CTRL_MOSI <= '0';
             CTRL_SCK <= '0';
-            FPGA_INT <= '0';
-            FEEDBACK_DATA <= (others => '0');
+            SINGLE_COMPLETE <= '0';
+            SINGLE_DATA <= (others => '0');
         elsif rising_edge(CLOCK_50MHz) then
 
             if OFFLOAD_INT = '1' then
@@ -227,7 +227,7 @@ begin
                                 spi_status <= "1000"; -- Next Byte Exit
                             else
                                 spi_status <= "1110"; -- Going Back to CONFIG
-                                BURST_INT <= '1';
+                                BURST_COMPLETE <= '1';
                                 BURST_DATA <= feedback_byte;
                             end if;
                         end if;
@@ -243,9 +243,9 @@ begin
                                 spi_status <= "1100"; -- Last Byte Exit
                             elsif byte_process_timer < BYTE_BREAK + BYTE_INIT + BYTE_CLOCK + BYTE_EXIT + TRANSFER_EXIT then
                                 spi_status <= "1101"; -- Transfer Exit
-                                FPGA_INT <= '1';
-                                BURST_INT <= '1';
-                                FEEDBACK_DATA <= feedback_byte;
+                                SINGLE_COMPLETE <= '1';
+                                BURST_COMPLETE <= '1';
+                                SINGLE_DATA <= feedback_byte;
                                 BURST_DATA <= feedback_byte;
                             else
                                 spi_status <= "1111"; -- Going Back to CONFIG -> IDLE
@@ -285,7 +285,7 @@ begin
                         end if;
 
                         if spi_status = "1101" then
-                            BURST_INT <= '0';
+                            BURST_COMPLETE <= '0';
                         end if;
 
                         ---------------------------------------------------
@@ -330,7 +330,7 @@ begin
                             CTRL_CS <= '0';
                             CTRL_MOSI <= '0';
                             CTRL_SCK <= '0';
-                            BURST_INT <= '0';
+                            BURST_COMPLETE <= '0';
                         end if;
 
                         ------------------------
@@ -341,7 +341,7 @@ begin
                             CTRL_MOSI <= '1';
                             CTRL_SCK <= '0';
                             SPI_state <= SPI_CONFIG;
-                            BURST_INT <= '0';
+                            BURST_COMPLETE <= '0';
                         end if;
 
 ------------------------------------------------------------------------------------------------------------------------------
@@ -395,8 +395,8 @@ begin
                                 spi_status <= "1100"; -- Last Byte Exit
                             elsif byte_process_timer < BYTE_BREAK + BYTE_INIT + BYTE_CLOCK + BYTE_EXIT + TRANSFER_EXIT then
                                 spi_status <= "1101"; -- Transfer Exit
-                                FPGA_INT <= '1';
-                                FEEDBACK_DATA <= OFFLOAD_REGISTER;
+                                SINGLE_COMPLETE <= '1';
+                                SINGLE_DATA <= OFFLOAD_REGISTER;
                             else
                                 spi_status <= "1111"; -- Going Back to CONFIG -> IDLE
                             end if;
@@ -495,7 +495,7 @@ begin
 
                 when SPI_DONE =>
                     CTRL_CS <= '1';
-                    FPGA_INT <= '0';
+                    SINGLE_COMPLETE <= '0';
                     OFFLOAD_WAIT <= '0';
                     SPI_state <= SPI_IDLE;
 

@@ -555,10 +555,10 @@ Port
     CTRL_MOSI : out std_logic;
     CTRL_SCK : out std_logic;
 
-    FPGA_INT : out std_logic;
-    BURST_INT : out std_logic;
+    SINGLE_COMPLETE : out std_logic;
+    BURST_COMPLETE : out std_logic;
     BURST_DATA : out std_logic_vector(7 downto 0);
-    FEEDBACK_DATA : out std_logic_vector(7 downto 0)
+    SINGLE_DATA : out std_logic_vector(7 downto 0)
 );
 end component;
 
@@ -1919,10 +1919,10 @@ SpiController_BMI160_S1_configuration: SpiController port map
     CTRL_SCK => ctrl_BMI160_S1_SCLK,
 
     -- Out
-    FPGA_INT => interrupt_spi_bmi160_s1_feedback,
-    BURST_INT => interrupt_spi_bmi160_s1_burst,
+    SINGLE_COMPLETE => interrupt_spi_bmi160_s1_feedback,
+    BURST_COMPLETE => interrupt_spi_bmi160_s1_burst,
     BURST_DATA => data_spi_bmi160_s1_burst,
-    FEEDBACK_DATA => data_spi_bmi160_s1_feedback
+    SINGLE_DATA => data_spi_bmi160_s1_feedback
 );
 
 SpiController_BMI160_S1_acquisition: SpiController port map
@@ -1951,10 +1951,10 @@ SpiController_BMI160_S1_acquisition: SpiController port map
     CTRL_SCK => acquisition_ctrl_BMI160_S1_SCLK,
 
     -- Out
-    FPGA_INT => acquisition_interrupt_spi_bmi160_s1_feedback,
-    BURST_INT => acquisition_interrupt_spi_bmi160_s1_burst,
+    SINGLE_COMPLETE => acquisition_interrupt_spi_bmi160_s1_feedback,
+    BURST_COMPLETE => acquisition_interrupt_spi_bmi160_s1_burst,
     BURST_DATA => acquisition_data_spi_bmi160_s1_burst,
-    FEEDBACK_DATA => acquisition_data_spi_bmi160_s1_feedback
+    SINGLE_DATA => acquisition_data_spi_bmi160_s1_feedback
 );
 
 SpiController_BMI160_S2_module: SpiController port map
@@ -1981,10 +1981,10 @@ SpiController_BMI160_S2_module: SpiController port map
     CTRL_MOSI => ctrl_BMI160_S2_MOSI,
     CTRL_SCK => ctrl_BMI160_S2_SCLK,
 
-    FPGA_INT => interrupt_spi_bmi160_s2_feedback,
-    BURST_INT => interrupt_spi_bmi160_s2_burst,
+    SINGLE_COMPLETE => interrupt_spi_bmi160_s2_feedback,
+    BURST_COMPLETE => interrupt_spi_bmi160_s2_burst,
     BURST_DATA => data_spi_bmi160_s2_burst,
-    FEEDBACK_DATA => data_spi_bmi160_s2_feedback
+    SINGLE_DATA => data_spi_bmi160_s2_feedback
 );
 
 SpiController_RF_module: SpiController port map
@@ -2011,10 +2011,10 @@ SpiController_RF_module: SpiController port map
     CTRL_MOSI => ctrl_RF_MOSI,
     CTRL_SCK => ctrl_RF_SCLK,
 
-    FPGA_INT => interrupt_spi_rf_feedback,
-    BURST_INT => interrupt_spi_rf_burst,
+    SINGLE_COMPLETE => interrupt_spi_rf_feedback,
+    BURST_COMPLETE => interrupt_spi_rf_burst,
     BURST_DATA => data_spi_rf_burst,
-    FEEDBACK_DATA => data_spi_rf_feedback
+    SINGLE_DATA => data_spi_rf_feedback
 );
 
 offload_wait <= offload_wait_i2c or offload_wait_spi_s1 or offload_wait_spi_s2 or offload_wait_spi_rf;
