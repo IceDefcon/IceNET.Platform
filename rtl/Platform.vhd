@@ -455,8 +455,8 @@ signal acquisition_offload_register : std_logic_vector(7 downto 0) := (others =>
 signal acquisition_offload_data : std_logic_vector(7 downto 0) := (others => '0');
 signal acquisition_offload_wait_spi_s1 : std_logic := '0';
 
-signal acquisition_interrupt_spi_bmi160_s1_feedback : std_logic := '0';
-signal acquisition_interrupt_spi_bmi160_s1_feedback_short : std_logic := '0';
+signal acquisition_single_complete_bmi160_s1 : std_logic := '0';
+signal acquisition_single_complete_bmi160_s1_short : std_logic := '0';
 signal acquisition_interrupt_spi_bmi160_s1_burst : std_logic := '0';
 signal acquisition_data_spi_bmi160_s1_burst : std_logic_vector(7 downto 0);
 signal acquisition_data_spi_bmi160_s1_feedback : std_logic_vector(7 downto 0) := "00010101";
@@ -698,9 +698,9 @@ Port
     CLOCK_50MHz : in  std_logic;
     RESET : in std_logic;
 
-    OFFLOAD_DELAY_SWITCH  : in  std_logic;
+    VECTOR_SWITCH  : in  std_logic;
 
-    OFFLOAD_IRQ_VECTOR  : in  std_logic;
+    OFFLOAD_INTERRUPT  : in  std_logic;
     OFFLOAD_BIT_COUNT : in std_logic_vector(3 downto 0);
     OFFLOAD_FIFO_EMPTY  : in  std_logic;
 
@@ -1910,7 +1910,7 @@ BMI160_S1_acquisition: SpiController port map
     CTRL_MOSI => acquisition_ctrl_BMI160_S1_MOSI,
     CTRL_SCK => acquisition_ctrl_BMI160_S1_SCLK,
     -- OUT
-    SINGLE_COMPLETE => acquisition_interrupt_spi_bmi160_s1_feedback,
+    SINGLE_COMPLETE => acquisition_single_complete_bmi160_s1,
     BURST_COMPLETE => acquisition_interrupt_spi_bmi160_s1_burst,
     BURST_DATA => acquisition_data_spi_bmi160_s1_burst,
     SINGLE_DATA => acquisition_data_spi_bmi160_s1_feedback,
@@ -1968,8 +1968,8 @@ port map
 
     ENABLE_CONTROLLER => enable_vector_interrupt,
 
-    INPUT_PULSE => acquisition_interrupt_spi_bmi160_s1_feedback,
-    OUTPUT_PULSE => acquisition_interrupt_spi_bmi160_s1_feedback_short
+    INPUT_PULSE => acquisition_single_complete_bmi160_s1,
+    OUTPUT_PULSE => acquisition_single_complete_bmi160_s1_short
 );
 
 
@@ -1979,9 +1979,9 @@ port map
     CLOCK_50MHz => CLOCK_50MHz,
     RESET => global_fpga_reset,
     -- In
-    OFFLOAD_DELAY_SWITCH => speed_vector_interrupt,
+    VECTOR_SWITCH => speed_vector_interrupt,
     -- In
-    OFFLOAD_IRQ_VECTOR => acquisition_interrupt_spi_bmi160_s1_feedback_short,
+    OFFLOAD_INTERRUPT => acquisition_single_complete_bmi160_s1_short,
     OFFLOAD_BIT_COUNT => sensor_fifo_bit_count,
     OFFLOAD_FIFO_EMPTY => sensor_fifo_empty,
     -- Out
