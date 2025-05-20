@@ -550,7 +550,7 @@ generic
 (
     PERIOD_MS : integer := 1000;
     PULSE_LENGTH : integer := 50;
-    TRESHOLD_LENGTH : integer := 1000
+    TRESHOLD_LENGTH : integer := 50000
 );
 Port
 (
@@ -1214,9 +1214,9 @@ port map
 TimerInterrupt: InterruptGenerator
 generic map
 (
-    PERIOD_MS => 1, -- Every 20ms
+    PERIOD_MS => 20, -- Every 20ms
     PULSE_LENGTH => 50, -- 50 * 20ns = 1us Interrupt Pulse
-    TRESHOLD_LENGTH => 2500 -- 2500 * 20ns = 50us Threashold
+    TRESHOLD_LENGTH => 50000 -- 50000 * 20ns = 1ms Threashold
 )
 port map
 (
