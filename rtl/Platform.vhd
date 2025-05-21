@@ -828,6 +828,24 @@ Port
 );
 end component;
 
+component Divider
+generic
+(
+    DEPTH : integer := 16
+);
+Port
+(
+    CLOCK_50MHz : in  std_logic;
+    RESET : in  std_logic;
+
+    DIVIDENT : in std_logic_vector(DEPTH - 1 downto 0);
+    DIVISOR : in std_logic_vector(DEPTH - 1 downto 0);
+
+    QUOTIENT : out std_logic_vector(DEPTH - 1 downto 0);
+    REMINDER : out std_logic_vector(DEPTH - 1 downto 0)
+);
+end component;
+
 -- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 -- //
 -- //
@@ -987,6 +1005,29 @@ port map
 
     ASYNC_INPUT => GPS_UART_RX,
     SYNC_OUTPUT => synced_GPS_UART_RX
+);
+
+-- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+-- //
+-- // Dvision Algorithm
+-- //
+-- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+Acceleration_Divider_S1: Divider
+generic map
+(
+    DEPTH => 21
+)
+port map
+(
+    CLOCK_50MHz => CLOCK_50MHz,
+    RESET => global_fpga_reset,
+
+    DIVIDENT => (others => '0'),
+    DIVISOR => (others => '0'),
+
+    QUOTIENT => open,
+    REMINDER => open
 );
 
 -- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
