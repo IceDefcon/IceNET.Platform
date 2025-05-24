@@ -289,7 +289,7 @@ type VECTOR_TYPE is
     VECTOR_DISABLE,             -- "0011"
     VECTOR_START,               -- "0100"
     VECTOR_STOP,                -- "0101"
-    VECTOR_OFFLOAD_SECONDARY,   -- "0110"
+    VECTOR_UNUSED_06,           -- "0110"
     VECTOR_FAST,                -- "0111"
     VECTOR_SLOW,                -- "1000"
     VECTOR_F1,                  -- "1001"
@@ -307,15 +307,11 @@ signal primary_offload_vector_interrupt : std_logic := '0';
 signal enable_vector_interrupt : std_logic := '0';
 signal start_vector_interrupt : std_logic := '0';
 signal speed_vector_interrupt : std_logic := '0';
-signal secondary_offload_vector_interrupt : std_logic := '0';
 signal f1_vector_interrupt : std_logic := '0';
 signal f2_vector_interrupt : std_logic := '0';
 signal f3_vector_interrupt : std_logic := '0';
 signal return_vector_extension : std_logic := '0';
 signal secondary_dma_trigger_gpio_pulse : std_logic := '0';
--- Interrupt Help
-signal data_vector_run : std_logic := '0';
-signal data_vector_count : std_logic_vector(3 downto 0) := (others => '0');
 -- Interrupt Vector signals
 signal primary_conversion_run : std_logic := '0';
 signal primary_conversion_reset : integer range 0 to 2048 := 0;
@@ -468,15 +464,16 @@ signal acceleration_ctrl_BMI160_S1_MISO : std_logic := '0';
 signal acceleration_ctrl_BMI160_S1_MOSI : std_logic := '0';
 signal acceleration_ctrl_BMI160_S1_SCLK : std_logic := '0';
 
-type SENSOR_STATE is
+type PACKET_SWITCH_SM is
 (
-    SENSOR_IDLE,
-    SENSOR_ACQUISITION,
-    SENSOR_DONE
+    PACKET_SWITCH_IDLE,
+    PACKET_SWITCH_ACQUISITION,
+    PACKET_SWITCH_DONE
 );
-signal s1_state: SENSOR_STATE := SENSOR_IDLE;
+signal packetSwitchState: PACKET_SWITCH_SM := PACKET_SWITCH_IDLE;
 
 -- Debug
+signal led_5_toggle : std_logic := '1';
 signal led_6_toggle : std_logic := '1';
 signal led_7_toggle : std_logic := '1';
 signal led_8_toggle : std_logic := '1';
@@ -491,6 +488,32 @@ signal sheduler_fifo_empty : std_logic := '0';
 
 signal wr_busy_job : std_logic := '0';
 signal rd_busy_job : std_logic := '0';
+
+signal acceleration_offload_six : integer range 0 to 8 := 0;
+signal acceleration_offload_pairs : integer range 0 to 256 := 0;
+signal acceleration_offload_x : std_logic_vector(15 downto 0) := (others => '0');
+signal acceleration_offload_y : std_logic_vector(15 downto 0) := (others => '0');
+signal acceleration_offload_z : std_logic_vector(15 downto 0) := (others => '0');
+signal acceleration_offload_x_total : std_logic_vector(20 downto 0) := (others => '0');
+signal acceleration_offload_y_total : std_logic_vector(20 downto 0) := (others => '0');
+signal acceleration_offload_z_total : std_logic_vector(20 downto 0) := (others => '0');
+signal acceleration_offload_counter : std_logic_vector(20 downto 0) := (others => '0');
+signal acceleration_offload_divident_x : std_logic_vector(20 downto 0) := (others => '0');
+signal acceleration_offload_divident_y : std_logic_vector(20 downto 0) := (others => '0');
+signal acceleration_offload_divident_z : std_logic_vector(20 downto 0) := (others => '0');
+signal acceleration_offload_divisor_xyz : std_logic_vector(20 downto 0) := (others => '0');
+signal acceleration_offload_trigger : std_logic := '0';
+signal acceleration_offload_ready : std_logic := '0';
+
+type ACCELERATION_SM is
+(
+    ACCELERATION_IDLE,
+    ACCELERATION_INIT,
+    ACCELERATION_WRITE,
+    ACCELERATION_CONFIG,
+    ACCELERATION_DONE
+);
+signal accelreation_state: ACCELERATION_SM := ACCELERATION_IDLE;
 
 ----------------------------------------------------------------------------------------------------------------
 -- COMPONENTS DECLARATION
@@ -1014,31 +1037,6 @@ port map
 
 -- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 -- //
--- // Dvision Algorithm
--- //
--- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-Acceleration_Divider_S1: Divider
-generic map
-(
-    DEPTH => 10
-)
-port map
-(
-    CLOCK_50MHz => CLOCK_50MHz,
-    RESET => global_fpga_reset,
-
-    TRIGGER => f1_vector_interrupt,
-    DIVIDENT => "1001110011",
-    DIVISOR => "0000001001",
-
-    QUOTIENT => open,
-    REMINDER => open,
-    DIVISION_COMPLETE => open
-);
-
--- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
--- //
 -- // NOISE CONTROLERS :: Used to eliminate spike noise from the long pulses :: Required for breadboard + long cables
 -- //
 -- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1367,7 +1365,6 @@ process(CLOCK_50MHz, global_fpga_reset)
 begin
     if global_fpga_reset = '1' then
         primary_offload_vector_interrupt <= '0';
-        secondary_offload_vector_interrupt <= '0';
         vector_state <= VECTOR_IDLE;
         enable_vector_interrupt <= '0';
         start_vector_interrupt <= '0';
@@ -1446,7 +1443,7 @@ begin
                 elsif interrupt_vector = "0101" then
                     vector_state <= VECTOR_STOP;
                 elsif interrupt_vector = "0110" then
-                    vector_state <= VECTOR_OFFLOAD_SECONDARY;
+                    vector_state <= VECTOR_UNUSED_06;
                 elsif interrupt_vector = "0111" then
                     vector_state <= VECTOR_FAST;
                 elsif interrupt_vector = "1000" then
@@ -1488,8 +1485,7 @@ begin
                 start_vector_interrupt <= '0';
                 led_7_toggle <= '1';
                 vector_state <= VECTOR_DONE;
-            when VECTOR_OFFLOAD_SECONDARY =>
-                secondary_offload_vector_interrupt <= '1';
+            when VECTOR_UNUSED_06 =>
                 vector_state <= VECTOR_DONE;
             when VECTOR_FAST =>
                 speed_vector_interrupt <= '1';
@@ -1516,7 +1512,6 @@ begin
                 vector_state <= VECTOR_DONE;
             when VECTOR_DONE =>
                 primary_offload_vector_interrupt <= '0';
-                secondary_offload_vector_interrupt <= '0';
                 f1_vector_interrupt <= '0';
                 f2_vector_interrupt <= '0';
                 f3_vector_interrupt <= '0';
@@ -1771,7 +1766,7 @@ process(CLOCK_50MHz)
 begin
     if rising_edge(CLOCK_50MHz) then
 
-        case s1_state is
+        case packetSwitchState is
             --------------------------------------------------------------------------------
             -- OFFLOAD_ID :: 7-bits
             --------------------------------------------------------------------------------
@@ -1780,7 +1775,7 @@ begin
             -- |1000|100| :: BMI160_S1 :: 0x11
             -- |0100|100| :: BMI160_S2 :: 0x12
             --------------------------------------------------------------------------------
-            when SENSOR_IDLE =>
+            when PACKET_SWITCH_IDLE =>
                 if primary_offload_ready = '1' then
                     if primary_offload_ctrl(2 downto 1) = CTRL_I2C then
                         trigger_i2c <= '1';
@@ -1800,10 +1795,10 @@ begin
                     elsif primary_offload_ctrl(2 downto 1) = CTRL_PWM then
                         trigger_pwm_m1 <= '1';
                     end if;
-                    s1_state <= SENSOR_DONE;
+                    packetSwitchState <= PACKET_SWITCH_DONE;
                 elsif s1_bmi160_int_1_DataReady = '1' then
                     if start_vector_interrupt = '1' then
-                        s1_state <= SENSOR_ACQUISITION;
+                        packetSwitchState <= PACKET_SWITCH_ACQUISITION;
                     end if;
                 end if;
 
@@ -1825,24 +1820,24 @@ begin
             --       burst size    R/W (I2C, SPI)
             --       (I2C, SPI)
             --------------------------------------------------------------------------------
-            when SENSOR_ACQUISITION =>
+            when PACKET_SWITCH_ACQUISITION =>
                 acceleration_trigger_bmi160_s1 <= '1';                 --  N/A   12    NA   R
                 acceleration_offload_ctrl_bmi160_s1     <= "00110000"; -- | 0 | 1100 | 01 | 0 |
                 acceleration_offload_register_bmi160_s1 <= "10010010"; -- 0x92 :: TODO -> Add 0x10 in case of Read !!!
                 acceleration_offload_data_bmi160_s1     <= "00000000"; -- 0x00
-                s1_state <= SENSOR_DONE;
+                packetSwitchState <= PACKET_SWITCH_DONE;
 
-            when SENSOR_DONE =>
+            when PACKET_SWITCH_DONE =>
                 trigger_i2c <= '0';
                 trigger_pwm_m1 <= '0';
                 acceleration_trigger_bmi160_s1 <= '0';
                 trigger_bmi160_s1 <= '0';
                 trigger_bmi160_s2 <= '0';
                 trigger_nRF905 <= '0';
-                s1_state <= SENSOR_IDLE;
+                packetSwitchState <= PACKET_SWITCH_IDLE;
 
             when others =>
-                s1_state <= SENSOR_IDLE;
+                packetSwitchState <= PACKET_SWITCH_IDLE;
 
         end case;
 
@@ -1971,7 +1966,7 @@ primary_offload_wait <= primary_offload_wait_i2c or primary_offload_wait_spi_s1 
 -- 0. Interrupt from sensor
 -- 1. Noise Controller
 -- 2. Pulse Controller
--- 3. [PACKED] Interface Controller -> SENSOR_ACQUISITION
+-- 3. [PACKED] Interface Controller -> PACKET_SWITCH_ACQUISITION
 -- 4. Set trigger for SpiController to read 6-Bytes
 -------------------------------------------------------------
 BMI160_S1_acceleration: SpiController port map
@@ -2006,7 +2001,7 @@ port map
     clock => CLOCK_50MHz,
     -- IN
     data  => acceleration_data_spi_bmi160_s1_burst,
-    rdreq => data_vector_run or sensor_fifo_rdreq,
+    rdreq => sensor_fifo_rdreq,
     wrreq => acceleration_interrupt_spi_bmi160_s1_burst,
     -- OUT
     empty => sensor_fifo_empty,
@@ -2051,23 +2046,6 @@ port map
 
     OFFLOAD_DEBUG => offload_debug
 );
--------------------------------------------------------------
--- 8. Additional Offload control from Qt5::GUI
--------------------------------------------------------------
-offload_FifoData:
-process(CLOCK_50MHz)
-begin
-    if rising_edge(CLOCK_50MHz) then
-        if secondary_offload_vector_interrupt = '1' and data_vector_run <= '0' then
-            data_vector_count <= "0000";
-            data_vector_run <= '1';
-        elsif data_vector_run = '1' and data_vector_count < "1011" then
-            data_vector_count <= data_vector_count + '1';
-        else
-            data_vector_run <= '0';
-        end if;
-    end if;
-end process;
 
 ----------------------------------------------------------------------------------------------------------------------------
 --
@@ -2084,13 +2062,26 @@ process(CLOCK_50MHz)
 begin
     if rising_edge(CLOCK_50MHz) then
         if rd_busy_job = '0' then
+            --
+            -- Write only when we are not reading
+            --
             wr_busy_job <= acceleration_interrupt_spi_bmi160_s1_burst;
+            --
+            -- Start Reading when last busy complete
+            -- And when threshold activates Reading process
+            --
             if acceleration_offload_wait_spi_s1 = '0' and sheduler_timer_threshold = '1' then
                 rd_busy_job <= '1';
             end if;
         elsif rd_busy_job = '1' then
+            --
+            -- Stop writing when we reading
+            --
             wr_busy_job <= '0';
             if sheduler_timer_threshold = '0' then
+                --
+                -- Stop reading when threashold go down
+                --
                 rd_busy_job <= '0';
             end if;
         end if;
@@ -2112,6 +2103,166 @@ port map
     empty => sheduler_fifo_empty,
     full  => sheduler_fifo_full,
     q     => sheduler_fifo_data_out
+);
+-------------------------------------------------------------
+-- A7. Average Acceleration Counter
+-------------------------------------------------------------
+acceleration_offset_process:
+process(CLOCK_50MHz)
+begin
+    if rising_edge(CLOCK_50MHz) then
+        if sheduler_fifo_empty = '0' then
+            if rd_busy_job = '1' then
+                acceleration_offload_counter <= acceleration_offload_counter + '1';
+                acceleration_offload_six <= acceleration_offload_six + 1;
+
+                if acceleration_offload_six = 1 then
+                    acceleration_offload_z_total <= acceleration_offload_z_total + acceleration_offload_z;
+                    acceleration_offload_x(7 downto 0) <= sheduler_fifo_data_out;
+
+                elsif acceleration_offload_six = 2 then
+                    acceleration_offload_x(15 downto 8) <= sheduler_fifo_data_out;
+
+                elsif acceleration_offload_six = 3 then
+                    acceleration_offload_x_total <= acceleration_offload_x_total + acceleration_offload_x;
+                    acceleration_offload_y(7 downto 0) <= sheduler_fifo_data_out;
+
+                elsif acceleration_offload_six = 4 then
+                    acceleration_offload_y(15 downto 8) <= sheduler_fifo_data_out;
+
+                elsif acceleration_offload_six = 5 then
+                    acceleration_offload_y_total <= acceleration_offload_y_total + acceleration_offload_y;
+                    acceleration_offload_z(7 downto 0) <= sheduler_fifo_data_out;
+
+                elsif acceleration_offload_six = 6 then
+                    acceleration_offload_six <= 1;
+                    acceleration_offload_pairs <= acceleration_offload_pairs + 1;
+                    acceleration_offload_z(15 downto 8) <= sheduler_fifo_data_out;
+                end if;
+
+                if acceleration_offload_pairs = 0 then
+                    acceleration_offload_pairs <= 1;
+                end if;
+
+            end if;
+        elsif sheduler_fifo_empty = '1' then
+            acceleration_offload_six <= 0;
+            acceleration_offload_pairs <= 0;
+            acceleration_offload_counter <= (others => '0');
+        end if;
+
+        case accelreation_state is
+            when ACCELERATION_IDLE =>
+                if rd_busy_job = '1' and sheduler_fifo_empty = '1' then
+                    if acceleration_offload_counter /= 0 and acceleration_offload_pairs /= 0 then
+                        acceleration_offload_divisor_xyz <= std_logic_vector(to_unsigned(acceleration_offload_pairs, 21));
+                        acceleration_offload_ready <= '1';
+                        accelreation_state <= ACCELERATION_INIT;
+                    end if;
+                end if;
+
+            when ACCELERATION_INIT =>
+                acceleration_offload_ready <= '0';
+                acceleration_offload_divident_x <= acceleration_offload_x_total;
+                acceleration_offload_divident_y <= acceleration_offload_y_total;
+                acceleration_offload_divident_z <= acceleration_offload_z_total;
+                acceleration_offload_x <= (others => '0');
+                acceleration_offload_y <= (others => '0');
+                acceleration_offload_z <= (others => '0');
+                acceleration_offload_x_total <= (others => '0');
+                acceleration_offload_y_total <= (others => '0');
+                acceleration_offload_z_total <= (others => '0');
+                accelreation_state <= ACCELERATION_WRITE;
+
+            when ACCELERATION_WRITE =>
+                acceleration_offload_trigger <= '1';
+                accelreation_state <= ACCELERATION_CONFIG;
+
+            when ACCELERATION_CONFIG =>
+                acceleration_offload_trigger <= '0';
+                accelreation_state <= ACCELERATION_DONE;
+
+            when ACCELERATION_DONE =>
+                accelreation_state <= ACCELERATION_IDLE;
+
+            when others =>
+                accelreation_state <= ACCELERATION_IDLE;
+        end case;
+
+        -- Debug :: Avoid Optimization
+        if acceleration_offload_six = 6
+        and acceleration_offload_pairs = 100
+        and acceleration_offload_ready = '1'
+        and acceleration_offload_x = "0000000000000001"
+        and acceleration_offload_y = "0000000000000001"
+        and acceleration_offload_z = "0000000000000001"
+        and acceleration_offload_x_total = "000000000000000000001"
+        and acceleration_offload_y_total = "000000000000000000001"
+        and acceleration_offload_z_total = "000000000000000000001"
+        and acceleration_offload_divisor_xyz = "000000000000000000001" then
+            led_5_toggle <= '0';
+        end if;
+    end if;
+end process;
+
+-------------------------------------------------------------
+-- A8. Division Algorithm
+-------------------------------------------------------------
+Acceleration_Divider_S1_x: Divider
+generic map
+(
+    DEPTH => 21
+)
+port map
+(
+    CLOCK_50MHz => CLOCK_50MHz,
+    RESET => global_fpga_reset,
+
+    TRIGGER => acceleration_offload_trigger,
+    DIVIDENT => acceleration_offload_divident_x,
+    DIVISOR => acceleration_offload_divisor_xyz,
+
+    QUOTIENT => open,
+    REMINDER => open,
+    DIVISION_COMPLETE => open
+);
+
+Acceleration_Divider_S1_y: Divider
+generic map
+(
+    DEPTH => 21
+)
+port map
+(
+    CLOCK_50MHz => CLOCK_50MHz,
+    RESET => global_fpga_reset,
+
+    TRIGGER => acceleration_offload_trigger,
+    DIVIDENT => acceleration_offload_divident_y,
+    DIVISOR => acceleration_offload_divisor_xyz,
+
+    QUOTIENT => open,
+    REMINDER => open,
+    DIVISION_COMPLETE => open
+);
+
+Acceleration_Divider_S1_z: Divider
+generic map
+(
+    DEPTH => 21
+)
+port map
+(
+    CLOCK_50MHz => CLOCK_50MHz,
+    RESET => global_fpga_reset,
+
+    TRIGGER => acceleration_offload_trigger,
+    DIVIDENT => acceleration_offload_divident_z,
+    DIVISOR => acceleration_offload_divisor_xyz,
+
+    QUOTIENT => open,
+    REMINDER => open,
+    DIVISION_COMPLETE => open
 );
 
 --------------------------------------------------------------------------
@@ -2200,17 +2351,6 @@ port map
 );
 
 -- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
--- //                          //
--- //                          //
--- // [SENSOR] Data Processing //
--- //                          //
--- //                          //
--- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-
-
--- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 -- //         //
 -- //         //
 -- // [DEBUG] //
@@ -2280,7 +2420,7 @@ LED_1 <= '0';
 LED_2 <= '1';
 LED_3 <= '1';
 LED_4 <= '1';
-LED_5 <= '1';
+LED_5 <= led_5_toggle;
 LED_6 <= led_6_toggle;
 LED_7 <= led_7_toggle;
 LED_8 <= led_8_toggle;
