@@ -292,9 +292,9 @@ type VECTOR_TYPE is
     VECTOR_OFFLOAD_SECONDARY,   -- "0110"
     VECTOR_FAST,                -- "0111"
     VECTOR_SLOW,                -- "1000"
-    VECTOR_UNUSED_09,           -- "1001"
-    VECTOR_UNUSED_10,           -- "1010"
-    VECTOR_UNUSED_11,           -- "1011"
+    VECTOR_F1,                  -- "1001"
+    VECTOR_F2,                  -- "1010"
+    VECTOR_F3,                  -- "1011"
     VECTOR_UNUSED_12,           -- "1100"
     VECTOR_UNUSED_13,           -- "1101"
     VECTOR_UNUSED_14,           -- "1110"
@@ -308,6 +308,9 @@ signal enable_vector_interrupt : std_logic := '0';
 signal start_vector_interrupt : std_logic := '0';
 signal speed_vector_interrupt : std_logic := '0';
 signal secondary_offload_vector_interrupt : std_logic := '0';
+signal f1_vector_interrupt : std_logic := '0';
+signal f2_vector_interrupt : std_logic := '0';
+signal f3_vector_interrupt : std_logic := '0';
 signal return_vector_extension : std_logic := '0';
 signal secondary_dma_trigger_gpio_pulse : std_logic := '0';
 -- Interrupt Help
@@ -828,6 +831,26 @@ Port
 );
 end component;
 
+component Divider
+generic
+(
+    DEPTH : integer := 16
+);
+Port
+(
+    CLOCK_50MHz : in  std_logic;
+    RESET : in  std_logic;
+
+    TRIGGER : in std_logic;
+    DIVIDENT : in std_logic_vector(DEPTH - 1 downto 0);
+    DIVISOR : in std_logic_vector(DEPTH - 1 downto 0);
+
+    QUOTIENT : out std_logic_vector(DEPTH - 1 downto 0);
+    REMINDER : out std_logic_vector(DEPTH - 1 downto 0);
+    DIVISION_COMPLETE : out std_logic
+);
+end component;
+
 -- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 -- //
 -- //
@@ -987,6 +1010,31 @@ port map
 
     ASYNC_INPUT => GPS_UART_RX,
     SYNC_OUTPUT => synced_GPS_UART_RX
+);
+
+-- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+-- //
+-- // Dvision Algorithm
+-- //
+-- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+Acceleration_Divider_S1: Divider
+generic map
+(
+    DEPTH => 10
+)
+port map
+(
+    CLOCK_50MHz => CLOCK_50MHz,
+    RESET => global_fpga_reset,
+
+    TRIGGER => f1_vector_interrupt,
+    DIVIDENT => "1001110011",
+    DIVISOR => "0000001001",
+
+    QUOTIENT => open,
+    REMINDER => open,
+    DIVISION_COMPLETE => open
 );
 
 -- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1404,11 +1452,11 @@ begin
                 elsif interrupt_vector = "1000" then
                     vector_state <= VECTOR_SLOW;
                 elsif interrupt_vector = "1001" then
-                    vector_state <= VECTOR_UNUSED_09;
+                    vector_state <= VECTOR_F1;
                 elsif interrupt_vector = "1010" then
-                    vector_state <= VECTOR_UNUSED_10;
+                    vector_state <= VECTOR_F2;
                 elsif interrupt_vector = "1011" then
-                    vector_state <= VECTOR_UNUSED_11;
+                    vector_state <= VECTOR_F3;
                 elsif interrupt_vector = "1100" then
                     vector_state <= VECTOR_UNUSED_12;
                 elsif interrupt_vector = "1101" then
@@ -1449,11 +1497,14 @@ begin
             when VECTOR_SLOW =>
                 speed_vector_interrupt <= '0';
                 vector_state <= VECTOR_DONE;
-            when VECTOR_UNUSED_09 =>
+            when VECTOR_F1 =>
+                f1_vector_interrupt <= '1';
                 vector_state <= VECTOR_DONE;
-            when VECTOR_UNUSED_10 =>
+            when VECTOR_F2 =>
+                f2_vector_interrupt <= '1';
                 vector_state <= VECTOR_DONE;
-            when VECTOR_UNUSED_11 =>
+            when VECTOR_F3 =>
+                f3_vector_interrupt <= '1';
                 vector_state <= VECTOR_DONE;
             when VECTOR_UNUSED_12 =>
                 vector_state <= VECTOR_DONE;
@@ -1466,6 +1517,9 @@ begin
             when VECTOR_DONE =>
                 primary_offload_vector_interrupt <= '0';
                 secondary_offload_vector_interrupt <= '0';
+                f1_vector_interrupt <= '0';
+                f2_vector_interrupt <= '0';
+                f3_vector_interrupt <= '0';
                 vector_state <= VECTOR_IDLE;
             when others =>
                 vector_state <= VECTOR_IDLE;
