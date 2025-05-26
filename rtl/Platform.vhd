@@ -312,7 +312,6 @@ signal f02_vector_interrupt : std_logic := '0';
 signal f1_vector_interrupt : std_logic := '0';
 signal f2_vector_interrupt : std_logic := '0';
 signal f3_vector_interrupt : std_logic := '0';
-signal secondary_dma_trigger_gpio_pulse_long : std_logic := '0';
 signal secondary_dma_trigger_gpio_pulse_20ns : std_logic := '0';
 -- Interrupt Vector signals
 signal primary_conversion_run : std_logic := '0';
@@ -366,8 +365,6 @@ signal data_spi_rf_feedback : std_logic_vector(7 downto 0) := "00010001";
 signal data_spi_bmi160_s1_feedback : std_logic_vector(7 downto 0) := "00010101";
 signal data_spi_bmi160_s2_feedback : std_logic_vector(7 downto 0) := "00010110";
 signal data_pwm_feedback : std_logic_vector(7 downto 0) := "11000011";
--- Interrupts
-signal feedback_interrupt_timer : std_logic_vector(12 downto 0) := (others => '0');
 -- UART
 signal uart_write_enable : std_logic := '0';
 signal uart_write_symbol : std_logic_vector(6 downto 0) := (others => '0');
@@ -475,7 +472,6 @@ signal led_6_toggle : std_logic := '1';
 signal led_7_toggle : std_logic := '1';
 signal led_8_toggle : std_logic := '1';
 
-signal feedbck_interrupt_logic : std_logic := '0';
 signal offload_debug : std_logic := '0';
 
 signal sheduler_timer_threshold : std_logic := '0';
@@ -904,8 +900,9 @@ port
     CLOCK_50MHz : in  std_logic;
     RESET : in std_logic;
 
-    TRIGGER : in std_logic;
-    RETURN_DATA : out std_logic_vector(7 downto 0);
+    TRIGGER_LONG : in std_logic;
+    TRIGGER_SHORT : in std_logic;
+
     RETURN_INTERRUPT : out std_logic
 );
 end component;
@@ -1333,45 +1330,21 @@ port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
     RESET => global_fpga_reset,
-
-    TRIGGER => '0',
-    RETURN_DATA => open,
-    RETURN_INTERRUPT => open
+    -- IN
+    TRIGGER_LONG => i2c_complete_long
+                    or pwm_m1_complete_long
+                    or spi_nRF905_complete_long
+                    or spi_bmi160_s1_complete_long
+                    or spi_bmi160_s2_complete_long,
+    TRIGGER_SHORT => secondary_dma_trigger_gpio_pulse_20ns,
+    -- OUT
+    RETURN_INTERRUPT => SPI_INT_FROM_FPGA
 );
 
-feedback_control_process:
+feedback_data_process:
 process(CLOCK_50MHz)
 begin
     if rising_edge(CLOCK_50MHz) then
-
-        ----------------------------------------------------
-        -- Short to Long Transition
-        ----------------------------------------------------
-        if secondary_dma_trigger_gpio_pulse_20ns = '1' then
-            secondary_dma_trigger_gpio_pulse_long <= '1';
-        end if;
-
-        if i2c_complete_long = '1'
-        or pwm_m1_complete_long = '1'
-        or spi_nRF905_complete_long = '1'
-        or spi_bmi160_s1_complete_long = '1'
-        or spi_bmi160_s2_complete_long = '1'
-        or secondary_dma_trigger_gpio_pulse_long = '1' then
-            if feedback_interrupt_timer = "1001110001000" then -- 5000 * 20 = 100us interrupt pulse back to CPU
-                SPI_INT_FROM_FPGA <= '0';
-                feedbck_interrupt_logic <= '0';
-                secondary_dma_trigger_gpio_pulse_long <= '0';
-            else
-                SPI_INT_FROM_FPGA <= '1';
-                feedbck_interrupt_logic <= '1';
-                feedback_interrupt_timer <= feedback_interrupt_timer + '1';
-            end if;
-        else
-            SPI_INT_FROM_FPGA <= '0';
-            feedbck_interrupt_logic <= '0';
-            feedback_interrupt_timer <= (others => '0'); -- Reseting timer here :: When FPGA_INT goto '0'
-        end if;
-
         --
         -- TODO :: For now
         --

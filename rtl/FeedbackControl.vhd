@@ -13,39 +13,53 @@ Port
     CLOCK_50MHz : in  std_logic;
     RESET : in std_logic;
 
-    TRIGGER : in std_logic;
-    RETURN_DATA : out std_logic_vector(7 downto 0);
+    TRIGGER_LONG : in std_logic;
+    TRIGGER_SHORT : in std_logic;
+
     RETURN_INTERRUPT : out std_logic
 );
 end entity FeedbackControl;
 
 architecture rtl of FeedbackControl is
 
-type FEEDBACK_SM is
-(
-    FEEDBACK_IDLE,
-    FEEDBACK_PRODUCE,
-    FEEDBACK_DONE
-);
-signal feedback_state: FEEDBACK_SM := FEEDBACK_IDLE;
+signal feedbck_interrupt_logic : std_logic := '0';
+signal secondary_dma_trigger_gpio_pulse_long : std_logic := '0';
+signal feedback_interrupt_timer : std_logic_vector(12 downto 0) := (others => '0');
 
 begin
 
     feedback_control_process:
     process(CLOCK_50MHz)
     begin
-        if rising_edge(CLOCK_50MHz) then
 
-            case feedback_state is
-                when FEEDBACK_IDLE =>
+        if RESET = '1' then
+            feedbck_interrupt_logic <= '0';
+            secondary_dma_trigger_gpio_pulse_long <= '0';
+            feedback_interrupt_timer <= (others => '0');
+        elsif rising_edge(CLOCK_50MHz) then
+            ----------------------------------------------------
+            -- Short to Long Transition
+            ----------------------------------------------------
+            if TRIGGER_SHORT = '1' then
+                secondary_dma_trigger_gpio_pulse_long <= '1';
+            end if;
 
-                when FEEDBACK_PRODUCE =>
+            if TRIGGER_LONG = '1' or secondary_dma_trigger_gpio_pulse_long = '1' then
+                if feedback_interrupt_timer = "1001110001000" then -- 5000 * 20 = 100us interrupt pulse back to CPU
+                    RETURN_INTERRUPT <= '0';
+                    feedbck_interrupt_logic <= '0';
+                    secondary_dma_trigger_gpio_pulse_long <= '0';
+                else
+                    RETURN_INTERRUPT <= '1';
+                    feedbck_interrupt_logic <= '1';
+                    feedback_interrupt_timer <= feedback_interrupt_timer + '1';
+                end if;
+            else
+                RETURN_INTERRUPT <= '0';
+                feedbck_interrupt_logic <= '0';
+                feedback_interrupt_timer <= (others => '0');
+            end if;
 
-                when FEEDBACK_DONE =>
-
-                when others =>
-                    feedback_state <= FEEDBACK_IDLE;
-            end case;
         end if;
     end process;
 
