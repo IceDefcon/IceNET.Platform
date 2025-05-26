@@ -441,15 +441,12 @@ signal s1_bmi160_int_1_DataReady : std_logic := '0';
 signal s1_bmi160_int_2_DataReady : std_logic := '0';
 signal s2_bmi160_int_1_DataReady : std_logic := '0';
 signal s2_bmi160_int_2_DataReady : std_logic := '0';
--- Debug
+-- Acceleration S1
 signal acceleration_trigger_bmi160_s1 : std_logic := '0';
 signal acceleration_offload_ctrl_bmi160_s1 : std_logic_vector(7 downto 0) := (others => '0');
 signal acceleration_offload_register_bmi160_s1 : std_logic_vector(7 downto 0) := (others => '0');
 signal acceleration_offload_data_bmi160_s1 : std_logic_vector(7 downto 0) := (others => '0');
 signal acceleration_offload_wait_spi_s1 : std_logic := '0';
-
-signal acceleration_single_complete_bmi160_s1 : std_logic := '0';
-signal acceleration_single_complete_bmi160_s1_short : std_logic := '0';
 signal acceleration_interrupt_spi_bmi160_s1_burst : std_logic := '0';
 signal acceleration_data_spi_bmi160_s1_burst : std_logic_vector(7 downto 0);
 signal acceleration_data_spi_bmi160_s1_feedback : std_logic_vector(7 downto 0) := "00010101";
@@ -1356,7 +1353,7 @@ begin
         elsif i2c_complete_long = '1'  then
             secondary_parallel_MISO <= data_i2c_feedback;
         elsif pwm_m1_complete_long = '1' then
-            secondary_parallel_MISO <= data_pwm_feedback;
+            secondary_parallel_MISO <= data_pwm_feedback; -- Constant
         elsif spi_bmi160_s1_complete_long = '1' then
             secondary_parallel_MISO <= data_spi_bmi160_s1_feedback;
         elsif spi_bmi160_s2_complete_long = '1' then
@@ -1671,6 +1668,7 @@ port map
     BUSY => TEST_BUSY
 );
 
+--RamControl_test_process:
 --process (CLOCK_133MHz, test_ram_state)
 --begin
 --    if rising_edge(CLOCK_133MHz) then
@@ -2011,65 +2009,12 @@ BMI160_S1_acceleration: SpiController port map
     CTRL_MOSI => acceleration_ctrl_BMI160_S1_MOSI,
     CTRL_SCK => acceleration_ctrl_BMI160_S1_SCLK,
     -- OUT
-    SINGLE_COMPLETE => acceleration_single_complete_bmi160_s1, -- Just one byte
+    SINGLE_COMPLETE => open,
     BURST_COMPLETE => acceleration_interrupt_spi_bmi160_s1_burst, -- Every byte @ Burst
     BURST_DATA => acceleration_data_spi_bmi160_s1_burst,
     SINGLE_DATA => acceleration_data_spi_bmi160_s1_feedback,
     OFFLOAD_WAIT => acceleration_offload_wait_spi_s1 -- TODO :: Need wait to process individual Bytes
 );
--------------------------------------------------------------
--- 5. Data is bursted to FIFO
--------------------------------------------------------------
---SensorData_Fifo: FifoData
---port map
---(
---    aclr  => global_fpga_reset,
---    clock => CLOCK_50MHz,
---    -- IN
---    data  => acceleration_data_spi_bmi160_s1_burst,
---    rdreq => sensor_fifo_rdreq,
---    wrreq => acceleration_interrupt_spi_bmi160_s1_burst,
---    -- OUT
---    empty => sensor_fifo_empty,
---    full  => sensor_fifo_full,
---    q     => acceleration_average_data_out
---);
--------------------------------------------------------------
--- 6. Long -> Short Single Complete Pulse
--------------------------------------------------------------
---Accqusition_pulse: PulseController
---generic map
---(
---    PULSE_LENGTH => 1 -- 1*20ns Pulse
---)
---port map
---(
---    CLOCK_50MHz => CLOCK_50MHz,
---    RESET => global_fpga_reset,
-
---    ENABLE_CONTROLLER => enable_vector_interrupt,
-
---    INPUT_PULSE => acceleration_single_complete_bmi160_s1,
---    OUTPUT_PULSE => acceleration_single_complete_bmi160_s1_short
---);
--------------------------------------------------------------
--- 7. Drive oflload Sensor Fifo
--------------------------------------------------------------
---OffloadController_secondary: SensorFifo_OffloadController
---port map
---(
---    CLOCK_50MHz => CLOCK_50MHz,
---    RESET => global_fpga_reset,
---    -- In
---    OFFLOAD_INTERRUPT => acceleration_single_complete_bmi160_s1_short,
---    OFFLOAD_BIT_COUNT => sensor_fifo_bit_count, -- When BIT(8)
---    OFFLOAD_FIFO_EMPTY => sensor_fifo_empty,
---    -- Out
---    OFFLOAD_READ_ENABLE => sensor_fifo_rdreq,
---    OFFLOAD_SECONDARY_DMA_TRIGGER => secondary_dma_trigger_gpio_pulse_20ns,
-
---    OFFLOAD_DEBUG => offload_debug
---);
 
 ----------------------------------------------------------------------------------------------------------------------------
 --
