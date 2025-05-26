@@ -47,7 +47,6 @@ gui::gui() :
     m_IO_GuiState(std::make_shared<ioStateType>(IO_COM_IDLE)),
     m_isPulseControllerEnabled(true),
     m_isStartAcquisition(true),
-    m_isFastControl(true),
     m_CsiCamera(nullptr),
     m_UsbCamera(nullptr)
 {
@@ -104,6 +103,8 @@ gui::gui() :
         "}"
     );
     connect(csiCameraButton, &QPushButton::clicked, this, &gui::openCsiCamera);
+
+    setupAdditionalDebugs();
 }
 
 
@@ -376,117 +377,6 @@ void gui::setupFpgaCtrl()
         m_isStartAcquisition = !m_isStartAcquisition;
     };
     connect(m_startButton, &QPushButton::clicked, this, acquisitionControl);
-
-    m_speedButton = new QPushButton("T.SLOW", this);
-    m_speedButton->setGeometry(w.xGap*6 + w.xText + w.xUnit*4, w.yGap*2 + w.yLogo, w.xUnit*2, w.yUnit);
-    m_speedButton->setStyleSheet(
-        "QPushButton {"
-        "   background-color: blue;"
-        "   color: white;"
-        "   font-size: 17px;"
-        "   font-weight: bold;"
-        "   border-radius: 10px;"
-        "   padding: 5px;"
-        "}"
-        "QPushButton:hover {"
-        "   background-color: darkblue;"
-        "}"
-        "QPushButton:pressed {"
-        "   background-color: black;"
-        "}"
-    );
-
-    auto speedControl = [this]()
-    {
-        if (NULL == m_instanceDroneControl)
-        {
-            printToMainConsole("$ Drone Control is Down");
-            return;
-        }
-
-        if (m_isFastControl)
-        {
-            m_speedButton->setText("T.FAST");
-            m_speedButton->setStyleSheet(
-                "QPushButton {"
-                "   background-color: purple;"
-                "   color: white;"
-                "   font-size: 17px;"
-                "   font-weight: bold;"
-                "   border-radius: 10px;"
-                "   padding: 5px;"
-                "}"
-                "QPushButton:hover {"
-                "   background-color: darkred;"
-                "}"
-                "QPushButton:pressed {"
-                "   background-color: black;"
-                "}"
-            );
-
-            printToMainConsole("$ Start Secondary SPI/DMA");
-            interruptVector_execute(VECTOR_FAST);
-        }
-        else
-        {
-            m_speedButton->setText("T.SLOW");
-            m_speedButton->setStyleSheet(
-                "QPushButton {"
-                "   background-color: blue;"
-                "   color: white;"
-                "   font-size: 17px;"
-                "   font-weight: bold;"
-                "   border-radius: 10px;"
-                "   padding: 5px;"
-                "}"
-                "QPushButton:hover {"
-                "   background-color: darkblue;"
-                "}"
-                "QPushButton:pressed {"
-                "   background-color: black;"
-                "}"
-            );
-
-            printToMainConsole("$ Stop Secondary SPI/DMA");
-            interruptVector_execute(VECTOR_SLOW);
-        }
-
-        m_isFastControl = !m_isFastControl;
-    };
-    connect(m_speedButton, &QPushButton::clicked, this, speedControl);
-
-    QPushButton *dataButton = new QPushButton("OFF.2ND", this);
-    dataButton->setGeometry(w.xGap*6 + w.xText + w.xUnit*4, w.yGap*3 + w.yLogo + w.yUnit, w.xUnit*2, w.yUnit);
-    dataButton->setStyleSheet(
-        "QPushButton {"
-        "   background-color: blue;"
-        "   color: white;"
-        "   font-size: 17px;"
-        "   font-weight: bold;"
-        "   border-radius: 10px;"
-        "   padding: 5px;"
-        "}"
-        "QPushButton:hover {"
-        "   background-color: darkblue;"
-        "}"
-        "QPushButton:pressed {"
-        "   background-color: black;"
-        "}"
-    );
-
-    auto secondaryOffload = [this]()
-    {
-        if(NULL == m_instanceDroneControl)
-        {
-            printToMainConsole("$ Drone Control is Down");
-        }
-        else
-        {
-            printToMainConsole("$ Secondary Offload from the FIFO");
-            interruptVector_execute(VECTOR_OFFLOAD_SECONDARY);
-        }
-    };
-    connect(dataButton, &QPushButton::clicked, this, secondaryOffload);
 }
 
 void gui::setupDroneControl()
@@ -582,6 +472,174 @@ void gui::setupSeparators()
     hLine5->setGeometry(w.xGap, w.yGap*20 + w.yLogo*4 + w.yUnit*12, w.xGap*3 + w.xText + w.xUnit*2, w.separatorWidth);
     hLine5->setFrameShape(QFrame::HLine);
     hLine5->setFrameShadow(QFrame::Sunken);
+}
+
+void gui::setupAdditionalDebugs()
+{
+    QPushButton *f00Button = new QPushButton("F00", this);
+    f00Button->setGeometry(w.xGap*6 + w.xText + w.xUnit*4, w.yGap*2 + w.yLogo, w.xUnit*2, w.yUnit);
+    f00Button->setStyleSheet(
+        "QPushButton {"
+        "   background-color: purple;"
+        "   color: white;"
+        "   font-size: 17px;"
+        "   font-weight: bold;"
+        "   border-radius: 10px;"
+        "   padding: 5px;"
+        "}"
+        "QPushButton:hover {"
+        "   background-color: darkblue;"
+        "}"
+        "QPushButton:pressed {"
+        "   background-color: black;"
+        "}"
+    );
+
+    auto executeF00 = [this]()
+    {
+        if(NULL == m_instanceDroneControl)
+        {
+            printToMainConsole("$ Drone Control is Down");
+        }
+        else
+        {
+            printToMainConsole("$ F0 Test Vector");
+            interruptVector_execute(VECTOR_F00);
+        }
+    };
+    connect(f00Button, &QPushButton::clicked, this, executeF00);
+
+    QPushButton *f01Button = new QPushButton("F01", this);
+    f01Button->setGeometry(w.xGap*6 + w.xText + w.xUnit*4, w.yGap*3 + w.yLogo + w.yUnit, w.xUnit*2, w.yUnit);
+    f01Button->setStyleSheet(
+        "QPushButton {"
+        "   background-color: purple;"
+        "   color: white;"
+        "   font-size: 17px;"
+        "   font-weight: bold;"
+        "   border-radius: 10px;"
+        "   padding: 5px;"
+        "}"
+        "QPushButton:hover {"
+        "   background-color: darkblue;"
+        "}"
+        "QPushButton:pressed {"
+        "   background-color: black;"
+        "}"
+    );
+
+    auto executeF01 = [this]()
+    {
+        if(NULL == m_instanceDroneControl)
+        {
+            printToMainConsole("$ Drone Control is Down");
+        }
+        else
+        {
+            printToMainConsole("$ F0 Test Vector");
+            interruptVector_execute(VECTOR_F01);
+        }
+    };
+    connect(f01Button, &QPushButton::clicked, this, executeF01);
+    
+    QPushButton *f1Button = new QPushButton("F1", this);
+    f1Button->setGeometry(w.xGap*7 + w.xText + w.xUnit*6, w.yGap*2 + w.yLogo, w.xUnit*2, w.yUnit);
+    f1Button->setStyleSheet(
+        "QPushButton {"
+        "   background-color: purple;"
+        "   color: white;"
+        "   font-size: 17px;"
+        "   font-weight: bold;"
+        "   border-radius: 10px;"
+        "   padding: 5px;"
+        "}"
+        "QPushButton:hover {"
+        "   background-color: darkblue;"
+        "}"
+        "QPushButton:pressed {"
+        "   background-color: black;"
+        "}"
+    );
+
+    auto executeF1 = [this]()
+    {
+        if(NULL == m_instanceDroneControl)
+        {
+            printToMainConsole("$ Drone Control is Down");
+        }
+        else
+        {
+            printToMainConsole("$ F1 Test Vector");
+            interruptVector_execute(VECTOR_F1);
+        }
+    };
+    connect(f1Button, &QPushButton::clicked, this, executeF1);
+
+    QPushButton *f2Button = new QPushButton("F2", this);
+    f2Button->setGeometry(w.xGap*7 + w.xText + w.xUnit*6, w.yGap*3 + w.yLogo + w.yUnit, w.xUnit*2, w.yUnit);
+    f2Button->setStyleSheet(
+        "QPushButton {"
+        "   background-color: purple;"
+        "   color: white;"
+        "   font-size: 17px;"
+        "   font-weight: bold;"
+        "   border-radius: 10px;"
+        "   padding: 5px;"
+        "}"
+        "QPushButton:hover {"
+        "   background-color: darkblue;"
+        "}"
+        "QPushButton:pressed {"
+        "   background-color: black;"
+        "}"
+    );
+
+    auto executeF2 = [this]()
+    {
+        if(NULL == m_instanceDroneControl)
+        {
+            printToMainConsole("$ Drone Control is Down");
+        }
+        else
+        {
+            printToMainConsole("$ F2 Test Vector");
+            interruptVector_execute(VECTOR_F2);
+        }
+    };
+    connect(f2Button, &QPushButton::clicked, this, executeF2);
+
+    QPushButton *f3Button = new QPushButton("F3", this);
+    f3Button->setGeometry(w.xGap*7 + w.xText + w.xUnit*6, w.yGap*4 + w.yLogo + w.yUnit*2, w.xUnit*2, w.yUnit);
+    f3Button->setStyleSheet(
+        "QPushButton {"
+        "   background-color: purple;"
+        "   color: white;"
+        "   font-size: 17px;"
+        "   font-weight: bold;"
+        "   border-radius: 10px;"
+        "   padding: 5px;"
+        "}"
+        "QPushButton:hover {"
+        "   background-color: darkblue;"
+        "}"
+        "QPushButton:pressed {"
+        "   background-color: black;"
+        "}"
+    );
+
+    auto executeF3 = [this]()
+    {
+        if(NULL == m_instanceDroneControl)
+        {
+            printToMainConsole("$ Drone Control is Down");
+        }
+        else
+        {
+            printToMainConsole("$ F3 Test Vector");
+            interruptVector_execute(VECTOR_F3);
+        }
+    };
+    connect(f3Button, &QPushButton::clicked, this, executeF3);
 }
 
 void gui::setupDMA()
@@ -784,12 +842,12 @@ std::string gui::vectorToString(interruptVectorType type)
         case VECTOR_DISABLE:            return "VECTOR_DISABLE";            /* Disable Pulse Controllers */
         case VECTOR_START:              return "VECTOR_START";              /* Start Measurement Acquisition */
         case VECTOR_STOP:               return "VECTOR_STOP";               /* Stop Measurement Acquisition */
-        case VECTOR_OFFLOAD_SECONDARY:  return "VECTOR_OFFLOAD_SECONDARY";  /* Offload data from sensor FIFO */
-        case VECTOR_FAST:               return "VECTOR_FAST";               /* Reset 2nd Fifo after 30000  ->  600us */
-        case VECTOR_SLOW:               return "VECTOR_SLOW";               /* Reset 2nd Fifo after 495000 -> 9900us */
-        case VECTOR_UNUSED_09:          return "VECTOR_UNUSED_09";
-        case VECTOR_UNUSED_10:          return "VECTOR_UNUSED_10";
-        case VECTOR_UNUSED_11:          return "VECTOR_UNUSED_11";
+        case VECTOR_F00:                return "VECTOR_F00";                /* Debug Test Vector */
+        case VECTOR_F01:                return "VECTOR_F01";                /* Debug Test Vector */
+        case VECTOR_F02:                return "VECTOR_F02";                /* Debug Test Vector */
+        case VECTOR_F1:                 return "VECTOR_F1";                 /* Debug Test Vector */
+        case VECTOR_F2:                 return "VECTOR_F2";                 /* Debug Test Vector */
+        case VECTOR_F3:                 return "VECTOR_F3";                 /* Debug Test Vector */
         case VECTOR_UNUSED_12:          return "VECTOR_UNUSED_12";
         case VECTOR_UNUSED_13:          return "VECTOR_UNUSED_13";
         case VECTOR_UNUSED_14:          return "VECTOR_UNUSED_14";
@@ -1323,7 +1381,7 @@ void gui::deleteDroneControl()
         {
             interruptVector_execute(VECTOR_DISABLE);
             interruptVector_execute(VECTOR_STOP);
-            interruptVector_execute(VECTOR_SLOW);
+            interruptVector_execute(VECTOR_F02);
         }
 
         m_isPulseControllerEnabled = true;
@@ -1350,25 +1408,6 @@ void gui::deleteDroneControl()
         m_startButton->setStyleSheet(
             "QPushButton {"
             "   background-color: green;"
-            "   color: white;"
-            "   font-size: 17px;"
-            "   font-weight: bold;"
-            "   border-radius: 10px;"
-            "   padding: 5px;"
-            "}"
-            "QPushButton:hover {"
-            "   background-color: darkblue;"
-            "}"
-            "QPushButton:pressed {"
-            "   background-color: black;"
-            "}"
-        );
-
-        m_isFastControl = true;
-        m_speedButton->setText("T.SLOW");
-        m_speedButton->setStyleSheet(
-            "QPushButton {"
-            "   background-color: blue;"
             "   color: white;"
             "   font-size: 17px;"
             "   font-weight: bold;"

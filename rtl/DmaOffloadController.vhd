@@ -39,13 +39,16 @@ type OFFLOAD_TYPE is
     OFFLOAD_TRANSFER,
     OFFLOAD_DONE
 );
+
 signal offload_state: OFFLOAD_TYPE := OFFLOAD_IDLE;
 signal check_delay : integer := 995000; -- 20ms / 20ns = 1 Mega
 signal offload_counter : integer range 0 to 400000 := 0;
 signal offload_fifo_empty_counter : integer range 0 to 256 := 0;
+
 begin
 
-    interrupt_process: process(CLOCK_50MHz)
+    DmaOffloadProcess:
+    process(CLOCK_50MHz)
     begin
 
         if RESET = '1' then
@@ -122,5 +125,5 @@ begin
             end case;
 
         end if;
-    end process interrupt_process;
+    end process;
 end architecture rtl;

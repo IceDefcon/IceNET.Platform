@@ -85,6 +85,7 @@ static schedulerProcess Process =
             break;
 
         case SCH_MAIN_20MS:
+            // printk(KERN_INFO "[CTRL][SCH] SCH_MAIN_20MS\n");
             /* Chacking currently allocated resources */
             Process.allocationTimer++;
             if(ALLOCATION_PRINT_DELAY == Process.allocationTimer)

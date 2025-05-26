@@ -47,7 +47,7 @@ RamDisk::RamDisk() :
         .registers =
         {
             {0x7E, 0xB6}, /* Soft reset the sensor */
-            /* CALIB */ {0x40, 0x28}, /* No undersampling, Filter set 2, Output data rate 100Hz (Default for Calibration) */
+            /* CALIB */ {0x40, 0x2C}, /* No undersampling, Filter set 2, Output data rate 100Hz (Default for Calibration) */
             {0x41, 0x05}, /* ±4g accelerometer range */
             {0x7E, 0x11}, /* Set accelerometer to normal mode */
             {0x77, 0x40}, /* Enable accel offset only */
@@ -68,7 +68,7 @@ RamDisk::RamDisk() :
         .registers =
         {
             {0x7E, 0xB6}, /* Soft reset the sensor */
-            /* CALIB */ {0x40, 0x28}, /* No undersampling, Filter set 2, Output data rate 100Hz (Default for Calibration) */
+            /* CALIB */ {0x40, 0x2C}, /* No undersampling, Filter set 2, Output data rate 100Hz (Default for Calibration) */
             {0x43, 0x02}, /* ±500°/s gyroscope range */
             {0x7E, 0x15}, /* Set gyroscope to normal mode */
             {0x77, 0x80}, /* Enable gyroscope offset -> 10-bit */

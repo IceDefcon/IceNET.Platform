@@ -11,7 +11,7 @@
 #include <cmath>
 #include <array>
 
-#define MAX_DIFF_BETWEEN_MEASUREMENTS 30
+#define MAX_DIFF_BETWEEN_MEASUREMENTS 100
 #define VECTOR_BUFFER_LENGTH 32
 #define SMOOTH_FILTER_LENGTH 4
 
@@ -49,6 +49,7 @@ public:
     ~Measure();
 
     bool appendBuffer(int16_t x, int16_t y, int16_t z);
+    void setFpgaAverageBuffer(int16_t xSample, int16_t ySample, int16_t zSample);
     void averageBuffer();
     void calibrationOfset();
     void clearBuffer();

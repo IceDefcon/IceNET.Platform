@@ -394,11 +394,25 @@ int Commander::closeDEV()
                         m_ioState = IO_COM_IDLE;
                         break;
                     }
-
+#if 0
+                    else
+                    {
+                        std::cout << std::dec << "[INFO] [CMD] Received " << ret << " Bytes of data: ";
+                        for (int i = 0; i < ret; ++i)
+                        {
+                            std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>((*m_Rx_CommanderVector)[i]) << " ";
+                        }
+                        std::cout << std::endl;
+                    }
+#endif
                     m_x = static_cast<int16_t>(((*m_Rx_CommanderVector)[1] << 8) | (*m_Rx_CommanderVector)[0]);
                     m_y = static_cast<int16_t>(((*m_Rx_CommanderVector)[3] << 8) | (*m_Rx_CommanderVector)[2]);
                     m_z = static_cast<int16_t>(((*m_Rx_CommanderVector)[5] << 8) | (*m_Rx_CommanderVector)[4]);
-
+#if 1
+                    setFpgaAverageBuffer(m_x, m_y, m_z);
+                    calibrationOfset();
+                    m_ioState = IO_COM_IDLE;
+#else
                     check = appendBuffer(m_x, m_y, m_z);
 
                     if(true == check)
@@ -407,6 +421,7 @@ int Commander::closeDEV()
                         calibrationOfset();
                         m_ioState = IO_COM_IDLE;
                     }
+#endif
                 }
                 else
                 {

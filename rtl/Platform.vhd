@@ -312,8 +312,7 @@ signal f02_vector_interrupt : std_logic := '0';
 signal f1_vector_interrupt : std_logic := '0';
 signal f2_vector_interrupt : std_logic := '0';
 signal f3_vector_interrupt : std_logic := '0';
-signal secondary_dma_trigger_gpio_pulse_extension : std_logic := '0';
-signal secondary_dma_trigger_gpio_pulse : std_logic := '0';
+signal secondary_dma_trigger_gpio_pulse_20ns : std_logic := '0';
 -- Interrupt Vector signals
 signal primary_conversion_run : std_logic := '0';
 signal primary_conversion_reset : integer range 0 to 2048 := 0;
@@ -325,7 +324,6 @@ signal primary_fifo_full : std_logic := '0';
 signal primary_fifo_empty : std_logic := '0';
 -- Fifo
 signal sensor_fifo_rdreq : std_logic := '0';
-signal sensor_fifo_data_out : std_logic_vector(7 downto 0) := (others => '0');
 signal sensor_fifo_full : std_logic := '0';
 signal sensor_fifo_empty : std_logic := '0';
 signal sensor_fifo_bit_count : std_logic_vector(3 downto 0) := (others => '0');
@@ -355,24 +353,18 @@ constant CTRL_PWM : std_logic_vector(1 downto 0) := "10";
 constant ID_BMI160_S1 : std_logic_vector(6 downto 0) := "1000100"; -- "0010001"; -- Must be upside down :: Due to primary_offload_id for i2c
 constant ID_BMI160_S2 : std_logic_vector(6 downto 0) := "0100100"; -- "0010010"; -- Must be upside down :: Due to primary_offload_id for i2c
 constant ID_nRF905 : std_logic_vector(6 downto 0) := "0010100"; -- Must be upside down :: Same as upside down
--- Feedback interrupts
-signal single_complete_i2c : std_logic := '0';
-signal single_complete_nRF905 : std_logic := '0';
-signal single_complete_bmi160_s1 : std_logic := '0';
-signal single_complete_bmi160_s2 : std_logic := '0';
-signal single_complete_pwm_m1 : std_logic := '0';
--- Feedback Pulse & Burst for S1
-signal interrupt_spi_bmi160_s1_pulse : std_logic := '0';
--- Feedback Pulse & Burst for S2 + Data
-signal interrupt_spi_bmi160_s2_pulse : std_logic := '0';
+-- Secondary DMA Trigger Interrupts
+signal i2c_complete_long : std_logic := '0';
+signal spi_nRF905_complete_long : std_logic := '0';
+signal spi_bmi160_s1_complete_long : std_logic := '0';
+signal spi_bmi160_s2_complete_long : std_logic := '0';
+signal pwm_m1_complete_long : std_logic := '0';
 -- Feedback data
 signal data_i2c_feedback : std_logic_vector(7 downto 0) := (others => '0');
 signal data_spi_rf_feedback : std_logic_vector(7 downto 0) := "00010001";
 signal data_spi_bmi160_s1_feedback : std_logic_vector(7 downto 0) := "00010101";
 signal data_spi_bmi160_s2_feedback : std_logic_vector(7 downto 0) := "00010110";
 signal data_pwm_feedback : std_logic_vector(7 downto 0) := "11000011";
--- Interrupts
-signal feedback_interrupt_timer : std_logic_vector(12 downto 0) := (others => '0');
 -- UART
 signal uart_write_enable : std_logic := '0';
 signal uart_write_symbol : std_logic_vector(6 downto 0) := (others => '0');
@@ -480,7 +472,6 @@ signal led_6_toggle : std_logic := '1';
 signal led_7_toggle : std_logic := '1';
 signal led_8_toggle : std_logic := '1';
 
-signal feedbck_interrupt_logic : std_logic := '0';
 signal offload_debug : std_logic := '0';
 
 signal sheduler_timer_threshold : std_logic := '0';
@@ -535,11 +526,12 @@ type ACCELERATION_SM is
 );
 signal accelreation_state: ACCELERATION_SM := ACCELERATION_IDLE;
 
-signal acceleration_average_data : std_logic_vector(7 downto 0) := (others => '0');
+signal acceleration_average_data_in : std_logic_vector(7 downto 0) := (others => '0');
 signal acceleration_average_RD : std_logic := '0';
 signal acceleration_average_WR : std_logic := '0';
 signal acceleration_average_empty : std_logic := '0';
 signal acceleration_average_full : std_logic := '0';
+signal acceleration_average_data_out : std_logic_vector(7 downto 0) := (others => '0');
 
 ----------------------------------------------------------------------------------------------------------------
 -- COMPONENTS DECLARATION
@@ -895,6 +887,23 @@ Port
     QUOTIENT : out std_logic_vector(DEPTH - 1 downto 0);
     REMINDER : out std_logic_vector(DEPTH - 1 downto 0);
     DIVISION_COMPLETE : out std_logic
+);
+end component;
+
+component DmaTriggerControl
+generic
+(
+    INTERRUPT_LENGTH_US : integer := 100
+);
+port
+(
+    CLOCK_50MHz : in  std_logic;
+    RESET : in std_logic;
+
+    TRIGGER_LONG : in std_logic;
+    TRIGGER_SHORT : in std_logic;
+
+    RETURN_INTERRUPT : out std_logic
 );
 end component;
 
@@ -1311,38 +1320,26 @@ port map
 --
 --
 -----------------------------------------------------------------------------------------
-feedback_interrupts_process:
-process(CLOCK_50MHz)
-begin
-    if rising_edge(CLOCK_50MHz) then
 
-        if secondary_dma_trigger_gpio_pulse = '1' then -- TODO :: Extension
-            secondary_dma_trigger_gpio_pulse_extension <= '1';
-        end if;
-
-        if single_complete_i2c = '1'
-        or single_complete_pwm_m1 = '1'
-        or single_complete_bmi160_s1 = '1'
-        or single_complete_bmi160_s2 = '1'
-        or single_complete_nRF905 = '1'
-        or secondary_dma_trigger_gpio_pulse_extension = '1' -- TODO :: Extension
-        then
-            if feedback_interrupt_timer = "1001110001000" then -- 5000 * 20 = 100us interrupt pulse back to CPU
-                SPI_INT_FROM_FPGA <= '0';
-                feedbck_interrupt_logic <= '0';
-                secondary_dma_trigger_gpio_pulse_extension <= '0';
-            else
-                SPI_INT_FROM_FPGA <= '1';
-                feedbck_interrupt_logic <= '1';
-                feedback_interrupt_timer <= feedback_interrupt_timer + '1';
-            end if;
-        else
-            SPI_INT_FROM_FPGA <= '0';
-            feedbck_interrupt_logic <= '0';
-            feedback_interrupt_timer <= (others => '0'); -- Reseting timer here :: When FPGA_INT goto '0'
-        end if;
-    end if;
-end process;
+FeedbackControl_module: DmaTriggerControl
+generic map
+(
+    INTERRUPT_LENGTH_US => 100
+)
+port map
+(
+    CLOCK_50MHz => CLOCK_50MHz,
+    RESET => global_fpga_reset,
+    -- IN
+    TRIGGER_LONG => i2c_complete_long
+                    or pwm_m1_complete_long
+                    or spi_nRF905_complete_long
+                    or spi_bmi160_s1_complete_long
+                    or spi_bmi160_s2_complete_long,
+    TRIGGER_SHORT => secondary_dma_trigger_gpio_pulse_20ns,
+    -- OUT
+    RETURN_INTERRUPT => SPI_INT_FROM_FPGA
+);
 
 feedback_data_process:
 process(CLOCK_50MHz)
@@ -1355,18 +1352,19 @@ begin
         -- If sensor data acquisition is disabled
         --
         if enable_vector_interrupt = '1' then
-            secondary_parallel_MISO <= sensor_fifo_data_out;
-        elsif single_complete_i2c = '1'  then
+            secondary_parallel_MISO <= acceleration_average_data_out;
+        elsif i2c_complete_long = '1'  then
             secondary_parallel_MISO <= data_i2c_feedback;
-        elsif single_complete_pwm_m1 = '1' then
+        elsif pwm_m1_complete_long = '1' then
             secondary_parallel_MISO <= data_pwm_feedback;
-        elsif single_complete_bmi160_s1 = '1' then
+        elsif spi_bmi160_s1_complete_long = '1' then
             secondary_parallel_MISO <= data_spi_bmi160_s1_feedback;
-        elsif single_complete_bmi160_s2 = '1' then
+        elsif spi_bmi160_s2_complete_long = '1' then
             secondary_parallel_MISO <= data_spi_bmi160_s2_feedback;
-        elsif single_complete_nRF905 = '1' then
+        elsif spi_nRF905_complete_long = '1' then
             secondary_parallel_MISO <= data_spi_rf_feedback;
         end if;
+
     end if;
 end process;
 
@@ -1896,7 +1894,7 @@ i2c_Bus_primary: I2cController port map
     -- in
     KERNEL_INT => '0',
     -- out
-    FPGA_INT => single_complete_i2c, -- SM is ready for SPI.1 transfer :: 1000*20ns interrupt
+    FPGA_INT => i2c_complete_long, -- SM is ready for SPI.1 transfer :: 1000*20ns interrupt
     FIFO_INT => open, -- TODO :: Store output data in secondary FIFO
 
     I2C_SCK => I2C_SCK,
@@ -1927,7 +1925,7 @@ BMI160_S1_primary: SpiController port map
     CTRL_MOSI => ctrl_BMI160_S1_MOSI,
     CTRL_SCK => ctrl_BMI160_S1_SCLK,
     -- OUT
-    SINGLE_COMPLETE => single_complete_bmi160_s1,
+    SINGLE_COMPLETE => spi_bmi160_s1_complete_long,
     BURST_COMPLETE => open,
     BURST_DATA => open,
     SINGLE_DATA => data_spi_bmi160_s1_feedback,
@@ -1950,7 +1948,7 @@ BMI160_S2_primary: SpiController port map
     CTRL_MOSI => ctrl_BMI160_S2_MOSI,
     CTRL_SCK => ctrl_BMI160_S2_SCLK,
     -- OUT
-    SINGLE_COMPLETE => single_complete_bmi160_s2,
+    SINGLE_COMPLETE => spi_bmi160_s2_complete_long,
     BURST_COMPLETE => open,
     BURST_DATA => open,
     SINGLE_DATA => data_spi_bmi160_s2_feedback,
@@ -1973,7 +1971,7 @@ RF905_primary: SpiController port map
     CTRL_MOSI => ctrl_RF_MOSI,
     CTRL_SCK => ctrl_RF_SCLK,
     -- OUT
-    SINGLE_COMPLETE => single_complete_nRF905,
+    SINGLE_COMPLETE => spi_nRF905_complete_long,
     BURST_COMPLETE => open,
     BURST_DATA => open,
     SINGLE_DATA => data_spi_rf_feedback,
@@ -2034,7 +2032,7 @@ BMI160_S1_acceleration: SpiController port map
 --    -- OUT
 --    empty => sensor_fifo_empty,
 --    full  => sensor_fifo_full,
---    q     => sensor_fifo_data_out
+--    q     => acceleration_average_data_out
 --);
 -------------------------------------------------------------
 -- 6. Long -> Short Single Complete Pulse
@@ -2068,7 +2066,7 @@ BMI160_S1_acceleration: SpiController port map
 --    OFFLOAD_FIFO_EMPTY => sensor_fifo_empty,
 --    -- Out
 --    OFFLOAD_READ_ENABLE => sensor_fifo_rdreq,
---    OFFLOAD_SECONDARY_DMA_TRIGGER => secondary_dma_trigger_gpio_pulse,
+--    OFFLOAD_SECONDARY_DMA_TRIGGER => secondary_dma_trigger_gpio_pulse_20ns,
 
 --    OFFLOAD_DEBUG => offload_debug
 --);
@@ -2217,39 +2215,39 @@ begin
 
             when ACCELERATION_DATA_1 =>
                 if acceleration_offload_reminder_x(4) = '1' then
-                    acceleration_average_data <= acceleration_offload_quotient_x(7 downto 0) + '1';
+                    acceleration_average_data_in <= acceleration_offload_quotient_x(7 downto 0) + '1';
                 else
-                    acceleration_average_data <= acceleration_offload_quotient_x(7 downto 0);
+                    acceleration_average_data_in <= acceleration_offload_quotient_x(7 downto 0);
                 end if;
                 acceleration_average_WR <= '1';
                 accelreation_state <= ACCELERATION_DATA_2;
 
             when ACCELERATION_DATA_2 =>
-                acceleration_average_data <= acceleration_offload_quotient_x(15 downto 8);
+                acceleration_average_data_in <= acceleration_offload_quotient_x(15 downto 8);
                 accelreation_state <= ACCELERATION_DATA_3;
 
             when ACCELERATION_DATA_3 =>
                 if acceleration_offload_reminder_y(4) = '1' then
-                    acceleration_average_data <= acceleration_offload_quotient_y(7 downto 0) + '1';
+                    acceleration_average_data_in <= acceleration_offload_quotient_y(7 downto 0) + '1';
                 else
-                    acceleration_average_data <= acceleration_offload_quotient_y(7 downto 0);
+                    acceleration_average_data_in <= acceleration_offload_quotient_y(7 downto 0);
                 end if;
                 accelreation_state <= ACCELERATION_DATA_4;
 
             when ACCELERATION_DATA_4 =>
-                acceleration_average_data <= acceleration_offload_quotient_y(15 downto 8);
+                acceleration_average_data_in <= acceleration_offload_quotient_y(15 downto 8);
                 accelreation_state <= ACCELERATION_DATA_5;
 
             when ACCELERATION_DATA_5 =>
                 if acceleration_offload_reminder_z(4) = '1' then
-                    acceleration_average_data <= acceleration_offload_quotient_z(7 downto 0) + '1';
+                    acceleration_average_data_in <= acceleration_offload_quotient_z(7 downto 0) + '1';
                 else
-                    acceleration_average_data <= acceleration_offload_quotient_z(7 downto 0);
+                    acceleration_average_data_in <= acceleration_offload_quotient_z(7 downto 0);
                 end if;
                 accelreation_state <= ACCELERATION_DATA_6;
 
             when ACCELERATION_DATA_6 =>
-                acceleration_average_data <= acceleration_offload_quotient_z(15 downto 8);
+                acceleration_average_data_in <= acceleration_offload_quotient_z(15 downto 8);
                 accelreation_state <= ACCELERATION_DATA_READY;
 
             when ACCELERATION_DATA_READY =>
@@ -2293,13 +2291,13 @@ port map
     aclr  => global_fpga_reset,
     clock => CLOCK_50MHz,
     -- IN
-    data  => acceleration_average_data,
+    data  => acceleration_average_data_in,
     rdreq => acceleration_average_RD, -- Must be offloaded
     wrreq => acceleration_average_WR,
     -- OUT
     empty => acceleration_average_empty,
     full  => acceleration_average_full,
-    q     => sensor_fifo_data_out
+    q     => acceleration_average_data_out
 );
 --------------------------------------------------------------------------
 -- Experimential !!!
@@ -2315,7 +2313,7 @@ port map
     OFFLOAD_FIFO_EMPTY => acceleration_average_empty,
     -- Out
     OFFLOAD_READ_ENABLE => acceleration_average_RD,
-    OFFLOAD_SECONDARY_DMA_TRIGGER => secondary_dma_trigger_gpio_pulse,
+    OFFLOAD_SECONDARY_DMA_TRIGGER => secondary_dma_trigger_gpio_pulse_20ns,
 
     OFFLOAD_DEBUG => offload_debug
 );
@@ -2458,7 +2456,7 @@ port map
     RESET => global_fpga_reset,
 
     OFFLOAD_TRIGGER => trigger_pwm_m1,
-    FPGA_INT => single_complete_pwm_m1,
+    FPGA_INT => pwm_m1_complete_long,
 
     PWM_VECTOR => primary_offload_data,
     -- OUT
