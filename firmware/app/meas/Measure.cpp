@@ -90,6 +90,17 @@ bool Measure::appendBuffer(int16_t x, int16_t y, int16_t z)
     return ret;
 }
 
+void Measure::setFpgaAverageBuffer(int16_t xSample, int16_t ySample, int16_t zSample)
+{
+    m_average.x = xSample;
+    m_average.y = ySample;
+    m_average.z = zSample + ACC_RAMGE;
+
+    std::cout << std::dec<< "[INFO] [MEAS] Average Acceleration ["
+    << m_average.x << "," << m_average.y << "," << m_average.z << "]" << std::endl;
+}
+
+
 void Measure::averageBuffer()
 {
     int64_t sum_x = 0, sum_y = 0, sum_z = 0;
@@ -98,7 +109,7 @@ void Measure::averageBuffer()
     {
         sum_x += m_vectorBuffer[i].x;
         sum_y += m_vectorBuffer[i].y;
-        sum_z += (m_vectorBuffer[i].z + 8192);
+        sum_z += (m_vectorBuffer[i].z);
     }
 
     m_average.x = static_cast<int16_t>(sum_x / VECTOR_BUFFER_LENGTH);
@@ -120,7 +131,7 @@ void Measure::calibrationOfset()
      */
     m_offset.x = static_cast<uint8_t>(std::min(255.0, std::max(0.0, std::round(-(m_average.x * 1000.0) / (ACC_RAMGE * 3.9)))));
     m_offset.y = static_cast<uint8_t>(std::min(255.0, std::max(0.0, std::round(-(m_average.y * 1000.0) / (ACC_RAMGE * 3.9)))));
-    m_offset.z = static_cast<uint8_t>(std::min(255.0, std::max(0.0, std::round(-(m_average.z * 1000.0) / (ACC_RAMGE * 3.9)))));
+    m_offset.z = static_cast<uint8_t>(std::min(255.0, std::max(0.0, std::round(-((m_average.z) * 1000.0) / (ACC_RAMGE * 3.9)))));
 
     std::cout << "[INFO] [MEAS] Acceleration Offset [0x"
             << std::hex << static_cast<int32_t>(m_offset.x) << ", 0x"
