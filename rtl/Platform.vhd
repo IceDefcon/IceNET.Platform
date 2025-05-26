@@ -890,7 +890,7 @@ Port
 );
 end component;
 
-component FeedbackControl
+component DmaTriggerControl
 generic
 (
     INTERRUPT_LENGTH_US : integer := 100
@@ -1321,7 +1321,7 @@ port map
 --
 -----------------------------------------------------------------------------------------
 
-FeedbackControl_module: FeedbackControl
+FeedbackControl_module: DmaTriggerControl
 generic map
 (
     INTERRUPT_LENGTH_US => 100
