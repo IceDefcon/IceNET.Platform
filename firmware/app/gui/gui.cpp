@@ -1467,6 +1467,7 @@ void gui::deleteDroneControl()
         {
             interruptVector_execute(VECTOR_DISABLE);
             interruptVector_execute(VECTOR_STOP);
+            m_instanceDroneControl->sendCommand(CMD_DEBUG_DISABLE);
         }
 
         m_isPulseControllerEnabled = true;
@@ -1508,10 +1509,10 @@ void gui::deleteDroneControl()
         );
 
         m_isDebugEnabled = true;
-        m_debugButton->setText("DBG.OFF");
+        m_debugButton->setText("DBG.ON");
         m_debugButton->setStyleSheet(
             "QPushButton {"
-            "   background-color: red;"
+            "   background-color: green;"
             "   color: white;"
             "   font-size: 17px;"
             "   font-weight: bold;"

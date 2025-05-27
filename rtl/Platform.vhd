@@ -260,71 +260,20 @@ signal primary_conversion_complete : std_logic := '0';
 signal primary_parallel_MOSI : std_logic_vector(7 downto 0) := (others => '0');
 -- Spi.1 Secondary
 signal secondary_parallel_MISO : std_logic_vector(7 downto 0) := (others => '0');
--- Interrupt Vector Counter + signals
-signal REG_primary_fifo_wr_en : std_logic_vector(2047 downto 0) := (others => '0');
-signal REG_primary_parallel_MOSI_0 : std_logic_vector(2047 downto 0) := (others => '0');
-signal REG_primary_parallel_MOSI_1 : std_logic_vector(2047 downto 0) := (others => '0');
-signal REG_primary_parallel_MOSI_2 : std_logic_vector(2047 downto 0) := (others => '0');
-signal REG_primary_parallel_MOSI_3 : std_logic_vector(2047 downto 0) := (others => '0');
-signal REG_primary_parallel_MOSI_4 : std_logic_vector(2047 downto 0) := (others => '0');
-signal REG_primary_parallel_MOSI_5 : std_logic_vector(2047 downto 0) := (others => '0');
-signal REG_primary_parallel_MOSI_6 : std_logic_vector(2047 downto 0) := (others => '0');
-signal REG_primary_parallel_MOSI_7 : std_logic_vector(2047 downto 0) := (others => '0');
+
 -- Interrupt Vector stage signals
 signal FIFO_primary_fifo_wr_en  : std_logic := '0';
 signal FIFO_primary_parallel_MOSI : std_logic_vector(7 downto 0) := (others => '0');
-signal STAGE_1_primary_parallel_MOSI : std_logic_vector(7 downto 0) := (others => '0');
-signal STAGE_2_primary_parallel_MOSI : std_logic_vector(7 downto 0) := (others => '0');
--- Interrupt Vector out signals
-signal interrupt_vector : std_logic_vector(3 downto 0) := (others => '0');
-signal interrupt_vector_busy : std_logic := '0';
--- Interrupt vector state machine
-type VECTOR_TYPE is
-(
-    VECTOR_IDLE,
-    VECTOR_RESERVED,            -- "0000"
-    VECTOR_OFFLOAD_PRIMARY,     -- "0001"
-    VECTOR_ENABLE,              -- "0010"
-    VECTOR_DISABLE,             -- "0011"
-    VECTOR_START,               -- "0100"
-    VECTOR_STOP,                -- "0101"
-    VECTOR_F00,                 -- "0110"
-    VECTOR_F01,                 -- "0111"
-    VECTOR_F02,                 -- "1000"
-    VECTOR_F1,                  -- "1001"
-    VECTOR_F2,                  -- "1010"
-    VECTOR_F3,                  -- "1011"
-    VECTOR_UNUSED_12,           -- "1100"
-    VECTOR_UNUSED_13,           -- "1101"
-    VECTOR_UNUSED_14,           -- "1110"
-    VECTOR_UNUSED_15,           -- "1111"
-    VECTOR_DONE
-);
-signal vector_state: VECTOR_TYPE := VECTOR_IDLE;
 -- Interrupt vector interrupts
 signal primary_offload_vector_interrupt : std_logic := '0';
 signal enable_vector_interrupt : std_logic := '0';
 signal start_vector_interrupt : std_logic := '0';
-signal f00_vector_interrupt : std_logic := '0';
-signal f01_vector_interrupt : std_logic := '0';
-signal f02_vector_interrupt : std_logic := '0';
-signal f1_vector_interrupt : std_logic := '0';
-signal f2_vector_interrupt : std_logic := '0';
-signal f3_vector_interrupt : std_logic := '0';
 signal secondary_dma_trigger_gpio_pulse_20ns : std_logic := '0';
--- Interrupt Vector signals
-signal primary_conversion_run : std_logic := '0';
-signal primary_conversion_reset : integer range 0 to 2048 := 0;
-signal primary_conversion_count : integer range 0 to 256 := 0;
 -- Fifo
 signal primary_fifo_rd_en : std_logic := '0';
 signal primary_fifo_data_out : std_logic_vector(7 downto 0) := (others => '0');
 signal primary_fifo_full : std_logic := '0';
 signal primary_fifo_empty : std_logic := '0';
--- Fifo
-signal sensor_fifo_rdreq : std_logic := '0';
-signal sensor_fifo_full : std_logic := '0';
-signal sensor_fifo_empty : std_logic := '0';
 signal sensor_fifo_bit_count : std_logic_vector(3 downto 0) := (others => '0');
 -- Primary Offload
 signal primary_offload_ready : std_logic := '0';
@@ -372,7 +321,7 @@ signal uart_write_busy : std_logic := '0';
 signal UART_LOG_MESSAGE_ID : UART_LOG_ID := ("1101", "1110"); -- 0xDE
 signal UART_LOG_MESSAGE_KEY : UART_LOG_KEY := ("1010", "1101"); -- 0xAD
 signal UART_LOG_MESSAGE_DATA : UART_LOG_DATA := ("1100", "0000", "1101", "1110"); -- 0xC0DE
--- Test
+-- Ram Test
 type TEST_STATE is
 (
     TEST_IDLE,
@@ -386,9 +335,9 @@ type TEST_STATE is
 
 signal test_ram_state : TEST_STATE := TEST_IDLE;
 -- Test
-signal test_timer : std_logic_vector(28 downto 0) := (others => '0');
-signal test_ops : std_logic_vector(3 downto 0) := (others => '0');
-signal test_flag : std_logic := '0';
+signal test_ram_timer : std_logic_vector(28 downto 0) := (others => '0');
+signal test_ram_ops : std_logic_vector(3 downto 0) := (others => '0');
+signal test_ram_flag : std_logic := '0';
 --
 --
 -- Address ---> Row[23:11] : Bank[10:9] : Column[8:0]
@@ -398,22 +347,15 @@ signal test_flag : std_logic := '0';
 -- ADDR(10 downto 9); -- Bank address
 -- ADDR(8 downto 0); -- Column address
 --
-signal TEST_RESET : std_logic := '1';
-signal TEST_ADDR :  std_logic_vector(23 downto 0) := "000000000000000000000000";
-signal TEST_WRITE_EN : std_logic := '0';
-signal TEST_DATA_IN :  std_logic_vector(15 downto 0) := "0101010101110000";
-signal TEST_READ_EN : std_logic := '0';
-signal TEST_DATA_OUT : std_logic_vector(15 downto 0) := (others => '0');
-signal TEST_BUSY : std_logic := '0';
+signal TEST_RAM_RESET : std_logic := '1';
+signal TEST_RAM_ADDR :  std_logic_vector(23 downto 0) := "000000000000000000000000";
+signal TEST_RAM_WRITE_EN : std_logic := '0';
+signal TEST_RAM_DATA_IN :  std_logic_vector(15 downto 0) := "0101010101110000";
+signal TEST_RAM_READ_EN : std_logic := '0';
+signal TEST_RAM_DATA_OUT : std_logic_vector(15 downto 0) := (others => '0');
+signal TEST_RAM_BUSY : std_logic := '0';
 -- PLL
-signal CLOCk_133MHz : std_logic := '0';
-signal CLOCK_Fast : std_logic := '0';
--- SPI Controller
-signal spi_mux : std_logic_vector(3 downto 0) := "0000";
-signal ctrl_CS : std_logic := '0';
-signal ctrl_MISO : std_logic := '0';
-signal ctrl_MOSI : std_logic := '0';
-signal ctrl_SCLK : std_logic := '0';
+signal CLOCK_133MHz : std_logic := '0';
 -- SPI :: nRF905
 signal ctrl_RF_CS : std_logic := '0';
 signal ctrl_RF_MISO : std_logic := '0';
@@ -903,8 +845,15 @@ port
     CLOCK_50MHz : in  std_logic;
     RESET : in  std_logic;
 
-    FIFO_PRIMARY_MOSI : out std_logic_vector(7 downto 0);
-    FIFO_PRIMARY_WR_EN : out std_logic
+    PARALLEL_PRIMARY_MOSI : in std_logic_vector(7 downto 0);
+    PARALLEL_CONVERSION_COMPLETE : in std_logic;
+
+    VECTOR_INTERRUPT_PRIMARY_OFFLOAD : out std_logic;
+    VECTOR_INTERRUPT_ENABLE : out std_logic;
+    VECTOR_INTERRUPT_START : out std_logic;
+
+    FIFO_PARALLEL_PRIMARY_MOSI : out std_logic_vector(7 downto 0);
+    FIFO_PARALLEL_PRIMARY_WR_EN : out std_logic
 );
 end component;
 
@@ -1371,7 +1320,7 @@ end process;
 
 -- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 -- //
--- // Interrupt Vector
+-- // Interrupt Vector Controller
 -- //
 -- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -1381,191 +1330,16 @@ port map
     CLOCK_50MHz => CLOCK_50MHz,
     RESET => global_fpga_reset,
     -- IN
+    PARALLEL_PRIMARY_MOSI => primary_parallel_MOSI,
+    PARALLEL_CONVERSION_COMPLETE => primary_conversion_complete,
     -- OUT
-    FIFO_PRIMARY_MOSI => open,
-    FIFO_PRIMARY_WR_EN => open
+    VECTOR_INTERRUPT_PRIMARY_OFFLOAD => primary_offload_vector_interrupt,
+    VECTOR_INTERRUPT_ENABLE => enable_vector_interrupt,
+    VECTOR_INTERRUPT_START => start_vector_interrupt,
+    -- OUT
+    FIFO_PARALLEL_PRIMARY_MOSI => FIFO_primary_parallel_MOSI,
+    FIFO_PARALLEL_PRIMARY_WR_EN => FIFO_primary_fifo_wr_en
 );
-
------------------------------------
---
--- TODO
---
--- Need to be put
--- Into the module
---
------------------------------------
-interrupt_vector_process:
-process(CLOCK_50MHz, global_fpga_reset)
-begin
-    if global_fpga_reset = '1' then
-        primary_offload_vector_interrupt <= '0';
-        vector_state <= VECTOR_IDLE;
-        enable_vector_interrupt <= '0';
-        start_vector_interrupt <= '0';
-    elsif rising_edge(CLOCK_50MHz) then
-
-        REG_primary_fifo_wr_en <= REG_primary_fifo_wr_en(2046 downto 0) & primary_conversion_complete;
-        REG_primary_parallel_MOSI_7 <= REG_primary_parallel_MOSI_0(2046 downto 0) & primary_parallel_MOSI(7);
-        REG_primary_parallel_MOSI_6 <= REG_primary_parallel_MOSI_1(2046 downto 0) & primary_parallel_MOSI(6);
-        REG_primary_parallel_MOSI_5 <= REG_primary_parallel_MOSI_2(2046 downto 0) & primary_parallel_MOSI(5);
-        REG_primary_parallel_MOSI_4 <= REG_primary_parallel_MOSI_3(2046 downto 0) & primary_parallel_MOSI(4);
-        REG_primary_parallel_MOSI_3 <= REG_primary_parallel_MOSI_4(2046 downto 0) & primary_parallel_MOSI(3);
-        REG_primary_parallel_MOSI_2 <= REG_primary_parallel_MOSI_5(2046 downto 0) & primary_parallel_MOSI(2);
-        REG_primary_parallel_MOSI_1 <= REG_primary_parallel_MOSI_6(2046 downto 0) & primary_parallel_MOSI(1);
-        REG_primary_parallel_MOSI_0 <= REG_primary_parallel_MOSI_7(2046 downto 0) & primary_parallel_MOSI(0);
-
-        if primary_conversion_complete = '1' or REG_primary_fifo_wr_en(2047) = '1' then
-            if primary_conversion_count < 2 then
-                STAGE_2_primary_parallel_MOSI <= primary_parallel_MOSI;
-                STAGE_1_primary_parallel_MOSI <= STAGE_2_primary_parallel_MOSI;
-            end if;
-            primary_conversion_reset <= 0;
-            primary_conversion_run <= '1';
-            primary_conversion_count <= primary_conversion_count + 1;
-        else
-            if primary_conversion_reset = 2000 then
-                interrupt_vector_busy <= '0';
-                primary_conversion_run <= '0';
-                primary_conversion_reset <= 0;
-                primary_conversion_count <= 0;
-                STAGE_2_primary_parallel_MOSI <= (others => '0');
-                STAGE_1_primary_parallel_MOSI <= (others => '0');
-            else
-                primary_conversion_reset <= primary_conversion_reset + 1;
-            end if;
-        end if;
-
-        ----------------------------------------------------------------------------------------------------------------------
-        --
-        -- IRQ Vector Condition
-        --
-        ----------------------------------------------------------------------------------------------------------------------
-        if STAGE_1_primary_parallel_MOSI(7) =  '1'  ---------------------------------
-        and STAGE_1_primary_parallel_MOSI(2) =  '1' ----===[ IRQ Vector Base ]===----
-        and STAGE_1_primary_parallel_MOSI(1) =  '1' ---------------------------------
-        and STAGE_2_primary_parallel_MOSI = "10101111" -- [Vector, 0xAF, 0xAE, 0xAD]
-        and interrupt_vector_busy = '0'
-        then
-            interrupt_vector <= STAGE_1_primary_parallel_MOSI(6 downto 3);
-            interrupt_vector_busy <= '1';
-        else
-            interrupt_vector <= "0000";
-        end if;
-
-        ----------------------------------------------------------------------------------------------------------------------
-        --
-        -- If an IRQ Vector condition are meet
-        -- Data from the Primary DMA is not
-        -- Processed further via FIFO
-        --
-        -- 4-Bit IRQ Vector is therefor processed
-        --
-        ----------------------------------------------------------------------------------------------------------------------
-        if interrupt_vector_busy = '1' then
-            FIFO_primary_parallel_MOSI <= (others => '0');
-            FIFO_primary_fifo_wr_en <= '0';
-        else
-            FIFO_primary_parallel_MOSI <= REG_primary_parallel_MOSI_0(2047) & REG_primary_parallel_MOSI_1(2047) &
-                                            REG_primary_parallel_MOSI_2(2047) & REG_primary_parallel_MOSI_3(2047) &
-                                            REG_primary_parallel_MOSI_4(2047) & REG_primary_parallel_MOSI_5(2047) &
-                                            REG_primary_parallel_MOSI_6(2047) & REG_primary_parallel_MOSI_7(2047);
-
-            FIFO_primary_fifo_wr_en <= REG_primary_fifo_wr_en(2047);
-        end if;
-
-        case vector_state is
-
-            when VECTOR_IDLE =>
-                if interrupt_vector = "0001" then
-                    vector_state <= VECTOR_OFFLOAD_PRIMARY;
-                elsif interrupt_vector = "0010" then
-                    vector_state <= VECTOR_ENABLE;
-                elsif interrupt_vector = "0011" then
-                    vector_state <= VECTOR_DISABLE;
-                elsif interrupt_vector = "0100" then
-                    vector_state <= VECTOR_START;
-                elsif interrupt_vector = "0101" then
-                    vector_state <= VECTOR_STOP;
-                elsif interrupt_vector = "0110" then
-                    vector_state <= VECTOR_F00;
-                elsif interrupt_vector = "0111" then
-                    vector_state <= VECTOR_F01;
-                elsif interrupt_vector = "1000" then
-                    vector_state <= VECTOR_F02;
-                elsif interrupt_vector = "1001" then
-                    vector_state <= VECTOR_F1;
-                elsif interrupt_vector = "1010" then
-                    vector_state <= VECTOR_F2;
-                elsif interrupt_vector = "1011" then
-                    vector_state <= VECTOR_F3;
-                elsif interrupt_vector = "1100" then
-                    vector_state <= VECTOR_UNUSED_12;
-                elsif interrupt_vector = "1101" then
-                    vector_state <= VECTOR_UNUSED_13;
-                elsif interrupt_vector = "1110" then
-                    vector_state <= VECTOR_UNUSED_14;
-                elsif interrupt_vector = "1111" then
-                    vector_state <= VECTOR_UNUSED_15;
-                end if;
-
-            when VECTOR_RESERVED =>
-                vector_state <= VECTOR_DONE;
-            when VECTOR_OFFLOAD_PRIMARY =>
-                primary_offload_vector_interrupt <= '1';
-                vector_state <= VECTOR_DONE;
-            when VECTOR_ENABLE =>
-                enable_vector_interrupt <= '1';
-                vector_state <= VECTOR_DONE;
-            when VECTOR_DISABLE =>
-                enable_vector_interrupt <= '0';
-                vector_state <= VECTOR_DONE;
-            when VECTOR_START =>
-                start_vector_interrupt <= '1';
-                vector_state <= VECTOR_DONE;
-            when VECTOR_STOP =>
-                start_vector_interrupt <= '0';
-                vector_state <= VECTOR_DONE;
-            when VECTOR_F00 =>
-                f00_vector_interrupt <= '1';
-                vector_state <= VECTOR_DONE;
-            when VECTOR_F01 =>
-                f01_vector_interrupt <= '1';
-                vector_state <= VECTOR_DONE;
-            when VECTOR_F02 =>
-                f02_vector_interrupt <= '1';
-                vector_state <= VECTOR_DONE;
-            when VECTOR_F1 =>
-                f1_vector_interrupt <= '1';
-                vector_state <= VECTOR_DONE;
-            when VECTOR_F2 =>
-                f2_vector_interrupt <= '1';
-                vector_state <= VECTOR_DONE;
-            when VECTOR_F3 =>
-                f3_vector_interrupt <= '1';
-                vector_state <= VECTOR_DONE;
-            when VECTOR_UNUSED_12 =>
-                vector_state <= VECTOR_DONE;
-            when VECTOR_UNUSED_13 =>
-                vector_state <= VECTOR_DONE;
-            when VECTOR_UNUSED_14 =>
-                vector_state <= VECTOR_DONE;
-            when VECTOR_UNUSED_15 =>
-                vector_state <= VECTOR_DONE;
-            when VECTOR_DONE =>
-                primary_offload_vector_interrupt <= '0';
-                f00_vector_interrupt <= '0';
-                f01_vector_interrupt <= '0';
-                f01_vector_interrupt <= '0';
-                f1_vector_interrupt <= '0';
-                f2_vector_interrupt <= '0';
-                f3_vector_interrupt <= '0';
-                vector_state <= VECTOR_IDLE;
-            when others =>
-                vector_state <= VECTOR_IDLE;
-        end case;
-
-    end if;
-end process;
 
 -- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 -- //
@@ -1635,7 +1409,7 @@ RamController_module: RamController
 port map
 (
     CLOCK_133MHz => CLOCK_133MHz,
-    RESET => TEST_RESET,
+    RESET => TEST_RAM_RESET,
 
     A0 => A0,
     A1 => A1,
@@ -1681,12 +1455,12 @@ port map
     UDQM => UDQM,
 
     -- User Interface :: TODO ??? Timing Issue
-    ADDR => TEST_ADDR,
-    DATA_IN => TEST_DATA_IN,
-    DATA_OUT => TEST_DATA_OUT,
-    READ_EN => TEST_READ_EN,
-    WRITE_EN => TEST_WRITE_EN,
-    BUSY => TEST_BUSY
+    ADDR => TEST_RAM_ADDR,
+    DATA_IN => TEST_RAM_DATA_IN,
+    DATA_OUT => TEST_RAM_DATA_OUT,
+    READ_EN => TEST_RAM_READ_EN,
+    WRITE_EN => TEST_RAM_WRITE_EN,
+    BUSY => TEST_RAM_BUSY
 );
 
 --RamControl_test_process:
@@ -1697,53 +1471,53 @@ port map
 --        case (test_ram_state) is
 
 --            when TEST_IDLE =>
---                if test_timer = "10111110101111000001111111111" then
+--                if test_ram_timer = "10111110101111000001111111111" then
 --                    test_ram_state <= TEST_INIT;
---                elsif test_timer = "10111110101111000001111111111" - "1011111010111100000111111111" then
---                    TEST_RESET <= '0';
---                    test_timer <= test_timer + '1';
+--                elsif test_ram_timer = "10111110101111000001111111111" - "1011111010111100000111111111" then
+--                    TEST_RAM_RESET <= '0';
+--                    test_ram_timer <= test_ram_timer + '1';
 --                else
---                    test_timer <= test_timer + '1';
+--                    test_ram_timer <= test_ram_timer + '1';
 --                end if;
 
 --            when TEST_INIT =>
 --                test_ram_state <= TEST_WRITE;
 
 --            when TEST_CONFIG =>
---                TEST_READ_EN <= '0';
---                TEST_WRITE_EN <= '0';
---                if TEST_BUSY = '0' then
---                    if test_flag = '0' then
---                        if test_ops = "1001" then
---                            test_ops <= "0000";
---                            test_flag <= '1';
+--                TEST_RAM_READ_EN <= '0';
+--                TEST_RAM_WRITE_EN <= '0';
+--                if TEST_RAM_BUSY = '0' then
+--                    if test_ram_flag = '0' then
+--                        if test_ram_ops = "1001" then
+--                            test_ram_ops <= "0000";
+--                            test_ram_flag <= '1';
 --                            test_ram_state <= TEST_CONFIG;
---                            TEST_ADDR <= "000000000000000000000000";
+--                            TEST_RAM_ADDR <= "000000000000000000000000";
 --                        else
---                            test_ops <= test_ops + '1';
+--                            test_ram_ops <= test_ram_ops + '1';
 --                            test_ram_state <= TEST_WRITE;
 --                        end if;
---                    elsif test_flag = '1' then
---                        if test_ops = "1010" then
---                            test_ops <= "0000";
---                            test_flag <= '0';
+--                    elsif test_ram_flag = '1' then
+--                        if test_ram_ops = "1010" then
+--                            test_ram_ops <= "0000";
+--                            test_ram_flag <= '0';
 --                            test_ram_state <= TEST_DONE;
 --                        else
---                            test_ops <= test_ops + '1';
+--                            test_ram_ops <= test_ram_ops + '1';
 --                            test_ram_state <= TEST_READ;
 --                        end if;
 --                    end if;
 --                end if;
 
 --            when TEST_WRITE =>
---                TEST_WRITE_EN <= '1';
---                TEST_DATA_IN <= TEST_DATA_IN + '1';
---                TEST_ADDR <= TEST_ADDR + '1';
+--                TEST_RAM_WRITE_EN <= '1';
+--                TEST_RAM_DATA_IN <= TEST_RAM_DATA_IN + '1';
+--                TEST_RAM_ADDR <= TEST_RAM_ADDR + '1';
 --                test_ram_state <= TEST_WAIT;
 
 --            when TEST_READ =>
---                TEST_READ_EN <= '1';
---                TEST_ADDR <= TEST_ADDR + '1';
+--                TEST_RAM_READ_EN <= '1';
+--                TEST_RAM_ADDR <= TEST_RAM_ADDR + '1';
 --                test_ram_state <= TEST_WAIT;
 
 --            when TEST_WAIT =>
@@ -2001,18 +1775,16 @@ primary_offload_wait <= primary_offload_wait_i2c or primary_offload_wait_spi_s1 
 
 -- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 -- //                      //
--- //                      //
 -- // [SENSOR] Acquisition //
--- //                      //
 -- //                      //
 -- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 -------------------------------------------------------------
 -- 0. Interrupt from sensor
--- 1. Noise Controller
--- 2. Pulse Controller
--- 3. [PACKED] Interface Controller -> PACKET_SWITCH_ACQUISITION
--- 4. Set trigger for SpiController to read 6-Bytes
+-- 1. NoiseController
+-- 2. PulseController
+-- 3. PacketSwitch
+-- 4. SpiController
 -------------------------------------------------------------
 BMI160_S1_acceleration: SpiController port map
 (
@@ -2036,16 +1808,8 @@ BMI160_S1_acceleration: SpiController port map
     SINGLE_DATA => acceleration_data_spi_bmi160_s1_feedback,
     OFFLOAD_WAIT => acceleration_offload_wait_spi_s1 -- TODO :: Need wait to process individual Bytes
 );
-
 ----------------------------------------------------------------------------------------------------------------------------
---
--- TODO :: Points 0 - 4 are common for both processes
--- TODO :: Alternative datapath for average acceleration sensor data
--- TODO :: Replace previuous process with the NEW one
--- TODO :: Faster Process operating at 1600MHz
---
-----------------------------------------------------------------------------------------------------------------------------
--- A5. WR & RD are checked against WAIT & BUSY conditions
+-- A5. FIFO Write & Read Control :: Checked against WAIT & BUSY conditions
 ----------------------------------------------------------------------------------------------------------------------------
 read_process:
 process(CLOCK_50MHz)
@@ -2078,7 +1842,7 @@ begin
     end if;
 end process;
 -------------------------------------------------------------
--- A6. Write and read bursted data when possible
+-- A6. Write and read bursted data :: Using above conditions
 -------------------------------------------------------------
 InstantaneousSensorData_Fifo: FifoData
 port map
@@ -2095,7 +1859,13 @@ port map
     q     => sheduler_fifo_data_out
 );
 -------------------------------------------------------------
--- A7. Average Acceleration Counter
+-- A7. State Machine
+--
+-- a. Addition of xyz components from FIFO
+-- b. Setup xyz Dividers
+-- c. Divide and wait for Results
+-- d. Store Results in the Secondary DMA Fifo
+-- e. Trigger DMA Offload Controller
 -------------------------------------------------------------
 acceleration_offset_process:
 process(CLOCK_50MHz)
@@ -2234,43 +2004,6 @@ begin
 
     end if;
 end process;
-
--------------------------------------------------------------
--- Ax. TODO :: This need restruct and refactor
--------------------------------------------------------------
-AverageSensorData_Fifo: FifoData
-port map
-(
-    aclr  => global_fpga_reset,
-    clock => CLOCK_50MHz,
-    -- IN
-    data  => acceleration_average_data_in,
-    rdreq => acceleration_average_RD, -- Must be offloaded
-    wrreq => acceleration_average_WR,
-    -- OUT
-    empty => acceleration_average_empty,
-    full  => acceleration_average_full,
-    q     => acceleration_average_data_out
-);
---------------------------------------------------------------------------
--- Experimential !!!
---------------------------------------------------------------------------
-MainSecondary_DmaOffloadController: DmaOffloadController
-port map
-(
-    CLOCK_50MHz => CLOCK_50MHz,
-    RESET => global_fpga_reset,
-    -- In
-    OFFLOAD_INTERRUPT => acceleration_offload_dma_trigger,
-    OFFLOAD_BIT_COUNT => sensor_fifo_bit_count, -- When BIT(8)
-    OFFLOAD_FIFO_EMPTY => acceleration_average_empty,
-    -- Out
-    OFFLOAD_READ_ENABLE => acceleration_average_RD,
-    OFFLOAD_SECONDARY_DMA_TRIGGER => secondary_dma_trigger_gpio_pulse_20ns,
-
-    OFFLOAD_DEBUG => offload_debug
-);
-
 -------------------------------------------------------------
 -- A8. Division Algorithm
 -------------------------------------------------------------
@@ -2329,6 +2062,41 @@ port map
     QUOTIENT => acceleration_offload_quotient_z,
     REMINDER => acceleration_offload_reminder_z,
     DIVISION_COMPLETE => acceleration_offload_division_complete_z
+);
+-------------------------------------------------------------
+-- A9. Secondary DMA/SPI Fifo
+-------------------------------------------------------------
+AverageSensorData_Fifo: FifoData
+port map
+(
+    aclr  => global_fpga_reset,
+    clock => CLOCK_50MHz,
+    -- IN
+    data  => acceleration_average_data_in,
+    rdreq => acceleration_average_RD, -- Must be offloaded
+    wrreq => acceleration_average_WR,
+    -- OUT
+    empty => acceleration_average_empty,
+    full  => acceleration_average_full,
+    q     => acceleration_average_data_out
+);
+--------------------------------------------------------------------------
+-- A10. Secondary DMA Offload Controller
+--------------------------------------------------------------------------
+MainSecondary_DmaOffloadController: DmaOffloadController
+port map
+(
+    CLOCK_50MHz => CLOCK_50MHz,
+    RESET => global_fpga_reset,
+    -- In
+    OFFLOAD_INTERRUPT => acceleration_offload_dma_trigger,
+    OFFLOAD_BIT_COUNT => sensor_fifo_bit_count, -- When BIT(8)
+    OFFLOAD_FIFO_EMPTY => acceleration_average_empty,
+    -- Out
+    OFFLOAD_READ_ENABLE => acceleration_average_RD,
+    OFFLOAD_SECONDARY_DMA_TRIGGER => secondary_dma_trigger_gpio_pulse_20ns,
+
+    OFFLOAD_DEBUG => offload_debug
 );
 
 --------------------------------------------------------------------------
