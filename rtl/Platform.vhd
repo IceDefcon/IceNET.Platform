@@ -903,8 +903,15 @@ port
     CLOCK_50MHz : in  std_logic;
     RESET : in  std_logic;
 
-    FIFO_PRIMARY_MOSI : out std_logic_vector(7 downto 0);
-    FIFO_PRIMARY_WR_EN : out std_logic
+    PARALLEL_PRIMARY_MOSI : in std_logic_vector(7 downto 0);
+    PARALLEL_CONVERSION_COMPLETE : in std_logic;
+
+    VECTOR_INTERRUPT_PRIMARY_OFFLOAD : out std_logic;
+    VECTOR_INTERRUPT_ENABLE : out std_logic;
+    VECTOR_INTERRUPT_START : out std_logic;
+
+    FIFO_PARALLEL_PRIMARY_MOSI : out std_logic_vector(7 downto 0);
+    FIFO_PARALLEL_PRIMARY_WR_EN : out std_logic
 );
 end component;
 
@@ -1371,7 +1378,7 @@ end process;
 
 -- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 -- //
--- // Interrupt Vector
+-- // Interrupt Vector Controller
 -- //
 -- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -1381,191 +1388,16 @@ port map
     CLOCK_50MHz => CLOCK_50MHz,
     RESET => global_fpga_reset,
     -- IN
+    PARALLEL_PRIMARY_MOSI => primary_parallel_MOSI,
+    PARALLEL_CONVERSION_COMPLETE => primary_conversion_complete,
     -- OUT
-    FIFO_PRIMARY_MOSI => open,
-    FIFO_PRIMARY_WR_EN => open
+    VECTOR_INTERRUPT_PRIMARY_OFFLOAD => primary_offload_vector_interrupt,
+    VECTOR_INTERRUPT_ENABLE => enable_vector_interrupt,
+    VECTOR_INTERRUPT_START => start_vector_interrupt,
+    -- OUT
+    FIFO_PARALLEL_PRIMARY_MOSI => FIFO_primary_parallel_MOSI,
+    FIFO_PARALLEL_PRIMARY_WR_EN => FIFO_primary_fifo_wr_en
 );
-
------------------------------------
---
--- TODO
---
--- Need to be put
--- Into the module
---
------------------------------------
-interrupt_vector_process:
-process(CLOCK_50MHz, global_fpga_reset)
-begin
-    if global_fpga_reset = '1' then
-        primary_offload_vector_interrupt <= '0';
-        vector_state <= VECTOR_IDLE;
-        enable_vector_interrupt <= '0';
-        start_vector_interrupt <= '0';
-    elsif rising_edge(CLOCK_50MHz) then
-
-        REG_primary_fifo_wr_en <= REG_primary_fifo_wr_en(2046 downto 0) & primary_conversion_complete;
-        REG_primary_parallel_MOSI_7 <= REG_primary_parallel_MOSI_0(2046 downto 0) & primary_parallel_MOSI(7);
-        REG_primary_parallel_MOSI_6 <= REG_primary_parallel_MOSI_1(2046 downto 0) & primary_parallel_MOSI(6);
-        REG_primary_parallel_MOSI_5 <= REG_primary_parallel_MOSI_2(2046 downto 0) & primary_parallel_MOSI(5);
-        REG_primary_parallel_MOSI_4 <= REG_primary_parallel_MOSI_3(2046 downto 0) & primary_parallel_MOSI(4);
-        REG_primary_parallel_MOSI_3 <= REG_primary_parallel_MOSI_4(2046 downto 0) & primary_parallel_MOSI(3);
-        REG_primary_parallel_MOSI_2 <= REG_primary_parallel_MOSI_5(2046 downto 0) & primary_parallel_MOSI(2);
-        REG_primary_parallel_MOSI_1 <= REG_primary_parallel_MOSI_6(2046 downto 0) & primary_parallel_MOSI(1);
-        REG_primary_parallel_MOSI_0 <= REG_primary_parallel_MOSI_7(2046 downto 0) & primary_parallel_MOSI(0);
-
-        if primary_conversion_complete = '1' or REG_primary_fifo_wr_en(2047) = '1' then
-            if primary_conversion_count < 2 then
-                STAGE_2_primary_parallel_MOSI <= primary_parallel_MOSI;
-                STAGE_1_primary_parallel_MOSI <= STAGE_2_primary_parallel_MOSI;
-            end if;
-            primary_conversion_reset <= 0;
-            primary_conversion_run <= '1';
-            primary_conversion_count <= primary_conversion_count + 1;
-        else
-            if primary_conversion_reset = 2000 then
-                interrupt_vector_busy <= '0';
-                primary_conversion_run <= '0';
-                primary_conversion_reset <= 0;
-                primary_conversion_count <= 0;
-                STAGE_2_primary_parallel_MOSI <= (others => '0');
-                STAGE_1_primary_parallel_MOSI <= (others => '0');
-            else
-                primary_conversion_reset <= primary_conversion_reset + 1;
-            end if;
-        end if;
-
-        ----------------------------------------------------------------------------------------------------------------------
-        --
-        -- IRQ Vector Condition
-        --
-        ----------------------------------------------------------------------------------------------------------------------
-        if STAGE_1_primary_parallel_MOSI(7) =  '1'  ---------------------------------
-        and STAGE_1_primary_parallel_MOSI(2) =  '1' ----===[ IRQ Vector Base ]===----
-        and STAGE_1_primary_parallel_MOSI(1) =  '1' ---------------------------------
-        and STAGE_2_primary_parallel_MOSI = "10101111" -- [Vector, 0xAF, 0xAE, 0xAD]
-        and interrupt_vector_busy = '0'
-        then
-            interrupt_vector <= STAGE_1_primary_parallel_MOSI(6 downto 3);
-            interrupt_vector_busy <= '1';
-        else
-            interrupt_vector <= "0000";
-        end if;
-
-        ----------------------------------------------------------------------------------------------------------------------
-        --
-        -- If an IRQ Vector condition are meet
-        -- Data from the Primary DMA is not
-        -- Processed further via FIFO
-        --
-        -- 4-Bit IRQ Vector is therefor processed
-        --
-        ----------------------------------------------------------------------------------------------------------------------
-        if interrupt_vector_busy = '1' then
-            FIFO_primary_parallel_MOSI <= (others => '0');
-            FIFO_primary_fifo_wr_en <= '0';
-        else
-            FIFO_primary_parallel_MOSI <= REG_primary_parallel_MOSI_0(2047) & REG_primary_parallel_MOSI_1(2047) &
-                                            REG_primary_parallel_MOSI_2(2047) & REG_primary_parallel_MOSI_3(2047) &
-                                            REG_primary_parallel_MOSI_4(2047) & REG_primary_parallel_MOSI_5(2047) &
-                                            REG_primary_parallel_MOSI_6(2047) & REG_primary_parallel_MOSI_7(2047);
-
-            FIFO_primary_fifo_wr_en <= REG_primary_fifo_wr_en(2047);
-        end if;
-
-        case vector_state is
-
-            when VECTOR_IDLE =>
-                if interrupt_vector = "0001" then
-                    vector_state <= VECTOR_OFFLOAD_PRIMARY;
-                elsif interrupt_vector = "0010" then
-                    vector_state <= VECTOR_ENABLE;
-                elsif interrupt_vector = "0011" then
-                    vector_state <= VECTOR_DISABLE;
-                elsif interrupt_vector = "0100" then
-                    vector_state <= VECTOR_START;
-                elsif interrupt_vector = "0101" then
-                    vector_state <= VECTOR_STOP;
-                elsif interrupt_vector = "0110" then
-                    vector_state <= VECTOR_F00;
-                elsif interrupt_vector = "0111" then
-                    vector_state <= VECTOR_F01;
-                elsif interrupt_vector = "1000" then
-                    vector_state <= VECTOR_F02;
-                elsif interrupt_vector = "1001" then
-                    vector_state <= VECTOR_F1;
-                elsif interrupt_vector = "1010" then
-                    vector_state <= VECTOR_F2;
-                elsif interrupt_vector = "1011" then
-                    vector_state <= VECTOR_F3;
-                elsif interrupt_vector = "1100" then
-                    vector_state <= VECTOR_UNUSED_12;
-                elsif interrupt_vector = "1101" then
-                    vector_state <= VECTOR_UNUSED_13;
-                elsif interrupt_vector = "1110" then
-                    vector_state <= VECTOR_UNUSED_14;
-                elsif interrupt_vector = "1111" then
-                    vector_state <= VECTOR_UNUSED_15;
-                end if;
-
-            when VECTOR_RESERVED =>
-                vector_state <= VECTOR_DONE;
-            when VECTOR_OFFLOAD_PRIMARY =>
-                primary_offload_vector_interrupt <= '1';
-                vector_state <= VECTOR_DONE;
-            when VECTOR_ENABLE =>
-                enable_vector_interrupt <= '1';
-                vector_state <= VECTOR_DONE;
-            when VECTOR_DISABLE =>
-                enable_vector_interrupt <= '0';
-                vector_state <= VECTOR_DONE;
-            when VECTOR_START =>
-                start_vector_interrupt <= '1';
-                vector_state <= VECTOR_DONE;
-            when VECTOR_STOP =>
-                start_vector_interrupt <= '0';
-                vector_state <= VECTOR_DONE;
-            when VECTOR_F00 =>
-                f00_vector_interrupt <= '1';
-                vector_state <= VECTOR_DONE;
-            when VECTOR_F01 =>
-                f01_vector_interrupt <= '1';
-                vector_state <= VECTOR_DONE;
-            when VECTOR_F02 =>
-                f02_vector_interrupt <= '1';
-                vector_state <= VECTOR_DONE;
-            when VECTOR_F1 =>
-                f1_vector_interrupt <= '1';
-                vector_state <= VECTOR_DONE;
-            when VECTOR_F2 =>
-                f2_vector_interrupt <= '1';
-                vector_state <= VECTOR_DONE;
-            when VECTOR_F3 =>
-                f3_vector_interrupt <= '1';
-                vector_state <= VECTOR_DONE;
-            when VECTOR_UNUSED_12 =>
-                vector_state <= VECTOR_DONE;
-            when VECTOR_UNUSED_13 =>
-                vector_state <= VECTOR_DONE;
-            when VECTOR_UNUSED_14 =>
-                vector_state <= VECTOR_DONE;
-            when VECTOR_UNUSED_15 =>
-                vector_state <= VECTOR_DONE;
-            when VECTOR_DONE =>
-                primary_offload_vector_interrupt <= '0';
-                f00_vector_interrupt <= '0';
-                f01_vector_interrupt <= '0';
-                f01_vector_interrupt <= '0';
-                f1_vector_interrupt <= '0';
-                f2_vector_interrupt <= '0';
-                f3_vector_interrupt <= '0';
-                vector_state <= VECTOR_IDLE;
-            when others =>
-                vector_state <= VECTOR_IDLE;
-        end case;
-
-    end if;
-end process;
 
 -- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 -- //
