@@ -2001,18 +2001,16 @@ primary_offload_wait <= primary_offload_wait_i2c or primary_offload_wait_spi_s1 
 
 -- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 -- //                      //
--- //                      //
 -- // [SENSOR] Acquisition //
--- //                      //
 -- //                      //
 -- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 -------------------------------------------------------------
 -- 0. Interrupt from sensor
--- 1. Noise Controller
--- 2. Pulse Controller
--- 3. [PACKED] Interface Controller -> PACKET_SWITCH_ACQUISITION
--- 4. Set trigger for SpiController to read 6-Bytes
+-- 1. NoiseController
+-- 2. PulseController
+-- 3. PacketSwitch
+-- 4. SpiController
 -------------------------------------------------------------
 BMI160_S1_acceleration: SpiController port map
 (
@@ -2036,16 +2034,8 @@ BMI160_S1_acceleration: SpiController port map
     SINGLE_DATA => acceleration_data_spi_bmi160_s1_feedback,
     OFFLOAD_WAIT => acceleration_offload_wait_spi_s1 -- TODO :: Need wait to process individual Bytes
 );
-
 ----------------------------------------------------------------------------------------------------------------------------
---
--- TODO :: Points 0 - 4 are common for both processes
--- TODO :: Alternative datapath for average acceleration sensor data
--- TODO :: Replace previuous process with the NEW one
--- TODO :: Faster Process operating at 1600MHz
---
-----------------------------------------------------------------------------------------------------------------------------
--- A5. WR & RD are checked against WAIT & BUSY conditions
+-- A5. FIFO Write & Read Control :: Checked against WAIT & BUSY conditions
 ----------------------------------------------------------------------------------------------------------------------------
 read_process:
 process(CLOCK_50MHz)
@@ -2078,7 +2068,7 @@ begin
     end if;
 end process;
 -------------------------------------------------------------
--- A6. Write and read bursted data when possible
+-- A6. Write and read bursted data :: Using above conditions
 -------------------------------------------------------------
 InstantaneousSensorData_Fifo: FifoData
 port map
@@ -2095,7 +2085,13 @@ port map
     q     => sheduler_fifo_data_out
 );
 -------------------------------------------------------------
--- A7. Average Acceleration Counter
+-- A7. State Machine
+--
+-- a. Addition of xyz components from FIFO
+-- b. Setup xyz Dividers
+-- c. Divide and wait for Results
+-- d. Store Results in the Secondary DMA Fifo
+-- e. Trigger DMA Offload Controller
 -------------------------------------------------------------
 acceleration_offset_process:
 process(CLOCK_50MHz)
@@ -2234,43 +2230,6 @@ begin
 
     end if;
 end process;
-
--------------------------------------------------------------
--- Ax. TODO :: This need restruct and refactor
--------------------------------------------------------------
-AverageSensorData_Fifo: FifoData
-port map
-(
-    aclr  => global_fpga_reset,
-    clock => CLOCK_50MHz,
-    -- IN
-    data  => acceleration_average_data_in,
-    rdreq => acceleration_average_RD, -- Must be offloaded
-    wrreq => acceleration_average_WR,
-    -- OUT
-    empty => acceleration_average_empty,
-    full  => acceleration_average_full,
-    q     => acceleration_average_data_out
-);
---------------------------------------------------------------------------
--- Experimential !!!
---------------------------------------------------------------------------
-MainSecondary_DmaOffloadController: DmaOffloadController
-port map
-(
-    CLOCK_50MHz => CLOCK_50MHz,
-    RESET => global_fpga_reset,
-    -- In
-    OFFLOAD_INTERRUPT => acceleration_offload_dma_trigger,
-    OFFLOAD_BIT_COUNT => sensor_fifo_bit_count, -- When BIT(8)
-    OFFLOAD_FIFO_EMPTY => acceleration_average_empty,
-    -- Out
-    OFFLOAD_READ_ENABLE => acceleration_average_RD,
-    OFFLOAD_SECONDARY_DMA_TRIGGER => secondary_dma_trigger_gpio_pulse_20ns,
-
-    OFFLOAD_DEBUG => offload_debug
-);
-
 -------------------------------------------------------------
 -- A8. Division Algorithm
 -------------------------------------------------------------
@@ -2329,6 +2288,41 @@ port map
     QUOTIENT => acceleration_offload_quotient_z,
     REMINDER => acceleration_offload_reminder_z,
     DIVISION_COMPLETE => acceleration_offload_division_complete_z
+);
+-------------------------------------------------------------
+-- A9. Secondary DMA/SPI Fifo
+-------------------------------------------------------------
+AverageSensorData_Fifo: FifoData
+port map
+(
+    aclr  => global_fpga_reset,
+    clock => CLOCK_50MHz,
+    -- IN
+    data  => acceleration_average_data_in,
+    rdreq => acceleration_average_RD, -- Must be offloaded
+    wrreq => acceleration_average_WR,
+    -- OUT
+    empty => acceleration_average_empty,
+    full  => acceleration_average_full,
+    q     => acceleration_average_data_out
+);
+--------------------------------------------------------------------------
+-- A10. Secondary DMA Offload Controller
+--------------------------------------------------------------------------
+MainSecondary_DmaOffloadController: DmaOffloadController
+port map
+(
+    CLOCK_50MHz => CLOCK_50MHz,
+    RESET => global_fpga_reset,
+    -- In
+    OFFLOAD_INTERRUPT => acceleration_offload_dma_trigger,
+    OFFLOAD_BIT_COUNT => sensor_fifo_bit_count, -- When BIT(8)
+    OFFLOAD_FIFO_EMPTY => acceleration_average_empty,
+    -- Out
+    OFFLOAD_READ_ENABLE => acceleration_average_RD,
+    OFFLOAD_SECONDARY_DMA_TRIGGER => secondary_dma_trigger_gpio_pulse_20ns,
+
+    OFFLOAD_DEBUG => offload_debug
 );
 
 --------------------------------------------------------------------------
