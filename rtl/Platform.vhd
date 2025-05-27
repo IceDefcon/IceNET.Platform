@@ -278,7 +278,6 @@ signal STAGE_2_primary_parallel_MOSI : std_logic_vector(7 downto 0) := (others =
 -- Interrupt Vector out signals
 signal interrupt_vector : std_logic_vector(3 downto 0) := (others => '0');
 signal interrupt_vector_busy : std_logic := '0';
-signal interrupt_vector_enable : std_logic := '0';
 -- Interrupt vector state machine
 type VECTOR_TYPE is
 (
@@ -462,12 +461,6 @@ type PACKET_SWITCH_SM is
     PACKET_SWITCH_DONE
 );
 signal packetSwitchState: PACKET_SWITCH_SM := PACKET_SWITCH_IDLE;
-
--- Debug
-signal led_5_toggle : std_logic := '1';
-signal led_6_toggle : std_logic := '1';
-signal led_7_toggle : std_logic := '1';
-signal led_8_toggle : std_logic := '1';
 
 signal offload_debug : std_logic := '0';
 
@@ -901,6 +894,17 @@ port
     TRIGGER_SHORT : in std_logic;
 
     RETURN_INTERRUPT : out std_logic
+);
+end component;
+
+component InterruptVectorController
+port
+(
+    CLOCK_50MHz : in  std_logic;
+    RESET : in  std_logic;
+
+    FIFO_PRIMARY_MOSI : out std_logic_vector(7 downto 0);
+    FIFO_PRIMARY_WR_EN : out std_logic
 );
 end component;
 
@@ -1353,7 +1357,7 @@ begin
         elsif i2c_complete_long = '1'  then
             secondary_parallel_MISO <= data_i2c_feedback;
         elsif pwm_m1_complete_long = '1' then
-            secondary_parallel_MISO <= data_pwm_feedback; -- Constant
+            secondary_parallel_MISO <= data_pwm_feedback; -- Constant 0xC3
         elsif spi_bmi160_s1_complete_long = '1' then
             secondary_parallel_MISO <= data_spi_bmi160_s1_feedback;
         elsif spi_bmi160_s2_complete_long = '1' then
@@ -1371,6 +1375,17 @@ end process;
 -- //
 -- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+InterruptVectorController_module: InterruptVectorController
+port map
+(
+    CLOCK_50MHz => CLOCK_50MHz,
+    RESET => global_fpga_reset,
+    -- IN
+    -- OUT
+    FIFO_PRIMARY_MOSI => open,
+    FIFO_PRIMARY_WR_EN => open
+);
+
 -----------------------------------
 --
 -- TODO
@@ -1387,8 +1402,6 @@ begin
         vector_state <= VECTOR_IDLE;
         enable_vector_interrupt <= '0';
         start_vector_interrupt <= '0';
-        led_7_toggle <= '1';
-        led_8_toggle <= '1';
     elsif rising_edge(CLOCK_50MHz) then
 
         REG_primary_fifo_wr_en <= REG_primary_fifo_wr_en(2046 downto 0) & primary_conversion_complete;
@@ -1422,6 +1435,11 @@ begin
             end if;
         end if;
 
+        ----------------------------------------------------------------------------------------------------------------------
+        --
+        -- IRQ Vector Condition
+        --
+        ----------------------------------------------------------------------------------------------------------------------
         if STAGE_1_primary_parallel_MOSI(7) =  '1'  ---------------------------------
         and STAGE_1_primary_parallel_MOSI(2) =  '1' ----===[ IRQ Vector Base ]===----
         and STAGE_1_primary_parallel_MOSI(1) =  '1' ---------------------------------
@@ -1429,13 +1447,20 @@ begin
         and interrupt_vector_busy = '0'
         then
             interrupt_vector <= STAGE_1_primary_parallel_MOSI(6 downto 3);
-            interrupt_vector_enable <= '1';
             interrupt_vector_busy <= '1';
         else
             interrupt_vector <= "0000";
-            interrupt_vector_enable <= '0';
         end if;
 
+        ----------------------------------------------------------------------------------------------------------------------
+        --
+        -- If an IRQ Vector condition are meet
+        -- Data from the Primary DMA is not
+        -- Processed further via FIFO
+        --
+        -- 4-Bit IRQ Vector is therefor processed
+        --
+        ----------------------------------------------------------------------------------------------------------------------
         if interrupt_vector_busy = '1' then
             FIFO_primary_parallel_MOSI <= (others => '0');
             FIFO_primary_fifo_wr_en <= '0';
@@ -1490,19 +1515,15 @@ begin
                 vector_state <= VECTOR_DONE;
             when VECTOR_ENABLE =>
                 enable_vector_interrupt <= '1';
-                led_8_toggle <= '0';
                 vector_state <= VECTOR_DONE;
             when VECTOR_DISABLE =>
                 enable_vector_interrupt <= '0';
-                led_8_toggle <= '1';
                 vector_state <= VECTOR_DONE;
             when VECTOR_START =>
                 start_vector_interrupt <= '1';
-                led_7_toggle <= '0';
                 vector_state <= VECTOR_DONE;
             when VECTOR_STOP =>
                 start_vector_interrupt <= '0';
-                led_7_toggle <= '1';
                 vector_state <= VECTOR_DONE;
             when VECTOR_F00 =>
                 f00_vector_interrupt <= '1';
@@ -2211,19 +2232,6 @@ begin
                 accelreation_state <= ACCELERATION_IDLE;
         end case;
 
-        -- Debug :: Avoid Optimization
-        if acceleration_offload_six = 6
-        and acceleration_offload_pairs = 100
-        and acceleration_offload_ready = '1'
-        and acceleration_offload_x = "0000000000000001"
-        and acceleration_offload_y = "0000000000000001"
-        and acceleration_offload_z = "0000000000000001"
-        and acceleration_offload_x_total = "000000000000000000001"
-        and acceleration_offload_y_total = "000000000000000000001"
-        and acceleration_offload_z_total = "000000000000000000001"
-        and acceleration_offload_divisor_xyz = "000000000000000000001" then
-            led_5_toggle <= '0';
-        end if;
     end if;
 end process;
 
@@ -2438,13 +2446,13 @@ port map
 --    end if;
 --end process;
 
---LOGIC_CH1 <= acceleration_ctrl_BMI160_S1_SCLK;
---LOGIC_CH2 <= SECONDARY_SCLK;
---LOGIC_CH3 <= SECONDARY_MOSI;
---LOGIC_CH4 <= feedbck_interrupt_logic;
---LOGIC_CH5 <= offload_debug;
---LOGIC_CH6 <= sensor_fifo_empty;
---LOGIC_CH7 <= sensor_fifo_full;
+--LOGIC_CH1 <= '0';
+--LOGIC_CH2 <= '0';
+--LOGIC_CH3 <= '0';
+--LOGIC_CH4 <= '0';
+--LOGIC_CH5 <= '0';
+--LOGIC_CH6 <= '0';
+--LOGIC_CH7 <= '0';
 
 ------------------------------------------------------------------------------------------------------------------------------------------
 --
@@ -2478,9 +2486,9 @@ LED_1 <= '0';
 LED_2 <= '1';
 LED_3 <= '1';
 LED_4 <= '1';
-LED_5 <= led_5_toggle;
-LED_6 <= led_6_toggle;
-LED_7 <= led_7_toggle;
-LED_8 <= led_8_toggle;
+LED_5 <= '1';
+LED_6 <= '1';
+LED_7 <= '1';
+LED_8 <= '1';
 
 end rtl;
