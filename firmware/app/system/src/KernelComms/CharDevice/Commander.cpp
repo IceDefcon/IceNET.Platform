@@ -51,6 +51,8 @@ void Commander::setupCommandMatrix()
     m_commandMatrix[CMD_DMA_CUSTOM] = {0xC5, 0x70}; /* 0xC570(CSTO) :: Reconfigure DMA Engine :: Custom Mode x-Byte */
     m_commandMatrix[CMD_RAMDISK_CONFIG] = {0xC0, 0xF1}; /* 0xC0F1(COFI) :: Activate DMA transfer to send IMU's config to FPGA */
     m_commandMatrix[CMD_RAMDISK_CLEAR]  = {0xC1, 0xEA}; /* 0xC1EA(CLEA) :: Clear DMA variables used for verification of IMU's config */
+    m_commandMatrix[CMD_DEBUG_ENABLE] = {0xDE, 0xBE}; /* 0xDEBE(DEBE) :: Enable debug in kernel space */
+    m_commandMatrix[CMD_DEBUG_DISABLE] = {0xDE, 0xBD}; /* 0xDEBD(DEBD) :: Disable debug in kernel space */
     m_commandMatrix[CMD_FPGA_RESET] = {0x4E,0x5E}; /* 0x4E5E(RESE) :: Global Reset to FPGA */
 }
 

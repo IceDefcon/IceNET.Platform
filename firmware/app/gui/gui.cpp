@@ -47,6 +47,7 @@ gui::gui() :
     m_IO_GuiState(std::make_shared<ioStateType>(IO_COM_IDLE)),
     m_isPulseControllerEnabled(true),
     m_isStartAcquisition(true),
+    m_isDebugEnabled(true),
     m_CsiCamera(nullptr),
     m_UsbCamera(nullptr)
 {
@@ -63,47 +64,7 @@ gui::gui() :
     setupDMA();
     setupCMD();
     setupSeparators();
-
-    QPushButton *usbCameraButton = new QPushButton("USB.CAM", this);
-    usbCameraButton->setGeometry(800 - w.xGap*1 - w.xUnit*2, w.yGap*2 + w.yLogo, w.xUnit*2, w.yUnit);
-    usbCameraButton->setStyleSheet(
-        "QPushButton {"
-        "   background-color: blue;"
-        "   color: white;"
-        "   font-size: 17px;"
-        "   font-weight: bold;"
-        "   border-radius: 10px;"
-        "   padding: 5px;"
-        "}"
-        "QPushButton:hover {"
-        "   background-color: darkblue;"
-        "}"
-        "QPushButton:pressed {"
-        "   background-color: black;"
-        "}"
-    );
-    connect(usbCameraButton, &QPushButton::clicked, this, &gui::openUsbCamera);
-
-    QPushButton *csiCameraButton = new QPushButton("CSI.CAM", this);
-    csiCameraButton->setGeometry(800 - w.xGap*1 - w.xUnit*2, w.yGap*3 + w.yLogo + w.yUnit, w.xUnit*2, w.yUnit);
-    csiCameraButton->setStyleSheet(
-        "QPushButton {"
-        "   background-color: blue;"
-        "   color: white;"
-        "   font-size: 17px;"
-        "   font-weight: bold;"
-        "   border-radius: 10px;"
-        "   padding: 5px;"
-        "}"
-        "QPushButton:hover {"
-        "   background-color: darkblue;"
-        "}"
-        "QPushButton:pressed {"
-        "   background-color: black;"
-        "}"
-    );
-    connect(csiCameraButton, &QPushButton::clicked, this, &gui::openCsiCamera);
-
+    setupCameras();
     setupAdditionalDebugs();
 }
 
@@ -474,6 +435,49 @@ void gui::setupSeparators()
     hLine5->setFrameShadow(QFrame::Sunken);
 }
 
+void gui::setupCameras()
+{
+    QPushButton *usbCameraButton = new QPushButton("USB.CAM", this);
+    usbCameraButton->setGeometry(800 - w.xGap*1 - w.xUnit*2, w.yGap*2 + w.yLogo, w.xUnit*2, w.yUnit);
+    usbCameraButton->setStyleSheet(
+        "QPushButton {"
+        "   background-color: blue;"
+        "   color: white;"
+        "   font-size: 17px;"
+        "   font-weight: bold;"
+        "   border-radius: 10px;"
+        "   padding: 5px;"
+        "}"
+        "QPushButton:hover {"
+        "   background-color: darkblue;"
+        "}"
+        "QPushButton:pressed {"
+        "   background-color: black;"
+        "}"
+    );
+    connect(usbCameraButton, &QPushButton::clicked, this, &gui::openUsbCamera);
+
+    QPushButton *csiCameraButton = new QPushButton("CSI.CAM", this);
+    csiCameraButton->setGeometry(800 - w.xGap*1 - w.xUnit*2, w.yGap*3 + w.yLogo + w.yUnit, w.xUnit*2, w.yUnit);
+    csiCameraButton->setStyleSheet(
+        "QPushButton {"
+        "   background-color: blue;"
+        "   color: white;"
+        "   font-size: 17px;"
+        "   font-weight: bold;"
+        "   border-radius: 10px;"
+        "   padding: 5px;"
+        "}"
+        "QPushButton:hover {"
+        "   background-color: darkblue;"
+        "}"
+        "QPushButton:pressed {"
+        "   background-color: black;"
+        "}"
+    );
+    connect(csiCameraButton, &QPushButton::clicked, this, &gui::openCsiCamera);
+}
+
 void gui::setupAdditionalDebugs()
 {
     QPushButton *f00Button = new QPushButton("F00", this);
@@ -640,6 +644,86 @@ void gui::setupAdditionalDebugs()
         }
     };
     connect(f3Button, &QPushButton::clicked, this, executeF3);
+
+    /* Kernel Debug */
+    m_debugButton = new QPushButton("DBG.ON", this);
+    m_debugButton->setGeometry(800 - w.xGap*1 - w.xUnit*2, w.yGap*4 + w.yLogo + w.yUnit*2, w.xUnit*2, w.yUnit);
+
+    m_debugButton->setStyleSheet(
+        "QPushButton {"
+        "   background-color: green;"
+        "   color: white;"
+        "   font-size: 17px;"
+        "   font-weight: bold;"
+        "   border-radius: 10px;"
+        "   padding: 5px;"
+        "}"
+        "QPushButton:hover {"
+        "   background-color: darkblue;"
+        "}"
+        "QPushButton:pressed {"
+        "   background-color: black;"
+        "}"
+    );
+
+    auto debugControl = [this]()
+    {
+        if (NULL == m_instanceDroneControl)
+        {
+            printToMainConsole("$ Drone Control is Down");
+            return;
+        }
+
+        if (m_isDebugEnabled)
+        {
+            m_debugButton->setText("DBG.OFF");
+            m_debugButton->setStyleSheet(
+                "QPushButton {"
+                "   background-color: red;"
+                "   color: white;"
+                "   font-size: 17px;"
+                "   font-weight: bold;"
+                "   border-radius: 10px;"
+                "   padding: 5px;"
+                "}"
+                "QPushButton:hover {"
+                "   background-color: darkred;"
+                "}"
+                "QPushButton:pressed {"
+                "   background-color: black;"
+                "}"
+            );
+
+            printToMainConsole("$ Enable Kernel Debug");
+            m_instanceDroneControl->sendCommand(CMD_DEBUG_ENABLE);
+        }
+        else
+        {
+            m_debugButton->setText("DBG.ON");
+            m_debugButton->setStyleSheet(
+                "QPushButton {"
+                "   background-color: green;"
+                "   color: white;"
+                "   font-size: 17px;"
+                "   font-weight: bold;"
+                "   border-radius: 10px;"
+                "   padding: 5px;"
+                "}"
+                "QPushButton:hover {"
+                "   background-color: darkblue;"
+                "}"
+                "QPushButton:pressed {"
+                "   background-color: black;"
+                "}"
+            );
+
+            printToMainConsole("$ Disable Kernel Debug");
+            m_instanceDroneControl->sendCommand(CMD_DEBUG_DISABLE);
+        }
+
+        m_isDebugEnabled = !m_isDebugEnabled;
+    };
+    connect(m_debugButton, &QPushButton::clicked, this, debugControl);
 }
 
 void gui::setupDMA()
@@ -932,6 +1016,8 @@ std::string gui::cmdToString(commandType cmd)
         case CMD_DMA_CUSTOM:    return "CMD_DMA_CUSTOM";
         case CMD_RAMDISK_CONFIG:return "CMD_RAMDISK_CONFIG";
         case CMD_RAMDISK_CLEAR: return "CMD_RAMDISK_CLEAR";
+        case CMD_DEBUG_ENABLE:  return "CMD_DEBUG_ENABLE";
+        case CMD_DEBUG_DISABLE: return "CMD_DEBUG_DISABLE";
         case CMD_FPGA_RESET:    return "CMD_FPGA_RESET";
         default:                return "UNKNOWN_CMD";
     }
@@ -1381,7 +1467,6 @@ void gui::deleteDroneControl()
         {
             interruptVector_execute(VECTOR_DISABLE);
             interruptVector_execute(VECTOR_STOP);
-            interruptVector_execute(VECTOR_F02);
         }
 
         m_isPulseControllerEnabled = true;
@@ -1408,6 +1493,25 @@ void gui::deleteDroneControl()
         m_startButton->setStyleSheet(
             "QPushButton {"
             "   background-color: green;"
+            "   color: white;"
+            "   font-size: 17px;"
+            "   font-weight: bold;"
+            "   border-radius: 10px;"
+            "   padding: 5px;"
+            "}"
+            "QPushButton:hover {"
+            "   background-color: darkblue;"
+            "}"
+            "QPushButton:pressed {"
+            "   background-color: black;"
+            "}"
+        );
+
+        m_isDebugEnabled = true;
+        m_debugButton->setText("DBG.OFF");
+        m_debugButton->setStyleSheet(
+            "QPushButton {"
+            "   background-color: red;"
             "   color: white;"
             "   font-size: 17px;"
             "   font-weight: bold;"

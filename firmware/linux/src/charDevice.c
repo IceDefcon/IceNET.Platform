@@ -17,6 +17,7 @@
 #include "charDevice.h"
 #include "spiWork.h"
 #include "config.h"
+#include "debug.h"
 #include "types.h"
 
 //////////////////////
@@ -312,7 +313,6 @@ static ssize_t commanderWrite(struct file *filep, const char __user *buffer, siz
         customDmaSize = Device[DEVICE_COMMANDER].io_transfer.RxData[2];
         printk(KERN_INFO "[CTRL][ C ] Reconfigure DMA Engine into custom %d Byte feedback mode\n", customDmaSize);
         setStateMachine(SM_DMA_CUSTOM);
-
     }
     else if (Device[DEVICE_COMMANDER].io_transfer.RxData[0] == 0xC0 && Device[DEVICE_COMMANDER].io_transfer.RxData[1] == 0xF1)
     {
@@ -324,6 +324,16 @@ static ssize_t commanderWrite(struct file *filep, const char __user *buffer, siz
     {
         printk(KERN_INFO "[CTRL][ C ] [0] Clear DMA variables used for verification of IMU's config\n");
         setStateMachine(SM_RAMDISK_CLEAR);
+    }
+    else if (Device[DEVICE_COMMANDER].io_transfer.RxData[0] == 0xDE && Device[DEVICE_COMMANDER].io_transfer.RxData[1] == 0xBE)
+    {
+        printk(KERN_INFO "[CTRL][ C ] Enable SPI/DMA Debug\n");
+        ctrlDebug(DEBUG_SPI, true);
+    }
+    else if (Device[DEVICE_COMMANDER].io_transfer.RxData[0] == 0xDE && Device[DEVICE_COMMANDER].io_transfer.RxData[1] == 0xBD)
+    {
+        printk(KERN_INFO "[CTRL][ C ] Disable SPI/DMA Debug\n");
+        ctrlDebug(DEBUG_SPI, false);
     }
     else if (Device[DEVICE_COMMANDER].io_transfer.RxData[0] == 0x4E && Device[DEVICE_COMMANDER].io_transfer.RxData[1] == 0x5E)
     {

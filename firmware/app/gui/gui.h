@@ -84,6 +84,7 @@ class gui : public QWidget
 
     QPushButton *m_enableButton;
     QPushButton *m_startButton;
+    QPushButton *m_debugButton;
 
     std::unique_ptr<DroneCtrl> m_instanceDroneControl;
     bool m_isKernelConnected;
@@ -102,6 +103,7 @@ class gui : public QWidget
 
     bool m_isPulseControllerEnabled;
     bool m_isStartAcquisition;
+    bool m_isDebugEnabled;
 
     QLabel *m_cameraDisplay;
     QTimer *m_videoTimer;
@@ -131,6 +133,7 @@ private slots:
     void setupFpgaCtrl();
     void setupDroneControl();
     void setupSeparators();
+    void setupCameras();
     void setupAdditionalDebugs();
 
     void setupI2C();
