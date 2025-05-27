@@ -260,71 +260,20 @@ signal primary_conversion_complete : std_logic := '0';
 signal primary_parallel_MOSI : std_logic_vector(7 downto 0) := (others => '0');
 -- Spi.1 Secondary
 signal secondary_parallel_MISO : std_logic_vector(7 downto 0) := (others => '0');
--- Interrupt Vector Counter + signals
-signal REG_primary_fifo_wr_en : std_logic_vector(2047 downto 0) := (others => '0');
-signal REG_primary_parallel_MOSI_0 : std_logic_vector(2047 downto 0) := (others => '0');
-signal REG_primary_parallel_MOSI_1 : std_logic_vector(2047 downto 0) := (others => '0');
-signal REG_primary_parallel_MOSI_2 : std_logic_vector(2047 downto 0) := (others => '0');
-signal REG_primary_parallel_MOSI_3 : std_logic_vector(2047 downto 0) := (others => '0');
-signal REG_primary_parallel_MOSI_4 : std_logic_vector(2047 downto 0) := (others => '0');
-signal REG_primary_parallel_MOSI_5 : std_logic_vector(2047 downto 0) := (others => '0');
-signal REG_primary_parallel_MOSI_6 : std_logic_vector(2047 downto 0) := (others => '0');
-signal REG_primary_parallel_MOSI_7 : std_logic_vector(2047 downto 0) := (others => '0');
+
 -- Interrupt Vector stage signals
 signal FIFO_primary_fifo_wr_en  : std_logic := '0';
 signal FIFO_primary_parallel_MOSI : std_logic_vector(7 downto 0) := (others => '0');
-signal STAGE_1_primary_parallel_MOSI : std_logic_vector(7 downto 0) := (others => '0');
-signal STAGE_2_primary_parallel_MOSI : std_logic_vector(7 downto 0) := (others => '0');
--- Interrupt Vector out signals
-signal interrupt_vector : std_logic_vector(3 downto 0) := (others => '0');
-signal interrupt_vector_busy : std_logic := '0';
--- Interrupt vector state machine
-type VECTOR_TYPE is
-(
-    VECTOR_IDLE,
-    VECTOR_RESERVED,            -- "0000"
-    VECTOR_OFFLOAD_PRIMARY,     -- "0001"
-    VECTOR_ENABLE,              -- "0010"
-    VECTOR_DISABLE,             -- "0011"
-    VECTOR_START,               -- "0100"
-    VECTOR_STOP,                -- "0101"
-    VECTOR_F00,                 -- "0110"
-    VECTOR_F01,                 -- "0111"
-    VECTOR_F02,                 -- "1000"
-    VECTOR_F1,                  -- "1001"
-    VECTOR_F2,                  -- "1010"
-    VECTOR_F3,                  -- "1011"
-    VECTOR_UNUSED_12,           -- "1100"
-    VECTOR_UNUSED_13,           -- "1101"
-    VECTOR_UNUSED_14,           -- "1110"
-    VECTOR_UNUSED_15,           -- "1111"
-    VECTOR_DONE
-);
-signal vector_state: VECTOR_TYPE := VECTOR_IDLE;
 -- Interrupt vector interrupts
 signal primary_offload_vector_interrupt : std_logic := '0';
 signal enable_vector_interrupt : std_logic := '0';
 signal start_vector_interrupt : std_logic := '0';
-signal f00_vector_interrupt : std_logic := '0';
-signal f01_vector_interrupt : std_logic := '0';
-signal f02_vector_interrupt : std_logic := '0';
-signal f1_vector_interrupt : std_logic := '0';
-signal f2_vector_interrupt : std_logic := '0';
-signal f3_vector_interrupt : std_logic := '0';
 signal secondary_dma_trigger_gpio_pulse_20ns : std_logic := '0';
--- Interrupt Vector signals
-signal primary_conversion_run : std_logic := '0';
-signal primary_conversion_reset : integer range 0 to 2048 := 0;
-signal primary_conversion_count : integer range 0 to 256 := 0;
 -- Fifo
 signal primary_fifo_rd_en : std_logic := '0';
 signal primary_fifo_data_out : std_logic_vector(7 downto 0) := (others => '0');
 signal primary_fifo_full : std_logic := '0';
 signal primary_fifo_empty : std_logic := '0';
--- Fifo
-signal sensor_fifo_rdreq : std_logic := '0';
-signal sensor_fifo_full : std_logic := '0';
-signal sensor_fifo_empty : std_logic := '0';
 signal sensor_fifo_bit_count : std_logic_vector(3 downto 0) := (others => '0');
 -- Primary Offload
 signal primary_offload_ready : std_logic := '0';
@@ -372,7 +321,7 @@ signal uart_write_busy : std_logic := '0';
 signal UART_LOG_MESSAGE_ID : UART_LOG_ID := ("1101", "1110"); -- 0xDE
 signal UART_LOG_MESSAGE_KEY : UART_LOG_KEY := ("1010", "1101"); -- 0xAD
 signal UART_LOG_MESSAGE_DATA : UART_LOG_DATA := ("1100", "0000", "1101", "1110"); -- 0xC0DE
--- Test
+-- Ram Test
 type TEST_STATE is
 (
     TEST_IDLE,
@@ -386,9 +335,9 @@ type TEST_STATE is
 
 signal test_ram_state : TEST_STATE := TEST_IDLE;
 -- Test
-signal test_timer : std_logic_vector(28 downto 0) := (others => '0');
-signal test_ops : std_logic_vector(3 downto 0) := (others => '0');
-signal test_flag : std_logic := '0';
+signal test_ram_timer : std_logic_vector(28 downto 0) := (others => '0');
+signal test_ram_ops : std_logic_vector(3 downto 0) := (others => '0');
+signal test_ram_flag : std_logic := '0';
 --
 --
 -- Address ---> Row[23:11] : Bank[10:9] : Column[8:0]
@@ -398,22 +347,15 @@ signal test_flag : std_logic := '0';
 -- ADDR(10 downto 9); -- Bank address
 -- ADDR(8 downto 0); -- Column address
 --
-signal TEST_RESET : std_logic := '1';
-signal TEST_ADDR :  std_logic_vector(23 downto 0) := "000000000000000000000000";
-signal TEST_WRITE_EN : std_logic := '0';
-signal TEST_DATA_IN :  std_logic_vector(15 downto 0) := "0101010101110000";
-signal TEST_READ_EN : std_logic := '0';
-signal TEST_DATA_OUT : std_logic_vector(15 downto 0) := (others => '0');
-signal TEST_BUSY : std_logic := '0';
+signal TEST_RAM_RESET : std_logic := '1';
+signal TEST_RAM_ADDR :  std_logic_vector(23 downto 0) := "000000000000000000000000";
+signal TEST_RAM_WRITE_EN : std_logic := '0';
+signal TEST_RAM_DATA_IN :  std_logic_vector(15 downto 0) := "0101010101110000";
+signal TEST_RAM_READ_EN : std_logic := '0';
+signal TEST_RAM_DATA_OUT : std_logic_vector(15 downto 0) := (others => '0');
+signal TEST_RAM_BUSY : std_logic := '0';
 -- PLL
-signal CLOCk_133MHz : std_logic := '0';
-signal CLOCK_Fast : std_logic := '0';
--- SPI Controller
-signal spi_mux : std_logic_vector(3 downto 0) := "0000";
-signal ctrl_CS : std_logic := '0';
-signal ctrl_MISO : std_logic := '0';
-signal ctrl_MOSI : std_logic := '0';
-signal ctrl_SCLK : std_logic := '0';
+signal CLOCK_133MHz : std_logic := '0';
 -- SPI :: nRF905
 signal ctrl_RF_CS : std_logic := '0';
 signal ctrl_RF_MISO : std_logic := '0';
@@ -1467,7 +1409,7 @@ RamController_module: RamController
 port map
 (
     CLOCK_133MHz => CLOCK_133MHz,
-    RESET => TEST_RESET,
+    RESET => TEST_RAM_RESET,
 
     A0 => A0,
     A1 => A1,
@@ -1513,12 +1455,12 @@ port map
     UDQM => UDQM,
 
     -- User Interface :: TODO ??? Timing Issue
-    ADDR => TEST_ADDR,
-    DATA_IN => TEST_DATA_IN,
-    DATA_OUT => TEST_DATA_OUT,
-    READ_EN => TEST_READ_EN,
-    WRITE_EN => TEST_WRITE_EN,
-    BUSY => TEST_BUSY
+    ADDR => TEST_RAM_ADDR,
+    DATA_IN => TEST_RAM_DATA_IN,
+    DATA_OUT => TEST_RAM_DATA_OUT,
+    READ_EN => TEST_RAM_READ_EN,
+    WRITE_EN => TEST_RAM_WRITE_EN,
+    BUSY => TEST_RAM_BUSY
 );
 
 --RamControl_test_process:
@@ -1529,53 +1471,53 @@ port map
 --        case (test_ram_state) is
 
 --            when TEST_IDLE =>
---                if test_timer = "10111110101111000001111111111" then
+--                if test_ram_timer = "10111110101111000001111111111" then
 --                    test_ram_state <= TEST_INIT;
---                elsif test_timer = "10111110101111000001111111111" - "1011111010111100000111111111" then
---                    TEST_RESET <= '0';
---                    test_timer <= test_timer + '1';
+--                elsif test_ram_timer = "10111110101111000001111111111" - "1011111010111100000111111111" then
+--                    TEST_RAM_RESET <= '0';
+--                    test_ram_timer <= test_ram_timer + '1';
 --                else
---                    test_timer <= test_timer + '1';
+--                    test_ram_timer <= test_ram_timer + '1';
 --                end if;
 
 --            when TEST_INIT =>
 --                test_ram_state <= TEST_WRITE;
 
 --            when TEST_CONFIG =>
---                TEST_READ_EN <= '0';
---                TEST_WRITE_EN <= '0';
---                if TEST_BUSY = '0' then
---                    if test_flag = '0' then
---                        if test_ops = "1001" then
---                            test_ops <= "0000";
---                            test_flag <= '1';
+--                TEST_RAM_READ_EN <= '0';
+--                TEST_RAM_WRITE_EN <= '0';
+--                if TEST_RAM_BUSY = '0' then
+--                    if test_ram_flag = '0' then
+--                        if test_ram_ops = "1001" then
+--                            test_ram_ops <= "0000";
+--                            test_ram_flag <= '1';
 --                            test_ram_state <= TEST_CONFIG;
---                            TEST_ADDR <= "000000000000000000000000";
+--                            TEST_RAM_ADDR <= "000000000000000000000000";
 --                        else
---                            test_ops <= test_ops + '1';
+--                            test_ram_ops <= test_ram_ops + '1';
 --                            test_ram_state <= TEST_WRITE;
 --                        end if;
---                    elsif test_flag = '1' then
---                        if test_ops = "1010" then
---                            test_ops <= "0000";
---                            test_flag <= '0';
+--                    elsif test_ram_flag = '1' then
+--                        if test_ram_ops = "1010" then
+--                            test_ram_ops <= "0000";
+--                            test_ram_flag <= '0';
 --                            test_ram_state <= TEST_DONE;
 --                        else
---                            test_ops <= test_ops + '1';
+--                            test_ram_ops <= test_ram_ops + '1';
 --                            test_ram_state <= TEST_READ;
 --                        end if;
 --                    end if;
 --                end if;
 
 --            when TEST_WRITE =>
---                TEST_WRITE_EN <= '1';
---                TEST_DATA_IN <= TEST_DATA_IN + '1';
---                TEST_ADDR <= TEST_ADDR + '1';
+--                TEST_RAM_WRITE_EN <= '1';
+--                TEST_RAM_DATA_IN <= TEST_RAM_DATA_IN + '1';
+--                TEST_RAM_ADDR <= TEST_RAM_ADDR + '1';
 --                test_ram_state <= TEST_WAIT;
 
 --            when TEST_READ =>
---                TEST_READ_EN <= '1';
---                TEST_ADDR <= TEST_ADDR + '1';
+--                TEST_RAM_READ_EN <= '1';
+--                TEST_RAM_ADDR <= TEST_RAM_ADDR + '1';
 --                test_ram_state <= TEST_WAIT;
 
 --            when TEST_WAIT =>
