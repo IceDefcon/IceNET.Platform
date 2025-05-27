@@ -74,6 +74,22 @@ begin
             VECTOR_INTERRUPT_PRIMARY_OFFLOAD <= '0';
             VECTOR_INTERRUPT_ENABLE <= '0';
             VECTOR_INTERRUPT_START <= '0';
+            interrupt_vector_busy <= '0';
+            primary_conversion_run <= '0';
+            interrupt_vector <= (others => '0');
+            REG_primary_fifo_wr_en <= (others => '0');
+            REG_primary_parallel_MOSI_0 <= (others => '0');
+            REG_primary_parallel_MOSI_1 <= (others => '0');
+            REG_primary_parallel_MOSI_2 <= (others => '0');
+            REG_primary_parallel_MOSI_3 <= (others => '0');
+            REG_primary_parallel_MOSI_4 <= (others => '0');
+            REG_primary_parallel_MOSI_5 <= (others => '0');
+            REG_primary_parallel_MOSI_6 <= (others => '0');
+            REG_primary_parallel_MOSI_7 <= (others => '0');
+            STAGE_1_primary_parallel_MOSI <= (others => '0');
+            STAGE_2_primary_parallel_MOSI <= (others => '0');
+            primary_conversion_reset <= 0;
+            primary_conversion_count <= 0;
             vector_state <= VECTOR_IDLE;
         elsif rising_edge(CLOCK_50MHz) then
             ----------------------------------------------------------------------------------------------------------------------
