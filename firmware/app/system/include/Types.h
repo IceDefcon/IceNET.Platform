@@ -31,6 +31,8 @@ typedef enum
     CMD_DMA_CUSTOM,
     CMD_RAMDISK_CONFIG,
     CMD_RAMDISK_CLEAR,
+    CMD_DEBUG_ENABLE,
+    CMD_DEBUG_DISABLE,
     CMD_FPGA_RESET,
     CMD_AMOUNT
 } commandType;

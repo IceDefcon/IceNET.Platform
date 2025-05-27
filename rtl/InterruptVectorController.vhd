@@ -3,22 +3,18 @@ use ieee.numeric_std.all;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.all;
 
-entity Temp is
-generic
-(
-    PERIOD : integer := 20;
-    LENGTH : integer := 16
-);
+entity InterruptVectorController is
 Port
 (
     CLOCK_50MHz : in  std_logic;
     RESET : in  std_logic;
 
-    INTERRUPT_SIGNAL : out std_logic
+    FIFO_PRIMARY_MOSI : out std_logic_vector(7 downto 0);
+    FIFO_PRIMARY_WR_EN : out std_logic
 );
-end entity Temp;
+end entity InterruptVectorController;
 
-architecture rtl of Temp is
+architecture rtl of InterruptVectorController is
 
 type TEMP_SM is
 (
@@ -30,11 +26,10 @@ signal temp_state: TEMP_SM := TEMP_IDLE;
 
 begin
 
-    temp_process:
-    process(CLOCK_50MHz)
+    interrupt_process: process(CLOCK_50MHz)
     begin
         if RESET = '1' then
-            temp_state <= TEMP_IDLE
+            temp_state <= TEMP_IDLE;
         elsif rising_edge(CLOCK_50MHz) then
 
             case temp_state is
@@ -47,6 +42,7 @@ begin
                 when others =>
                     temp_state <= TEMP_IDLE;
             end case;
+
         end if;
     end process interrupt_process;
 end architecture rtl;
