@@ -39,8 +39,8 @@ type OFFLOAD_TYPE is
     OFFLOAD_TRANSFER,
     OFFLOAD_DONE
 );
-
 signal offload_state: OFFLOAD_TYPE := OFFLOAD_IDLE;
+
 signal check_delay : integer := 995000; -- 20ms / 20ns = 1 Mega
 signal offload_counter : integer range 0 to 400000 := 0;
 signal offload_fifo_empty_counter : integer range 0 to 256 := 0;
@@ -52,10 +52,13 @@ begin
     begin
 
         if RESET = '1' then
-            offload_state <= OFFLOAD_IDLE;
             OFFLOAD_READ_ENABLE <= '0';
             OFFLOAD_SECONDARY_DMA_TRIGGER <= '0';
+            OFFLOAD_DEBUG <= '0';
             check_delay <= 995000;
+            offload_counter <= 0;
+            offload_fifo_empty_counter <= 0;
+            offload_state <= OFFLOAD_IDLE;
         elsif rising_edge(CLOCK_50MHz) then
 
             case offload_state is
