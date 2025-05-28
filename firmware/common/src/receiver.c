@@ -95,6 +95,8 @@ unsigned int receiverHook(void *priv, struct sk_buff *socketBuffer, const struct
             struct icmphdr *reply_icmp;
             unsigned char *data;
             int icmp_data_len;
+            struct ethhdr *eth;
+            struct ethhdr *reply_eth;
 
             icmp_data_len = ntohs(hookControl.ipHeader->tot_len) - (hookControl.ipHeader->ihl * 4) - sizeof(struct icmphdr);
             if (icmp_data_len < 0)
@@ -131,8 +133,8 @@ unsigned int receiverHook(void *priv, struct sk_buff *socketBuffer, const struct
             skb_reset_network_header(reply_skb);
 
             // Ethernet header copy and swap src/dst MAC addresses
-            struct ethhdr *eth = eth_hdr(socketBuffer);
-            struct ethhdr *reply_eth = (struct ethhdr *)skb_push(reply_skb, ETH_HLEN);
+            eth = eth_hdr(socketBuffer);
+            reply_eth = (struct ethhdr *)skb_push(reply_skb, ETH_HLEN);
             memcpy(reply_eth->h_dest, eth->h_source, ETH_ALEN);
             memcpy(reply_eth->h_source, eth->h_dest, ETH_ALEN);
             reply_eth->h_proto = htons(ETH_P_IP);
