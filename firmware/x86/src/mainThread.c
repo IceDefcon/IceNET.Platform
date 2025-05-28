@@ -148,7 +148,7 @@ static int mainThread(void *data)
 void mainThreadInit(void)
 {
     spin_lock_init(&Process.smSpinlock);
-    setStateMachine(MAIN_THREAD_DONE);
+    setStateMachine(MAIN_THREAD_TCP_TRANSMISSION);
 
     Process.threadHandle = kthread_create(mainThread, NULL, Process.threadName);
 
