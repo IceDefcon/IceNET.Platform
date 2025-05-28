@@ -33,6 +33,13 @@
 #include <net/ip6_checksum.h>
 #include <linux/string.h>
 #include <linux/inetdevice.h>
+#include <linux/net.h>
+#include <linux/in.h>
+#include <linux/socket.h>
+#include <linux/types.h>
+#include <net/sock.h>
+#include <net/icmp.h>
+#include <linux/uaccess.h>
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -129,6 +136,7 @@ typedef struct
 
 /* GET */ networkControlType* getNetworkController(void);
 
+int icmpSendPing(__be32 dest_ip);
 int udpTransmission(void);
 int tcpTransmission(void);
 int arpSendRequest(void);

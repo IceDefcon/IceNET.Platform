@@ -1,0 +1,1 @@
+savedcmd_/ice/code.lab/IceNET/IceNET.Platform/firmware/x86/iceControler.o := ld -m elf_x86_64 -z noexecstack --no-warn-rwx-segments   -r -o /ice/code.lab/IceNET/IceNET.Platform/firmware/x86/iceControler.o @/ice/code.lab/IceNET/IceNET.Platform/firmware/x86/iceControler.mod 

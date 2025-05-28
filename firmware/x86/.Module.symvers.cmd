@@ -1,0 +1,1 @@
+savedcmd_/ice/code.lab/IceNET/IceNET.Platform/firmware/x86/Module.symvers :=  scripts/mod/modpost -M -m -a      -o /ice/code.lab/IceNET/IceNET.Platform/firmware/x86/Module.symvers -T /ice/code.lab/IceNET/IceNET.Platform/firmware/x86/modules.order -i Module.symvers -e 
