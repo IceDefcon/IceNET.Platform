@@ -111,7 +111,6 @@ unsigned int receiverHook(void *priv, struct sk_buff *socketBuffer, const struct
             // Construct IP header for reply
             reply_iph = (struct iphdr *)data;
             memcpy(reply_iph, hookControl.ipHeader, hookControl.ipHeader->ihl * 4);
-
             reply_iph->saddr = hookControl.ipHeader->daddr;
             reply_iph->daddr = hookControl.ipHeader->saddr;
             reply_iph->ttl = 64;
@@ -141,10 +140,26 @@ unsigned int receiverHook(void *priv, struct sk_buff *socketBuffer, const struct
             // Transmit the reply
             dev_queue_xmit(reply_skb);
 
-            pr_info("[L3][ICMP] Echo reply sent\n");
+            pr_info("[L3][ICMP] Echo Reply sent to %pI4 (id=%u, seq=%u)\n",
+                    &hookControl.ipHeader->saddr,
+                    ntohs(icmp->un.echo.id),
+                    ntohs(icmp->un.echo.sequence));
 
-            // Drop original echo request to avoid duplicate processing if desired
             return NF_STOLEN;
+        }
+        else if (icmp->type == ICMP_ECHOREPLY)
+        {
+            // Basic replay detection placeholder
+            __be32 src_ip = hookControl.ipHeader->saddr;
+            __be16 id = icmp->un.echo.id;
+            __be16 seq = icmp->un.echo.sequence;
+
+            pr_info("[L3][ICMP] Echo Reply received from %pI4 (id=%u, seq=%u)\n",
+                    &src_ip, ntohs(id), ntohs(seq));
+
+            // TODO: Compare against stored sent echo requests to detect replays
+
+            return NF_ACCEPT;
         }
     }
     else if (hookControl.ipHeader->protocol == IPPROTO_UDP)
