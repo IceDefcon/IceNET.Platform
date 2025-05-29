@@ -102,8 +102,6 @@ static int mainThread(void *data)
             Process.previousState = Process.currentState;
         }
 
-;
-
         switch (state)
         {
             case MAIN_THREAD_IDLE:
