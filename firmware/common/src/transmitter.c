@@ -128,13 +128,14 @@ int icmpSendPing(__be32 dest_ip)
 
     packet = kmalloc(packet_size, GFP_KERNEL);
     if (!packet)
+    {
         return -ENOMEM;
+    }
 
-    // ret = sock_create_kern(&init_net, AF_INET, SOCK_DGRAM, IPPROTO_ICMP, &sock);
     ret = sock_create_kern(&init_net, AF_INET, SOCK_RAW, IPPROTO_ICMP, &sock);
-
-    if (ret < 0) {
-        printk(KERN_ERR "[ICMP] Failed to create socket: %d\n", ret);
+    if (ret < 0)
+    {
+        printk(KERN_ERR "[TX][ICMP] Failed to create socket: %d\n", ret);
         kfree(packet);
         return ret;
     }
@@ -149,7 +150,6 @@ int icmpSendPing(__be32 dest_ip)
     icmp->checksum = 0;
     icmp->un.echo.id = htons(0x1234);
     icmp->un.echo.sequence = htons(1);
-
     icmp->checksum = ip_compute_csum((void *)icmp, packet_size);
 
     memset(&msg, 0, sizeof(msg));
@@ -160,10 +160,13 @@ int icmpSendPing(__be32 dest_ip)
     iov.iov_len = packet_size;
 
     ret = kernel_sendmsg(sock, &msg, &iov, 1, packet_size);
-    if (ret < 0) {
-        printk(KERN_ERR "[ICMP] Failed to send ICMP echo request: %d\n", ret);
-    } else {
-        printk(KERN_INFO "[ICMP] ICMP Echo Request sent to %pI4\n", &dest_ip);
+    if (ret < 0)
+    {
+        printk(KERN_ERR "[TX][ICMP] Failed to send ICMP echo request: %d\n", ret);
+    }
+    else
+    {
+        printk(KERN_INFO "[TX][ICMP] ICMP Echo Request sent to %pI4\n", &dest_ip);
     }
 
     sock_release(sock);
