@@ -51,6 +51,8 @@ static int RX_Count = 0;
 
 unsigned int receiverHook(void *priv, struct sk_buff *socketBuffer, const struct nf_hook_state *state)
 {
+    struct icmphdr *icmp;
+
     if (!socketBuffer)
     {
         return NF_ACCEPT;
@@ -65,7 +67,7 @@ unsigned int receiverHook(void *priv, struct sk_buff *socketBuffer, const struct
     if (hookControl.ipHeader->protocol == IPPROTO_ICMP)
     {
         pr_info("[RX][ICMP] IPPROTO_ICMP Detected\n");
-        struct icmphdr *icmp = icmp_hdr(socketBuffer);
+        icmp = icmp_hdr(socketBuffer);
         if (!icmp)
         {
             return NF_ACCEPT;
