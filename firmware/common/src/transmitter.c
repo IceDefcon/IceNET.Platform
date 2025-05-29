@@ -115,6 +115,65 @@ static ndpRequestType ndpRequest =
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+int icmpSendPing(__be32 dest_ip)
+{
+    struct socket *sock = NULL;
+    struct sockaddr_in addr;
+    struct msghdr msg;
+    struct kvec iov;
+    struct icmphdr *icmp;
+    char *packet;
+    int ret;
+    int packet_size = sizeof(struct icmphdr);
+
+    packet = kmalloc(packet_size, GFP_KERNEL);
+    if (!packet)
+        return -ENOMEM;
+
+    // ret = sock_create_kern(&init_net, AF_INET, SOCK_DGRAM, IPPROTO_ICMP, &sock);
+    ret = sock_create_kern(&init_net, AF_INET, SOCK_RAW, IPPROTO_ICMP, &sock);
+
+    if (ret < 0) {
+        printk(KERN_ERR "[ICMP] Failed to create socket: %d\n", ret);
+        kfree(packet);
+        return ret;
+    }
+
+    memset(&addr, 0, sizeof(addr));
+    addr.sin_family = AF_INET;
+    addr.sin_addr.s_addr = dest_ip;
+
+    icmp = (struct icmphdr *)packet;
+    icmp->type = ICMP_ECHO;
+    icmp->code = 0;
+    icmp->checksum = 0;
+    icmp->un.echo.id = htons(0x1234);
+    icmp->un.echo.sequence = htons(1);
+
+    icmp->checksum = ip_compute_csum((void *)icmp, packet_size);
+
+    memset(&msg, 0, sizeof(msg));
+    msg.msg_name = &addr;
+    msg.msg_namelen = sizeof(addr);
+
+    iov.iov_base = packet;
+    iov.iov_len = packet_size;
+
+    ret = kernel_sendmsg(sock, &msg, &iov, 1, packet_size);
+    if (ret < 0) {
+        printk(KERN_ERR "[ICMP] Failed to send ICMP echo request: %d\n", ret);
+    } else {
+        printk(KERN_INFO "[ICMP] ICMP Echo Request sent to %pI4\n", &dest_ip);
+    }
+
+    sock_release(sock);
+    kfree(packet);
+
+    return ret;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 int udpTransmission(void)
 {
     transmissionControl.transmissionLength = ETH_HLEN + sizeof(struct iphdr) + sizeof(struct udphdr) + PAYLOAD_LEN;

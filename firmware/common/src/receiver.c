@@ -49,44 +49,122 @@ static int RX_Count = 0;
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+#include <linux/ip.h>
+#include <linux/icmp.h>
+#include <linux/netdevice.h>
+#include <linux/skbuff.h>
+#include <linux/if_ether.h>
+
+static unsigned short ip_checksum(void *buf, int nwords)
+{
+    unsigned long sum = 0;
+    unsigned short *w = buf;
+    int i;
+
+    for (i = 0; i < nwords; i++)
+        sum += ntohs(w[i]);
+
+    sum = (sum >> 16) + (sum & 0xffff);
+    sum += (sum >> 16);
+
+    return htons(~sum);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 unsigned int receiverHook(void *priv, struct sk_buff *socketBuffer, const struct nf_hook_state *state)
 {
     if (!socketBuffer)
-    {
         return NF_ACCEPT;
-    }
-
-    // if (state->in || state->out)
-    // {
-    //     pr_info("[L2][ETH] In: %s | Out: %s\n", state->in ? state->in->name : "N/A", state->out ? state->out->name : "N/A");
-
-    //     if (state->in && strcmp(state->in->name, "eth0") == 0)
-    //     {
-    //         pr_info("[L2][ETH] Packet received on interface: %s\n", state->in->name);
-    //     }
-    // }
-
-    // if (skb_mac_header_was_set(socketBuffer))
-    // {
-    //     hookControl.ethernetHeader = eth_hdr(socketBuffer);
-    //     if (hookControl.ethernetHeader)
-    //     {
-    //         pr_info("[L2][ETH] Src MAC: %pM -> Dst MAC: %pM | Proto: 0x%04x\n",
-    //                 hookControl.ethernetHeader->h_source,
-    //                 hookControl.ethernetHeader->h_dest,
-    //                 ntohs(hookControl.ethernetHeader->h_proto));
-    //     }
-    // }
 
     hookControl.ipHeader = ip_hdr(socketBuffer);
     if (!hookControl.ipHeader)
-    {
         return NF_ACCEPT;
+
+    if (hookControl.ipHeader->protocol == IPPROTO_ICMP)
+    {
+        struct icmphdr *icmp = icmp_hdr(socketBuffer);
+        if (!icmp)
+            return NF_ACCEPT;
+
+        if (icmp->type == ICMP_ECHO)
+        {
+            // Prepare reply skb
+            struct sk_buff *reply_skb;
+            struct iphdr *reply_iph;
+            struct icmphdr *reply_icmp;
+            unsigned char *data;
+            int icmp_data_len;
+            struct ethhdr *eth;
+            struct ethhdr *reply_eth;
+
+            icmp_data_len = ntohs(hookControl.ipHeader->tot_len) - (hookControl.ipHeader->ihl * 4) - sizeof(struct icmphdr);
+            if (icmp_data_len < 0)
+                return NF_ACCEPT;
+
+            // Allocate skb for reply: Ethernet + IP + ICMP header + data
+            reply_skb = alloc_skb(ETH_HLEN + ntohs(hookControl.ipHeader->tot_len), GFP_ATOMIC);
+            if (!reply_skb)
+                return NF_ACCEPT;
+
+            skb_reserve(reply_skb, ETH_HLEN);
+            data = skb_put(reply_skb, ntohs(hookControl.ipHeader->tot_len));
+
+            // Construct IP header for reply
+            reply_iph = (struct iphdr *)data;
+            memcpy(reply_iph, hookControl.ipHeader, hookControl.ipHeader->ihl * 4);
+            reply_iph->saddr = hookControl.ipHeader->daddr;
+            reply_iph->daddr = hookControl.ipHeader->saddr;
+            reply_iph->ttl = 64;
+            reply_iph->check = 0;
+            reply_iph->check = ip_checksum(reply_iph, reply_iph->ihl);
+
+            // Construct ICMP header and copy payload
+            reply_icmp = (struct icmphdr *)(data + (reply_iph->ihl * 4));
+            memcpy(reply_icmp, icmp, sizeof(struct icmphdr) + icmp_data_len);
+            reply_icmp->type = ICMP_ECHOREPLY;
+            reply_icmp->checksum = 0;
+            reply_icmp->checksum = ip_checksum(reply_icmp, (sizeof(struct icmphdr) + icmp_data_len) / 2 + 1);
+
+            // Set skb parameters
+            reply_skb->dev = socketBuffer->dev;
+            reply_skb->protocol = htons(ETH_P_IP);
+            skb_reset_mac_header(reply_skb);
+            skb_reset_network_header(reply_skb);
+
+            // Ethernet header copy and swap src/dst MAC addresses
+            eth = eth_hdr(socketBuffer);
+            reply_eth = (struct ethhdr *)skb_push(reply_skb, ETH_HLEN);
+            memcpy(reply_eth->h_dest, eth->h_source, ETH_ALEN);
+            memcpy(reply_eth->h_source, eth->h_dest, ETH_ALEN);
+            reply_eth->h_proto = htons(ETH_P_IP);
+
+            // Transmit the reply
+            dev_queue_xmit(reply_skb);
+
+            pr_info("[L3][ICMP] Echo Reply sent to %pI4 (id=%u, seq=%u)\n",
+                    &hookControl.ipHeader->saddr,
+                    ntohs(icmp->un.echo.id),
+                    ntohs(icmp->un.echo.sequence));
+
+            return NF_STOLEN;
+        }
+        else if (icmp->type == ICMP_ECHOREPLY)
+        {
+            // Basic replay detection placeholder
+            __be32 src_ip = hookControl.ipHeader->saddr;
+            __be16 id = icmp->un.echo.id;
+            __be16 seq = icmp->un.echo.sequence;
+
+            pr_info("[L3][ICMP] Echo Reply received from %pI4 (id=%u, seq=%u)\n",
+                    &src_ip, ntohs(id), ntohs(seq));
+
+            // TODO: Compare against stored sent echo requests to detect replays
+
+            return NF_ACCEPT;
+        }
     }
-
-    // pr_info("[L3][IP] Src IP: %pI4 -> Dst IP: %pI4 | Proto: %d\n", &hookControl.ipHeader->saddr, &hookControl.ipHeader->daddr, hookControl.ipHeader->protocol);
-
-    if (hookControl.ipHeader->protocol == IPPROTO_UDP)
+    else if (hookControl.ipHeader->protocol == IPPROTO_UDP)
     {
         hookControl.udpHeader = udp_hdr(socketBuffer);
         if (!hookControl.udpHeader)

@@ -165,25 +165,6 @@ void memoryDestroy(void)
     pr_info("[INFO][MOD] Free Stack  : %zu bytes\n", remaining);
 }
 
-/* PRINT */ void showSections(void)
-{
-    void *text_start = (void *)kallsyms_lookup_name("_stext");
-    void *data_start = (void *)kallsyms_lookup_name("_sdata");
-    void *bss_start  = (void *)kallsyms_lookup_name("__bss_start");
-
-    void *text_end   = (void *)kallsyms_lookup_name("_etext");
-    void *data_end   = (void *)kallsyms_lookup_name("_edata");
-    void *bss_end    = (void *)kallsyms_lookup_name("__bss_stop");
-
-    size_t text_size = (size_t)(text_end - text_start);
-    size_t data_size = (size_t)(data_end - data_start);
-    size_t bss_size  = (size_t)(bss_end  - bss_start);
-
-    pr_info("[INFO][DIA] .text %p - %p [Size: %zu bytes]\n", text_start, text_end, text_size);
-    pr_info("[INFO][DIA] .data %p - %p [Size: %zu bytes]\n", data_start, data_end, data_size);
-    pr_info("[INFO][DIA] .bss  %p - %p [Size: %zu bytes]\n", bss_start, bss_end, bss_size);
-}
-
 /* PRINT */ void showAllocation(void)
 {
     printk(KERN_INFO "[INFO][DIA] Allocations[%d] Deallocatios[%d] Allocated[%d] Bytes\n", Process.noAllocs, Process.noDeallocs, Process.currAllocated);

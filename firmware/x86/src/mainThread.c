@@ -56,6 +56,7 @@ static const char* getMainThreadStateString(mainThreadStateType type)
     static const char* mainThreadStateStrings[] =
     {
         "MAIN_THREAD_IDLE",
+        "MAIN_THREAD_NETWORK_ICMP_PING",
         "MAIN_THREAD_NETWORK_ARP_REQUEST",
         "MAIN_THREAD_NETWORK_NDP_REQUEST",
         "MAIN_THREAD_TCP_TRANSMISSION",
@@ -101,10 +102,19 @@ static int mainThread(void *data)
             Process.previousState = Process.currentState;
         }
 
+;
+
         switch (state)
         {
             case MAIN_THREAD_IDLE:
                 /* Nothing to do */
+                break;
+
+            case MAIN_THREAD_NETWORK_ICMP_PING:
+                printk(KERN_INFO "[CTRL][STM] mode -> MAIN_THREAD_NETWORK_ICMP_PING\n");
+                __be32 ip = in_aton("192.168.8.174");
+                icmpSendPing(ip);
+                setStateMachine(MAIN_THREAD_DONE);
                 break;
 
             case MAIN_THREAD_NETWORK_ARP_REQUEST:
@@ -148,7 +158,7 @@ static int mainThread(void *data)
 void mainThreadInit(void)
 {
     spin_lock_init(&Process.smSpinlock);
-    setStateMachine(MAIN_THREAD_DONE);
+    setStateMachine(MAIN_THREAD_NETWORK_ICMP_PING);
 
     Process.threadHandle = kthread_create(mainThread, NULL, Process.threadName);
 

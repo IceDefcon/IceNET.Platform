@@ -4,8 +4,8 @@
  * IceNET Technology 2025
  *
  */
-#include <linux/init.h>        // For __init and __exit macros
-#include <linux/module.h>      // For module initialization and exit macros
+#include <linux/init.h>
+#include <linux/module.h>
 
 #include "mainThread.h"
 #include "x86network.h"
