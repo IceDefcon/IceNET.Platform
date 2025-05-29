@@ -50,7 +50,19 @@
 
 typedef struct
 {
+    struct icmphdr *icmpHeader;
+    struct icmphdr *icmpHeaderReply;
+    struct sk_buff *socketBufferReply;
+    struct iphdr *ipHeaderReply;
     struct ethhdr *ethernetHeader;
+    struct ethhdr *ethernetHeaderReply;
+    unsigned char *dataBuffer;
+    int dataBufferLength;
+    struct iphdr *ipHeader;
+} hookDiagnosticsType;
+
+typedef struct
+{
     struct iphdr *ipHeader;
     struct udphdr *udpHeader;
     struct tcphdr *tcpHeader;
@@ -58,13 +70,13 @@ typedef struct
     int payloadLength;
     unsigned short destPort;
     u8 aesKey[AES_KEY_SIZE];
-} hookControlType;
+} hookCommunicationType;
 
 typedef struct
 {
     struct arphdr *arpHeader;
     unsigned char *arpPtr;
-    struct sk_buff *replySocketBuffer;
+    struct sk_buff *socketBufferReply;
     struct net_device *networkDevice;
     unsigned char *senderMacAddress;
     unsigned char *senderIpAddress;
@@ -82,7 +94,8 @@ typedef struct
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-unsigned int receiverHook(void *priv, struct sk_buff *socketBuffer, const struct nf_hook_state *state);
+unsigned int receiverHookDiagnostic(void *priv, struct sk_buff *socketBuffer, const struct nf_hook_state *state);
+unsigned int receiverHookCommunication(void *priv, struct sk_buff *socketBuffer, const struct nf_hook_state *state);
 int arpReceive(struct sk_buff *socketBuffer, struct net_device *networkDevice, struct packet_type *packetType, struct net_device *originalDevice);
 int ndpReceive(struct sk_buff *socketBuffer, struct net_device *networkDevice, struct packet_type *pt, struct net_device *orig_dev);
 

@@ -9,9 +9,21 @@
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-static hookControlType hookControl =
+static hookDiagnosticsType hookDiagnostics =
 {
+    .icmpHeader = NULL,
+    .icmpHeaderReply = NULL,
+    .socketBufferReply = NULL,
+    .ipHeaderReply = NULL,
     .ethernetHeader = NULL,
+    .ethernetHeaderReply = NULL,
+    .dataBuffer = NULL,
+    .dataBufferLength = 0,
+    .ipHeader = NULL,
+};
+
+static hookCommunicationType hookCommunication =
+{
     .ipHeader = NULL,
     .udpHeader = NULL,
     .tcpHeader = NULL,
@@ -29,7 +41,7 @@ static arpRequestType arpRequest =
 {
     .arpHeader = NULL,
     .arpPtr = NULL,
-    .replySocketBuffer = NULL,
+    .socketBufferReply = NULL,
     .networkDevice = NULL,
     .senderMacAddress = NULL,
     .senderIpAddress = NULL,
@@ -49,91 +61,87 @@ static int RX_Count = 0;
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-unsigned int receiverHook(void *priv, struct sk_buff *socketBuffer, const struct nf_hook_state *state)
+unsigned int receiverHookDiagnostic(void *priv, struct sk_buff *socketBuffer, const struct nf_hook_state *state)
 {
-    struct icmphdr *icmp;
-
     if (!socketBuffer)
     {
         return NF_ACCEPT;
     }
 
-    hookControl.ipHeader = ip_hdr(socketBuffer);
-    if (!hookControl.ipHeader)
+    hookDiagnostics.ipHeader = ip_hdr(socketBuffer);
+    if (!hookDiagnostics.ipHeader)
     {
         return NF_ACCEPT;
     }
 
-    if (hookControl.ipHeader->protocol == IPPROTO_ICMP)
+    if (hookDiagnostics.ipHeader->protocol == IPPROTO_ICMP)
     {
-        pr_info("[RX][ICMP] IPPROTO_ICMP Detected\n");
-        icmp = icmp_hdr(socketBuffer);
-        if (!icmp)
+        hookDiagnostics.icmpHeader = icmp_hdr(socketBuffer);
+        if (!hookDiagnostics.icmpHeader)
         {
             return NF_ACCEPT;
         }
-
-        if (icmp->type == ICMP_ECHO)
+/**
+ * This can be commented
+ * as Linux operating system
+ * handles response to ICMP packets
+ */
+#if 0
+        if (hookDiagnostics.icmpHeader->type == ICMP_ECHO)
         {
-            struct sk_buff *reply_skb;
-            struct iphdr *reply_iph;
-            struct icmphdr *reply_icmp;
-            unsigned char *data;
-            int icmp_data_len;
-            struct ethhdr *eth;
-            struct ethhdr *reply_eth;
-
-            icmp_data_len = ntohs(hookControl.ipHeader->tot_len) - (hookControl.ipHeader->ihl * 4) - sizeof(struct icmphdr);
-            if (icmp_data_len < 0)
+            hookDiagnostics.dataBufferLength = ntohs(hookDiagnostics.ipHeader->tot_len) - (hookDiagnostics.ipHeader->ihl * 4) - sizeof(struct icmphdr);
+            if (hookDiagnostics.dataBufferLength < 0)
             {
                 return NF_ACCEPT;
             }
 
-            reply_skb = alloc_skb(ETH_HLEN + ntohs(hookControl.ipHeader->tot_len), GFP_ATOMIC);
-            if (!reply_skb)
+            hookDiagnostics.socketBufferReply = alloc_skb(ETH_HLEN + ntohs(hookDiagnostics.ipHeader->tot_len), GFP_ATOMIC);
+            if (!hookDiagnostics.socketBufferReply)
             {
                 return NF_ACCEPT;
             }
 
-            skb_reserve(reply_skb, ETH_HLEN);
-            data = skb_put(reply_skb, ntohs(hookControl.ipHeader->tot_len));
+            skb_reserve(hookDiagnostics.socketBufferReply, ETH_HLEN);
+            hookDiagnostics.dataBuffer = skb_put(hookDiagnostics.socketBufferReply, ntohs(hookDiagnostics.ipHeader->tot_len));
 
-            reply_iph = (struct iphdr *)data;
-            memcpy(reply_iph, hookControl.ipHeader, hookControl.ipHeader->ihl * 4);
-            reply_iph->saddr = hookControl.ipHeader->daddr;
-            reply_iph->daddr = hookControl.ipHeader->saddr;
-            reply_iph->ttl = 64;
-            reply_iph->check = 0;
-            reply_iph->check = ip_fast_csum((unsigned char *)reply_iph, reply_iph->ihl);
+            hookDiagnostics.ipHeaderReply = (struct iphdr *)hookDiagnostics.dataBuffer;
+            memcpy(hookDiagnostics.ipHeaderReply, hookDiagnostics.ipHeader, hookDiagnostics.ipHeader->ihl * 4);
+            hookDiagnostics.ipHeaderReply->saddr = hookDiagnostics.ipHeader->daddr;
+            hookDiagnostics.ipHeaderReply->daddr = hookDiagnostics.ipHeader->saddr;
+            hookDiagnostics.ipHeaderReply->ttl = 64;
+            hookDiagnostics.ipHeaderReply->check = 0;
+            hookDiagnostics.ipHeaderReply->check = ip_fast_csum((unsigned char *)hookDiagnostics.ipHeaderReply, hookDiagnostics.ipHeaderReply->ihl);
 
-            reply_icmp = (struct icmphdr *)(data + (reply_iph->ihl * 4));
-            memcpy(reply_icmp, icmp, sizeof(struct icmphdr) + icmp_data_len);
-            reply_icmp->type = ICMP_ECHOREPLY;
-            reply_icmp->checksum = 0;
-            reply_icmp->checksum = ip_compute_csum((void *)reply_icmp, sizeof(struct icmphdr) + icmp_data_len);
+            hookDiagnostics.icmpHeaderReply = (struct icmphdr *)(hookDiagnostics.dataBuffer + (hookDiagnostics.ipHeaderReply->ihl * 4));
+            memcpy(hookDiagnostics.icmpHeaderReply, hookDiagnostics.icmpHeader, sizeof(struct icmphdr) + hookDiagnostics.dataBufferLength);
+            hookDiagnostics.icmpHeaderReply->type = ICMP_ECHOREPLY;
+            hookDiagnostics.icmpHeaderReply->checksum = 0;
+            hookDiagnostics.icmpHeaderReply->checksum = ip_compute_csum((void *)hookDiagnostics.icmpHeaderReply, sizeof(struct icmphdr) + hookDiagnostics.dataBufferLength);
 
-            reply_skb->dev = socketBuffer->dev;
-            reply_skb->protocol = htons(ETH_P_IP);
-            skb_reset_mac_header(reply_skb);
-            skb_reset_network_header(reply_skb);
+            hookDiagnostics.socketBufferReply->dev = socketBuffer->dev;
+            hookDiagnostics.socketBufferReply->protocol = htons(ETH_P_IP);
+            skb_reset_mac_header(hookDiagnostics.socketBufferReply);
+            skb_reset_network_header(hookDiagnostics.socketBufferReply);
 
-            eth = eth_hdr(socketBuffer);
-            reply_eth = (struct ethhdr *)skb_push(reply_skb, ETH_HLEN);
-            memcpy(reply_eth->h_dest, eth->h_source, ETH_ALEN);
-            memcpy(reply_eth->h_source, eth->h_dest, ETH_ALEN);
-            reply_eth->h_proto = htons(ETH_P_IP);
+            hookDiagnostics.ethernetHeader = eth_hdr(socketBuffer);
+            hookDiagnostics.ethernetHeaderReply = (struct ethhdr *)skb_push(hookDiagnostics.socketBufferReply, ETH_HLEN);
+            memcpy(hookDiagnostics.ethernetHeaderReply->h_dest, hookDiagnostics.ethernetHeader->h_source, ETH_ALEN);
+            memcpy(hookDiagnostics.ethernetHeaderReply->h_source, hookDiagnostics.ethernetHeader->h_dest, ETH_ALEN);
+            hookDiagnostics.ethernetHeaderReply->h_proto = htons(ETH_P_IP);
 
-            dev_queue_xmit(reply_skb);
+            dev_queue_xmit(hookDiagnostics.socketBufferReply);
 
-            pr_info("[RX][ICMP] Echo Reply sent to %pI4 (id=%u, seq=%u)\n", &hookControl.ipHeader->saddr, ntohs(icmp->un.echo.id), ntohs(icmp->un.echo.sequence));
+            pr_info("[RX][ICMP] Echo Reply sent to %pI4 (id=%u, seq=%u)\n", &hookDiagnostics.ipHeader->saddr, ntohs(hookDiagnostics.icmpHeader->un.echo.id), ntohs(hookDiagnostics.icmpHeader->un.echo.sequence));
 
             return NF_STOLEN;
         }
-        else if (icmp->type == ICMP_ECHOREPLY)
+        else
+#else
+        if (hookDiagnostics.icmpHeader->type == ICMP_ECHOREPLY)
         {
-            __be32 src_ip = hookControl.ipHeader->saddr;
-            __be16 id = icmp->un.echo.id;
-            __be16 seq = icmp->un.echo.sequence;
+            __be32 src_ip = hookDiagnostics.ipHeader->saddr;
+            __be16 id = hookDiagnostics.icmpHeader->un.echo.id;
+            __be16 seq = hookDiagnostics.icmpHeader->un.echo.sequence;
 
             pr_info("[RX][ICMP] Echo Reply received from %pI4 (id=%u, seq=%u)\n", &src_ip, ntohs(id), ntohs(seq));
 
@@ -148,40 +156,58 @@ unsigned int receiverHook(void *priv, struct sk_buff *socketBuffer, const struct
 
             return NF_ACCEPT;
         }
+#endif
     }
-    else if (hookControl.ipHeader->protocol == IPPROTO_UDP)
+
+    return NF_ACCEPT;
+}
+
+unsigned int receiverHookCommunication(void *priv, struct sk_buff *socketBuffer, const struct nf_hook_state *state)
+{
+    if (!socketBuffer)
     {
-        hookControl.udpHeader = udp_hdr(socketBuffer);
-        if (!hookControl.udpHeader)
+        return NF_ACCEPT;
+    }
+
+    hookCommunication.ipHeader = ip_hdr(socketBuffer);
+    if (!hookCommunication.ipHeader)
+    {
+        return NF_ACCEPT;
+    }
+
+    if (hookCommunication.ipHeader->protocol == IPPROTO_UDP)
+    {
+        hookCommunication.udpHeader = udp_hdr(socketBuffer);
+        if (!hookCommunication.udpHeader)
         {
             return NF_ACCEPT;
         }
 
-        hookControl.destPort = ntohs(hookControl.udpHeader->dest);
-        if (hookControl.destPort != UDP_PORT)
+        hookCommunication.destPort = ntohs(hookCommunication.udpHeader->dest);
+        if (hookCommunication.destPort != UDP_PORT)
         {
             return NF_ACCEPT;
         }
 
-        if (hookControl.ipHeader->daddr != htonl(BROADCAST_HEX_IP))
+        if (hookCommunication.ipHeader->daddr != htonl(BROADCAST_HEX_IP))
         {
             return NF_ACCEPT;
         }
 
-        hookControl.payload = (u8 *)hookControl.udpHeader + sizeof(struct udphdr);
-        hookControl.payloadLength = ntohs(hookControl.udpHeader->len) - sizeof(struct udphdr);
+        hookCommunication.payload = (u8 *)hookCommunication.udpHeader + sizeof(struct udphdr);
+        hookCommunication.payloadLength = ntohs(hookCommunication.udpHeader->len) - sizeof(struct udphdr);
 
-        // pr_info("[L4][UDP] Src Port: %d -> Dst Port: %d\n", ntohs(hookControl.udpHeader->source), hookControl.destPort);
+        // pr_info("[L4][UDP] Src Port: %d -> Dst Port: %d\n", ntohs(hookCommunication.udpHeader->source), hookCommunication.destPort);
 
-        if (hookControl.payloadLength > 0 && skb_tail_pointer(socketBuffer) >= hookControl.payload + hookControl.payloadLength)
+        if (hookCommunication.payloadLength > 0 && skb_tail_pointer(socketBuffer) >= hookCommunication.payload + hookCommunication.payloadLength)
         {
-            // pr_info("[L7][DATA][UDP] Encrypted Payload: %.32s\n", hookControl.payload);
-            if (aesDecrypt(hookControl.payload, hookControl.payloadLength, hookControl.aesKey, NULL) == 0)
+            // pr_info("[L7][DATA][UDP] Encrypted Payload: %.32s\n", hookCommunication.payload);
+            if (aesDecrypt(hookCommunication.payload, hookCommunication.payloadLength, hookCommunication.aesKey, NULL) == 0)
             {
-                if('I' == hookControl.payload[0] && 'c' == hookControl.payload[1] && 'e' == hookControl.payload[2])
+                if('I' == hookCommunication.payload[0] && 'c' == hookCommunication.payload[1] && 'e' == hookCommunication.payload[2])
                 {
-                    pr_info("[L4][UDP] Src Port: %d -> Dst Port: %d\n", ntohs(hookControl.udpHeader->source), hookControl.destPort);
-                    pr_info("[L7][DATA][UDP] Decrypted Payload: %.32s\n", hookControl.payload);
+                    pr_info("[L4][UDP] Src Port: %d -> Dst Port: %d\n", ntohs(hookCommunication.udpHeader->source), hookCommunication.destPort);
+                    pr_info("[L7][DATA][UDP] Decrypted Payload: %.32s\n", hookCommunication.payload);
                 }
             }
             else
@@ -194,34 +220,34 @@ unsigned int receiverHook(void *priv, struct sk_buff *socketBuffer, const struct
             // pr_info("[L7][DATA][UDP] Payload not safely accessible\n");
         }
     }
-    else if (hookControl.ipHeader->protocol == IPPROTO_TCP)
+    else if (hookCommunication.ipHeader->protocol == IPPROTO_TCP)
     {
-        hookControl.tcpHeader = (struct tcphdr *)((__u32 *)hookControl.ipHeader + hookControl.ipHeader->ihl);
-        if (!hookControl.tcpHeader)
+        hookCommunication.tcpHeader = (struct tcphdr *)((__u32 *)hookCommunication.ipHeader + hookCommunication.ipHeader->ihl);
+        if (!hookCommunication.tcpHeader)
         {
             return NF_ACCEPT;
         }
 
-        hookControl.destPort = ntohs(hookControl.tcpHeader->dest);
-        if (hookControl.destPort != TCP_PORT)
+        hookCommunication.destPort = ntohs(hookCommunication.tcpHeader->dest);
+        if (hookCommunication.destPort != TCP_PORT)
         {
             return NF_ACCEPT;
         }
 
-        hookControl.payload = (u8 *)hookControl.tcpHeader + (hookControl.tcpHeader->doff * 4);
-        hookControl.payloadLength = ntohs(hookControl.ipHeader->tot_len) - (hookControl.ipHeader->ihl * 4) - (hookControl.tcpHeader->doff * 4);
+        hookCommunication.payload = (u8 *)hookCommunication.tcpHeader + (hookCommunication.tcpHeader->doff * 4);
+        hookCommunication.payloadLength = ntohs(hookCommunication.ipHeader->tot_len) - (hookCommunication.ipHeader->ihl * 4) - (hookCommunication.tcpHeader->doff * 4);
 
-        // pr_info("[L4][TCP] Src Port: %d -> Dst Port: %d\n", ntohs(hookControl.tcpHeader->source), ntohs(hookControl.tcpHeader->dest));
+        // pr_info("[L4][TCP] Src Port: %d -> Dst Port: %d\n", ntohs(hookCommunication.tcpHeader->source), ntohs(hookCommunication.tcpHeader->dest));
 
-        if (hookControl.payloadLength > 0 && skb_tail_pointer(socketBuffer) >= hookControl.payload + hookControl.payloadLength)
+        if (hookCommunication.payloadLength > 0 && skb_tail_pointer(socketBuffer) >= hookCommunication.payload + hookCommunication.payloadLength)
         {
-            // pr_info("[L7][DATA][TCP] Encrypted Payload: %.32s\n", hookControl.payload);
-            if (aesDecrypt(hookControl.payload, hookControl.payloadLength, hookControl.aesKey, NULL) == 0)
+            // pr_info("[L7][DATA][TCP] Encrypted Payload: %.32s\n", hookCommunication.payload);
+            if (aesDecrypt(hookCommunication.payload, hookCommunication.payloadLength, hookCommunication.aesKey, NULL) == 0)
             {
-                if('I' == hookControl.payload[0] && 'c' == hookControl.payload[1] && 'e' == hookControl.payload[2])
+                if('I' == hookCommunication.payload[0] && 'c' == hookCommunication.payload[1] && 'e' == hookCommunication.payload[2])
                 {
-                    pr_info("[L4][TCP] Src Port: %d -> Dst Port: %d\n", ntohs(hookControl.tcpHeader->source), ntohs(hookControl.tcpHeader->dest));
-                    pr_info("[L7][DATA][TCP] Decrypted Payload: %.32s\n", hookControl.payload);
+                    pr_info("[L4][TCP] Src Port: %d -> Dst Port: %d\n", ntohs(hookCommunication.tcpHeader->source), ntohs(hookCommunication.tcpHeader->dest));
+                    pr_info("[L7][DATA][TCP] Decrypted Payload: %.32s\n", hookCommunication.payload);
                 }
             }
             else
@@ -287,28 +313,28 @@ static int handleArpRequest(struct sk_buff *socketBuffer)
     arpRequest.arpHeaderLength = sizeof(struct arphdr) + 2 * (ETH_ALEN + 4); // hln=6, pln=4
     // pr_info("[RX][ARP] ARP header length calculated: %d\n", arpRequest.arpHeaderLength);
 
-    arpRequest.replySocketBuffer = alloc_skb(ETH_HLEN + arpRequest.arpHeaderLength, GFP_ATOMIC);
-    if (!arpRequest.replySocketBuffer)
+    arpRequest.socketBufferReply = alloc_skb(ETH_HLEN + arpRequest.arpHeaderLength, GFP_ATOMIC);
+    if (!arpRequest.socketBufferReply)
     {
-        pr_err("[RX][ARP] Failed to allocate replySocketBuffer for ARP reply\n");
+        pr_err("[RX][ARP] Failed to allocate socketBufferReply for ARP reply\n");
         return NET_RX_DROP;
     }
-    // pr_info("[RX][ARP] Successfully allocated replySocketBuffer for ARP reply: replySocketBuffer=%p\n", arpRequest.replySocketBuffer);
+    // pr_info("[RX][ARP] Successfully allocated socketBufferReply for ARP reply: socketBufferReply=%p\n", arpRequest.socketBufferReply);
 
-    skb_reserve(arpRequest.replySocketBuffer, ETH_HLEN);               // Reserve space for Ethernet header
-    skb_put(arpRequest.replySocketBuffer, arpRequest.arpHeaderLength);                // Make room for ARP header/data
-    arpRequest.ethernetHeader = (struct ethhdr *)skb_push(arpRequest.replySocketBuffer, ETH_HLEN);            // Push Ethernet header
+    skb_reserve(arpRequest.socketBufferReply, ETH_HLEN);               // Reserve space for Ethernet header
+    skb_put(arpRequest.socketBufferReply, arpRequest.arpHeaderLength);                // Make room for ARP header
+    arpRequest.ethernetHeader = (struct ethhdr *)skb_push(arpRequest.socketBufferReply, ETH_HLEN);            // Push Ethernet header
 
-    // pr_info("[RX][ARP] replySocketBuffer headroom: %d, tailroom: %d\n", skb_headroom(arpRequest.replySocketBuffer), skb_tailroom(arpRequest.replySocketBuffer));
+    // pr_info("[RX][ARP] socketBufferReply headroom: %d, tailroom: %d\n", skb_headroom(arpRequest.socketBufferReply), skb_tailroom(arpRequest.socketBufferReply));
 
-    arpRequest.replySocketBuffer->dev = arpRequest.networkDevice;
-    arpRequest.replySocketBuffer->protocol = htons(ETH_P_ARP);
-    skb_reset_mac_header(arpRequest.replySocketBuffer);
-    skb_reset_network_header(arpRequest.replySocketBuffer);
+    arpRequest.socketBufferReply->dev = arpRequest.networkDevice;
+    arpRequest.socketBufferReply->protocol = htons(ETH_P_ARP);
+    skb_reset_mac_header(arpRequest.socketBufferReply);
+    skb_reset_network_header(arpRequest.socketBufferReply);
 
-    // pr_info("[RX][ARP] MAC header set at: %p\n", skb_mac_header(arpRequest.replySocketBuffer));
+    // pr_info("[RX][ARP] MAC header set at: %p\n", skb_mac_header(arpRequest.socketBufferReply));
 
-    arpRequest.ethernetHeader = (struct ethhdr *)skb_mac_header(arpRequest.replySocketBuffer);
+    arpRequest.ethernetHeader = (struct ethhdr *)skb_mac_header(arpRequest.socketBufferReply);
     memcpy(arpRequest.ethernetHeader->h_dest, arpRequest.senderMacAddress, ETH_ALEN);         // Dest: sender MAC
     memcpy(arpRequest.ethernetHeader->h_source, arpRequest.ourMac, ETH_ALEN);   // Src: our MAC
     arpRequest.ethernetHeader->h_proto = htons(ETH_P_ARP);            // Protocol type
@@ -339,7 +365,7 @@ static int handleArpRequest(struct sk_buff *socketBuffer)
     memcpy(arpRequest.arpReplyPtr + ETH_ALEN + 4, arpRequest.senderMacAddress, ETH_ALEN);     // Target MAC
     memcpy(arpRequest.arpReplyPtr + 2 * ETH_ALEN + 4, arpRequest.senderIpAddress, 4);        // Target IP
 
-    dev_queue_xmit(arpRequest.replySocketBuffer);
+    dev_queue_xmit(arpRequest.socketBufferReply);
 
     pr_info("[RX][ARP] Reply Successfully Sent -> %pI4\n", &arpRequest.senderIp);
     pr_info("[RX][ARP] Reply Payload -> senderMac[%pM] senderIp[%pI4] targetMac[%pM] targetIp[%pI4]\n",

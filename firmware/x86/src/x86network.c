@@ -12,7 +12,7 @@
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-static struct nf_hook_ops netFilterHook;
+static struct nf_hook_ops netFilterHook[2];
 static struct packet_type arpPacket;
 static struct packet_type ndpPacket;
 
@@ -63,12 +63,26 @@ int networkInit(void)
      * [L3] Netfilter hook works only at Layer 3
      * and above meaning IP packets (IPv4, IPv6, etc)
      */
-    netFilterHook.hook = receiverHook;
-    netFilterHook.hooknum = NF_INET_PRE_ROUTING;
-    netFilterHook.pf = PF_INET;
-    netFilterHook.priority = NF_IP_PRI_FIRST;
+    netFilterHook[0].hook = receiverHookDiagnostic;
+    netFilterHook[0].hooknum = NF_INET_PRE_ROUTING;
+    netFilterHook[0].pf = PF_INET;
+    netFilterHook[0].priority = NF_IP_PRI_FIRST; /* -300 :: Highest Priority */
 
-    if (nf_register_net_hook(&init_net, &netFilterHook) < 0)
+    netFilterHook[1].hook = receiverHookCommunication;
+    netFilterHook[1].hooknum = NF_INET_PRE_ROUTING;
+    netFilterHook[1].pf = PF_INET;
+    netFilterHook[1].priority = NF_IP_PRI_FIRST + 10; /* -290 :: Lower Priority */
+
+    if (nf_register_net_hook(&init_net, &netFilterHook[0]) < 0)
+    {
+        pr_err("[ERNO][NET] Failed to register netfilter hook\n");
+    }
+    else
+    {
+        pr_info("[INIT][NET] Sniffing TCP[port: %d] and UDP[port: %d]\n",TCP_PORT, UDP_PORT);
+    }
+
+    if (nf_register_net_hook(&init_net, &netFilterHook[1]) < 0)
     {
         pr_err("[ERNO][NET] Failed to register netfilter hook\n");
     }
@@ -102,7 +116,8 @@ void networkDestroy(void)
 {
     networkControlType* networkControl = getNetworkController();
 
-    nf_unregister_net_hook(&init_net, &netFilterHook);
+    nf_unregister_net_hook(&init_net, &netFilterHook[0]);
+    nf_unregister_net_hook(&init_net, &netFilterHook[1]);
 
     dev_remove_pack(&ndpPacket);
     dev_remove_pack(&arpPacket);
