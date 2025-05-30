@@ -4,6 +4,7 @@
  * IceNET Technology 2025
  *
  */
+#include "diagnostics.h"
 #include "receiver.h"
 #include "crypto.h"
 
@@ -145,14 +146,7 @@ unsigned int receiverHookDiagnostic(void *priv, struct sk_buff *socketBuffer, co
 
             pr_info("[RX][ICMP] Echo Reply received from %pI4 (id=%u, seq=%u)\n", &src_ip, ntohs(id), ntohs(seq));
 
-            /**
-             *
-             * TODO
-             *
-             * Compare against stored sent echo
-             * requests to detect replays
-             *
-             */
+            addActiveHost(src_ip);
 
             return NF_ACCEPT;
         }

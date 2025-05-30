@@ -7,6 +7,7 @@
 #include <linux/init.h>
 #include <linux/module.h>
 
+#include "diagnostics.h"
 #include "mainThread.h"
 #include "x86network.h"
 
@@ -30,6 +31,8 @@ static int __init master_controler_init(void)
     printk(KERN_INFO "[BEGIN] Master x86 Controler                     \n");
     printk(KERN_INFO "-------------------------------------------------\n");
 
+    /* Initialise Active Host List */
+    initActiveHostList();
     /* Initialise main thread */
     mainThreadInit();
     /* Initialise Broadcas Transmiter */
@@ -58,6 +61,7 @@ static void __exit master_controler_exit(void)
     /* Destroy everything */
     networkDestroy();
     mainThreadDestroy();
+    cleanupActiveHostList();
 
     printk(KERN_INFO "[TERMINATE] Master Controler Terminated Successfully\n");
 }

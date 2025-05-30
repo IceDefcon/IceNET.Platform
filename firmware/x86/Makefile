@@ -4,6 +4,7 @@ iceControler-objs := \
     src/main.o \
     src/mainThread.o \
     src/x86network.o \
+    src/diagnostics.o \
     ../common/src/memory.o \
     ../common/src/crypto.o \
     ../common/src/receiver.o \

@@ -6,6 +6,7 @@
 #include <linux/wait.h>
 
 #include "transmitter.h"
+#include "diagnostics.h"
 #include "mainThread.h"
 #include "x86network.h"
 #include "receiver.h"
@@ -110,8 +111,27 @@ static int mainThread(void *data)
 
             case MAIN_THREAD_NETWORK_ICMP_PING:
                 printk(KERN_INFO "[CTRL][STM] mode -> MAIN_THREAD_NETWORK_ICMP_PING\n");
-                __be32 ip = in_aton("192.168.8.174");
-                icmpSendPing(ip);
+                char ip_str[16];
+                __be32 ip;
+
+                /**
+                 * TODO :: Do we need configurable Network Mask
+                 *
+                 * Ping current network mask -> IceNET :: 192.168.8.0/24
+                 * /24 -> 11111111 11111111 11111111 00000000
+                 * First 24-Bits are not modifiable
+                 * do we have range 0 to 255
+                 * for the last 8-Bits
+                 *
+                 */
+                for (int i = 1; i < 255; i++)
+                {
+                    snprintf(ip_str, sizeof(ip_str), "192.168.8.%d", i);
+                    ip = in_aton(ip_str);
+                    icmpSendPing(ip);
+                }
+                msleep(1000); /* Wait 1s max for the list update */
+                printActiveHosts();
                 setStateMachine(MAIN_THREAD_DONE);
                 break;
 

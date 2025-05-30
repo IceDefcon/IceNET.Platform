@@ -1,0 +1,30 @@
+/*!
+ *
+ * Author: Ice.Marek
+ * IceNET Technology 2025
+ *
+ */
+#ifndef DIAGNOSTICS_H
+#define DIAGNOSTICS_H
+
+#include <linux/spinlock.h>
+#include <linux/slab.h>
+#include <linux/list.h>
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+struct active_host
+{
+    __be32 ip;
+    struct list_head list;
+};
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void initActiveHostList(void);
+void cleanupActiveHostList(void);
+
+void printActiveHosts(void);
+void addActiveHost(__be32 ip);
+
+#endif // DIAGNOSTICS_H
