@@ -256,7 +256,7 @@ static void registerMainComander(void)
     }
     else
     {
-        printk(KERN_ALERT "[INIT][ C ] %s :: Char mainCommander Succesfully created\n", mainCommander.name);
+        printk(KERN_ALERT "[INIT][ C ] %s :: Succesfully created\n", mainCommander.name);
     }
 }
 
