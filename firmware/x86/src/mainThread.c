@@ -176,7 +176,7 @@ static int mainThread(void *data)
 void mainThreadInit(void)
 {
     spin_lock_init(&Process.smSpinlock);
-    setStateMachine(MAIN_THREAD_NETWORK_ICMP_PING);
+    setStateMachine(MAIN_THREAD_IDLE);
 
     Process.threadHandle = kthread_create(mainThread, NULL, Process.threadName);
 
