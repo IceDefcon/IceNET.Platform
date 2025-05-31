@@ -15,6 +15,8 @@
 #include <iostream>
 #include <cstdint>
 
+#include "KernelCtrl.h"
+
 typedef struct
 {
     uint32_t xWindow;
@@ -44,6 +46,8 @@ class mainCtrl : public QWidget
 
     QPlainTextEdit *m_mainConsoleOutput;
 
+    std::unique_ptr<KernelCtrl> m_instanceMainCtrl;
+
 private slots:
 
 
@@ -60,4 +64,6 @@ private slots:
     void printToMainConsole(const QString &message);
     void setupNetworkControl();
     void setupSeparators();
+
+    void createMainCtrl();
 };

@@ -29,13 +29,21 @@ link_directories(
 # Add source files
 set(SOURCES
     main.cpp
-    StreamReceiver.cpp
-    mainCtrl.cpp         # <-- Added your GUI implementation file
+    mainCtrl.cpp
+    kernel/KernelCtrl.cpp
+    stream/StreamReceiver.cpp
 )
 
 set(HEADERS
-    StreamReceiver.h
-    mainCtrl.h           # <-- Added your GUI header
+    mainCtrl.h
+    kernel/KernelCtrl.h
+    stream/StreamReceiver.h
+)
+
+# Include directories
+include_directories(
+    kernel
+    stream
 )
 
 add_executable(receiver ${SOURCES} ${HEADERS})

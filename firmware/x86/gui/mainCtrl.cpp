@@ -144,3 +144,19 @@ void mainCtrl::setupSeparators()
     hLine5->setFrameShadow(QFrame::Sunken);
 }
 
+void mainCtrl::createMainCtrl()
+{
+    if (!m_instanceMainCtrl)
+    {
+        /* Create Kernel Control Instance */
+        m_instanceMainCtrl = std::make_unique<KernelCtrl>();
+        /* Configure Shared pointers for modified Observert */
+        // m_instanceMainCtrl->setTransferPointers(m_Rx_GuiVector, m_Tx_GuiVector, m_IO_GuiState);
+        /* Trigger configuration Event */
+        // m_instanceMainCtrl->setDroneCtrlState(DRONE_CTRL_INIT);
+    }
+    else
+    {
+        std::cout << "[INFO] [GUI] Kernel Control -> Already Created" << std::endl;
+    }
+}
