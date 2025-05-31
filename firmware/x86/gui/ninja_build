@@ -1,0 +1,19 @@
+#!/bin/bash
+
+mkdir -p build
+cd build
+
+# Set clang as compiler explicitly
+export CC=clang
+export CXX=clang++
+
+# Run CMake with Ninja generator
+cmake .. -G "Ninja"
+
+START_TIME=$(date +%s)
+
+ninja -j$(nproc)
+
+END_TIME=$(date +%s)
+DIFF=$((END_TIME - START_TIME))
+echo "Compilation Time: $DIFF seconds"
