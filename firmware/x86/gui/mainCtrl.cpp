@@ -36,6 +36,7 @@ mainCtrl::mainCtrl()
     setupWindow();
     setupMainConsole();
     setupNetworkControl();
+    setupMainCtrl();
     setupSeparators();
 }
 
@@ -98,6 +99,17 @@ void mainCtrl::setupNetworkControl()
         printToMainConsole("$ Perform ICMP Network Scan");
     };
     connect(icmpButton, &QPushButton::clicked, this, icmpScan);
+}
+
+void mainCtrl::setupMainCtrl()
+{
+    QLabel *mainCtrlLabel = new QLabel("MAIN.CTR", this);
+    QFont mainCtrlLabelFont;
+    mainCtrlLabelFont.setPointSize(30);
+    mainCtrlLabelFont.setItalic(true);
+    mainCtrlLabelFont.setBold(true);
+    mainCtrlLabel->setFont(mainCtrlLabelFont);
+    mainCtrlLabel->setGeometry(800 - w.xGap*2 - w.xUnit*4 , w.yGap, w.xLogo, w.yLogo);
 }
 
 void mainCtrl::setupSeparators()

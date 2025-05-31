@@ -63,6 +63,7 @@ private slots:
     void setupMainConsole();
     void printToMainConsole(const QString &message);
     void setupNetworkControl();
+    void setupMainCtrl();
     void setupSeparators();
 
     void createMainCtrl();
