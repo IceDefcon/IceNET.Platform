@@ -1,10 +1,12 @@
 #include <QApplication>
-#include "StreamReceiver.h"
+#include "mainCtrl.h"
 
 int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
-    StreamReceiver receiver;
-    receiver.show();
+
+    mainCtrl ctrl;
+    ctrl.show();
+
     return app.exec();
 }

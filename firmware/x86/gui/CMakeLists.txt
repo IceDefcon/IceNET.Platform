@@ -30,10 +30,12 @@ link_directories(
 set(SOURCES
     main.cpp
     StreamReceiver.cpp
+    mainCtrl.cpp         # <-- Added your GUI implementation file
 )
 
 set(HEADERS
     StreamReceiver.h
+    mainCtrl.h           # <-- Added your GUI header
 )
 
 add_executable(receiver ${SOURCES} ${HEADERS})
