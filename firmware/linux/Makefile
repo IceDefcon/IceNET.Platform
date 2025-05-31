@@ -17,7 +17,8 @@ iceDriver-objs := \
     ../common/src/crypto.o \
     ../common/src/memory.o \
     ../common/src/receiver.o \
-    ../common/src/transmitter.o
+    ../common/src/transmitter.o \
+    ../common/src/diagnostics.o
 
 EXTRA_CFLAGS = -I$(PWD)/include -I$(PWD)/../common/include
 
