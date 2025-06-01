@@ -1,11 +1,11 @@
 #include <QApplication>
-#include "mainCtrl.h"
+#include "MainGui.h"
 
 int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
 
-    mainCtrl ctrl;
+    MainGui ctrl;
     ctrl.show();
 
     return app.exec();

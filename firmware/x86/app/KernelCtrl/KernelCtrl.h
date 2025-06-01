@@ -20,15 +20,18 @@
 #include <mutex>
 #include <array>
 
+#include "KernelCommander.h"
+
 typedef enum
 {
-    MAIN_CTRL_IDLE = 0,
-    MAIN_CTRL_INIT,
-    MAIN_CTRL_CONFIG,
-    MAIN_CTRL_AMOUNT,
+    KERNEL_CTRL_IDLE = 0,
+    KERNEL_CTRL_INIT,
+    KERNEL_CTRL_CONFIG,
+    KERNEL_CTRL_MAIN,
+    KERNEL_CTRL_AMOUNT,
 } KernelCtrlStateType;
 
-class KernelCtrl
+class KernelCtrl : public KernelCommander
 {
     private:
 
@@ -57,6 +60,10 @@ class KernelCtrl
         /* THREAD */ std::string getThreadStateMachineString(KernelCtrlStateType state);
         /* THREAD */ void setKernelCtrlState(KernelCtrlStateType state);
         /* THREAD */ void KernelCtrlThread();
+
+        /* COMMS */ int initKernelComms();
+        /* COMMS */ void shutdownKernelComms();
+        /* COMMS */ bool isKernelComsDead();
 
         /* EVENT */ void waitKernelCtrlEvent();
         /* EVENT */ void triggerKernelCtrlEvent();

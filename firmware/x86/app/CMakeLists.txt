@@ -18,22 +18,26 @@ pkg_check_modules(GSTREAMER REQUIRED gstreamer-1.0 gstreamer-app-1.0 gstreamer-v
 
 set(SOURCES
     main.cpp
-    mainCtrl.cpp
-    kernel/KernelCtrl.cpp
-    stream/StreamReceiver.cpp
+    MainGui/MainGui.cpp
+    KernelCtrl/KernelCtrl.cpp
+    KernelCommander/KernelCommander.cpp
+    StreamReceiver/StreamReceiver.cpp
 )
 
 set(HEADERS
-    mainCtrl.h
-    kernel/KernelCtrl.h
-    stream/StreamReceiver.h
+    MainGui/MainGui.h
+    KernelCtrl/KernelCtrl.h
+    KernelCommander/KernelCommander.h
+    StreamReceiver/StreamReceiver.h
 )
 
 add_executable(mainControl ${SOURCES} ${HEADERS})
 
 target_include_directories(mainControl PRIVATE
-    kernel
-    stream
+    KernelCtrl
+    StreamReceiver
+    KernelCommander
+    MainGui
     ${OpenCV_INCLUDE_DIRS}
     ${GSTREAMER_INCLUDE_DIRS}
 )

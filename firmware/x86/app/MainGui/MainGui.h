@@ -16,6 +16,7 @@
 #include <cstdint>
 
 #include "KernelCtrl.h"
+#include "KernelCommander.h"
 
 typedef struct
 {
@@ -40,13 +41,17 @@ typedef struct
     uint32_t ySize;
 } mainConsoleType;
 
-class mainCtrl : public QWidget
+class MainGui : public QWidget
 {
     Q_OBJECT
 
     QPlainTextEdit *m_mainConsoleOutput;
 
-    std::unique_ptr<KernelCtrl> m_instanceMainCtrl;
+    std::shared_ptr<std::vector<uint8_t>> m_Rx_MainGuiVector;
+    std::shared_ptr<std::vector<uint8_t>> m_Tx_MainGuiVector;
+    std::shared_ptr<KernelCommanderStateType> m_IO_MainGuiState;
+
+    std::unique_ptr<KernelCtrl> m_instanceKernelCtrl;
 
 private slots:
 
@@ -54,8 +59,8 @@ private slots:
 
 public:
 
-    mainCtrl();
-    ~mainCtrl();
+    MainGui();
+    ~MainGui();
 
 private slots:
 
@@ -67,4 +72,5 @@ private slots:
     void setupSeparators();
 
     void createMainCtrl();
+    void deleteMainCtrl();
 };
