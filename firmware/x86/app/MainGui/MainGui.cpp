@@ -4,7 +4,7 @@
  * IceNET Technology 2025
  *
  */
-#include "mainCtrl.h"
+#include "MainGui.h"
 
 static const mainWindowType w =
 {
@@ -29,29 +29,33 @@ static const mainConsoleType c =
     .ySize = w.yGap*8 + w.yLogo*2 + w.yUnit*6+1,  // Last Horizontal Separator - yPosition + yGap
 };
 
-mainCtrl::mainCtrl()
+MainGui::MainGui() :
+    m_Rx_MainGuiVector(std::make_shared<std::vector<uint8_t>>(IO_TRANSFER_SIZE)),
+    m_Tx_MainGuiVector(std::make_shared<std::vector<uint8_t>>(IO_TRANSFER_SIZE)),
+    m_IO_MainGuiState(std::make_shared<KernelCommanderStateType>(KERNEL_COMMANDER_IDLE))
 {
-    qDebug() << "[MAIN] [CONSTRUCTOR]" << this << "::  mainCtrl";
+    std::cout << "[INFO] [CONSTRUCTOR] " << this << " :: Instantiate MainGui" << std::endl;
 
     setupWindow();
     setupMainConsole();
     setupNetworkControl();
+    setupMainCtrl();
     setupSeparators();
 }
 
 
-mainCtrl::~mainCtrl()
+MainGui::~MainGui()
 {
-    qDebug() << "[MAIN] [DESTRUCTOR]" << this << ":: mainCtrl ";
+    std::cout << "[INFO] [DESTRUCTOR] " << this << " :: Destroy MainGui" << std::endl;
 }
 
-void mainCtrl::setupWindow()
+void MainGui::setupWindow()
 {
     setWindowTitle("IceNET Platform");
     setFixedSize(w.xWindow, w.yWindow);
 }
 
-void mainCtrl::setupMainConsole()
+void MainGui::setupMainConsole()
 {
     m_mainConsoleOutput = new QPlainTextEdit(this);
     m_mainConsoleOutput->setReadOnly(true);
@@ -59,12 +63,12 @@ void mainCtrl::setupMainConsole()
     m_mainConsoleOutput->setPlainText("[INIT] Main Console Initialized...");
 }
 
-void mainCtrl::printToMainConsole(const QString &message)
+void MainGui::printToMainConsole(const QString &message)
 {
     m_mainConsoleOutput->appendPlainText(message);
 }
 
-void mainCtrl::setupNetworkControl()
+void MainGui::setupNetworkControl()
 {
     QLabel *netLabel = new QLabel("NET.CTRL", this);
     QFont netLabelFont;
@@ -95,12 +99,72 @@ void mainCtrl::setupNetworkControl()
 
     auto icmpScan = [this]()
     {
-        printToMainConsole("$ Perform ICMP Network Scan");
+        if (NULL == m_instanceKernelCtrl)
+        {
+            printToMainConsole("$ Drone Control is Down");
+            return;
+        }
+        else
+        {
+            printToMainConsole("$ Perform ICMP Network Scan");
+            m_instanceKernelCtrl->sendCommand(CTRL_CMD_NET_ICMP);
+        }
     };
     connect(icmpButton, &QPushButton::clicked, this, icmpScan);
 }
 
-void mainCtrl::setupSeparators()
+void MainGui::setupMainCtrl()
+{
+    QLabel *mainCtrlLabel = new QLabel("MAIN.CTR", this);
+    QFont mainCtrlLabelFont;
+    mainCtrlLabelFont.setPointSize(30);
+    mainCtrlLabelFont.setItalic(true);
+    mainCtrlLabelFont.setBold(true);
+    mainCtrlLabel->setFont(mainCtrlLabelFont);
+    mainCtrlLabel->setGeometry(800 - w.xGap*2 - w.xUnit*4 , w.yGap, w.xLogo, w.yLogo);
+
+    QPushButton *connectButton = new QPushButton("NEW", this);
+    connectButton->setGeometry(800 - w.xGap*2 - w.xUnit*4, w.yGap*2 + w.yLogo, w.xUnit*2, w.yUnit);
+    connectButton->setStyleSheet(
+        "QPushButton {"
+        "   background-color: green;"
+        "   color: white;"
+        "   font-size: 17px;"
+        "   font-weight: bold;"
+        "   border-radius: 10px;"
+        "   padding: 5px;"
+        "}"
+        "QPushButton:hover {"
+        "   background-color: darkgreen;"
+        "}"
+        "QPushButton:pressed {"
+        "   background-color: black;"
+        "}"
+    );
+    connect(connectButton, &QPushButton::clicked, this, &MainGui::createMainCtrl);
+
+    QPushButton *terminateButton = new QPushButton("DELETE", this);
+    terminateButton->setGeometry(800 - w.xGap*2 - w.xUnit*4, w.yGap*3 + w.yUnit*3, w.xUnit*2, w.yUnit);
+    terminateButton->setStyleSheet(
+        "QPushButton {"
+        "   background-color: red;"
+        "   color: white;"
+        "   font-size: 17px;"
+        "   font-weight: bold;"
+        "   border-radius: 10px;"
+        "   padding: 5px;"
+        "}"
+        "QPushButton:hover {"
+        "   background-color: darkred;"
+        "}"
+        "QPushButton:pressed {"
+        "   background-color: black;"
+        "}"
+    );
+    connect(terminateButton, &QPushButton::clicked, this, &MainGui::deleteMainCtrl);
+}
+
+void MainGui::setupSeparators()
 {
     /* Vertical Separator */
     QFrame *vLine1 = new QFrame(this);
@@ -144,3 +208,36 @@ void mainCtrl::setupSeparators()
     hLine5->setFrameShadow(QFrame::Sunken);
 }
 
+void MainGui::createMainCtrl()
+{
+    if (!m_instanceKernelCtrl)
+    {
+        /* Create Kernel Control Instance */
+        m_instanceKernelCtrl = std::make_unique<KernelCtrl>();
+        /* Configure Shared pointers for modified Observert */
+        m_instanceKernelCtrl->setTransferPointers(m_Rx_MainGuiVector, m_Tx_MainGuiVector, m_IO_MainGuiState);
+        /* Trigger configuration Event */
+        m_instanceKernelCtrl->setKernelCtrlState(KERNEL_CTRL_INIT);
+    }
+    else
+    {
+        std::cout << "[INFO] [CTR] Kernel Control -> Already Created" << std::endl;
+    }
+}
+
+void MainGui::deleteMainCtrl()
+{
+    if(m_instanceKernelCtrl)
+    {
+        if(true == m_instanceKernelCtrl->getKernelConnected())
+        {
+            // m_instanceKernelCtrl->sendCommand(CMD_DEBUG_DISABLE);
+        }
+
+        m_instanceKernelCtrl.reset();
+    }
+    else
+    {
+        std::cout << "[INFO] [CTR] Kernel Control -> Already Destroyed" << std::endl;
+    }
+}

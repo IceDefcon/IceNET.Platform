@@ -129,8 +129,8 @@ static int mainThread(void *data)
                     snprintf(ip_str, sizeof(ip_str), "192.168.8.%d", i);
                     ip = in_aton(ip_str);
                     icmpSendPing(ip);
+                    msleep(50);
                 }
-                msleep(1000); /* Wait 1s max for the list update */
                 printActiveHosts();
                 setStateMachine(MAIN_THREAD_DONE);
                 break;
