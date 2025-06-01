@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(receiver LANGUAGES CXX)
+project(mainControl LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -29,16 +29,16 @@ set(HEADERS
     stream/StreamReceiver.h
 )
 
-add_executable(receiver ${SOURCES} ${HEADERS})
+add_executable(mainControl ${SOURCES} ${HEADERS})
 
-target_include_directories(receiver PRIVATE
+target_include_directories(mainControl PRIVATE
     kernel
     stream
     ${OpenCV_INCLUDE_DIRS}
     ${GSTREAMER_INCLUDE_DIRS}
 )
 
-target_link_libraries(receiver PRIVATE
+target_link_libraries(mainControl PRIVATE
     Qt5::Core
     Qt5::Gui
     Qt5::Widgets

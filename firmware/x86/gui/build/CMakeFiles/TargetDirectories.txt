@@ -1,0 +1,5 @@
+/ice/code.lab/IceNET/IceNET.Platform/firmware/x86/gui/build/CMakeFiles/mainControl.dir
+/ice/code.lab/IceNET/IceNET.Platform/firmware/x86/gui/build/CMakeFiles/edit_cache.dir
+/ice/code.lab/IceNET/IceNET.Platform/firmware/x86/gui/build/CMakeFiles/rebuild_cache.dir
+/ice/code.lab/IceNET/IceNET.Platform/firmware/x86/gui/build/CMakeFiles/mainControl_autogen_timestamp_deps.dir
+/ice/code.lab/IceNET/IceNET.Platform/firmware/x86/gui/build/CMakeFiles/mainControl_autogen.dir

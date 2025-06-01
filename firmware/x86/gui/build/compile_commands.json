@@ -1,0 +1,32 @@
+[
+{
+  "directory": "/ice/code.lab/IceNET/IceNET.Platform/firmware/x86/gui/build",
+  "command": "/usr/bin/clang++ -DQT_CORE_LIB -DQT_GUI_LIB -DQT_NETWORK_LIB -DQT_NO_DEBUG -DQT_WIDGETS_LIB -I/ice/code.lab/IceNET/IceNET.Platform/firmware/x86/gui/build/mainControl_autogen/include -I/ice/code.lab/IceNET/IceNET.Platform/firmware/x86/gui/kernel -I/ice/code.lab/IceNET/IceNET.Platform/firmware/x86/gui/stream -I/usr/include/gstreamer-1.0 -I/usr/include/glib-2.0 -I/usr/lib/x86_64-linux-gnu/glib-2.0/include -I/usr/include/orc-0.4 -isystem /usr/local/include/opencv4 -isystem /usr/include/x86_64-linux-gnu/qt5 -isystem /usr/include/x86_64-linux-gnu/qt5/QtCore -isystem /usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++ -isystem /usr/include/x86_64-linux-gnu/qt5/QtGui -isystem /usr/include/x86_64-linux-gnu/qt5/QtWidgets -isystem /usr/include/x86_64-linux-gnu/qt5/QtNetwork -std=gnu++17 -fPIE -fPIC -o CMakeFiles/mainControl.dir/mainControl_autogen/mocs_compilation.cpp.o -c /ice/code.lab/IceNET/IceNET.Platform/firmware/x86/gui/build/mainControl_autogen/mocs_compilation.cpp",
+  "file": "/ice/code.lab/IceNET/IceNET.Platform/firmware/x86/gui/build/mainControl_autogen/mocs_compilation.cpp",
+  "output": "CMakeFiles/mainControl.dir/mainControl_autogen/mocs_compilation.cpp.o"
+},
+{
+  "directory": "/ice/code.lab/IceNET/IceNET.Platform/firmware/x86/gui/build",
+  "command": "/usr/bin/clang++ -DQT_CORE_LIB -DQT_GUI_LIB -DQT_NETWORK_LIB -DQT_NO_DEBUG -DQT_WIDGETS_LIB -I/ice/code.lab/IceNET/IceNET.Platform/firmware/x86/gui/build/mainControl_autogen/include -I/ice/code.lab/IceNET/IceNET.Platform/firmware/x86/gui/kernel -I/ice/code.lab/IceNET/IceNET.Platform/firmware/x86/gui/stream -I/usr/include/gstreamer-1.0 -I/usr/include/glib-2.0 -I/usr/lib/x86_64-linux-gnu/glib-2.0/include -I/usr/include/orc-0.4 -isystem /usr/local/include/opencv4 -isystem /usr/include/x86_64-linux-gnu/qt5 -isystem /usr/include/x86_64-linux-gnu/qt5/QtCore -isystem /usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++ -isystem /usr/include/x86_64-linux-gnu/qt5/QtGui -isystem /usr/include/x86_64-linux-gnu/qt5/QtWidgets -isystem /usr/include/x86_64-linux-gnu/qt5/QtNetwork -std=gnu++17 -fPIE -fPIC -o CMakeFiles/mainControl.dir/main.cpp.o -c /ice/code.lab/IceNET/IceNET.Platform/firmware/x86/gui/main.cpp",
+  "file": "/ice/code.lab/IceNET/IceNET.Platform/firmware/x86/gui/main.cpp",
+  "output": "CMakeFiles/mainControl.dir/main.cpp.o"
+},
+{
+  "directory": "/ice/code.lab/IceNET/IceNET.Platform/firmware/x86/gui/build",
+  "command": "/usr/bin/clang++ -DQT_CORE_LIB -DQT_GUI_LIB -DQT_NETWORK_LIB -DQT_NO_DEBUG -DQT_WIDGETS_LIB -I/ice/code.lab/IceNET/IceNET.Platform/firmware/x86/gui/build/mainControl_autogen/include -I/ice/code.lab/IceNET/IceNET.Platform/firmware/x86/gui/kernel -I/ice/code.lab/IceNET/IceNET.Platform/firmware/x86/gui/stream -I/usr/include/gstreamer-1.0 -I/usr/include/glib-2.0 -I/usr/lib/x86_64-linux-gnu/glib-2.0/include -I/usr/include/orc-0.4 -isystem /usr/local/include/opencv4 -isystem /usr/include/x86_64-linux-gnu/qt5 -isystem /usr/include/x86_64-linux-gnu/qt5/QtCore -isystem /usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++ -isystem /usr/include/x86_64-linux-gnu/qt5/QtGui -isystem /usr/include/x86_64-linux-gnu/qt5/QtWidgets -isystem /usr/include/x86_64-linux-gnu/qt5/QtNetwork -std=gnu++17 -fPIE -fPIC -o CMakeFiles/mainControl.dir/mainCtrl.cpp.o -c /ice/code.lab/IceNET/IceNET.Platform/firmware/x86/gui/mainCtrl.cpp",
+  "file": "/ice/code.lab/IceNET/IceNET.Platform/firmware/x86/gui/mainCtrl.cpp",
+  "output": "CMakeFiles/mainControl.dir/mainCtrl.cpp.o"
+},
+{
+  "directory": "/ice/code.lab/IceNET/IceNET.Platform/firmware/x86/gui/build",
+  "command": "/usr/bin/clang++ -DQT_CORE_LIB -DQT_GUI_LIB -DQT_NETWORK_LIB -DQT_NO_DEBUG -DQT_WIDGETS_LIB -I/ice/code.lab/IceNET/IceNET.Platform/firmware/x86/gui/build/mainControl_autogen/include -I/ice/code.lab/IceNET/IceNET.Platform/firmware/x86/gui/kernel -I/ice/code.lab/IceNET/IceNET.Platform/firmware/x86/gui/stream -I/usr/include/gstreamer-1.0 -I/usr/include/glib-2.0 -I/usr/lib/x86_64-linux-gnu/glib-2.0/include -I/usr/include/orc-0.4 -isystem /usr/local/include/opencv4 -isystem /usr/include/x86_64-linux-gnu/qt5 -isystem /usr/include/x86_64-linux-gnu/qt5/QtCore -isystem /usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++ -isystem /usr/include/x86_64-linux-gnu/qt5/QtGui -isystem /usr/include/x86_64-linux-gnu/qt5/QtWidgets -isystem /usr/include/x86_64-linux-gnu/qt5/QtNetwork -std=gnu++17 -fPIE -fPIC -o CMakeFiles/mainControl.dir/kernel/KernelCtrl.cpp.o -c /ice/code.lab/IceNET/IceNET.Platform/firmware/x86/gui/kernel/KernelCtrl.cpp",
+  "file": "/ice/code.lab/IceNET/IceNET.Platform/firmware/x86/gui/kernel/KernelCtrl.cpp",
+  "output": "CMakeFiles/mainControl.dir/kernel/KernelCtrl.cpp.o"
+},
+{
+  "directory": "/ice/code.lab/IceNET/IceNET.Platform/firmware/x86/gui/build",
+  "command": "/usr/bin/clang++ -DQT_CORE_LIB -DQT_GUI_LIB -DQT_NETWORK_LIB -DQT_NO_DEBUG -DQT_WIDGETS_LIB -I/ice/code.lab/IceNET/IceNET.Platform/firmware/x86/gui/build/mainControl_autogen/include -I/ice/code.lab/IceNET/IceNET.Platform/firmware/x86/gui/kernel -I/ice/code.lab/IceNET/IceNET.Platform/firmware/x86/gui/stream -I/usr/include/gstreamer-1.0 -I/usr/include/glib-2.0 -I/usr/lib/x86_64-linux-gnu/glib-2.0/include -I/usr/include/orc-0.4 -isystem /usr/local/include/opencv4 -isystem /usr/include/x86_64-linux-gnu/qt5 -isystem /usr/include/x86_64-linux-gnu/qt5/QtCore -isystem /usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++ -isystem /usr/include/x86_64-linux-gnu/qt5/QtGui -isystem /usr/include/x86_64-linux-gnu/qt5/QtWidgets -isystem /usr/include/x86_64-linux-gnu/qt5/QtNetwork -std=gnu++17 -fPIE -fPIC -o CMakeFiles/mainControl.dir/stream/StreamReceiver.cpp.o -c /ice/code.lab/IceNET/IceNET.Platform/firmware/x86/gui/stream/StreamReceiver.cpp",
+  "file": "/ice/code.lab/IceNET/IceNET.Platform/firmware/x86/gui/stream/StreamReceiver.cpp",
+  "output": "CMakeFiles/mainControl.dir/stream/StreamReceiver.cpp.o"
+}
+]
