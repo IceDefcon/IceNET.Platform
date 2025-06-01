@@ -99,7 +99,16 @@ void MainGui::setupNetworkControl()
 
     auto icmpScan = [this]()
     {
-        printToMainConsole("$ Perform ICMP Network Scan");
+        if (NULL == m_instanceKernelCtrl)
+        {
+            printToMainConsole("$ Drone Control is Down");
+            return;
+        }
+        else
+        {
+            printToMainConsole("$ Perform ICMP Network Scan");
+            m_instanceKernelCtrl->sendCommand(CTRL_CMD_NET_ICMP);
+        }
     };
     connect(icmpButton, &QPushButton::clicked, this, icmpScan);
 }

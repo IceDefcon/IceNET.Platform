@@ -5,6 +5,7 @@
  *
  */
 #include "kernelComms.h"
+#include "mainThread.h"
 #include "memory.h"
 
 //////////////////////
@@ -129,56 +130,36 @@ static charDeviceData mainCommander =
         /* Copy failed */
         ret = -EFAULT;
     }
-    else if (mainCommander.io_transfer.RxData[0] == 0x04 && mainCommander.io_transfer.RxData[1] == 0xA1)
+    else if (mainCommander.io_transfer.RxData[0] == 0xD1 && mainCommander.io_transfer.RxData[1] == 0x1C)
     {
         /* Reconfigure DMA Engine */
-        // printk(KERN_INFO "[CTRL][ C ] Reconfigure DMA Engine into normal mode\n");
-        // setStateMachine(SM_DMA_NORMAL);
+        printk(KERN_INFO "[CTRL][ C ] Trigger ICMP Network scan\n");
+        setStateMachine(MAIN_THREAD_NETWORK_ICMP_PING);
     }
-    else if (mainCommander.io_transfer.RxData[0] == 0x5E && mainCommander.io_transfer.RxData[1] == 0x50)
+    else if (mainCommander.io_transfer.RxData[0] == 0x1D && mainCommander.io_transfer.RxData[1] == 0xAA)
     {
         /* Reconfigure DMA Engine */
         // printk(KERN_INFO "[CTRL][ C ] Reconfigure DMA Engine into sensor mode\n");
         // setStateMachine(SM_DMA_SENSOR);
     }
-    else if (mainCommander.io_transfer.RxData[0] == 0x51 && mainCommander.io_transfer.RxData[1] == 0x6E)
+    else if (mainCommander.io_transfer.RxData[0] == 0x1D && mainCommander.io_transfer.RxData[1] == 0xDD)
     {
         /* Reconfigure DMA Engine */
         // printk(KERN_INFO "[CTRL][ C ] Reconfigure DMA Engine into single byte feedback mode\n");
         // setStateMachine(SM_DMA_SINGLE);
     }
-    else if (mainCommander.io_transfer.RxData[0] == 0xC5 && mainCommander.io_transfer.RxData[1] == 0x70)
+    else if (mainCommander.io_transfer.RxData[0] == 0x5E && mainCommander.io_transfer.RxData[1] == 0xCC)
     {
         /* Reconfigure DMA Engine */
         // customDmaSize = mainCommander.io_transfer.RxData[2];
         // printk(KERN_INFO "[CTRL][ C ] Reconfigure DMA Engine into custom %d Byte feedback mode\n", customDmaSize);
         // setStateMachine(SM_DMA_CUSTOM);
     }
-    else if (mainCommander.io_transfer.RxData[0] == 0xC0 && mainCommander.io_transfer.RxData[1] == 0xF1)
+    else if (mainCommander.io_transfer.RxData[0] == 0x5E && mainCommander.io_transfer.RxData[1] == 0xDD)
     {
         /* Activate DMA Engine */
         // printk(KERN_INFO "[CTRL][ C ] Activate DMA transfer to send IMU's config to FPGA\n");
         // setStateMachine(SM_RAMDISK_CONFIG);
-    }
-    else if (mainCommander.io_transfer.RxData[0] == 0xC1 && mainCommander.io_transfer.RxData[1] == 0xEA)
-    {
-        // printk(KERN_INFO "[CTRL][ C ] [0] Clear DMA variables used for verification of IMU's config\n");
-        // setStateMachine(SM_RAMDISK_CLEAR);
-    }
-    else if (mainCommander.io_transfer.RxData[0] == 0xDE && mainCommander.io_transfer.RxData[1] == 0xBE)
-    {
-        // printk(KERN_INFO "[CTRL][ C ] Enable SPI/DMA Debug\n");
-        // ctrlDebug(DEBUG_SPI, true);
-    }
-    else if (mainCommander.io_transfer.RxData[0] == 0xDE && mainCommander.io_transfer.RxData[1] == 0xBD)
-    {
-        // printk(KERN_INFO "[CTRL][ C ] Disable SPI/DMA Debug\n");
-        // ctrlDebug(DEBUG_SPI, false);
-    }
-    else if (mainCommander.io_transfer.RxData[0] == 0x4E && mainCommander.io_transfer.RxData[1] == 0x5E)
-    {
-        // printk(KERN_INFO "[CTRL][ C ] Reset everything in FPGA :: Global Discharge\n");
-        // setStateMachine(SM_FPGA_RESET);
     }
     else
     {
