@@ -1,5 +1,0 @@
-cd firmware/linux/
-make -j
-cd ../app/
-./ninja_build
-cd ../../

@@ -1,6 +1,0 @@
-cd firmware/linux/
-make clean
-cd ../app/
-rm build -R
-make clean
-cd ..
