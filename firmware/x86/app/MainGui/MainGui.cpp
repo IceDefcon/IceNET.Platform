@@ -101,7 +101,7 @@ void MainGui::setupNetworkControl()
     {
         if (NULL == m_instanceKernelCtrl)
         {
-            printToMainConsole("$ Drone Control is Down");
+            printToMainConsole("$ Main Control is Down");
             return;
         }
         else
