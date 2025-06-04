@@ -66,6 +66,24 @@ void addActiveHost(__be32 ip)
     spin_unlock_bh(&active_host_lock);
 }
 
+void removeActiveHost(__be32 ip)
+{
+    struct active_host *host, *tmp;
+
+    spin_lock_bh(&active_host_lock);
+    list_for_each_entry_safe(host, tmp, &active_host_list, list)
+    {
+        if (host->ip == ip)
+        {
+            list_del(&host->list);
+            kfree(host);
+            pr_info("[DISCOVERY] Removed active host: %pI4\n", &ip);
+            break;  // IPs are unique in list, so break after removing
+        }
+    }
+    spin_unlock_bh(&active_host_lock);
+}
+
 void cleanupActiveHostList(void)
 {
     struct active_host *host, *tmp;
