@@ -2191,6 +2191,11 @@ ctrl_BMI160_S2_MISO <= S2_BMI160_MISO;
 S2_BMI160_MOSI <= ctrl_BMI160_S2_MOSI;
 S2_BMI160_SCLK <= ctrl_BMI160_S2_SCLK;
 
+EXTERNAL_CS <= ctrl_EXTERNAL_CS;
+ctrl_EXTERNAL_MISO <= EXTERNAL_MISO;
+EXTERNAL_MOSI <= ctrl_EXTERNAL_MOSI;
+EXTERNAL_SCLK <= ctrl_EXTERNAL_SCLK;
+
 ---------------------------------------------------------------
 -- TODO :: Need Refactoring and Parametrization !!!
 --
