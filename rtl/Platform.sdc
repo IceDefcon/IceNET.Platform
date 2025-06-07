@@ -133,6 +133,10 @@ set_input_delay -clock CLOCK_MAIN -min $MIN_I_DELAY_50MHz [get_ports {S1_BMI160_
 set_input_delay -clock CLOCK_MAIN -max $MAX_I_DELAY_50MHz [get_ports {S1_BMI160_INT_1 S1_BMI160_INT_2}]
 set_input_delay -clock CLOCK_MAIN -max $MAX_I_DELAY_50MHz [get_ports {S2_BMI160_INT_1 S2_BMI160_INT_2}]
 
+# External SPI
+set_input_delay -clock CLOCK_MAIN -max $MAX_I_DELAY_50MHz [get_ports {EXTERNAL_MISO}]
+set_input_delay -clock CLOCK_MAIN -min $MIN_I_DELAY_50MHz [get_ports {EXTERNAL_MISO}]
+
 # UART inputs
 set_input_delay -clock CLOCK_MAIN -max $MAX_I_DELAY_50MHz [get_ports {FPGA_UART_RX GPS_UART_RX}]
 set_input_delay -clock CLOCK_MAIN -min $MIN_I_DELAY_50MHz [get_ports {FPGA_UART_RX GPS_UART_RX}]
@@ -172,6 +176,10 @@ set_output_delay -clock CLOCK_MAIN -max $MAX_O_DELAY_50MHz [get_ports {S2_BMI160
 set_output_delay -clock CLOCK_MAIN -min $MIN_O_DELAY_50MHz [get_ports {S2_BMI160_CS S2_BMI160_MOSI S2_BMI160_SCLK}]
 set_output_delay -clock CLOCK_MAIN -max $MAX_O_DELAY_50MHz [get_ports {S3_BMI160_CS S3_BMI160_MOSI S3_BMI160_SCLK}]
 set_output_delay -clock CLOCK_MAIN -min $MIN_O_DELAY_50MHz [get_ports {S3_BMI160_CS S3_BMI160_MOSI S3_BMI160_SCLK}]
+
+# EXTERNAL SPI
+set_output_delay -clock CLOCK_MAIN -max $MAX_O_DELAY_50MHz [get_ports {EXTERNAL_CS EXTERNAL_MOSI EXTERNAL_SCLK}]
+set_output_delay -clock CLOCK_MAIN -min $MIN_O_DELAY_50MHz [get_ports {EXTERNAL_CS EXTERNAL_MOSI EXTERNAL_SCLK}]
 
 # UART outputs
 set_output_delay -clock CLOCK_MAIN -max $MAX_O_DELAY_50MHz [get_ports {FPGA_UART_TX GPS_UART_TX}]

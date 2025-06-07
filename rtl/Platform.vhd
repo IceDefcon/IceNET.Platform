@@ -149,6 +149,12 @@ port
     SECONDARY_SCLK : in std_logic;  -- PIN_A15 :: P9_31 :: SPI1_SCLK
     SECONDARY_CS : in std_logic;    -- PIN_B13 :: P9_28 :: SPI1_CS0
 
+    -- EXTERNAL SPI
+    EXTERNAL_CS : out std_logic;   -- PIN_F21
+    EXTERNAL_MISO : in std_logic;  -- PIN_H21
+    EXTERNAL_MOSI : out std_logic; -- PIN_J21
+    EXTERNAL_SCLK : out std_logic; -- PIN_K21
+
     -----------------------------------------------------------------------------
     -- 256Mbit SDRAM
     -----------------------------------------------------------------------------
@@ -231,8 +237,7 @@ port
     NRF905_CD : in std_logic;       -- PIN_J1
     NRF905_DR : in std_logic;       -- PIN_M1
     NRF905_MOSI : out std_logic;    -- PIN_N1
-    NRF905_CSN : out std_logic     -- PIN_P1
-
+    NRF905_CSN : out std_logic      -- PIN_P1
 );
 end Platform;
 
@@ -291,6 +296,7 @@ signal primary_offload_wait_spi_rf : std_logic := '0';
 signal trigger_i2c : std_logic := '0';
 signal trigger_bmi160_s1 : std_logic := '0';
 signal trigger_bmi160_s2 : std_logic := '0';
+signal trigger_external_spi : std_logic := '0';
 signal trigger_nRF905 : std_logic := '0';
 signal trigger_pwm_m1 : std_logic := '0';
 -- CTRL Mux
@@ -298,8 +304,9 @@ constant CTRL_I2C : std_logic_vector(1 downto 0) := "00";
 constant CTRL_SPI : std_logic_vector(1 downto 0) := "01";
 constant CTRL_PWM : std_logic_vector(1 downto 0) := "10";
 -- ID Mux
-constant ID_BMI160_S1 : std_logic_vector(6 downto 0) := "1000100"; -- "0010001"; -- Must be upside down :: Due to primary_offload_id for i2c
-constant ID_BMI160_S2 : std_logic_vector(6 downto 0) := "0100100"; -- "0010010"; -- Must be upside down :: Due to primary_offload_id for i2c
+constant ID_BMI160_S1 : std_logic_vector(6 downto 0) := "1000100"; -- "001 0001" :: 0x11 :: Must be upside down :: Due to primary_offload_id for i2c
+constant ID_BMI160_S2 : std_logic_vector(6 downto 0) := "0100100"; -- "001 0010" :: 0x12
+constant ID_EXTERNAL_SPI : std_logic_vector(6 downto 0) := "1100100"; -- "001 0010" :: 0x13
 constant ID_nRF905 : std_logic_vector(6 downto 0) := "0010100"; -- Must be upside down :: Same as upside down
 -- Secondary DMA Trigger Interrupts
 signal i2c_complete_long : std_logic := '0';
@@ -370,6 +377,11 @@ signal ctrl_BMI160_S2_CS : std_logic := '0';
 signal ctrl_BMI160_S2_MISO : std_logic := '0';
 signal ctrl_BMI160_S2_MOSI : std_logic := '0';
 signal ctrl_BMI160_S2_SCLK : std_logic := '0';
+-- External Systms
+signal ctrl_EXTERNAL_CS : std_logic := '0';
+signal ctrl_EXTERNAL_MISO : std_logic := '0';
+signal ctrl_EXTERNAL_MOSI : std_logic := '0';
+signal ctrl_EXTERNAL_SCLK : std_logic := '0';
 -- Sensor ready
 signal global_fpga_reset : std_logic := '0';
 -- Debounced interrupt signals
@@ -464,6 +476,12 @@ signal acceleration_average_WR : std_logic := '0';
 signal acceleration_average_empty : std_logic := '0';
 signal acceleration_average_full : std_logic := '0';
 signal acceleration_average_data_out : std_logic_vector(7 downto 0) := (others => '0');
+
+signal spi_external_single_complete : std_logic := '0';
+signal spi_external_burst_complete : std_logic := '0';
+signal spi_external_burst_data : std_logic_vector(7 downto 0) := (others => '0');
+signal spi_external_single_data : std_logic_vector(7 downto 0) := (others => '0');
+signal spi_external_offload_wait : std_logic := '0';
 
 ----------------------------------------------------------------------------------------------------------------
 -- COMPONENTS DECLARATION
@@ -1603,12 +1621,15 @@ begin
                             trigger_bmi160_s1 <= '1';
                         elsif primary_offload_id = ID_BMI160_S2 then
                             trigger_bmi160_s2 <= '1';
+                        elsif primary_offload_id = ID_EXTERNAL_SPI then
+                            trigger_external_spi <= '1';
                         elsif primary_offload_id = ID_nRF905 then
                             trigger_nRF905 <= '1';
                         else
                             acceleration_trigger_bmi160_s1 <= '0';
                             trigger_bmi160_s1 <= '0';
                             trigger_bmi160_s2 <= '0';
+                            trigger_external_spi <= '0';
                             trigger_nRF905 <= '0';
                         end if;
                     elsif primary_offload_ctrl(2 downto 1) = CTRL_PWM then
@@ -1652,6 +1673,7 @@ begin
                 acceleration_trigger_bmi160_s1 <= '0';
                 trigger_bmi160_s1 <= '0';
                 trigger_bmi160_s2 <= '0';
+                trigger_external_spi <= '0';
                 trigger_nRF905 <= '0';
                 packetSwitchState <= PACKET_SWITCH_IDLE;
 
@@ -1746,6 +1768,29 @@ BMI160_S2_primary: SpiController port map
     BURST_DATA => open,
     SINGLE_DATA => data_spi_bmi160_s2_feedback,
     OFFLOAD_WAIT => primary_offload_wait_spi_s2
+);
+
+EXTERNAL_SPI_primary: SpiController port map
+(
+    CLOCK_50MHz => CLOCK_50MHz,
+    RESET => global_fpga_reset,
+    -- IN
+    OFFLOAD_TRIGGER => trigger_external_spi,
+    OFFLOAD_ID => "0000000",
+    OFFLOAD_CONTROL => primary_offload_ctrl,
+    OFFLOAD_REGISTER => primary_offload_register,
+    OFFLOAD_DATA => primary_offload_data,
+    -- SPI
+    CTRL_CS => ctrl_EXTERNAL_CS,
+    CTRL_MISO => ctrl_EXTERNAL_MISO,
+    CTRL_MOSI => ctrl_EXTERNAL_MOSI,
+    CTRL_SCK => ctrl_EXTERNAL_SCLK,
+    -- OUT
+    SINGLE_COMPLETE => spi_external_single_complete,
+    BURST_COMPLETE => spi_external_burst_complete,
+    BURST_DATA => spi_external_burst_data,
+    SINGLE_DATA => spi_external_single_data,
+    OFFLOAD_WAIT => spi_external_offload_wait
 );
 
 RF905_primary: SpiController port map
@@ -2145,6 +2190,11 @@ S2_BMI160_CS <= ctrl_BMI160_S2_CS;
 ctrl_BMI160_S2_MISO <= S2_BMI160_MISO;
 S2_BMI160_MOSI <= ctrl_BMI160_S2_MOSI;
 S2_BMI160_SCLK <= ctrl_BMI160_S2_SCLK;
+
+EXTERNAL_CS <= ctrl_EXTERNAL_CS;
+ctrl_EXTERNAL_MISO <= EXTERNAL_MISO;
+EXTERNAL_MOSI <= ctrl_EXTERNAL_MOSI;
+EXTERNAL_SCLK <= ctrl_EXTERNAL_SCLK;
 
 ---------------------------------------------------------------
 -- TODO :: Need Refactoring and Parametrization !!!
