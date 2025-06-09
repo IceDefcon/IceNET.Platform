@@ -82,6 +82,22 @@ unsigned int receiverHookDiagnostic(void *priv, struct sk_buff *socketBuffer, co
         {
             return NF_ACCEPT;
         }
+
+        hookDiagnostics.ethernetHeader = eth_hdr(socketBuffer);
+        if (hookDiagnostics.ethernetHeader)
+        {
+            if (!is_zero_ether_addr(hookDiagnostics.ethernetHeader->h_source) &&
+                !is_zero_ether_addr(hookDiagnostics.ethernetHeader->h_dest))
+            {
+                pr_info("[RX][ICMP] MAC Source: %pM, MAC Dest: %pM\n",
+                        hookDiagnostics.ethernetHeader->h_source,
+                        hookDiagnostics.ethernetHeader->h_dest);
+            }
+        }
+        else
+        {
+            pr_warn("[RX][ICMP] Ethernet header not found.\n");
+        }
 /**
  * This can be commented
  * as Linux operating system
@@ -146,7 +162,10 @@ unsigned int receiverHookDiagnostic(void *priv, struct sk_buff *socketBuffer, co
 
             pr_info("[RX][ICMP] Echo Reply received from %pI4 (id=%u, seq=%u)\n", &src_ip, ntohs(id), ntohs(seq));
 
-            addActiveHost(src_ip);
+            if (hookDiagnostics.ethernetHeader)
+            {
+                addActiveHost(src_ip, hookDiagnostics.ethernetHeader->h_source);
+            }
 
             return NF_ACCEPT;
         }

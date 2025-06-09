@@ -29,56 +29,55 @@ void printActiveHosts(void)
     pr_info("[ACTIVE HOSTS LIST]:\n");
     list_for_each_entry(host, &active_host_list, list)
     {
-        pr_info(" - %pI4\n", &host->ip);
+        pr_info(" - IP: %pI4, MAC: %pM\n", &host->ip, host->mac);
     }
 
     spin_unlock_bh(&active_host_lock);
 }
 
-void addActiveHost(__be32 ip)
+void addActiveHost(__be32 ip, const unsigned char *mac)
 {
-    // Check if this IP is already in the active list
     struct active_host *host;
     bool found = false;
 
     spin_lock_bh(&active_host_lock);
     list_for_each_entry(host, &active_host_list, list)
     {
-        if (host->ip == ip)
+        if (host->ip == ip && ether_addr_equal(host->mac, mac))
         {
             found = true;
             break;
         }
     }
 
-    // If not found, add to list
     if (!found)
     {
         host = kmalloc(sizeof(*host), GFP_ATOMIC);
         if (host)
         {
             host->ip = ip;
+            memcpy(host->mac, mac, ETH_ALEN);
             list_add_tail(&host->list, &active_host_list);
-            pr_info("[DISCOVERY] New active host: %pI4\n", &ip);
+            pr_info("[DISCOVERY] New active host: %pI4 (%pM)\n", &ip, mac);
         }
     }
 
     spin_unlock_bh(&active_host_lock);
 }
 
-void removeActiveHost(__be32 ip)
+void removeActiveHost(__be32 ip, const unsigned char *mac)
 {
     struct active_host *host, *tmp;
 
     spin_lock_bh(&active_host_lock);
     list_for_each_entry_safe(host, tmp, &active_host_list, list)
     {
-        if (host->ip == ip)
+        if (host->ip == ip && ether_addr_equal(host->mac, mac))
         {
             list_del(&host->list);
             kfree(host);
-            pr_info("[DISCOVERY] Removed active host: %pI4\n", &ip);
-            break;  // IPs are unique in list, so break after removing
+            pr_info("[DISCOVERY] Removed active host: %pI4 (%pM)\n", &ip, mac);
+            break;
         }
     }
     spin_unlock_bh(&active_host_lock);
