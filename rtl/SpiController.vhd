@@ -4,6 +4,12 @@ use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.all;
 
 entity SpiController is
+generic
+(
+    BYTE_INIT : integer := 10;
+    BYTE_BREAK : integer := 50;
+    BYTE_EXIT : integer := 10
+);
 Port
 (
     CLOCK_50MHz : in  std_logic;
@@ -44,10 +50,7 @@ signal SPI_state: SPI_CONTROLLER_TYPE := SPI_IDLE;
 signal byte_process_timer : integer range 0 to 1024 := 0;
 
 constant TRANSFER_INIT : integer range 0 to 512 := 500;
-constant BYTE_INIT : integer range 0 to 16   := 10;
 constant BYTE_CLOCK : integer range 0 to 128 := 80;
-constant BYTE_EXIT : integer range 0 to 16   := 10;
-constant BYTE_BREAK : integer range 0 to 64  := 50;
 constant TRANSFER_EXIT : integer range 0 to 512 := 500;
 constant WRITE_DELAY : integer range 0 to 5000000 := 5000000;
 
