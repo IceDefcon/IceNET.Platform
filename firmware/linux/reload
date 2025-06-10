@@ -1,4 +1,0 @@
-rmmod iceDriver
-make clean
-make -j
-insmod iceDriver.ko
