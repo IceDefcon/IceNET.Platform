@@ -221,13 +221,13 @@ begin
                         end if;
 
                         if next_byte = '1' then
-                            if byte_process_timer < BYTE_BREAK then
+                            if byte_process_timer < BYTE_BREAK - SM_OFFSET then
                                 spi_status <= "0101"; -- Break Between Bytes
-                            elsif byte_process_timer < BYTE_BREAK + BYTE_INIT then
+                            elsif byte_process_timer < BYTE_BREAK - SM_OFFSET + BYTE_INIT then
                                 spi_status <= "0110"; -- Next Byte Init
-                            elsif byte_process_timer < BYTE_BREAK + BYTE_INIT + BYTE_CLOCK then
+                            elsif byte_process_timer < BYTE_BREAK - SM_OFFSET + BYTE_INIT + BYTE_CLOCK then
                                 spi_status <= "0111"; -- Generic Byte Clock Processing
-                            elsif byte_process_timer < BYTE_BREAK + BYTE_INIT + BYTE_CLOCK + BYTE_EXIT then
+                            elsif byte_process_timer < BYTE_BREAK - SM_OFFSET + BYTE_INIT + BYTE_CLOCK + BYTE_EXIT then
                                 spi_status <= "1000"; -- Next Byte Exit
                             else
                                 spi_status <= "1110"; -- Going Back to CONFIG
@@ -237,15 +237,15 @@ begin
                         end if;
 
                         if last_byte = '1' then
-                            if byte_process_timer < BYTE_BREAK then
+                            if byte_process_timer < BYTE_BREAK - SM_OFFSET then
                                 spi_status <= "1001"; -- Break Between Bytes
-                            elsif byte_process_timer < BYTE_BREAK + BYTE_INIT then
+                            elsif byte_process_timer < BYTE_BREAK - SM_OFFSET + BYTE_INIT then
                                 spi_status <= "1010"; -- Last Byte Init
-                            elsif byte_process_timer < BYTE_BREAK + BYTE_INIT + BYTE_CLOCK then
+                            elsif byte_process_timer < BYTE_BREAK - SM_OFFSET + BYTE_INIT + BYTE_CLOCK then
                                 spi_status <= "1011"; -- Generic Byte Clock Process
-                            elsif byte_process_timer < BYTE_BREAK + BYTE_INIT + BYTE_CLOCK + BYTE_EXIT then
+                            elsif byte_process_timer < BYTE_BREAK - SM_OFFSET + BYTE_INIT + BYTE_CLOCK + BYTE_EXIT then
                                 spi_status <= "1100"; -- Last Byte Exit
-                            elsif byte_process_timer < BYTE_BREAK + BYTE_INIT + BYTE_CLOCK + BYTE_EXIT + TRANSFER_EXIT then
+                            elsif byte_process_timer < BYTE_BREAK - SM_OFFSET + BYTE_INIT + BYTE_CLOCK + BYTE_EXIT + TRANSFER_EXIT then
                                 spi_status <= "1101"; -- Transfer Exit
                                 SINGLE_COMPLETE <= '1';
                                 BURST_COMPLETE <= '1';
@@ -384,13 +384,13 @@ begin
                         end if;
 
                         if next_byte = '1' then
-                            if byte_process_timer < BYTE_BREAK then
+                            if byte_process_timer < BYTE_BREAK - SM_OFFSET then
                                 spi_status <= "0101"; -- Break Between Bytes
-                            elsif byte_process_timer < BYTE_BREAK + BYTE_INIT then
+                            elsif byte_process_timer < BYTE_BREAK - SM_OFFSET + BYTE_INIT then
                                 spi_status <= "0110"; -- Next Byte Init
-                            elsif byte_process_timer < BYTE_BREAK + BYTE_INIT + BYTE_CLOCK then
+                            elsif byte_process_timer < BYTE_BREAK - SM_OFFSET + BYTE_INIT + BYTE_CLOCK then
                                 spi_status <= "0111"; -- Generic Byte Clock Processing
-                            elsif byte_process_timer < BYTE_BREAK + BYTE_INIT + BYTE_CLOCK + BYTE_EXIT then
+                            elsif byte_process_timer < BYTE_BREAK - SM_OFFSET + BYTE_INIT + BYTE_CLOCK + BYTE_EXIT then
                                 spi_status <= "1000"; -- Next Byte Exit
                             else
                                 spi_status <= "1110"; -- Going Back to CONFIG
@@ -398,15 +398,15 @@ begin
                         end if;
 
                         if last_byte = '1' then
-                            if byte_process_timer < BYTE_BREAK then
+                            if byte_process_timer < BYTE_BREAK - SM_OFFSET then
                                 spi_status <= "1001"; -- Break Between Bytes
-                            elsif byte_process_timer < BYTE_BREAK + BYTE_INIT then
+                            elsif byte_process_timer < BYTE_BREAK - SM_OFFSET + BYTE_INIT then
                                 spi_status <= "1010"; -- Last Byte Init
-                            elsif byte_process_timer < BYTE_BREAK + BYTE_INIT + BYTE_CLOCK then
+                            elsif byte_process_timer < BYTE_BREAK - SM_OFFSET + BYTE_INIT + BYTE_CLOCK then
                                 spi_status <= "1011"; -- Generic Byte Clock Process
-                            elsif byte_process_timer < BYTE_BREAK + BYTE_INIT + BYTE_CLOCK + BYTE_EXIT then
+                            elsif byte_process_timer < BYTE_BREAK - SM_OFFSET + BYTE_INIT + BYTE_CLOCK + BYTE_EXIT then
                                 spi_status <= "1100"; -- Last Byte Exit
-                            elsif byte_process_timer < BYTE_BREAK + BYTE_INIT + BYTE_CLOCK + BYTE_EXIT + TRANSFER_EXIT then
+                            elsif byte_process_timer < BYTE_BREAK - SM_OFFSET + BYTE_INIT + BYTE_CLOCK + BYTE_EXIT + TRANSFER_EXIT then
                                 spi_status <= "1101"; -- Transfer Exit
                                 SINGLE_COMPLETE <= '1';
                                 SINGLE_DATA <= OFFLOAD_REGISTER;
