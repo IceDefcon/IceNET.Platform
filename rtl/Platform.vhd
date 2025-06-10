@@ -525,6 +525,7 @@ end component;
 component SpiController
 generic
 (
+    SM_OFFSET : integer := 3;
     BYTE_INIT : integer := 10;
     BYTE_BREAK : integer := 50;
     BYTE_EXIT : integer := 10
@@ -1733,6 +1734,7 @@ i2c_Bus_primary: I2cController port map
 BMI160_S1_primary: SpiController
 generic map
 (
+    SM_OFFSET => 0,
     BYTE_INIT => 10,
     BYTE_BREAK => 50,
     BYTE_EXIT => 10
@@ -1763,6 +1765,7 @@ port map
 BMI160_S2_primary: SpiController
 generic map
 (
+    SM_OFFSET => 0,
     BYTE_INIT => 10,
     BYTE_BREAK => 50,
     BYTE_EXIT => 10
@@ -1793,6 +1796,7 @@ port map
 EXTERNAL_SPI_primary: SpiController
 generic map
 (
+    SM_OFFSET => 3,
     BYTE_INIT => 0,
     BYTE_BREAK => 0,
     BYTE_EXIT => 0
@@ -1820,7 +1824,15 @@ port map
     OFFLOAD_WAIT => spi_external_offload_wait
 );
 
-RF905_primary: SpiController port map
+RF905_primary: SpiController
+generic map
+(
+    SM_OFFSET => 0,
+    BYTE_INIT => 10,
+    BYTE_BREAK => 50,
+    BYTE_EXIT => 10
+)
+port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
     RESET => global_fpga_reset,
