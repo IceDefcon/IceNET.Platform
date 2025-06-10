@@ -99,11 +99,12 @@ RamDisk::RamDisk() :
 
 RamDisk::~RamDisk()
 {
-    std::cout << "[INFO] [DESTRUCTOR] " << m_instance << " :: Destroy RamDisk" << std::endl;
     if (m_fileDescriptor >= 0)
     {
         closeDEV();
     }
+
+    std::cout << "[INFO] [DESTRUCTOR] " << m_instance << " :: Destroy RamDisk" << std::endl;
 }
 
 int RamDisk::openDEV()

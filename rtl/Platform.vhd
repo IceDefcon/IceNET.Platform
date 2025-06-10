@@ -523,6 +523,12 @@ Port
 end component;
 
 component SpiController
+generic
+(
+    BYTE_INIT : integer := 10;
+    BYTE_BREAK : integer := 50;
+    BYTE_EXIT : integer := 10
+);
 Port
 (
     CLOCK_50MHz : in  std_logic;
@@ -1724,7 +1730,14 @@ i2c_Bus_primary: I2cController port map
     FEEDBACK_DATA => data_i2c_feedback
 );
 
-BMI160_S1_primary: SpiController port map
+BMI160_S1_primary: SpiController
+generic map
+(
+    BYTE_INIT => 10,
+    BYTE_BREAK => 50,
+    BYTE_EXIT => 10
+)
+port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
     RESET => global_fpga_reset,
@@ -1747,7 +1760,14 @@ BMI160_S1_primary: SpiController port map
     OFFLOAD_WAIT => primary_offload_wait_spi_s1
 );
 
-BMI160_S2_primary: SpiController port map
+BMI160_S2_primary: SpiController
+generic map
+(
+    BYTE_INIT => 10,
+    BYTE_BREAK => 50,
+    BYTE_EXIT => 10
+)
+port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
     RESET => global_fpga_reset,
@@ -1770,7 +1790,14 @@ BMI160_S2_primary: SpiController port map
     OFFLOAD_WAIT => primary_offload_wait_spi_s2
 );
 
-EXTERNAL_SPI_primary: SpiController port map
+EXTERNAL_SPI_primary: SpiController
+generic map
+(
+    BYTE_INIT => 0,
+    BYTE_BREAK => 0,
+    BYTE_EXIT => 0
+)
+port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
     RESET => global_fpga_reset,
