@@ -18,12 +18,12 @@ m_isKernelConnected(false)
 
 KernelCtrl::~KernelCtrl()
 {
-    std::cout << "[INFO] [DESTRUCTOR] " << this << " :: Destroy KernelCtrl" << std::endl;
-
     shutdownKernelComms();
     shutdownThread();
 
     m_isKernelConnected = false;
+
+    std::cout << "[INFO] [DESTRUCTOR] " << this << " :: Destroy KernelCtrl" << std::endl;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -24,10 +24,10 @@ m_stateChanged(false)
 
 KernelCommander::~KernelCommander()
 {
-    std::cout << "[INFO] [DESTRUCTOR] " << this << " :: Destroy KernelCommander" << std::endl;
-
     shutdownThread();
     closeDEV();
+
+    std::cout << "[INFO] [DESTRUCTOR] " << this << " :: Destroy KernelCommander" << std::endl;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -37,10 +37,10 @@ m_stateChanged(false)
 
 Commander::~Commander()
 {
-    std::cout << "[INFO] [DESTRUCTOR] " << this << " :: Destroy Commander" << std::endl;
-
     shutdownThread();
     closeDEV();
+
+    std::cout << "[INFO] [DESTRUCTOR] " << this << " :: Destroy Commander" << std::endl;
 }
 
 void Commander::setupCommandMatrix()

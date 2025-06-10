@@ -29,12 +29,12 @@ DroneCtrl::DroneCtrl() :
 
 DroneCtrl::~DroneCtrl()
 {
-    std::cout << "[INFO] [DESTRUCTOR] " << this << " :: Destroy DroneCtrl" << std::endl;
-
     shutdownKernelComms();
     shutdownThread();
 
     m_isKernelConnected = false;
+    
+    std::cout << "[INFO] [DESTRUCTOR] " << this << " :: Destroy DroneCtrl" << std::endl;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////

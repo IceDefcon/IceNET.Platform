@@ -28,14 +28,14 @@ Watchdog::Watchdog() :
 
 Watchdog::~Watchdog()
 {
-    std::cout << "[INFO] [DESTRUCTOR] " << this << " :: Destroy Watchdog" << std::endl;
-
     shutdownThread();
 
     closeDEV();
 
     delete m_Rx_Watchdog;
     delete m_Tx_Watchdog;
+
+    std::cout << "[INFO] [DESTRUCTOR] " << this << " :: Destroy Watchdog" << std::endl;
 }
 
 void Watchdog::initBuffers()
