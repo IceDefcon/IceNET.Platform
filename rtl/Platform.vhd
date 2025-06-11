@@ -270,6 +270,7 @@ signal secondary_parallel_MISO : std_logic_vector(7 downto 0) := (others => '0')
 signal FIFO_primary_fifo_wr_en  : std_logic := '0';
 signal FIFO_primary_parallel_MOSI : std_logic_vector(7 downto 0) := (others => '0');
 -- Interrupt vector interrupts
+signal external_offload_vector_interrupt : std_logic := '0';
 signal primary_offload_vector_interrupt : std_logic := '0';
 signal enable_vector_interrupt : std_logic := '0';
 signal start_vector_interrupt : std_logic := '0';
@@ -685,6 +686,7 @@ port
     CLOCK_50MHz : in std_logic;
     RESET : in std_logic;
 
+    OFFLOAD_INTERRUPT_EXT : in std_logic;
     OFFLOAD_INTERRUPT : in std_logic;
     FIFO_DATA : in std_logic_vector(7 downto 0);
     FIFO_READ_ENABLE : out std_logic;
@@ -873,6 +875,7 @@ port
     PARALLEL_PRIMARY_MOSI : in std_logic_vector(7 downto 0);
     PARALLEL_CONVERSION_COMPLETE : in std_logic;
 
+    VECTOR_INTERRUPT_EXTERNAL_OFFLOAD : out std_logic;
     VECTOR_INTERRUPT_PRIMARY_OFFLOAD : out std_logic;
     VECTOR_INTERRUPT_ENABLE : out std_logic;
     VECTOR_INTERRUPT_START : out std_logic;
@@ -1358,6 +1361,7 @@ port map
     PARALLEL_PRIMARY_MOSI => primary_parallel_MOSI,
     PARALLEL_CONVERSION_COMPLETE => primary_conversion_complete,
     -- OUT
+    VECTOR_INTERRUPT_EXTERNAL_OFFLOAD => external_offload_vector_interrupt,
     VECTOR_INTERRUPT_PRIMARY_OFFLOAD => primary_offload_vector_interrupt,
     VECTOR_INTERRUPT_ENABLE => enable_vector_interrupt,
     VECTOR_INTERRUPT_START => start_vector_interrupt,
@@ -1398,6 +1402,7 @@ port map
     CLOCK_50MHz => CLOCK_50MHz,
     RESET => global_fpga_reset,
 
+    OFFLOAD_INTERRUPT_EXT => external_offload_vector_interrupt,
     OFFLOAD_INTERRUPT => primary_offload_vector_interrupt,
     FIFO_DATA => primary_fifo_data_out,
     FIFO_READ_ENABLE => primary_fifo_rd_en,
