@@ -158,3 +158,42 @@ void gui::setupPWM()
     };
     connect(pwm_downButton, &QPushButton::clicked, this, pwmDown);
 }
+
+void gui::setupEXT()
+{
+    const mainWindowType* w = getMainWindow();
+    
+    /* Row[0] */
+    QLabel *spi_label = new QLabel("SPI.EXT", this);
+    QFont spi_labelFont;
+    spi_labelFont.setPointSize(30);
+    spi_labelFont.setItalic(true);
+    spi_labelFont.setBold(true);
+    spi_label->setFont(spi_labelFont);
+    spi_label->setGeometry(800 + w->xGap, w->yGap*6 + w->yUnit*3 + w->yLogo, w->xLogo, w->yLogo);
+
+    /* Row[1] */
+    QLabel *byte_0_Label = new QLabel("R/W -> Byte.[0]", this);
+    byte_0_Label->setGeometry(800 + w->xGap, w->yGap*7 + w->yLogo*2 + w->yUnit*3, w->xText, w->yUnit);
+    m_ext_Byte_0 = new QLineEdit(this);
+    m_ext_Byte_0->setGeometry(800 + w->xGap*2 + w->xText, w->yGap*7 + w->yLogo*2 + w->yUnit*3, w->xUnit, w->yUnit);
+    m_ext_Byte_0->setText("0x40");
+    QPushButton *ext_exeButton = new QPushButton("EXE", this);
+    ext_exeButton->setGeometry(800 + w->xGap*3 + w->xText + w->xUnit, w->yGap*7 + w->yLogo*2 + w->yUnit*3, w->xUnit, w->yUnit);
+    connect(ext_exeButton, &QPushButton::clicked, this, &gui::ext_execute);
+    /* Row[2] */
+    QLabel *spi_registerLabel = new QLabel("R/W -> Byte.[1]", this);
+    spi_registerLabel->setGeometry(800 + w->xGap, w->yGap*8 + w->yLogo*2 + w->yUnit*4, w->xText, w->yUnit);
+    m_ext_Byte_1 = new QLineEdit(this);
+    m_ext_Byte_1->setGeometry(800 + w->xGap*2 + w->xText, w->yGap*8 + w->yLogo*2 + w->yUnit*4, w->xUnit, w->yUnit);
+    m_ext_Byte_1->setText("0x37");
+    /* Row[3] */
+    QLabel *spi_dataLabel = new QLabel("R/W -> Byte.[2]", this);
+    spi_dataLabel->setGeometry(800 + w->xGap, w->yGap*9 + w->yLogo*2 + w->yUnit*5, w->xText, w->yUnit);
+    m_ext_Byte_2 = new QLineEdit(this);
+    m_ext_Byte_2->setGeometry(800 + w->xGap*2 + w->xText, w->yGap*9 + w->yLogo*2 + w->yUnit*5, w->xUnit, w->yUnit);
+    m_ext_Byte_2->setText("0x00");
+    m_ext_writeTick = new QCheckBox("WR", this);
+    m_ext_writeTick->setGeometry(800 + w->xGap*3 + w->xText + w->xUnit, w->yGap*9 + w->yLogo*2 + w->yUnit*5, w->xUnit, w->yUnit);
+    connect(m_ext_writeTick, &QCheckBox::toggled, m_spi_dataField, &QLineEdit::setEnabled);
+}

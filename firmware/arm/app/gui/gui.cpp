@@ -63,6 +63,7 @@ gui::gui() :
     setupPWM();
     setupDMA();
     setupCMD();
+    setupEXT();
     setupSeparators();
     setupCameras();
     setupAdditionalDebugs();
@@ -71,10 +72,10 @@ gui::gui() :
 
 gui::~gui()
 {
-    qDebug() << "[MAIN] [DESTRUCTOR]" << this << ":: gui ";
-
     shutdownUart();
     deleteDroneControl();
+
+    qDebug() << "[MAIN] [DESTRUCTOR]" << this << ":: gui ";
 }
 
 void gui::setupWindow()
@@ -148,7 +149,7 @@ void gui::setupFpgaCtrl()
     };
     connect(resetButton, &QPushButton::clicked, this, fpgaReset);
 
-    QPushButton *offloadButton = new QPushButton("OFF.EXT", this);
+    QPushButton *offloadButton = new QPushButton("OFF.CFG", this);
     offloadButton->setGeometry(w.xGap*5 + w.xText + w.xUnit*2, w.yGap*3 + w.yLogo + w.yUnit, w.xUnit*2, w.yUnit);
     offloadButton->setStyleSheet(
         "QPushButton {"
@@ -729,13 +730,13 @@ void gui::setupAdditionalDebugs()
 void gui::setupDMA()
 {
     /* DMA :: Row[0] */
-    QLabel *i2c_label = new QLabel("DMA", this);
-    QFont i2c_labelFont;
-    i2c_labelFont.setPointSize(30);
-    i2c_labelFont.setItalic(true);
-    i2c_labelFont.setBold(true);
-    i2c_label->setFont(i2c_labelFont);
-    i2c_label->setGeometry(w.xGap, w.yGap*16 + w.yLogo*3 + w.yUnit*9, w.xLogo, w.yLogo);
+    QLabel *dma_label = new QLabel("DMA", this);
+    QFont dma_labelFont;
+    dma_labelFont.setPointSize(30);
+    dma_labelFont.setItalic(true);
+    dma_labelFont.setBold(true);
+    dma_label->setFont(dma_labelFont);
+    dma_label->setGeometry(w.xGap, w.yGap*16 + w.yLogo*3 + w.yUnit*9, w.xLogo, w.yLogo);
     /* DMA :: Row[1] */
     QLabel *dma_customLabel = new QLabel("[FPGA->CPU] Custom", this);
     dma_customLabel->setGeometry(w.xGap, w.yGap*16 + w.yLogo*4 + w.yUnit*9, w.xText, w.yUnit);
@@ -782,13 +783,13 @@ void gui::setupDMA()
 void gui::setupCMD()
 {
     /* FIFO :: Row[0] */
-    QLabel *i2c_label = new QLabel("CMD", this);
-    QFont i2c_labelFont;
-    i2c_labelFont.setPointSize(30);
-    i2c_labelFont.setItalic(true);
-    i2c_labelFont.setBold(true);
-    i2c_label->setFont(i2c_labelFont);
-    i2c_label->setGeometry(800 + w.xGap, w.yGap, w.xLogo, w.yLogo);
+    QLabel *cmd_label = new QLabel("CMD", this);
+    QFont cmd_labelFont;
+    cmd_labelFont.setPointSize(30);
+    cmd_labelFont.setItalic(true);
+    cmd_labelFont.setBold(true);
+    cmd_label->setFont(cmd_labelFont);
+    cmd_label->setGeometry(800 + w.xGap, w.yGap, w.xLogo, w.yLogo);
 
     QPushButton *readOnlyButton = new QPushButton("READ", this);
     readOnlyButton->setGeometry(800 + w.xGap, w.yGap*2 + w.yLogo, w.xUnit*2, w.yUnit);
@@ -1221,6 +1222,77 @@ void gui::spi_execute()
         (*m_Tx_GuiVector)[1] = addressValue;
         (*m_Tx_GuiVector)[2] = registerValue;
         (*m_Tx_GuiVector)[3] = dataValue;
+        (*m_Tx_GuiVector)[4] = 0x00;
+        (*m_Tx_GuiVector)[5] = 0x00;
+        (*m_Tx_GuiVector)[6] = 0x00;
+        (*m_Tx_GuiVector)[7] = 0x00;
+        m_instanceDroneControl->setCommanderState(IO_COM_WRITE_ONLY);
+
+        /* Wait for Kerenl to send data to FPGA */
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        printToMainConsole("$ Done");
+    }
+}
+
+void gui::ext_execute()
+{
+    /* Dead Command :: In case if something happen */
+    setDeadCommand();
+
+    if(NULL == m_instanceDroneControl)
+    {
+        printToMainConsole("$ Drone Control is Down");
+    }
+    else if(false == m_instanceDroneControl->getKernelConnected())
+    {
+        printToMainConsole("$ Kernel Communication is Down");
+    }
+    else
+    {
+        /* Dummy Command :: In case if something happen */
+        setDummyCommand();
+
+        int byte0Temp, byte1Temp, byte2Temp;
+        bool byte0Flag, byte1Flag, byte2Flag;
+        uint8_t byte0Value, byte1Value, byte2Value, burstValue;
+
+        uint8_t headerValue = 0x82; /* SPI Header Type */
+
+        QString byte0Text = m_ext_Byte_0->text();
+        QString byte1Text = m_ext_Byte_1->text();
+        QString byte2Text = m_ext_Byte_2->text();
+
+        byte0Temp = byte0Text.toInt(&byte0Flag, 0);
+        byte1Temp = byte1Text.toInt(&byte1Flag, 0);
+        byte2Temp = byte2Text.toInt(&byte2Flag, 0);
+
+        if(byte0Temp > 255 || byte1Temp > 255 || byte2Temp > 255)
+        {
+            if(byte0Temp > 255) QMessageBox::warning(this, "Invalid Byte 0 Value", "Please enter a 8-bit Value");
+            if(byte1Temp > 255) QMessageBox::warning(this, "Invalid Byte 0 Value", "Please enter a 8-bit Value");
+            if(byte2Temp > 255) QMessageBox::warning(this, "Invalid Byte 0 Value", "Please enter a 8-bit Value");
+            return;
+        }
+        else
+        {
+            byte0Value = static_cast<uint8_t>(byte0Temp);
+            byte1Value = static_cast<uint8_t>(byte1Temp);
+            byte2Value = static_cast<uint8_t>(byte2Temp);
+        }
+
+        if (m_ext_writeTick->isChecked())
+        {
+            headerValue += 0x01;
+        }
+
+        burstValue = static_cast<uint8_t>(0x02);
+        burstValue <<= 3;
+        headerValue += burstValue;
+
+        (*m_Tx_GuiVector)[0] = headerValue;
+        (*m_Tx_GuiVector)[1] = byte0Value;
+        (*m_Tx_GuiVector)[2] = byte1Value;
+        (*m_Tx_GuiVector)[3] = byte2Value;
         (*m_Tx_GuiVector)[4] = 0x00;
         (*m_Tx_GuiVector)[5] = 0x00;
         (*m_Tx_GuiVector)[6] = 0x00;
