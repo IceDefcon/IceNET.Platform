@@ -6,6 +6,7 @@ use ieee.std_logic_unsigned.all;
 entity SpiController is
 generic
 (
+    SM_OFFSET : integer := 3;
     BYTE_INIT : integer := 10;
     BYTE_BREAK : integer := 50;
     BYTE_EXIT : integer := 10
@@ -72,6 +73,8 @@ signal next_byte : std_logic := '0';
 signal last_byte : std_logic := '0';
 
 signal feedback_byte : std_logic_vector(7 downto 0) := (others => '0');
+
+signal sm_flag : std_logic := '0';
 
 begin
 
@@ -218,13 +221,13 @@ begin
                         end if;
 
                         if next_byte = '1' then
-                            if byte_process_timer < BYTE_BREAK then
+                            if byte_process_timer < BYTE_BREAK - SM_OFFSET then
                                 spi_status <= "0101"; -- Break Between Bytes
-                            elsif byte_process_timer < BYTE_BREAK + BYTE_INIT then
+                            elsif byte_process_timer < BYTE_BREAK - SM_OFFSET + BYTE_INIT then
                                 spi_status <= "0110"; -- Next Byte Init
-                            elsif byte_process_timer < BYTE_BREAK + BYTE_INIT + BYTE_CLOCK then
+                            elsif byte_process_timer < BYTE_BREAK - SM_OFFSET + BYTE_INIT + BYTE_CLOCK then
                                 spi_status <= "0111"; -- Generic Byte Clock Processing
-                            elsif byte_process_timer < BYTE_BREAK + BYTE_INIT + BYTE_CLOCK + BYTE_EXIT then
+                            elsif byte_process_timer < BYTE_BREAK - SM_OFFSET + BYTE_INIT + BYTE_CLOCK + BYTE_EXIT then
                                 spi_status <= "1000"; -- Next Byte Exit
                             else
                                 spi_status <= "1110"; -- Going Back to CONFIG
@@ -234,15 +237,15 @@ begin
                         end if;
 
                         if last_byte = '1' then
-                            if byte_process_timer < BYTE_BREAK then
+                            if byte_process_timer < BYTE_BREAK - SM_OFFSET then
                                 spi_status <= "1001"; -- Break Between Bytes
-                            elsif byte_process_timer < BYTE_BREAK + BYTE_INIT then
+                            elsif byte_process_timer < BYTE_BREAK - SM_OFFSET + BYTE_INIT then
                                 spi_status <= "1010"; -- Last Byte Init
-                            elsif byte_process_timer < BYTE_BREAK + BYTE_INIT + BYTE_CLOCK then
+                            elsif byte_process_timer < BYTE_BREAK - SM_OFFSET + BYTE_INIT + BYTE_CLOCK then
                                 spi_status <= "1011"; -- Generic Byte Clock Process
-                            elsif byte_process_timer < BYTE_BREAK + BYTE_INIT + BYTE_CLOCK + BYTE_EXIT then
+                            elsif byte_process_timer < BYTE_BREAK - SM_OFFSET + BYTE_INIT + BYTE_CLOCK + BYTE_EXIT then
                                 spi_status <= "1100"; -- Last Byte Exit
-                            elsif byte_process_timer < BYTE_BREAK + BYTE_INIT + BYTE_CLOCK + BYTE_EXIT + TRANSFER_EXIT then
+                            elsif byte_process_timer < BYTE_BREAK - SM_OFFSET + BYTE_INIT + BYTE_CLOCK + BYTE_EXIT + TRANSFER_EXIT then
                                 spi_status <= "1101"; -- Transfer Exit
                                 SINGLE_COMPLETE <= '1';
                                 BURST_COMPLETE <= '1';
@@ -300,7 +303,15 @@ begin
                                 sck_timer_toggle <= not sck_timer_toggle;
 
                                 if sck_timer_toggle = '1' then
-                                    sck_timer <= (others => '0');
+                                    -----------------------------------------
+                                    -- SM Offset taken into account
+                                    -----------------------------------------
+                                    if sm_flag = '1' then
+                                        sck_timer <= std_logic_vector(to_unsigned(SM_OFFSET, 4));
+                                        sm_flag <= '0';
+                                    else
+                                        sck_timer <= (others => '0');
+                                    end if;
                                     -----------------------------------------
                                     -- CLOCK [0]
                                     -----------------------------------------
@@ -328,6 +339,7 @@ begin
                         ------------------------
                         if spi_status = "1110" then
                             SPI_state <= SPI_CONFIG;
+                            sm_flag <= '1';
                             CTRL_CS <= '0';
                             CTRL_MOSI <= '0';
                             CTRL_SCK <= '0';
@@ -372,13 +384,13 @@ begin
                         end if;
 
                         if next_byte = '1' then
-                            if byte_process_timer < BYTE_BREAK then
+                            if byte_process_timer < BYTE_BREAK - SM_OFFSET then
                                 spi_status <= "0101"; -- Break Between Bytes
-                            elsif byte_process_timer < BYTE_BREAK + BYTE_INIT then
+                            elsif byte_process_timer < BYTE_BREAK - SM_OFFSET + BYTE_INIT then
                                 spi_status <= "0110"; -- Next Byte Init
-                            elsif byte_process_timer < BYTE_BREAK + BYTE_INIT + BYTE_CLOCK then
+                            elsif byte_process_timer < BYTE_BREAK - SM_OFFSET + BYTE_INIT + BYTE_CLOCK then
                                 spi_status <= "0111"; -- Generic Byte Clock Processing
-                            elsif byte_process_timer < BYTE_BREAK + BYTE_INIT + BYTE_CLOCK + BYTE_EXIT then
+                            elsif byte_process_timer < BYTE_BREAK - SM_OFFSET + BYTE_INIT + BYTE_CLOCK + BYTE_EXIT then
                                 spi_status <= "1000"; -- Next Byte Exit
                             else
                                 spi_status <= "1110"; -- Going Back to CONFIG
@@ -386,15 +398,15 @@ begin
                         end if;
 
                         if last_byte = '1' then
-                            if byte_process_timer < BYTE_BREAK then
+                            if byte_process_timer < BYTE_BREAK - SM_OFFSET then
                                 spi_status <= "1001"; -- Break Between Bytes
-                            elsif byte_process_timer < BYTE_BREAK + BYTE_INIT then
+                            elsif byte_process_timer < BYTE_BREAK - SM_OFFSET + BYTE_INIT then
                                 spi_status <= "1010"; -- Last Byte Init
-                            elsif byte_process_timer < BYTE_BREAK + BYTE_INIT + BYTE_CLOCK then
+                            elsif byte_process_timer < BYTE_BREAK - SM_OFFSET + BYTE_INIT + BYTE_CLOCK then
                                 spi_status <= "1011"; -- Generic Byte Clock Process
-                            elsif byte_process_timer < BYTE_BREAK + BYTE_INIT + BYTE_CLOCK + BYTE_EXIT then
+                            elsif byte_process_timer < BYTE_BREAK - SM_OFFSET + BYTE_INIT + BYTE_CLOCK + BYTE_EXIT then
                                 spi_status <= "1100"; -- Last Byte Exit
-                            elsif byte_process_timer < BYTE_BREAK + BYTE_INIT + BYTE_CLOCK + BYTE_EXIT + TRANSFER_EXIT then
+                            elsif byte_process_timer < BYTE_BREAK - SM_OFFSET + BYTE_INIT + BYTE_CLOCK + BYTE_EXIT + TRANSFER_EXIT then
                                 spi_status <= "1101"; -- Transfer Exit
                                 SINGLE_COMPLETE <= '1';
                                 SINGLE_DATA <= OFFLOAD_REGISTER;
@@ -446,7 +458,15 @@ begin
                                 sck_timer_toggle <= not sck_timer_toggle;
 
                                 if sck_timer_toggle = '1' then
-                                    sck_timer <= (others => '0');
+                                    -----------------------------------------
+                                    -- SM Offset taken into account
+                                    -----------------------------------------
+                                    if sm_flag = '1' then
+                                        sck_timer <= std_logic_vector(to_unsigned(SM_OFFSET, 4));
+                                        sm_flag <= '0';
+                                    else
+                                        sck_timer <= (others => '0');
+                                    end if;
                                     -----------------------------------------
                                     -- CLOCK [0]
                                     -----------------------------------------
@@ -473,6 +493,7 @@ begin
                         ------------------------
                         if spi_status = "1110" then
                             SPI_state <= SPI_CONFIG;
+                            sm_flag <= '1';
                             CTRL_CS <= '0';
                             CTRL_MOSI <= '0';
                             CTRL_SCK <= '0';

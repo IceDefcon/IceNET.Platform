@@ -79,6 +79,11 @@ class gui : public QWidget
     QLineEdit *m_spi_dataField;
     QCheckBox *m_spi_writeTick;
 
+    QLineEdit *m_ext_Byte_0;
+    QLineEdit *m_ext_Byte_1;
+    QLineEdit *m_ext_Byte_2;
+    QCheckBox *m_ext_writeTick;
+
     QLineEdit *m_pwm_dataField;
     QLineEdit *m_dmaCustom_dataField;
 
@@ -141,6 +146,7 @@ private slots:
     void setupPWM();
     void setupDMA();
     void setupCMD();
+    void setupEXT();
 
     void setDeadCommand();
     void setDummyCommand();
@@ -151,6 +157,7 @@ private slots:
     void dma_execute(commandType cmd);
     void i2c_execute();
     void spi_execute();
+    void ext_execute();
     void pwm_execute(pwmType type);
 
     void openUart();

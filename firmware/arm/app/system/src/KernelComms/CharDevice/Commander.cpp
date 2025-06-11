@@ -287,7 +287,7 @@ int Commander::closeDEV()
         switch(m_ioState)
         {
             case IO_COM_IDLE:
-                waitCommanderEvent();
+                waitCommanderEvent(); /* Breaking IDLE on Event */
                 break;
 
             case IO_COM_WRITE:

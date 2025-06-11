@@ -12,6 +12,7 @@ Port
     PARALLEL_PRIMARY_MOSI : in std_logic_vector(7 downto 0);
     PARALLEL_CONVERSION_COMPLETE : in std_logic;
 
+    VECTOR_INTERRUPT_EXTERNAL_OFFLOAD : out std_logic;
     VECTOR_INTERRUPT_PRIMARY_OFFLOAD : out std_logic;
     VECTOR_INTERRUPT_ENABLE : out std_logic;
     VECTOR_INTERRUPT_START : out std_logic;
@@ -32,12 +33,12 @@ type VECTOR_TYPE is
     VECTOR_DISABLE,             -- "0011"
     VECTOR_START,               -- "0100"
     VECTOR_STOP,                -- "0101"
-    VECTOR_F00,                 -- "0110"
-    VECTOR_F01,                 -- "0111"
-    VECTOR_F02,                 -- "1000"
-    VECTOR_F1,                  -- "1001"
-    VECTOR_F2,                  -- "1010"
-    VECTOR_F3,                  -- "1011"
+    VECTOR_OFFLOAD_EXTERNAL,    -- "0110"
+    VECTOR_F0,                  -- "0111"
+    VECTOR_F1,                  -- "1000"
+    VECTOR_F2,                  -- "1001"
+    VECTOR_F3,                  -- "1010"
+    VECTOR_UNUSED_11,           -- "1011"
     VECTOR_UNUSED_12,           -- "1100"
     VECTOR_UNUSED_13,           -- "1101"
     VECTOR_UNUSED_14,           -- "1110"
@@ -72,6 +73,7 @@ begin
     begin
         if RESET = '1' then
             VECTOR_INTERRUPT_PRIMARY_OFFLOAD <= '0';
+            VECTOR_INTERRUPT_EXTERNAL_OFFLOAD <= '0';
             VECTOR_INTERRUPT_ENABLE <= '0';
             VECTOR_INTERRUPT_START <= '0';
             interrupt_vector_busy <= '0';
@@ -187,17 +189,17 @@ begin
                     elsif interrupt_vector = "0101" then
                         vector_state <= VECTOR_STOP;
                     elsif interrupt_vector = "0110" then
-                        vector_state <= VECTOR_F00;
+                        vector_state <= VECTOR_OFFLOAD_EXTERNAL;
                     elsif interrupt_vector = "0111" then
-                        vector_state <= VECTOR_F01;
+                        vector_state <= VECTOR_F0;
                     elsif interrupt_vector = "1000" then
-                        vector_state <= VECTOR_F02;
-                    elsif interrupt_vector = "1001" then
                         vector_state <= VECTOR_F1;
-                    elsif interrupt_vector = "1010" then
+                    elsif interrupt_vector = "1001" then
                         vector_state <= VECTOR_F2;
-                    elsif interrupt_vector = "1011" then
+                    elsif interrupt_vector = "1010" then
                         vector_state <= VECTOR_F3;
+                    elsif interrupt_vector = "1011" then
+                        vector_state <= VECTOR_UNUSED_11;
                     elsif interrupt_vector = "1100" then
                         vector_state <= VECTOR_UNUSED_12;
                     elsif interrupt_vector = "1101" then
@@ -231,13 +233,11 @@ begin
                     VECTOR_INTERRUPT_START <= '0';
                     vector_state <= VECTOR_DONE;
 
-                when VECTOR_F00 =>
+                when VECTOR_OFFLOAD_EXTERNAL =>
+                    VECTOR_INTERRUPT_EXTERNAL_OFFLOAD <= '1';
                     vector_state <= VECTOR_DONE;
 
-                when VECTOR_F01 =>
-                    vector_state <= VECTOR_DONE;
-
-                when VECTOR_F02 =>
+                when VECTOR_F0 =>
                     vector_state <= VECTOR_DONE;
 
                 when VECTOR_F1 =>
@@ -247,6 +247,9 @@ begin
                     vector_state <= VECTOR_DONE;
 
                 when VECTOR_F3 =>
+                    vector_state <= VECTOR_DONE;
+
+                when VECTOR_UNUSED_11 =>
                     vector_state <= VECTOR_DONE;
 
                 when VECTOR_UNUSED_12 =>
@@ -262,6 +265,7 @@ begin
                     vector_state <= VECTOR_DONE;
 
                 when VECTOR_DONE =>
+                    VECTOR_INTERRUPT_EXTERNAL_OFFLOAD <= '0';
                     VECTOR_INTERRUPT_PRIMARY_OFFLOAD <= '0';
                     vector_state <= VECTOR_IDLE;
 

@@ -8,6 +8,7 @@ port
     CLOCK_50MHz : in std_logic;
     RESET : in std_logic;
 
+    OFFLOAD_INTERRUPT_EXT : in std_logic;
     OFFLOAD_INTERRUPT : in std_logic;
     FIFO_DATA : in std_logic_vector(7 downto 0);
     FIFO_READ_ENABLE : out std_logic;
