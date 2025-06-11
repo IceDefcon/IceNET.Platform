@@ -148,7 +148,7 @@ void gui::setupFpgaCtrl()
     };
     connect(resetButton, &QPushButton::clicked, this, fpgaReset);
 
-    QPushButton *offloadButton = new QPushButton("OFF.1ST", this);
+    QPushButton *offloadButton = new QPushButton("OFF.EXT", this);
     offloadButton->setGeometry(w.xGap*5 + w.xText + w.xUnit*2, w.yGap*3 + w.yLogo + w.yUnit, w.xUnit*2, w.yUnit);
     offloadButton->setStyleSheet(
         "QPushButton {"
@@ -180,6 +180,39 @@ void gui::setupFpgaCtrl()
         }
     };
     connect(offloadButton, &QPushButton::clicked, this, primaryOffload);
+
+    QPushButton *externalOffloadButton = new QPushButton("OFF.EXT", this);
+    externalOffloadButton->setGeometry(w.xGap*6 + w.xText + w.xUnit*4, w.yGap*3 + w.yLogo + w.yUnit, w.xUnit*2, w.yUnit);
+    externalOffloadButton->setStyleSheet(
+        "QPushButton {"
+        "   background-color: blue;"
+        "   color: white;"
+        "   font-size: 17px;"
+        "   font-weight: bold;"
+        "   border-radius: 10px;"
+        "   padding: 5px;"
+        "}"
+        "QPushButton:hover {"
+        "   background-color: darkblue;"
+        "}"
+        "QPushButton:pressed {"
+        "   background-color: black;"
+        "}"
+    );
+
+    auto externalOffload = [this]()
+    {
+        if(NULL == m_instanceDroneControl)
+        {
+            printToMainConsole("$ Drone Control is Down");
+        }
+        else
+        {
+            printToMainConsole("$ External Offload from the FIFO");
+            interruptVector_execute(VECTOR_OFFLOAD_EXTERNAL);
+        }
+    };
+    connect(externalOffloadButton, &QPushButton::clicked, this, externalOffload);
 
     m_enableButton = new QPushButton("ENABLE", this);
     m_enableButton->setGeometry(w.xGap*5 + w.xText + w.xUnit*2, w.yGap*4 + w.yLogo + w.yUnit*2, w.xUnit*2, w.yUnit);
@@ -480,9 +513,9 @@ void gui::setupCameras()
 
 void gui::setupAdditionalDebugs()
 {
-    QPushButton *f00Button = new QPushButton("F00", this);
-    f00Button->setGeometry(w.xGap*6 + w.xText + w.xUnit*4, w.yGap*2 + w.yLogo, w.xUnit*2, w.yUnit);
-    f00Button->setStyleSheet(
+    QPushButton *f0Button = new QPushButton("F0", this);
+    f0Button->setGeometry(w.xGap*6 + w.xText + w.xUnit*4, w.yGap*2 + w.yLogo, w.xUnit*2, w.yUnit);
+    f0Button->setStyleSheet(
         "QPushButton {"
         "   background-color: purple;"
         "   color: white;"
@@ -499,7 +532,7 @@ void gui::setupAdditionalDebugs()
         "}"
     );
 
-    auto executeF00 = [this]()
+    auto executeF0 = [this]()
     {
         if(NULL == m_instanceDroneControl)
         {
@@ -508,44 +541,11 @@ void gui::setupAdditionalDebugs()
         else
         {
             printToMainConsole("$ F0 Test Vector");
-            interruptVector_execute(VECTOR_F00);
+            interruptVector_execute(VECTOR_F0);
         }
     };
-    connect(f00Button, &QPushButton::clicked, this, executeF00);
+    connect(f0Button, &QPushButton::clicked, this, executeF0);
 
-    QPushButton *f01Button = new QPushButton("F01", this);
-    f01Button->setGeometry(w.xGap*6 + w.xText + w.xUnit*4, w.yGap*3 + w.yLogo + w.yUnit, w.xUnit*2, w.yUnit);
-    f01Button->setStyleSheet(
-        "QPushButton {"
-        "   background-color: purple;"
-        "   color: white;"
-        "   font-size: 17px;"
-        "   font-weight: bold;"
-        "   border-radius: 10px;"
-        "   padding: 5px;"
-        "}"
-        "QPushButton:hover {"
-        "   background-color: darkblue;"
-        "}"
-        "QPushButton:pressed {"
-        "   background-color: black;"
-        "}"
-    );
-
-    auto executeF01 = [this]()
-    {
-        if(NULL == m_instanceDroneControl)
-        {
-            printToMainConsole("$ Drone Control is Down");
-        }
-        else
-        {
-            printToMainConsole("$ F0 Test Vector");
-            interruptVector_execute(VECTOR_F01);
-        }
-    };
-    connect(f01Button, &QPushButton::clicked, this, executeF01);
-    
     QPushButton *f1Button = new QPushButton("F1", this);
     f1Button->setGeometry(w.xGap*7 + w.xText + w.xUnit*6, w.yGap*2 + w.yLogo, w.xUnit*2, w.yUnit);
     f1Button->setStyleSheet(
@@ -926,12 +926,12 @@ std::string gui::vectorToString(interruptVectorType type)
         case VECTOR_DISABLE:            return "VECTOR_DISABLE";            /* Disable Pulse Controllers */
         case VECTOR_START:              return "VECTOR_START";              /* Start Measurement Acquisition */
         case VECTOR_STOP:               return "VECTOR_STOP";               /* Stop Measurement Acquisition */
-        case VECTOR_F00:                return "VECTOR_F00";                /* Debug Test Vector */
-        case VECTOR_F01:                return "VECTOR_F01";                /* Debug Test Vector */
-        case VECTOR_F02:                return "VECTOR_F02";                /* Debug Test Vector */
+        case VECTOR_OFFLOAD_EXTERNAL:   return "VECTOR_OFFLOAD_EXTERNAL";   /* FIFO Offload External chain */
+        case VECTOR_F0:                 return "VECTOR_F0";                 /* Debug Test Vector */
         case VECTOR_F1:                 return "VECTOR_F1";                 /* Debug Test Vector */
         case VECTOR_F2:                 return "VECTOR_F2";                 /* Debug Test Vector */
         case VECTOR_F3:                 return "VECTOR_F3";                 /* Debug Test Vector */
+        case VECTOR_UNUSED_11:          return "VECTOR_UNUSED_11";               
         case VECTOR_UNUSED_12:          return "VECTOR_UNUSED_12";
         case VECTOR_UNUSED_13:          return "VECTOR_UNUSED_13";
         case VECTOR_UNUSED_14:          return "VECTOR_UNUSED_14";
