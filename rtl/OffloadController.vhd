@@ -67,6 +67,8 @@ signal Byte_0 : std_logic_vector(7 downto 0) := (others => '0');
 signal Byte_1 : std_logic_vector(7 downto 0) := (others => '0');
 signal Byte_2 : std_logic_vector(7 downto 0) := (others => '0');
 signal Byte_3 : std_logic_vector(7 downto 0) := (others => '0');
+signal Byte_4 : std_logic_vector(7 downto 0) := (others => '0');
+signal Byte_5 : std_logic_vector(7 downto 0) := (others => '0');
 
 signal config_devices : integer := 0;
 signal config_scramble : std_logic_vector(7 downto 0) := (others => '0');
@@ -93,6 +95,8 @@ begin
         Byte_1 <= (others => '0');
         Byte_2 <= (others => '0');
         Byte_3 <= (others => '0');
+        Byte_4 <= (others => '0');
+        Byte_5 <= (others => '0');
         config_devices <= 0;
         config_scramble <= (others => '0');
         config_checksum <= (others => '0');
