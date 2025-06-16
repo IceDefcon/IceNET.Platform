@@ -81,6 +81,9 @@ signal device_pairs : integer := 0;
 
 signal transfer_pairs : integer := 0;
 
+signal active_offload_interrupt : std_logic := '0';
+signal active_offload_interrupt_external : std_logic := '0';
+
 ----------------------------------------------------------------------------------------------------------------
 -- MAIN ROUTINE
 ----------------------------------------------------------------------------------------------------------------
@@ -118,6 +121,10 @@ begin
                 OFFLOAD_READY <= '0';
                 FIFO_READ_ENABLE <= '0';
                 if OFFLOAD_INTERRUPT = '1' then
+                    active_offload_interrupt <= '1';
+                    offload_state <= HEADER_INIT;
+                elsif OFFLOAD_INTERRUPT_EXT = '1' then
+                    active_offload_interrupt_external <= '1';
                     offload_state <= HEADER_INIT;
                 else
                     offload_state <= IDLE;
@@ -340,6 +347,8 @@ begin
                 offload_state <= DEVICE_INIT;
 
             when DONE =>
+                active_offload_interrupt <= '0';
+                active_offload_interrupt_external <= '0';
                 OFFLOAD_READY <= '0';
                 offload_state <= IDLE;
 
