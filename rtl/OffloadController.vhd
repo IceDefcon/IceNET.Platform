@@ -17,7 +17,7 @@ port
     FIFO_EMPTY : in std_logic;
 
     OFFLOAD_READY : out std_logic;
-    OFFLOAD_ID : out std_logic_vector(6 downto 0);
+    OFFLOAD_ID : out std_logic_vector(7 downto 0);
     OFFLOAD_CTRL : out std_logic_vector(7 downto 0);
     OFFLOAD_REGISTER : out std_logic_vector(7 downto 0);
     OFFLOAD_DATA : out std_logic_vector(7 downto 0);
@@ -67,6 +67,8 @@ signal Byte_0 : std_logic_vector(7 downto 0) := (others => '0');
 signal Byte_1 : std_logic_vector(7 downto 0) := (others => '0');
 signal Byte_2 : std_logic_vector(7 downto 0) := (others => '0');
 signal Byte_3 : std_logic_vector(7 downto 0) := (others => '0');
+signal Byte_4 : std_logic_vector(7 downto 0) := (others => '0');
+signal Byte_5 : std_logic_vector(7 downto 0) := (others => '0');
 
 signal config_devices : integer := 0;
 signal config_scramble : std_logic_vector(7 downto 0) := (others => '0');
@@ -74,10 +76,13 @@ signal config_checksum : std_logic_vector(7 downto 0) := (others => '0');
 
 signal device_size : integer := 0;
 signal device_ctrl : std_logic_vector(7 downto 0) := (others => '0');
-signal device_id : std_logic_vector(6 downto 0) := (others => '0');
+signal device_id : std_logic_vector(7 downto 0) := (others => '0');
 signal device_pairs : integer := 0;
 
 signal transfer_pairs : integer := 0;
+
+signal active_offload_interrupt : std_logic := '0';
+signal active_offload_interrupt_external : std_logic := '0';
 
 ----------------------------------------------------------------------------------------------------------------
 -- MAIN ROUTINE
@@ -93,6 +98,8 @@ begin
         Byte_1 <= (others => '0');
         Byte_2 <= (others => '0');
         Byte_3 <= (others => '0');
+        Byte_4 <= (others => '0');
+        Byte_5 <= (others => '0');
         config_devices <= 0;
         config_scramble <= (others => '0');
         config_checksum <= (others => '0');
@@ -114,6 +121,10 @@ begin
                 OFFLOAD_READY <= '0';
                 FIFO_READ_ENABLE <= '0';
                 if OFFLOAD_INTERRUPT = '1' then
+                    active_offload_interrupt <= '1';
+                    offload_state <= HEADER_INIT;
+                elsif OFFLOAD_INTERRUPT_EXT = '1' then
+                    active_offload_interrupt_external <= '1';
                     offload_state <= HEADER_INIT;
                 else
                     offload_state <= IDLE;
@@ -197,10 +208,10 @@ begin
                 --------------------------------------------------------------------------------
                 else
                     OFFLOAD_CTRL <= Byte_0;
-                    OFFLOAD_ID <= Byte_1(0) & Byte_1(1)
-                    & Byte_1(2) & Byte_1(3)
-                    & Byte_1(4) & Byte_1(5)
-                    & Byte_1(6);
+                    OFFLOAD_ID <= '0' & Byte_1(0)
+                    & Byte_1(1) & Byte_1(2)
+                    & Byte_1(3) & Byte_1(4)
+                    & Byte_1(5) & Byte_1(6);
                     OFFLOAD_REGISTER <= Byte_2;
                     OFFLOAD_DATA <= Byte_3;
                     offload_state <= TRANSFER_READY_SINGLE;
@@ -243,10 +254,10 @@ begin
                 offload_state <= DEVICE_BYTE_3;
 
             when DEVICE_BYTE_3 =>
-                device_id <= FIFO_DATA(0) & FIFO_DATA(1) 
-                & FIFO_DATA(2) & FIFO_DATA(3) 
-                & FIFO_DATA(4) & FIFO_DATA(5) 
-                & FIFO_DATA(6); -- Device ID :: Reverse concatenation
+                device_id <= '0' & FIFO_DATA(0)
+                & FIFO_DATA(1) & FIFO_DATA(2)
+                & FIFO_DATA(3) & FIFO_DATA(4)
+                & FIFO_DATA(5) & FIFO_DATA(6); -- Device ID :: Reverse concatenation
                 FIFO_READ_ENABLE <= '0';
                 offload_state <= DEVICE_BYTE_4;
 
@@ -336,6 +347,8 @@ begin
                 offload_state <= DEVICE_INIT;
 
             when DONE =>
+                active_offload_interrupt <= '0';
+                active_offload_interrupt_external <= '0';
                 OFFLOAD_READY <= '0';
                 offload_state <= IDLE;
 

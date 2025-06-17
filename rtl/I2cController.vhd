@@ -17,7 +17,7 @@ port
     I2C_SCK : inout std_logic;
     I2C_SDA : inout std_logic;
 
-    OFFLOAD_ID : in std_logic_vector(6 downto 0);
+    OFFLOAD_ID : in std_logic_vector(7 downto 0);
     OFFLOAD_REGISTER : in std_logic_vector(7 downto 0);
     OFFLOAD_CONTROL : in std_logic;
     OFFLOAD_DATA : in std_logic_vector(7 downto 0);

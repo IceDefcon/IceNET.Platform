@@ -283,7 +283,7 @@ signal primary_fifo_empty : std_logic := '0';
 signal sensor_fifo_bit_count : std_logic_vector(3 downto 0) := (others => '0');
 -- Primary Offload
 signal primary_offload_ready : std_logic := '0';
-signal primary_offload_id : std_logic_vector(6 downto 0) := (others => '0');
+signal primary_offload_id : std_logic_vector(7 downto 0) := (others => '0');
 signal primary_offload_ctrl : std_logic_vector(7 downto 0) := (others => '0');
 signal primary_offload_register : std_logic_vector(7 downto 0) := (others => '0');
 signal primary_offload_data : std_logic_vector(7 downto 0) := (others => '0');
@@ -305,10 +305,10 @@ constant CTRL_I2C : std_logic_vector(1 downto 0) := "00";
 constant CTRL_SPI : std_logic_vector(1 downto 0) := "01";
 constant CTRL_PWM : std_logic_vector(1 downto 0) := "10";
 -- ID Mux
-constant ID_BMI160_S1 : std_logic_vector(6 downto 0) := "1000100"; -- "001 0001" :: 0x11 :: Must be upside down :: Due to primary_offload_id for i2c
-constant ID_BMI160_S2 : std_logic_vector(6 downto 0) := "0100100"; -- "001 0010" :: 0x12
-constant ID_EXTERNAL_SPI : std_logic_vector(6 downto 0) := "1100100"; -- "001 0010" :: 0x13
-constant ID_nRF905 : std_logic_vector(6 downto 0) := "0010100"; -- Must be upside down :: Same as upside down
+constant ID_BMI160_S1 : std_logic_vector(7 downto 0) := "01000100"; -- "001 0001" :: 0x11 :: Must be upside down :: Due to primary_offload_id for i2c
+constant ID_BMI160_S2 : std_logic_vector(7 downto 0) := "00100100"; -- "001 0010" :: 0x12
+constant ID_EXTERNAL_SPI : std_logic_vector(7 downto 0) := "01100100"; -- "001 0010" :: 0x13
+constant ID_nRF905 : std_logic_vector(7 downto 0) := "00010100"; -- Must be upside down :: Same as upside down
 -- Secondary DMA Trigger Interrupts
 signal i2c_complete_long : std_logic := '0';
 signal spi_nRF905_complete_long : std_logic := '0';
@@ -537,7 +537,7 @@ Port
     RESET : in std_logic;
     -- IN
     OFFLOAD_TRIGGER : in std_logic;
-    OFFLOAD_ID : in std_logic_vector(6 downto 0);
+    OFFLOAD_ID : in std_logic_vector(7 downto 0);
     OFFLOAD_REGISTER : in std_logic_vector(7 downto 0);
     OFFLOAD_CONTROL : in std_logic_vector(7 downto 0);
     OFFLOAD_DATA : in std_logic_vector(7 downto 0);
@@ -586,7 +586,7 @@ port
     I2C_SCK : inout std_logic;
     I2C_SDA : inout std_logic;
 
-    OFFLOAD_ID : in std_logic_vector(6 downto 0);
+    OFFLOAD_ID : in std_logic_vector(7 downto 0);
     OFFLOAD_REGISTER : in std_logic_vector(7 downto 0);
     OFFLOAD_CONTROL : in std_logic;
     OFFLOAD_DATA : in std_logic_vector(7 downto 0);
@@ -695,7 +695,7 @@ port
     FIFO_EMPTY : in std_logic;
 
     OFFLOAD_READY : out std_logic;
-    OFFLOAD_ID : out std_logic_vector(6 downto 0);
+    OFFLOAD_ID : out std_logic_vector(7 downto 0);
     OFFLOAD_CTRL : out std_logic_vector(7 downto 0);
     OFFLOAD_REGISTER : out std_logic_vector(7 downto 0);
     OFFLOAD_DATA : out std_logic_vector(7 downto 0);
@@ -1750,7 +1750,7 @@ port map
     RESET => global_fpga_reset,
     -- IN
     OFFLOAD_TRIGGER => trigger_bmi160_s1,
-    OFFLOAD_ID => "0000000",
+    OFFLOAD_ID => (others => '0'), -- Not necessary for SPI
     OFFLOAD_CONTROL => primary_offload_ctrl,
     OFFLOAD_REGISTER => primary_offload_register,
     OFFLOAD_DATA => primary_offload_data,
@@ -1781,7 +1781,7 @@ port map
     RESET => global_fpga_reset,
     -- IN
     OFFLOAD_TRIGGER => trigger_bmi160_s2,
-    OFFLOAD_ID => "0000000",
+    OFFLOAD_ID => (others => '0'), -- Not necessary for SPI
     OFFLOAD_CONTROL => primary_offload_ctrl,
     OFFLOAD_REGISTER => primary_offload_register,
     OFFLOAD_DATA => primary_offload_data,
@@ -1812,7 +1812,7 @@ port map
     RESET => global_fpga_reset,
     -- IN
     OFFLOAD_TRIGGER => trigger_external_spi,
-    OFFLOAD_ID => "0000000",
+    OFFLOAD_ID => (others => '0'), -- Not necessary for SPI
     OFFLOAD_CONTROL => primary_offload_ctrl,
     OFFLOAD_REGISTER => primary_offload_register,
     OFFLOAD_DATA => primary_offload_data,
@@ -1843,7 +1843,7 @@ port map
     RESET => global_fpga_reset,
     -- IN
     OFFLOAD_TRIGGER => trigger_nRF905,
-    OFFLOAD_ID => "0000000",
+    OFFLOAD_ID => (others => '0'), -- Not necessary for SPI
     OFFLOAD_CONTROL => primary_offload_ctrl,
     OFFLOAD_REGISTER => primary_offload_register,
     OFFLOAD_DATA => primary_offload_data,
@@ -1881,7 +1881,7 @@ BMI160_S1_acceleration: SpiController port map
     RESET => global_fpga_reset,
     -- IN
     OFFLOAD_TRIGGER => acceleration_trigger_bmi160_s1,
-    OFFLOAD_ID => "0000000",
+    OFFLOAD_ID => (others => '0'), -- Not necessary for SPI
     OFFLOAD_CONTROL => acceleration_offload_ctrl_bmi160_s1,
     OFFLOAD_REGISTER => acceleration_offload_register_bmi160_s1,
     OFFLOAD_DATA => acceleration_offload_data_bmi160_s1,
