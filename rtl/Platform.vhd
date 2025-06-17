@@ -274,6 +274,7 @@ signal external_offload_vector_interrupt : std_logic := '0';
 signal primary_offload_vector_interrupt : std_logic := '0';
 signal enable_vector_interrupt : std_logic := '0';
 signal start_vector_interrupt : std_logic := '0';
+signal trigger_vector_interrupt : std_logic := '0';
 signal secondary_dma_trigger_gpio_pulse_20ns : std_logic := '0';
 -- Fifo
 signal primary_fifo_rd_en : std_logic := '0';
@@ -879,6 +880,7 @@ port
     VECTOR_INTERRUPT_PRIMARY_OFFLOAD : out std_logic;
     VECTOR_INTERRUPT_ENABLE : out std_logic;
     VECTOR_INTERRUPT_START : out std_logic;
+    VECTOR_INTERRUPT_TRIGGER : out std_logic;
 
     FIFO_PARALLEL_PRIMARY_MOSI : out std_logic_vector(7 downto 0);
     FIFO_PARALLEL_PRIMARY_WR_EN : out std_logic
@@ -1365,6 +1367,7 @@ port map
     VECTOR_INTERRUPT_PRIMARY_OFFLOAD => primary_offload_vector_interrupt,
     VECTOR_INTERRUPT_ENABLE => enable_vector_interrupt,
     VECTOR_INTERRUPT_START => start_vector_interrupt,
+    VECTOR_INTERRUPT_TRIGGER => trigger_vector_interrupt,
     -- OUT
     FIFO_PARALLEL_PRIMARY_MOSI => FIFO_primary_parallel_MOSI,
     FIFO_PARALLEL_PRIMARY_WR_EN => FIFO_primary_fifo_wr_en
@@ -1811,7 +1814,7 @@ port map
     CLOCK_50MHz => CLOCK_50MHz,
     RESET => global_fpga_reset,
     -- IN
-    OFFLOAD_TRIGGER => trigger_external_spi,
+    OFFLOAD_TRIGGER => trigger_external_spi or trigger_vector_interrupt,
     OFFLOAD_ID => (others => '0'), -- Not necessary for SPI
     OFFLOAD_CONTROL => primary_offload_ctrl,
     OFFLOAD_REGISTER => primary_offload_register,

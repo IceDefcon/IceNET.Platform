@@ -207,14 +207,22 @@ begin
                 --
                 --------------------------------------------------------------------------------
                 else
-                    OFFLOAD_CTRL <= Byte_0;
-                    OFFLOAD_ID <= '0' & Byte_1(0)
-                    & Byte_1(1) & Byte_1(2)
-                    & Byte_1(3) & Byte_1(4)
-                    & Byte_1(5) & Byte_1(6);
-                    OFFLOAD_REGISTER <= Byte_2;
-                    OFFLOAD_DATA <= Byte_3;
-                    offload_state <= TRANSFER_READY_SINGLE;
+                    if active_offload_interrupt = '1' then
+                        OFFLOAD_CTRL <= Byte_0;
+                        OFFLOAD_ID <= '0' & Byte_1(0)
+                        & Byte_1(1) & Byte_1(2)
+                        & Byte_1(3) & Byte_1(4)
+                        & Byte_1(5) & Byte_1(6);
+                        OFFLOAD_REGISTER <= Byte_2;
+                        OFFLOAD_DATA <= Byte_3;
+                        offload_state <= TRANSFER_READY_SINGLE;
+                    elsif active_offload_interrupt_external = '1' then
+                        OFFLOAD_CTRL <= Byte_0;
+                        OFFLOAD_ID <= Byte_1;
+                        OFFLOAD_REGISTER <= Byte_2;
+                        OFFLOAD_DATA <= Byte_3;
+                        offload_state <= TRANSFER_READY_SINGLE;
+                    end if;
                 end if;
 
             when DEVICE_INIT =>
