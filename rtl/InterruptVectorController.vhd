@@ -16,6 +16,7 @@ Port
     VECTOR_INTERRUPT_PRIMARY_OFFLOAD : out std_logic;
     VECTOR_INTERRUPT_ENABLE : out std_logic;
     VECTOR_INTERRUPT_START : out std_logic;
+    VECTOR_INTERRUPT_TRIGGER : out std_logic;
 
     FIFO_PARALLEL_PRIMARY_MOSI : out std_logic_vector(7 downto 0);
     FIFO_PARALLEL_PRIMARY_WR_EN : out std_logic
@@ -34,7 +35,7 @@ type VECTOR_TYPE is
     VECTOR_START,               -- "0100"
     VECTOR_STOP,                -- "0101"
     VECTOR_OFFLOAD_EXTERNAL,    -- "0110"
-    VECTOR_F0,                  -- "0111"
+    VECTOR_TRIGGER,             -- "0111"
     VECTOR_F1,                  -- "1000"
     VECTOR_F2,                  -- "1001"
     VECTOR_F3,                  -- "1010"
@@ -191,7 +192,7 @@ begin
                     elsif interrupt_vector = "0110" then
                         vector_state <= VECTOR_OFFLOAD_EXTERNAL;
                     elsif interrupt_vector = "0111" then
-                        vector_state <= VECTOR_F0;
+                        vector_state <= VECTOR_TRIGGER;
                     elsif interrupt_vector = "1000" then
                         vector_state <= VECTOR_F1;
                     elsif interrupt_vector = "1001" then
@@ -237,7 +238,8 @@ begin
                     VECTOR_INTERRUPT_EXTERNAL_OFFLOAD <= '1';
                     vector_state <= VECTOR_DONE;
 
-                when VECTOR_F0 =>
+                when VECTOR_TRIGGER =>
+                    VECTOR_INTERRUPT_TRIGGER <= '1';
                     vector_state <= VECTOR_DONE;
 
                 when VECTOR_F1 =>
@@ -267,6 +269,7 @@ begin
                 when VECTOR_DONE =>
                     VECTOR_INTERRUPT_EXTERNAL_OFFLOAD <= '0';
                     VECTOR_INTERRUPT_PRIMARY_OFFLOAD <= '0';
+                    VECTOR_INTERRUPT_TRIGGER <= '0';
                     vector_state <= VECTOR_IDLE;
 
                 when others =>
