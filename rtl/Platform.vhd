@@ -536,6 +536,7 @@ Port
 (
     CLOCK_50MHz : in  std_logic;
     RESET : in std_logic;
+    EXTERN : in std_logic;
     -- IN
     OFFLOAD_TRIGGER : in std_logic;
     OFFLOAD_ID : in std_logic_vector(7 downto 0);
@@ -1751,6 +1752,7 @@ port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
     RESET => global_fpga_reset,
+    EXTERN => '0',
     -- IN
     OFFLOAD_TRIGGER => trigger_bmi160_s1,
     OFFLOAD_ID => (others => '0'), -- Not necessary for SPI
@@ -1782,6 +1784,7 @@ port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
     RESET => global_fpga_reset,
+    EXTERN => '0',
     -- IN
     OFFLOAD_TRIGGER => trigger_bmi160_s2,
     OFFLOAD_ID => (others => '0'), -- Not necessary for SPI
@@ -1813,9 +1816,10 @@ port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
     RESET => global_fpga_reset,
+    EXTERN => '1',
     -- IN
     OFFLOAD_TRIGGER => trigger_external_spi or trigger_vector_interrupt,
-    OFFLOAD_ID => (others => '0'), -- Not necessary for SPI
+    OFFLOAD_ID => primary_offload_id,
     OFFLOAD_CONTROL => primary_offload_ctrl,
     OFFLOAD_REGISTER => primary_offload_register,
     OFFLOAD_DATA => primary_offload_data,
@@ -1844,6 +1848,7 @@ port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
     RESET => global_fpga_reset,
+    EXTERN => '0',
     -- IN
     OFFLOAD_TRIGGER => trigger_nRF905,
     OFFLOAD_ID => (others => '0'), -- Not necessary for SPI
@@ -1882,6 +1887,7 @@ BMI160_S1_acceleration: SpiController port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
     RESET => global_fpga_reset,
+    EXTERN => '0',
     -- IN
     OFFLOAD_TRIGGER => acceleration_trigger_bmi160_s1,
     OFFLOAD_ID => (others => '0'), -- Not necessary for SPI
