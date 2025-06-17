@@ -514,11 +514,11 @@ void gui::setupCameras()
 
 void gui::setupAdditionalDebugs()
 {
-    QPushButton *f0Button = new QPushButton("F0", this);
+    QPushButton *f0Button = new QPushButton("TRIGGER", this);
     f0Button->setGeometry(w.xGap*6 + w.xText + w.xUnit*4, w.yGap*2 + w.yLogo, w.xUnit*2, w.yUnit);
     f0Button->setStyleSheet(
         "QPushButton {"
-        "   background-color: purple;"
+        "   background-color: blue;"
         "   color: white;"
         "   font-size: 17px;"
         "   font-weight: bold;"
@@ -541,8 +541,8 @@ void gui::setupAdditionalDebugs()
         }
         else
         {
-            printToMainConsole("$ F0 Test Vector");
-            interruptVector_execute(VECTOR_F0);
+            printToMainConsole("$ External SPI Trigger Vector");
+            interruptVector_execute(VECTOR_TRIGGER);
         }
     };
     connect(f0Button, &QPushButton::clicked, this, executeF0);
@@ -928,7 +928,7 @@ std::string gui::vectorToString(interruptVectorType type)
         case VECTOR_START:              return "VECTOR_START";              /* Start Measurement Acquisition */
         case VECTOR_STOP:               return "VECTOR_STOP";               /* Stop Measurement Acquisition */
         case VECTOR_OFFLOAD_EXTERNAL:   return "VECTOR_OFFLOAD_EXTERNAL";   /* FIFO Offload External chain */
-        case VECTOR_F0:                 return "VECTOR_F0";                 /* Debug Test Vector */
+        case VECTOR_TRIGGER:            return "VECTOR_TRIGGER";            /* Trigger Vector */
         case VECTOR_F1:                 return "VECTOR_F1";                 /* Debug Test Vector */
         case VECTOR_F2:                 return "VECTOR_F2";                 /* Debug Test Vector */
         case VECTOR_F3:                 return "VECTOR_F3";                 /* Debug Test Vector */
@@ -1285,6 +1285,12 @@ void gui::ext_execute()
             headerValue += 0x01;
         }
 
+        /**
+         *
+         * This chunk cause
+         * header to be 0x92
+         *
+         */
         burstValue = static_cast<uint8_t>(0x02);
         burstValue <<= 3;
         headerValue += burstValue;
