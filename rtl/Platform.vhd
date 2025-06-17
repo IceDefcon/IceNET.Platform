@@ -1808,9 +1808,14 @@ EXTERNAL_SPI_primary: SpiController
 generic map
 (
     SM_OFFSET => 3,
-    BYTE_INIT => 0,
-    BYTE_BREAK => 0,
-    BYTE_EXIT => 0
+    ------------------------------------
+    -- All three generics must be set
+    -- to zero or non-zero values
+    -- to satisfy if-else statement
+    ------------------------------------
+    BYTE_INIT => 10,
+    BYTE_BREAK => 50,
+    BYTE_EXIT => 10
 )
 port map
 (
