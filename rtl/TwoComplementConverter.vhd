@@ -3,16 +3,17 @@
     use ieee.std_logic_1164.all;
 
     entity TwoComplementConverter is
-        Port (
-            CLOCK_250MHz : in  std_logic;
-            RESET        : in  std_logic;
+    Port
+    (
+        CLOCK_250MHz : in  std_logic;
+        RESET        : in  std_logic;
 
-            I_12_BITS    : in  std_logic_vector(11 downto 0);
-            O_16_BITS    : out std_logic_vector(15 downto 0)
-        );
+        I_12_BITS    : in  std_logic_vector(11 downto 0);
+        O_16_BITS    : out std_logic_vector(15 downto 0)
+    );
     end TwoComplementConverter;
 
-    architecture Behavioral of TwoComplementConverter is
+    architecture rtl of TwoComplementConverter is
     begin
 
         process(CLOCK_250MHz, RESET)
@@ -28,4 +29,4 @@
             end if;
         end process;
 
-    end Behavioral;
+    end rtl;
