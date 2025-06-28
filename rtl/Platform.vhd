@@ -889,6 +889,32 @@ port
 end component;
 
 -- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+--
+-- Experimential HW-Logic
+--
+-- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+component SoftwareDefinedRadioWraper
+generic
+(
+    CTRL : std_logic_vector(3 downto 0) := "0000"
+);
+Port
+(
+    CLOCK_250MHz : in  std_logic;
+    RESET : in  std_logic;
+    -- IN
+    ADC_12_BITS_I : in  std_logic_vector(11 downto 0); -- Real
+    ADC_12_BITS_Q : in  std_logic_vector(11 downto 0); -- Imaginary
+    -- OUT
+    COMPLEMENT_XK_RE : out std_logic_vector(15 downto 0);
+    COMPLEMENT_XK_IM : out std_logic_vector(15 downto 0);
+    FLOAT_XK_RE : out std_logic_vector(31 downto 0);
+    FLOAT_XK_IM : out std_logic_vector(31 downto 0)
+);
+end component;
+
+-- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 -- //
 -- //
 -- // MAIN ROUTINE
@@ -903,6 +929,32 @@ begin
 -- // DEBOUNCE
 -- //
 -- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+------------------------------------------------------------------------------------------------
+--
+--
+-- EXPERIMENTIAL
+--
+--
+------------------------------------------------------------------------------------------------
+SoftwareDefinedRadioWraper_module: SoftwareDefinedRadioWraper
+generic map
+(
+    CTRL => "0000"
+)
+port map
+(
+    CLOCK_250MHz => '0',
+    RESET => '0',
+    -- IN
+    ADC_12_BITS_I => (others => '0'),
+    ADC_12_BITS_Q => (others => '0'),
+    -- OUT
+    COMPLEMENT_XK_RE => open,
+    COMPLEMENT_XK_IM => open,
+    FLOAT_XK_RE => open,
+    FLOAT_XK_IM => open
+);
 
 ------------------------------------------------
 -- BUTTON_1
