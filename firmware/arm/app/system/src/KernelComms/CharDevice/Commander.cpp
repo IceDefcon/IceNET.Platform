@@ -28,7 +28,8 @@ m_customDmaSize(0),
 m_x(0),
 m_y(0),
 m_z(0),
-m_stateChanged(false)
+m_stateChanged(false),
+m_calibrationCount(0)
 {
     std::cout << "[INFO] [CONSTRUCTOR] " << this << " :: Instantiate Commander" << std::endl;
 
@@ -45,15 +46,15 @@ Commander::~Commander()
 
 void Commander::setupCommandMatrix()
 {
-    m_commandMatrix[CMD_DMA_NORMAL] = {0x04, 0xA1}; /* 0x04A1(ORAL) :: Reconfigure DMA Engine :: Normal Mode 4-Byte */
-    m_commandMatrix[CMD_DMA_SENSOR] = {0x5E, 0x50}; /* 0x5E50(SESO) :: Reconfigure DMA Engine :: Sensor Mode 12-Byte */
-    m_commandMatrix[CMD_DMA_SINGLE] = {0x51, 0x6E}; /* 0x516E(SIGE) :: Reconfigure DMA Engine :: Single Mode 1-Byte */
-    m_commandMatrix[CMD_DMA_CUSTOM] = {0xC5, 0x70}; /* 0xC570(CSTO) :: Reconfigure DMA Engine :: Custom Mode x-Byte */
+    m_commandMatrix[CMD_DMA_NORMAL] = {0x04, 0xA1}; /* 0x04A1(ORAL) :: Reconfigure Primary DMA Engine :: Normal Mode 4-Byte */
+    m_commandMatrix[CMD_DMA_SENSOR] = {0x5E, 0x50}; /* 0x5E50(SESO) :: Reconfigure Secondary DMA Engine :: Sensor Mode 12-Byte */
+    m_commandMatrix[CMD_DMA_SINGLE] = {0x51, 0x6E}; /* 0x516E(SIGE) :: Reconfigure Secondary DMA Engine :: Single Mode 1-Byte */
+    m_commandMatrix[CMD_DMA_CUSTOM] = {0xC5, 0x70}; /* 0xC570(CSTO) :: Reconfigure Secondary DMA Engine :: Custom Mode x-Byte */
     m_commandMatrix[CMD_RAMDISK_CONFIG] = {0xC0, 0xF1}; /* 0xC0F1(COFI) :: Activate DMA transfer to send IMU's config to FPGA */
     m_commandMatrix[CMD_RAMDISK_CLEAR]  = {0xC1, 0xEA}; /* 0xC1EA(CLEA) :: Clear DMA variables used for verification of IMU's config */
-    m_commandMatrix[CMD_DEBUG_ENABLE] = {0xDE, 0xBE}; /* 0xDEBE(DEBE) :: Enable debug in kernel space */
-    m_commandMatrix[CMD_DEBUG_DISABLE] = {0xDE, 0xBD}; /* 0xDEBD(DEBD) :: Disable debug in kernel space */
-    m_commandMatrix[CMD_FPGA_RESET] = {0x4E,0x5E}; /* 0x4E5E(RESE) :: Global Reset to FPGA */
+    m_commandMatrix[CMD_DEBUG_ENABLE]   = {0xDE, 0xBE}; /* 0xDEBE(DEBE) :: Enable debug in kernel space */
+    m_commandMatrix[CMD_DEBUG_DISABLE]  = {0xDE, 0xBD}; /* 0xDEBD(DEBD) :: Disable debug in kernel space */
+    m_commandMatrix[CMD_FPGA_RESET]     = {0x4E, 0x5E}; /* 0x4E5E(RESE) :: Global Reset to FPGA */
 }
 
 int Commander::openDEV()
@@ -246,7 +247,8 @@ int Commander::closeDEV()
         "IO_COM_WRITE_ONLY",
         "IO_COM_READ",
         "IO_COM_READ_ONLY",
-        "IO_COM_CALIBRATION",
+        "IO_COM_GET_CALIBRATION",
+        "IO_COM_SET_CALIBRATION",
     };
 
     if (state >= 0 && state < IO_AMOUNT)
@@ -330,7 +332,14 @@ int Commander::closeDEV()
                         (*m_Tx_CommanderVector)[i] = 0x00;
                     }
                 }
-                m_ioState = IO_COM_IDLE;
+                if(0 < m_calibrationCount)
+                {
+                    m_ioState = IO_COM_SET_CALIBRATION;
+                }
+                else
+                {
+                    m_ioState = IO_COM_IDLE;
+                }
                 break;
 
             case IO_COM_READ:
@@ -385,8 +394,9 @@ int Commander::closeDEV()
                 m_ioState = IO_COM_IDLE;
                 break;
 
-            case IO_COM_CALIBRATION:
+            case IO_COM_GET_CALIBRATION:
 
+                std::cout << "[ERNO] [CMD] Get Calibration offset" << std::endl;
                 ret = read(m_file_descriptor, m_Rx_CommanderVector->data(), IO_TRANSFER_SIZE);
 
                 if (ret == 6)
@@ -432,6 +442,66 @@ int Commander::closeDEV()
                     std::cout << "[ERNO] [CMD] Cannot read from kernel space" << std::endl;
                     m_ioState = IO_COM_IDLE;
                 }
+                break;
+
+            case IO_COM_SET_CALIBRATION:
+
+                offsetType* pOffset;
+                pOffset = getCalibrationOfset();
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+                if(0 == m_calibrationCount)
+                {
+                    std::cout << "[ERNO] [CMD] Set [x] offset" << std::endl;
+                    (*m_Tx_CommanderVector)[0] = 0x8A;
+                    (*m_Tx_CommanderVector)[1] = 0x11;
+                    (*m_Tx_CommanderVector)[2] = 0x71;
+                    (*m_Tx_CommanderVector)[3] = pOffset->x;
+                    (*m_Tx_CommanderVector)[4] = 0x00;
+                    (*m_Tx_CommanderVector)[5] = 0x00;
+                    (*m_Tx_CommanderVector)[6] = 0x00;
+                    (*m_Tx_CommanderVector)[7] = 0x00;
+
+                    m_calibrationCount = 1;
+                    m_ioState = IO_COM_WRITE_ONLY;
+                }
+                else if(1 == m_calibrationCount)
+                {
+                    std::cout << "[ERNO] [CMD] Set [y] offset" << std::endl;
+                    (*m_Tx_CommanderVector)[0] = 0x8A;
+                    (*m_Tx_CommanderVector)[1] = 0x11;
+                    (*m_Tx_CommanderVector)[2] = 0x72;
+                    (*m_Tx_CommanderVector)[3] = pOffset->y;
+                    (*m_Tx_CommanderVector)[4] = 0x00;
+                    (*m_Tx_CommanderVector)[5] = 0x00;
+                    (*m_Tx_CommanderVector)[6] = 0x00;
+                    (*m_Tx_CommanderVector)[7] = 0x00;
+
+                    m_calibrationCount = 2;
+                    m_ioState = IO_COM_WRITE_ONLY;
+                }
+                else if(2 == m_calibrationCount)
+                {
+                    std::cout << "[ERNO] [CMD] Set [z] offset" << std::endl;
+                    (*m_Tx_CommanderVector)[0] = 0x8A;
+                    (*m_Tx_CommanderVector)[1] = 0x11;
+                    (*m_Tx_CommanderVector)[2] = 0x73;
+                    (*m_Tx_CommanderVector)[3] = pOffset->z;
+                    (*m_Tx_CommanderVector)[4] = 0x00;
+                    (*m_Tx_CommanderVector)[5] = 0x00;
+                    (*m_Tx_CommanderVector)[6] = 0x00;
+                    (*m_Tx_CommanderVector)[7] = 0x00;
+
+                    m_calibrationCount = 0;;
+                    m_ioState = IO_COM_WRITE_ONLY;
+                }
+                else
+                {
+                    std::cout << "[ERNO] [CMD] Something wrong with calibration offset" << std::endl;
+                    m_calibrationCount = 0;;
+                    m_ioState = IO_COM_IDLE;
+                }
+
                 break;
 
             default:

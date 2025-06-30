@@ -857,9 +857,9 @@ void gui::setupCMD()
     };
     connect(idleButton, &QPushButton::clicked, this, idleMode);
 
-    QPushButton *calibButton = new QPushButton("CALIB", this);
-    calibButton->setGeometry(800 + w.xGap, w.yGap*4 + w.yUnit*4, w.xUnit*2, w.yUnit);
-    calibButton->setStyleSheet(
+    QPushButton *getCalibButton = new QPushButton("GET.CLB", this);
+    getCalibButton->setGeometry(800 + w.xGap, w.yGap*4 + w.yUnit*4, w.xUnit*2, w.yUnit);
+    getCalibButton->setStyleSheet(
         "QPushButton {"
         "   background-color: blue;"
         "   color: white;"
@@ -876,7 +876,7 @@ void gui::setupCMD()
         "}"
     );
 
-    auto calibrationMode = [this]()
+    auto getCalibrationMode = [this]()
     {
         if(NULL == m_instanceDroneControl)
         {
@@ -884,11 +884,44 @@ void gui::setupCMD()
         }
         else
         {
-            printToMainConsole("$ Set Commander State Machine -> IO_COM_CALIBRATION");
-            m_instanceDroneControl->setCommanderState(IO_COM_CALIBRATION);
+            printToMainConsole("$ Set Commander State Machine -> IO_COM_GET_CALIBRATION");
+            m_instanceDroneControl->setCommanderState(IO_COM_GET_CALIBRATION);
         }
     };
-    connect(calibButton, &QPushButton::clicked, this, calibrationMode);
+    connect(getCalibButton, &QPushButton::clicked, this, getCalibrationMode);
+
+    QPushButton *setCalibButton = new QPushButton("SET.CLB", this);
+    setCalibButton->setGeometry(800 + w.xGap*2 + w.xUnit*2, w.yGap*4 + w.yUnit*4, w.xUnit*2, w.yUnit);
+    setCalibButton->setStyleSheet(
+        "QPushButton {"
+        "   background-color: blue;"
+        "   color: white;"
+        "   font-size: 17px;"
+        "   font-weight: bold;"
+        "   border-radius: 10px;"
+        "   padding: 5px;"
+        "}"
+        "QPushButton:hover {"
+        "   background-color: darkblue;"
+        "}"
+        "QPushButton:pressed {"
+        "   background-color: black;"
+        "}"
+    );
+
+    auto setCalibrationMode = [this]()
+    {
+        if(NULL == m_instanceDroneControl)
+        {
+            printToMainConsole("$ Drone Control is Down");
+        }
+        else
+        {
+            printToMainConsole("$ Set Commander State Machine -> IO_COM_SET_CALIBRATION");
+            m_instanceDroneControl->setCommanderState(IO_COM_SET_CALIBRATION);
+        }
+    };
+    connect(setCalibButton, &QPushButton::clicked, this, setCalibrationMode);
 }
 
 void gui::setDeadCommand()
