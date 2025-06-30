@@ -7,6 +7,11 @@ entity SpiController is
 generic
 (
     SM_OFFSET : integer := 3;
+    ------------------------------------
+    -- All three generics must be set
+    -- to zero or non-zero values
+    -- to satisfy if-else statement
+    ------------------------------------
     BYTE_INIT : integer := 10;
     BYTE_BREAK : integer := 50;
     BYTE_EXIT : integer := 10
@@ -331,7 +336,11 @@ begin
                                     -- SM Offset taken into account
                                     -----------------------------------------
                                     if sm_flag = '1' then
-                                        sck_timer <= std_logic_vector(to_unsigned(SM_OFFSET, 4));
+                                        if BYTE_INIT = 0 and BYTE_BREAK = 0 and BYTE_EXIT = 0 then
+                                            sck_timer <= std_logic_vector(to_unsigned(SM_OFFSET, 4));
+                                        else
+                                            sck_timer <= (others => '0');
+                                        end if;
                                         sm_flag <= '0';
                                     else
                                         sck_timer <= (others => '0');
@@ -486,7 +495,11 @@ begin
                                     -- SM Offset taken into account
                                     -----------------------------------------
                                     if sm_flag = '1' then
-                                        sck_timer <= std_logic_vector(to_unsigned(SM_OFFSET, 4));
+                                        if BYTE_INIT = 0 and BYTE_BREAK = 0 and BYTE_EXIT = 0 then
+                                            sck_timer <= std_logic_vector(to_unsigned(SM_OFFSET, 4));
+                                        else
+                                            sck_timer <= (others => '0');
+                                        end if;
                                         sm_flag <= '0';
                                     else
                                         sck_timer <= (others => '0');
