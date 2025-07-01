@@ -65,7 +65,8 @@ typedef enum
     IO_COM_WRITE_ONLY,
     IO_COM_READ,
     IO_COM_READ_ONLY,
-    IO_COM_CALIBRATION,
+    IO_COM_GET_CALIBRATION,
+    IO_COM_SET_CALIBRATION,
     IO_AMOUNT
 } ioStateType;
 

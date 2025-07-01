@@ -52,5 +52,6 @@ public:
     void setFpgaAverageBuffer(int16_t xSample, int16_t ySample, int16_t zSample);
     void averageBuffer();
     void calibrationOfset();
+    offsetType* getCalibrationOfset();
     void clearBuffer();
 };

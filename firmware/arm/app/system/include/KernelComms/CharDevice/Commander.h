@@ -47,6 +47,7 @@ class Commander : public Measure
         std::mutex m_eventMutex;
         std::condition_variable m_conditionalVariable;
         bool m_stateChanged;
+        uint8_t m_calibrationCount;
 
     public:
         Commander();

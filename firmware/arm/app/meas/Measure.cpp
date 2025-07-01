@@ -139,6 +139,11 @@ void Measure::calibrationOfset()
             << static_cast<int32_t>(m_offset.z) << "]" << std::endl;
 }
 
+offsetType* Measure::getCalibrationOfset()
+{
+    return &m_offset;
+}
+
 void Measure::clearBuffer()
 {
     for (int i = 0; i < VECTOR_BUFFER_LENGTH; i++)
