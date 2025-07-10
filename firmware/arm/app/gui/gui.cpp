@@ -402,7 +402,12 @@ void gui::setupDroneControl()
         "   background-color: black;"
         "}"
     );
-    connect(connectButton, &QPushButton::clicked, this, &gui::createDroneControl);
+
+    auto executeConnect = [this]()
+    {
+        createDroneControl(INIT_MODE_CONFIG);
+    };
+    connect(connectButton, &QPushButton::clicked, this, executeConnect);
 
     QPushButton *terminateButton = new QPushButton("DELETE", this);
     terminateButton->setGeometry(800 - w.xGap*2 - w.xUnit*4, w.yGap*3 + w.yUnit*3, w.xUnit*2, w.yUnit);
@@ -423,6 +428,31 @@ void gui::setupDroneControl()
         "}"
     );
     connect(terminateButton, &QPushButton::clicked, this, &gui::deleteDroneControl);
+
+    QPushButton *skipButton = new QPushButton("SKIP", this);
+    skipButton->setGeometry(800 - w.xGap*2 - w.xUnit*4, w.yGap*4 + w.yUnit*4, w.xUnit*2, w.yUnit);
+    skipButton->setStyleSheet(
+        "QPushButton {"
+        "   background-color: purple;"
+        "   color: white;"
+        "   font-size: 17px;"
+        "   font-weight: bold;"
+        "   border-radius: 10px;"
+        "   padding: 5px;"
+        "}"
+        "QPushButton:hover {"
+        "   background-color: darkred;"
+        "}"
+        "QPushButton:pressed {"
+        "   background-color: black;"
+        "}"
+    );
+    auto executeSkip = [this]()
+    {
+        printToMainConsole("$ Skip Peripheral Configuration");
+        createDroneControl(INIT_MODE_SKIP);
+    };
+    connect(skipButton, &QPushButton::clicked, this, executeSkip);
 }
 
 void gui::setupSeparators()
@@ -1553,7 +1583,7 @@ void gui::printToUartConsole(const QString &message)
 // Resource Acquisition Is Initialisation
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void gui::createDroneControl()
+void gui::createDroneControl(InitMode mode)
 {
     if (!m_instanceDroneControl)
     {
@@ -1562,7 +1592,18 @@ void gui::createDroneControl()
         /* Configure Shared pointers for modified Observert */
         m_instanceDroneControl->setTransferPointers(m_Rx_GuiVector, m_Tx_GuiVector, m_IO_GuiState);
         /* Trigger configuration Event */
-        m_instanceDroneControl->setDroneCtrlState(DRONE_CTRL_INIT);
+        if (INIT_MODE_CONFIG == mode)
+        {
+            m_instanceDroneControl->setDroneCtrlState(DRONE_CTRL_INIT);
+        }
+        else if (INIT_MODE_SKIP == mode)
+        {
+            m_instanceDroneControl->setDroneCtrlState(DRONE_CTRL_SKIP);
+        }
+        else
+        {
+            std::cout << "[ERNO] [GUI] Bad mode @ Drone Control State Machine" << std::endl;
+        }
     }
     else
     {
