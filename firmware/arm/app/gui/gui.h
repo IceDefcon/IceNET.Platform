@@ -169,7 +169,7 @@ private slots:
     void printToMainConsole(const QString &message);
     void printToUartConsole(const QString &message);
 
-    void createDroneControl();
+    void createDroneControl(InitMode mode);
     void deleteDroneControl();
 
     void C1_Execute();

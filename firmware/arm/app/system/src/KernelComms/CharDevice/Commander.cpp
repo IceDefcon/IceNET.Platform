@@ -450,10 +450,30 @@ int Commander::closeDEV()
                 pOffset = getCalibrationOfset();
                 std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
+                //////////////////////////////////////////////////////////////////////////////
+                //
+                //  OFFLOAD_CTRL :: 8-bits
+                //
+                //  Dma config (Auto/Manual Config)
+                //      |
+                //      |        Device (I2C, SPI, PWM, INT)
+                //      |          ID
+                //      |  Vector  ||
+                //      |   ||||   ||
+                //      V   VVVV   VV
+                //    | x | xxxx | xx | x | << OFFLOAD_CTRL : std_logic_vector(7 downto 0)
+                //          ΛΛΛΛ        Λ
+                //          ||||        |
+                //          ||||        |
+                //          ||||        |
+                //       burst size    R/W (Read[0] Write[1])
+                //       (I2C, SPI)
+                //
+                //////////////////////////////////////////////////////////////////////////////
                 if(0 == m_calibrationCount)
                 {
                     std::cout << "[ERNO] [CMD] Set [x] offset" << std::endl;
-                    (*m_Tx_CommanderVector)[0] = 0x8A;
+                    (*m_Tx_CommanderVector)[0] = 0x8B;
                     (*m_Tx_CommanderVector)[1] = 0x11;
                     (*m_Tx_CommanderVector)[2] = 0x71;
                     (*m_Tx_CommanderVector)[3] = pOffset->x;
@@ -468,7 +488,7 @@ int Commander::closeDEV()
                 else if(1 == m_calibrationCount)
                 {
                     std::cout << "[ERNO] [CMD] Set [y] offset" << std::endl;
-                    (*m_Tx_CommanderVector)[0] = 0x8A;
+                    (*m_Tx_CommanderVector)[0] = 0x8B;
                     (*m_Tx_CommanderVector)[1] = 0x11;
                     (*m_Tx_CommanderVector)[2] = 0x72;
                     (*m_Tx_CommanderVector)[3] = pOffset->y;
@@ -483,7 +503,7 @@ int Commander::closeDEV()
                 else if(2 == m_calibrationCount)
                 {
                     std::cout << "[ERNO] [CMD] Set [z] offset" << std::endl;
-                    (*m_Tx_CommanderVector)[0] = 0x8A;
+                    (*m_Tx_CommanderVector)[0] = 0x8B;
                     (*m_Tx_CommanderVector)[1] = 0x11;
                     (*m_Tx_CommanderVector)[2] = 0x73;
                     (*m_Tx_CommanderVector)[3] = pOffset->z;

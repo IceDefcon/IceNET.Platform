@@ -73,6 +73,7 @@ typedef enum
 typedef enum
 {
     DRONE_CTRL_IDLE = 0,
+    DRONE_CTRL_SKIP,
     DRONE_CTRL_INIT,
     DRONE_CTRL_CONFIG,
     DRONE_CTRL_RAMDISK_PERIPHERALS,
@@ -89,6 +90,13 @@ typedef enum
    PWM_DOWN,
    PWM_AMOUNT
 }pwmType;
+
+typedef enum
+{
+   INIT_MODE_CONFIG,
+   INIT_MODE_SKIP,
+   INIT_MODE_AMOUNT
+}InitMode;
 
 inline void printHexBuffer(std::vector<char>* buffer)
 {

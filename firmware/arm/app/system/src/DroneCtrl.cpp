@@ -88,6 +88,7 @@ DroneCtrl::~DroneCtrl()
     static const std::array<std::string, DRONE_CTRL_AMOUNT> ctrlStateStrings =
     {
         "DRONE_CTRL_IDLE",
+        "DRONE_CTRL_SKIP",
         "DRONE_CTRL_INIT",
         "DRONE_CTRL_CONFIG",
         "DRONE_CTRL_RAMDISK_PERIPHERALS",
@@ -113,6 +114,24 @@ DroneCtrl::~DroneCtrl()
     triggerDroneControlEvent();
 }
 
+/* THREAD */ bool DroneCtrl::setKernelComms()
+{
+    m_isKernelConnected = (OK == initKernelComms()) ? true : false;
+    if(false == m_isKernelConnected)
+    {
+        std::cout << "[INFO] [ D ] Kernel Connection -> Failure" << std::endl;
+        m_ctrlState = DRONE_CTRL_IDLE;
+
+        return false;
+    }
+    else
+    {
+        std::cout << "[INFO] [ D ] Kernel Connection -> Success" << std::endl;
+    }
+
+    return true;
+}
+
 /* THREAD */ void DroneCtrl::DroneCtrlThread()
 {
     while (!m_threadKill)
@@ -129,18 +148,32 @@ DroneCtrl::~DroneCtrl()
                 waitDroneControlEvent();
                 break;
 
-            case DRONE_CTRL_INIT:
-                m_isKernelConnected = (OK == initKernelComms()) ? true : false;
-                if(false == m_isKernelConnected)
+            case DRONE_CTRL_SKIP:
+                std::cout << "[INFO] [ D ] Configuration Skipped :: Switch DMA into a Normal Mode" << std::endl;
+                if(false == setKernelComms())
                 {
-                    std::cout << "[INFO] [ D ] Kernel Connection -> Failure" << std::endl;
-                    m_ctrlState = DRONE_CTRL_IDLE;
                     break;
                 }
                 else
                 {
-                    std::cout << "[INFO] [ D ] Kernel Connection -> Success" << std::endl;
+                    /* ALL GOOD */
                 }
+
+
+                m_ctrlState = DRONE_CTRL_DMA_SINGLE;
+                break;
+
+            case DRONE_CTRL_INIT:
+                m_isKernelConnected = (OK == initKernelComms()) ? true : false;
+                if(false == setKernelComms())
+                {
+                    break;
+                }
+                else
+                {
+                    /* ALL GOOD */
+                }
+
                 m_ctrlState = DRONE_CTRL_CONFIG;
                 break;
 

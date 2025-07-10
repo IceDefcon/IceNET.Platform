@@ -40,6 +40,7 @@ class DroneCtrl : public KernelComms
         /* THREAD */ void shutdownThread();
         /* THREAD */ std::string getThreadStateMachineString(droneCtrlStateType state);
         /* THREAD */ void setDroneCtrlState(droneCtrlStateType state);
+        /* THREAD */ bool setKernelComms();
         /* THREAD */ void DroneCtrlThread();
 
         /* KERNEL */ int initKernelComms();

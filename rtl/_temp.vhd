@@ -48,5 +48,6 @@ begin
                     temp_state <= TEMP_IDLE;
             end case;
         end if;
-    end process interrupt_process;
+    end process;
+
 end architecture rtl;

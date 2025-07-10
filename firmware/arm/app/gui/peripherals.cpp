@@ -193,7 +193,8 @@ void gui::setupEXT()
     m_ext_Byte_2 = new QLineEdit(this);
     m_ext_Byte_2->setGeometry(800 + w->xGap*2 + w->xText, w->yGap*9 + w->yLogo*2 + w->yUnit*5, w->xUnit, w->yUnit);
     m_ext_Byte_2->setText("0x00");
+    m_ext_Byte_2->setDisabled(true);
     m_ext_writeTick = new QCheckBox("WR", this);
     m_ext_writeTick->setGeometry(800 + w->xGap*3 + w->xText + w->xUnit, w->yGap*9 + w->yLogo*2 + w->yUnit*5, w->xUnit, w->yUnit);
-    connect(m_ext_writeTick, &QCheckBox::toggled, m_spi_dataField, &QLineEdit::setEnabled);
+    connect(m_ext_writeTick, &QCheckBox::toggled, m_ext_Byte_2, &QLineEdit::setEnabled);
 }
