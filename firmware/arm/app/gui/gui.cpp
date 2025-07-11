@@ -1495,13 +1495,13 @@ void gui::openUart()
     connect(m_serialPort, &QSerialPort::readyRead, this, &gui::readUartData);
 }
 
+#if 1
 void gui::readUartData()
 {
     if (m_uartIsConnected && m_serialPort->isOpen())
     {
         m_readBuffer.append(m_serialPort->readAll());
 
-#if 1
         const int messageLength = 8;
         while (m_readBuffer.size() >= messageLength)
         {
@@ -1509,27 +1509,33 @@ void gui::readUartData()
             m_readBuffer.remove(0, messageLength);
 
             m_currentTime = QDateTime::currentDateTime().toString("HH:mm:ss");
-
             printToUartConsole("[" + m_currentTime + "] UART Rx: " + completeMessage);
         }
-#else
+        m_readBuffer.clear();
+    }
+}
+
+#else /* This is for GPS continous UART messages */
+void gui::readUartData()
+{
+    if (m_uartIsConnected && m_serialPort->isOpen())
+    {
+        m_readBuffer.append(m_serialPort->readAll());
         const QByteArray lineEnding = "\r\n";
         while (m_readBuffer.contains(lineEnding))
         {
             int lineEndIndex = m_readBuffer.indexOf(lineEnding);
-            QByteArray completeMessage = m_readBuffer.left(lineEndIndex);
 
-            // Remove the processed message from the buffer
+            QByteArray completeMessage = m_readBuffer.left(lineEndIndex);
             m_readBuffer.remove(0, lineEndIndex + lineEnding.size());
 
             m_currentTime = QDateTime::currentDateTime().toString("HH:mm:ss");
-
-            // Print the message without the line ending characters
             printToUartConsole("[" + m_currentTime + "] UART Rx: " + completeMessage);
         }
-#endif
+        m_readBuffer.clear();
     }
 }
+#endif
 
 void gui::writeToUart(const QString &data)
 {
