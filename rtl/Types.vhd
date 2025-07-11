@@ -15,6 +15,9 @@ package Types is
     )
     return UART_ASCII;
 
+    constant ASCII_R    : std_logic_vector(6 downto 0) := "1010010"; -- 0x52
+    constant ASCII_COLON: std_logic_vector(6 downto 0) := "0111010"; -- 0x3A
+
     constant ASCII_LF    : std_logic_vector(6 downto 0) := "0001010";
     constant ASCII_CR    : std_logic_vector(6 downto 0) := "0001100";
     constant ASCII_DOT   : std_logic_vector(6 downto 0) := "0101110";

@@ -442,7 +442,7 @@ begin
                             elsif byte_process_timer < BYTE_BREAK - SM_OFFSET + BYTE_INIT + BYTE_CLOCK + BYTE_EXIT + TRANSFER_EXIT then
                                 spi_status <= "1101"; -- Transfer Exit
                                 SINGLE_COMPLETE <= '1';
-                                SINGLE_DATA <= OFFLOAD_REGISTER;
+                                SINGLE_DATA <= OFFLOAD_DATA;
                             else
                                 spi_status <= "1111"; -- Going Back to CONFIG -> IDLE
                             end if;

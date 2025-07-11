@@ -5,10 +5,16 @@ use ieee.std_logic_unsigned.all;
 use work.Types.all;
 
 entity UartDataAssembly is
+generic
+(
+    UART_CTRL : std_logic := '1'
+);
 port
 (
     CLOCK_50MHz : in std_logic;
     RESET : in std_logic;
+
+    UART_LOG_TRIGGER : in std_logic;
 
     UART_LOG_MESSAGE_ID : in UART_LOG_ID;
     UART_LOG_MESSAGE_KEY : in UART_LOG_KEY;
@@ -58,23 +64,41 @@ begin
 
             case uart_state is
                 when ASSEMBLER_IDLE =>
-                    if delay_timer = "10111110101111000001111111" then
-                        delay_timer <= (others => '0');
-                        uart_state <= ASSEMBLER_INIT;
-                    else
-                        delay_timer <= delay_timer + '1';
+                    if UART_CTRL = '1' then
+                        if delay_timer = "10111110101111000001111111" then
+                            delay_timer <= (others => '0');
+                            uart_state <= ASSEMBLER_INIT;
+                        else
+                            delay_timer <= delay_timer + '1';
+                        end if;
+                    elsif UART_CTRL = '0' then
+                        if UART_LOG_TRIGGER = '1' then
+                            uart_state <= ASSEMBLER_INIT;
+                        end if;
                     end if;
 
                 when ASSEMBLER_INIT =>
-                    uart_tx(0) <= CONVERT_TO_ASCII(UART_LOG_MESSAGE_ID(0));
-                    uart_tx(1) <= CONVERT_TO_ASCII(UART_LOG_MESSAGE_ID(1));
-                    uart_tx(2) <= CONVERT_TO_ASCII(UART_LOG_MESSAGE_KEY(0));
-                    uart_tx(3) <= CONVERT_TO_ASCII(UART_LOG_MESSAGE_KEY(1));
-                    uart_tx(4) <= CONVERT_TO_ASCII(UART_LOG_MESSAGE_DATA(0));
-                    uart_tx(5) <= CONVERT_TO_ASCII(UART_LOG_MESSAGE_DATA(1));
-                    uart_tx(6) <= CONVERT_TO_ASCII(UART_LOG_MESSAGE_DATA(2));
-                    uart_tx(7) <= CONVERT_TO_ASCII(UART_LOG_MESSAGE_DATA(3));
-                    uart_state <= ASSEMBLER_CONFIG;
+                    if UART_CTRL = '1' then
+                        uart_tx(0) <= CONVERT_TO_ASCII(UART_LOG_MESSAGE_ID(0));
+                        uart_tx(1) <= CONVERT_TO_ASCII(UART_LOG_MESSAGE_ID(1));
+                        uart_tx(2) <= CONVERT_TO_ASCII(UART_LOG_MESSAGE_KEY(0));
+                        uart_tx(3) <= CONVERT_TO_ASCII(UART_LOG_MESSAGE_KEY(1));
+                        uart_tx(4) <= CONVERT_TO_ASCII(UART_LOG_MESSAGE_DATA(0));
+                        uart_tx(5) <= CONVERT_TO_ASCII(UART_LOG_MESSAGE_DATA(1));
+                        uart_tx(6) <= CONVERT_TO_ASCII(UART_LOG_MESSAGE_DATA(2));
+                        uart_tx(7) <= CONVERT_TO_ASCII(UART_LOG_MESSAGE_DATA(3));
+                        uart_state <= ASSEMBLER_CONFIG;
+                    elsif UART_CTRL = '0' then
+                        uart_tx(0) <= ASCII_R; -- "R"
+                        uart_tx(1) <= ASCII_COLON; -- ":"
+                        uart_tx(2) <= CONVERT_TO_ASCII(UART_LOG_MESSAGE_KEY(0));
+                        uart_tx(3) <= CONVERT_TO_ASCII(UART_LOG_MESSAGE_KEY(1));
+                        uart_tx(4) <= CONVERT_TO_ASCII("1101"); -- "D"
+                        uart_tx(5) <= ASCII_COLON; -- ":"
+                        uart_tx(6) <= CONVERT_TO_ASCII(UART_LOG_MESSAGE_DATA(2));
+                        uart_tx(7) <= CONVERT_TO_ASCII(UART_LOG_MESSAGE_DATA(3));
+                        uart_state <= ASSEMBLER_CONFIG;
+                    end if;
 
                 when ASSEMBLER_CONFIG =>
                     WRITE_ENABLE <= '0';
