@@ -149,7 +149,7 @@ DroneCtrl::~DroneCtrl()
                 break;
 
             case DRONE_CTRL_SKIP:
-                std::cout << "[INFO] [ D ] Configuration Skipped :: Switch DMA into a Normal Mode" << std::endl;
+                std::cout << "[INFO] [ D ] Skip Configuration :: Switch DMA into a Normal Mode" << std::endl;
                 if(false == setKernelComms())
                 {
                     break;
@@ -164,7 +164,7 @@ DroneCtrl::~DroneCtrl()
                 break;
 
             case DRONE_CTRL_INIT:
-                m_isKernelConnected = (OK == initKernelComms()) ? true : false;
+                std::cout << "[INFO] [ D ] Init Configuration :: Switch to Drone Control Config" << std::endl;
                 if(false == setKernelComms())
                 {
                     break;

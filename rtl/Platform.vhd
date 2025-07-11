@@ -316,10 +316,15 @@ signal data_pwm_feedback : std_logic_vector(7 downto 0) := "11000011";
 signal uart_write_enable : std_logic := '0';
 signal uart_write_symbol : std_logic_vector(6 downto 0) := (others => '0');
 signal uart_write_busy : std_logic := '0';
--- UART Test Log
+-- UART Log
 signal UART_LOG_MESSAGE_ID : UART_LOG_ID := ("1101", "1110"); -- 0xDE
 signal UART_LOG_MESSAGE_KEY : UART_LOG_KEY := ("1010", "1101"); -- 0xAD
 signal UART_LOG_MESSAGE_DATA : UART_LOG_DATA := ("1100", "0000", "1101", "1110"); -- 0xC0DE
+-- UART Test Log
+signal TEST_LOG_MESSAGE_ID : UART_LOG_ID := ("0000", "0000");
+signal TEST_LOG_MESSAGE_KEY : UART_LOG_KEY := ("0000", "0000");
+signal TEST_LOG_MESSAGE_DATA : UART_LOG_DATA := ("0000", "0000", "0000", "0000");
+
 -- Ram Test
 type TEST_STATE is
 (
@@ -374,8 +379,12 @@ signal ctrl_EXTERNAL_CS : std_logic := '0';
 signal ctrl_EXTERNAL_MISO : std_logic := '0';
 signal ctrl_EXTERNAL_MOSI : std_logic := '0';
 signal ctrl_EXTERNAL_SCLK : std_logic := '0';
--- Sensor ready
+-- External FPGA reset
 signal global_fpga_reset : std_logic := '0';
+-- Timed FPGA reset
+signal init_fpga_reset_counter : std_logic_vector(24 downto 0) := (others => '0');
+signal init_fpga_reset_stop : std_logic := '0';
+signal init_fpga_reset : std_logic := '1';
 -- Debounced interrupt signals
 signal s1_bmi160_int1_denoised : std_logic := '0';
 signal s1_bmi160_int2_denoised : std_logic := '0';
@@ -474,6 +483,9 @@ signal spi_external_burst_complete : std_logic := '0';
 signal spi_external_burst_data : std_logic_vector(7 downto 0) := (others => '0');
 signal spi_external_single_data : std_logic_vector(7 downto 0) := (others => '0');
 signal spi_external_offload_wait : std_logic := '0';
+
+signal uart_trigger_pulse : std_logic := '0';
+signal uart_trigger_stop : std_logic := '0';
 
 ----------------------------------------------------------------------------------------------------------------
 -- COMPONENTS DECLARATION
@@ -749,11 +761,16 @@ port
 end component;
 
 component UartDataAssembly
+generic
+(
+    UART_CTRL : std_logic := '1'
+);
 port
 (
     CLOCK_50MHz : in std_logic;
     RESET : in std_logic;
 
+    UART_LOG_TRIGGER : in std_logic;
     UART_LOG_MESSAGE_ID : in UART_LOG_ID;
     UART_LOG_MESSAGE_KEY : in UART_LOG_KEY;
     UART_LOG_MESSAGE_DATA : in UART_LOG_DATA;
@@ -916,9 +933,24 @@ begin
 
 -- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 -- //
--- // DEBOUNCE
+-- // TIMED INITIAL RESET
 -- //
 -- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+reset_process:
+process(CLOCK_50MHz)
+begin
+    if rising_edge(CLOCK_50MHz) then
+        if init_fpga_reset_stop = '0' and init_fpga_reset_counter <= "1011111010111100001000000" then
+            init_fpga_reset_counter <= init_fpga_reset_counter + '1';
+            init_fpga_reset <= '1';
+        else
+            init_fpga_reset <= '0';
+            init_fpga_reset_stop <= '1';
+            init_fpga_reset_counter <= (others => '0');
+        end if;
+    end if;
+end process;
 
 ------------------------------------------------------------------------------------------------
 --
@@ -935,7 +967,7 @@ generic map
 port map
 (
     CLOCK_250MHz => '0',
-    RESET => '0',
+    RESET => '0' or init_fpga_reset,
     -- IN
     ADC_12_BITS_I => (others => '0'),
     ADC_12_BITS_Q => (others => '0'),
@@ -945,6 +977,12 @@ port map
     FLOAT_XK_RE => open,
     FLOAT_XK_IM => open
 );
+
+-- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+-- //
+-- // DEBOUNCE
+-- //
+-- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 ------------------------------------------------
 -- BUTTON_1
@@ -958,7 +996,7 @@ generic map
 port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
-    RESET => global_fpga_reset,
+    RESET => global_fpga_reset or init_fpga_reset,
 
     BUTTON_IN => BUTTON_1,
     BUTTON_OUT => active_button_1
@@ -981,7 +1019,7 @@ generic map
 port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
-    RESET => global_fpga_reset,
+    RESET => global_fpga_reset or init_fpga_reset,
 
     ASYNC_INPUT => PRIMARY_MOSI,
     SYNC_OUTPUT => synced_PRIMARY_MOSI
@@ -995,7 +1033,7 @@ generic map
 port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
-    RESET => global_fpga_reset,
+    RESET => global_fpga_reset or init_fpga_reset,
 
     ASYNC_INPUT => PRIMARY_SCLK,
     SYNC_OUTPUT => synced_PRIMARY_SCLK
@@ -1009,7 +1047,7 @@ generic map
 port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
-    RESET => global_fpga_reset,
+    RESET => global_fpga_reset or init_fpga_reset,
 
     ASYNC_INPUT => PRIMARY_CS,
     SYNC_OUTPUT => synced_PRIMARY_CS
@@ -1026,7 +1064,7 @@ generic map
 port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
-    RESET => global_fpga_reset,
+    RESET => global_fpga_reset or init_fpga_reset,
 
     ASYNC_INPUT => SECONDARY_MOSI,
     SYNC_OUTPUT => synced_SECONDARY_MOSI
@@ -1040,7 +1078,7 @@ generic map
 port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
-    RESET => global_fpga_reset,
+    RESET => global_fpga_reset or init_fpga_reset,
 
     ASYNC_INPUT => SECONDARY_SCLK,
     SYNC_OUTPUT => synced_SECONDARY_SCLK
@@ -1054,7 +1092,7 @@ generic map
 port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
-    RESET => global_fpga_reset,
+    RESET => global_fpga_reset or init_fpga_reset,
 
     ASYNC_INPUT => SECONDARY_CS,
     SYNC_OUTPUT => synced_SECONDARY_CS
@@ -1071,7 +1109,7 @@ generic map
 port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
-    RESET => global_fpga_reset,
+    RESET => global_fpga_reset or init_fpga_reset,
 
     ASYNC_INPUT => FPGA_UART_RX,
     SYNC_OUTPUT => synced_FPGA_UART_RX
@@ -1085,7 +1123,7 @@ generic map
 port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
-    RESET => global_fpga_reset,
+    RESET => global_fpga_reset or init_fpga_reset,
 
     ASYNC_INPUT => GPS_UART_RX,
     SYNC_OUTPUT => synced_GPS_UART_RX
@@ -1104,7 +1142,7 @@ s1_int1_NoiseControl: NoiseController
 port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
-    RESET => global_fpga_reset,
+    RESET => global_fpga_reset or init_fpga_reset,
 
     INPUT_SIGNAL => S1_BMI160_INT_1,
     THRESHOLD => 5, -- 50ns
@@ -1119,7 +1157,7 @@ s1_int2_NoiseControl: NoiseController
 port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
-    RESET => global_fpga_reset,
+    RESET => global_fpga_reset or init_fpga_reset,
 
     INPUT_SIGNAL => S1_BMI160_INT_2,
     THRESHOLD => 5, -- 50ns
@@ -1134,7 +1172,7 @@ s2_int1_NoiseControl: NoiseController
 port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
-    RESET => global_fpga_reset,
+    RESET => global_fpga_reset or init_fpga_reset,
 
     INPUT_SIGNAL => S2_BMI160_INT_1,
     THRESHOLD => 5, -- 50ns
@@ -1149,7 +1187,7 @@ s2_int2_NoiseControl: NoiseController
 port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
-    RESET => global_fpga_reset,
+    RESET => global_fpga_reset or init_fpga_reset,
 
     INPUT_SIGNAL => S2_BMI160_INT_2,
     THRESHOLD => 5, -- 50ns
@@ -1174,7 +1212,7 @@ generic map
 port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
-    RESET => global_fpga_reset,
+    RESET => global_fpga_reset or init_fpga_reset,
 
     ENABLE_CONTROLLER => enable_vector_interrupt,
 
@@ -1193,7 +1231,7 @@ generic map
 port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
-    RESET => global_fpga_reset,
+    RESET => global_fpga_reset or init_fpga_reset,
 
     ENABLE_CONTROLLER => enable_vector_interrupt,
 
@@ -1212,7 +1250,7 @@ generic map
 port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
-    RESET => global_fpga_reset,
+    RESET => global_fpga_reset or init_fpga_reset,
 
     ENABLE_CONTROLLER => enable_vector_interrupt,
 
@@ -1231,7 +1269,7 @@ generic map
 port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
-    RESET => global_fpga_reset,
+    RESET => global_fpga_reset or init_fpga_reset,
 
     ENABLE_CONTROLLER => enable_vector_interrupt,
 
@@ -1250,7 +1288,7 @@ generic map
 port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
-    RESET => '0',
+    RESET => '0' or init_fpga_reset,
 
     ENABLE_CONTROLLER => '1',
 
@@ -1267,7 +1305,7 @@ port map
 primarySpiConverter_module: SpiConverter port map
 (
 	CLOCK => CLOCK_50MHz,
-    RESET => global_fpga_reset,
+    RESET => global_fpga_reset or init_fpga_reset,
 
 	CS => synced_PRIMARY_CS,
 	SCLK => synced_PRIMARY_SCLK, -- Kernel Master always initialise SPI transfer
@@ -1284,7 +1322,7 @@ primarySpiConverter_module: SpiConverter port map
 secondarySpiConverter_module: SpiConverter port map
 (
     CLOCK => CLOCK_50MHz,
-    RESET => global_fpga_reset,
+    RESET => global_fpga_reset or init_fpga_reset,
 
     CS => synced_SECONDARY_CS,
     SCLK => synced_SECONDARY_SCLK, -- Kernel Master always initialise SPI transfer
@@ -1314,7 +1352,7 @@ generic map
 port map
 (
 	CLOCK_50MHz => CLOCK_50MHz,
-    RESET => global_fpga_reset,
+    RESET => global_fpga_reset or init_fpga_reset,
 
 	INTERRUPT_SIGNAL => WDG_INT_FROM_FPGA,
     THRESHOLD => open
@@ -1330,7 +1368,7 @@ generic map
 port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
-    RESET => global_fpga_reset,
+    RESET => global_fpga_reset or init_fpga_reset,
 
     INTERRUPT_SIGNAL => TIMER_INT_FROM_FPGA,
     THRESHOLD => sheduler_timer_threshold
@@ -1352,7 +1390,7 @@ generic map
 port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
-    RESET => global_fpga_reset,
+    RESET => global_fpga_reset or init_fpga_reset,
     -- IN
     TRIGGER_LONG => i2c_complete_long
                     or pwm_m1_complete_long
@@ -1401,7 +1439,7 @@ InterruptVectorController_module: InterruptVectorController
 port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
-    RESET => global_fpga_reset,
+    RESET => global_fpga_reset or init_fpga_reset,
     -- IN
     PARALLEL_PRIMARY_MOSI => primary_parallel_MOSI,
     PARALLEL_CONVERSION_COMPLETE => primary_conversion_complete,
@@ -1446,7 +1484,7 @@ OffloadController_primary: OffloadController
 port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
-    RESET => global_fpga_reset,
+    RESET => global_fpga_reset or init_fpga_reset,
 
     OFFLOAD_INTERRUPT_EXT => external_offload_vector_interrupt,
     OFFLOAD_INTERRUPT => primary_offload_vector_interrupt,
@@ -1474,7 +1512,7 @@ port map
 PLL_RamClock_module: PLL_RamClock
 port map
 (
-    areset => '0',
+    areset => '0' or init_fpga_reset,
     inclk0 => CLOCK_50MHz,
     c0 => CLOCK_133MHz,
     c1 => CLK_SDRAM, -- 133MHz Shifted by 180°
@@ -1614,11 +1652,56 @@ port map
 -- //                   //
 -- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+short_process:
+process(CLOCK_50MHz)
+begin
+    if rising_edge(CLOCK_50MHz) then
+        if spi_bmi160_s1_complete_long = '1' and uart_trigger_stop = '0' then
+            uart_trigger_pulse <= '1';
+            uart_trigger_stop <= '1';
+        elsif spi_bmi160_s1_complete_long = '1' and uart_trigger_stop = '1' then
+            uart_trigger_pulse <= '0';
+        else
+            uart_trigger_stop <= '0';
+        end if;
+    end if;
+end process;
+
+TEST_LOG_MESSAGE_ID(0) <= "0000";
+TEST_LOG_MESSAGE_ID(1) <= "0000";
+TEST_LOG_MESSAGE_KEY(0) <= "0" & primary_offload_register(6 downto 4);
+TEST_LOG_MESSAGE_KEY(1) <= primary_offload_register(3 downto 0);
+TEST_LOG_MESSAGE_DATA(0) <= "0000";
+TEST_LOG_MESSAGE_DATA(1) <= "0000";
+TEST_LOG_MESSAGE_DATA(2) <= data_spi_bmi160_s1_feedback(7 downto 4);
+TEST_LOG_MESSAGE_DATA(3) <= data_spi_bmi160_s1_feedback(3 downto 0);
+
+UartDataAssembly_module: UartDataAssembly
+generic map
+(
+    UART_CTRL => '0'
+)
+port map
+(
+    CLOCK_50MHz => CLOCK_50MHz,
+    RESET => global_fpga_reset or init_fpga_reset,
+
+    UART_LOG_TRIGGER => uart_trigger_pulse,
+    UART_LOG_MESSAGE_ID => TEST_LOG_MESSAGE_ID,
+    UART_LOG_MESSAGE_KEY => TEST_LOG_MESSAGE_KEY,
+    UART_LOG_MESSAGE_DATA => TEST_LOG_MESSAGE_DATA,
+
+    WRITE_ENABLE => uart_write_enable,
+    WRITE_SYMBOL => uart_write_symbol,
+
+    WRITE_BUSY => uart_write_busy
+);
+
 UartDataTransfer_module: UartDataTransfer
 port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
-    RESET => global_fpga_reset,
+    RESET => global_fpga_reset or init_fpga_reset,
 
     WRITE_ENABLE => uart_write_enable,
     WRITE_SYMBOL => uart_write_symbol,
@@ -1631,22 +1714,6 @@ port map
 
 --FPGA_UART_TX <=  synced_GPS_UART_RX;
 --GPS_UART_TX <= synced_FPGA_UART_RX;
-
-UartDataAssembly_module: UartDataAssembly
-port map
-(
-    CLOCK_50MHz => CLOCK_50MHz,
-    RESET => global_fpga_reset,
-
-    UART_LOG_MESSAGE_ID => UART_LOG_MESSAGE_ID,
-    UART_LOG_MESSAGE_KEY => UART_LOG_MESSAGE_KEY,
-    UART_LOG_MESSAGE_DATA => UART_LOG_MESSAGE_DATA,
-
-    WRITE_ENABLE => uart_write_enable,
-    WRITE_SYMBOL => uart_write_symbol,
-
-    WRITE_BUSY => uart_write_busy
-);
 
 -- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 -- //                               //
@@ -1761,7 +1828,7 @@ end process;
 i2c_Bus_primary: I2cController port map
 (
     CLOCK => CLOCK_50MHz,
-    RESET => global_fpga_reset,
+    RESET => global_fpga_reset or init_fpga_reset,
     -- in
     OFFLOAD_TRIGGER => trigger_i2c, -- i2c transfer ready to begin
     -- in
@@ -1793,7 +1860,7 @@ generic map
 port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
-    RESET => global_fpga_reset,
+    RESET => global_fpga_reset or init_fpga_reset,
     EXTERN => '0',
     -- IN
     OFFLOAD_TRIGGER => trigger_bmi160_s1,
@@ -1825,7 +1892,7 @@ generic map
 port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
-    RESET => global_fpga_reset,
+    RESET => global_fpga_reset or init_fpga_reset,
     EXTERN => '0',
     -- IN
     OFFLOAD_TRIGGER => trigger_bmi160_s2,
@@ -1862,7 +1929,7 @@ generic map
 port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
-    RESET => global_fpga_reset,
+    RESET => global_fpga_reset or init_fpga_reset,
     EXTERN => '1',
     -- IN
     OFFLOAD_TRIGGER => trigger_external_spi or trigger_vector_interrupt,
@@ -1894,7 +1961,7 @@ generic map
 port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
-    RESET => global_fpga_reset,
+    RESET => global_fpga_reset or init_fpga_reset,
     EXTERN => '0',
     -- IN
     OFFLOAD_TRIGGER => trigger_nRF905,
@@ -1933,7 +2000,7 @@ primary_offload_wait <= primary_offload_wait_i2c or primary_offload_wait_spi_s1 
 BMI160_S1_acceleration: SpiController port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
-    RESET => global_fpga_reset,
+    RESET => global_fpga_reset or init_fpga_reset,
     EXTERN => '0',
     -- IN
     OFFLOAD_TRIGGER => acceleration_trigger_bmi160_s1,
@@ -2160,7 +2227,7 @@ generic map
 port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
-    RESET => global_fpga_reset,
+    RESET => global_fpga_reset or init_fpga_reset,
 
     TRIGGER => acceleration_offload_trigger,
     DIVIDENT => acceleration_offload_divident_x,
@@ -2179,7 +2246,7 @@ generic map
 port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
-    RESET => global_fpga_reset,
+    RESET => global_fpga_reset or init_fpga_reset,
 
     TRIGGER => acceleration_offload_trigger,
     DIVIDENT => acceleration_offload_divident_y,
@@ -2198,7 +2265,7 @@ generic map
 port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
-    RESET => global_fpga_reset,
+    RESET => global_fpga_reset or init_fpga_reset,
 
     TRIGGER => acceleration_offload_trigger,
     DIVIDENT => acceleration_offload_divident_z,
@@ -2232,7 +2299,7 @@ MainSecondary_DmaOffloadController: DmaOffloadController
 port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
-    RESET => global_fpga_reset,
+    RESET => global_fpga_reset or init_fpga_reset,
     -- In
     OFFLOAD_INTERRUPT => acceleration_offload_dma_trigger,
     OFFLOAD_BIT_COUNT => sensor_fifo_bit_count, -- When BIT(8)
@@ -2324,7 +2391,7 @@ port map
 (
     -- IN
     CLOCK_50MHz => CLOCK_50MHz,
-    RESET => global_fpga_reset,
+    RESET => global_fpga_reset or init_fpga_reset,
 
     OFFLOAD_TRIGGER => trigger_pwm_m1,
     FPGA_INT => pwm_m1_complete_long,
@@ -2400,7 +2467,7 @@ port map
 --
 ------------------------------------------------------------------------------------------------------------------------------------------
 
-LED_1 <= '0';
+LED_1 <= init_fpga_reset;
 LED_2 <= '1';
 LED_3 <= '1';
 LED_4 <= '1';
