@@ -3,32 +3,40 @@ use ieee.numeric_std.all;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.all;
 
-entity Temp is
-generic
+entity TempProcess is
+port
 (
-    PERIOD : integer := 20;
-    LENGTH : integer := 16
-);
-Port
-(
-    CLOCK_50MHz : in  std_logic;
-    RESET : in  std_logic;
+    CLOCK_50MHz : in std_logic;
+    RESET : in std_logic;
 
-    INTERRUPT_SIGNAL : out std_logic
+    PROESS_IN : in std_logic;
+    PROESS_OUT : out std_logic
 );
-end entity Temp;
+end TempProcess;
 
-architecture rtl of Temp is
+architecture rtl of TempProcess is
 
-type TEMP_SM is
-(
-    TEMP_IDLE,
-    TEMP_PRODUCE,
-    TEMP_DONE
-);
-signal temp_state: TEMP_SM := TEMP_IDLE;
+------------------------------------------------------------------------------------------------------------
+-- Signals
+------------------------------------------------------------------------------------------------------------
+
+    type TEMP_SM is
+    (
+        TEMP_IDLE,
+        TEMP_PRODUCE,
+        TEMP_DONE
+    );
+    signal temp_state: TEMP_SM := TEMP_IDLE;
+
+------------------------------------------------------------------------------------------------------------
+-- Components
+------------------------------------------------------------------------------------------------------------
 
 begin
+
+------------------------------------------------------------------------------------------------------------
+-- Main Routine
+------------------------------------------------------------------------------------------------------------
 
     temp_process:
     process(CLOCK_50MHz)
@@ -50,4 +58,5 @@ begin
         end if;
     end process;
 
-end architecture rtl;
+
+end architecture;
