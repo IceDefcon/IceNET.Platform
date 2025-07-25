@@ -56,7 +56,7 @@ static int watchdogThread(void *data)
     {
         watchdog_spinLockCtrl(CTRL_LOCK);
 
-#if 0 /* Hack :: If Fpga is not flashed */
+#if 1 /* Hack :: If Fpga is not flashed */
         Process.indicatorCurrent++;
 #endif
         watchdogData = getCharDeviceTransfer(DEVICE_WATCHDOG);

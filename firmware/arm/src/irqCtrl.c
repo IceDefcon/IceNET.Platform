@@ -71,6 +71,18 @@ static gpioOutputProcessType gpioOutputProcess[GPIO_OUT_AMOUNT] =
     {
         .gpioName = "FpgaResetGPIO",
         .gpioNumber = GPIO_NUMBER_RESET_FPGA,
+    },
+
+    [GPIO_OUT_OFFLOAD] =
+    {
+        .gpioName = "DebugOffload",
+        .gpioNumber = GPIO_NUMBER_OFFLOAD,
+    },
+
+    [GPIO_OUT_TRIGGER] =
+    {
+        .gpioName = "DebugTrigger",
+        .gpioNumber = GPIO_NUMBER_TRIGGER,
     }
 };
 
@@ -145,25 +157,25 @@ static int initializeInterruptFromCPU(outputGpioType outGpio)
 {
     int ret;
 
-    ret = gpio_request(gpioOutputProcess[GPIO_OUT_RESET_FPGA].gpioNumber, gpioOutputProcess[GPIO_OUT_RESET_FPGA].gpioName);
+    ret = gpio_request(gpioOutputProcess[outGpio].gpioNumber, gpioOutputProcess[outGpio].gpioName);
     if (ret < 0)
     {
-        printk(KERN_ERR "[INIT][ISR] Failed GPIO Request :: Pin [%d]\n", gpioOutputProcess[GPIO_OUT_RESET_FPGA].gpioNumber);
+        printk(KERN_ERR "[INIT][ISR] Failed GPIO Request :: Pin [%d]\n", gpioOutputProcess[outGpio].gpioNumber);
     }
     else
     {
-        printk(KERN_ERR "[INIT][ISR] Setup GPIO Pin [%d] Request\n", gpioOutputProcess[GPIO_OUT_RESET_FPGA].gpioNumber);
+        printk(KERN_ERR "[INIT][ISR] Setup GPIO Pin [%d] Request\n", gpioOutputProcess[outGpio].gpioNumber);
     }
 
-    ret = gpio_direction_output(gpioOutputProcess[GPIO_OUT_RESET_FPGA].gpioNumber, 0);
+    ret = gpio_direction_output(gpioOutputProcess[outGpio].gpioNumber, 0);
     if (ret < 0)
     {
-        printk(KERN_ERR "[INIT][ISR] Failed to set GPIO direction :: Pin [%d]\n", gpioOutputProcess[GPIO_OUT_RESET_FPGA].gpioNumber);
-        gpio_free(gpioOutputProcess[GPIO_OUT_RESET_FPGA].gpioNumber);
+        printk(KERN_ERR "[INIT][ISR] Failed to set GPIO direction :: Pin [%d]\n", gpioOutputProcess[outGpio].gpioNumber);
+        gpio_free(gpioOutputProcess[outGpio].gpioNumber);
     }
     else
     {
-        printk(KERN_ERR "[INIT][ISR] Setup GPIO Pin [%d] Output\n", gpioOutputProcess[GPIO_OUT_RESET_FPGA].gpioNumber);
+        printk(KERN_ERR "[INIT][ISR] Setup GPIO Pin [%d] Output\n", gpioOutputProcess[outGpio].gpioNumber);
     }
 
     return ret;
@@ -246,10 +258,14 @@ void isrGpioInit(void)
     (void)initializeInterruptFromFpga(GPIO_IN_SCHEDULER_TIMER);
     (void)initializeInterruptFromFpga(GPIO_IN_WATCHDOG_TICK);
     (void)initializeInterruptFromCPU(GPIO_OUT_RESET_FPGA);
+    (void)initializeInterruptFromCPU(GPIO_OUT_OFFLOAD);
+    (void)initializeInterruptFromCPU(GPIO_OUT_TRIGGER);
 }
 
 void isrGpioDestroy(void)
 {
+    destroyInterruptFromCPU(GPIO_OUT_TRIGGER);
+    destroyInterruptFromCPU(GPIO_OUT_OFFLOAD);
     destroyInterruptFromCPU(GPIO_OUT_RESET_FPGA);
     destroyInterruptFromFPGA(GPIO_IN_ACTIVATE_SECONDARY_DMA);
     destroyInterruptFromFPGA(GPIO_IN_SCHEDULER_TIMER);
