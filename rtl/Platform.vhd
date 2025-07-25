@@ -1652,14 +1652,38 @@ port map
 -- //                   //
 -- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+--short_process:
+--process(CLOCK_50MHz)
+--begin
+--    if rising_edge(CLOCK_50MHz) then
+--        if spi_bmi160_s1_complete_long = '1' and uart_trigger_stop = '0' then
+--            uart_trigger_pulse <= '1';
+--            uart_trigger_stop <= '1';
+--        elsif spi_bmi160_s1_complete_long = '1' and uart_trigger_stop = '1' then
+--            uart_trigger_pulse <= '0';
+--        else
+--            uart_trigger_stop <= '0';
+--        end if;
+--    end if;
+--end process;
+
+--TEST_LOG_MESSAGE_ID(0) <= "0000";
+--TEST_LOG_MESSAGE_ID(1) <= "0000";
+--TEST_LOG_MESSAGE_KEY(0) <= "0" & primary_offload_register(6 downto 4);
+--TEST_LOG_MESSAGE_KEY(1) <= primary_offload_register(3 downto 0);
+--TEST_LOG_MESSAGE_DATA(0) <= "0000";
+--TEST_LOG_MESSAGE_DATA(1) <= "0000";
+--TEST_LOG_MESSAGE_DATA(2) <= data_spi_bmi160_s1_feedback(7 downto 4);
+--TEST_LOG_MESSAGE_DATA(3) <= data_spi_bmi160_s1_feedback(3 downto 0);
+
 short_process:
 process(CLOCK_50MHz)
 begin
     if rising_edge(CLOCK_50MHz) then
-        if spi_bmi160_s1_complete_long = '1' and uart_trigger_stop = '0' then
+        if spi_external_single_complete = '1' and uart_trigger_stop = '0' then
             uart_trigger_pulse <= '1';
             uart_trigger_stop <= '1';
-        elsif spi_bmi160_s1_complete_long = '1' and uart_trigger_stop = '1' then
+        elsif spi_external_single_complete = '1' and uart_trigger_stop = '1' then
             uart_trigger_pulse <= '0';
         else
             uart_trigger_stop <= '0';
@@ -1673,8 +1697,8 @@ TEST_LOG_MESSAGE_KEY(0) <= "0" & primary_offload_register(6 downto 4);
 TEST_LOG_MESSAGE_KEY(1) <= primary_offload_register(3 downto 0);
 TEST_LOG_MESSAGE_DATA(0) <= "0000";
 TEST_LOG_MESSAGE_DATA(1) <= "0000";
-TEST_LOG_MESSAGE_DATA(2) <= data_spi_bmi160_s1_feedback(7 downto 4);
-TEST_LOG_MESSAGE_DATA(3) <= data_spi_bmi160_s1_feedback(3 downto 0);
+TEST_LOG_MESSAGE_DATA(2) <= spi_external_single_data(7 downto 4);
+TEST_LOG_MESSAGE_DATA(3) <= spi_external_single_data(3 downto 0);
 
 UartDataAssembly_module: UartDataAssembly
 generic map
