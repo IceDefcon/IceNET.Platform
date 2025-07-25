@@ -577,7 +577,7 @@ void gui::setupAdditionalDebugs()
     };
     connect(f0Button, &QPushButton::clicked, this, executeF0);
 
-    QPushButton *f1Button = new QPushButton("F1.CTL this);
+    QPushButton *f1Button = new QPushButton("F1.CTL", this);
     f1Button->setGeometry(w.xGap*7 + w.xText + w.xUnit*6, w.yGap*2 + w.yLogo, w.xUnit*2, w.yUnit);
     f1Button->setStyleSheet(
         "QPushButton {"
