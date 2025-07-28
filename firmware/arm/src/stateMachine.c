@@ -181,6 +181,20 @@ static int stateMachineThread(void *data)
                 setStateMachine(SM_DONE);
                 break;
 
+            case SM_FPGA_OFFLOAD:
+                printk(KERN_INFO "[CTRL][STM] Debug Offload mode\n");
+                gpio_set_value(GPIO_NUMBER_OFFLOAD, 1);
+                gpio_set_value(GPIO_NUMBER_OFFLOAD, 0);
+                setStateMachine(SM_DONE);
+                break;
+
+            case SM_FPGA_TRIGGER:
+                printk(KERN_INFO "[CTRL][STM] Debug Trigger mode\n");
+                gpio_set_value(GPIO_NUMBER_TRIGGER, 1);
+                gpio_set_value(GPIO_NUMBER_TRIGGER, 0);
+                setStateMachine(SM_DONE);
+                break;
+
             case SM_SENSOR_CONFIG_DONE:
                 if(isConfigDone())
                 {

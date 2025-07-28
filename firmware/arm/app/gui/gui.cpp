@@ -577,7 +577,7 @@ void gui::setupAdditionalDebugs()
     };
     connect(f0Button, &QPushButton::clicked, this, executeF0);
 
-    QPushButton *f1Button = new QPushButton("F1", this);
+    QPushButton *f1Button = new QPushButton("F1.CTL", this);
     f1Button->setGeometry(w.xGap*7 + w.xText + w.xUnit*6, w.yGap*2 + w.yLogo, w.xUnit*2, w.yUnit);
     f1Button->setStyleSheet(
         "QPushButton {"
@@ -604,13 +604,13 @@ void gui::setupAdditionalDebugs()
         }
         else
         {
-            printToMainConsole("$ F1 Test Vector");
-            interruptVector_execute(VECTOR_F1);
+            printToMainConsole("$ F1 Debug Offload");
+            m_instanceDroneControl->sendCommand(CMD_DEBUG_OFFLOAD);
         }
     };
     connect(f1Button, &QPushButton::clicked, this, executeF1);
 
-    QPushButton *f2Button = new QPushButton("F2", this);
+    QPushButton *f2Button = new QPushButton("F2.CTL", this);
     f2Button->setGeometry(w.xGap*7 + w.xText + w.xUnit*6, w.yGap*3 + w.yLogo + w.yUnit, w.xUnit*2, w.yUnit);
     f2Button->setStyleSheet(
         "QPushButton {"
@@ -637,8 +637,8 @@ void gui::setupAdditionalDebugs()
         }
         else
         {
-            printToMainConsole("$ F2 Test Vector");
-            interruptVector_execute(VECTOR_F2);
+            printToMainConsole("$ F2 Debug Trigger");
+            m_instanceDroneControl->sendCommand(CMD_DEBUG_TRIGGER);
         }
     };
     connect(f2Button, &QPushButton::clicked, this, executeF2);
@@ -1083,6 +1083,8 @@ std::string gui::cmdToString(commandType cmd)
         case CMD_DEBUG_ENABLE:  return "CMD_DEBUG_ENABLE";
         case CMD_DEBUG_DISABLE: return "CMD_DEBUG_DISABLE";
         case CMD_FPGA_RESET:    return "CMD_FPGA_RESET";
+        case CMD_DEBUG_OFFLOAD: return "CMD_DEBUG_OFFLOAD";
+        case CMD_DEBUG_TRIGGER: return "CMD_DEBUG_TRIGGER";
         default:                return "UNKNOWN_CMD";
     }
 }

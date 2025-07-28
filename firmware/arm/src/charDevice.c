@@ -340,6 +340,16 @@ static ssize_t commanderWrite(struct file *filep, const char __user *buffer, siz
         printk(KERN_INFO "[CTRL][ C ] Reset everything in FPGA :: Global Discharge\n");
         setStateMachine(SM_FPGA_RESET);
     }
+    else if (Device[DEVICE_COMMANDER].io_transfer.RxData[0] == 0x10 && Device[DEVICE_COMMANDER].io_transfer.RxData[1] == 0x4D)
+    {
+        printk(KERN_INFO "[CTRL][ C ] Debug Offload in FPGA\n");
+        setStateMachine(SM_FPGA_OFFLOAD);
+    }
+    else if (Device[DEVICE_COMMANDER].io_transfer.RxData[0] == 0x71 && Device[DEVICE_COMMANDER].io_transfer.RxData[1] == 0x5E)
+    {
+        printk(KERN_INFO "[CTRL][ C ] Debug Trigger in FPGA\n");
+        setStateMachine(SM_FPGA_TRIGGER);
+    }
     else
     {
         printk(KERN_INFO "[CTRL][ C ] Data Received: \n");
