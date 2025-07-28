@@ -605,7 +605,7 @@ void gui::setupAdditionalDebugs()
         else
         {
             printToMainConsole("$ F1 Debug Offload");
-            m_instanceDroneControl->sendCommand(CMD_DEBUG_OFFLOAD);
+            m_instanceDroneControl->sendCommand(CMD_DEBUG_F1);
         }
     };
     connect(f1Button, &QPushButton::clicked, this, executeF1);
@@ -638,7 +638,7 @@ void gui::setupAdditionalDebugs()
         else
         {
             printToMainConsole("$ F2 Debug Trigger");
-            m_instanceDroneControl->sendCommand(CMD_DEBUG_TRIGGER);
+            m_instanceDroneControl->sendCommand(CMD_DEBUG_F2);
         }
     };
     connect(f2Button, &QPushButton::clicked, this, executeF2);
@@ -1083,8 +1083,8 @@ std::string gui::cmdToString(commandType cmd)
         case CMD_DEBUG_ENABLE:  return "CMD_DEBUG_ENABLE";
         case CMD_DEBUG_DISABLE: return "CMD_DEBUG_DISABLE";
         case CMD_FPGA_RESET:    return "CMD_FPGA_RESET";
-        case CMD_DEBUG_OFFLOAD: return "CMD_DEBUG_OFFLOAD";
-        case CMD_DEBUG_TRIGGER: return "CMD_DEBUG_TRIGGER";
+        case CMD_DEBUG_F1:      return "CMD_DEBUG_F1";
+        case CMD_DEBUG_F2:      return "CMD_DEBUG_F2";
         default:                return "UNKNOWN_CMD";
     }
 }
