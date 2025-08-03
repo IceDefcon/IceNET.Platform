@@ -9,7 +9,7 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 set(CMAKE_AUTOMOC ON)
 
-find_package(Qt5 REQUIRED COMPONENTS Core Gui Widgets Network)
+find_package(Qt5 REQUIRED COMPONENTS Core Gui Widgets Network SerialPort)
 
 find_package(OpenCV REQUIRED)
 
@@ -47,6 +47,7 @@ target_link_libraries(mainControl PRIVATE
     Qt5::Gui
     Qt5::Widgets
     Qt5::Network
+    Qt5::SerialPort
     ${OpenCV_LIBS}
     ${GSTREAMER_LIBRARIES}
 )
