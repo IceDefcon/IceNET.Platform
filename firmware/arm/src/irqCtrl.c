@@ -73,16 +73,16 @@ static gpioOutputProcessType gpioOutputProcess[GPIO_OUT_AMOUNT] =
         .gpioNumber = GPIO_NUMBER_RESET_FPGA,
     },
 
-    [GPIO_OUT_OFFLOAD] =
+    [GPIO_OUT_F1] =
     {
-        .gpioName = "DebugOffload",
-        .gpioNumber = GPIO_NUMBER_OFFLOAD,
+        .gpioName = "DebugF1",
+        .gpioNumber = GPIO_NUMBER_F1,
     },
 
-    [GPIO_OUT_TRIGGER] =
+    [GPIO_OUT_F2] =
     {
-        .gpioName = "DebugTrigger",
-        .gpioNumber = GPIO_NUMBER_TRIGGER,
+        .gpioName = "DebugF2",
+        .gpioNumber = GPIO_NUMBER_F2,
     }
 };
 
@@ -258,14 +258,14 @@ void isrGpioInit(void)
     (void)initializeInterruptFromFpga(GPIO_IN_SCHEDULER_TIMER);
     (void)initializeInterruptFromFpga(GPIO_IN_WATCHDOG_TICK);
     (void)initializeInterruptFromCPU(GPIO_OUT_RESET_FPGA);
-    (void)initializeInterruptFromCPU(GPIO_OUT_OFFLOAD);
-    (void)initializeInterruptFromCPU(GPIO_OUT_TRIGGER);
+    (void)initializeInterruptFromCPU(GPIO_OUT_F1);
+    (void)initializeInterruptFromCPU(GPIO_OUT_F2);
 }
 
 void isrGpioDestroy(void)
 {
-    destroyInterruptFromCPU(GPIO_OUT_TRIGGER);
-    destroyInterruptFromCPU(GPIO_OUT_OFFLOAD);
+    destroyInterruptFromCPU(GPIO_OUT_F2);
+    destroyInterruptFromCPU(GPIO_OUT_F1);
     destroyInterruptFromCPU(GPIO_OUT_RESET_FPGA);
     destroyInterruptFromFPGA(GPIO_IN_ACTIVATE_SECONDARY_DMA);
     destroyInterruptFromFPGA(GPIO_IN_SCHEDULER_TIMER);

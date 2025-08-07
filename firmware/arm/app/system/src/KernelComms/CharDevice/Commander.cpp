@@ -55,8 +55,8 @@ void Commander::setupCommandMatrix()
     m_commandMatrix[CMD_DEBUG_ENABLE]   = {0xDE, 0xBE}; /* 0xDEBE(DEBE) :: Enable debug in kernel space */
     m_commandMatrix[CMD_DEBUG_DISABLE]  = {0xDE, 0xBD}; /* 0xDEBD(DEBD) :: Disable debug in kernel space */
     m_commandMatrix[CMD_FPGA_RESET]     = {0x4E, 0x5E}; /* 0x4E5E(RESE) :: Global Reset to FPGA */
-    m_commandMatrix[CMD_DEBUG_OFFLOAD]  = {0x10, 0x4D}; /* 0x104D(LOAD) :: Debug Offload */
-    m_commandMatrix[CMD_DEBUG_TRIGGER]  = {0x71, 0x5E}; /* 0x715E(TIGE) :: Debug Trigger */
+    m_commandMatrix[CMD_DEBUG_F1] = {0xF1, 0xC7}; /* 0xF1C7(F1CT) :: F1 Debug Control */
+    m_commandMatrix[CMD_DEBUG_F2] = {0xF2, 0xC7}; /* 0xF2C7(F2CT) :: F2 Debug Control */
 }
 
 int Commander::openDEV()
@@ -126,8 +126,8 @@ std::string Commander::commandToString(commandType cmd)
         "CMD_DEBUG_ENABLE",
         "CMD_DEBUG_DISABLE",
         "CMD_FPGA_RESET",
-        "CMD_DEBUG_OFFLOAD",
-        "CMD_DEBUG_TRIGGER",
+        "CMD_DEBUG_F1",
+        "CMD_DEBUG_F2"
     };
 
     if (cmd >= 0 && cmd < CMD_AMOUNT)

@@ -94,6 +94,32 @@ void gui::setupMainConsole()
 
 void gui::setupUartConsole()
 {
+    QPushButton *saveUartButton = new QPushButton("SAVE.LOG", this);
+    saveUartButton->setGeometry(800 + w.xGap*3 + w.xUnit*4, w.yGap*4 + w.yUnit*4, w.xUnit*2, w.yUnit);
+
+    saveUartButton->setStyleSheet(
+        "QPushButton {"
+        "   background-color: blue;"
+        "   color: white;"
+        "   font-size: 17px;"
+        "   font-weight: bold;"
+        "   border-radius: 10px;"
+        "   padding: 5px;"
+        "}"
+        "QPushButton:hover {"
+        "   background-color: darkblue;"
+        "}"
+        "QPushButton:pressed {"
+        "   background-color: black;"
+        "}"
+    );
+
+    auto saveUart = [this]()
+    {
+        saveUartConsoleToFile("uart_console_log.txt");
+    };
+    connect(saveUartButton, &QPushButton::clicked, this, saveUart);
+
     /* Rx window */
     m_uartConsoleOutput = new QPlainTextEdit(this);
     m_uartConsoleOutput->setReadOnly(true);
@@ -605,7 +631,7 @@ void gui::setupAdditionalDebugs()
         else
         {
             printToMainConsole("$ F1 Debug Offload");
-            m_instanceDroneControl->sendCommand(CMD_DEBUG_OFFLOAD);
+            m_instanceDroneControl->sendCommand(CMD_DEBUG_F1);
         }
     };
     connect(f1Button, &QPushButton::clicked, this, executeF1);
@@ -638,7 +664,7 @@ void gui::setupAdditionalDebugs()
         else
         {
             printToMainConsole("$ F2 Debug Trigger");
-            m_instanceDroneControl->sendCommand(CMD_DEBUG_TRIGGER);
+            m_instanceDroneControl->sendCommand(CMD_DEBUG_F2);
         }
     };
     connect(f2Button, &QPushButton::clicked, this, executeF2);
@@ -1083,8 +1109,8 @@ std::string gui::cmdToString(commandType cmd)
         case CMD_DEBUG_ENABLE:  return "CMD_DEBUG_ENABLE";
         case CMD_DEBUG_DISABLE: return "CMD_DEBUG_DISABLE";
         case CMD_FPGA_RESET:    return "CMD_FPGA_RESET";
-        case CMD_DEBUG_OFFLOAD: return "CMD_DEBUG_OFFLOAD";
-        case CMD_DEBUG_TRIGGER: return "CMD_DEBUG_TRIGGER";
+        case CMD_DEBUG_F1:      return "CMD_DEBUG_F1";
+        case CMD_DEBUG_F2:      return "CMD_DEBUG_F2";
         default:                return "UNKNOWN_CMD";
     }
 }
@@ -1538,6 +1564,22 @@ void gui::readUartData()
     }
 }
 #endif
+
+void gui::saveUartConsoleToFile(const QString& filePath)
+{
+    QFile file(filePath);
+    if (file.open(QIODevice::WriteOnly | QIODevice::Text))
+    {
+        QTextStream out(&file);
+        out << m_uartConsoleOutput->toPlainText();
+        file.close();
+        printToUartConsole("[INFO] UART Console saved to file: " + filePath);
+    }
+    else
+    {
+        printToUartConsole("[ERROR] Failed to save UART Console to file: " + filePath);
+    }
+}
 
 void gui::writeToUart(const QString &data)
 {

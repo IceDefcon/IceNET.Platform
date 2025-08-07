@@ -34,8 +34,8 @@ typedef enum
     CMD_DEBUG_ENABLE,
     CMD_DEBUG_DISABLE,
     CMD_FPGA_RESET,
-    CMD_DEBUG_OFFLOAD,
-    CMD_DEBUG_TRIGGER,
+    CMD_DEBUG_F1,
+    CMD_DEBUG_F2,
     CMD_AMOUNT
 } commandType;
 

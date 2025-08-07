@@ -162,6 +162,7 @@ private slots:
 
     void openUart();
     void readUartData();
+    void saveUartConsoleToFile(const QString& filePath);
     void writeToUart(const QString &data);
     void onUartInput();
     void shutdownUart();

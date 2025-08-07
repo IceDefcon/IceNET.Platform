@@ -38,6 +38,8 @@ MainGui::MainGui() :
 
     setupWindow();
     setupMainConsole();
+    setupUartControl();
+    setupUartConsole();
     setupNetworkControl();
     setupMainCtrl();
     setupSeparators();
@@ -66,6 +68,165 @@ void MainGui::setupMainConsole()
 void MainGui::printToMainConsole(const QString &message)
 {
     m_mainConsoleOutput->appendPlainText(message);
+}
+
+void MainGui::setupUartControl()
+{
+    /* UART :: Row[0] */
+    QLabel *uart_label = new QLabel("UART", this);
+    QFont uart_labelFont;
+    uart_labelFont.setPointSize(30);
+    uart_labelFont.setItalic(true);
+    uart_labelFont.setBold(true);
+    uart_label->setFont(uart_labelFont);
+    uart_label->setGeometry(w.xGap, w.yGap*16 + w.yLogo*3 + w.yUnit*9, w.xLogo, w.yLogo);
+
+    m_serialPortDropdown = new QComboBox(this);
+    m_serialPortDropdown->setGeometry(w.xGap, w.yGap*16 + w.yLogo*4 + w.yUnit*9, w.xText, w.yUnit);
+    m_serialPortDropdown->clear();
+
+    const auto ports = QSerialPortInfo::availablePorts();
+    for (const QSerialPortInfo &info : ports)
+    {
+        m_serialPortDropdown->addItem(info.portName());
+    }
+
+    if (ports.isEmpty())
+    {
+        m_serialPortDropdown->addItem("No devices found");
+        m_serialPortDropdown->setEnabled(false);
+    }
+    else
+    {
+        m_serialPortDropdown->setEnabled(true);
+    }
+
+    auto onSerialPortChanged = [this](int index)
+    {
+        QString port = m_serialPortDropdown->itemText(index);
+        qDebug() << "Selected port:" << port;
+    };
+    connect(m_serialPortDropdown, QOverload<int>::of(&QComboBox::currentIndexChanged), this, onSerialPortChanged);
+
+    QPushButton *uartOpen_exeButton = new QPushButton("OPEN", this);
+    uartOpen_exeButton->setGeometry(w.xGap*3 + w.xText, w.yGap*16 + w.yLogo*4 + w.yUnit*9, w.xUnit*2, w.yUnit);
+
+    auto openSelectedUart = [this]()
+    {
+        openUart();
+
+    };
+    connect(uartOpen_exeButton, &QPushButton::clicked, this, openSelectedUart);
+
+    QPushButton *shutdownUart_exeButton = new QPushButton("CLOSE", this);
+    shutdownUart_exeButton->setGeometry(w.xGap*3 + w.xText, w.yGap*17 + w.yLogo*4 + w.yUnit*10, w.xUnit*2, w.yUnit);
+
+    auto shutdownSelectedUart = [this]()
+    {
+        shutdownUart();
+
+    };
+    connect(shutdownUart_exeButton, &QPushButton::clicked, this, shutdownSelectedUart);
+}
+
+void MainGui::setupUartConsole()
+{
+    /* Rx window */
+    m_uartConsoleOutput = new QPlainTextEdit(this);
+    m_uartConsoleOutput->setReadOnly(true);
+    m_uartConsoleOutput->setGeometry(c.xPosition, w.yGap*16 + w.yLogo*3 + w.yUnit*9, c.xSize, w.yWindow - w.yGap*17 - w.yUnit*10 - w.yLogo*3);
+    m_uartConsoleOutput->setPlainText("[INIT] UART Console Initialized");
+    /* Tx bar */
+    m_uartInput = new QLineEdit(this);
+    m_uartInput->setGeometry(c.xPosition, w.yWindow - w.yGap - w.yUnit, c.xSize, w.yUnit);
+    connect(m_uartInput, &QLineEdit::returnPressed, this, &MainGui::onUartInput);
+}
+
+void MainGui::openUart()
+{
+    m_serialPort = new QSerialPort(this);
+
+    m_uartPortName = m_serialPortDropdown->currentText();
+    m_serialPort->setPortName(m_uartPortName);
+#if 1
+    m_serialPort->setBaudRate(2000000);
+#else
+    m_serialPort->setBaudRate(115200);
+#endif
+    m_serialPort->setDataBits(QSerialPort::Data8);
+    m_serialPort->setParity(QSerialPort::NoParity);
+    m_serialPort->setStopBits(QSerialPort::OneStop);
+    m_serialPort->setFlowControl(QSerialPort::NoFlowControl);
+
+    if (m_serialPort->open(QIODevice::ReadWrite))
+    {
+        m_uartIsConnected = true;
+        printToUartConsole("[INIT] UART Connection established");
+    }
+    else
+    {
+        m_uartIsConnected = false;
+        printToUartConsole("[INIT] UART Failed to open port");
+    }
+
+    connect(m_serialPort, &QSerialPort::readyRead, this, &MainGui::readUartData);
+}
+
+void MainGui::readUartData()
+{
+    if (m_uartIsConnected && m_serialPort->isOpen())
+    {
+        m_readBuffer.append(m_serialPort->readAll());
+
+        const int messageLength = 8;
+        while (m_readBuffer.size() >= messageLength)
+        {
+            QByteArray completeMessage = m_readBuffer.left(messageLength);
+            m_readBuffer.remove(0, messageLength);
+
+            m_currentTime = QDateTime::currentDateTime().toString("HH:mm:ss");
+            printToUartConsole("[" + m_currentTime + "] UART Rx: " + completeMessage);
+        }
+        m_readBuffer.clear();
+    }
+}
+
+void MainGui::writeToUart(const QString &data)
+{
+    m_currentTime = QDateTime::currentDateTime().toString("HH:mm:ss");
+    if (m_uartIsConnected && m_serialPort->isOpen())
+    {
+        m_serialPort->write(data.toUtf8());
+        printToUartConsole("[" + m_currentTime + "] UART Tx: " + data);
+    }
+    else
+    {
+        printToUartConsole("[" + m_currentTime + "] UART is not connected.");
+    }
+}
+
+void MainGui::onUartInput()
+{
+    QString inputData = m_uartInput->text();
+    if (!inputData.isEmpty())
+    {
+        writeToUart(inputData);
+        m_uartInput->clear();
+    }
+}
+
+void MainGui::shutdownUart()
+{
+    if (m_uartIsConnected && m_serialPort->isOpen())
+    {
+        m_serialPort->close();
+        printToUartConsole("[EXIT] Connection closed");
+    }
+}
+
+void MainGui::printToUartConsole(const QString &message)
+{
+    m_uartConsoleOutput->appendPlainText(message);
 }
 
 void MainGui::setupNetworkControl()

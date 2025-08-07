@@ -75,6 +75,8 @@ static const char* getStateMachineThreadString(stateMachineType type)
         "SM_RAMDISK_PRINT",
         "SM_PRIMARY_SPI",
         "SM_FPGA_RESET",
+        "SM_FPGA_F1",
+        "SM_FPGA_F2",
         "SM_SENSOR_CONFIG_DONE",
         "SM_DONE"
     };
@@ -181,17 +183,17 @@ static int stateMachineThread(void *data)
                 setStateMachine(SM_DONE);
                 break;
 
-            case SM_FPGA_OFFLOAD:
-                printk(KERN_INFO "[CTRL][STM] Debug Offload mode\n");
-                gpio_set_value(GPIO_NUMBER_OFFLOAD, 1);
-                gpio_set_value(GPIO_NUMBER_OFFLOAD, 0);
+            case SM_FPGA_F1:
+                printk(KERN_INFO "[CTRL][STM] Debug F1 mode\n");
+                gpio_set_value(GPIO_NUMBER_F1, 1);
+                gpio_set_value(GPIO_NUMBER_F1, 0);
                 setStateMachine(SM_DONE);
                 break;
 
-            case SM_FPGA_TRIGGER:
-                printk(KERN_INFO "[CTRL][STM] Debug Trigger mode\n");
-                gpio_set_value(GPIO_NUMBER_TRIGGER, 1);
-                gpio_set_value(GPIO_NUMBER_TRIGGER, 0);
+            case SM_FPGA_F2:
+                printk(KERN_INFO "[CTRL][STM] Debug F2 mode\n");
+                gpio_set_value(GPIO_NUMBER_F2, 1);
+                gpio_set_value(GPIO_NUMBER_F2, 0);
                 setStateMachine(SM_DONE);
                 break;
 
