@@ -6,11 +6,19 @@
  */
 #pragma once
 
+#include <QSerialPortInfo>
 #include <QPlainTextEdit>
+#include <QVBoxLayout>
 #include <QPushButton>
+#include <QSerialPort>
+#include <QLineEdit>
+#include <QDateTime>
+#include <QComboBox>
+#include <QString>
 #include <QWidget>
 #include <QDebug>
 #include <QLabel>
+
 
 #include <iostream>
 #include <cstdint>
@@ -46,12 +54,22 @@ class MainGui : public QWidget
     Q_OBJECT
 
     QPlainTextEdit *m_mainConsoleOutput;
+    QPlainTextEdit *m_uartConsoleOutput;
 
     std::shared_ptr<std::vector<uint8_t>> m_Rx_MainGuiVector;
     std::shared_ptr<std::vector<uint8_t>> m_Tx_MainGuiVector;
     std::shared_ptr<KernelCommanderStateType> m_IO_MainGuiState;
 
     std::unique_ptr<KernelCtrl> m_instanceKernelCtrl;
+
+    QSerialPort *m_serialPort;
+    QByteArray m_readBuffer;
+    QString m_uartPortName;
+    QLineEdit *m_uartInput;
+    bool m_uartIsConnected;
+    QComboBox *m_serialPortDropdown;
+
+    QString m_currentTime;
 
 private slots:
 
@@ -66,7 +84,19 @@ private slots:
 
     void setupWindow();
     void setupMainConsole();
+    void setupUartControl();
+    void setupUartConsole();
+
+    void openUart();
+    void readUartData();
+    void writeToUart(const QString &data);
+    void onUartInput();
+    void shutdownUart();
+
     void printToMainConsole(const QString &message);
+    void printToUartConsole(const QString &message);
+
+
     void setupNetworkControl();
     void setupMainCtrl();
     void setupSeparators();
