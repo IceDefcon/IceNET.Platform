@@ -8,7 +8,7 @@ package UartTypes is
     type UART_LOG_KEY is array (0 to 1) of std_logic_vector(3 downto 0);
     type UART_LOG_DATA is array (0 to 3) of std_logic_vector(3 downto 0);
 
-    function CONVERT_TO_ASCII
+    function HEX_TO_ASCII
     (
         hex_code : std_logic_vector(3 downto 0)
     )
@@ -26,7 +26,7 @@ end package UartTypes;
 
 package body UartTypes is
 
-    function CONVERT_TO_ASCII
+    function HEX_TO_ASCII
     (
         hex_code : std_logic_vector(3 downto 0)
     )
@@ -53,6 +53,6 @@ package body UartTypes is
         end case;
 
         return result;
-    end function CONVERT_TO_ASCII;
+    end function HEX_TO_ASCII;
 
 end package body UartTypes;

@@ -3,23 +3,21 @@ use ieee.numeric_std.all;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.all;
 
-entity UartDataTransfer is
+entity UartTx is
 port
 (
-    CLOCK_40MHz : in std_logic;
+    CLOCK : in std_logic;
     RESET : in std_logic;
 
     WRITE_ENABLE : in std_logic;
     WRITE_SYMBOL : in std_logic_vector(6 downto 0);
+    WRITE_BUSY : out std_logic;
 
-    FPGA_UART_RX : in std_logic;
-    FPGA_UART_TX : out std_logic;
-
-    WRITE_BUSY : out std_logic
+    FPGA_UART_TX : out std_logic
 );
-end UartDataTransfer;
+end UartTx;
 
-architecture rtl of UartDataTransfer is
+architecture rtl of UartTx is
 
 constant baudRate : std_logic_vector(7 downto 0) := "00011000"; -- 1/[25*20ns] ---> 2M Baud Rate
 
@@ -42,16 +40,16 @@ signal uart_output : std_logic := '1';
 begin
 
 state_machine_process:
-process(CLOCK_40MHz, RESET)
+process(CLOCK, RESET)
 begin
     if RESET = '1' then
         uart_state <= UART_IDLE;
         bit_number <= 0;
         baud_count <= (others => '0');
         uart_output <= '1';
-        FPGA_UART_TX <= '0';
+        FPGA_UART_TX <= '1';
         WRITE_BUSY <= '0';
-    elsif rising_edge(CLOCK_40MHz) then
+    elsif rising_edge(CLOCK) then
         case uart_state is
 
             when UART_IDLE =>
