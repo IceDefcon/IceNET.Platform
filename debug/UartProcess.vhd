@@ -68,7 +68,7 @@ port
     CLOCK : in std_logic;
     RESET : in std_logic;
 
-    READ_ENABLE : in std_logic;
+    READ_ENABLE : out std_logic;
     READ_SYMBOL : out std_logic_vector(6 downto 0);
     READ_BUSY : out std_logic;
 
