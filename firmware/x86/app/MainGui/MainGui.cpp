@@ -127,6 +127,31 @@ void MainGui::setupUartControl()
 
     };
     connect(shutdownUart_exeButton, &QPushButton::clicked, this, shutdownSelectedUart);
+
+    m_baudrate_dataField = new QLineEdit(this);
+    m_baudrate_dataField->setGeometry(w.xGap, w.yGap*17 + w.yLogo*4 + w.yUnit*10, w.xText, w.yUnit);
+    m_baudrate_dataField->setText("2000000");
+    m_baudrate_dataField->setPlaceholderText("baudrate");
+
+    QPushButton *clearConsole_exeButton = new QPushButton("CLEAN", this);
+    clearConsole_exeButton->setGeometry(w.xGap*3 + w.xText, w.yGap*18 + w.yLogo*4 + w.yUnit*11, w.xUnit*2, w.yUnit);
+
+    auto clearConsole = [this]()
+    {
+        clearUartConsole();
+
+    };
+    connect(clearConsole_exeButton, &QPushButton::clicked, this, clearConsole);
+
+    QPushButton *refreshSerial_exeButton = new QPushButton("REFRESH", this);
+    refreshSerial_exeButton->setGeometry(w.xGap, w.yGap*18 + w.yLogo*4 + w.yUnit*11, w.xText, w.yUnit);
+
+    auto refreshSerial = [this]()
+    {
+        refreshSerialPorts();
+
+    };
+    connect(refreshSerial_exeButton, &QPushButton::clicked, this, refreshSerial);
 }
 
 void MainGui::setupUartConsole()
@@ -142,6 +167,41 @@ void MainGui::setupUartConsole()
     connect(m_uartInput, &QLineEdit::returnPressed, this, &MainGui::onUartInput);
 }
 
+void MainGui::clearUartConsole()
+{
+    if( m_uartConsoleOutput)
+    {
+        m_uartConsoleOutput->clear();
+    }
+}
+
+void MainGui::refreshSerialPorts()
+{
+    // Clear the current list
+    m_serialPortDropdown->clear();
+
+    // Get available ports
+    const auto ports = QSerialPortInfo::availablePorts();
+    for (const QSerialPortInfo &info : ports)
+    {
+        m_serialPortDropdown->addItem(info.portName());
+    }
+
+    // Handle the case where no devices are found
+    if (ports.isEmpty())
+    {
+        m_serialPortDropdown->addItem("No devices found");
+        m_serialPortDropdown->setEnabled(false);
+    }
+    else
+    {
+        m_serialPortDropdown->setEnabled(true);
+    }
+
+    // Optional: print to console so you know it ran
+    printToUartConsole("[INFO] Serial port list refreshed");
+}
+
 void MainGui::openUart()
 {
     m_serialPort = new QSerialPort(this);
@@ -149,7 +209,17 @@ void MainGui::openUart()
     m_uartPortName = m_serialPortDropdown->currentText();
     m_serialPort->setPortName(m_uartPortName);
 #if 1
-    m_serialPort->setBaudRate(2000000);
+    bool ok = false;
+    int baudRate = m_baudrate_dataField->text().toInt(&ok);
+
+    if (ok)
+    {
+        m_serialPort->setBaudRate(baudRate);
+    }
+    else
+    {
+        printToUartConsole("[ERROR] Invalid baud rate entered.");
+    }
 #else
     m_serialPort->setBaudRate(115200);
 #endif
@@ -174,6 +244,7 @@ void MainGui::openUart()
 
 void MainGui::readUartData()
 {
+#if 0
     if (m_uartIsConnected && m_serialPort->isOpen())
     {
         m_readBuffer.append(m_serialPort->readAll());
@@ -187,12 +258,29 @@ void MainGui::readUartData()
             m_currentTime = QDateTime::currentDateTime().toString("HH:mm:ss");
             printToUartConsole("[" + m_currentTime + "] UART Rx: " + completeMessage);
         }
-        m_readBuffer.clear();
+        // m_readBuffer.clear();
     }
+#else
+    if (m_uartIsConnected && m_serialPort->isOpen())
+    {
+        m_readBuffer.append(m_serialPort->readAll());
+
+        const int messageLength = 8;
+        while (m_readBuffer.size() >= messageLength)
+        {
+            QByteArray completeMessage = m_readBuffer.left(messageLength);
+            m_readBuffer.remove(0, messageLength);
+
+            printToUartConsole(completeMessage);
+        }
+        // m_readBuffer.clear();
+    }
+#endif
 }
 
 void MainGui::writeToUart(const QString &data)
 {
+#if 0
     m_currentTime = QDateTime::currentDateTime().toString("HH:mm:ss");
     if (m_uartIsConnected && m_serialPort->isOpen())
     {
@@ -203,6 +291,17 @@ void MainGui::writeToUart(const QString &data)
     {
         printToUartConsole("[" + m_currentTime + "] UART is not connected.");
     }
+#else
+    if (m_uartIsConnected && m_serialPort->isOpen())
+    {
+        m_serialPort->write(data.toUtf8());
+        printToUartConsole(data);
+    }
+    else
+    {
+        printToUartConsole("UART is not connected");
+    }
+#endif
 }
 
 void MainGui::onUartInput()
