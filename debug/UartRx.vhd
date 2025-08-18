@@ -22,28 +22,27 @@ architecture rtl of UartRx is
 constant baudRate : std_logic_vector(7 downto 0) := "00011000"; -- 1/[25*20ns] ---> 2M Baud
 constant bit_baud : integer range 0 to 32 := 25; -- 25*20ns ---> 2M Baud
 constant bit_start : integer range 0 to 32 := 10;               -- 10
-constant bit_0 : integer range 0 to 32 := bit_start + bit_baud; -- 35
-constant bit_1 : integer range 0 to 32 := bit_0 + bit_baud;     -- 60
-constant bit_2 : integer range 0 to 32 := bit_1 + bit_baud;     -- 85
-constant bit_3 : integer range 0 to 32 := bit_2 + bit_baud;     -- 110
-constant bit_4 : integer range 0 to 32 := bit_3 + bit_baud;     -- 135
-constant bit_5 : integer range 0 to 32 := bit_4 + bit_baud;     -- 160
-constant bit_6 : integer range 0 to 32 := bit_5 + bit_baud;     -- 185
-constant bit_7 : integer range 0 to 32 := bit_6 + bit_baud;     -- 210
-constant bit_stop : integer range 0 to 32 := bit_7 + bit_baud;  -- 235
+constant bit_0 : integer range 0 to 512 := bit_start + bit_baud; -- 35
+constant bit_1 : integer range 0 to 512 := bit_0 + bit_baud;     -- 60
+constant bit_2 : integer range 0 to 512 := bit_1 + bit_baud;     -- 85
+constant bit_3 : integer range 0 to 512 := bit_2 + bit_baud;     -- 110
+constant bit_4 : integer range 0 to 512 := bit_3 + bit_baud;     -- 135
+constant bit_5 : integer range 0 to 512 := bit_4 + bit_baud;     -- 160
+constant bit_6 : integer range 0 to 512 := bit_5 + bit_baud;     -- 185
+constant bit_7 : integer range 0 to 512 := bit_6 + bit_baud;     -- 210
+constant bit_stop : integer range 0 to 512 := bit_7 + bit_baud;  -- 235
 
 signal byte_process_timer : integer range 0 to 1024 := 0;
 
 signal bit_count : std_logic_vector(3 downto 0) := (others => '0');
 
-signal symbol_process : std_logic_vector(6 downto 0) := (others => '0');
-signal symbol_trigger : std_logic := '0';
+signal symbol_process : std_logic_vector(7 downto 0) := (others => '0');
 
 type STATE is
 (
     UART_IDLE,
     UART_PROCESS,
-    UART_FIFO
+    UART_FIFO,
     UART_DONE
 );
 signal uart_state: STATE := UART_IDLE;
@@ -56,7 +55,7 @@ signal uart_state: STATE := UART_IDLE;
 
 --signal REG_FPGA_UART_RX : std_logic_vector(2047 downto 0) := (others => '0');
 
---begin
+begin
 
 --buffer_delay_process:
 --process(CLOCK)
@@ -83,7 +82,7 @@ begin
         ---------------------------------
         -- Avoid Latches
         ---------------------------------
-        symbol_trigger <= '0';
+        --symbol_trigger <= '0';
 
         ---------------------------------
         -- State Machine
@@ -94,7 +93,7 @@ begin
             -- IDLE
             ---------------------------------
             when UART_IDLE =>
-                if FPGA_UART_RX = '1' then
+                if FPGA_UART_RX = '0' then
                     uart_state <= UART_PROCESS;
                 end if;
 
@@ -104,45 +103,46 @@ begin
             when UART_PROCESS =>
                 if byte_process_timer = 1024 then
                 else
-                    if byte_process_timer = bit_start
+                    if byte_process_timer = bit_start then
                         --
                         --
                         --
-                    elsif byte_process_timer = bit_0
+                    elsif byte_process_timer = bit_0 then
 
                         symbol_process(0) <= FPGA_UART_RX;
 
-                    elsif byte_process_timer = bit_1
+                    elsif byte_process_timer = bit_1 then
 
                         symbol_process(1) <= FPGA_UART_RX;
 
-                    elsif byte_process_timer = bit_2
+                    elsif byte_process_timer = bit_2 then
 
                         symbol_process(2) <= FPGA_UART_RX;
 
-                    elsif byte_process_timer = bit_3
+                    elsif byte_process_timer = bit_3 then
 
                         symbol_process(3) <= FPGA_UART_RX;
 
-                    elsif byte_process_timer = bit_4
+                    elsif byte_process_timer = bit_4 then
 
                         symbol_process(4) <= FPGA_UART_RX;
 
-                    elsif byte_process_timer = bit_5
+                    elsif byte_process_timer = bit_5 then
 
                         symbol_process(5) <= FPGA_UART_RX;
 
-                    elsif byte_process_timer = bit_6
+                    elsif byte_process_timer = bit_6 then
 
                         symbol_process(6) <= FPGA_UART_RX;
 
-                    elsif byte_process_timer = bit_7
+                    elsif byte_process_timer = bit_7 then
 
                         symbol_process(7) <= FPGA_UART_RX;
 
-                    elsif byte_process_timer = bit_stop
-                        byte_process_timer <= 0;
+                    elsif byte_process_timer = bit_stop then
+
                         uart_state <= UART_FIFO;
+
                     end if;
 
                     byte_process_timer <= byte_process_timer + 1;
@@ -154,7 +154,8 @@ begin
             when UART_FIFO =>
                 READ_ENABLE <= '1';
                 READ_SYMBOL <= symbol_process(6 downto 0);
-                symbol_trigger <= '1';
+                byte_process_timer <= 0;
+                --symbol_trigger <= '1';
                 uart_state <= UART_DONE;
 
             ---------------------------------
@@ -162,7 +163,7 @@ begin
             ---------------------------------
             when UART_DONE =>
                 READ_ENABLE <= '0';
-                READ_SYMBOL <= (others => '0');
+                symbol_process <= (others => '0');
                 uart_state <= UART_IDLE;
 
             when others =>

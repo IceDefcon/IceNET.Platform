@@ -140,8 +140,8 @@ port map
     CLOCK => CLOCK,
     RESET => RESET,
 
-    WRITE_ENABLE => uart_write_enable,
-    WRITE_SYMBOL => uart_write_symbol,
+    WRITE_ENABLE => uart_read_enable,
+    WRITE_SYMBOL => uart_read_symbol,
     WRITE_BUSY => uart_write_busy,
 
     FPGA_UART_TX => UART_PROCESS_TX
