@@ -6,7 +6,7 @@ use ieee.std_logic_unsigned.all;
 entity TimedReset is
 port
 (
-    MAIN_CLOCK : in std_logic;
+    CLOCK : in std_logic;
     TIMED_RESET : out std_logic
 );
 end TimedReset;
@@ -33,9 +33,9 @@ begin
 ------------------------------------------------------------------------------------------------------------
 
 reset_process:
-process(MAIN_CLOCK)
+process(CLOCK)
 begin
-    if rising_edge(MAIN_CLOCK) then
+    if rising_edge(CLOCK) then
         if reset_counter = reset_trigger then
             reset_reg <= '0';
         else

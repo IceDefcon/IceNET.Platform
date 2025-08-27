@@ -68,6 +68,7 @@ class MainGui : public QWidget
     QLineEdit *m_uartInput;
     bool m_uartIsConnected;
     QComboBox *m_serialPortDropdown;
+    QLineEdit *m_baudrate_dataField;
 
     QString m_currentTime;
 
@@ -86,6 +87,8 @@ private slots:
     void setupMainConsole();
     void setupUartControl();
     void setupUartConsole();
+    void clearUartConsole();
+    void refreshSerialPorts();
 
     void openUart();
     void readUartData();

@@ -7,11 +7,11 @@ use work.UartTypes.all;
 entity UartDataAssembly is
 generic
 (
-    UART_CTRL : std_logic := '1'
+    UART_CTRL : std_logic := '0'
 );
 port
 (
-    CLOCK_40MHz : in std_logic;
+    CLOCK : in std_logic;
     RESET : in std_logic;
 
     UART_LOG_TRIGGER : in std_logic;
@@ -45,58 +45,77 @@ type ASSEMBLER_STATE is
     ASSEMBLER_DONE
 );
 signal uart_state: ASSEMBLER_STATE := ASSEMBLER_IDLE;
-signal delay_timer : std_logic_vector(25 downto 0) := (others => '0');
 signal uart_byte : integer := 0;
 
+component DelaySynchroniser
+generic
+(
+    SYNCHRONIZATION_DEPTH : integer := 2
+);
+Port
+(
+    CLOCK : in  std_logic;
+    RESET : in std_logic;
+
+    ASYNC_INPUT : in std_logic;
+    SYNC_OUTPUT : out std_logic
+);
+end component;
+
+signal synced_UART_LOG_TRIGGER : std_logic := '0';
 begin
 
+DelaySynchroniser_LOG_TRIGGER: DelaySynchroniser
+generic map
+(
+    SYNCHRONIZATION_DEPTH => 2
+)
+port map
+(
+    CLOCK => CLOCK,
+    RESET => RESET,
+
+    ASYNC_INPUT => UART_LOG_TRIGGER,
+    SYNC_OUTPUT => synced_UART_LOG_TRIGGER
+);
+
     uart_process:
-    process(CLOCK_40MHz, RESET)
+    process(CLOCK, RESET)
     begin
         if RESET = '1' then
             uart_tx <= (others => (others => '0'));
             uart_state <= ASSEMBLER_IDLE;
-            delay_timer <= (others => '0');
             uart_byte <= 0;
             WRITE_ENABLE <= '0';
             WRITE_SYMBOL <= (others => '0');
-        elsif rising_edge(CLOCK_40MHz) then
+        elsif rising_edge(CLOCK) then
 
             case uart_state is
                 when ASSEMBLER_IDLE =>
-                    if UART_CTRL = '1' then
-                        if delay_timer = "10111110101111000001111111" then
-                            delay_timer <= (others => '0');
-                            uart_state <= ASSEMBLER_INIT;
-                        else
-                            delay_timer <= delay_timer + '1';
-                        end if;
-                    elsif UART_CTRL = '0' then
-                        if UART_LOG_TRIGGER = '1' then
-                            uart_state <= ASSEMBLER_INIT;
-                        end if;
+                    if synced_UART_LOG_TRIGGER = '1' then
+                        uart_state <= ASSEMBLER_INIT;
                     end if;
 
                 when ASSEMBLER_INIT =>
                     if UART_CTRL = '1' then
-                        uart_tx(0) <= CONVERT_TO_ASCII(UART_LOG_MESSAGE_ID(0));
-                        uart_tx(1) <= CONVERT_TO_ASCII(UART_LOG_MESSAGE_ID(1));
-                        uart_tx(2) <= CONVERT_TO_ASCII(UART_LOG_MESSAGE_KEY(0));
-                        uart_tx(3) <= CONVERT_TO_ASCII(UART_LOG_MESSAGE_KEY(1));
-                        uart_tx(4) <= CONVERT_TO_ASCII(UART_LOG_MESSAGE_DATA(0));
-                        uart_tx(5) <= CONVERT_TO_ASCII(UART_LOG_MESSAGE_DATA(1));
-                        uart_tx(6) <= CONVERT_TO_ASCII(UART_LOG_MESSAGE_DATA(2));
-                        uart_tx(7) <= CONVERT_TO_ASCII(UART_LOG_MESSAGE_DATA(3));
+                        uart_tx(0) <= HEX_TO_ASCII(UART_LOG_MESSAGE_ID(0));
+                        uart_tx(1) <= HEX_TO_ASCII(UART_LOG_MESSAGE_ID(1));
+                        uart_tx(2) <= HEX_TO_ASCII(UART_LOG_MESSAGE_KEY(0));
+                        uart_tx(3) <= HEX_TO_ASCII(UART_LOG_MESSAGE_KEY(1));
+                        uart_tx(4) <= HEX_TO_ASCII(UART_LOG_MESSAGE_DATA(0));
+                        uart_tx(5) <= HEX_TO_ASCII(UART_LOG_MESSAGE_DATA(1));
+                        uart_tx(6) <= HEX_TO_ASCII(UART_LOG_MESSAGE_DATA(2));
+                        uart_tx(7) <= HEX_TO_ASCII(UART_LOG_MESSAGE_DATA(3));
                         uart_state <= ASSEMBLER_CONFIG;
                     elsif UART_CTRL = '0' then
-                        uart_tx(0) <= ASCII_R; -- "R"
-                        uart_tx(1) <= ASCII_COLON; -- ":"
-                        uart_tx(2) <= CONVERT_TO_ASCII(UART_LOG_MESSAGE_KEY(0));
-                        uart_tx(3) <= CONVERT_TO_ASCII(UART_LOG_MESSAGE_KEY(1));
-                        uart_tx(4) <= CONVERT_TO_ASCII("1101"); -- "D"
-                        uart_tx(5) <= ASCII_COLON; -- ":"
-                        uart_tx(6) <= CONVERT_TO_ASCII(UART_LOG_MESSAGE_DATA(2));
-                        uart_tx(7) <= CONVERT_TO_ASCII(UART_LOG_MESSAGE_DATA(3));
+                        uart_tx(0) <= HEX_TO_ASCII(UART_LOG_MESSAGE_ID(0));
+                        uart_tx(1) <= HEX_TO_ASCII(UART_LOG_MESSAGE_ID(1));
+                        uart_tx(2) <= HEX_TO_ASCII(UART_LOG_MESSAGE_KEY(0));
+                        uart_tx(3) <= HEX_TO_ASCII(UART_LOG_MESSAGE_KEY(1));
+                        uart_tx(4) <= HEX_TO_ASCII(UART_LOG_MESSAGE_DATA(0));
+                        uart_tx(5) <= HEX_TO_ASCII(UART_LOG_MESSAGE_DATA(1));
+                        uart_tx(6) <= ASCII_CR;
+                        uart_tx(7) <= ASCII_LF;
                         uart_state <= ASSEMBLER_CONFIG;
                     end if;
 

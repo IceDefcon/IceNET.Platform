@@ -6,10 +6,10 @@ use work.UartTypes.all;
 
 -----------------------------------------------------------------------------
 --
--- PIN_B21  :: J504_CAT_CE          | PIN_B22  :: J504_CAT_MISO
--- PIN_C21  :: J504_CAT_MOSI        | PIN_C22  :: J504_CAT_CLK
--- PIN_D21  :: J504_EXT1            | PIN_D22  :: J504_EXT2
--- PIN_E21  :: J504_UART_TX         | PIN_E22  :: J504_UART_RX
+-- PIN_B21  :: J504_IN1     | PIN_B22  :: J504_IN2
+-- PIN_C21  :: J504_IN3     | PIN_C22  :: J504_IN4
+-- PIN_D21  :: J504_IN5     | PIN_D22  :: J504_IN6
+-- PIN_E21  :: J504_OUT1    | PIN_E22  :: J504_OUT2
 --
 -- ...
 -- ...
@@ -47,14 +47,14 @@ Port
     -----------------------------------------------------------------------------
     -- J504.B210
     -----------------------------------------------------------------------------
-    J504_CAT_CE   : in std_logic; -- PIN_B21
-    J504_CAT_MISO : in std_logic; -- PIN_B22
-    J504_CAT_MOSI : in std_logic; -- PIN_C21
-    J504_CAT_CLK  : in std_logic; -- PIN_C22
-    J504_EXT1 : out std_logic; -- PIN_D21
-    J504_EXT2 : out std_logic; -- PIN_D22
-    J504_UART_TX : out std_logic; -- PIN_E21
-    J504_UART_RX : in std_logic; -- PIN_E22
+    J504_IN1 : in std_logic; -- PIN_B21
+    J504_IN2 : in std_logic; -- PIN_B22
+    J504_IN3 : in std_logic; -- PIN_C21
+    J504_IN4 : in std_logic; -- PIN_C22
+    J504_IN5 : in std_logic; -- PIN_D21
+    J504_IN6 : in std_logic; -- PIN_D22
+    J504_OUT1 : out std_logic; -- PIN_E21
+    J504_OUT2 : out std_logic; -- PIN_E22
     -----------------------------------------------------------------------------
     -- JETSON.NANO
     -----------------------------------------------------------------------------
@@ -76,154 +76,375 @@ Port
     LED_5 : out std_logic; -- PIN_R8
     LED_6 : out std_logic; -- PIN_P8
     LED_7 : out std_logic; -- PIN_M8
-    LED_8 : out std_logic  -- PIN_N8
+    LED_8 : out std_logic; -- PIN_N8
+    -----------------------------------------------------------------------------
+    -- UART
+    -----------------------------------------------------------------------------
+    DEBUG_UART_TX : out std_logic; -- PIN_P1
+    DEBUG_UART_RX : in std_logic -- PIN_R1
 );
 end Debug;
 
 architecture rtl of Debug is
 
+------------------------------------------------------------------------------------------------------------
+-- Signals
+------------------------------------------------------------------------------------------------------------
+
 signal global_reset : std_logic := '1';
 
-signal parallel_J504_CAT_MOSI : std_logic_vector(7 downto 0) := (others => '0');
-signal parallel_J504_CAT_MISO : std_logic_vector(7 downto 0) := (others => '0');
+signal synced_J504_IN1 : std_logic := '0';
+signal synced_J504_IN2 : std_logic := '0';
+signal synced_J504_IN3 : std_logic := '0';
+signal synced_J504_IN4 : std_logic := '0';
+signal synced_J504_IN5 : std_logic := '0';
+signal synced_J504_IN6 : std_logic := '0';
 
-signal parallel_MOSI_complete : std_logic := '0';
-signal parallel_MISO_complete : std_logic := '0';
+signal short_J504_IN1 : std_logic := '0';
+signal short_J504_IN2 : std_logic := '0';
+signal short_J504_IN3 : std_logic := '0';
+signal short_J504_IN4 : std_logic := '0';
+signal short_J504_IN5 : std_logic := '0';
+signal short_J504_IN6 : std_logic := '0';
 
-signal UART_LOG_TRIGGER : std_logic := '0';
-signal UART_LOG_MESSAGE : std_logic_vector(31 downto 0) := (others => '0');
+signal uart_busy : std_logic := '0';
+signal uart_trigger : std_logic := '0';
+signal uart_counter : std_logic_vector(31 downto 0) := (others => '0');
+signal uart_message : std_logic_vector(31 downto 0) := (others => '0');
+
+------------------------------------------------------------------------------------------------------------
+-- Components
+------------------------------------------------------------------------------------------------------------
 
 component TimedReset
 Port
 (
-    MAIN_CLOCK : in  std_logic;
+    CLOCK : in  std_logic;
     TIMED_RESET : out std_logic
 );
 end component;
 
-component SpiConverter
+component DelaySynchroniser
+generic
+(
+    SYNCHRONIZATION_DEPTH : integer := 2
+);
 Port
 (
     CLOCK : in  std_logic;
     RESET : in std_logic;
 
-    CS : in std_logic;
-    SCLK : in std_logic;
+    ASYNC_INPUT : in std_logic;
+    SYNC_OUTPUT : out std_logic
+);
+end component;
 
-    SERIAL_MOSI : in std_logic;
-    PARALLEL_MOSI : out std_logic_vector(7 downto 0);
-    PARALLEL_MISO : in std_logic_vector(7 downto 0);
-    SERIAL_MISO : out std_logic;
+component PulseController
+generic
+(
+    PULSE_LENGTH : integer := 1
+);
+Port
+(
+    CLOCK : in  std_logic;
+    RESET : in std_logic;
 
-    CONVERSION_BIT_COUNT : out std_logic_vector(3 downto 0);
-    CONVERSION_COMPLETE : out std_logic
+    ENABLE_CONTROLLER : in std_logic;
+
+    INPUT_PULSE : in std_logic;
+    OUTPUT_PULSE : out std_logic
 );
 end component;
 
 component UartProcess
 port
 (
-    CLOCK_40MHz : in std_logic;
+    CLOCK : in std_logic;
     RESET : in std_logic;
 
     UART_LOG_TRIGGER : in std_logic;
     UART_LOG_VECTOR : in std_logic_vector(31 downto 0);
 
     UART_PROCESS_RX : in std_logic;
-    UART_PROCESS_TX : out std_logic
+    UART_PROCESS_TX : out std_logic;
+
+    WRITE_BUSY : out std_logic
 );
 end component;
 
 begin
 
-    -- Console UART
-    J504_UART_TX <= FPGA_UART_RX;
-    FPGA_UART_TX <= J504_UART_RX;
-    -- Kernel GPIO Control
-    J504_EXT1 <= CTRL_F1;
-    J504_EXT2 <= CTRL_F2;
+------------------------------------------------------------------------------------------------------------
+-- Main Routine
+------------------------------------------------------------------------------------------------------------
 
-    LED_process:
-    process(CLOCK_50MHz)
-    begin
-        if rising_edge(CLOCK_50MHz) then
-            if global_reset = '0' then
-                LED_1 <= '0';
-                LED_2 <= '1';
-                LED_3 <= '1';
-                LED_4 <= '0';
-                LED_5 <= '0';
-                LED_6 <= '1';
-                LED_7 <= '1';
-                LED_8 <= '0';
-            else
-                LED_1 <= '1';
-                LED_2 <= '1';
-                LED_3 <= '1';
-                LED_4 <= '1';
-                LED_5 <= '1';
-                LED_6 <= '1';
-                LED_7 <= '1';
-                LED_8 <= '1';
-            end if;
-        end if;
-    end process;
+-- Kernel GPIO Control
+J504_OUT1 <= CTRL_F1;
+J504_OUT2 <= CTRL_F2;
+
+------------------------------------------------------------------------------------------------------------
+-- Global Reset
+------------------------------------------------------------------------------------------------------------
 
 TimedReset_Main: TimedReset port map
 (
-    MAIN_CLOCK => CLOCK_50MHz,
+    CLOCK => CLOCK_50MHz,
     TIMED_RESET => global_reset
 );
 
-SpiConverter_MOSI: SpiConverter port map
+------------------------------------------------------------------------------------------------------------
+-- Synchroniser
+------------------------------------------------------------------------------------------------------------
+
+DelaySynchroniser_J504_IN1: DelaySynchroniser
+generic map
+(
+    SYNCHRONIZATION_DEPTH => 2
+)
+port map
 (
     CLOCK => CLOCK_50MHz,
     RESET => global_reset,
 
-    CS => '0',
-    SCLK => J504_CAT_CLK, -- Kernel Master always initialise SPI transfer
-
-    SERIAL_MOSI => J504_CAT_MOSI, -- in :: Data from Kernel to Serialize
-    PARALLEL_MOSI => parallel_J504_CAT_MOSI, -- out :: Serialized Data
-    PARALLEL_MISO => "00011000", -- in :: 0x18 Hard coded Feedback to Serialize
-    SERIAL_MISO => open, -- out :: 0x18 Serialized Hard coded Feedback to Kernel
-
-    CONVERSION_BIT_COUNT => open,
-    CONVERSION_COMPLETE => parallel_MOSI_complete -- Out :: Data byte is ready [FIFO Write Enable]
+    ASYNC_INPUT => J504_IN1,
+    SYNC_OUTPUT => synced_J504_IN1
 );
 
-SpiConverter_MISO: SpiConverter port map
+DelaySynchroniser_J504_IN2: DelaySynchroniser
+generic map
+(
+    SYNCHRONIZATION_DEPTH => 2
+)
+port map
 (
     CLOCK => CLOCK_50MHz,
     RESET => global_reset,
 
-    CS => '0',
-    SCLK => J504_CAT_CLK,
-
-    SERIAL_MOSI => J504_CAT_MISO, -- in :: Data from Kernel to Serialize
-    PARALLEL_MOSI => parallel_J504_CAT_MISO, -- out :: Serialized Data
-    PARALLEL_MISO => "00011000", -- in :: 0x18 Hard coded Feedback to Serialize
-    SERIAL_MISO => open, -- out :: 0x18 Serialized Hard coded Feedback to Kernel
-
-    CONVERSION_BIT_COUNT => open,
-    CONVERSION_COMPLETE => parallel_MISO_complete -- Out :: Data byte is ready [FIFO Write Enable]
+    ASYNC_INPUT => J504_IN2,
+    SYNC_OUTPUT => synced_J504_IN2
 );
 
-UART_LOG_TRIGGER <= parallel_MISO_complete or parallel_MOSI_complete;
-UART_LOG_MESSAGE <= "00000000" & parallel_J504_CAT_MOSI & "00000000" & parallel_J504_CAT_MISO;
+DelaySynchroniser_J504_IN3: DelaySynchroniser
+generic map
+(
+    SYNCHRONIZATION_DEPTH => 2
+)
+port map
+(
+    CLOCK => CLOCK_50MHz,
+    RESET => global_reset,
 
---UartProcess_Module: UartProcess
---port map
---(
---    CLOCK_40MHz => CLOCK_50MHz,
---    RESET => global_reset,
+    ASYNC_INPUT => J504_IN3,
+    SYNC_OUTPUT => synced_J504_IN3
+);
 
---    UART_LOG_TRIGGER => UART_LOG_TRIGGER,
---    UART_LOG_VECTOR => UART_LOG_MESSAGE,
+DelaySynchroniser_J504_IN4: DelaySynchroniser
+generic map
+(
+    SYNCHRONIZATION_DEPTH => 2
+)
+port map
+(
+    CLOCK => CLOCK_50MHz,
+    RESET => global_reset,
 
---    UART_PROCESS_RX => FPGA_UART_RX,
---    UART_PROCESS_TX => FPGA_UART_TX
---);
+    ASYNC_INPUT => J504_IN4,
+    SYNC_OUTPUT => synced_J504_IN4
+);
+
+DelaySynchroniser_J504_IN5: DelaySynchroniser
+generic map
+(
+    SYNCHRONIZATION_DEPTH => 2
+)
+port map
+(
+    CLOCK => CLOCK_50MHz,
+    RESET => global_reset,
+
+    ASYNC_INPUT => J504_IN5,
+    SYNC_OUTPUT => synced_J504_IN5
+);
+
+DelaySynchroniser_J504_IN6: DelaySynchroniser
+generic map
+(
+    SYNCHRONIZATION_DEPTH => 2
+)
+port map
+(
+    CLOCK => CLOCK_50MHz,
+    RESET => global_reset,
+
+    ASYNC_INPUT => J504_IN6,
+    SYNC_OUTPUT => synced_J504_IN6
+);
+
+------------------------------------------------------------------------------------------------------------
+-- Pulse Contoller
+------------------------------------------------------------------------------------------------------------
+
+PulseController_J504_IN1: PulseController
+generic map
+(
+    PULSE_LENGTH => 1 -- 1*20ns Pulse
+)
+port map
+(
+    CLOCK => CLOCK_50MHz,
+    RESET => global_reset,
+
+    ENABLE_CONTROLLER => '1',
+
+    INPUT_PULSE => synced_J504_IN1,
+    OUTPUT_PULSE => short_J504_IN1
+);
+
+PulseController_J504_IN2: PulseController
+generic map
+(
+    PULSE_LENGTH => 1 -- 1*20ns Pulse
+)
+port map
+(
+    CLOCK => CLOCK_50MHz,
+    RESET => global_reset,
+
+    ENABLE_CONTROLLER => '1',
+
+    INPUT_PULSE => synced_J504_IN2,
+    OUTPUT_PULSE => short_J504_IN2
+);
+
+PulseController_J504_IN3: PulseController
+generic map
+(
+    PULSE_LENGTH => 1 -- 1*20ns Pulse
+)
+port map
+(
+    CLOCK => CLOCK_50MHz,
+    RESET => global_reset,
+
+    ENABLE_CONTROLLER => '1',
+
+    INPUT_PULSE => synced_J504_IN3,
+    OUTPUT_PULSE => short_J504_IN3
+);
+
+PulseController_J504_IN4: PulseController
+generic map
+(
+    PULSE_LENGTH => 1 -- 1*20ns Pulse
+)
+port map
+(
+    CLOCK => CLOCK_50MHz,
+    RESET => global_reset,
+
+    ENABLE_CONTROLLER => '1',
+
+    INPUT_PULSE => synced_J504_IN4,
+    OUTPUT_PULSE => short_J504_IN4
+);
+
+PulseController_J504_IN5: PulseController
+generic map
+(
+    PULSE_LENGTH => 1 -- 1*20ns Pulse
+)
+port map
+(
+    CLOCK => CLOCK_50MHz,
+    RESET => global_reset,
+
+    ENABLE_CONTROLLER => '1',
+
+    INPUT_PULSE => synced_J504_IN5,
+    OUTPUT_PULSE => short_J504_IN5
+);
+
+PulseController_J504_IN6: PulseController
+generic map
+(
+    PULSE_LENGTH => 1 -- 1*20ns Pulse
+)
+port map
+(
+    CLOCK => CLOCK_50MHz,
+    RESET => global_reset,
+
+    ENABLE_CONTROLLER => '1',
+
+    INPUT_PULSE => synced_J504_IN6,
+    OUTPUT_PULSE => short_J504_IN6
+);
+
+------------------------------------------------------------------------------------------------------------
+-- UART Contoller
+------------------------------------------------------------------------------------------------------------
+
+trigger_process:
+process(CLOCK_50MHz)
+begin
+    if rising_edge(CLOCK_50MHz) then
+        if uart_counter = "10111110101111000010000000" then
+            uart_counter <= (others => '0');
+            uart_trigger <= '1';
+        else
+            uart_counter <= uart_counter + '1';
+            uart_trigger <= '0';
+        end if;
+    end if;
+end process;
+
+uart_message <= x"DEADC0DE";
+
+UartProcess_Module: UartProcess
+port map
+(
+    CLOCK => CLOCK_50MHz,
+    RESET => global_reset,
+    -- IN
+    UART_LOG_TRIGGER => uart_trigger,
+    UART_LOG_VECTOR => uart_message,
+    -- BOTH
+    UART_PROCESS_RX => FPGA_UART_RX,
+    UART_PROCESS_TX => FPGA_UART_TX,
+    -- OUT
+    WRITE_BUSY => uart_busy
+);
+
+
+------------------------------------------------------------------------------------------------------------
+-- DEBUG
+------------------------------------------------------------------------------------------------------------
+
+LED_process:
+process(CLOCK_50MHz, global_reset)
+begin
+    if rising_edge(CLOCK_50MHz) then
+        if global_reset = '0' then
+            LED_1 <= '0';
+            LED_2 <= '1';
+            LED_3 <= '1';
+            LED_4 <= '0';
+            LED_5 <= '0';
+            LED_6 <= '1';
+            LED_7 <= '1';
+            LED_8 <= '0';
+        else
+            LED_1 <= '1';
+            LED_2 <= '1';
+            LED_3 <= '1';
+            LED_4 <= '1';
+            LED_5 <= '1';
+            LED_6 <= '1';
+            LED_7 <= '1';
+            LED_8 <= '1';
+        end if;
+    end if;
+end process;
 
 end rtl;
 

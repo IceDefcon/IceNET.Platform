@@ -42,7 +42,7 @@ begin
     process(CLOCK_50MHz)
     begin
         if RESET = '1' then
-            temp_state <= TEMP_IDLE
+            temp_state <= TEMP_IDLE;
         elsif rising_edge(CLOCK_50MHz) then
 
             case temp_state is
