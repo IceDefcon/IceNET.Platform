@@ -6,7 +6,7 @@ use ieee.std_logic_unsigned.all;
 entity IRQ_CONTROLLER is
 generic
 (
-    VECTOR_SIZE : integer := 4
+    VECTOR_SIZE : integer := 6
 );
 Port
 (
@@ -29,6 +29,8 @@ type VECTOR_TYPE is
     VECTOR_1, -- 0x32 :: Keyboard 2
     VECTOR_2, -- 0x33 :: Keyboard 3
     VECTOR_3, -- 0x34 :: Keyboard 4
+    VECTOR_4, -- 0x35 :: Keyboard 5
+    VECTOR_5, -- 0x36 :: Keyboard 6
     VECTOR_DONE
 );
 signal vector_state: VECTOR_TYPE := VECTOR_IDLE;
@@ -41,10 +43,7 @@ begin
     interrupt_process: process(CLOCK, RESET)
     begin
         if RESET = '1' then
-            vector_trigger(0) <= '0';
-            vector_trigger(1) <= '0';
-            vector_trigger(2) <= '0';
-            vector_trigger(3) <= '0';
+            vector_trigger <= (others => '0');
             interrupt_vector <= (others => '0');
             vector_state <= VECTOR_IDLE;
         elsif rising_edge(CLOCK) then
@@ -63,22 +62,34 @@ begin
                         vector_state <= VECTOR_2;
                     elsif interrupt_vector = "0110100" then
                         vector_state <= VECTOR_3;
+                    elsif interrupt_vector = "0110101" then
+                        vector_state <= VECTOR_4;
+                    elsif interrupt_vector = "0110110" then
+                        vector_state <= VECTOR_5;
                     end if;
 
                 when VECTOR_0 =>
-                    vector_trigger(2 downto 0) <= "001";
+                    vector_trigger(1 downto 0) <= "00";
                     vector_state <= VECTOR_DONE;
 
                 when VECTOR_1 =>
-                    vector_trigger(2 downto 0) <= "010";
+                    vector_trigger(1 downto 0) <= "01";
                     vector_state <= VECTOR_DONE;
 
                 when VECTOR_2 =>
-                    vector_trigger(2 downto 0) <= "100";
+                    vector_trigger(1 downto 0) <= "10";
                     vector_state <= VECTOR_DONE;
 
                 when VECTOR_3 =>
-                    vector_trigger(3) <= not vector_trigger(3);
+                    vector_trigger(3 downto 2) <= "00";
+                    vector_state <= VECTOR_DONE;
+
+                when VECTOR_4 =>
+                    vector_trigger(3 downto 2) <= "01";
+                    vector_state <= VECTOR_DONE;
+
+                when VECTOR_5 =>
+                    vector_trigger(3 downto 2) <= "10";
                     vector_state <= VECTOR_DONE;
 
                 when VECTOR_DONE =>

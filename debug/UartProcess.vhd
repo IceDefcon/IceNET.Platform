@@ -18,7 +18,7 @@ port
 
     WRITE_BUSY : out std_logic;
 
-    DEBUG_INTERRUPT : out std_logic_vector(3 downto 0)
+    DEBUG_INTERRUPT : out std_logic_vector(5 downto 0)
 );
 end UartProcess;
 
@@ -113,7 +113,7 @@ port
     TRIGGER : in std_logic;
     COMMAND : in std_logic_vector(6 downto 0);
 
-    VECTOR_INTERRUPT : out std_logic_vector(3 downto 0)
+    VECTOR_INTERRUPT : out std_logic_vector(5 downto 0)
 );
 end component;
 
@@ -184,7 +184,7 @@ port map
 IRQ_CONTROLLER_module: IRQ_CONTROLLER
 generic map
 (
-    VECTOR_SIZE => 4
+    VECTOR_SIZE => 6
 )
 port map
 (

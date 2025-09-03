@@ -112,7 +112,7 @@ signal uart_trigger : std_logic := '0';
 signal uart_counter : std_logic_vector(31 downto 0) := (others => '0');
 signal uart_message : std_logic_vector(31 downto 0) := (others => '0');
 
-signal debug_led : std_logic_vector(3 downto 0) := (others => '0');
+signal debug_led : std_logic_vector(5 downto 0) := (others => '0');
 
 ------------------------------------------------------------------------------------------------------------
 -- Components
@@ -172,7 +172,7 @@ port
 
     WRITE_BUSY : out std_logic;
 
-    DEBUG_INTERRUPT : out std_logic_vector(3 downto 0)
+    DEBUG_INTERRUPT : out std_logic_vector(5 downto 0)
 );
 end component;
 
@@ -441,12 +441,12 @@ begin
             LED_8 <= '1';
         else
             LED_1 <= '1';
-            LED_2 <= debug_led(0);
-            LED_3 <= debug_led(1);
-            LED_4 <= debug_led(2);
-            LED_5 <= debug_led(3);
-            LED_6 <= '1';
-            LED_7 <= '1';
+            LED_2 <= not debug_led(0);
+            LED_3 <= not debug_led(1);
+            LED_4 <= not debug_led(2);
+            LED_5 <= not debug_led(3);
+            LED_6 <= not debug_led(4);
+            LED_7 <= not debug_led(5);
             LED_8 <= '1';
         end if;
     end if;
