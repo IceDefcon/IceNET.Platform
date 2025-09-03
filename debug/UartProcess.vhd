@@ -16,7 +16,9 @@ port
     UART_PROCESS_RX : in std_logic;
     UART_PROCESS_TX : out std_logic;
 
-    WRITE_BUSY : out std_logic
+    WRITE_BUSY : out std_logic;
+
+    DEBUG_INTERRUPT : out std_logic_vector(3 downto 0)
 );
 end UartProcess;
 
@@ -98,6 +100,23 @@ port
 );
 end component;
 
+component IRQ_CONTROLLER
+generic
+(
+    VECTOR_SIZE : integer := 4
+);
+port
+(
+    CLOCK : in  std_logic;
+    RESET : in  std_logic;
+
+    TRIGGER : in std_logic;
+    COMMAND : in std_logic_vector(6 downto 0);
+
+    VECTOR_INTERRUPT : out std_logic_vector(3 downto 0)
+);
+end component;
+
 begin
 
 ------------------------------------------------------------------------------------------------------------
@@ -160,6 +179,22 @@ port map
     READ_BUSY => uart_read_busy,
 
     FPGA_UART_RX => UART_PROCESS_RX
+);
+
+IRQ_CONTROLLER_module: IRQ_CONTROLLER
+generic map
+(
+    VECTOR_SIZE => 4
+)
+port map
+(
+    CLOCK => CLOCK,
+    RESET => RESET,
+
+    TRIGGER => uart_read_enable,
+    COMMAND => uart_read_symbol,
+
+    VECTOR_INTERRUPT => DEBUG_INTERRUPT
 );
 
 end architecture;

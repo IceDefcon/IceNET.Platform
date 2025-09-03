@@ -72,7 +72,7 @@ begin
             -- IDLE
             ---------------------------------------------------------------------------------------------------
             when SYMBOL_IDLE =>
-                if FPGA_UART_RX = '0' then
+                if FPGA_SYMBOL_RX = '0' then
                     symbol_state <= SYMBOL_PROCESS;
                 end if;
 
@@ -88,35 +88,35 @@ begin
                         --
                     elsif symbol_process_timer = bit_0 then
 
-                        symbol_byte(0) <= FPGA_UART_RX;
+                        symbol_byte(0) <= FPGA_SYMBOL_RX;
 
                     elsif symbol_process_timer = bit_1 then
 
-                        symbol_byte(1) <= FPGA_UART_RX;
+                        symbol_byte(1) <= FPGA_SYMBOL_RX;
 
                     elsif symbol_process_timer = bit_2 then
 
-                        symbol_byte(2) <= FPGA_UART_RX;
+                        symbol_byte(2) <= FPGA_SYMBOL_RX;
 
                     elsif symbol_process_timer = bit_3 then
 
-                        symbol_byte(3) <= FPGA_UART_RX;
+                        symbol_byte(3) <= FPGA_SYMBOL_RX;
 
                     elsif symbol_process_timer = bit_4 then
 
-                        symbol_byte(4) <= FPGA_UART_RX;
+                        symbol_byte(4) <= FPGA_SYMBOL_RX;
 
                     elsif symbol_process_timer = bit_5 then
 
-                        symbol_byte(5) <= FPGA_UART_RX;
+                        symbol_byte(5) <= FPGA_SYMBOL_RX;
 
                     elsif symbol_process_timer = bit_6 then
 
-                        symbol_byte(6) <= FPGA_UART_RX;
+                        symbol_byte(6) <= FPGA_SYMBOL_RX;
 
                     elsif symbol_process_timer = bit_7 then
 
-                        symbol_byte(7) <= FPGA_UART_RX;
+                        symbol_byte(7) <= FPGA_SYMBOL_RX;
 
                     elsif symbol_process_timer = bit_stop then
 
