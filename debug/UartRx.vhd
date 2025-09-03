@@ -38,68 +38,52 @@ signal bit_count : std_logic_vector(3 downto 0) := (others => '0');
 
 signal symbol_process : std_logic_vector(7 downto 0) := (others => '0');
 
+signal REG_FPGA_UART_RX : std_logic := '1';
+signal DELAYED_FPGA_UART_RX : std_logic := '1';
+
 type STATE is
 (
     UART_IDLE,
     UART_PROCESS,
-    UART_FIFO,
+    UART_SYMBOL_READY,
     UART_DONE
 );
 signal uart_state: STATE := UART_IDLE;
 
---signal FPGA_UART_RX_d1 : std_logic := '0';
---signal FPGA_UART_RX_d2 : std_logic := '0';
---signal FPGA_UART_RX_d3 : std_logic := '0';
---signal FPGA_UART_RX_d4 : std_logic := '0';
---signal FPGA_UART_RX_delayed : std_logic := '0';
-
---signal REG_FPGA_UART_RX : std_logic_vector(2047 downto 0) := (others => '0');
-
 begin
-
---buffer_delay_process:
---process(CLOCK)
---begin
---    if rising_edge(CLOCK) then
---        FPGA_UART_RX_d1 <= FPGA_UART_RX;
---        FPGA_UART_RX_d2 <= FPGA_UART_RX_d1;
---        FPGA_UART_RX_d3 <= FPGA_UART_RX_d2;
---        FPGA_UART_RX_d4 <= FPGA_UART_RX_d3;
---        FPGA_UART_RX_delayed <= FPGA_UART_RX_d4;
---    end if;
---end process;
 
 state_machine_process:
 process(CLOCK, RESET)
 begin
     if RESET = '1' then
+        ---------------------------------------------------------------------------------------------------
+        -- RESET Values
+        ---------------------------------------------------------------------------------------------------
         uart_state <= UART_IDLE;
         byte_process_timer <= 0;
-        --bit_number <= 0;
-        --uart_output <= '1';
         READ_BUSY <= '0';
     elsif rising_edge(CLOCK) then
-        ---------------------------------
+        ---------------------------------------------------------------------------------------------------
         -- Avoid Latches
-        ---------------------------------
-        --symbol_trigger <= '0';
+        ---------------------------------------------------------------------------------------------------
+        symbol_trigger <= '0';
 
-        ---------------------------------
+        ---------------------------------------------------------------------------------------------------
         -- State Machine
-        ---------------------------------
+        ---------------------------------------------------------------------------------------------------
         case uart_state is
 
-            ---------------------------------
+            ---------------------------------------------------------------------------------------------------
             -- IDLE
-            ---------------------------------
+            ---------------------------------------------------------------------------------------------------
             when UART_IDLE =>
                 if FPGA_UART_RX = '0' then
                     uart_state <= UART_PROCESS;
                 end if;
 
-            ---------------------------------
+            ---------------------------------------------------------------------------------------------------
             -- START PROCESS
-            ---------------------------------
+            ---------------------------------------------------------------------------------------------------
             when UART_PROCESS =>
                 if byte_process_timer = 1024 then
                 else
@@ -141,37 +125,36 @@ begin
 
                     elsif byte_process_timer = bit_stop then
 
-                        uart_state <= UART_FIFO;
+                        uart_state <= UART_SYMBOL_READY;
 
                     end if;
 
                     byte_process_timer <= byte_process_timer + 1;
                 end if;
 
-            ---------------------------------
+            ---------------------------------------------------------------------------------------------------
             -- WRITE TO FIFO
-            ---------------------------------
-            when UART_FIFO =>
-                READ_ENABLE <= '1';
-                READ_SYMBOL <= symbol_process(6 downto 0);
-                byte_process_timer <= 0;
-                --symbol_trigger <= '1';
+            ---------------------------------------------------------------------------------------------------
+            when UART_SYMBOL_READY =>
+                symbol_trigger <= '1';
                 uart_state <= UART_DONE;
+                READ_SYMBOL <= symbol_process(6 downto 0);
 
-            ---------------------------------
+            ---------------------------------------------------------------------------------------------------
             -- DONE
-            ---------------------------------
+            ---------------------------------------------------------------------------------------------------
             when UART_DONE =>
-                READ_ENABLE <= '0';
                 symbol_process <= (others => '0');
+                byte_process_timer <= 0;
                 uart_state <= UART_IDLE;
 
             when others =>
                 uart_state <= UART_IDLE;
 
         end case;
-
-
     end if;
 end process;
+
+READ_ENABLE <= symbol_trigger;
+
 end architecture;
