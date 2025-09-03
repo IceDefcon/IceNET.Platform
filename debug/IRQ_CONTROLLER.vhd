@@ -66,15 +66,15 @@ begin
                     end if;
 
                 when VECTOR_0 =>
-                    vector_trigger(0) <= not vector_trigger(0);
+                    vector_trigger(2 downto 0) <= "001";
                     vector_state <= VECTOR_DONE;
 
                 when VECTOR_1 =>
-                    vector_trigger(1) <= not vector_trigger(1);
+                    vector_trigger(2 downto 0) <= "010";
                     vector_state <= VECTOR_DONE;
 
                 when VECTOR_2 =>
-                    vector_trigger(2) <= not vector_trigger(2);
+                    vector_trigger(2 downto 0) <= "100";
                     vector_state <= VECTOR_DONE;
 
                 when VECTOR_3 =>
