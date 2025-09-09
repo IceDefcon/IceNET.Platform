@@ -112,6 +112,8 @@ signal uart_trigger : std_logic := '0';
 signal uart_counter : std_logic_vector(31 downto 0) := (others => '0');
 signal uart_message : std_logic_vector(31 downto 0) := (others => '0');
 
+signal debug_led : std_logic_vector(5 downto 0) := (others => '0');
+
 ------------------------------------------------------------------------------------------------------------
 -- Components
 ------------------------------------------------------------------------------------------------------------
@@ -168,7 +170,9 @@ port
     UART_PROCESS_RX : in std_logic;
     UART_PROCESS_TX : out std_logic;
 
-    WRITE_BUSY : out std_logic
+    WRITE_BUSY : out std_logic;
+
+    DEBUG_INTERRUPT : out std_logic_vector(5 downto 0)
 );
 end component;
 
@@ -412,7 +416,9 @@ port map
     UART_PROCESS_RX => FPGA_UART_RX,
     UART_PROCESS_TX => FPGA_UART_TX,
     -- OUT
-    WRITE_BUSY => uart_busy
+    WRITE_BUSY => uart_busy,
+
+    DEBUG_INTERRUPT => debug_led
 );
 
 
@@ -424,16 +430,7 @@ LED_process:
 process(CLOCK_50MHz, global_reset)
 begin
     if rising_edge(CLOCK_50MHz) then
-        if global_reset = '0' then
-            LED_1 <= '0';
-            LED_2 <= '1';
-            LED_3 <= '1';
-            LED_4 <= '0';
-            LED_5 <= '0';
-            LED_6 <= '1';
-            LED_7 <= '1';
-            LED_8 <= '0';
-        else
+        if global_reset = '1' then 
             LED_1 <= '1';
             LED_2 <= '1';
             LED_3 <= '1';
@@ -441,6 +438,15 @@ begin
             LED_5 <= '1';
             LED_6 <= '1';
             LED_7 <= '1';
+            LED_8 <= '1';
+        else
+            LED_1 <= '1';
+            LED_2 <= not debug_led(0);
+            LED_3 <= not debug_led(1);
+            LED_4 <= not debug_led(2);
+            LED_5 <= not debug_led(3);
+            LED_6 <= not debug_led(4);
+            LED_7 <= not debug_led(5);
             LED_8 <= '1';
         end if;
     end if;
