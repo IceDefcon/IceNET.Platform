@@ -25,28 +25,29 @@ architecture rtl of UartRx is
 ---------------------------------------------------------------------------------------------------
 -- Constand definitions
 ---------------------------------------------------------------------------------------------------
+constant PROCESS_SIZE : integer := 2048;
 constant EDGE_COUNT_OFFSET : integer range 0 to 4 := 2;
 constant EDGE_OFFSET : integer range 0 to 4 := 2;
 constant EDGE_SYNC : integer range 0 to 4 := 2;
 
 constant BIT_BAUD : integer range 0 to 64 := 25; -- 25*20ns ---> 2M Baud
 constant BIT_START : integer range 0 to 64 := 15;               -- 15
-constant BIT_0 : integer range 0 to 1024 := BIT_START + BIT_BAUD; -- 40
-constant BIT_1 : integer range 0 to 1024 := BIT_0 + BIT_BAUD;     -- 65
-constant BIT_2 : integer range 0 to 1024 := BIT_1 + BIT_BAUD;     -- 90
-constant BIT_3 : integer range 0 to 1024 := BIT_2 + BIT_BAUD;     -- 115
-constant BIT_4 : integer range 0 to 1024 := BIT_3 + BIT_BAUD;     -- 140
-constant BIT_5 : integer range 0 to 1024 := BIT_4 + BIT_BAUD;     -- 165
-constant BIT_6 : integer range 0 to 1024 := BIT_5 + BIT_BAUD;     -- 190
-constant BIT_7 : integer range 0 to 1024 := BIT_6 + BIT_BAUD;     -- 215
-constant BIT_STOP : integer range 0 to 1024 := BIT_7 + BIT_BAUD;  -- 240
-constant BIT_NEXT : integer range 0 to 1024 := BIT_STOP + BIT_BAUD;   -- 265
+constant BIT_0 : integer range 0 to PROCESS_SIZE := BIT_START + BIT_BAUD; -- 40
+constant BIT_1 : integer range 0 to PROCESS_SIZE := BIT_0 + BIT_BAUD;     -- 65
+constant BIT_2 : integer range 0 to PROCESS_SIZE := BIT_1 + BIT_BAUD;     -- 90
+constant BIT_3 : integer range 0 to PROCESS_SIZE := BIT_2 + BIT_BAUD;     -- 115
+constant BIT_4 : integer range 0 to PROCESS_SIZE := BIT_3 + BIT_BAUD;     -- 140
+constant BIT_5 : integer range 0 to PROCESS_SIZE := BIT_4 + BIT_BAUD;     -- 165
+constant BIT_6 : integer range 0 to PROCESS_SIZE := BIT_5 + BIT_BAUD;     -- 190
+constant BIT_7 : integer range 0 to PROCESS_SIZE := BIT_6 + BIT_BAUD;     -- 215
+constant BIT_STOP : integer range 0 to PROCESS_SIZE := BIT_7 + BIT_BAUD;  -- 240
+constant BIT_NEXT : integer range 0 to PROCESS_SIZE := BIT_STOP + BIT_BAUD;   -- 265
 
 ---------------------------------------------------------------------------------------------------
 -- Signals
 ---------------------------------------------------------------------------------------------------
 signal symbol_byte : std_logic_vector(7 downto 0) := (others => '0');
-signal symbol_process_timer : integer range 0 to 1024 := 0;
+signal symbol_process_timer : integer range 0 to PROCESS_SIZE := 0;
 signal symbol_trigger : std_logic := '0';
 
 type UART_STATE_MACHINE is
@@ -66,7 +67,7 @@ signal fpga_uart_rx_d2 : std_logic := '0';
 
 signal edge_detected : std_logic := '0';
 signal edge_timer : std_logic_vector(7 downto 0) := (others => '0');
-signal edge_error_correction : integer range 0 to 1024 := 0;
+signal edge_error_correction : integer range 0 to PROCESS_SIZE := 0;
 
 signal uart_fifo_data_I : std_logic_vector(7 downto 0) := (others => '0');
 signal uart_fifo_rd_en : std_logic := '0';
@@ -149,14 +150,14 @@ begin
             -- START PROCESS
             ---------------------------------------------------------------------------------------------------
             when UART_NEXT_SYMBOL =>
-                fpga_uart_rx_d1 <= '0';
-                fpga_uart_rx_d2 <= '0';
-                edge_timer <= edge_timer + 1;
+                fpga_uart_rx_d1 <= fpga_uart_rx_s2;
+                fpga_uart_rx_d2 <= fpga_uart_rx_d1;
+                edge_timer <= edge_timer + '1';
                 symbol_process_timer <= BIT_START + edge_error_correction;
                 uart_state <= UART_PROCESS_SYMBOL;
 
             when UART_PROCESS_SYMBOL =>
-                if symbol_process_timer = 1024 then
+                if symbol_process_timer = PROCESS_SIZE then
                 else
                     if symbol_process_timer = BIT_START then
                         ---------------------------------------------------------------------------------------------------
@@ -257,9 +258,14 @@ begin
                     fpga_uart_rx_d2 <= fpga_uart_rx_d1;
 
                     if fpga_uart_rx_d1 /= fpga_uart_rx_d2 then
-                        edge_detected <= '1';
-                        if to_integer(unsigned(edge_timer)) > 23 then
-                            edge_error_correction <= (edge_error_correction + ((to_integer(unsigned(edge_timer)) + EDGE_COUNT_OFFSET) mod BIT_BAUD));
+                        ---------------------------------------------------------------------------------------------------
+                        -- Ignore First Edge
+                        ---------------------------------------------------------------------------------------------------
+                        if symbol_process_timer > BIT_START then
+                            edge_detected <= '1';
+                            if to_integer(unsigned(edge_timer)) > 23 then
+                                edge_error_correction <= (edge_error_correction + ((to_integer(unsigned(edge_timer)) + EDGE_COUNT_OFFSET) mod BIT_BAUD));
+                            end if;
                         end if;
                     end if;
 
