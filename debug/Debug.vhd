@@ -413,8 +413,8 @@ port map
     UART_LOG_TRIGGER => uart_trigger,
     UART_LOG_VECTOR => uart_message,
     -- BOTH
-    UART_PROCESS_RX => DEBUG_UART_RX,
-    UART_PROCESS_TX => DEBUG_UART_TX,
+    UART_PROCESS_RX => FPGA_UART_RX,
+    UART_PROCESS_TX => FPGA_UART_TX,
     -- OUT
     WRITE_BUSY => uart_busy,
 
