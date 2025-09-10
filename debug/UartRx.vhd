@@ -29,22 +29,19 @@ constant PROCESS_SIZE : integer := 2048;
 constant EDGE_COUNT_OFFSET : integer range 0 to 4 := 2;
 constant EDGE_OFFSET : integer range 0 to 4 := 2;
 constant EDGE_SYNC : integer range 0 to 4 := 2;
----------------------------------------------------------------------------------------------------
--- 100*20ns ---> 500K Baud
--- 100*5ns  ---> 2M Baud
----------------------------------------------------------------------------------------------------
-constant BIT_BAUD : integer range 0 to 128 := 100;
-constant BIT_START : integer range 0 to 128 := 60; -- 60
-constant BIT_0 : integer range 0 to PROCESS_SIZE := BIT_START + BIT_BAUD; -- 160
-constant BIT_1 : integer range 0 to PROCESS_SIZE := BIT_0 + BIT_BAUD;     -- 260
-constant BIT_2 : integer range 0 to PROCESS_SIZE := BIT_1 + BIT_BAUD;     -- 360
-constant BIT_3 : integer range 0 to PROCESS_SIZE := BIT_2 + BIT_BAUD;     -- 460
-constant BIT_4 : integer range 0 to PROCESS_SIZE := BIT_3 + BIT_BAUD;     -- 560
-constant BIT_5 : integer range 0 to PROCESS_SIZE := BIT_4 + BIT_BAUD;     -- 660
-constant BIT_6 : integer range 0 to PROCESS_SIZE := BIT_5 + BIT_BAUD;     -- 760
-constant BIT_7 : integer range 0 to PROCESS_SIZE := BIT_6 + BIT_BAUD;     -- 860
-constant BIT_STOP : integer range 0 to PROCESS_SIZE := BIT_7 + BIT_BAUD;  -- 960
-constant BIT_NEXT : integer range 0 to PROCESS_SIZE := BIT_STOP + BIT_BAUD; -- 1060
+
+constant BIT_BAUD : integer range 0 to 64 := 25; -- 25*20ns ---> 2M Baud
+constant BIT_START : integer range 0 to 64 := 15;               -- 15
+constant BIT_0 : integer range 0 to PROCESS_SIZE := BIT_START + BIT_BAUD; -- 40
+constant BIT_1 : integer range 0 to PROCESS_SIZE := BIT_0 + BIT_BAUD;     -- 65
+constant BIT_2 : integer range 0 to PROCESS_SIZE := BIT_1 + BIT_BAUD;     -- 90
+constant BIT_3 : integer range 0 to PROCESS_SIZE := BIT_2 + BIT_BAUD;     -- 115
+constant BIT_4 : integer range 0 to PROCESS_SIZE := BIT_3 + BIT_BAUD;     -- 140
+constant BIT_5 : integer range 0 to PROCESS_SIZE := BIT_4 + BIT_BAUD;     -- 165
+constant BIT_6 : integer range 0 to PROCESS_SIZE := BIT_5 + BIT_BAUD;     -- 190
+constant BIT_7 : integer range 0 to PROCESS_SIZE := BIT_6 + BIT_BAUD;     -- 215
+constant BIT_STOP : integer range 0 to PROCESS_SIZE := BIT_7 + BIT_BAUD;  -- 240
+constant BIT_NEXT : integer range 0 to PROCESS_SIZE := BIT_STOP + BIT_BAUD;   -- 265
 
 ---------------------------------------------------------------------------------------------------
 -- Signals
