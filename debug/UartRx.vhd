@@ -30,8 +30,8 @@ constant EDGE_COUNT_OFFSET : integer range 0 to 4 := 2;
 constant EDGE_OFFSET : integer range 0 to 4 := 2;
 constant EDGE_SYNC : integer range 0 to 4 := 2;
 
-constant BIT_BAUD : integer range 0 to 64 := 25; -- 25*20ns ---> 2M Baud
-constant BIT_START : integer range 0 to 64 := 15;               -- 15
+constant BIT_BAUD : integer range 0 to 64 := 50; -- 25*20ns ---> 2M Baud
+constant BIT_START : integer range 0 to 64 := 30;               -- 15
 constant BIT_0 : integer range 0 to PROCESS_SIZE := BIT_START + BIT_BAUD; -- 40
 constant BIT_1 : integer range 0 to PROCESS_SIZE := BIT_0 + BIT_BAUD;     -- 65
 constant BIT_2 : integer range 0 to PROCESS_SIZE := BIT_1 + BIT_BAUD;     -- 90
@@ -55,8 +55,8 @@ type UART_STATE_MACHINE is
     UART_IDLE,
     UART_NEXT_SYMBOL,
     UART_PROCESS_SYMBOL,
-    UART_PROCESS_SYMBOL_COMPETE,
-    UART_PROCESS_COMPETE
+    UART_PROCESS_SYMBOL_COMPLETE,
+    UART_PROCESS_COMPLETE
 );
 signal uart_state: UART_STATE_MACHINE := UART_IDLE;
 
@@ -142,7 +142,7 @@ begin
                 fpga_uart_rx_d2 <= '1';
                 if fpga_uart_rx_s2 = '0' then
                     READ_BUSY <= '1';
-                    symbol_process_timer <= EDGE_OFFSET + EDGE_SYNC; -- Edge Offset + Sync UART Delay
+                    symbol_process_timer <= EDGE_SYNC; -- Edge Offset + Sync UART Delay
                     uart_state <= UART_PROCESS_SYMBOL;
                 end if;
 
@@ -240,7 +240,7 @@ begin
                             -- TRANSMISSION OVER
                             ---------------------------------------------------------------------------------------------------
                             uart_fifo_wr_en <= '1';
-                            uart_state <= UART_PROCESS_SYMBOL_COMPETE;
+                            uart_state <= UART_PROCESS_SYMBOL_COMPLETE;
                             uart_fifo_data_I <= "0" & symbol_byte(6 downto 0);
                         end if;
 
@@ -280,18 +280,18 @@ begin
             ---------------------------------------------------------------------------------------------------
             -- WRITE TO FIFO
             ---------------------------------------------------------------------------------------------------
-            when UART_PROCESS_SYMBOL_COMPETE =>
+            when UART_PROCESS_SYMBOL_COMPLETE =>
+                symbol_process_timer <= 0;
                 symbol_trigger <= '1';
                 READ_SYMBOL <= symbol_byte(6 downto 0);
-                uart_state <= UART_PROCESS_COMPETE;
+                uart_state <= UART_PROCESS_COMPLETE;
 
             ---------------------------------------------------------------------------------------------------
             -- DATA PROCESS COMPLETE
             ---------------------------------------------------------------------------------------------------
-            when UART_PROCESS_COMPETE =>
+            when UART_PROCESS_COMPLETE =>
                 READ_BUSY <= '0';
                 symbol_byte <= (others => '0');
-                symbol_process_timer <= 0;
                 uart_state <= UART_IDLE;
 
             when others =>
