@@ -19,8 +19,7 @@ end UartTx;
 
 architecture rtl of UartTx is
 
---constant baudRate : std_logic_vector(7 downto 0) := "00110001"; -- 1/[50*20ns] ---> 1M Baud Rate
-constant baudRate : std_logic_vector(7 downto 0) := "00011000"; -- 1/[25*20ns] ---> 2M Baud Rate
+constant baudRate : std_logic_vector(7 downto 0) := "01100011"; -- 1/[100*20ns] ---> 2M @ 200Mhz
 
 type STATE is
 (

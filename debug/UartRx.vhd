@@ -13,23 +13,24 @@ port
     READ_SYMBOL : out std_logic_vector(6 downto 0);
     READ_BUSY : out std_logic;
 
-    FPGA_UART_RX : in std_logic
+    FPGA_UART_RX : in std_logic;
+    UART_DEBUG : out std_logic_vector(5 downto 0)
 );
 end UartRx;
 
 architecture rtl of UartRx is
 
-constant bit_baud : integer range 0 to 128 := 100; -- 100*5ns ---> 2M Baud
-constant bit_start : integer range 0 to 64 := 60;                 -- 40
-constant bit_0 : integer range 0 to 2048 := bit_start + bit_baud; -- 140
-constant bit_1 : integer range 0 to 2048 := bit_0 + bit_baud;     -- 240
-constant bit_2 : integer range 0 to 2048 := bit_1 + bit_baud;     -- 340
-constant bit_3 : integer range 0 to 2048 := bit_2 + bit_baud;     -- 440
-constant bit_4 : integer range 0 to 2048 := bit_3 + bit_baud;     -- 540
-constant bit_5 : integer range 0 to 2048 := bit_4 + bit_baud;     -- 640
-constant bit_6 : integer range 0 to 2048 := bit_5 + bit_baud;     -- 740
-constant bit_7 : integer range 0 to 2048 := bit_6 + bit_baud;     -- 840
-constant bit_stop : integer range 0 to 2048 := bit_7 + bit_baud;  -- 940
+constant bit_baud : integer range 0 to 128 := 100; -- 100*5ns ---> 2M Baud @ 200Mhz
+constant bit_start : integer range 0 to 128 := 60; -- 60
+constant bit_0 : integer range 0 to 2048 := bit_start + bit_baud; -- 160
+constant bit_1 : integer range 0 to 2048 := bit_0 + bit_baud;     -- 260
+constant bit_2 : integer range 0 to 2048 := bit_1 + bit_baud;     -- 360
+constant bit_3 : integer range 0 to 2048 := bit_2 + bit_baud;     -- 460
+constant bit_4 : integer range 0 to 2048 := bit_3 + bit_baud;     -- 560
+constant bit_5 : integer range 0 to 2048 := bit_4 + bit_baud;     -- 660
+constant bit_6 : integer range 0 to 2048 := bit_5 + bit_baud;     -- 760
+constant bit_7 : integer range 0 to 2048 := bit_6 + bit_baud;     -- 860
+constant bit_stop : integer range 0 to 2048 := bit_7 + bit_baud;  -- 960
 
 signal symbol_byte : std_logic_vector(7 downto 0) := (others => '0');
 signal symbol_process_timer : integer range 0 to 2048 := 0;
@@ -43,6 +44,12 @@ type SYMBOL_SM is
     SYMBOL_DONE
 );
 signal symbol_state: SYMBOL_SM := SYMBOL_IDLE;
+
+signal uart_rx_reg : std_logic := '1';
+signal uart_rx_sync : std_logic := '1';
+
+
+signal debug_uart_vector : std_logic_vector(5 downto 0) := (others => '0');
 
 begin
 
@@ -61,6 +68,14 @@ begin
         -- Avoid Latches
         ---------------------------------------------------------------------------------------------------
         symbol_trigger <= '0';
+        debug_uart_vector(1) <= '0';
+
+        ---------------------------------------------------------------------------------------------------
+        -- UART Sync
+        ---------------------------------------------------------------------------------------------------
+        uart_rx_reg <= FPGA_UART_RX;
+        uart_rx_sync <= uart_rx_reg;
+        debug_uart_vector(0) <= uart_rx_reg;
 
         ---------------------------------------------------------------------------------------------------
         -- State Machine
@@ -71,7 +86,8 @@ begin
             -- IDLE
             ---------------------------------------------------------------------------------------------------
             when SYMBOL_IDLE =>
-                if FPGA_UART_RX = '0' then
+                debug_uart_vector(5 downto 2) <= "1111";
+                if uart_rx_sync = '0' then
                     symbol_state <= SYMBOL_PROCESS;
                 end if;
 
@@ -82,44 +98,83 @@ begin
                 if symbol_process_timer = 2048 then
                 else
                     if symbol_process_timer = bit_start then
-                        --
-                        --
-                        --
-                    elsif symbol_process_timer = bit_0 then
+                        ---------------------------------------------------------------------------------------------------
+                        -- BIT START
+                        ---------------------------------------------------------------------------------------------------
+                        debug_uart_vector(5 downto 2) <= "0001";
+                        debug_uart_vector(1) <= '1';
 
-                        symbol_byte(0) <= FPGA_UART_RX;
+                    elsif symbol_process_timer = bit_0 then
+                        ---------------------------------------------------------------------------------------------------
+                        -- BIT 0
+                        ---------------------------------------------------------------------------------------------------
+                        debug_uart_vector(5 downto 2) <= "0010";
+                        symbol_byte(0) <= uart_rx_sync;
+                        debug_uart_vector(1) <= '1';
 
                     elsif symbol_process_timer = bit_1 then
-
-                        symbol_byte(1) <= FPGA_UART_RX;
+                        ---------------------------------------------------------------------------------------------------
+                        -- BIT 1
+                        ---------------------------------------------------------------------------------------------------
+                        debug_uart_vector(5 downto 2) <= "0011";
+                        symbol_byte(1) <= uart_rx_sync;
+                        debug_uart_vector(1) <= '1';
 
                     elsif symbol_process_timer = bit_2 then
-
-                        symbol_byte(2) <= FPGA_UART_RX;
+                        ---------------------------------------------------------------------------------------------------
+                        -- BIT 2
+                        ---------------------------------------------------------------------------------------------------
+                        debug_uart_vector(5 downto 2) <= "0100";
+                        symbol_byte(2) <= uart_rx_sync;
+                        debug_uart_vector(1) <= '1';
 
                     elsif symbol_process_timer = bit_3 then
-
-                        symbol_byte(3) <= FPGA_UART_RX;
+                        ---------------------------------------------------------------------------------------------------
+                        -- BIT 3
+                        ---------------------------------------------------------------------------------------------------
+                        debug_uart_vector(5 downto 2) <= "0101";
+                        symbol_byte(3) <= uart_rx_sync;
+                        debug_uart_vector(1) <= '1';
 
                     elsif symbol_process_timer = bit_4 then
-
-                        symbol_byte(4) <= FPGA_UART_RX;
+                        ---------------------------------------------------------------------------------------------------
+                        -- BIT 4
+                        ---------------------------------------------------------------------------------------------------
+                        debug_uart_vector(5 downto 2) <= "0110";
+                        symbol_byte(4) <= uart_rx_sync;
+                        debug_uart_vector(1) <= '1';
 
                     elsif symbol_process_timer = bit_5 then
-
-                        symbol_byte(5) <= FPGA_UART_RX;
+                        ---------------------------------------------------------------------------------------------------
+                        -- BIT 5
+                        ---------------------------------------------------------------------------------------------------
+                        debug_uart_vector(5 downto 2) <= "0111";
+                        symbol_byte(5) <= uart_rx_sync;
+                        debug_uart_vector(1) <= '1';
 
                     elsif symbol_process_timer = bit_6 then
-
-                        symbol_byte(6) <= FPGA_UART_RX;
+                        ---------------------------------------------------------------------------------------------------
+                        -- BIT 6
+                        ---------------------------------------------------------------------------------------------------
+                        debug_uart_vector(5 downto 2) <= "1000";
+                        symbol_byte(6) <= uart_rx_sync;
+                        debug_uart_vector(1) <= '1';
 
                     elsif symbol_process_timer = bit_7 then
-
-                        symbol_byte(7) <= FPGA_UART_RX;
+                        ---------------------------------------------------------------------------------------------------
+                        -- BIT 7
+                        ---------------------------------------------------------------------------------------------------
+                        debug_uart_vector(5 downto 2) <= "1001";
+                        symbol_byte(7) <= uart_rx_sync;
+                        debug_uart_vector(1) <= '1';
 
                     elsif symbol_process_timer = bit_stop then
-
+                        ---------------------------------------------------------------------------------------------------
+                        -- BIT STOP
+                        ---------------------------------------------------------------------------------------------------
+                        debug_uart_vector(5 downto 2) <= "1010";
                         symbol_state <= SYMBOL_SYMBOL_READY;
+                        debug_uart_vector(1) <= '1';
 
                     end if;
 
@@ -130,6 +185,7 @@ begin
             -- WRITE TO FIFO
             ---------------------------------------------------------------------------------------------------
             when SYMBOL_SYMBOL_READY =>
+                debug_uart_vector(5 downto 2) <= "1011";
                 symbol_trigger <= '1';
                 symbol_state <= SYMBOL_DONE;
                 READ_SYMBOL <= symbol_byte(6 downto 0);
@@ -138,6 +194,7 @@ begin
             -- DONE
             ---------------------------------------------------------------------------------------------------
             when SYMBOL_DONE =>
+                debug_uart_vector(5 downto 2) <= "1100";
                 symbol_byte <= (others => '0');
                 symbol_process_timer <= 0;
                 symbol_state <= SYMBOL_IDLE;
@@ -150,5 +207,7 @@ begin
 end process;
 
 READ_ENABLE <= symbol_trigger;
+
+UART_DEBUG <= debug_uart_vector;
 
 end architecture;

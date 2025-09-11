@@ -99,20 +99,7 @@ architecture rtl of Debug is
 ------------------------------------------------------------------------------------------------------------
 
 signal global_reset : std_logic := '1';
-
-signal synced_J504_IN1 : std_logic := '0';
-signal synced_J504_IN2 : std_logic := '0';
-signal synced_J504_IN3 : std_logic := '0';
-signal synced_J504_IN4 : std_logic := '0';
-signal synced_J504_IN5 : std_logic := '0';
-signal synced_J504_IN6 : std_logic := '0';
-
-signal short_J504_IN1 : std_logic := '0';
-signal short_J504_IN2 : std_logic := '0';
-signal short_J504_IN3 : std_logic := '0';
-signal short_J504_IN4 : std_logic := '0';
-signal short_J504_IN5 : std_logic := '0';
-signal short_J504_IN6 : std_logic := '0';
+signal CLOCK_200MHz : std_logic := '0';
 
 signal uart_busy : std_logic := '0';
 signal uart_trigger : std_logic := '0';
@@ -126,12 +113,21 @@ signal debug_led : std_logic_vector(5 downto 0) := (others => '0');
 ------------------------------------------------------------------------------------------------------------
 -- Components
 ------------------------------------------------------------------------------------------------------------
-
 component TimedReset
 Port
 (
     CLOCK : in  std_logic;
     TIMED_RESET : out std_logic
+);
+end component;
+
+component PLL_200MHz
+Port
+(
+    areset : IN STD_LOGIC;
+    inclk0 : IN STD_LOGIC;
+    c0 : OUT STD_LOGIC;
+    locked : OUT STD_LOGIC
 );
 end component;
 
@@ -200,6 +196,14 @@ J504_OUT2 <= CTRL_F2;
 -- Global Reset
 ------------------------------------------------------------------------------------------------------------
 
+PLL_200MHz_Main: PLL_200MHz port map
+(
+    areset => global_reset,
+    inclk0 => CLOCK_50MHz,
+    c0 => CLOCK_200MHz,
+    locked => open
+);
+
 TimedReset_Main: TimedReset port map
 (
     CLOCK => CLOCK_50MHz,
@@ -210,198 +214,21 @@ TimedReset_Main: TimedReset port map
 -- Synchroniser
 ------------------------------------------------------------------------------------------------------------
 
-DelaySynchroniser_J504_IN1: DelaySynchroniser
-generic map
-(
-    SYNCHRONIZATION_DEPTH => 2
-)
-port map
-(
-    CLOCK => CLOCK_50MHz,
-    RESET => global_reset,
 
-    ASYNC_INPUT => J504_IN1,
-    SYNC_OUTPUT => synced_J504_IN1
-);
-
-DelaySynchroniser_J504_IN2: DelaySynchroniser
-generic map
-(
-    SYNCHRONIZATION_DEPTH => 2
-)
-port map
-(
-    CLOCK => CLOCK_50MHz,
-    RESET => global_reset,
-
-    ASYNC_INPUT => J504_IN2,
-    SYNC_OUTPUT => synced_J504_IN2
-);
-
-DelaySynchroniser_J504_IN3: DelaySynchroniser
-generic map
-(
-    SYNCHRONIZATION_DEPTH => 2
-)
-port map
-(
-    CLOCK => CLOCK_50MHz,
-    RESET => global_reset,
-
-    ASYNC_INPUT => J504_IN3,
-    SYNC_OUTPUT => synced_J504_IN3
-);
-
-DelaySynchroniser_J504_IN4: DelaySynchroniser
-generic map
-(
-    SYNCHRONIZATION_DEPTH => 2
-)
-port map
-(
-    CLOCK => CLOCK_50MHz,
-    RESET => global_reset,
-
-    ASYNC_INPUT => J504_IN4,
-    SYNC_OUTPUT => synced_J504_IN4
-);
-
-DelaySynchroniser_J504_IN5: DelaySynchroniser
-generic map
-(
-    SYNCHRONIZATION_DEPTH => 2
-)
-port map
-(
-    CLOCK => CLOCK_50MHz,
-    RESET => global_reset,
-
-    ASYNC_INPUT => J504_IN5,
-    SYNC_OUTPUT => synced_J504_IN5
-);
-
-DelaySynchroniser_J504_IN6: DelaySynchroniser
-generic map
-(
-    SYNCHRONIZATION_DEPTH => 2
-)
-port map
-(
-    CLOCK => CLOCK_50MHz,
-    RESET => global_reset,
-
-    ASYNC_INPUT => J504_IN6,
-    SYNC_OUTPUT => synced_J504_IN6
-);
 
 ------------------------------------------------------------------------------------------------------------
 -- Pulse Contoller
 ------------------------------------------------------------------------------------------------------------
 
-PulseController_J504_IN1: PulseController
-generic map
-(
-    PULSE_LENGTH => 1 -- 1*20ns Pulse
-)
-port map
-(
-    CLOCK => CLOCK_50MHz,
-    RESET => global_reset,
-
-    ENABLE_CONTROLLER => '1',
-
-    INPUT_PULSE => synced_J504_IN1,
-    OUTPUT_PULSE => short_J504_IN1
-);
-
-PulseController_J504_IN2: PulseController
-generic map
-(
-    PULSE_LENGTH => 1 -- 1*20ns Pulse
-)
-port map
-(
-    CLOCK => CLOCK_50MHz,
-    RESET => global_reset,
-
-    ENABLE_CONTROLLER => '1',
-
-    INPUT_PULSE => synced_J504_IN2,
-    OUTPUT_PULSE => short_J504_IN2
-);
-
-PulseController_J504_IN3: PulseController
-generic map
-(
-    PULSE_LENGTH => 1 -- 1*20ns Pulse
-)
-port map
-(
-    CLOCK => CLOCK_50MHz,
-    RESET => global_reset,
-
-    ENABLE_CONTROLLER => '1',
-
-    INPUT_PULSE => synced_J504_IN3,
-    OUTPUT_PULSE => short_J504_IN3
-);
-
-PulseController_J504_IN4: PulseController
-generic map
-(
-    PULSE_LENGTH => 1 -- 1*20ns Pulse
-)
-port map
-(
-    CLOCK => CLOCK_50MHz,
-    RESET => global_reset,
-
-    ENABLE_CONTROLLER => '1',
-
-    INPUT_PULSE => synced_J504_IN4,
-    OUTPUT_PULSE => short_J504_IN4
-);
-
-PulseController_J504_IN5: PulseController
-generic map
-(
-    PULSE_LENGTH => 1 -- 1*20ns Pulse
-)
-port map
-(
-    CLOCK => CLOCK_50MHz,
-    RESET => global_reset,
-
-    ENABLE_CONTROLLER => '1',
-
-    INPUT_PULSE => synced_J504_IN5,
-    OUTPUT_PULSE => short_J504_IN5
-);
-
-PulseController_J504_IN6: PulseController
-generic map
-(
-    PULSE_LENGTH => 1 -- 1*20ns Pulse
-)
-port map
-(
-    CLOCK => CLOCK_50MHz,
-    RESET => global_reset,
-
-    ENABLE_CONTROLLER => '1',
-
-    INPUT_PULSE => synced_J504_IN6,
-    OUTPUT_PULSE => short_J504_IN6
-);
 
 ------------------------------------------------------------------------------------------------------------
 -- UART Contoller
 ------------------------------------------------------------------------------------------------------------
 
 trigger_process:
-process(CLOCK_50MHz)
+process(CLOCK_200MHz)
 begin
-    if rising_edge(CLOCK_50MHz) then
+    if rising_edge(CLOCK_200MHz) then
         if uart_counter = "10111110101111000010000000" then
             uart_counter <= (others => '0');
             uart_trigger <= '1';
@@ -417,7 +244,7 @@ uart_message <= x"DEADC0DE";
 UartProcess_Module: UartProcess
 port map
 (
-    CLOCK => CLOCK_50MHz,
+    CLOCK => CLOCK_200MHz,
     RESET => global_reset,
     -- IN
     UART_LOG_TRIGGER => uart_trigger,
@@ -432,15 +259,14 @@ port map
     UART_DEBUG => uart_debug_vector
 );
 
-
 ------------------------------------------------------------------------------------------------------------
 -- DEBUG
 ------------------------------------------------------------------------------------------------------------
 
 LED_process:
-process(CLOCK_50MHz, global_reset)
+process(CLOCK_200MHz, global_reset)
 begin
-    if rising_edge(CLOCK_50MHz) then
+    if rising_edge(CLOCK_200MHz) then
         if global_reset = '1' then 
             LED_1 <= '1';
             LED_2 <= '1';
