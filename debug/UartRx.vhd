@@ -10,11 +10,10 @@ port
     RESET : in std_logic;
 
     READ_ENABLE : out std_logic;
-    READ_SYMBOL : out std_logic_vector(6 downto 0);
+    READ_SYMBOL : out std_logic_vector(7 downto 0);
     READ_BUSY : out std_logic;
 
-    FPGA_UART_RX : in std_logic;
-    UART_DEBUG : out std_logic_vector(5 downto 0)
+    FPGA_UART_RX : in std_logic
 );
 end UartRx;
 
@@ -49,7 +48,6 @@ signal uart_rx_reg : std_logic := '1';
 signal uart_rx_sync : std_logic := '1';
 
 
-signal debug_uart_vector : std_logic_vector(5 downto 0) := (others => '0');
 
 begin
 
@@ -68,14 +66,12 @@ begin
         -- Avoid Latches
         ---------------------------------------------------------------------------------------------------
         symbol_trigger <= '0';
-        debug_uart_vector(1) <= '0';
 
         ---------------------------------------------------------------------------------------------------
         -- UART Sync
         ---------------------------------------------------------------------------------------------------
         uart_rx_reg <= FPGA_UART_RX;
         uart_rx_sync <= uart_rx_reg;
-        debug_uart_vector(0) <= uart_rx_reg;
 
         ---------------------------------------------------------------------------------------------------
         -- State Machine
@@ -86,7 +82,6 @@ begin
             -- IDLE
             ---------------------------------------------------------------------------------------------------
             when SYMBOL_IDLE =>
-                debug_uart_vector(5 downto 2) <= "1111";
                 if uart_rx_sync = '0' then
                     symbol_state <= SYMBOL_PROCESS;
                 end if;
@@ -101,80 +96,60 @@ begin
                         ---------------------------------------------------------------------------------------------------
                         -- BIT START
                         ---------------------------------------------------------------------------------------------------
-                        debug_uart_vector(5 downto 2) <= "0001";
-                        debug_uart_vector(1) <= '1';
 
                     elsif symbol_process_timer = bit_0 then
                         ---------------------------------------------------------------------------------------------------
                         -- BIT 0
                         ---------------------------------------------------------------------------------------------------
-                        debug_uart_vector(5 downto 2) <= "0010";
                         symbol_byte(0) <= uart_rx_sync;
-                        debug_uart_vector(1) <= '1';
 
                     elsif symbol_process_timer = bit_1 then
                         ---------------------------------------------------------------------------------------------------
                         -- BIT 1
                         ---------------------------------------------------------------------------------------------------
-                        debug_uart_vector(5 downto 2) <= "0011";
                         symbol_byte(1) <= uart_rx_sync;
-                        debug_uart_vector(1) <= '1';
 
                     elsif symbol_process_timer = bit_2 then
                         ---------------------------------------------------------------------------------------------------
                         -- BIT 2
                         ---------------------------------------------------------------------------------------------------
-                        debug_uart_vector(5 downto 2) <= "0100";
                         symbol_byte(2) <= uart_rx_sync;
-                        debug_uart_vector(1) <= '1';
 
                     elsif symbol_process_timer = bit_3 then
                         ---------------------------------------------------------------------------------------------------
                         -- BIT 3
                         ---------------------------------------------------------------------------------------------------
-                        debug_uart_vector(5 downto 2) <= "0101";
                         symbol_byte(3) <= uart_rx_sync;
-                        debug_uart_vector(1) <= '1';
 
                     elsif symbol_process_timer = bit_4 then
                         ---------------------------------------------------------------------------------------------------
                         -- BIT 4
                         ---------------------------------------------------------------------------------------------------
-                        debug_uart_vector(5 downto 2) <= "0110";
                         symbol_byte(4) <= uart_rx_sync;
-                        debug_uart_vector(1) <= '1';
 
                     elsif symbol_process_timer = bit_5 then
                         ---------------------------------------------------------------------------------------------------
                         -- BIT 5
                         ---------------------------------------------------------------------------------------------------
-                        debug_uart_vector(5 downto 2) <= "0111";
                         symbol_byte(5) <= uart_rx_sync;
-                        debug_uart_vector(1) <= '1';
 
                     elsif symbol_process_timer = bit_6 then
                         ---------------------------------------------------------------------------------------------------
                         -- BIT 6
                         ---------------------------------------------------------------------------------------------------
-                        debug_uart_vector(5 downto 2) <= "1000";
                         symbol_byte(6) <= uart_rx_sync;
-                        debug_uart_vector(1) <= '1';
 
                     elsif symbol_process_timer = bit_7 then
                         ---------------------------------------------------------------------------------------------------
                         -- BIT 7
                         ---------------------------------------------------------------------------------------------------
-                        debug_uart_vector(5 downto 2) <= "1001";
                         symbol_byte(7) <= uart_rx_sync;
-                        debug_uart_vector(1) <= '1';
 
                     elsif symbol_process_timer = bit_stop then
                         ---------------------------------------------------------------------------------------------------
                         -- BIT STOP
                         ---------------------------------------------------------------------------------------------------
-                        debug_uart_vector(5 downto 2) <= "1010";
                         symbol_state <= SYMBOL_SYMBOL_READY;
-                        debug_uart_vector(1) <= '1';
 
                     end if;
 
@@ -185,16 +160,14 @@ begin
             -- WRITE TO FIFO
             ---------------------------------------------------------------------------------------------------
             when SYMBOL_SYMBOL_READY =>
-                debug_uart_vector(5 downto 2) <= "1011";
                 symbol_trigger <= '1';
                 symbol_state <= SYMBOL_DONE;
-                READ_SYMBOL <= symbol_byte(6 downto 0);
+                READ_SYMBOL <= symbol_byte;
 
             ---------------------------------------------------------------------------------------------------
             -- DONE
             ---------------------------------------------------------------------------------------------------
             when SYMBOL_DONE =>
-                debug_uart_vector(5 downto 2) <= "1100";
                 symbol_byte <= (others => '0');
                 symbol_process_timer <= 0;
                 symbol_state <= SYMBOL_IDLE;
@@ -207,7 +180,5 @@ begin
 end process;
 
 READ_ENABLE <= symbol_trigger;
-
-UART_DEBUG <= debug_uart_vector;
 
 end architecture;

@@ -18,8 +18,7 @@ port
 
     WRITE_BUSY : out std_logic;
 
-    DEBUG_INTERRUPT : out std_logic_vector(5 downto 0);
-    UART_DEBUG  : out std_logic_vector(5 downto 0)
+    DEBUG_INTERRUPT : out std_logic_vector(5 downto 0)
 );
 end UartProcess;
 
@@ -44,10 +43,8 @@ signal uart_process_enable : std_logic := '0';
 signal uart_process_symbol : std_logic_vector(6 downto 0) := (others => '0');
 
 signal uart_read_enable : std_logic := '0';
-signal uart_read_symbol : std_logic_vector(6 downto 0) := (others => '0');
+signal uart_read_symbol : std_logic_vector(7 downto 0) := (others => '0');
 signal uart_read_busy : std_logic := '0';
-
-signal uart_debug_vector : std_logic_vector(5 downto 0) := (others => '0');
 
 ------------------------------------------------------------------------------------------------------------
 -- Components
@@ -74,11 +71,10 @@ port
     RESET : in std_logic;
 
     READ_ENABLE : out std_logic;
-    READ_SYMBOL : out std_logic_vector(6 downto 0);
+    READ_SYMBOL : out std_logic_vector(7 downto 0);
     READ_BUSY : out std_logic;
 
-    FPGA_UART_RX : in std_logic;
-    UART_DEBUG  : out std_logic_vector(5 downto 0)
+    FPGA_UART_RX : in std_logic
 );
 end component;
 
@@ -164,7 +160,7 @@ port map
     RESET => RESET,
 
     WRITE_ENABLE => uart_read_enable,
-    WRITE_SYMBOL => uart_read_symbol,
+    WRITE_SYMBOL => uart_read_symbol(6 downto 0),
     WRITE_BUSY => uart_write_busy,
 
     FPGA_UART_TX => UART_PROCESS_TX
@@ -182,8 +178,7 @@ port map
     READ_SYMBOL => uart_read_symbol,
     READ_BUSY => uart_read_busy,
 
-    FPGA_UART_RX => UART_PROCESS_RX,
-    UART_DEBUG => uart_debug_vector
+    FPGA_UART_RX => UART_PROCESS_RX
 );
 
 IRQ_CONTROLLER_module: IRQ_CONTROLLER
@@ -197,12 +192,10 @@ port map
     RESET => RESET,
 
     TRIGGER => uart_read_enable,
-    COMMAND => uart_read_symbol,
+    COMMAND => uart_read_symbol(6 downto 0),
 
     VECTOR_INTERRUPT => DEBUG_INTERRUPT
 );
-
-UART_DEBUG <= uart_debug_vector;
 
 end architecture;
 

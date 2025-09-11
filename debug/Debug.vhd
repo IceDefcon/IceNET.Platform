@@ -106,8 +106,6 @@ signal uart_trigger : std_logic := '0';
 signal uart_counter : std_logic_vector(31 downto 0) := (others => '0');
 signal uart_message : std_logic_vector(31 downto 0) := (others => '0');
 
-signal uart_debug_vector : std_logic_vector(5 downto 0) := (others => '0');
-
 signal debug_led : std_logic_vector(5 downto 0) := (others => '0');
 
 ------------------------------------------------------------------------------------------------------------
@@ -177,8 +175,7 @@ port
 
     WRITE_BUSY : out std_logic;
 
-    DEBUG_INTERRUPT : out std_logic_vector(5 downto 0);
-    UART_DEBUG  : out std_logic_vector(5 downto 0)
+    DEBUG_INTERRUPT : out std_logic_vector(5 downto 0)
 );
 end component;
 
@@ -255,8 +252,7 @@ port map
     -- OUT
     WRITE_BUSY => uart_busy,
 
-    DEBUG_INTERRUPT => debug_led,
-    UART_DEBUG => uart_debug_vector
+    DEBUG_INTERRUPT => debug_led
 );
 
 ------------------------------------------------------------------------------------------------------------
@@ -288,13 +284,6 @@ begin
         end if;
     end if;
 end process;
-
-DEBUG_PIN_5 <= uart_debug_vector(5);
-DEBUG_PIN_4 <= uart_debug_vector(4);
-DEBUG_PIN_3 <= uart_debug_vector(3);
-DEBUG_PIN_2 <= uart_debug_vector(2);
-DEBUG_PIN_1 <= uart_debug_vector(1);
-DEBUG_PIN_0 <= uart_debug_vector(0);
 
 end rtl;
 
