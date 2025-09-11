@@ -47,8 +47,6 @@ signal symbol_state: SYMBOL_SM := SYMBOL_IDLE;
 signal uart_rx_reg : std_logic := '1';
 signal uart_rx_sync : std_logic := '1';
 
-
-
 begin
 
 state_machine_process:
@@ -168,6 +166,7 @@ begin
             -- DONE
             ---------------------------------------------------------------------------------------------------
             when SYMBOL_DONE =>
+                READ_SYMBOL <= (others => '0');
                 symbol_byte <= (others => '0');
                 symbol_process_timer <= 0;
                 symbol_state <= SYMBOL_IDLE;
