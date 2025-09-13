@@ -113,7 +113,7 @@ end component;
 component IRQ_CONTROLLER
 generic
 (
-    VECTOR_SIZE : integer := 4
+    VECTOR_SIZE : integer := 10
 );
 port
 (
@@ -252,6 +252,8 @@ port map
 
     FPGA_UART_TX => UART_PROCESS_TX
 );
+
+WRITE_BUSY <= uart_write_busy;
 
 UartRx_module: UartRx
 port map
