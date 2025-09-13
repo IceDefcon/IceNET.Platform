@@ -10,93 +10,42 @@ port
     RESET : in std_logic;
 
     READ_ENABLE : out std_logic;
-    READ_SYMBOL : out std_logic_vector(6 downto 0);
+    READ_SYMBOL : out std_logic_vector(7 downto 0);
     READ_BUSY : out std_logic;
 
-    FPGA_UART_RX : in std_logic;
-
-    -- DEBUG OUTPUTS
-    BIT_READY_OUT  : out std_logic
+    FPGA_UART_RX : in std_logic
 );
 end UartRx;
 
 architecture rtl of UartRx is
 
----------------------------------------------------------------------------------------------------
--- Constand definitions
----------------------------------------------------------------------------------------------------
-constant PROCESS_SIZE : integer := 2048;
-constant EDGE_COUNT_OFFSET : integer range 0 to 4 := 2;
-constant EDGE_OFFSET : integer range 0 to 4 := 2;
-constant EDGE_SYNC : integer range 0 to 4 := 2;
----------------------------------------------------------------------------------------------------
--- 100*20ns ---> 500K Baud
--- 100*5ns  ---> 2M Baud
----------------------------------------------------------------------------------------------------
-constant BIT_BAUD : integer range 0 to 128 := 100;
-constant BIT_START : integer range 0 to 128 := 60; -- 60
-constant BIT_0 : integer range 0 to PROCESS_SIZE := BIT_START + BIT_BAUD; -- 160
-constant BIT_1 : integer range 0 to PROCESS_SIZE := BIT_0 + BIT_BAUD;     -- 260
-constant BIT_2 : integer range 0 to PROCESS_SIZE := BIT_1 + BIT_BAUD;     -- 360
-constant BIT_3 : integer range 0 to PROCESS_SIZE := BIT_2 + BIT_BAUD;     -- 460
-constant BIT_4 : integer range 0 to PROCESS_SIZE := BIT_3 + BIT_BAUD;     -- 560
-constant BIT_5 : integer range 0 to PROCESS_SIZE := BIT_4 + BIT_BAUD;     -- 660
-constant BIT_6 : integer range 0 to PROCESS_SIZE := BIT_5 + BIT_BAUD;     -- 760
-constant BIT_7 : integer range 0 to PROCESS_SIZE := BIT_6 + BIT_BAUD;     -- 860
-constant BIT_STOP : integer range 0 to PROCESS_SIZE := BIT_7 + BIT_BAUD;  -- 960
-constant BIT_NEXT : integer range 0 to PROCESS_SIZE := BIT_STOP + BIT_BAUD; -- 1060
+constant bit_baud : integer range 0 to 128 := 25; -- 100*5ns ---> 2M Baud @ 50Mhz
+constant bit_start : integer range 0 to 128 := 15; -- 60
+constant bit_0 : integer range 0 to 2048 := bit_start + bit_baud; -- 160
+constant bit_1 : integer range 0 to 2048 := bit_0 + bit_baud;     -- 260
+constant bit_2 : integer range 0 to 2048 := bit_1 + bit_baud;     -- 360
+constant bit_3 : integer range 0 to 2048 := bit_2 + bit_baud;     -- 460
+constant bit_4 : integer range 0 to 2048 := bit_3 + bit_baud;     -- 560
+constant bit_5 : integer range 0 to 2048 := bit_4 + bit_baud;     -- 660
+constant bit_6 : integer range 0 to 2048 := bit_5 + bit_baud;     -- 760
+constant bit_7 : integer range 0 to 2048 := bit_6 + bit_baud;     -- 860
+constant bit_stop : integer range 0 to 2048 := bit_7 + bit_baud;  -- 960
 
----------------------------------------------------------------------------------------------------
--- Signals
----------------------------------------------------------------------------------------------------
 signal symbol_byte : std_logic_vector(7 downto 0) := (others => '0');
-signal symbol_process_timer : integer range 0 to PROCESS_SIZE := 0;
+signal symbol_process_timer : integer range 0 to 2048 := 0;
 signal symbol_trigger : std_logic := '0';
 
-type UART_STATE_MACHINE is
+type SYMBOL_SM is
 (
-    UART_IDLE,
-    UART_NEXT_SYMBOL,
-    UART_PROCESS_SYMBOL,
-    UART_PROCESS_SYMBOL_COMPETE,
-    UART_PROCESS_COMPETE
+    SYMBOL_IDLE,
+    SYMBOL_PROCESS,
+    SYMBOL_SYMBOL_READY,
+    SYMBOL_DONE
 );
-signal uart_state: UART_STATE_MACHINE := UART_IDLE;
+signal symbol_state: SYMBOL_SM := SYMBOL_IDLE;
 
-signal fpga_uart_rx_s1 : std_logic := '0';
-signal fpga_uart_rx_s2 : std_logic := '0';
-signal fpga_uart_rx_d1 : std_logic := '0';
-signal fpga_uart_rx_d2 : std_logic := '0';
-
-signal edge_detected : std_logic := '0';
-signal edge_timer : std_logic_vector(9 downto 0) := (others => '0');
-signal edge_error_correction : integer range 0 to PROCESS_SIZE := 0;
-
-signal uart_fifo_data_I : std_logic_vector(7 downto 0) := (others => '0');
-signal uart_fifo_rd_en : std_logic := '0';
-signal uart_fifo_wr_en : std_logic := '0';
-signal uart_fifo_empty : std_logic := '0';
-signal uart_fifo_full : std_logic := '0';
-signal uart_fifo_data_O : std_logic_vector(7 downto 0) := (others => '0');
-
----------------------------------------------------------------------------------------------------
--- Components Declaration
----------------------------------------------------------------------------------------------------
-component UART_FIFO
-port
-(
-    aclr : IN STD_LOGIC ;
-    clock : IN STD_LOGIC ;
-    -- IN
-    data : IN STD_LOGIC_VECTOR (7 DOWNTO 0);
-    rdreq : IN STD_LOGIC ;
-    wrreq : IN STD_LOGIC ;
-    -- OUT
-    empty : OUT STD_LOGIC ;
-    full : OUT STD_LOGIC ;
-    q : OUT STD_LOGIC_VECTOR (7 DOWNTO 0)
-);
-end component;
+signal uart_rx_reg : std_logic := '1';
+signal uart_rx_sync : std_logic := '1';
 
 begin
 
@@ -107,218 +56,128 @@ begin
         ---------------------------------------------------------------------------------------------------
         -- RESET Values
         ---------------------------------------------------------------------------------------------------
-        uart_state <= UART_IDLE;
-        symbol_byte <= (others => '0');
+        symbol_state <= SYMBOL_IDLE;
         symbol_process_timer <= 0;
-        fpga_uart_rx_s1 <= '1';
-        fpga_uart_rx_s2 <= '1';
-        fpga_uart_rx_d1 <= '1';
-        fpga_uart_rx_d2 <= '1';
         READ_BUSY <= '0';
     elsif rising_edge(CLOCK) then
         ---------------------------------------------------------------------------------------------------
         -- Avoid Latches
         ---------------------------------------------------------------------------------------------------
-        uart_fifo_wr_en <= '0';
-        BIT_READY_OUT <= '0';
-        edge_detected <= '0';
         symbol_trigger <= '0';
 
         ---------------------------------------------------------------------------------------------------
-        -- Edge Sync
+        -- UART Sync
         ---------------------------------------------------------------------------------------------------
-        fpga_uart_rx_s1 <= FPGA_UART_RX;
-        fpga_uart_rx_s2 <= fpga_uart_rx_s1;
+        uart_rx_reg <= FPGA_UART_RX;
+        uart_rx_sync <= uart_rx_reg;
 
         ---------------------------------------------------------------------------------------------------
         -- State Machine
         ---------------------------------------------------------------------------------------------------
-        case uart_state is
+        case symbol_state is
 
             ---------------------------------------------------------------------------------------------------
             -- IDLE
             ---------------------------------------------------------------------------------------------------
-            when UART_IDLE =>
-                edge_timer <= (others => '0');
-                edge_error_correction <= 0;
-                fpga_uart_rx_d1 <= '1';
-                fpga_uart_rx_d2 <= '1';
-                if fpga_uart_rx_s2 = '0' then
-                    READ_BUSY <= '1';
-                    symbol_process_timer <= EDGE_OFFSET + EDGE_SYNC; -- Edge Offset + Sync UART Delay
-                    uart_state <= UART_PROCESS_SYMBOL;
+            when SYMBOL_IDLE =>
+                if uart_rx_sync = '0' then
+                    symbol_state <= SYMBOL_PROCESS;
                 end if;
 
             ---------------------------------------------------------------------------------------------------
             -- START PROCESS
             ---------------------------------------------------------------------------------------------------
-            when UART_NEXT_SYMBOL =>
-                fpga_uart_rx_d1 <= fpga_uart_rx_s2;
-                fpga_uart_rx_d2 <= fpga_uart_rx_d1;
-                edge_timer <= edge_timer + '1';
-                symbol_process_timer <= BIT_START + edge_error_correction;
-                uart_state <= UART_PROCESS_SYMBOL;
-
-            when UART_PROCESS_SYMBOL =>
-                if symbol_process_timer = PROCESS_SIZE then
+            when SYMBOL_PROCESS =>
+                if symbol_process_timer = 2048 then
                 else
-                    if symbol_process_timer = BIT_START then
+                    if symbol_process_timer = bit_start then
                         ---------------------------------------------------------------------------------------------------
-                        -- START BIT
+                        -- BIT START
                         ---------------------------------------------------------------------------------------------------
-                        BIT_READY_OUT <= '1';
-                    elsif symbol_process_timer = BIT_0 + edge_error_correction - EDGE_OFFSET then
+
+                    elsif symbol_process_timer = bit_0 then
                         ---------------------------------------------------------------------------------------------------
                         -- BIT 0
                         ---------------------------------------------------------------------------------------------------
-                        BIT_READY_OUT <= '1';
-                        symbol_byte(0) <= fpga_uart_rx_s2;
+                        symbol_byte(0) <= uart_rx_sync;
 
-                    elsif symbol_process_timer = BIT_1 + edge_error_correction - EDGE_OFFSET then
+                    elsif symbol_process_timer = bit_1 then
                         ---------------------------------------------------------------------------------------------------
                         -- BIT 1
                         ---------------------------------------------------------------------------------------------------
-                        BIT_READY_OUT <= '1';
-                        symbol_byte(1) <= fpga_uart_rx_s2;
+                        symbol_byte(1) <= uart_rx_sync;
 
-                    elsif symbol_process_timer = BIT_2 + edge_error_correction - EDGE_OFFSET then
+                    elsif symbol_process_timer = bit_2 then
                         ---------------------------------------------------------------------------------------------------
                         -- BIT 2
                         ---------------------------------------------------------------------------------------------------
-                        BIT_READY_OUT <= '1';
-                        symbol_byte(2) <= fpga_uart_rx_s2;
+                        symbol_byte(2) <= uart_rx_sync;
 
-                    elsif symbol_process_timer = BIT_3 + edge_error_correction - EDGE_OFFSET then
+                    elsif symbol_process_timer = bit_3 then
                         ---------------------------------------------------------------------------------------------------
                         -- BIT 3
                         ---------------------------------------------------------------------------------------------------
-                        BIT_READY_OUT <= '1';
-                        symbol_byte(3) <= fpga_uart_rx_s2;
+                        symbol_byte(3) <= uart_rx_sync;
 
-                    elsif symbol_process_timer = BIT_4 + edge_error_correction - EDGE_OFFSET then
+                    elsif symbol_process_timer = bit_4 then
                         ---------------------------------------------------------------------------------------------------
                         -- BIT 4
                         ---------------------------------------------------------------------------------------------------
-                        BIT_READY_OUT <= '1';
-                        symbol_byte(4) <= fpga_uart_rx_s2;
+                        symbol_byte(4) <= uart_rx_sync;
 
-                    elsif symbol_process_timer = BIT_5 + edge_error_correction - EDGE_OFFSET then
+                    elsif symbol_process_timer = bit_5 then
                         ---------------------------------------------------------------------------------------------------
                         -- BIT 5
                         ---------------------------------------------------------------------------------------------------
-                        BIT_READY_OUT <= '1';
-                        symbol_byte(5) <= fpga_uart_rx_s2;
+                        symbol_byte(5) <= uart_rx_sync;
 
-                    elsif symbol_process_timer = BIT_6 + edge_error_correction - EDGE_OFFSET then
+                    elsif symbol_process_timer = bit_6 then
                         ---------------------------------------------------------------------------------------------------
                         -- BIT 6
                         ---------------------------------------------------------------------------------------------------
-                        BIT_READY_OUT <= '1';
-                        symbol_byte(6) <= fpga_uart_rx_s2;
+                        symbol_byte(6) <= uart_rx_sync;
 
-                    elsif symbol_process_timer = BIT_7 + edge_error_correction - EDGE_OFFSET then
+                    elsif symbol_process_timer = bit_7 then
                         ---------------------------------------------------------------------------------------------------
                         -- BIT 7
                         ---------------------------------------------------------------------------------------------------
-                        BIT_READY_OUT <= '1';
-                        symbol_byte(7) <= fpga_uart_rx_s2;
+                        symbol_byte(7) <= uart_rx_sync;
 
-                    elsif symbol_process_timer = BIT_STOP + edge_error_correction - EDGE_OFFSET then
+                    elsif symbol_process_timer = bit_stop then
                         ---------------------------------------------------------------------------------------------------
-                        -- STOP BIT
+                        -- BIT STOP
                         ---------------------------------------------------------------------------------------------------
-                        BIT_READY_OUT <= '1';
-                    elsif symbol_process_timer = BIT_NEXT + edge_error_correction - EDGE_OFFSET then
-
-                        if fpga_uart_rx_s2 = '0' then
-                            ---------------------------------------------------------------------------------------------------
-                            -- ANOTHER START BIT
-                            ---------------------------------------------------------------------------------------------------
-                            uart_fifo_wr_en <= '1';
-                            BIT_READY_OUT <= '1';
-                            uart_state <= UART_NEXT_SYMBOL;
-                            uart_fifo_data_I <= "0" & symbol_byte(6 downto 0);
-                        else
-                            ---------------------------------------------------------------------------------------------------
-                            -- TRANSMISSION OVER
-                            ---------------------------------------------------------------------------------------------------
-                            uart_fifo_wr_en <= '1';
-                            uart_state <= UART_PROCESS_SYMBOL_COMPETE;
-                            uart_fifo_data_I <= "0" & symbol_byte(6 downto 0);
-                        end if;
+                        symbol_state <= SYMBOL_SYMBOL_READY;
 
                     end if;
 
-                    ---------------------------------------------------------------------------------------------------
-                    -- Symbol Process Timer
-                    ---------------------------------------------------------------------------------------------------
                     symbol_process_timer <= symbol_process_timer + 1;
-
-                    ---------------------------------------------------------------------------------------------------
-                    -- Edge Detector
-                    ---------------------------------------------------------------------------------------------------
-                    fpga_uart_rx_d1 <= fpga_uart_rx_s2;
-                    fpga_uart_rx_d2 <= fpga_uart_rx_d1;
-
-                    if fpga_uart_rx_d1 /= fpga_uart_rx_d2 then
-                        ---------------------------------------------------------------------------------------------------
-                        -- Ignore First Edge
-                        ---------------------------------------------------------------------------------------------------
-                        if symbol_process_timer > BIT_START then
-                            edge_detected <= '1';
-                            if to_integer(unsigned(edge_timer)) > (BIT_BAUD - EDGE_COUNT_OFFSET) then
-                                edge_error_correction <= (edge_error_correction + ((to_integer(unsigned(edge_timer)) + EDGE_COUNT_OFFSET) mod BIT_BAUD));
-                            end if;
-                        end if;
-                    end if;
-
-                    if edge_detected = '1' then
-                        edge_timer <= (others => '0');
-                    else
-                        edge_timer <= edge_timer + '1';
-                    end if;
-
                 end if;
 
             ---------------------------------------------------------------------------------------------------
             -- WRITE TO FIFO
             ---------------------------------------------------------------------------------------------------
-            when UART_PROCESS_SYMBOL_COMPETE =>
+            when SYMBOL_SYMBOL_READY =>
                 symbol_trigger <= '1';
-                READ_SYMBOL <= symbol_byte(6 downto 0);
-                uart_state <= UART_PROCESS_COMPETE;
+                symbol_state <= SYMBOL_DONE;
+                READ_SYMBOL <= symbol_byte;
 
             ---------------------------------------------------------------------------------------------------
-            -- DATA PROCESS COMPLETE
+            -- DONE
             ---------------------------------------------------------------------------------------------------
-            when UART_PROCESS_COMPETE =>
-                READ_BUSY <= '0';
+            when SYMBOL_DONE =>
+                READ_SYMBOL <= (others => '0');
                 symbol_byte <= (others => '0');
                 symbol_process_timer <= 0;
-                uart_state <= UART_IDLE;
+                symbol_state <= SYMBOL_IDLE;
 
             when others =>
-                uart_state <= UART_IDLE;
+                symbol_state <= SYMBOL_IDLE;
 
         end case;
     end if;
 end process;
 
 READ_ENABLE <= symbol_trigger;
-
-UART_FIFO_inst: UART_FIFO
-port map
-(
-    aclr  => RESET,
-    clock => CLOCK,
-    -- IN
-    data  => uart_fifo_data_I,
-    rdreq => uart_fifo_rd_en,
-    wrreq => uart_fifo_wr_en,
-    -- OUT
-    empty => uart_fifo_empty,
-    full  => uart_fifo_full,
-    q     => uart_fifo_data_O
-);
 
 end architecture;
