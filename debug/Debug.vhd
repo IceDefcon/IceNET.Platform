@@ -110,6 +110,9 @@ signal debug_FPGA_UART_TX : std_logic := '1';
 
 signal uart_vector : std_logic_vector(IRQ_VECTOR_SIZE - 1 downto 0) := (others => '0');
 
+signal uart_trigger : std_logic := '0';
+signal uart_message : std_logic_vector(31 downto 0) := (others => '0');
+signal uart_wait : std_logic := '0';
 ----------------------------------------------------------------------------------------
 -- Components
 ----------------------------------------------------------------------------------------
@@ -174,8 +177,13 @@ port
     CLOCK : in std_logic;
     RESET : in std_logic;
 
+    UART_LOG_TRIGGER : in std_logic;
+    UART_LOG_VECTOR : in std_logic_vector(31 downto 0);
+
     UART_PROCESS_RX : in std_logic;
     UART_PROCESS_TX : out std_logic;
+
+    WRITE_BUSY : out std_logic;
 
     VECTOR_INTERRUPT : out std_logic_vector(IRQ_VECTOR_SIZE - 1 downto 0)
 );
@@ -233,9 +241,16 @@ port map
 (
     CLOCK => CLOCK_50MHz,
     RESET => global_reset,
+
+    UART_LOG_TRIGGER => uart_trigger,
+    UART_LOG_VECTOR => uart_message,
+
     -- UART
     UART_PROCESS_RX => debug_FPGA_UART_RX,
     UART_PROCESS_TX => debug_FPGA_UART_TX,
+
+    WRITE_BUSY => uart_wait,
+
     -- OUT
     VECTOR_INTERRUPT => uart_vector
 );
@@ -271,8 +286,8 @@ begin
             LED_8 <= '1';
         end if;
 
-    DEBUG_PIN_1 <= debug_FPGA_UART_RX;
     DEBUG_PIN_0 <= debug_FPGA_UART_TX;
+    DEBUG_PIN_1 <= debug_FPGA_UART_RX;
 
     end if;
 end process;

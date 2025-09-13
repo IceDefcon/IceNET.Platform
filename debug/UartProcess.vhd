@@ -15,8 +15,13 @@ port
     CLOCK : in std_logic;
     RESET : in std_logic;
 
+    UART_LOG_TRIGGER : in std_logic;
+    UART_LOG_VECTOR : in std_logic_vector(31 downto 0);
+
     UART_PROCESS_RX : in std_logic;
     UART_PROCESS_TX : out std_logic;
+
+    WRITE_BUSY : out std_logic;
 
     VECTOR_INTERRUPT : out std_logic_vector(IRQ_VECTOR_SIZE - 1 downto 0)
 );
@@ -28,9 +33,7 @@ architecture rtl of UartProcess is
 -- Signals
 ------------------------------------------------------------------------------------------------------------
 
---constant baudRate : std_logic_vector(7 downto 0) := "00010011"; -- 1/[20*25ns] ---> 2M Baud Rate @ 40Mhz
-constant baudRate : std_logic_vector(7 downto 0) := "00011000"; -- 1/[25*20ns] ---> 2M Baud Rate @ 50Mhz
-
+signal UART_LOG_MESSAGE_TRIGGER : std_logic := '0';
 signal UART_LOG_MESSAGE_ID : UART_LOG_ID := ("0000", "0000");
 signal UART_LOG_MESSAGE_KEY : UART_LOG_KEY := ("0000", "0000");
 signal UART_LOG_MESSAGE_DATA : UART_LOG_DATA := ("0000", "0000", "0000", "0000");
@@ -145,22 +148,22 @@ end component;
 begin
 
 ------------------------------------------------------------------------------------------------------------
--- Main Routine
+-- UART Debug
 ------------------------------------------------------------------------------------------------------------
 
-debug_trigger_process:
-process(CLOCK)
-begin
-    if rising_edge(CLOCK) then
-        if uart_counter = "10111110101111000010000000" then
-            uart_counter <= (others => '0');
-            uart_trigger <= '1';
-        else
-            uart_counter <= uart_counter + '1';
-            uart_trigger <= '0';
-        end if;
-    end if;
-end process;
+--debug_trigger_process:
+--process(CLOCK)
+--begin
+--    if rising_edge(CLOCK) then
+--        if uart_counter = "10111110101111000010000000" then
+--            uart_counter <= (others => '0');
+--            uart_trigger <= '1';
+--        else
+--            uart_counter <= uart_counter + '1';
+--            uart_trigger <= '0';
+--        end if;
+--    end if;
+--end process;
 
 --uart_message <= x"DEADC0DE";
 
@@ -173,14 +176,48 @@ end process;
 --UART_LOG_MESSAGE_DATA(2) <= uart_message(7 downto 4);
 --UART_LOG_MESSAGE_DATA(3) <= uart_message(3 downto 0);
 
-UART_LOG_MESSAGE_ID(0) <= UART_FEEDBACK_VECTOR(31 downto 28);
-UART_LOG_MESSAGE_ID(1) <= UART_FEEDBACK_VECTOR(27 downto 24);
-UART_LOG_MESSAGE_KEY(0) <= UART_FEEDBACK_VECTOR(23 downto 20);
-UART_LOG_MESSAGE_KEY(1) <= UART_FEEDBACK_VECTOR(19 downto 16);
-UART_LOG_MESSAGE_DATA(0) <= UART_FEEDBACK_VECTOR(15 downto 12);
-UART_LOG_MESSAGE_DATA(1) <= UART_FEEDBACK_VECTOR(11 downto 8);
-UART_LOG_MESSAGE_DATA(2) <= UART_FEEDBACK_VECTOR(7 downto 4);
-UART_LOG_MESSAGE_DATA(3) <= UART_FEEDBACK_VECTOR(3 downto 0);
+------------------------------------------------------------------------------------------------------------
+-- Main Routine
+------------------------------------------------------------------------------------------------------------
+uart_switch_process:
+process(CLOCK, RESET)
+begin
+    if RESET = '1' then
+        UART_LOG_MESSAGE_TRIGGER <= '0';
+        UART_LOG_MESSAGE_ID(0) <= "0000";
+        UART_LOG_MESSAGE_ID(1) <= "0000";
+        UART_LOG_MESSAGE_KEY(0) <= "0000";
+        UART_LOG_MESSAGE_KEY(1) <= "0000";
+        UART_LOG_MESSAGE_DATA(0) <= "0000";
+        UART_LOG_MESSAGE_DATA(1) <= "0000";
+        UART_LOG_MESSAGE_DATA(2) <= "0000";
+        UART_LOG_MESSAGE_DATA(3) <= "0000";
+    elsif rising_edge(CLOCK) then
+        if UART_LOG_TRIGGER = '1' then
+            UART_LOG_MESSAGE_TRIGGER <= '1';
+            UART_LOG_MESSAGE_ID(0) <= UART_LOG_VECTOR(31 downto 28);
+            UART_LOG_MESSAGE_ID(1) <= UART_LOG_VECTOR(27 downto 24);
+            UART_LOG_MESSAGE_KEY(0) <= UART_LOG_VECTOR(23 downto 20);
+            UART_LOG_MESSAGE_KEY(1) <= UART_LOG_VECTOR(19 downto 16);
+            UART_LOG_MESSAGE_DATA(0) <= UART_LOG_VECTOR(15 downto 12);
+            UART_LOG_MESSAGE_DATA(1) <= UART_LOG_VECTOR(11 downto 8);
+            UART_LOG_MESSAGE_DATA(2) <= UART_LOG_VECTOR(7 downto 4);
+            UART_LOG_MESSAGE_DATA(3) <= UART_LOG_VECTOR(3 downto 0);
+        elsif UART_FEEDBACK_TRIGGER = '1' then
+            UART_LOG_MESSAGE_TRIGGER <= '1';
+            UART_LOG_MESSAGE_ID(0) <= UART_FEEDBACK_VECTOR(31 downto 28);
+            UART_LOG_MESSAGE_ID(1) <= UART_FEEDBACK_VECTOR(27 downto 24);
+            UART_LOG_MESSAGE_KEY(0) <= UART_FEEDBACK_VECTOR(23 downto 20);
+            UART_LOG_MESSAGE_KEY(1) <= UART_FEEDBACK_VECTOR(19 downto 16);
+            UART_LOG_MESSAGE_DATA(0) <= UART_FEEDBACK_VECTOR(15 downto 12);
+            UART_LOG_MESSAGE_DATA(1) <= UART_FEEDBACK_VECTOR(11 downto 8);
+            UART_LOG_MESSAGE_DATA(2) <= UART_FEEDBACK_VECTOR(7 downto 4);
+            UART_LOG_MESSAGE_DATA(3) <= UART_FEEDBACK_VECTOR(3 downto 0);
+        else
+            UART_LOG_MESSAGE_TRIGGER <= '0';
+        end if;
+    end if;
+end process;
 
 UartDataAssembly_module: UartDataAssembly
 generic map
@@ -192,7 +229,7 @@ port map
     CLOCK => CLOCK,
     RESET => RESET,
 
-    UART_LOG_TRIGGER => UART_FEEDBACK_TRIGGER,
+    UART_LOG_TRIGGER => UART_LOG_MESSAGE_TRIGGER,
     UART_LOG_MESSAGE_ID => UART_LOG_MESSAGE_ID,
     UART_LOG_MESSAGE_KEY => UART_LOG_MESSAGE_KEY,
     UART_LOG_MESSAGE_DATA => UART_LOG_MESSAGE_DATA,

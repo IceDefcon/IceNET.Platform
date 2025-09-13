@@ -27,7 +27,7 @@ architecture rtl of UartOffloadController is
 -- Signals
 ------------------------------------------------------------------------------------------------------------
 constant DOLAR_SYMBOL : std_logic_vector(7 downto 0) := "00100100"; -- 0x24
-constant CONTROL_BYTES_NUMBER : integer := 2;
+constant CONTROL_BYTES_NUMBER : integer := 4;
 
 ------------------------------------------------------------------------------------------------------------
 -- Signals
