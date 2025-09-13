@@ -105,10 +105,8 @@ constant IRQ_VECTOR_SIZE : integer := 10;
 signal global_reset : std_logic := '1';
 signal CLOCK_200MHz : std_logic := '0';
 
-signal uart_busy : std_logic := '0';
-signal uart_trigger : std_logic := '0';
-signal uart_counter : std_logic_vector(31 downto 0) := (others => '0');
-signal uart_message : std_logic_vector(31 downto 0) := (others => '0');
+signal debug_FPGA_UART_RX : std_logic := '1';
+signal debug_FPGA_UART_TX : std_logic := '1';
 
 signal uart_vector : std_logic_vector(IRQ_VECTOR_SIZE - 1 downto 0) := (others => '0');
 
@@ -166,23 +164,18 @@ Port
 end component;
 
 component UartProcess
-generic map
+generic
 (
-    UART_CTRL => '1',
-    IRQ_VECTOR_SIZE => IRQ_VECTOR_SIZE
-)
+    UART_CTRL : std_logic := '0';
+    IRQ_VECTOR_SIZE : integer := 10
+);
 port
 (
     CLOCK : in std_logic;
     RESET : in std_logic;
 
-    UART_LOG_TRIGGER : in std_logic;
-    UART_LOG_VECTOR : in std_logic_vector(31 downto 0);
-
     UART_PROCESS_RX : in std_logic;
     UART_PROCESS_TX : out std_logic;
-
-    WRITE_BUSY : out std_logic;
 
     VECTOR_INTERRUPT : out std_logic_vector(IRQ_VECTOR_SIZE - 1 downto 0)
 );
@@ -230,23 +223,6 @@ TimedReset_Main: TimedReset port map
 ------------------------------------------------------------------------------------------------------------
 -- UART Contoller
 ------------------------------------------------------------------------------------------------------------
-
-trigger_process:
-process(CLOCK_200MHz)
-begin
-    if rising_edge(CLOCK_200MHz) then
-        if uart_counter = "10111110101111000010000000" then
-            uart_counter <= (others => '0');
-            uart_trigger <= '1';
-        else
-            uart_counter <= uart_counter + '1';
-            uart_trigger <= '0';
-        end if;
-    end if;
-end process;
-
-uart_message <= x"DEADC0DE";
-
 UartProcess_Module: UartProcess
 generic map
 (
@@ -255,28 +231,26 @@ generic map
 )
 port map
 (
-    CLOCK => CLOCK_200MHz,
+    CLOCK => CLOCK_50MHz,
     RESET => global_reset,
-    -- IN
-    UART_LOG_TRIGGER => uart_trigger,
-    UART_LOG_VECTOR => uart_message,
-    -- BOTH
-    UART_PROCESS_RX => FPGA_UART_RX,
-    UART_PROCESS_TX => FPGA_UART_TX,
+    -- UART
+    UART_PROCESS_RX => debug_FPGA_UART_RX,
+    UART_PROCESS_TX => debug_FPGA_UART_TX,
     -- OUT
-    WRITE_BUSY => uart_busy,
-
     VECTOR_INTERRUPT => uart_vector
 );
+
+debug_FPGA_UART_RX <= FPGA_UART_RX;
+FPGA_UART_TX <= debug_FPGA_UART_TX;
 
 ------------------------------------------------------------------------------------------------------------
 -- DEBUG
 ------------------------------------------------------------------------------------------------------------
 
 LED_process:
-process(CLOCK_200MHz, global_reset)
+process(CLOCK_50MHz, global_reset)
 begin
-    if rising_edge(CLOCK_200MHz) then
+    if rising_edge(CLOCK_50MHz) then
         if global_reset = '1' then 
             LED_1 <= '1';
             LED_2 <= '1';
@@ -296,6 +270,10 @@ begin
             LED_7 <= not uart_vector(5);
             LED_8 <= '1';
         end if;
+
+    DEBUG_PIN_1 <= debug_FPGA_UART_RX;
+    DEBUG_PIN_0 <= debug_FPGA_UART_TX;
+
     end if;
 end process;
 

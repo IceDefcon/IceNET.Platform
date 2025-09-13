@@ -19,8 +19,8 @@ end UartRx;
 
 architecture rtl of UartRx is
 
-constant bit_baud : integer range 0 to 128 := 100; -- 100*5ns ---> 2M Baud @ 200Mhz
-constant bit_start : integer range 0 to 128 := 60; -- 60
+constant bit_baud : integer range 0 to 128 := 25; -- 100*5ns ---> 2M Baud @ 50Mhz
+constant bit_start : integer range 0 to 128 := 15; -- 60
 constant bit_0 : integer range 0 to 2048 := bit_start + bit_baud; -- 160
 constant bit_1 : integer range 0 to 2048 := bit_0 + bit_baud;     -- 260
 constant bit_2 : integer range 0 to 2048 := bit_1 + bit_baud;     -- 360
