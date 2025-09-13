@@ -94,10 +94,14 @@ end Debug;
 
 architecture rtl of Debug is
 
-------------------------------------------------------------------------------------------------------------
--- Signals
-------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------
+-- Constants & Types
+----------------------------------------------------------------------------------------
+constant IRQ_VECTOR_SIZE : integer := 10;
 
+----------------------------------------------------------------------------------------
+-- Signals
+----------------------------------------------------------------------------------------
 signal global_reset : std_logic := '1';
 signal CLOCK_200MHz : std_logic := '0';
 
@@ -106,11 +110,11 @@ signal uart_trigger : std_logic := '0';
 signal uart_counter : std_logic_vector(31 downto 0) := (others => '0');
 signal uart_message : std_logic_vector(31 downto 0) := (others => '0');
 
-signal debug_led : std_logic_vector(5 downto 0) := (others => '0');
+signal uart_vector : std_logic_vector(IRQ_VECTOR_SIZE - 1 downto 0) := (others => '0');
 
-------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------
 -- Components
-------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------
 component TimedReset
 Port
 (
@@ -162,6 +166,11 @@ Port
 end component;
 
 component UartProcess
+generic map
+(
+    UART_CTRL => '1',
+    IRQ_VECTOR_SIZE => IRQ_VECTOR_SIZE
+)
 port
 (
     CLOCK : in std_logic;
@@ -175,7 +184,7 @@ port
 
     WRITE_BUSY : out std_logic;
 
-    DEBUG_INTERRUPT : out std_logic_vector(5 downto 0)
+    VECTOR_INTERRUPT : out std_logic_vector(IRQ_VECTOR_SIZE - 1 downto 0)
 );
 end component;
 
@@ -239,6 +248,11 @@ end process;
 uart_message <= x"DEADC0DE";
 
 UartProcess_Module: UartProcess
+generic map
+(
+    UART_CTRL => '1',
+    IRQ_VECTOR_SIZE => IRQ_VECTOR_SIZE
+)
 port map
 (
     CLOCK => CLOCK_200MHz,
@@ -252,7 +266,7 @@ port map
     -- OUT
     WRITE_BUSY => uart_busy,
 
-    DEBUG_INTERRUPT => debug_led
+    VECTOR_INTERRUPT => uart_vector
 );
 
 ------------------------------------------------------------------------------------------------------------
@@ -274,12 +288,12 @@ begin
             LED_8 <= '1';
         else
             LED_1 <= '1';
-            LED_2 <= not debug_led(0);
-            LED_3 <= not debug_led(1);
-            LED_4 <= not debug_led(2);
-            LED_5 <= not debug_led(3);
-            LED_6 <= not debug_led(4);
-            LED_7 <= not debug_led(5);
+            LED_2 <= not uart_vector(0);
+            LED_3 <= not uart_vector(1);
+            LED_4 <= not uart_vector(2);
+            LED_5 <= not uart_vector(3);
+            LED_6 <= not uart_vector(4);
+            LED_7 <= not uart_vector(5);
             LED_8 <= '1';
         end if;
     end if;

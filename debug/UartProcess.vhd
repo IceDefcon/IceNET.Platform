@@ -5,6 +5,11 @@ use ieee.std_logic_unsigned.all;
 use work.UartTypes.all;
 
 entity UartProcess is
+generic
+(
+    UART_CTRL : std_logic := '0';
+    IRQ_VECTOR_SIZE : integer := 10
+);
 port
 (
     CLOCK : in std_logic;
@@ -18,7 +23,7 @@ port
 
     WRITE_BUSY : out std_logic;
 
-    DEBUG_INTERRUPT : out std_logic_vector(5 downto 0)
+    VECTOR_INTERRUPT : out std_logic_vector(IRQ_VECTOR_SIZE - 1 downto 0)
 );
 end UartProcess;
 
@@ -184,7 +189,7 @@ port map
 IRQ_CONTROLLER_module: IRQ_CONTROLLER
 generic map
 (
-    VECTOR_SIZE => 6
+    VECTOR_SIZE => IRQ_VECTOR_SIZE
 )
 port map
 (
@@ -194,7 +199,7 @@ port map
     TRIGGER => uart_read_enable,
     COMMAND => uart_read_symbol(6 downto 0),
 
-    VECTOR_INTERRUPT => DEBUG_INTERRUPT
+    VECTOR_INTERRUPT => VECTOR_INTERRUPT
 );
 
 end architecture;
