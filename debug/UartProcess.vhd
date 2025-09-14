@@ -110,7 +110,7 @@ port
 );
 end component;
 
-component IRQ_CONTROLLER
+component IrqController
 generic
 (
     VECTOR_SIZE : integer := 10
@@ -121,21 +121,9 @@ port
     RESET : in  std_logic;
 
     TRIGGER : in std_logic;
-    COMMAND : in std_logic_vector(6 downto 0);
+    COMMAND : in std_logic_vector(7 downto 0);
 
-    VECTOR_INTERRUPT : out std_logic_vector(VECTOR_SIZE - 1 downto 0)
-);
-end component;
-
-component UartOffloadController
-port
-(
-    CLOCK : in std_logic;
-    RESET : in std_logic;
-
-    UART_SYMBOL_READY : in std_logic;
-    UART_SYMBOL_BYTE : in std_logic_vector(7 downto 0);
-    UART_READ_BUSY : in std_logic;
+    VECTOR_INTERRUPT : out std_logic_vector(VECTOR_SIZE - 1 downto 0);
 
     OFFLOAD_DATA_BYTE : out std_logic_vector(7 downto 0);
     OFFLOAD_DATA_READY : out std_logic;
@@ -260,15 +248,15 @@ port map
 (
     CLOCK => CLOCK,
     RESET => RESET,
-
+    -- OUT
     READ_ENABLE => uart_read_enable,
     READ_SYMBOL => uart_read_symbol,
     READ_BUSY => uart_read_busy,
-
+    -- IN
     FPGA_UART_RX => UART_PROCESS_RX
 );
 
-IRQ_CONTROLLER_module: IRQ_CONTROLLER
+IrqController_module: IrqController
 generic map
 (
     VECTOR_SIZE => IRQ_VECTOR_SIZE
@@ -277,26 +265,15 @@ port map
 (
     CLOCK => CLOCK,
     RESET => RESET,
-
+    -- IN
     TRIGGER => uart_read_enable,
-    COMMAND => uart_read_symbol(6 downto 0),
-
-    VECTOR_INTERRUPT => VECTOR_INTERRUPT
-);
-
-UartOffloadController_module: UartOffloadController
-port map
-(
-    CLOCK => CLOCK,
-    RESET => RESET,
-
-    UART_SYMBOL_READY => uart_read_enable,
-    UART_SYMBOL_BYTE => uart_read_symbol,
-    UART_READ_BUSY => uart_read_busy,
-
+    COMMAND => uart_read_symbol,
+    -- OUT
+    VECTOR_INTERRUPT => VECTOR_INTERRUPT,
+    -- OUT
     OFFLOAD_DATA_BYTE => open,
     OFFLOAD_DATA_READY => open,
-
+    -- OUT
     FEEDBACK_DATA => UART_FEEDBACK_VECTOR,
     FEEDBACK_TRIGGER => UART_FEEDBACK_TRIGGER
 );
