@@ -83,8 +83,8 @@ port map
     process(CLOCK, RESET)
     begin
         if RESET = '1' then
-            uart_tx <= (others => (others => '0'));
             uart_state <= ASSEMBLER_IDLE;
+            uart_tx <= (others => (others => '0'));
             uart_byte <= 0;
             WRITE_ENABLE <= '0';
             WRITE_SYMBOL <= (others => '0');
