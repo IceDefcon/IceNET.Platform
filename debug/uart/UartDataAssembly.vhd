@@ -65,7 +65,7 @@ end component;
 signal synced_UART_LOG_TRIGGER : std_logic := '0';
 begin
 
-DelaySynchroniser_LOG_TRIGGER: DelaySynchroniser
+DelaySynchroniser_module: DelaySynchroniser
 generic map
 (
     SYNCHRONIZATION_DEPTH => 2

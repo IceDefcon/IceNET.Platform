@@ -48,6 +48,8 @@ constant CMD_DEBUG_C : std_logic_vector(7 downto 0) := "01000011"; -- 0x43
 constant CMD_DEBUG_D : std_logic_vector(7 downto 0) := "01000100"; -- 0x44
 constant CMD_DEBUG_E : std_logic_vector(7 downto 0) := "01000101"; -- 0x45
 constant CMD_DEBUG_F : std_logic_vector(7 downto 0) := "01000110"; -- 0x46
+constant CMD_DEBUG_G : std_logic_vector(7 downto 0) := "01000111"; -- 0x47
+constant CMD_DEBUG_H : std_logic_vector(7 downto 0) := "01001000"; -- 0x48
 
 ------------------------------------------------------------------------------------------------------------
 -- Signals and Types
@@ -74,6 +76,8 @@ type VECTOR_SM is
     VECTOR_DEBUG_D,     -- 0x44 :: ASCII "D"
     VECTOR_DEBUG_E,     -- 0x45 :: ASCII "E"
     VECTOR_DEBUG_F,     -- 0x46 :: ASCII "F"
+    VECTOR_DEBUG_G,     -- 0x47 :: ASCII "G"
+    VECTOR_DEBUG_H,     -- 0x48 :: ASCII "H"
     VECTOR_DONE
 );
 signal interrupt_vector_state: VECTOR_SM := VECTOR_IDLE;
@@ -205,31 +209,60 @@ begin
 
                         interrupt_vector_state <= VECTOR_GEN_SOURCE;
                     ---------------------------------------------------------------------------------------------------------------
-                    -- DEBUG
+                    -- ASCII "A" DETECTED
                     ---------------------------------------------------------------------------------------------------------------
                     elsif interrupt_vector = CMD_DEBUG_A then
 
                         interrupt_vector_state <= VECTOR_DEBUG_A;
 
+                    ---------------------------------------------------------------------------------------------------------------
+                    -- ASCII "B" DETECTED
+                    ---------------------------------------------------------------------------------------------------------------
                     elsif interrupt_vector = CMD_DEBUG_B then
 
                         interrupt_vector_state <= VECTOR_DEBUG_B;
 
+                    ---------------------------------------------------------------------------------------------------------------
+                    -- ASCII "C" DETECTED
+                    ---------------------------------------------------------------------------------------------------------------
                     elsif interrupt_vector = CMD_DEBUG_C then
 
                         interrupt_vector_state <= VECTOR_DEBUG_C;
 
+                    ---------------------------------------------------------------------------------------------------------------
+                    -- ASCII "D" DETECTED
+                    ---------------------------------------------------------------------------------------------------------------
                     elsif interrupt_vector = CMD_DEBUG_D then
 
                         interrupt_vector_state <= VECTOR_DEBUG_D;
 
+                    ---------------------------------------------------------------------------------------------------------------
+                    -- ASCII "E" DETECTED
+                    ---------------------------------------------------------------------------------------------------------------
                     elsif interrupt_vector = CMD_DEBUG_E then
 
                         interrupt_vector_state <= VECTOR_DEBUG_E;
 
+                    ---------------------------------------------------------------------------------------------------------------
+                    -- ASCII "F" DETECTED
+                    ---------------------------------------------------------------------------------------------------------------
                     elsif interrupt_vector = CMD_DEBUG_F then
 
                         interrupt_vector_state <= VECTOR_DEBUG_F;
+
+                    ---------------------------------------------------------------------------------------------------------------
+                    -- ASCII "G" DETECTED
+                    ---------------------------------------------------------------------------------------------------------------
+                    elsif interrupt_vector = CMD_DEBUG_G then
+
+                        interrupt_vector_state <= VECTOR_DEBUG_G;
+
+                    ---------------------------------------------------------------------------------------------------------------
+                    -- ASCII "H" DETECTED
+                    ---------------------------------------------------------------------------------------------------------------
+                    elsif interrupt_vector = CMD_DEBUG_H then
+
+                        interrupt_vector_state <= VECTOR_DEBUG_H;
 
                     end if;
 
@@ -325,6 +358,14 @@ begin
 
                 when VECTOR_DEBUG_F =>
                     interrupt_vector_trigger(8 downto 6) <= "101";
+                    interrupt_vector_state <= VECTOR_DONE;
+
+                when VECTOR_DEBUG_G =>
+                    interrupt_vector_trigger(8 downto 6) <= "110";
+                    interrupt_vector_state <= VECTOR_DONE;
+
+                when VECTOR_DEBUG_H =>
+                    interrupt_vector_trigger(8 downto 6) <= "111";
                     interrupt_vector_state <= VECTOR_DONE;
                 ---------------------------------------------------------------------------------------------------------------
                 -- DONE

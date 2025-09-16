@@ -210,7 +210,7 @@ end process;
 UartDataAssembly_module: UartDataAssembly
 generic map
 (
-    UART_CTRL => '1'
+    UART_CTRL => UART_CTRL
 )
 port map
 (
