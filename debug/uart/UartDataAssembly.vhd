@@ -62,7 +62,7 @@ Port
 );
 end component;
 
-signal synced_UART_LOG_TRIGGER : std_logic := '0';
+signal uart_log_trigger_synced : std_logic := '0';
 begin
 
 DelaySynchroniser_module: DelaySynchroniser
@@ -76,7 +76,7 @@ port map
     RESET => RESET,
 
     ASYNC_INPUT => UART_LOG_TRIGGER,
-    SYNC_OUTPUT => synced_UART_LOG_TRIGGER
+    SYNC_OUTPUT => uart_log_trigger_synced
 );
 
     uart_process:
@@ -92,7 +92,7 @@ port map
 
             case uart_state is
                 when ASSEMBLER_IDLE =>
-                    if synced_UART_LOG_TRIGGER = '1' then
+                    if uart_log_trigger_synced = '1' then
                         uart_state <= ASSEMBLER_INIT;
                     end if;
 

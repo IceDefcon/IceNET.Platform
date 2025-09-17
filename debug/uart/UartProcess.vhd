@@ -59,6 +59,27 @@ signal uart_message : std_logic_vector(31 downto 0) := (others => '0');
 ------------------------------------------------------------------------------------------------------------
 -- Components
 ------------------------------------------------------------------------------------------------------------
+component UartDataAssembly
+generic
+(
+    UART_CTRL : std_logic := '0'
+);
+port
+(
+    CLOCK : in std_logic;
+    RESET : in std_logic;
+
+    UART_LOG_TRIGGER : in std_logic;
+    UART_LOG_MESSAGE_ID : in UART_LOG_ID;
+    UART_LOG_MESSAGE_KEY : in UART_LOG_KEY;
+    UART_LOG_MESSAGE_DATA : in UART_LOG_DATA;
+
+    WRITE_ENABLE : out std_logic;
+    WRITE_SYMBOL : out std_logic_vector(6 downto 0);
+
+    WRITE_BUSY : in std_logic
+);
+end component;
 
 component UartTx
 port
@@ -88,29 +109,7 @@ port
 );
 end component;
 
-component UartDataAssembly
-generic
-(
-    UART_CTRL : std_logic := '0'
-);
-port
-(
-    CLOCK : in std_logic;
-    RESET : in std_logic;
-
-    UART_LOG_TRIGGER : in std_logic;
-    UART_LOG_MESSAGE_ID : in UART_LOG_ID;
-    UART_LOG_MESSAGE_KEY : in UART_LOG_KEY;
-    UART_LOG_MESSAGE_DATA : in UART_LOG_DATA;
-
-    WRITE_ENABLE : out std_logic;
-    WRITE_SYMBOL : out std_logic_vector(6 downto 0);
-
-    WRITE_BUSY : in std_logic
-);
-end component;
-
-component IrqController
+component UartIrqController
 generic
 (
     VECTOR_SIZE : integer := 10
@@ -256,7 +255,7 @@ port map
     FPGA_UART_RX => UART_PROCESS_RX
 );
 
-IrqController_module: IrqController
+UartIrqController_module: UartIrqController
 generic map
 (
     VECTOR_SIZE => IRQ_VECTOR_SIZE
