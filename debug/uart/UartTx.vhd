@@ -10,7 +10,7 @@ port
     RESET : in std_logic;
 
     WRITE_ENABLE : in std_logic;
-    WRITE_SYMBOL : in std_logic_vector(6 downto 0);
+    WRITE_SYMBOL : in std_logic_vector(7 downto 0);
     WRITE_BUSY : out std_logic;
 
     FPGA_UART_TX : out std_logic

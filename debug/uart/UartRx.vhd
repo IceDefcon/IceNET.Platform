@@ -9,7 +9,7 @@ port
     CLOCK : in std_logic;
     RESET : in std_logic;
 
-    READ_ENABLE : out std_logic;
+    READ_VALID : out std_logic;
     READ_SYMBOL : out std_logic_vector(7 downto 0);
     READ_BUSY : out std_logic;
 
@@ -178,6 +178,6 @@ begin
     end if;
 end process;
 
-READ_ENABLE <= symbol_trigger;
+READ_VALID <= symbol_trigger;
 
 end architecture;
