@@ -39,7 +39,7 @@ type SYMBOL_SM is
 (
     SYMBOL_IDLE,
     SYMBOL_PROCESS,
-    SYMBOL_SYMBOL_READY,
+    SYMBOL_READY,
     SYMBOL_DONE
 );
 signal symbol_state: SYMBOL_SM := SYMBOL_IDLE;
@@ -147,7 +147,7 @@ begin
                         ---------------------------------------------------------------------------------------------------
                         -- BIT STOP
                         ---------------------------------------------------------------------------------------------------
-                        symbol_state <= SYMBOL_SYMBOL_READY;
+                        symbol_state <= SYMBOL_READY;
 
                     end if;
 
@@ -157,7 +157,7 @@ begin
             ---------------------------------------------------------------------------------------------------
             -- WRITE TO FIFO
             ---------------------------------------------------------------------------------------------------
-            when SYMBOL_SYMBOL_READY =>
+            when SYMBOL_READY =>
                 symbol_trigger <= '1';
                 symbol_state <= SYMBOL_DONE;
                 READ_SYMBOL <= symbol_byte;
