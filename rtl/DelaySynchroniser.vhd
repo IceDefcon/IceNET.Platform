@@ -9,7 +9,7 @@ generic
 );
 Port
 (
-    CLOCK_50MHz : in  std_logic;
+    CLOCK : in  std_logic;
     RESET : in std_logic;
 
     ASYNC_INPUT : in std_logic;
@@ -24,12 +24,12 @@ signal sync_vector : std_logic_vector(SYNCHRONIZATION_DEPTH - 1 downto 0) := (ot
 begin
 
     sync_process:
-    process(CLOCK_50MHz, RESET)
+    process(CLOCK, RESET)
     begin
         if RESET = '1' then
             sync_vector <= (others => '0');
             SYNC_OUTPUT <= '0';
-        elsif rising_edge(CLOCK_50MHz) then
+        elsif rising_edge(CLOCK) then
             for i in SYNCHRONIZATION_DEPTH - 1 downto 1 loop
                 sync_vector(i) <= sync_vector(i - 1);
             end loop;

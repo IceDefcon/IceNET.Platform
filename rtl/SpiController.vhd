@@ -20,7 +20,6 @@ Port
 (
     CLOCK_50MHz : in  std_logic;
     RESET : in std_logic;
-    EXTERN : in std_logic;
     -- IN
     OFFLOAD_TRIGGER : in std_logic;
     OFFLOAD_ID : in std_logic_vector(7 downto 0);
@@ -74,10 +73,6 @@ signal bytes_count : integer range 0 to 15 := 0;
 signal register_address : std_logic_vector(7 downto 0) := (others => '0');
 signal transfer_byte : std_logic_vector(7 downto 0) := (others => '0');
 
-signal byte_0 : std_logic_vector(7 downto 0) := (others => '0');
-signal byte_1 : std_logic_vector(7 downto 0) := (others => '0');
-signal byte_2 : std_logic_vector(7 downto 0) := (others => '0');
-
 signal first_byte : std_logic := '0';
 signal next_byte : std_logic := '0';
 signal last_byte : std_logic := '0';
@@ -104,9 +99,6 @@ begin
             bytes_amount <= 0;
             bytes_count <= 0;
             register_address <= (others => '0');
-            byte_0 <= (others => '0');
-            byte_1 <= (others => '0');
-            byte_2 <= (others => '0');
             transfer_byte <= (others => '0');
             first_byte <= '0';
             next_byte <= '0';
@@ -143,10 +135,6 @@ begin
                     write_data <= OFFLOAD_DATA;
                     bytes_amount <= 1 + to_integer(unsigned(OFFLOAD_CONTROL(6 downto 3)));
                     register_address <= OFFLOAD_REGISTER;
-                    -- Extern combination
-                    byte_0 <= OFFLOAD_ID;
-                    byte_1 <= OFFLOAD_REGISTER;
-                    byte_2 <= OFFLOAD_DATA;
 
                 when SPI_CONFIG =>
                     ------------------------------
@@ -186,22 +174,14 @@ begin
                             first_byte <= '1';
                             next_byte <= '0';
                             last_byte <= '0';
-                            if EXTERN = '1' then
-                                transfer_byte <= byte_0;
-                            else
-                                transfer_byte <= register_address;
-                            end if;
+                            transfer_byte <= register_address;
                         end if;
 
                         if bytes_count > 0 and bytes_count < (bytes_amount - 1) then
                             first_byte <= '0';
                             next_byte <= '1';
                             last_byte <= '0';
-                            if EXTERN = '1' then
-                                transfer_byte <= byte_1;
-                            else
-                                transfer_byte <= (others => '0'); -- Only this one is required
-                            end if;
+                            transfer_byte <= (others => '0'); -- Only this one is required
                         end if;
 
                         if bytes_count = bytes_amount - 1 then
@@ -209,11 +189,7 @@ begin
                             next_byte <= '0';
                             last_byte <= '1';
                             if write_flag = '1' then
-                                if EXTERN = '1' then
-                                    transfer_byte <= byte_2;
-                                else
-                                    transfer_byte <= write_data;
-                                end if;
+                                transfer_byte <= write_data;
                             else
                                 transfer_byte <= (others => '0'); -- Burst length is already set
                             end if;

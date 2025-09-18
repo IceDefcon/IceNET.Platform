@@ -8,7 +8,6 @@ port
     CLOCK_50MHz : in std_logic;
     RESET : in std_logic;
 
-    OFFLOAD_INTERRUPT_EXT : in std_logic;
     OFFLOAD_INTERRUPT : in std_logic;
     FIFO_DATA : in std_logic_vector(7 downto 0);
     FIFO_READ_ENABLE : out std_logic;
@@ -82,7 +81,6 @@ signal device_pairs : integer := 0;
 signal transfer_pairs : integer := 0;
 
 signal active_offload_interrupt : std_logic := '0';
-signal active_offload_interrupt_external : std_logic := '0';
 
 ----------------------------------------------------------------------------------------------------------------
 -- MAIN ROUTINE
@@ -122,9 +120,6 @@ begin
                 FIFO_READ_ENABLE <= '0';
                 if OFFLOAD_INTERRUPT = '1' then
                     active_offload_interrupt <= '1';
-                    offload_state <= HEADER_INIT;
-                elsif OFFLOAD_INTERRUPT_EXT = '1' then
-                    active_offload_interrupt_external <= '1';
                     offload_state <= HEADER_INIT;
                 else
                     offload_state <= IDLE;
@@ -213,12 +208,6 @@ begin
                         & Byte_1(1) & Byte_1(2)
                         & Byte_1(3) & Byte_1(4)
                         & Byte_1(5) & Byte_1(6);
-                        OFFLOAD_REGISTER <= Byte_2;
-                        OFFLOAD_DATA <= Byte_3;
-                        offload_state <= TRANSFER_READY_SINGLE;
-                    elsif active_offload_interrupt_external = '1' then
-                        OFFLOAD_CTRL <= Byte_0;
-                        OFFLOAD_ID <= Byte_1;
                         OFFLOAD_REGISTER <= Byte_2;
                         OFFLOAD_DATA <= Byte_3;
                         offload_state <= TRANSFER_READY_SINGLE;
@@ -356,7 +345,6 @@ begin
 
             when DONE =>
                 active_offload_interrupt <= '0';
-                active_offload_interrupt_external <= '0';
                 OFFLOAD_READY <= '0';
                 offload_state <= IDLE;
 
