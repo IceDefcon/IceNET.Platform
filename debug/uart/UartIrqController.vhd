@@ -1,7 +1,8 @@
 library ieee;
 use ieee.std_logic_1164.all;
+use work.UartTypes.all;
 
-entity IrqController is
+entity UartIrqController is
 generic
 (
     VECTOR_SIZE : integer := 10
@@ -11,28 +12,29 @@ Port
     CLOCK : in  std_logic;
     RESET : in  std_logic;
 
-    TRIGGER : in std_logic;
-    COMMAND : in std_logic_vector(7 downto 0);
+    VECTOR_TRIGGER : in std_logic;
+    VECTOR_BYTE : in std_logic_vector(7 downto 0);
 
     VECTOR_INTERRUPT : out std_logic_vector(VECTOR_SIZE - 1 downto 0);
 
-    OFFLOAD_DATA_BYTE : out std_logic_vector(7 downto 0);
-    OFFLOAD_DATA_READY : out std_logic;
+    PARAMETER_READY : out std_logic_vector(PARAMETER_NUMBER - 1 downto 0);
+    PARAMETER_MATRIX : out PARAMETER_ARRAY;
 
     FEEDBACK_DATA : out std_logic_vector(31 downto 0);
     FEEDBACK_TRIGGER : out std_logic
 );
-end entity IrqController;
+end entity UartIrqController;
 
-architecture rtl of IrqController is
+architecture rtl of UartIrqController is
 
 ------------------------------------------------------------------------------------------------------------
 -- Constants
 ------------------------------------------------------------------------------------------------------------
-constant CONTROL_BYTES_NUMBER : integer := 4;
+constant CONTROL_BYTES_NUMBER : integer := 8;
+constant PARAMETER_TIMEOUT : integer := 4096;
 
-constant CMD_FIFO_DATA  : std_logic_vector(7 downto 0) := "00100100"; -- 0x24
-constant CMD_UART_RESET : std_logic_vector(7 downto 0) := "00110000"; -- 0x30
+constant CMD_PARAMETER  : std_logic_vector(7 downto 0) := "00100100"; -- 0x24
+constant CMD_250_PULSE  : std_logic_vector(7 downto 0) := "00110000"; -- 0x30
 constant CMD_OP_NORMAL  : std_logic_vector(7 downto 0) := "00110001"; -- 0x31
 constant CMD_OP_UART_FD : std_logic_vector(7 downto 0) := "00110010"; -- 0x32
 constant CMD_OP_UART_TD : std_logic_vector(7 downto 0) := "00110011"; -- 0x33
@@ -48,6 +50,11 @@ constant CMD_DEBUG_C : std_logic_vector(7 downto 0) := "01000011"; -- 0x43
 constant CMD_DEBUG_D : std_logic_vector(7 downto 0) := "01000100"; -- 0x44
 constant CMD_DEBUG_E : std_logic_vector(7 downto 0) := "01000101"; -- 0x45
 constant CMD_DEBUG_F : std_logic_vector(7 downto 0) := "01000110"; -- 0x46
+constant CMD_DEBUG_G : std_logic_vector(7 downto 0) := "01000111"; -- 0x47
+constant CMD_DEBUG_H : std_logic_vector(7 downto 0) := "01001000"; -- 0x48
+
+constant CMD_PARAM_BANDWIDTH : std_logic_vector(7 downto 0) := "01000001"; -- 0x41
+constant CMD_PARAM_THRESHOLD : std_logic_vector(7 downto 0) := "01000010"; -- 0x42
 
 ------------------------------------------------------------------------------------------------------------
 -- Signals and Types
@@ -55,10 +62,15 @@ constant CMD_DEBUG_F : std_logic_vector(7 downto 0) := "01000110"; -- 0x46
 type VECTOR_SM is
 (
     VECTOR_IDLE,
-    VECTOR_CHECK,       -- 0x24 :: ASCII "$"
-    VECTOR_WRITE,       -- 0x24 :: ASCII "$"
-    VECTOR_FEEDBACK,    -- 0x24 :: ASCII "$"
-    VECTOR_UART_RESET,  -- 0x30 :: ASCII "0"
+    VECTOR_CHECK,
+    VECTOR_ERROR,
+    VECTOR_PARAMETER_ID,
+    VECTOR_PARAMETER_WRITE,
+    VECTOR_PARAMETER_OFFLOAD,
+    VECTOR_PARAMETER_OUTPUTS,
+    VECTOR_PARAMETER_ID_ERROR,
+    VECTOR_PARAMETER_FEEDBACK,
+    VECTOR_250_PULSE,   -- 0x30 :: ASCII "0"
     VECTOR_OP_NORMAL,   -- 0x31 :: ASCII "1"
     VECTOR_OP_UART_FD,  -- 0x32 :: ASCII "2"
     VECTOR_OP_UART_TD,  -- 0x33 :: ASCII "3"
@@ -74,11 +86,12 @@ type VECTOR_SM is
     VECTOR_DEBUG_D,     -- 0x44 :: ASCII "D"
     VECTOR_DEBUG_E,     -- 0x45 :: ASCII "E"
     VECTOR_DEBUG_F,     -- 0x46 :: ASCII "F"
+    VECTOR_DEBUG_G,     -- 0x47 :: ASCII "G"
+    VECTOR_DEBUG_H,     -- 0x48 :: ASCII "H"
     VECTOR_DONE
 );
 signal interrupt_vector_state: VECTOR_SM := VECTOR_IDLE;
 signal interrupt_vector_trigger : std_logic_vector(VECTOR_SIZE - 1 downto 0) := (others => '0');
-
 
 signal uart_fifo_data_in : std_logic_vector(7 downto 0) := (others => '0');
 signal uart_fifo_rd_req : std_logic := '0';
@@ -88,7 +101,14 @@ signal uart_fifo_full : std_logic := '0';
 signal uart_fifo_data_out : std_logic_vector(7 downto 0) := (others => '0');
 
 signal interrupt_vector : std_logic_vector(7 downto 0) := (others => '0');
-signal interrupt_vector_count : integer range 0 to 4 := 0;
+signal interrupt_vector_count : integer range 0 to CONTROL_BYTES_NUMBER := 0;
+
+signal interrupt_vector_parameter_id : std_logic_vector(7 downto 0) := (others => '0');
+signal interrupt_vector_parameter_data : std_logic_vector(31 downto 0) := (others => '0');
+signal interrupt_vector_parameter_hex : std_logic_vector(3 downto 0) := (others => '0');
+signal interrupt_vector_parameter_timeout : integer range 0 to 4096 := 0;
+
+signal i : integer range 0 to 32 := 0;
 
 ------------------------------------------------------------------------------------------------------------
 -- Components
@@ -120,9 +140,22 @@ begin
     process(CLOCK, RESET)
     begin
         if RESET = '1' then
+            PARAMETER_READY <= (others => '0');
+            PARAMETER_MATRIX <= (others => (others => '0'));
             interrupt_vector_trigger <= (others => '0');
             interrupt_vector <= (others => '0');
+            uart_fifo_data_in <= (others => '0');
+            uart_fifo_wr_req  <= '0';
+            uart_fifo_rd_req  <= '0';
             interrupt_vector_state <= VECTOR_IDLE;
+            interrupt_vector_count <= 0;
+            interrupt_vector_parameter_id   <= (others => '0');
+            interrupt_vector_parameter_data <= (others => '0');
+            interrupt_vector_parameter_hex  <= (others => '0');
+            interrupt_vector_parameter_timeout <= 0;
+            FEEDBACK_DATA <= (others => '0');
+            FEEDBACK_TRIGGER <= '0';
+            i <= 0;
         elsif rising_edge(CLOCK) then
             ------------------------------------------------------------------------------------------------------------
             -- Anti-latch
@@ -131,18 +164,14 @@ begin
             uart_fifo_rd_req <= '0';
             FEEDBACK_TRIGGER <= '0';
 
-            if TRIGGER = '1' then
-                interrupt_vector <= COMMAND;
-            end if;
-
             case interrupt_vector_state is
-
                 ------------------------------------------------------------------------------------------------------------
                 -- IDLE
                 ------------------------------------------------------------------------------------------------------------
                 when VECTOR_IDLE =>
-                    if TRIGGER = '1' then
-                        interrupt_vector <= COMMAND;
+                    interrupt_vector_parameter_timeout <= 0;
+                    if VECTOR_TRIGGER = '1' then
+                        interrupt_vector <= VECTOR_BYTE;
                         interrupt_vector_state <= VECTOR_CHECK;
                     end if;
 
@@ -153,15 +182,15 @@ begin
                     ---------------------------------------------------------------------------------------------------------------
                     -- FIFO DATA
                     ---------------------------------------------------------------------------------------------------------------
-                    if interrupt_vector = CMD_FIFO_DATA then
+                    if interrupt_vector = CMD_PARAMETER then
 
-                        interrupt_vector_state <= VECTOR_WRITE;
+                        interrupt_vector_state <= VECTOR_PARAMETER_ID;
                     ---------------------------------------------------------------------------------------------------------------
                     -- RESET
                     ---------------------------------------------------------------------------------------------------------------
-                    elsif interrupt_vector = CMD_UART_RESET then
+                    elsif interrupt_vector = CMD_250_PULSE then
 
-                        interrupt_vector_state <= VECTOR_UART_RESET;
+                        interrupt_vector_state <= VECTOR_250_PULSE;
                     ---------------------------------------------------------------------------------------------------------------
                     -- MODE
                     ---------------------------------------------------------------------------------------------------------------
@@ -205,57 +234,169 @@ begin
 
                         interrupt_vector_state <= VECTOR_GEN_SOURCE;
                     ---------------------------------------------------------------------------------------------------------------
-                    -- DEBUG
+                    -- ASCII "A" DETECTED
                     ---------------------------------------------------------------------------------------------------------------
                     elsif interrupt_vector = CMD_DEBUG_A then
 
                         interrupt_vector_state <= VECTOR_DEBUG_A;
 
+                    ---------------------------------------------------------------------------------------------------------------
+                    -- ASCII "B" DETECTED
+                    ---------------------------------------------------------------------------------------------------------------
                     elsif interrupt_vector = CMD_DEBUG_B then
 
                         interrupt_vector_state <= VECTOR_DEBUG_B;
 
+                    ---------------------------------------------------------------------------------------------------------------
+                    -- ASCII "C" DETECTED
+                    ---------------------------------------------------------------------------------------------------------------
                     elsif interrupt_vector = CMD_DEBUG_C then
 
                         interrupt_vector_state <= VECTOR_DEBUG_C;
 
+                    ---------------------------------------------------------------------------------------------------------------
+                    -- ASCII "D" DETECTED
+                    ---------------------------------------------------------------------------------------------------------------
                     elsif interrupt_vector = CMD_DEBUG_D then
 
                         interrupt_vector_state <= VECTOR_DEBUG_D;
 
+                    ---------------------------------------------------------------------------------------------------------------
+                    -- ASCII "E" DETECTED
+                    ---------------------------------------------------------------------------------------------------------------
                     elsif interrupt_vector = CMD_DEBUG_E then
 
                         interrupt_vector_state <= VECTOR_DEBUG_E;
 
+                    ---------------------------------------------------------------------------------------------------------------
+                    -- ASCII "F" DETECTED
+                    ---------------------------------------------------------------------------------------------------------------
                     elsif interrupt_vector = CMD_DEBUG_F then
 
                         interrupt_vector_state <= VECTOR_DEBUG_F;
 
+                    ---------------------------------------------------------------------------------------------------------------
+                    -- ASCII "G" DETECTED
+                    ---------------------------------------------------------------------------------------------------------------
+                    elsif interrupt_vector = CMD_DEBUG_G then
+
+                        interrupt_vector_state <= VECTOR_DEBUG_G;
+
+                    ---------------------------------------------------------------------------------------------------------------
+                    -- ASCII "H" DETECTED
+                    ---------------------------------------------------------------------------------------------------------------
+                    elsif interrupt_vector = CMD_DEBUG_H then
+
+                        interrupt_vector_state <= VECTOR_DEBUG_H;
+
+                    else
+
+                        interrupt_vector_state <= VECTOR_ERROR;
+
                     end if;
 
                 ---------------------------------------------------------------------------------------------------------------
-                -- WRITE FIFO DATA
+                -- BAD VECTOR RECEIVED
                 ---------------------------------------------------------------------------------------------------------------
-                when VECTOR_WRITE =>
+                when VECTOR_ERROR =>
+                    interrupt_vector_parameter_data <= x"DEADBEEF";
+                    interrupt_vector_state <= VECTOR_PARAMETER_FEEDBACK;
+
+                ---------------------------------------------------------------------------------------------------------------
+                -- GET PARAMETER ID
+                ---------------------------------------------------------------------------------------------------------------
+                when VECTOR_PARAMETER_ID =>
+                    if VECTOR_TRIGGER = '1' then
+                        interrupt_vector_parameter_id <= VECTOR_BYTE;
+                        interrupt_vector_state <= VECTOR_PARAMETER_WRITE;
+                    end if;
+
+                ---------------------------------------------------------------------------------------------------------------
+                -- WRITE PARAMETER TO FIFO
+                ---------------------------------------------------------------------------------------------------------------
+                when VECTOR_PARAMETER_WRITE =>
                     if CONTROL_BYTES_NUMBER = interrupt_vector_count then
-                        interrupt_vector_state <= VECTOR_FEEDBACK;
+                        interrupt_vector_state <= VECTOR_PARAMETER_OFFLOAD;
+                        uart_fifo_rd_req <= '1'; -- 1st symbol
                     else
-                        if TRIGGER = '1' then
-                            uart_fifo_data_in <= COMMAND;
+                        if VECTOR_TRIGGER = '1' then
+                            uart_fifo_data_in <= VECTOR_BYTE;
                             uart_fifo_wr_req <= '1';
                             interrupt_vector_count <= interrupt_vector_count + 1;
                         end if;
                     end if;
 
-                when VECTOR_FEEDBACK =>
-                    FEEDBACK_DATA <= x"FEEDC0DE";
+                    if interrupt_vector_parameter_timeout = PARAMETER_TIMEOUT then
+                        interrupt_vector_state <= VECTOR_PARAMETER_ID_ERROR;
+                    else
+                        interrupt_vector_parameter_timeout <= interrupt_vector_parameter_timeout + 1;
+                    end if;
+
+                ---------------------------------------------------------------------------------------------------------------
+                -- OFFLOAD PARAMETER FROM FIFO
+                ---------------------------------------------------------------------------------------------------------------
+                when VECTOR_PARAMETER_OFFLOAD =>
+
+                    interrupt_vector_parameter_data(31 - i downto 28 - i) <= ASCII_TO_HEX(uart_fifo_data_out);
+
+                    if 0 = interrupt_vector_count then
+                        interrupt_vector_state <= VECTOR_PARAMETER_OUTPUTS;
+                        interrupt_vector_count <= 0;
+                        uart_fifo_rd_req <= '0'; -- Stop Reading
+                        i <= 0;
+                    else
+
+                        if interrupt_vector_count /= 8 then -- Skip first increment
+                            i <= i + 4;
+                        end if;
+
+                        if interrupt_vector_count /= 1 then -- Skip last RD
+                            uart_fifo_rd_req <= '1'; -- Consecutive symbols
+                        end if;
+
+                        interrupt_vector_count <= interrupt_vector_count - 1;
+                    end if;
+
+                ---------------------------------------------------------------------------------------------------------------
+                -- OFFLOAD PARAMETER FROM FIFO
+                ---------------------------------------------------------------------------------------------------------------
+                when VECTOR_PARAMETER_OUTPUTS =>
+                    if interrupt_vector_parameter_id = CMD_PARAM_BANDWIDTH then
+                        PARAMETER_READY(0) <= '1';
+                        PARAMETER_MATRIX(0) <= interrupt_vector_parameter_data;
+                        interrupt_vector_state <= VECTOR_PARAMETER_FEEDBACK;
+                    elsif interrupt_vector_parameter_id = CMD_PARAM_THRESHOLD then
+                        PARAMETER_READY(1) <= '1';
+                        PARAMETER_MATRIX(1) <= interrupt_vector_parameter_data;
+                        interrupt_vector_state <= VECTOR_PARAMETER_FEEDBACK;
+                    else
+                        interrupt_vector_state <= VECTOR_PARAMETER_ID_ERROR;
+                    end if;
+
+                ---------------------------------------------------------------------------------------------------------------
+                -- BAD PARAMETER ID RECEIVED
+                ---------------------------------------------------------------------------------------------------------------
+                when VECTOR_PARAMETER_ID_ERROR =>
+                    if uart_fifo_empty = '1' then
+                        uart_fifo_rd_req <= '0';
+                        interrupt_vector_parameter_data <= x"DEADC0DE";
+                        interrupt_vector_state <= VECTOR_PARAMETER_FEEDBACK;
+                    else
+                        uart_fifo_rd_req <= '1';
+                    end if;
+
+                ---------------------------------------------------------------------------------------------------------------
+                -- FEEDBACK DATA TO PC
+                ---------------------------------------------------------------------------------------------------------------
+                when VECTOR_PARAMETER_FEEDBACK =>
+                    FEEDBACK_DATA <= interrupt_vector_parameter_data;
                     FEEDBACK_TRIGGER <= '1';
                     interrupt_vector_state <= VECTOR_DONE;
 
                 ---------------------------------------------------------------------------------------------------------------
                 -- GUI RESET
                 ---------------------------------------------------------------------------------------------------------------
-                when VECTOR_UART_RESET =>
+                when VECTOR_250_PULSE =>
                     interrupt_vector_trigger(0) <= '1';
                     interrupt_vector_state <= VECTOR_DONE;
                 ---------------------------------------------------------------------------------------------------------------
@@ -326,6 +467,14 @@ begin
                 when VECTOR_DEBUG_F =>
                     interrupt_vector_trigger(8 downto 6) <= "101";
                     interrupt_vector_state <= VECTOR_DONE;
+
+                when VECTOR_DEBUG_G =>
+                    interrupt_vector_trigger(8 downto 6) <= "110";
+                    interrupt_vector_state <= VECTOR_DONE;
+
+                when VECTOR_DEBUG_H =>
+                    interrupt_vector_trigger(8 downto 6) <= "111";
+                    interrupt_vector_state <= VECTOR_DONE;
                 ---------------------------------------------------------------------------------------------------------------
                 -- DONE
                 ---------------------------------------------------------------------------------------------------------------
@@ -334,6 +483,8 @@ begin
                     interrupt_vector_trigger(0) <= '0';
                     interrupt_vector <= (others => '0');
                     uart_fifo_data_in  <= (others => '0');
+                    interrupt_vector_parameter_id <= (others => '0');
+                    interrupt_vector_parameter_data <= (others => '0');
                     interrupt_vector_state <= VECTOR_IDLE;
 
                 when others =>

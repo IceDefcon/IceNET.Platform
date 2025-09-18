@@ -20,8 +20,8 @@ port
     UART_LOG_MESSAGE_KEY : in UART_LOG_KEY;
     UART_LOG_MESSAGE_DATA : in UART_LOG_DATA;
 
-    WRITE_ENABLE : out std_logic;
-    WRITE_SYMBOL : out std_logic_vector(6 downto 0);
+    WRITE_VALID : out std_logic;
+    WRITE_SYMBOL : out std_logic_vector(7 downto 0);
 
     WRITE_BUSY : in std_logic
 );
@@ -31,7 +31,7 @@ architecture rtl of UartDataAssembly is
 
 constant uart_length : integer := 8;
 
-type uart_type is array (0 to 7) of std_logic_vector(6 downto 0);
+type uart_type is array (0 to 7) of std_logic_vector(7 downto 0);
 signal uart_tx : uart_type;
 
 type ASSEMBLER_STATE is
@@ -62,10 +62,10 @@ Port
 );
 end component;
 
-signal synced_UART_LOG_TRIGGER : std_logic := '0';
+signal uart_log_trigger_synced : std_logic := '0';
 begin
 
-DelaySynchroniser_LOG_TRIGGER: DelaySynchroniser
+DelaySynchroniser_module: DelaySynchroniser
 generic map
 (
     SYNCHRONIZATION_DEPTH => 2
@@ -76,7 +76,7 @@ port map
     RESET => RESET,
 
     ASYNC_INPUT => UART_LOG_TRIGGER,
-    SYNC_OUTPUT => synced_UART_LOG_TRIGGER
+    SYNC_OUTPUT => uart_log_trigger_synced
 );
 
     uart_process:
@@ -86,13 +86,13 @@ port map
             uart_state <= ASSEMBLER_IDLE;
             uart_tx <= (others => (others => '0'));
             uart_byte <= 0;
-            WRITE_ENABLE <= '0';
+            WRITE_VALID <= '0';
             WRITE_SYMBOL <= (others => '0');
         elsif rising_edge(CLOCK) then
 
             case uart_state is
                 when ASSEMBLER_IDLE =>
-                    if synced_UART_LOG_TRIGGER = '1' then
+                    if uart_log_trigger_synced = '1' then
                         uart_state <= ASSEMBLER_INIT;
                     end if;
 
@@ -120,7 +120,7 @@ port map
                     end if;
 
                 when ASSEMBLER_CONFIG =>
-                    WRITE_ENABLE <= '0';
+                    WRITE_VALID <= '0';
                     if uart_byte = uart_length then
                         uart_byte <= 0;
                         uart_state <= ASSEMBLER_DONE;
@@ -139,7 +139,7 @@ port map
                     end if;
 
                 when ASSEMBLER_CHECK =>
-                    WRITE_ENABLE <= '1';
+                    WRITE_VALID <= '1';
                     uart_state <= ASSEMBLER_CONFIG;
 
                 when ASSEMBLER_DONE =>

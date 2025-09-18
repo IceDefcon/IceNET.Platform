@@ -134,38 +134,6 @@ Port
 );
 end component;
 
-component DelaySynchroniser
-generic
-(
-    SYNCHRONIZATION_DEPTH : integer := 2
-);
-Port
-(
-    CLOCK : in  std_logic;
-    RESET : in std_logic;
-
-    ASYNC_INPUT : in std_logic;
-    SYNC_OUTPUT : out std_logic
-);
-end component;
-
-component PulseController
-generic
-(
-    PULSE_LENGTH : integer := 1
-);
-Port
-(
-    CLOCK : in  std_logic;
-    RESET : in std_logic;
-
-    ENABLE_CONTROLLER : in std_logic;
-
-    INPUT_PULSE : in std_logic;
-    OUTPUT_PULSE : out std_logic
-);
-end component;
-
 component UartProcess
 generic
 (
@@ -216,17 +184,6 @@ TimedReset_Main: TimedReset port map
     CLOCK => CLOCK_50MHz,
     TIMED_RESET => global_reset
 );
-
-------------------------------------------------------------------------------------------------------------
--- Synchroniser
-------------------------------------------------------------------------------------------------------------
-
-
-
-------------------------------------------------------------------------------------------------------------
--- Pulse Contoller
-------------------------------------------------------------------------------------------------------------
-
 
 ------------------------------------------------------------------------------------------------------------
 -- UART Contoller

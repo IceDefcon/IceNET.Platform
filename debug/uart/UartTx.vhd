@@ -10,7 +10,7 @@ port
     RESET : in std_logic;
 
     WRITE_ENABLE : in std_logic;
-    WRITE_SYMBOL : in std_logic_vector(6 downto 0);
+    WRITE_SYMBOL : in std_logic_vector(7 downto 0);
     WRITE_BUSY : out std_logic;
 
     FPGA_UART_TX : out std_logic
@@ -19,8 +19,7 @@ end UartTx;
 
 architecture rtl of UartTx is
 
-constant baudRate : std_logic_vector(7 downto 0) := "00011000"; -- 1/[25*20ns] ---> 2M @ 500Mhz
---constant baudRate : std_logic_vector(7 downto 0) := "01100011"; -- 1/[100*20ns] ---> 2M @ 200Mhz
+constant baudRate : std_logic_vector(7 downto 0) := "00011000"; -- 1/[25*20ns] ---> 2M @ 50Mhz
 
 type STATE is
 (

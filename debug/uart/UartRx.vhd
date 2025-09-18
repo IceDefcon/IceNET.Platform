@@ -9,7 +9,7 @@ port
     CLOCK : in std_logic;
     RESET : in std_logic;
 
-    READ_ENABLE : out std_logic;
+    READ_VALID : out std_logic;
     READ_SYMBOL : out std_logic_vector(7 downto 0);
     READ_BUSY : out std_logic;
 
@@ -19,20 +19,20 @@ end UartRx;
 
 architecture rtl of UartRx is
 
-constant bit_baud : integer range 0 to 128 := 25; -- 100*5ns ---> 2M Baud @ 50Mhz
-constant bit_start : integer range 0 to 128 := 15; -- 60
-constant bit_0 : integer range 0 to 2048 := bit_start + bit_baud; -- 160
-constant bit_1 : integer range 0 to 2048 := bit_0 + bit_baud;     -- 260
-constant bit_2 : integer range 0 to 2048 := bit_1 + bit_baud;     -- 360
-constant bit_3 : integer range 0 to 2048 := bit_2 + bit_baud;     -- 460
-constant bit_4 : integer range 0 to 2048 := bit_3 + bit_baud;     -- 560
-constant bit_5 : integer range 0 to 2048 := bit_4 + bit_baud;     -- 660
-constant bit_6 : integer range 0 to 2048 := bit_5 + bit_baud;     -- 760
-constant bit_7 : integer range 0 to 2048 := bit_6 + bit_baud;     -- 860
-constant bit_stop : integer range 0 to 2048 := bit_7 + bit_baud;  -- 960
+constant bit_baud : integer range 0 to 128 := 25; -- 25*20ns ---> 2M Baud @ 50Mhz
+constant bit_start : integer range 0 to 128 := 15; -- 15
+constant bit_0 : integer range 0 to 4096 := bit_start + bit_baud; -- 40
+constant bit_1 : integer range 0 to 4096 := bit_0 + bit_baud;     -- 65
+constant bit_2 : integer range 0 to 4096 := bit_1 + bit_baud;     -- 90
+constant bit_3 : integer range 0 to 4096 := bit_2 + bit_baud;     -- 115
+constant bit_4 : integer range 0 to 4096 := bit_3 + bit_baud;     -- 140
+constant bit_5 : integer range 0 to 4096 := bit_4 + bit_baud;     -- 165
+constant bit_6 : integer range 0 to 4096 := bit_5 + bit_baud;     -- 190
+constant bit_7 : integer range 0 to 4096 := bit_6 + bit_baud;     -- 215
+constant bit_stop : integer range 0 to 4096 := bit_7 + bit_baud;  -- 240
 
 signal symbol_byte : std_logic_vector(7 downto 0) := (others => '0');
-signal symbol_process_timer : integer range 0 to 2048 := 0;
+signal symbol_process_timer : integer range 0 to 4096 := 0;
 signal symbol_trigger : std_logic := '0';
 
 type SYMBOL_SM is
@@ -88,7 +88,7 @@ begin
             -- START PROCESS
             ---------------------------------------------------------------------------------------------------
             when SYMBOL_PROCESS =>
-                if symbol_process_timer = 2048 then
+                if symbol_process_timer = 4096 then
                 else
                     if symbol_process_timer = bit_start then
                         ---------------------------------------------------------------------------------------------------
@@ -178,6 +178,6 @@ begin
     end if;
 end process;
 
-READ_ENABLE <= symbol_trigger;
+READ_VALID <= symbol_trigger;
 
 end architecture;
