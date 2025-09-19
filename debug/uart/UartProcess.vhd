@@ -18,10 +18,8 @@ port
     UART_LOG_TRIGGER : in std_logic;
     UART_LOG_VECTOR : in std_logic_vector(31 downto 0);
 
-    UART_PROCESS_RX : in std_logic;
-    UART_PROCESS_TX : out std_logic;
-
-    WRITE_BUSY : out std_logic;
+    SYNCED_UART_RX : in std_logic;
+    SYNCED_UART_TX : out std_logic;
 
     VECTOR_INTERRUPT : out std_logic_vector(IRQ_VECTOR_SIZE - 1 downto 0)
 );
@@ -88,7 +86,7 @@ port
     WRITE_SYMBOL : in std_logic_vector(7 downto 0);
     WRITE_BUSY : out std_logic;
 
-    FPGA_UART_TX : out std_logic
+    SYNCED_UART_TX : out std_logic
 );
 end component;
 
@@ -102,7 +100,7 @@ port
     READ_SYMBOL : out std_logic_vector(7 downto 0);
     READ_BUSY : out std_logic;
 
-    FPGA_UART_RX : in std_logic
+    SYNCED_UART_RX : in std_logic
 );
 end component;
 
@@ -234,10 +232,8 @@ port map
     WRITE_SYMBOL => uart_write_symbol,
     WRITE_BUSY => uart_write_busy,
 
-    FPGA_UART_TX => UART_PROCESS_TX
+    SYNCED_UART_TX => SYNCED_UART_TX
 );
-
-WRITE_BUSY <= uart_write_busy;
 
 UartRx_module: UartRx
 port map
@@ -249,7 +245,7 @@ port map
     READ_SYMBOL => uart_read_symbol,
     READ_BUSY => uart_read_busy,
     -- IN
-    FPGA_UART_RX => UART_PROCESS_RX
+    SYNCED_UART_RX => SYNCED_UART_RX
 );
 
 UartIrqController_module: UartIrqController

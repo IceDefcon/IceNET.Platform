@@ -102,17 +102,15 @@ constant IRQ_VECTOR_SIZE : integer := 10;
 ----------------------------------------------------------------------------------------
 -- Signals
 ----------------------------------------------------------------------------------------
-signal global_reset : std_logic := '1';
-signal CLOCK_200MHz : std_logic := '0';
+signal timed_reset : std_logic := '1';
 
-signal debug_FPGA_UART_RX : std_logic := '1';
-signal debug_FPGA_UART_TX : std_logic := '1';
+signal fpga_uart_tx_synced : std_logic := '1';
+signal fpga_uart_rx_synced : std_logic := '1';
 
 signal uart_vector : std_logic_vector(IRQ_VECTOR_SIZE - 1 downto 0) := (others => '0');
-
 signal uart_trigger : std_logic := '0';
 signal uart_message : std_logic_vector(31 downto 0) := (others => '0');
-signal uart_wait : std_logic := '0';
+
 ----------------------------------------------------------------------------------------
 -- Components
 ----------------------------------------------------------------------------------------
@@ -120,17 +118,23 @@ component TimedReset
 Port
 (
     CLOCK : in  std_logic;
-    TIMED_RESET : out std_logic
+    RESET : out std_logic
 );
 end component;
 
-component PLL_200MHz
+component DelaySynchroniser
+generic
+(
+    SYNCHRONIZATION_DEPTH : integer := 2;
+    INITIAL_VALUE : std_logic := '0'
+);
 Port
 (
-    areset : IN STD_LOGIC;
-    inclk0 : IN STD_LOGIC;
-    c0 : OUT STD_LOGIC;
-    locked : OUT STD_LOGIC
+    CLOCK : in  std_logic;
+    RESET : in std_logic;
+
+    ASYNC_INPUT : in std_logic;
+    SYNC_OUTPUT : out std_logic
 );
 end component;
 
@@ -148,10 +152,8 @@ port
     UART_LOG_TRIGGER : in std_logic;
     UART_LOG_VECTOR : in std_logic_vector(31 downto 0);
 
-    UART_PROCESS_RX : in std_logic;
-    UART_PROCESS_TX : out std_logic;
-
-    WRITE_BUSY : out std_logic;
+    SYNCED_UART_RX : in std_logic;
+    SYNCED_UART_TX : out std_logic;
 
     VECTOR_INTERRUPT : out std_logic_vector(IRQ_VECTOR_SIZE - 1 downto 0)
 );
@@ -171,18 +173,28 @@ J504_OUT2 <= CTRL_F2;
 -- Global Reset
 ------------------------------------------------------------------------------------------------------------
 
-PLL_200MHz_Main: PLL_200MHz port map
-(
-    areset => global_reset,
-    inclk0 => CLOCK_50MHz,
-    c0 => CLOCK_200MHz,
-    locked => open
-);
-
 TimedReset_Main: TimedReset port map
 (
     CLOCK => CLOCK_50MHz,
-    TIMED_RESET => global_reset
+    RESET => timed_reset
+);
+
+------------------------------------------------------------------------------------------------------------
+-- Syncronise UART RX
+------------------------------------------------------------------------------------------------------------
+Synced_Uart_Rx: DelaySynchroniser
+generic map
+(
+    SYNCHRONIZATION_DEPTH => 2,
+    INITIAL_VALUE => '1' -- Uart Rx Must be High
+)
+port map
+(
+    CLOCK => CLOCK_50MHz,
+    RESET => timed_reset,
+
+    ASYNC_INPUT => FPGA_UART_RX,
+    SYNC_OUTPUT => fpga_uart_tx_synced
 );
 
 ------------------------------------------------------------------------------------------------------------
@@ -197,33 +209,28 @@ generic map
 port map
 (
     CLOCK => CLOCK_50MHz,
-    RESET => global_reset,
-
+    RESET => timed_reset,
+    -- IN
     UART_LOG_TRIGGER => uart_trigger,
     UART_LOG_VECTOR => uart_message,
-
     -- UART
-    UART_PROCESS_RX => debug_FPGA_UART_RX,
-    UART_PROCESS_TX => debug_FPGA_UART_TX,
-
-    WRITE_BUSY => uart_wait,
-
+    SYNCED_UART_RX => fpga_uart_tx_synced,
+    SYNCED_UART_TX => fpga_uart_rx_synced,
     -- OUT
     VECTOR_INTERRUPT => uart_vector
 );
 
-debug_FPGA_UART_RX <= FPGA_UART_RX;
-FPGA_UART_TX <= debug_FPGA_UART_TX;
+FPGA_UART_TX <= fpga_uart_rx_synced;
 
 ------------------------------------------------------------------------------------------------------------
 -- DEBUG
 ------------------------------------------------------------------------------------------------------------
 
 LED_process:
-process(CLOCK_50MHz, global_reset)
+process(CLOCK_50MHz, timed_reset)
 begin
     if rising_edge(CLOCK_50MHz) then
-        if global_reset = '1' then 
+        if timed_reset = '1' then
             LED_1 <= '1';
             LED_2 <= '1';
             LED_3 <= '1';
@@ -243,8 +250,8 @@ begin
             LED_8 <= '1';
         end if;
 
-    DEBUG_PIN_0 <= debug_FPGA_UART_TX;
-    DEBUG_PIN_1 <= debug_FPGA_UART_RX;
+    DEBUG_PIN_0 <= fpga_uart_rx_synced;
+    DEBUG_PIN_1 <= fpga_uart_tx_synced;
 
     end if;
 end process;

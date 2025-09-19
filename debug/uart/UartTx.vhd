@@ -12,7 +12,7 @@ port
     WRITE_SYMBOL : in std_logic_vector(7 downto 0);
     WRITE_BUSY : out std_logic;
 
-    FPGA_UART_TX : out std_logic
+    SYNCED_UART_TX : out std_logic
 );
 end UartTx;
 
@@ -32,25 +32,33 @@ type STATE is
 );
 signal uart_state: STATE := UART_IDLE;
 
-signal bit_number : integer := 0;
-signal baud_count : integer range 0 to 256 := 0;
-signal uart_output : std_logic := '1';
+signal uart_bit_number : integer := 0;
+signal uart_baud_count : integer range 0 to 256 := 0;
+signal uart_tx : std_logic := '1';
 
 begin
 
 state_machine_process:
 process(CLOCK, RESET)
 begin
+    ---------------------------------------------------------------------------------------------------
+    -- RESET VARIABLES
+    ---------------------------------------------------------------------------------------------------
     if RESET = '1' then
         uart_state <= UART_IDLE;
-        bit_number <= 0;
-        baud_count <= 0;
-        uart_output <= '1';
-        FPGA_UART_TX <= '1';
+        uart_bit_number <= 0;
+        uart_baud_count <= 0;
+        uart_tx <= '1';
+        SYNCED_UART_TX <= '1';
         WRITE_BUSY <= '0';
     elsif rising_edge(CLOCK) then
+        ---------------------------------------------------------------------------------------------------
+        -- STATE MACHINE
+        ---------------------------------------------------------------------------------------------------
         case uart_state is
-
+            ---------------------------------------------------------------------------------------------------
+            -- IDLE
+            ---------------------------------------------------------------------------------------------------
             when UART_IDLE =>
                 if WRITE_ENABLE = '1' then
                     uart_state <= UART_CONFIG;
@@ -61,49 +69,51 @@ begin
                 uart_state <= UART_START;
 
             when UART_START =>
-                uart_output <= '0';
-                if baud_count = baudRate then
-                    baud_count <= 0;
+                uart_tx <= '0';
+                if uart_baud_count = baudRate then
+                    uart_baud_count <= 0;
                     uart_state <= UART_WRITE;
                 else
-                    baud_count <= baud_count + 1;
+                    uart_baud_count <= uart_baud_count + 1;
                 end if;
 
             when UART_WRITE =>
-                if bit_number = 7 then
-                    uart_output <= '0';
+                if uart_bit_number = 7 then
+                    uart_tx <= '0';
                     uart_state <= UART_STOP;
-                    bit_number <= 0;
+                    uart_bit_number <= 0;
                 else
-                    if baud_count = baudRate then
-                        baud_count <= 0;
-                        bit_number <= bit_number + 1;
+                    if uart_baud_count = baudRate then
+                        uart_baud_count <= 0;
+                        uart_bit_number <= uart_bit_number + 1;
                     else
-                        baud_count <= baud_count + 1;
+                        uart_baud_count <= uart_baud_count + 1;
                     end if;
 
-                    uart_output <= WRITE_SYMBOL(bit_number);
+                    uart_tx <= WRITE_SYMBOL(uart_bit_number);
 
                 end if;
 
             when UART_STOP =>
-                if baud_count = baudRate then
-                    uart_output <= '1';
-                    baud_count <= 0;
+                if uart_baud_count = baudRate then
+                    uart_tx <= '1';
+                    uart_baud_count <= 0;
                     uart_state <= UART_PAUSE;
                 else
-                    baud_count <= baud_count + 1;
+                    uart_baud_count <= uart_baud_count + 1;
                 end if;
 
             when UART_PAUSE =>
-                if baud_count = baudRate then
-                    uart_output <= '1';
-                    baud_count <= 0;
+                if uart_baud_count = baudRate then
+                    uart_tx <= '1';
+                    uart_baud_count <= 0;
                     uart_state <= UART_DONE;
                 else
-                    baud_count <= baud_count + 1;
+                    uart_baud_count <= uart_baud_count + 1;
                 end if;
-
+            ---------------------------------------------------------------------------------------------------
+            -- DONE
+            ---------------------------------------------------------------------------------------------------
             when UART_DONE =>
                 WRITE_BUSY <= '0';
                 uart_state <= UART_IDLE;
@@ -112,8 +122,10 @@ begin
                 uart_state <= UART_IDLE;
 
         end case;
-
-        FPGA_UART_TX <= uart_output;
+        ---------------------------------------------------------------------------------------------------
+        -- UART TX
+        ---------------------------------------------------------------------------------------------------
+        SYNCED_UART_TX <= uart_tx;
 
     end if;
 end process;
