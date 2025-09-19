@@ -20,8 +20,8 @@ use work.UartTypes.all;
 -- PIN_A20 :: PIN_B20
 -- ______________________________________________________________________________________
 --                      Λ                                                Λ
--- PIN_A19 :: PIN_B19   | TIMER_INT_FROM_FPGA   :: FPGA_UART_RX          | H7  :: H8
--- PIN_A18 :: PIN_B18   | ----===[ GND ]===---- :: FPGA_UART_TX          | H9  :: H10
+-- PIN_A19 :: PIN_B19   | TIMER_INT_FROM_FPGA   :: UART_RX               | H7  :: H8
+-- PIN_A18 :: PIN_B18   | ----===[ GND ]===---- :: UART_TX               | H9  :: H10
 -- PIN_A17 :: PIN_B17   |                       ::                       | H11 :: H12
 -- PIN_A16 :: PIN_B16   | SECONDARY_SCLK        :: ----===[ GND ]===---- | H13 :: H14
 -- PIN_A15 :: PIN_B15   | CTRL_F1               ::                       | H15 :: H16
@@ -64,8 +64,8 @@ Port
     PRIMARY_CS   : in  std_logic; -- PIN_B9
     CTRL_F1 : in std_logic; -- PIN_A15
     CTRL_F2 : in std_logic; -- PIN_C3
-    FPGA_UART_TX  : out std_logic; -- PIN_B18 :: H10 -> JetsonNano UART1_RXD
-    FPGA_UART_RX  : in  std_logic; -- PIN_B19 :: H8  -> JetsonNano UART1_TXD
+    UART_TX  : out std_logic; -- PIN_B18 :: H10 -> JetsonNano UART1_RXD
+    UART_RX  : in  std_logic; -- PIN_B19 :: H8  -> JetsonNano UART1_TXD
     -----------------------------------------------------------------------------
     -- DEBUG
     -----------------------------------------------------------------------------
@@ -78,11 +78,8 @@ Port
     LED_7 : out std_logic; -- PIN_M8
     LED_8 : out std_logic; -- PIN_N8
     -----------------------------------------------------------------------------
-    -- UART
+    -- DEBUG
     -----------------------------------------------------------------------------
-    DEBUG_UART_TX : out std_logic; -- PIN_P1
-    DEBUG_UART_RX : in std_logic; -- PIN_R1
-
     DEBUG_PIN_5 : out std_logic; -- PIN_D2
     DEBUG_PIN_4 : out std_logic; -- PIN_F2
     DEBUG_PIN_3 : out std_logic; -- PIN_H2
@@ -104,8 +101,8 @@ constant IRQ_VECTOR_SIZE : integer := 10;
 ----------------------------------------------------------------------------------------
 signal timed_reset : std_logic := '1';
 
-signal fpga_uart_rx_synced : std_logic := '1';
-signal fpga_uart_tx_synced : std_logic := '1';
+signal uart_rx_synced : std_logic := '1';
+signal uart_tx_synced : std_logic := '1';
 
 signal uart_vector : std_logic_vector(IRQ_VECTOR_SIZE - 1 downto 0) := (others => '0');
 signal uart_trigger : std_logic := '0';
@@ -193,8 +190,8 @@ port map
     CLOCK => CLOCK_50MHz,
     RESET => timed_reset,
 
-    ASYNC_INPUT => FPGA_UART_RX,
-    SYNC_OUTPUT => fpga_uart_rx_synced
+    ASYNC_INPUT => UART_RX,
+    SYNC_OUTPUT => uart_rx_synced
 );
 
 ------------------------------------------------------------------------------------------------------------
@@ -214,13 +211,13 @@ port map
     UART_LOG_TRIGGER => uart_trigger,
     UART_LOG_VECTOR => uart_message,
     -- UART
-    SYNCED_UART_RX => fpga_uart_rx_synced,
-    SYNCED_UART_TX => fpga_uart_tx_synced,
+    SYNCED_UART_RX => uart_rx_synced,
+    SYNCED_UART_TX => uart_tx_synced,
     -- OUT
     VECTOR_INTERRUPT => uart_vector
 );
 
-FPGA_UART_TX <= fpga_uart_tx_synced;
+UART_TX <= uart_tx_synced;
 
 ------------------------------------------------------------------------------------------------------------
 -- DEBUG
@@ -250,8 +247,8 @@ begin
             LED_8 <= '1';
         end if;
 
-    DEBUG_PIN_0 <= fpga_uart_tx_synced;
-    DEBUG_PIN_1 <= fpga_uart_rx_synced;
+    DEBUG_PIN_0 <= uart_tx_synced;
+    DEBUG_PIN_1 <= uart_rx_synced;
 
     end if;
 end process;
