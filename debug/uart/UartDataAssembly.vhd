@@ -50,7 +50,8 @@ signal uart_byte : integer := 0;
 component DelaySynchroniser
 generic
 (
-    SYNCHRONIZATION_DEPTH : integer := 2
+    SYNCHRONIZATION_DEPTH : integer := 2;
+    INITIAL_VALUE : std_logic := '0'
 );
 Port
 (
@@ -68,7 +69,8 @@ begin
 DelaySynchroniser_module: DelaySynchroniser
 generic map
 (
-    SYNCHRONIZATION_DEPTH => 2
+    SYNCHRONIZATION_DEPTH => 2,
+    INITIAL_VALUE => '0'
 )
 port map
 (
