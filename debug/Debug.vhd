@@ -104,8 +104,8 @@ constant IRQ_VECTOR_SIZE : integer := 10;
 ----------------------------------------------------------------------------------------
 signal timed_reset : std_logic := '1';
 
-signal fpga_uart_tx_synced : std_logic := '1';
 signal fpga_uart_rx_synced : std_logic := '1';
+signal fpga_uart_tx_synced : std_logic := '1';
 
 signal uart_vector : std_logic_vector(IRQ_VECTOR_SIZE - 1 downto 0) := (others => '0');
 signal uart_trigger : std_logic := '0';
@@ -194,7 +194,7 @@ port map
     RESET => timed_reset,
 
     ASYNC_INPUT => FPGA_UART_RX,
-    SYNC_OUTPUT => fpga_uart_tx_synced
+    SYNC_OUTPUT => fpga_uart_rx_synced
 );
 
 ------------------------------------------------------------------------------------------------------------
@@ -214,13 +214,13 @@ port map
     UART_LOG_TRIGGER => uart_trigger,
     UART_LOG_VECTOR => uart_message,
     -- UART
-    SYNCED_UART_RX => fpga_uart_tx_synced,
-    SYNCED_UART_TX => fpga_uart_rx_synced,
+    SYNCED_UART_RX => fpga_uart_rx_synced,
+    SYNCED_UART_TX => fpga_uart_tx_synced,
     -- OUT
     VECTOR_INTERRUPT => uart_vector
 );
 
-FPGA_UART_TX <= fpga_uart_rx_synced;
+FPGA_UART_TX <= fpga_uart_tx_synced;
 
 ------------------------------------------------------------------------------------------------------------
 -- DEBUG
@@ -250,8 +250,8 @@ begin
             LED_8 <= '1';
         end if;
 
-    DEBUG_PIN_0 <= fpga_uart_rx_synced;
-    DEBUG_PIN_1 <= fpga_uart_tx_synced;
+    DEBUG_PIN_0 <= fpga_uart_tx_synced;
+    DEBUG_PIN_1 <= fpga_uart_rx_synced;
 
     end if;
 end process;
