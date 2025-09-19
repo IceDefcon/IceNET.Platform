@@ -18,29 +18,22 @@ end UartTx;
 
 architecture rtl of UartTx is
 
-constant bit_baud : integer range 0 to 128 := 25; -- 25*20ns ---> 2M Baud @ 50Mhz
-constant bit_start : integer range 0 to 128 := 0; -- 0
-constant bit_0 : integer range 0 to 4096 := bit_start + bit_baud;   -- 25
-constant bit_1 : integer range 0 to 4096 := bit_0 + bit_baud;       -- 50
-constant bit_2 : integer range 0 to 4096 := bit_1 + bit_baud;       -- 75
-constant bit_3 : integer range 0 to 4096 := bit_2 + bit_baud;       -- 125
-constant bit_4 : integer range 0 to 4096 := bit_3 + bit_baud;       -- 150
-constant bit_5 : integer range 0 to 4096 := bit_4 + bit_baud;       -- 175
-constant bit_6 : integer range 0 to 4096 := bit_5 + bit_baud;       -- 200
-constant bit_7 : integer range 0 to 4096 := bit_6 + bit_baud;       -- 225
-constant bit_stop : integer range 0 to 4096 := bit_7 + bit_baud;    -- 250
-constant bit_next : integer range 0 to 4096 := bit_stop + bit_baud; -- 275
+constant baudRate : integer := 25; -- 1/[25*4ns] ---> 2M @ 50Mhz
 
-signal symbol_process_timer : integer range 0 to 4096 := 0;
-
-type SYMBOL_SM is
+type STATE is
 (
-    SYMBOL_IDLE,
-    SYMBOL_PROCESS,
-    SYMBOL_DONE
+    UART_IDLE,
+    UART_CONFIG,
+    UART_START,
+    UART_WRITE,
+    UART_STOP,
+    UART_PAUSE,
+    UART_DONE
 );
-signal symbol_state: SYMBOL_SM := SYMBOL_IDLE;
+signal uart_state: STATE := UART_IDLE;
 
+signal bit_number : integer := 0;
+signal baud_count : integer range 0 to 256 := 0;
 signal uart_output : std_logic := '1';
 
 begin
@@ -49,125 +42,80 @@ state_machine_process:
 process(CLOCK, RESET)
 begin
     if RESET = '1' then
-        ---------------------------------------------------------------------------------------------------
-        -- RESET Values
-        ---------------------------------------------------------------------------------------------------
-        symbol_state <= SYMBOL_IDLE;
-        symbol_process_timer <= 0;
-        WRITE_BUSY <= '0';
+        uart_state <= UART_IDLE;
+        bit_number <= 0;
+        baud_count <= 0;
         uart_output <= '1';
+        FPGA_UART_TX <= '1';
+        WRITE_BUSY <= '0';
     elsif rising_edge(CLOCK) then
-        ---------------------------------------------------------------------------------------------------
-        -- Avoid Latches
-        ---------------------------------------------------------------------------------------------------
+        case uart_state is
 
-
-        ---------------------------------------------------------------------------------------------------
-        -- State Machine
-        ---------------------------------------------------------------------------------------------------
-        case symbol_state is
-
-            ---------------------------------------------------------------------------------------------------
-            -- IDLE
-            ---------------------------------------------------------------------------------------------------
-            when SYMBOL_IDLE =>
+            when UART_IDLE =>
                 if WRITE_ENABLE = '1' then
-                    WRITE_BUSY <= '1';
-                    symbol_state <= SYMBOL_PROCESS;
+                    uart_state <= UART_CONFIG;
                 end if;
 
-            ---------------------------------------------------------------------------------------------------
-            -- START PROCESS
-            ---------------------------------------------------------------------------------------------------
-            when SYMBOL_PROCESS =>
-                if symbol_process_timer = 4096 then
+            when UART_CONFIG =>
+                WRITE_BUSY <= '1';
+                uart_state <= UART_START;
+
+            when UART_START =>
+                uart_output <= '0';
+                if baud_count = baudRate then
+                    baud_count <= 0;
+                    uart_state <= UART_WRITE;
                 else
-                    if symbol_process_timer = bit_start then
-                        ---------------------------------------------------------------------------------------------------
-                        -- BIT START
-                        ---------------------------------------------------------------------------------------------------
-                        uart_output <= '0';
+                    baud_count <= baud_count + 1;
+                end if;
 
-                    elsif symbol_process_timer = bit_0 then
-                        ---------------------------------------------------------------------------------------------------
-                        -- BIT 0
-                        ---------------------------------------------------------------------------------------------------
-                        uart_output <= WRITE_SYMBOL(0);
-
-                    elsif symbol_process_timer = bit_1 then
-                        ---------------------------------------------------------------------------------------------------
-                        -- BIT 1
-                        ---------------------------------------------------------------------------------------------------
-                        uart_output <= WRITE_SYMBOL(1);
-
-                    elsif symbol_process_timer = bit_2 then
-                        ---------------------------------------------------------------------------------------------------
-                        -- BIT 2
-                        ---------------------------------------------------------------------------------------------------
-                        uart_output <= WRITE_SYMBOL(2);
-
-                    elsif symbol_process_timer = bit_3 then
-                        ---------------------------------------------------------------------------------------------------
-                        -- BIT 3
-                        ---------------------------------------------------------------------------------------------------
-                        uart_output <= WRITE_SYMBOL(3);
-
-                    elsif symbol_process_timer = bit_4 then
-                        ---------------------------------------------------------------------------------------------------
-                        -- BIT 4
-                        ---------------------------------------------------------------------------------------------------
-                        uart_output <= WRITE_SYMBOL(4);
-
-                    elsif symbol_process_timer = bit_5 then
-                        ---------------------------------------------------------------------------------------------------
-                        -- BIT 5
-                        ---------------------------------------------------------------------------------------------------
-                        uart_output <= WRITE_SYMBOL(5);
-
-                    elsif symbol_process_timer = bit_6 then
-                        ---------------------------------------------------------------------------------------------------
-                        -- BIT 6
-                        ---------------------------------------------------------------------------------------------------
-                        uart_output <= WRITE_SYMBOL(6);
-
-                    elsif symbol_process_timer = bit_7 then
-                        ---------------------------------------------------------------------------------------------------
-                        -- BIT 7
-                        ---------------------------------------------------------------------------------------------------
-                        uart_output <= WRITE_SYMBOL(7);
-
-                    elsif symbol_process_timer = bit_stop then
-                        ---------------------------------------------------------------------------------------------------
-                        -- BIT STOP
-                        ---------------------------------------------------------------------------------------------------
-                        uart_output <= '1';
-
-                    elsif symbol_process_timer = bit_next then
-                        ---------------------------------------------------------------------------------------------------
-                        -- BIT NEXT
-                        ---------------------------------------------------------------------------------------------------
-                        symbol_state <= SYMBOL_DONE;
-
+            when UART_WRITE =>
+                if bit_number = 7 then
+                    uart_output <= '0';
+                    uart_state <= UART_STOP;
+                    bit_number <= 0;
+                else
+                    if baud_count = baudRate then
+                        baud_count <= 0;
+                        bit_number <= bit_number + 1;
+                    else
+                        baud_count <= baud_count + 1;
                     end if;
 
-                    symbol_process_timer <= symbol_process_timer + 1;
+                    uart_output <= WRITE_SYMBOL(bit_number);
+
                 end if;
 
-            ---------------------------------------------------------------------------------------------------
-            -- DONE
-            ---------------------------------------------------------------------------------------------------
-            when SYMBOL_DONE =>
+            when UART_STOP =>
+                if baud_count = baudRate then
+                    uart_output <= '1';
+                    baud_count <= 0;
+                    uart_state <= UART_PAUSE;
+                else
+                    baud_count <= baud_count + 1;
+                end if;
+
+            when UART_PAUSE =>
+                if baud_count = baudRate then
+                    uart_output <= '1';
+                    baud_count <= 0;
+                    uart_state <= UART_DONE;
+                else
+                    baud_count <= baud_count + 1;
+                end if;
+
+            when UART_DONE =>
                 WRITE_BUSY <= '0';
-                symbol_process_timer <= 0;
-                symbol_state <= SYMBOL_IDLE;
+                uart_state <= UART_IDLE;
 
             when others =>
-                symbol_state <= SYMBOL_IDLE;
+                uart_state <= UART_IDLE;
 
         end case;
+
+        FPGA_UART_TX <= uart_output;
+
     end if;
 end process;
-
-FPGA_UART_TX <= uart_output;
 
 end architecture;

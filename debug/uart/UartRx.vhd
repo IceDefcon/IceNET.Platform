@@ -1,7 +1,6 @@
 library ieee;
 use ieee.numeric_std.all;
 use ieee.std_logic_1164.all;
-use ieee.std_logic_unsigned.all;
 
 entity UartRx is
 port
@@ -20,16 +19,16 @@ end UartRx;
 architecture rtl of UartRx is
 
 constant bit_baud : integer range 0 to 128 := 25; -- 25*20ns ---> 2M Baud @ 50Mhz
-constant bit_start : integer range 0 to 128 := 15; -- 15
-constant bit_0 : integer range 0 to 4096 := bit_start + bit_baud; -- 40
-constant bit_1 : integer range 0 to 4096 := bit_0 + bit_baud;     -- 65
-constant bit_2 : integer range 0 to 4096 := bit_1 + bit_baud;     -- 90
-constant bit_3 : integer range 0 to 4096 := bit_2 + bit_baud;     -- 115
-constant bit_4 : integer range 0 to 4096 := bit_3 + bit_baud;     -- 140
-constant bit_5 : integer range 0 to 4096 := bit_4 + bit_baud;     -- 165
-constant bit_6 : integer range 0 to 4096 := bit_5 + bit_baud;     -- 190
-constant bit_7 : integer range 0 to 4096 := bit_6 + bit_baud;     -- 215
-constant bit_stop : integer range 0 to 4096 := bit_7 + bit_baud;  -- 240
+constant bit_start : integer range 0 to 128 := 15;
+constant bit_0 : integer range 0 to 4096 := bit_start + bit_baud;
+constant bit_1 : integer range 0 to 4096 := bit_0 + bit_baud;
+constant bit_2 : integer range 0 to 4096 := bit_1 + bit_baud;
+constant bit_3 : integer range 0 to 4096 := bit_2 + bit_baud;
+constant bit_4 : integer range 0 to 4096 := bit_3 + bit_baud;
+constant bit_5 : integer range 0 to 4096 := bit_4 + bit_baud;
+constant bit_6 : integer range 0 to 4096 := bit_5 + bit_baud;
+constant bit_7 : integer range 0 to 4096 := bit_6 + bit_baud;
+constant bit_stop : integer range 0 to 4096 := bit_7 + bit_baud;
 
 signal symbol_byte : std_logic_vector(7 downto 0) := (others => '0');
 signal symbol_process_timer : integer range 0 to 4096 := 0;
