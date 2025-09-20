@@ -40,6 +40,7 @@ signal UART_LOG_MESSAGE_DATA : UART_LOG_DATA := ("0000", "0000", "0000", "0000")
 
 signal uart_write_valid : std_logic := '0';
 signal uart_write_symbol : std_logic_vector(7 downto 0) := (others => '0');
+signal uart_write_busy : std_logic := '0';
 
 signal uart_read_valid : std_logic := '0';
 signal uart_read_symbol : std_logic_vector(7 downto 0) := (others => '0');
