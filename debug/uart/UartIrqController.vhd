@@ -106,7 +106,7 @@ signal interrupt_vector_count : integer range 0 to CONTROL_BYTES_NUMBER := 0;
 signal interrupt_vector_parameter_id : std_logic_vector(7 downto 0) := (others => '0');
 signal interrupt_vector_parameter_data : std_logic_vector(31 downto 0) := (others => '0');
 signal interrupt_vector_parameter_hex : std_logic_vector(3 downto 0) := (others => '0');
-signal interrupt_vector_parameter_timeout : integer range 0 to 4096 := 0;
+signal interrupt_vector_parameter_timeout : integer range 0 to PARAMETER_TIMEOUT := 0;
 
 signal i : integer range 0 to 32 := 0;
 

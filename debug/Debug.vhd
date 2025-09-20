@@ -152,6 +152,8 @@ port
     SYNCED_UART_RX : in std_logic;
     SYNCED_UART_TX : out std_logic;
 
+    WRITE_BUSY : out std_logic;
+
     VECTOR_INTERRUPT : out std_logic_vector(IRQ_VECTOR_SIZE - 1 downto 0)
 );
 end component;
@@ -214,6 +216,8 @@ port map
     SYNCED_UART_RX => uart_rx_synced,
     SYNCED_UART_TX => uart_tx_synced,
     -- OUT
+    WRITE_BUSY => open,
+
     VECTOR_INTERRUPT => uart_vector
 );
 

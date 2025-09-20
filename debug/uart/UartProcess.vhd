@@ -21,6 +21,8 @@ port
     SYNCED_UART_RX : in std_logic;
     SYNCED_UART_TX : out std_logic;
 
+    WRITE_BUSY : out std_logic;
+
     VECTOR_INTERRUPT : out std_logic_vector(IRQ_VECTOR_SIZE - 1 downto 0)
 );
 end UartProcess;
@@ -38,7 +40,6 @@ signal UART_LOG_MESSAGE_DATA : UART_LOG_DATA := ("0000", "0000", "0000", "0000")
 
 signal uart_write_valid : std_logic := '0';
 signal uart_write_symbol : std_logic_vector(7 downto 0) := (others => '0');
-signal uart_write_busy : std_logic := '0';
 
 signal uart_read_valid : std_logic := '0';
 signal uart_read_symbol : std_logic_vector(7 downto 0) := (others => '0');
@@ -234,6 +235,8 @@ port map
 
     SYNCED_UART_TX => SYNCED_UART_TX
 );
+
+WRITE_BUSY <= uart_write_busy;
 
 UartRx_module: UartRx
 port map
