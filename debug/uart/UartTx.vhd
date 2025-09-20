@@ -165,9 +165,10 @@ begin
                 symbol_state <= SYMBOL_IDLE;
 
         end case;
+
+        SYNCED_UART_TX <= uart_tx;
+
     end if;
 end process;
-
-SYNCED_UART_TX <= uart_tx;
 
 end architecture;
