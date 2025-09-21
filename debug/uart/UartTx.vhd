@@ -19,17 +19,17 @@ end UartTx;
 architecture rtl of UartTx is
 
 constant bit_baud : integer range 0 to 128 := 25; -- 25*20ns ---> 2M Baud @ 50Mhz
-constant bit_start : integer range 0 to 128 := 0; -- 0
-constant bit_0 : integer range 0 to 4096 := bit_start + bit_baud;   -- 25
-constant bit_1 : integer range 0 to 4096 := bit_0 + bit_baud;       -- 50
-constant bit_2 : integer range 0 to 4096 := bit_1 + bit_baud;       -- 75
-constant bit_3 : integer range 0 to 4096 := bit_2 + bit_baud;       -- 125
-constant bit_4 : integer range 0 to 4096 := bit_3 + bit_baud;       -- 150
-constant bit_5 : integer range 0 to 4096 := bit_4 + bit_baud;       -- 175
-constant bit_6 : integer range 0 to 4096 := bit_5 + bit_baud;       -- 200
-constant bit_7 : integer range 0 to 4096 := bit_6 + bit_baud;       -- 225
-constant bit_stop : integer range 0 to 4096 := bit_7 + bit_baud;    -- 250
-constant bit_next : integer range 0 to 4096 := bit_stop + bit_baud; -- 275
+constant bit_start : integer range 0 to 128 := 0;
+constant bit_0 : integer range 0 to 4096 := bit_start + bit_baud;
+constant bit_1 : integer range 0 to 4096 := bit_0 + bit_baud;
+constant bit_2 : integer range 0 to 4096 := bit_1 + bit_baud;
+constant bit_3 : integer range 0 to 4096 := bit_2 + bit_baud;
+constant bit_4 : integer range 0 to 4096 := bit_3 + bit_baud;
+constant bit_5 : integer range 0 to 4096 := bit_4 + bit_baud;
+constant bit_6 : integer range 0 to 4096 := bit_5 + bit_baud;
+constant bit_7 : integer range 0 to 4096 := bit_6 + bit_baud;
+constant bit_stop : integer range 0 to 4096 := bit_7 + bit_baud;
+constant bit_next : integer range 0 to 4096 := bit_stop + bit_baud;
 
 signal symbol_process_timer : integer range 0 to 4096 := 0;
 
