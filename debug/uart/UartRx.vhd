@@ -12,7 +12,8 @@ port
     READ_SYMBOL : out std_logic_vector(7 downto 0);
     READ_BUSY : out std_logic;
 
-    SYNCED_UART_RX : in std_logic
+    SYNCED_UART_RX : in std_logic;
+    DEBUG : out std_logic
 );
 end UartRx;
 
@@ -43,6 +44,14 @@ signal symbol_byte : std_logic_vector(7 downto 0) := (others => '0');
 signal symbol_process_timer : integer range 0 to 4096 := 0;
 signal symbol_trigger : std_logic := '0';
 
+signal uart_rx_edge : std_logic := '1';
+
+signal edge_detected : std_logic := '0';
+signal edge_test : std_logic := '0';
+signal edge_bit : std_logic := '0';
+signal edge_timer : integer range 0 to 4096 := 0;
+signal edge_error : integer range 0 to 4096 := 0;
+
 begin
 
 state_machine_process:
@@ -52,6 +61,12 @@ begin
     -- RESET VARIABLES
     ---------------------------------------------------------------------------------------------------
     if RESET = '1' then
+        uart_rx_edge <= '1';
+        edge_detected <= '0';
+        edge_test <= '0';
+        edge_bit <= '0';
+        edge_timer <= 0;
+        edge_error <= 0;
         symbol_state <= SYMBOL_IDLE;
         symbol_byte <= (others => '0');
         symbol_process_timer <= 0;
@@ -60,6 +75,12 @@ begin
         READ_VALID <= '0';
         READ_SYMBOL <= (others => '0');
     elsif rising_edge(CLOCK) then
+        ---------------------------------------------------------------------------------------------------
+        -- RUNTIME RESET
+        ---------------------------------------------------------------------------------------------------
+        edge_bit <= '0';
+        edge_test <= '0';
+        edge_detected <= '0';
 
         ---------------------------------------------------------------------------------------------------
         -- STATE MACHINE
@@ -70,6 +91,7 @@ begin
             -- IDLE
             ---------------------------------------------------------------------------------------------------
             when SYMBOL_IDLE =>
+                edge_error <= 0;
                 if SYNCED_UART_RX = '0' then
                     symbol_state <= SYMBOL_PROCESS;
                 end if;
@@ -80,60 +102,70 @@ begin
             when SYMBOL_PROCESS =>
                 if symbol_process_timer = 4096 then
                 else
-                    if symbol_process_timer = bit_start then
+                    if symbol_process_timer = bit_start + edge_error - 2 then
+                        edge_bit <= '1';
                         ---------------------------------------------------------------------------------------------------
                         -- BIT START
                         ---------------------------------------------------------------------------------------------------
 
-                    elsif symbol_process_timer = bit_0 then
+                    elsif symbol_process_timer = bit_0 + edge_error - 2 then
+                        edge_bit <= '1';
                         ---------------------------------------------------------------------------------------------------
                         -- BIT 0
                         ---------------------------------------------------------------------------------------------------
                         symbol_byte(0) <= SYNCED_UART_RX;
 
-                    elsif symbol_process_timer = bit_1 then
+                    elsif symbol_process_timer = bit_1 + edge_error - 2 then
+                        edge_bit <= '1';
                         ---------------------------------------------------------------------------------------------------
                         -- BIT 1
                         ---------------------------------------------------------------------------------------------------
                         symbol_byte(1) <= SYNCED_UART_RX;
 
-                    elsif symbol_process_timer = bit_2 then
+                    elsif symbol_process_timer = bit_2 + edge_error - 2 then
+                        edge_bit <= '1';
                         ---------------------------------------------------------------------------------------------------
                         -- BIT 2
                         ---------------------------------------------------------------------------------------------------
                         symbol_byte(2) <= SYNCED_UART_RX;
 
-                    elsif symbol_process_timer = bit_3 then
+                    elsif symbol_process_timer = bit_3 + edge_error - 2 then
+                        edge_bit <= '1';
                         ---------------------------------------------------------------------------------------------------
                         -- BIT 3
                         ---------------------------------------------------------------------------------------------------
                         symbol_byte(3) <= SYNCED_UART_RX;
 
-                    elsif symbol_process_timer = bit_4 then
+                    elsif symbol_process_timer = bit_4 + edge_error - 2 then
+                        edge_bit <= '1';
                         ---------------------------------------------------------------------------------------------------
                         -- BIT 4
                         ---------------------------------------------------------------------------------------------------
                         symbol_byte(4) <= SYNCED_UART_RX;
 
-                    elsif symbol_process_timer = bit_5 then
+                    elsif symbol_process_timer = bit_5 + edge_error - 2 then
+                        edge_bit <= '1';
                         ---------------------------------------------------------------------------------------------------
                         -- BIT 5
                         ---------------------------------------------------------------------------------------------------
                         symbol_byte(5) <= SYNCED_UART_RX;
 
-                    elsif symbol_process_timer = bit_6 then
+                    elsif symbol_process_timer = bit_6 + edge_error - 2 then
+                        edge_bit <= '1';
                         ---------------------------------------------------------------------------------------------------
                         -- BIT 6
                         ---------------------------------------------------------------------------------------------------
                         symbol_byte(6) <= SYNCED_UART_RX;
 
-                    elsif symbol_process_timer = bit_7 then
+                    elsif symbol_process_timer = bit_7 + edge_error - 2 then
+                        edge_bit <= '1';
                         ---------------------------------------------------------------------------------------------------
                         -- BIT 7
                         ---------------------------------------------------------------------------------------------------
                         symbol_byte(7) <= SYNCED_UART_RX;
 
-                    elsif symbol_process_timer = bit_stop then
+                    elsif symbol_process_timer = bit_stop + edge_error - 2 then
+                        edge_bit <= '1';
                         ---------------------------------------------------------------------------------------------------
                         -- BIT STOP
                         ---------------------------------------------------------------------------------------------------
@@ -145,6 +177,33 @@ begin
                     ---------------------------------------------------------------------------------------------------
                     symbol_process_timer <= symbol_process_timer + 1;
 
+                    ---------------------------------------------------------------------------------------------------
+                    -- Edge Detector
+                    ---------------------------------------------------------------------------------------------------
+                    uart_rx_edge <= SYNCED_UART_RX;
+
+                    ---------------------------------------------------------------------------------------------------
+                    -- Ignore First Edge
+                    ---------------------------------------------------------------------------------------------------
+                    if uart_rx_edge /= SYNCED_UART_RX then
+                        if symbol_process_timer < bit_0 then
+                            edge_detected <= '1';
+                            if edge_timer > bit_baud - 2 then
+                                edge_test <= '1';
+                                edge_error <= (edge_error + ((edge_timer + 2) mod bit_baud));
+                            end if;
+                            edge_timer <= 0;
+                        else
+                            edge_detected <= '1';
+                            if edge_timer > bit_baud - 2 then
+                                edge_test <= '1';
+                                edge_error <= (edge_error + ((edge_timer + 1) mod bit_baud));
+                            end if;
+                            edge_timer <= 0;
+                        end if;
+                    else
+                        edge_timer <= edge_timer + 1;
+                    end if;
                 end if;
 
             ---------------------------------------------------------------------------------------------------
@@ -159,6 +218,7 @@ begin
             -- DONE
             ---------------------------------------------------------------------------------------------------
             when SYMBOL_DONE =>
+                edge_timer <= 0;
                 symbol_trigger <= '0';
                 symbol_byte <= (others => '0');
                 symbol_process_timer <= 0;
@@ -173,6 +233,10 @@ begin
         ---------------------------------------------------------------------------------------------------
         READ_VALID <= symbol_trigger;
 
+        ---------------------------------------------------------------------------------------------------
+        -- ANTI OPTIMIZATION
+        ---------------------------------------------------------------------------------------------------
+        DEBUG <= edge_bit or edge_test or edge_detected;
     end if;
 end process;
 
