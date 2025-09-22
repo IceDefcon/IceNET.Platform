@@ -21,7 +21,9 @@ Port
     PARAMETER_MATRIX : out PARAMETER_ARRAY;
 
     FEEDBACK_DATA : out std_logic_vector(31 downto 0);
-    FEEDBACK_TRIGGER : out std_logic
+    FEEDBACK_TRIGGER : out std_logic;
+
+    DEBUG_VECTOR : out std_logic_vector(5 downto 0)
 );
 end entity UartIrqController;
 
@@ -31,7 +33,7 @@ architecture rtl of UartIrqController is
 -- Constants
 ------------------------------------------------------------------------------------------------------------
 constant CONTROL_BYTES_NUMBER : integer := 8;
-constant PARAMETER_TIMEOUT : integer := 4096;
+constant WRITE_PARAMETER_TIMEOUT : integer := 15000;
 
 constant CMD_PARAMETER  : std_logic_vector(7 downto 0) := "00100100"; -- 0x24
 constant CMD_250_PULSE  : std_logic_vector(7 downto 0) := "00110000"; -- 0x30
@@ -106,9 +108,11 @@ signal interrupt_vector_count : integer range 0 to CONTROL_BYTES_NUMBER := 0;
 signal interrupt_vector_parameter_id : std_logic_vector(7 downto 0) := (others => '0');
 signal interrupt_vector_parameter_data : std_logic_vector(31 downto 0) := (others => '0');
 signal interrupt_vector_parameter_hex : std_logic_vector(3 downto 0) := (others => '0');
-signal interrupt_vector_parameter_timeout : integer range 0 to PARAMETER_TIMEOUT := 0;
+signal interrupt_vector_parameter_timeout : integer range 0 to WRITE_PARAMETER_TIMEOUT := 0;
 
-signal i : integer range 0 to 32 := 0;
+signal i : integer range 0 to 32 - 1 := 0;
+
+signal irq_state_bin : std_logic_vector(3 downto 0);
 
 ------------------------------------------------------------------------------------------------------------
 -- Components
@@ -299,7 +303,7 @@ begin
                 -- BAD VECTOR RECEIVED
                 ---------------------------------------------------------------------------------------------------------------
                 when VECTOR_ERROR =>
-                    interrupt_vector_parameter_data <= x"DEADBEEF";
+                    interrupt_vector_parameter_data <= x"BAD0C0DE";
                     interrupt_vector_state <= VECTOR_PARAMETER_FEEDBACK;
 
                 ---------------------------------------------------------------------------------------------------------------
@@ -326,7 +330,7 @@ begin
                         end if;
                     end if;
 
-                    if interrupt_vector_parameter_timeout = PARAMETER_TIMEOUT then
+                    if interrupt_vector_parameter_timeout = WRITE_PARAMETER_TIMEOUT then
                         interrupt_vector_state <= VECTOR_PARAMETER_ID_ERROR;
                     else
                         interrupt_vector_parameter_timeout <= interrupt_vector_parameter_timeout + 1;
@@ -509,6 +513,62 @@ port map
     full => uart_fifo_full,
     q => uart_fifo_data_out
 );
+
+debug_vector_process:
+process(CLOCK)
+begin
+    if rising_edge(CLOCK) then
+        case interrupt_vector_state is
+            when VECTOR_IDLE =>
+                irq_state_bin <= "0000";
+
+            when VECTOR_CHECK =>
+                irq_state_bin <= "0001";
+
+            when VECTOR_ERROR =>
+                irq_state_bin <= "0010";
+
+            when VECTOR_PARAMETER_ID =>
+                irq_state_bin <= "0011";
+
+            when VECTOR_PARAMETER_WRITE =>
+                irq_state_bin <= "0100";
+
+            when VECTOR_PARAMETER_OFFLOAD =>
+                irq_state_bin <= "0101";
+
+            when VECTOR_PARAMETER_OUTPUTS =>
+                irq_state_bin <= "0110";
+
+            when VECTOR_PARAMETER_ID_ERROR =>
+                irq_state_bin <= "0111";
+
+            when VECTOR_PARAMETER_FEEDBACK =>
+                irq_state_bin <= "1000";
+
+            when VECTOR_250_PULSE =>
+                irq_state_bin <= "1001";
+
+            when VECTOR_OP_NORMAL =>
+                irq_state_bin <= "1010";
+
+            when VECTOR_OP_UART_FD =>
+                irq_state_bin <= "1011";
+
+            when VECTOR_OP_UART_TD =>
+                irq_state_bin <= "1100";
+
+            when VECTOR_DONE =>
+                irq_state_bin <= "1101";
+
+            when others =>
+                irq_state_bin <= "1111";
+        end case;
+
+        DEBUG_VECTOR <= irq_state_bin & uart_fifo_wr_req & uart_fifo_rd_req;
+
+    end if;
+end process;
 
 ------------------------------------------------------------------------------------------------------------
 -- End

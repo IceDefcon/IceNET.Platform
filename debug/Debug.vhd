@@ -108,6 +108,8 @@ signal uart_vector : std_logic_vector(IRQ_VECTOR_SIZE - 1 downto 0) := (others =
 signal uart_trigger : std_logic := '0';
 signal uart_message : std_logic_vector(31 downto 0) := (others => '0');
 
+signal debug_vector : std_logic_vector(5 downto 0) := (others => '0');
+
 ----------------------------------------------------------------------------------------
 -- Components
 ----------------------------------------------------------------------------------------
@@ -154,7 +156,9 @@ port
 
     WRITE_BUSY : out std_logic;
 
-    VECTOR_INTERRUPT : out std_logic_vector(IRQ_VECTOR_SIZE - 1 downto 0)
+    VECTOR_INTERRUPT : out std_logic_vector(IRQ_VECTOR_SIZE - 1 downto 0);
+
+    DEBUG_VECTOR : out std_logic_vector(5 downto 0)
 );
 end component;
 
@@ -218,7 +222,9 @@ port map
     -- OUT
     WRITE_BUSY => open,
 
-    VECTOR_INTERRUPT => uart_vector
+    VECTOR_INTERRUPT => uart_vector,
+
+    DEBUG_VECTOR => debug_vector
 );
 
 UART_TX <= uart_tx_synced;

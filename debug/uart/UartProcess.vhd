@@ -23,7 +23,9 @@ port
 
     WRITE_BUSY : out std_logic;
 
-    VECTOR_INTERRUPT : out std_logic_vector(IRQ_VECTOR_SIZE - 1 downto 0)
+    VECTOR_INTERRUPT : out std_logic_vector(IRQ_VECTOR_SIZE - 1 downto 0);
+
+    DEBUG_VECTOR : out std_logic_vector(5 downto 0)
 );
 end UartProcess;
 
@@ -125,7 +127,9 @@ port
     PARAMETER_MATRIX : out PARAMETER_ARRAY;
 
     FEEDBACK_DATA : out std_logic_vector(31 downto 0);
-    FEEDBACK_TRIGGER : out std_logic
+    FEEDBACK_TRIGGER : out std_logic;
+
+    DEBUG_VECTOR : out std_logic_vector(5 downto 0)
 );
 end component;
 
@@ -271,7 +275,9 @@ port map
     PARAMETER_MATRIX => open,
     -- OUT
     FEEDBACK_DATA => UART_FEEDBACK_VECTOR,
-    FEEDBACK_TRIGGER => UART_FEEDBACK_TRIGGER
+    FEEDBACK_TRIGGER => UART_FEEDBACK_TRIGGER,
+
+    DEBUG_VECTOR => DEBUG_VECTOR
 );
 
 end architecture;

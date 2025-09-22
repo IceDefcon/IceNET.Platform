@@ -18,20 +18,20 @@ end UartTx;
 
 architecture rtl of UartTx is
 
-constant bit_baud : integer range 0 to 128 := 25; -- 25*20ns ---> 2M Baud @ 50Mhz
-constant bit_start : integer range 0 to 128 := 0;
-constant bit_0 : integer range 0 to 4096 := bit_start + bit_baud;
-constant bit_1 : integer range 0 to 4096 := bit_0 + bit_baud;
-constant bit_2 : integer range 0 to 4096 := bit_1 + bit_baud;
-constant bit_3 : integer range 0 to 4096 := bit_2 + bit_baud;
-constant bit_4 : integer range 0 to 4096 := bit_3 + bit_baud;
-constant bit_5 : integer range 0 to 4096 := bit_4 + bit_baud;
-constant bit_6 : integer range 0 to 4096 := bit_5 + bit_baud;
-constant bit_7 : integer range 0 to 4096 := bit_6 + bit_baud;
-constant bit_stop : integer range 0 to 4096 := bit_7 + bit_baud;
-constant bit_next : integer range 0 to 4096 := bit_stop + bit_baud;
+constant bit_baud : integer range 0 to 255 := 25; -- 25*20ns ---> 2M Baud @ 50Mhz
+constant bit_start : integer range 0 to 255 := 0;
+constant bit_0 : integer range 0 to 4095 := bit_start + bit_baud;
+constant bit_1 : integer range 0 to 4095 := bit_0 + bit_baud;
+constant bit_2 : integer range 0 to 4095 := bit_1 + bit_baud;
+constant bit_3 : integer range 0 to 4095 := bit_2 + bit_baud;
+constant bit_4 : integer range 0 to 4095 := bit_3 + bit_baud;
+constant bit_5 : integer range 0 to 4095 := bit_4 + bit_baud;
+constant bit_6 : integer range 0 to 4095 := bit_5 + bit_baud;
+constant bit_7 : integer range 0 to 4095 := bit_6 + bit_baud;
+constant bit_stop : integer range 0 to 4095 := bit_7 + bit_baud;
+constant bit_next : integer range 0 to 4095 := bit_stop + bit_baud;
 
-signal symbol_process_timer : integer range 0 to 4096 := 0;
+signal symbol_process_timer : integer range 0 to 4095 := 0;
 
 type SYMBOL_SM is
 (
@@ -80,7 +80,7 @@ begin
             -- START PROCESS
             ---------------------------------------------------------------------------------------------------
             when SYMBOL_PROCESS =>
-                if symbol_process_timer = 4096 then
+                if symbol_process_timer = 4095 then
                 else
                     if symbol_process_timer = bit_start then
                         ---------------------------------------------------------------------------------------------------
