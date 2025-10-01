@@ -18,12 +18,14 @@ port
     UART_LOG_TRIGGER : in std_logic;
     UART_LOG_VECTOR : in std_logic_vector(31 downto 0);
 
-    UART_PROCESS_RX : in std_logic;
-    UART_PROCESS_TX : out std_logic;
+    SYNCED_UART_RX : in std_logic;
+    SYNCED_UART_TX : out std_logic;
 
     WRITE_BUSY : out std_logic;
 
-    VECTOR_INTERRUPT : out std_logic_vector(IRQ_VECTOR_SIZE - 1 downto 0)
+    VECTOR_INTERRUPT : out std_logic_vector(IRQ_VECTOR_SIZE - 1 downto 0);
+
+    DEBUG_VECTOR : out std_logic_vector(5 downto 0)
 );
 end UartProcess;
 
@@ -88,7 +90,7 @@ port
     WRITE_SYMBOL : in std_logic_vector(7 downto 0);
     WRITE_BUSY : out std_logic;
 
-    FPGA_UART_TX : out std_logic
+    SYNCED_UART_TX : out std_logic
 );
 end component;
 
@@ -102,7 +104,7 @@ port
     READ_SYMBOL : out std_logic_vector(7 downto 0);
     READ_BUSY : out std_logic;
 
-    FPGA_UART_RX : in std_logic
+    SYNCED_UART_RX : in std_logic
 );
 end component;
 
@@ -125,7 +127,9 @@ port
     PARAMETER_MATRIX : out PARAMETER_ARRAY;
 
     FEEDBACK_DATA : out std_logic_vector(31 downto 0);
-    FEEDBACK_TRIGGER : out std_logic
+    FEEDBACK_TRIGGER : out std_logic;
+
+    DEBUG_VECTOR : out std_logic_vector(5 downto 0)
 );
 end component;
 
@@ -234,7 +238,7 @@ port map
     WRITE_SYMBOL => uart_write_symbol,
     WRITE_BUSY => uart_write_busy,
 
-    FPGA_UART_TX => UART_PROCESS_TX
+    SYNCED_UART_TX => SYNCED_UART_TX
 );
 
 WRITE_BUSY <= uart_write_busy;
@@ -249,7 +253,7 @@ port map
     READ_SYMBOL => uart_read_symbol,
     READ_BUSY => uart_read_busy,
     -- IN
-    FPGA_UART_RX => UART_PROCESS_RX
+    SYNCED_UART_RX => SYNCED_UART_RX
 );
 
 UartIrqController_module: UartIrqController
@@ -271,7 +275,9 @@ port map
     PARAMETER_MATRIX => open,
     -- OUT
     FEEDBACK_DATA => UART_FEEDBACK_VECTOR,
-    FEEDBACK_TRIGGER => UART_FEEDBACK_TRIGGER
+    FEEDBACK_TRIGGER => UART_FEEDBACK_TRIGGER,
+
+    DEBUG_VECTOR => DEBUG_VECTOR
 );
 
 end architecture;

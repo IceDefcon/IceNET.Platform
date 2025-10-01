@@ -20,8 +20,8 @@ use work.UartTypes.all;
 -- PIN_A20 :: PIN_B20
 -- ______________________________________________________________________________________
 --                      Λ                                                Λ
--- PIN_A19 :: PIN_B19   | TIMER_INT_FROM_FPGA   :: FPGA_UART_RX          | H7  :: H8
--- PIN_A18 :: PIN_B18   | ----===[ GND ]===---- :: FPGA_UART_TX          | H9  :: H10
+-- PIN_A19 :: PIN_B19   | TIMER_INT_FROM_FPGA   :: UART_RX               | H7  :: H8
+-- PIN_A18 :: PIN_B18   | ----===[ GND ]===---- :: UART_TX               | H9  :: H10
 -- PIN_A17 :: PIN_B17   |                       ::                       | H11 :: H12
 -- PIN_A16 :: PIN_B16   | SECONDARY_SCLK        :: ----===[ GND ]===---- | H13 :: H14
 -- PIN_A15 :: PIN_B15   | CTRL_F1               ::                       | H15 :: H16
@@ -64,8 +64,8 @@ Port
     PRIMARY_CS   : in  std_logic; -- PIN_B9
     CTRL_F1 : in std_logic; -- PIN_A15
     CTRL_F2 : in std_logic; -- PIN_C3
-    FPGA_UART_TX  : out std_logic; -- PIN_B18 :: H10 -> JetsonNano UART1_RXD
-    FPGA_UART_RX  : in  std_logic; -- PIN_B19 :: H8  -> JetsonNano UART1_TXD
+    UART_TX  : out std_logic; -- PIN_B18 :: H10 -> JetsonNano UART1_RXD
+    UART_RX  : in  std_logic; -- PIN_B19 :: H8  -> JetsonNano UART1_TXD
     -----------------------------------------------------------------------------
     -- DEBUG
     -----------------------------------------------------------------------------
@@ -78,11 +78,8 @@ Port
     LED_7 : out std_logic; -- PIN_M8
     LED_8 : out std_logic; -- PIN_N8
     -----------------------------------------------------------------------------
-    -- UART
+    -- DEBUG
     -----------------------------------------------------------------------------
-    DEBUG_UART_TX : out std_logic; -- PIN_P1
-    DEBUG_UART_RX : in std_logic; -- PIN_R1
-
     DEBUG_PIN_5 : out std_logic; -- PIN_D2
     DEBUG_PIN_4 : out std_logic; -- PIN_F2
     DEBUG_PIN_3 : out std_logic; -- PIN_H2
@@ -102,17 +99,17 @@ constant IRQ_VECTOR_SIZE : integer := 10;
 ----------------------------------------------------------------------------------------
 -- Signals
 ----------------------------------------------------------------------------------------
-signal global_reset : std_logic := '1';
-signal CLOCK_200MHz : std_logic := '0';
+signal timed_reset : std_logic := '1';
 
-signal debug_FPGA_UART_RX : std_logic := '1';
-signal debug_FPGA_UART_TX : std_logic := '1';
+signal uart_rx_synced : std_logic := '1';
+signal uart_tx_synced : std_logic := '1';
 
 signal uart_vector : std_logic_vector(IRQ_VECTOR_SIZE - 1 downto 0) := (others => '0');
-
 signal uart_trigger : std_logic := '0';
 signal uart_message : std_logic_vector(31 downto 0) := (others => '0');
-signal uart_wait : std_logic := '0';
+
+signal debug_vector : std_logic_vector(5 downto 0) := (others => '0');
+
 ----------------------------------------------------------------------------------------
 -- Components
 ----------------------------------------------------------------------------------------
@@ -120,17 +117,23 @@ component TimedReset
 Port
 (
     CLOCK : in  std_logic;
-    TIMED_RESET : out std_logic
+    RESET : out std_logic
 );
 end component;
 
-component PLL_200MHz
+component DelaySynchroniser
+generic
+(
+    SYNCHRONIZATION_DEPTH : integer := 2;
+    INITIAL_VALUE : std_logic := '0'
+);
 Port
 (
-    areset : IN STD_LOGIC;
-    inclk0 : IN STD_LOGIC;
-    c0 : OUT STD_LOGIC;
-    locked : OUT STD_LOGIC
+    CLOCK : in  std_logic;
+    RESET : in std_logic;
+
+    ASYNC_INPUT : in std_logic;
+    SYNC_OUTPUT : out std_logic
 );
 end component;
 
@@ -148,12 +151,14 @@ port
     UART_LOG_TRIGGER : in std_logic;
     UART_LOG_VECTOR : in std_logic_vector(31 downto 0);
 
-    UART_PROCESS_RX : in std_logic;
-    UART_PROCESS_TX : out std_logic;
+    SYNCED_UART_RX : in std_logic;
+    SYNCED_UART_TX : out std_logic;
 
     WRITE_BUSY : out std_logic;
 
-    VECTOR_INTERRUPT : out std_logic_vector(IRQ_VECTOR_SIZE - 1 downto 0)
+    VECTOR_INTERRUPT : out std_logic_vector(IRQ_VECTOR_SIZE - 1 downto 0);
+
+    DEBUG_VECTOR : out std_logic_vector(5 downto 0)
 );
 end component;
 
@@ -171,18 +176,28 @@ J504_OUT2 <= CTRL_F2;
 -- Global Reset
 ------------------------------------------------------------------------------------------------------------
 
-PLL_200MHz_Main: PLL_200MHz port map
-(
-    areset => global_reset,
-    inclk0 => CLOCK_50MHz,
-    c0 => CLOCK_200MHz,
-    locked => open
-);
-
 TimedReset_Main: TimedReset port map
 (
     CLOCK => CLOCK_50MHz,
-    TIMED_RESET => global_reset
+    RESET => timed_reset
+);
+
+------------------------------------------------------------------------------------------------------------
+-- Syncronise UART RX
+------------------------------------------------------------------------------------------------------------
+Synced_Uart_Rx: DelaySynchroniser
+generic map
+(
+    SYNCHRONIZATION_DEPTH => 2,
+    INITIAL_VALUE => '1' -- Uart Rx Must be High
+)
+port map
+(
+    CLOCK => CLOCK_50MHz,
+    RESET => timed_reset,
+
+    ASYNC_INPUT => UART_RX,
+    SYNC_OUTPUT => uart_rx_synced
 );
 
 ------------------------------------------------------------------------------------------------------------
@@ -197,33 +212,32 @@ generic map
 port map
 (
     CLOCK => CLOCK_50MHz,
-    RESET => global_reset,
-
+    RESET => timed_reset,
+    -- IN
     UART_LOG_TRIGGER => uart_trigger,
     UART_LOG_VECTOR => uart_message,
-
     -- UART
-    UART_PROCESS_RX => debug_FPGA_UART_RX,
-    UART_PROCESS_TX => debug_FPGA_UART_TX,
-
-    WRITE_BUSY => uart_wait,
-
+    SYNCED_UART_RX => uart_rx_synced,
+    SYNCED_UART_TX => uart_tx_synced,
     -- OUT
-    VECTOR_INTERRUPT => uart_vector
+    WRITE_BUSY => open,
+
+    VECTOR_INTERRUPT => uart_vector,
+
+    DEBUG_VECTOR => debug_vector
 );
 
-debug_FPGA_UART_RX <= FPGA_UART_RX;
-FPGA_UART_TX <= debug_FPGA_UART_TX;
+UART_TX <= uart_tx_synced;
 
 ------------------------------------------------------------------------------------------------------------
 -- DEBUG
 ------------------------------------------------------------------------------------------------------------
 
 LED_process:
-process(CLOCK_50MHz, global_reset)
+process(CLOCK_50MHz, timed_reset)
 begin
     if rising_edge(CLOCK_50MHz) then
-        if global_reset = '1' then 
+        if timed_reset = '1' then
             LED_1 <= '1';
             LED_2 <= '1';
             LED_3 <= '1';
@@ -243,8 +257,8 @@ begin
             LED_8 <= '1';
         end if;
 
-    DEBUG_PIN_0 <= debug_FPGA_UART_TX;
-    DEBUG_PIN_1 <= debug_FPGA_UART_RX;
+    DEBUG_PIN_0 <= uart_tx_synced;
+    DEBUG_PIN_1 <= uart_rx_synced;
 
     end if;
 end process;

@@ -5,7 +5,8 @@ use ieee.numeric_std.all;
 entity DelaySynchroniser is
 generic
 (
-    SYNCHRONIZATION_DEPTH : integer := 2
+    SYNCHRONIZATION_DEPTH : integer := 2;
+    INITIAL_VALUE : std_logic := '0'
 );
 Port
 (
@@ -19,7 +20,7 @@ end entity DelaySynchroniser;
 
 architecture rtl of DelaySynchroniser is
 
-signal sync_vector : std_logic_vector(SYNCHRONIZATION_DEPTH - 1 downto 0) := (others => '0');
+signal sync_vector : std_logic_vector(SYNCHRONIZATION_DEPTH - 1 downto 0) := (others => INITIAL_VALUE);
 
 begin
 
@@ -27,8 +28,8 @@ begin
     process(CLOCK, RESET)
     begin
         if RESET = '1' then
-            sync_vector <= (others => '0');
-            SYNC_OUTPUT <= '0';
+            sync_vector <= (others => INITIAL_VALUE);
+            SYNC_OUTPUT <= INITIAL_VALUE;
         elsif rising_edge(CLOCK) then
             for i in SYNCHRONIZATION_DEPTH - 1 downto 1 loop
                 sync_vector(i) <= sync_vector(i - 1);

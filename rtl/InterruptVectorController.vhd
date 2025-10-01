@@ -12,7 +12,7 @@ Port
     PARALLEL_PRIMARY_MOSI : in std_logic_vector(7 downto 0);
     PARALLEL_CONVERSION_COMPLETE : in std_logic;
 
-    VECTOR_INTERRUPT_EXTERNAL_OFFLOAD : out std_logic;
+    VECTOR_INTERRUPT_FREE : out std_logic;
     VECTOR_INTERRUPT_PRIMARY_OFFLOAD : out std_logic;
     VECTOR_INTERRUPT_ENABLE : out std_logic;
     VECTOR_INTERRUPT_START : out std_logic;
@@ -34,7 +34,7 @@ type VECTOR_TYPE is
     VECTOR_DISABLE,             -- "0011"
     VECTOR_START,               -- "0100"
     VECTOR_STOP,                -- "0101"
-    VECTOR_OFFLOAD_EXTERNAL,    -- "0110"
+    VECTOR_FREE,                -- "0110"
     VECTOR_TRIGGER,             -- "0111"
     VECTOR_F1,                  -- "1000"
     VECTOR_F2,                  -- "1001"
@@ -74,7 +74,6 @@ begin
     begin
         if RESET = '1' then
             VECTOR_INTERRUPT_PRIMARY_OFFLOAD <= '0';
-            VECTOR_INTERRUPT_EXTERNAL_OFFLOAD <= '0';
             VECTOR_INTERRUPT_ENABLE <= '0';
             VECTOR_INTERRUPT_START <= '0';
             interrupt_vector_busy <= '0';
@@ -190,7 +189,7 @@ begin
                     elsif interrupt_vector = "0101" then
                         vector_state <= VECTOR_STOP;
                     elsif interrupt_vector = "0110" then
-                        vector_state <= VECTOR_OFFLOAD_EXTERNAL;
+                        vector_state <= VECTOR_FREE;
                     elsif interrupt_vector = "0111" then
                         vector_state <= VECTOR_TRIGGER;
                     elsif interrupt_vector = "1000" then
@@ -234,8 +233,8 @@ begin
                     VECTOR_INTERRUPT_START <= '0';
                     vector_state <= VECTOR_DONE;
 
-                when VECTOR_OFFLOAD_EXTERNAL =>
-                    VECTOR_INTERRUPT_EXTERNAL_OFFLOAD <= '1';
+                when VECTOR_FREE =>
+                    VECTOR_INTERRUPT_FREE <= '1';
                     vector_state <= VECTOR_DONE;
 
                 when VECTOR_TRIGGER =>
@@ -267,7 +266,7 @@ begin
                     vector_state <= VECTOR_DONE;
 
                 when VECTOR_DONE =>
-                    VECTOR_INTERRUPT_EXTERNAL_OFFLOAD <= '0';
+                    VECTOR_INTERRUPT_FREE <= '0';
                     VECTOR_INTERRUPT_PRIMARY_OFFLOAD <= '0';
                     VECTOR_INTERRUPT_TRIGGER <= '0';
                     vector_state <= VECTOR_IDLE;

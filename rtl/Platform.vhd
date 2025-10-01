@@ -139,12 +139,6 @@ port
     SECONDARY_SCLK : in std_logic;  -- PIN_A15 :: P9_31 :: SPI1_SCLK
     SECONDARY_CS : in std_logic;    -- PIN_B13 :: P9_28 :: SPI1_CS0
 
-    -- EXTERNAL SPI
-    EXTERNAL_CS : out std_logic;   -- PIN_F21
-    EXTERNAL_MISO : in std_logic;  -- PIN_H21
-    EXTERNAL_MOSI : out std_logic; -- PIN_J21
-    EXTERNAL_SCLK : out std_logic; -- PIN_K21
-
     -----------------------------------------------------------------------------
     -- 256Mbit SDRAM
     -----------------------------------------------------------------------------
@@ -245,9 +239,12 @@ signal synced_PRIMARY_CS : std_logic := '0';
 signal synced_SECONDARY_MOSI : std_logic := '0';
 signal synced_SECONDARY_SCLK : std_logic := '0';
 signal synced_SECONDARY_CS : std_logic := '0';
--- Main UART
-signal synced_FPGA_UART_RX : std_logic := '0';
-signal synced_GPS_UART_RX : std_logic := '0';
+-- FPGA UART
+signal FPGA_UART_RX_SYNCED : std_logic := '0';
+signal FPGA_UART_TX_SYNCED : std_logic := '0';
+-- GPS UART
+signal GPS_UART_RX_SYNCED : std_logic := '0';
+signal GPS_UART_TX_SYNCED : std_logic := '0';
 -- Buttons
 signal active_button_1 : std_logic := '0';
 -- Spi.0 Primary
@@ -260,7 +257,6 @@ signal secondary_parallel_MISO : std_logic_vector(7 downto 0) := (others => '0')
 signal FIFO_primary_fifo_wr_en  : std_logic := '0';
 signal FIFO_primary_parallel_MOSI : std_logic_vector(7 downto 0) := (others => '0');
 -- Interrupt vector interrupts
-signal external_offload_vector_interrupt : std_logic := '0';
 signal primary_offload_vector_interrupt : std_logic := '0';
 signal enable_vector_interrupt : std_logic := '0';
 signal start_vector_interrupt : std_logic := '0';
@@ -288,7 +284,6 @@ signal primary_offload_wait_spi_rf : std_logic := '0';
 signal trigger_i2c : std_logic := '0';
 signal trigger_bmi160_s1 : std_logic := '0';
 signal trigger_bmi160_s2 : std_logic := '0';
-signal trigger_external_spi : std_logic := '0';
 signal trigger_nRF905 : std_logic := '0';
 signal trigger_pwm_m1 : std_logic := '0';
 -- CTRL Mux
@@ -298,7 +293,6 @@ constant CTRL_PWM : std_logic_vector(1 downto 0) := "10";
 -- ID Mux
 constant ID_BMI160_S1 : std_logic_vector(7 downto 0) := "01000100"; -- "001 0001" :: 0x11 :: Must be upside down :: Due to primary_offload_id for i2c
 constant ID_BMI160_S2 : std_logic_vector(7 downto 0) := "00100100"; -- "001 0010" :: 0x12
-constant ID_EXTERNAL_SPI : std_logic_vector(7 downto 0) := "01100100"; -- "001 0010" :: 0x13
 constant ID_nRF905 : std_logic_vector(7 downto 0) := "00010100"; -- Must be upside down :: Same as upside down
 -- Secondary DMA Trigger Interrupts
 signal i2c_complete_long : std_logic := '0';
@@ -374,12 +368,7 @@ signal ctrl_BMI160_S2_CS : std_logic := '0';
 signal ctrl_BMI160_S2_MISO : std_logic := '0';
 signal ctrl_BMI160_S2_MOSI : std_logic := '0';
 signal ctrl_BMI160_S2_SCLK : std_logic := '0';
--- External Systms
-signal ctrl_EXTERNAL_CS : std_logic := '0';
-signal ctrl_EXTERNAL_MISO : std_logic := '0';
-signal ctrl_EXTERNAL_MOSI : std_logic := '0';
-signal ctrl_EXTERNAL_SCLK : std_logic := '0';
--- External FPGA reset
+-- FPGA reset
 signal global_fpga_reset : std_logic := '0';
 -- Timed FPGA reset
 signal init_fpga_reset_counter : std_logic_vector(24 downto 0) := (others => '0');
@@ -478,19 +467,12 @@ signal acceleration_average_empty : std_logic := '0';
 signal acceleration_average_full : std_logic := '0';
 signal acceleration_average_data_out : std_logic_vector(7 downto 0) := (others => '0');
 
-signal spi_external_single_complete : std_logic := '0';
-signal spi_external_burst_complete : std_logic := '0';
-signal spi_external_burst_data : std_logic_vector(7 downto 0) := (others => '0');
-signal spi_external_single_data : std_logic_vector(7 downto 0) := (others => '0');
-signal spi_external_offload_wait : std_logic := '0';
-
 signal uart_trigger_pulse : std_logic := '0';
 signal uart_trigger_stop : std_logic := '0';
 
 ----------------------------------------------------------------------------------------------------------------
 -- COMPONENTS DECLARATION
 ----------------------------------------------------------------------------------------------------------------
-
 component DebounceController
 generic
 (
@@ -538,7 +520,6 @@ Port
 (
     CLOCK_50MHz : in  std_logic;
     RESET : in std_logic;
-    EXTERN : in std_logic;
     -- IN
     OFFLOAD_TRIGGER : in std_logic;
     OFFLOAD_ID : in std_logic_vector(7 downto 0);
@@ -690,7 +671,6 @@ port
     CLOCK_50MHz : in std_logic;
     RESET : in std_logic;
 
-    OFFLOAD_INTERRUPT_EXT : in std_logic;
     OFFLOAD_INTERRUPT : in std_logic;
     FIFO_DATA : in std_logic_vector(7 downto 0);
     FIFO_READ_ENABLE : out std_logic;
@@ -830,7 +810,7 @@ generic
 );
 Port
 (
-    CLOCK_50MHz : in  std_logic;
+    CLOCK : in  std_logic;
     RESET : in std_logic;
 
     ASYNC_INPUT : in std_logic;
@@ -884,7 +864,7 @@ port
     PARALLEL_PRIMARY_MOSI : in std_logic_vector(7 downto 0);
     PARALLEL_CONVERSION_COMPLETE : in std_logic;
 
-    VECTOR_INTERRUPT_EXTERNAL_OFFLOAD : out std_logic;
+    VECTOR_INTERRUPT_FREE : out std_logic;
     VECTOR_INTERRUPT_PRIMARY_OFFLOAD : out std_logic;
     VECTOR_INTERRUPT_ENABLE : out std_logic;
     VECTOR_INTERRUPT_START : out std_logic;
@@ -892,32 +872,6 @@ port
 
     FIFO_PARALLEL_PRIMARY_MOSI : out std_logic_vector(7 downto 0);
     FIFO_PARALLEL_PRIMARY_WR_EN : out std_logic
-);
-end component;
-
--- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
---
--- Experimential HW-Logic
---
--- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-component SoftwareDefinedRadioWraper
-generic
-(
-    CTRL : std_logic_vector(3 downto 0) := "0000"
-);
-Port
-(
-    CLOCK_250MHz : in  std_logic;
-    RESET : in  std_logic;
-    -- IN
-    ADC_12_BITS_I : in  std_logic_vector(11 downto 0); -- Real
-    ADC_12_BITS_Q : in  std_logic_vector(11 downto 0); -- Imaginary
-    -- OUT
-    COMPLEMENT_XK_RE : out std_logic_vector(15 downto 0);
-    COMPLEMENT_XK_IM : out std_logic_vector(15 downto 0);
-    FLOAT_XK_RE : out std_logic_vector(31 downto 0);
-    FLOAT_XK_IM : out std_logic_vector(31 downto 0)
 );
 end component;
 
@@ -951,32 +905,6 @@ begin
         end if;
     end if;
 end process;
-
-------------------------------------------------------------------------------------------------
---
---
--- EXPERIMENTIAL
---
---
-------------------------------------------------------------------------------------------------
-SoftwareDefinedRadioWraper_module: SoftwareDefinedRadioWraper
-generic map
-(
-    CTRL => "0000"
-)
-port map
-(
-    CLOCK_250MHz => '0',
-    RESET => '0' or init_fpga_reset,
-    -- IN
-    ADC_12_BITS_I => (others => '0'),
-    ADC_12_BITS_Q => (others => '0'),
-    -- OUT
-    COMPLEMENT_XK_RE => open,
-    COMPLEMENT_XK_IM => open,
-    FLOAT_XK_RE => open,
-    FLOAT_XK_IM => open
-);
 
 -- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 -- //
@@ -1018,7 +946,7 @@ generic map
 )
 port map
 (
-    CLOCK_50MHz => CLOCK_50MHz,
+    CLOCK => CLOCK_50MHz,
     RESET => global_fpga_reset or init_fpga_reset,
 
     ASYNC_INPUT => PRIMARY_MOSI,
@@ -1032,7 +960,7 @@ generic map
 )
 port map
 (
-    CLOCK_50MHz => CLOCK_50MHz,
+    CLOCK => CLOCK_50MHz,
     RESET => global_fpga_reset or init_fpga_reset,
 
     ASYNC_INPUT => PRIMARY_SCLK,
@@ -1046,7 +974,7 @@ generic map
 )
 port map
 (
-    CLOCK_50MHz => CLOCK_50MHz,
+    CLOCK => CLOCK_50MHz,
     RESET => global_fpga_reset or init_fpga_reset,
 
     ASYNC_INPUT => PRIMARY_CS,
@@ -1063,7 +991,7 @@ generic map
 )
 port map
 (
-    CLOCK_50MHz => CLOCK_50MHz,
+    CLOCK => CLOCK_50MHz,
     RESET => global_fpga_reset or init_fpga_reset,
 
     ASYNC_INPUT => SECONDARY_MOSI,
@@ -1077,7 +1005,7 @@ generic map
 )
 port map
 (
-    CLOCK_50MHz => CLOCK_50MHz,
+    CLOCK => CLOCK_50MHz,
     RESET => global_fpga_reset or init_fpga_reset,
 
     ASYNC_INPUT => SECONDARY_SCLK,
@@ -1091,7 +1019,7 @@ generic map
 )
 port map
 (
-    CLOCK_50MHz => CLOCK_50MHz,
+    CLOCK => CLOCK_50MHz,
     RESET => global_fpga_reset or init_fpga_reset,
 
     ASYNC_INPUT => SECONDARY_CS,
@@ -1108,11 +1036,11 @@ generic map
 )
 port map
 (
-    CLOCK_50MHz => CLOCK_50MHz,
+    CLOCK => CLOCK_50MHz,
     RESET => global_fpga_reset or init_fpga_reset,
 
     ASYNC_INPUT => FPGA_UART_RX,
-    SYNC_OUTPUT => synced_FPGA_UART_RX
+    SYNC_OUTPUT => FPGA_UART_RX_SYNCED
 );
 
 DelaySynchroniser_GPS_UART: DelaySynchroniser
@@ -1122,11 +1050,11 @@ generic map
 )
 port map
 (
-    CLOCK_50MHz => CLOCK_50MHz,
+    CLOCK => CLOCK_50MHz,
     RESET => global_fpga_reset or init_fpga_reset,
 
     ASYNC_INPUT => GPS_UART_RX,
-    SYNC_OUTPUT => synced_GPS_UART_RX
+    SYNC_OUTPUT => GPS_UART_RX_SYNCED
 );
 
 -- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1444,7 +1372,7 @@ port map
     PARALLEL_PRIMARY_MOSI => primary_parallel_MOSI,
     PARALLEL_CONVERSION_COMPLETE => primary_conversion_complete,
     -- OUT
-    VECTOR_INTERRUPT_EXTERNAL_OFFLOAD => external_offload_vector_interrupt,
+    VECTOR_INTERRUPT_FREE => open,
     VECTOR_INTERRUPT_PRIMARY_OFFLOAD => primary_offload_vector_interrupt,
     VECTOR_INTERRUPT_ENABLE => enable_vector_interrupt,
     VECTOR_INTERRUPT_START => start_vector_interrupt,
@@ -1486,7 +1414,6 @@ port map
     CLOCK_50MHz => CLOCK_50MHz,
     RESET => global_fpga_reset or init_fpga_reset,
 
-    OFFLOAD_INTERRUPT_EXT => external_offload_vector_interrupt,
     OFFLOAD_INTERRUPT => primary_offload_vector_interrupt,
     FIFO_DATA => primary_fifo_data_out,
     FIFO_READ_ENABLE => primary_fifo_rd_en,
@@ -1652,38 +1579,14 @@ port map
 -- //                   //
 -- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
---short_process:
---process(CLOCK_50MHz)
---begin
---    if rising_edge(CLOCK_50MHz) then
---        if spi_bmi160_s1_complete_long = '1' and uart_trigger_stop = '0' then
---            uart_trigger_pulse <= '1';
---            uart_trigger_stop <= '1';
---        elsif spi_bmi160_s1_complete_long = '1' and uart_trigger_stop = '1' then
---            uart_trigger_pulse <= '0';
---        else
---            uart_trigger_stop <= '0';
---        end if;
---    end if;
---end process;
-
---TEST_LOG_MESSAGE_ID(0) <= "0000";
---TEST_LOG_MESSAGE_ID(1) <= "0000";
---TEST_LOG_MESSAGE_KEY(0) <= "0" & primary_offload_register(6 downto 4);
---TEST_LOG_MESSAGE_KEY(1) <= primary_offload_register(3 downto 0);
---TEST_LOG_MESSAGE_DATA(0) <= "0000";
---TEST_LOG_MESSAGE_DATA(1) <= "0000";
---TEST_LOG_MESSAGE_DATA(2) <= data_spi_bmi160_s1_feedback(7 downto 4);
---TEST_LOG_MESSAGE_DATA(3) <= data_spi_bmi160_s1_feedback(3 downto 0);
-
 short_process:
 process(CLOCK_50MHz)
 begin
     if rising_edge(CLOCK_50MHz) then
-        if spi_external_single_complete = '1' and uart_trigger_stop = '0' then
+        if spi_bmi160_s1_complete_long = '1' and uart_trigger_stop = '0' then
             uart_trigger_pulse <= '1';
             uart_trigger_stop <= '1';
-        elsif spi_external_single_complete = '1' and uart_trigger_stop = '1' then
+        elsif spi_bmi160_s1_complete_long = '1' and uart_trigger_stop = '1' then
             uart_trigger_pulse <= '0';
         else
             uart_trigger_stop <= '0';
@@ -1697,8 +1600,8 @@ TEST_LOG_MESSAGE_KEY(0) <= "0" & primary_offload_register(6 downto 4);
 TEST_LOG_MESSAGE_KEY(1) <= primary_offload_register(3 downto 0);
 TEST_LOG_MESSAGE_DATA(0) <= "0000";
 TEST_LOG_MESSAGE_DATA(1) <= "0000";
-TEST_LOG_MESSAGE_DATA(2) <= spi_external_single_data(7 downto 4);
-TEST_LOG_MESSAGE_DATA(3) <= spi_external_single_data(3 downto 0);
+TEST_LOG_MESSAGE_DATA(2) <= data_spi_bmi160_s1_feedback(7 downto 4);
+TEST_LOG_MESSAGE_DATA(3) <= data_spi_bmi160_s1_feedback(3 downto 0);
 
 UartDataAssembly_module: UartDataAssembly
 generic map
@@ -1730,14 +1633,16 @@ port map
     WRITE_ENABLE => uart_write_enable,
     WRITE_SYMBOL => uart_write_symbol,
 
-    FPGA_UART_TX => FPGA_UART_TX,
-    FPGA_UART_RX => synced_FPGA_UART_RX,
+    FPGA_UART_TX => FPGA_UART_TX_SYNCED,
+    FPGA_UART_RX => FPGA_UART_RX_SYNCED,
 
     WRITE_BUSY => uart_write_busy
 );
 
---FPGA_UART_TX <=  synced_GPS_UART_RX;
---GPS_UART_TX <= synced_FPGA_UART_RX;
+FPGA_UART_TX <= FPGA_UART_TX_SYNCED;
+
+--FPGA_UART_TX <=  GPS_UART_RX_SYNCED;
+--GPS_UART_TX <= FPGA_UART_RX_SYNCED;
 
 -- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 -- //                               //
@@ -1770,15 +1675,12 @@ begin
                             trigger_bmi160_s1 <= '1';
                         elsif primary_offload_id = ID_BMI160_S2 then
                             trigger_bmi160_s2 <= '1';
-                        elsif primary_offload_id = ID_EXTERNAL_SPI then
-                            trigger_external_spi <= '1';
                         elsif primary_offload_id = ID_nRF905 then
                             trigger_nRF905 <= '1';
                         else
                             acceleration_trigger_bmi160_s1 <= '0';
                             trigger_bmi160_s1 <= '0';
                             trigger_bmi160_s2 <= '0';
-                            trigger_external_spi <= '0';
                             trigger_nRF905 <= '0';
                         end if;
                     elsif primary_offload_ctrl(2 downto 1) = CTRL_PWM then
@@ -1822,7 +1724,6 @@ begin
                 acceleration_trigger_bmi160_s1 <= '0';
                 trigger_bmi160_s1 <= '0';
                 trigger_bmi160_s2 <= '0';
-                trigger_external_spi <= '0';
                 trigger_nRF905 <= '0';
                 packetSwitchState <= PACKET_SWITCH_IDLE;
 
@@ -1885,7 +1786,6 @@ port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
     RESET => global_fpga_reset or init_fpga_reset,
-    EXTERN => '0',
     -- IN
     OFFLOAD_TRIGGER => trigger_bmi160_s1,
     OFFLOAD_ID => (others => '0'), -- Not necessary for SPI
@@ -1917,7 +1817,6 @@ port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
     RESET => global_fpga_reset or init_fpga_reset,
-    EXTERN => '0',
     -- IN
     OFFLOAD_TRIGGER => trigger_bmi160_s2,
     OFFLOAD_ID => (others => '0'), -- Not necessary for SPI
@@ -1937,43 +1836,6 @@ port map
     OFFLOAD_WAIT => primary_offload_wait_spi_s2
 );
 
-EXTERNAL_SPI_primary: SpiController
-generic map
-(
-    SM_OFFSET => 3,
-    ------------------------------------
-    -- All three generics must be set
-    -- to zero or non-zero values
-    -- to satisfy if-else statement
-    ------------------------------------
-    BYTE_INIT => 10,
-    BYTE_BREAK => 50,
-    BYTE_EXIT => 10
-)
-port map
-(
-    CLOCK_50MHz => CLOCK_50MHz,
-    RESET => global_fpga_reset or init_fpga_reset,
-    EXTERN => '1',
-    -- IN
-    OFFLOAD_TRIGGER => trigger_external_spi or trigger_vector_interrupt,
-    OFFLOAD_ID => primary_offload_id,
-    OFFLOAD_CONTROL => primary_offload_ctrl,
-    OFFLOAD_REGISTER => primary_offload_register,
-    OFFLOAD_DATA => primary_offload_data,
-    -- SPI
-    CTRL_CS => ctrl_EXTERNAL_CS,
-    CTRL_MISO => ctrl_EXTERNAL_MISO,
-    CTRL_MOSI => ctrl_EXTERNAL_MOSI,
-    CTRL_SCK => ctrl_EXTERNAL_SCLK,
-    -- OUT
-    SINGLE_COMPLETE => spi_external_single_complete,
-    BURST_COMPLETE => spi_external_burst_complete,
-    BURST_DATA => spi_external_burst_data,
-    SINGLE_DATA => spi_external_single_data,
-    OFFLOAD_WAIT => spi_external_offload_wait
-);
-
 RF905_primary: SpiController
 generic map
 (
@@ -1986,7 +1848,6 @@ port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
     RESET => global_fpga_reset or init_fpga_reset,
-    EXTERN => '0',
     -- IN
     OFFLOAD_TRIGGER => trigger_nRF905,
     OFFLOAD_ID => (others => '0'), -- Not necessary for SPI
@@ -2025,7 +1886,6 @@ BMI160_S1_acceleration: SpiController port map
 (
     CLOCK_50MHz => CLOCK_50MHz,
     RESET => global_fpga_reset or init_fpga_reset,
-    EXTERN => '0',
     -- IN
     OFFLOAD_TRIGGER => acceleration_trigger_bmi160_s1,
     OFFLOAD_ID => (others => '0'), -- Not necessary for SPI
@@ -2381,11 +2241,6 @@ S2_BMI160_CS <= ctrl_BMI160_S2_CS;
 ctrl_BMI160_S2_MISO <= S2_BMI160_MISO;
 S2_BMI160_MOSI <= ctrl_BMI160_S2_MOSI;
 S2_BMI160_SCLK <= ctrl_BMI160_S2_SCLK;
-
-EXTERNAL_CS <= ctrl_EXTERNAL_CS;
-ctrl_EXTERNAL_MISO <= EXTERNAL_MISO;
-EXTERNAL_MOSI <= ctrl_EXTERNAL_MOSI;
-EXTERNAL_SCLK <= ctrl_EXTERNAL_SCLK;
 
 ---------------------------------------------------------------
 -- TODO :: Need Refactoring and Parametrization !!!
